@@ -97,6 +97,7 @@ import {
   Passive,
   DidDefer,
   ViewTransitionNamedStatic,
+  ViewTransitionNamedMount,
   LayoutStatic,
 } from './ReactFiberFlags';
 import {
@@ -3242,7 +3243,10 @@ function updateViewTransition(
   if (pendingProps.name != null && pendingProps.name !== 'auto') {
     // Explicitly named boundary. We track it so that we can pair it up with another explicit
     // boundary if we get deleted.
-    workInProgress.flags |= ViewTransitionNamedStatic;
+    workInProgress.flags |=
+      current === null
+        ? ViewTransitionNamedMount | ViewTransitionNamedStatic
+        : ViewTransitionNamedStatic;
   } else {
     // Assign an auto generated name using the useId algorthim if an explicit one is not provided.
     // We don't need the name yet but we do it here to allow hydration state to be used.

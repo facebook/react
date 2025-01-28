@@ -4808,6 +4808,10 @@ export function commitPassiveUnmountEffects(finishedWork: Fiber): void {
 // already in the "current" tree. Because their visibility has changed, the
 // browser may not have prerendered them yet. So we check the MaySuspendCommit
 // flag instead.
+//
+// Note that MaySuspendCommit and ShouldSuspendCommit also includes named
+// ViewTransitions so that we know to also visit those to collect appearing
+// pairs.
 let suspenseyCommitFlag = ShouldSuspendCommit;
 export function accumulateSuspenseyCommit(finishedWork: Fiber): void {
   appearingViewTransitions = null;
@@ -4888,6 +4892,29 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
         }
       }
       break;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        if ((fiber.flags & suspenseyCommitFlag) !== NoFlags) {
+          const props: ViewTransitionProps = fiber.memoizedProps;
+          const name: ?string | 'auto' = props.name;
+          if (name != null && name !== 'auto') {
+            // This is a named ViewTransition being mounted or reappearing. Let's add it to
+            // the map so we can match it with deletions later.
+            if (appearingViewTransitions === null) {
+              appearingViewTransitions = new Map();
+            }
+            // Reset the pair in case we didn't end up restoring the instance in previous commits.
+            // This shouldn't really happen anymore but just in case. We could maybe add an invariant.
+            const instance: ViewTransitionState = fiber.stateNode;
+            instance.paired = null;
+            appearingViewTransitions.set(name, instance);
+          }
+        }
+        recursivelyAccumulateSuspenseyCommit(fiber);
+        break;
+      }
+      // Fallthrough
     }
     default: {
       recursivelyAccumulateSuspenseyCommit(fiber);
