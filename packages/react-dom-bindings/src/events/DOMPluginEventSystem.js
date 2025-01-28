@@ -53,6 +53,7 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableOwnerStacks,
+  disableCommentsAsDOMContainers,
 } from 'shared/ReactFeatureFlags';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {
@@ -558,7 +559,8 @@ function isMatchingRootContainer(
 ): boolean {
   return (
     grandContainer === targetContainer ||
-    (grandContainer.nodeType === COMMENT_NODE &&
+    (!disableCommentsAsDOMContainers &&
+      grandContainer.nodeType === COMMENT_NODE &&
       grandContainer.parentNode === targetContainer)
   );
 }
