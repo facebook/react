@@ -14,7 +14,10 @@ import {
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import isArray from 'shared/isArray';
 
-import {enableShallowPropDiffing, enableFastAddPropertiesInDiffing} from 'shared/ReactFeatureFlags';
+import {
+  enableShallowPropDiffing,
+  enableFastAddPropertiesInDiffing,
+} from 'shared/ReactFeatureFlags';
 
 import type {AttributeConfiguration} from './ReactNativeTypes';
 
