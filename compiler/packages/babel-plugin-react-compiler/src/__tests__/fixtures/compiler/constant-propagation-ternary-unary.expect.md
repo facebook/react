@@ -2,16 +2,13 @@
 ## Input
 
 ```javascript
+// @enableTernaryConstantPropagation
 import {Stringify} from 'shared-runtime';
 
 function foo() {
   let _b;
   const b = true;
-  if (!b) {
-    _b = 'bar';
-  } else {
-    _b = 'baz';
-  }
+  _b = !b ? 'bar' : 'baz';
 
   return (
     <Stringify
@@ -43,7 +40,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @enableTernaryConstantPropagation
 import { Stringify } from "shared-runtime";
 
 function foo() {

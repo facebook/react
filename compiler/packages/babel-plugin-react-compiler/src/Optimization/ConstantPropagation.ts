@@ -157,16 +157,18 @@ function applyConstantPropagation(
         break;
       }
       case 'ternary': {
+        if (!fn.env.config.enableTernaryConstantPropagation) {
+          break;
+        }
         const branchBlock = fn.body.blocks.get(terminal.test);
         if (branchBlock === undefined) {
           break;
         }
 
-        CompilerError.invariant(branchBlock.terminal.kind === 'branch', {
-          reason: 'value kind expected to be LoadGlobal',
-          loc: null,
-          suggestions: null,
-        });
+        if (branchBlock.terminal.kind !== 'branch') {
+          // TODO: could be other kinds like logical
+          break;
+        }
 
         const testValue = read(constants, branchBlock.terminal.test);
 
@@ -187,6 +189,9 @@ function applyConstantPropagation(
             id: terminal.id,
             loc: terminal.loc,
           };
+
+          fn.body.blocks.get(branchBlock.terminal.consequent)!.kind = 'block';
+          fn.body.blocks.get(branchBlock.terminal.alternate)!.kind = 'block';
         }
 
         break;
