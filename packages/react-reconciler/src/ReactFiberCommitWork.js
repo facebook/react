@@ -276,6 +276,10 @@ export let shouldFireAfterActiveInstanceBlur: boolean = false;
 
 export let shouldStartViewTransition: boolean = false;
 
+// This tracks named ViewTransition components found in the accumulateSuspenseyCommit
+// phase that might need to find deleted pairs in the beforeMutation phase.
+let appearingViewTransitions: Map<string, ViewTransitionState> | null = null;
+
 // Used during the commit phase to track whether a parent ViewTransition component
 // might have been affected by any mutations / relayouts below.
 let viewTransitionContextChanged: boolean = false;
@@ -288,7 +292,6 @@ export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
   committedLanes: Lanes,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
 ): void {
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
   shouldFireAfterActiveInstanceBlur = false;
@@ -299,19 +302,15 @@ export function commitBeforeMutationEffects(
     includesOnlyViewTransitionEligibleLanes(committedLanes);
 
   nextEffect = firstChild;
-  commitBeforeMutationEffects_begin(
-    isViewTransitionEligible,
-    appearingViewTransitions,
-  );
+  commitBeforeMutationEffects_begin(isViewTransitionEligible);
 
   // We no longer need to track the active instance fiber
   focusedInstanceHandle = null;
+  // We've found any matched pairs and can now reset.
+  appearingViewTransitions = null;
 }
 
-function commitBeforeMutationEffects_begin(
-  isViewTransitionEligible: boolean,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
-) {
+function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
   // If this commit is eligible for a View Transition we look into all mutated subtrees.
   // TODO: We could optimize this by marking these with the Snapshot subtree flag in the render phase.
   const subtreeMask = isViewTransitionEligible
@@ -331,7 +330,6 @@ function commitBeforeMutationEffects_begin(
           commitBeforeMutationEffectsDeletion(
             deletion,
             isViewTransitionEligible,
-            appearingViewTransitions,
           );
         }
       }
@@ -364,7 +362,7 @@ function commitBeforeMutationEffects_begin(
             isViewTransitionEligible
           ) {
             // Was previously mounted as visible but is now hidden.
-            commitExitViewTransitions(current, appearingViewTransitions);
+            commitExitViewTransitions(current);
           }
           // Skip before mutation effects of the children because they're hidden.
           commitBeforeMutationEffects_complete(isViewTransitionEligible);
@@ -528,7 +526,6 @@ function commitBeforeMutationEffectsOnFiber(
 function commitBeforeMutationEffectsDeletion(
   deletion: Fiber,
   isViewTransitionEligible: boolean,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
 ) {
   if (enableCreateEventHandleAPI) {
     // TODO (effects) It would be nice to avoid calling doesFiberContain()
@@ -541,7 +538,7 @@ function commitBeforeMutationEffectsDeletion(
     }
   }
   if (isViewTransitionEligible) {
-    commitExitViewTransitions(deletion, appearingViewTransitions);
+    commitExitViewTransitions(deletion);
   }
 }
 
@@ -745,14 +742,15 @@ function commitEnterViewTransitions(placement: Fiber): void {
   }
 }
 
-function commitDeletedPairViewTransitions(
-  deletion: Fiber,
-  appearingViewTransitions: Map<string, ViewTransitionState>,
-): void {
-  if (appearingViewTransitions.size === 0) {
+function commitDeletedPairViewTransitions(deletion: Fiber): void {
+  if (
+    appearingViewTransitions === null ||
+    appearingViewTransitions.size === 0
+  ) {
     // We've found all.
     return;
   }
+  const pairs = appearingViewTransitions;
   if ((deletion.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
     // This has no named view transitions in its subtree.
     return;
@@ -769,7 +767,7 @@ function commitDeletedPairViewTransitions(
         const props: ViewTransitionProps = child.memoizedProps;
         const name = props.name;
         if (name != null && name !== 'auto') {
-          const pair = appearingViewTransitions.get(name);
+          const pair = pairs.get(name);
           if (pair !== undefined) {
             const className: ?string = getViewTransitionClassName(
               props.className,
@@ -802,23 +800,20 @@ function commitDeletedPairViewTransitions(
             }
             // Delete the entry so that we know when we've found all of them
             // and can stop searching (size reaches zero).
-            appearingViewTransitions.delete(name);
-            if (appearingViewTransitions.size === 0) {
+            pairs.delete(name);
+            if (pairs.size === 0) {
               break;
             }
           }
         }
       }
-      commitDeletedPairViewTransitions(child, appearingViewTransitions);
+      commitDeletedPairViewTransitions(child);
     }
     child = child.sibling;
   }
 }
 
-function commitExitViewTransitions(
-  deletion: Fiber,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
-): void {
+function commitExitViewTransitions(deletion: Fiber): void {
   if (deletion.tag === ViewTransitionComponent) {
     const props: ViewTransitionProps = deletion.memoizedProps;
     const name = getViewTransitionName(props, deletion.stateNode);
@@ -863,17 +858,17 @@ function commitExitViewTransitions(
     }
     if (appearingViewTransitions !== null) {
       // Look for more pairs deeper in the tree.
-      commitDeletedPairViewTransitions(deletion, appearingViewTransitions);
+      commitDeletedPairViewTransitions(deletion);
     }
   } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = deletion.child;
     while (child !== null) {
-      commitExitViewTransitions(child, appearingViewTransitions);
+      commitExitViewTransitions(child);
       child = child.sibling;
     }
   } else {
     if (appearingViewTransitions !== null) {
-      commitDeletedPairViewTransitions(deletion, appearingViewTransitions);
+      commitDeletedPairViewTransitions(deletion);
     }
   }
 }
@@ -4815,6 +4810,7 @@ export function commitPassiveUnmountEffects(finishedWork: Fiber): void {
 // flag instead.
 let suspenseyCommitFlag = ShouldSuspendCommit;
 export function accumulateSuspenseyCommit(finishedWork: Fiber): void {
+  appearingViewTransitions = null;
   accumulateSuspenseyCommitOnFiber(finishedWork);
 }
 

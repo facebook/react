@@ -266,7 +266,6 @@ import {
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
   peekDeferredLane,
-  trackAppearingViewTransition,
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent';
@@ -3244,11 +3243,6 @@ function updateViewTransition(
     // Explicitly named boundary. We track it so that we can pair it up with another explicit
     // boundary if we get deleted.
     workInProgress.flags |= ViewTransitionNamedStatic;
-    if (current === null) {
-      // This is a new mount. We track it in case we end up having a deletion with the same name.
-      // TODO: A problem with this strategy is that this subtree might not actually end up mounted.
-      trackAppearingViewTransition(instance, pendingProps.name);
-    }
   } else {
     // Assign an auto generated name using the useId algorthim if an explicit one is not provided.
     // We don't need the name yet but we do it here to allow hydration state to be used.
