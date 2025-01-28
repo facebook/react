@@ -344,7 +344,7 @@ function setProp(
     case 'children': {
       if (typeof value === 'string') {
         if (__DEV__) {
-          validateTextNesting(value, tag);
+          validateTextNesting(value, tag, false);
         }
         // Avoid setting initial textContent when the text is empty. In IE11 setting
         // textContent on a <textarea> will cause the placeholder to not
@@ -358,7 +358,7 @@ function setProp(
       } else if (typeof value === 'number' || typeof value === 'bigint') {
         if (__DEV__) {
           // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
-          validateTextNesting('' + value, tag);
+          validateTextNesting('' + value, tag, false);
         }
         const canSetTextContent = tag !== 'body';
         if (canSetTextContent) {

@@ -595,7 +595,11 @@ export function createTextInstance(
     const hostContextDev = ((hostContext: any): HostContextDev);
     const ancestor = hostContextDev.ancestorInfo.current;
     if (ancestor != null) {
-      validateTextNesting(text, ancestor.tag);
+      validateTextNesting(
+        text,
+        ancestor.tag,
+        hostContextDev.ancestorInfo.implicitRootScope,
+      );
     }
   }
   const textNode: TextInstance = getOwnerDocumentFromRootContainer(
@@ -2029,7 +2033,11 @@ export function validateHydratableTextInstance(
     const hostContextDev = ((hostContext: any): HostContextDev);
     const ancestor = hostContextDev.ancestorInfo.current;
     if (ancestor != null) {
-      return validateTextNesting(text, ancestor.tag);
+      return validateTextNesting(
+        text,
+        ancestor.tag,
+        hostContextDev.ancestorInfo.implicitRootScope,
+      );
     }
   }
   return true;

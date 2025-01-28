@@ -511,9 +511,6 @@ describe('ReactDOMFloat', () => {
         'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
         {withoutStack: true},
       ],
-      'In HTML, <noscript> cannot be a child of <#document>.\n' +
-        'This will cause a hydration error.\n' +
-        '    in noscript (at **)',
     ]);
 
     root.render(
@@ -577,9 +574,6 @@ describe('ReactDOMFloat', () => {
           'Consider adding precedence="default" or moving it into the root <head> tag.',
         {withoutStack: true},
       ],
-      'In HTML, <link> cannot be a child of <#document>.\n' +
-        'This will cause a hydration error.\n' +
-        '    in link (at **)',
     ]);
 
     root.render(
