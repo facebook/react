@@ -595,7 +595,11 @@ export function createTextInstance(
     const hostContextDev = ((hostContext: any): HostContextDev);
     const ancestor = hostContextDev.ancestorInfo.current;
     if (ancestor != null) {
-      validateTextNesting(text, ancestor.tag);
+      validateTextNesting(
+        text,
+        ancestor.tag,
+        hostContextDev.ancestorInfo.implicitRootScope,
+      );
     }
   }
   const textNode: TextInstance = getOwnerDocumentFromRootContainer(
@@ -2046,7 +2050,11 @@ export function validateHydratableTextInstance(
     const hostContextDev = ((hostContext: any): HostContextDev);
     const ancestor = hostContextDev.ancestorInfo.current;
     if (ancestor != null) {
-      return validateTextNesting(text, ancestor.tag);
+      return validateTextNesting(
+        text,
+        ancestor.tag,
+        hostContextDev.ancestorInfo.implicitRootScope,
+      );
     }
   }
   return true;
@@ -2394,8 +2402,15 @@ export function acquireSingletonInstance(
   internalInstanceHandle: Object,
 ): void {
   if (__DEV__) {
-    const currentInstanceHandle = getInstanceFromNodeDOMTree(instance);
-    if (currentInstanceHandle) {
+    if (
+      // If this instance is the container then it is invalid to acquire it as a singleton however
+      // the DOM nesting validation will already warn for this and the message below isn't semantically
+      // aligned with the actual fix you need to make so we omit the warning in this case
+      !isContainerMarkedAsRoot(instance) &&
+      // If this instance isn't the root but is currently owned by a different HostSingleton instance then
+      // we we need to warn that you are rendering more than one singleton at a time.
+      getInstanceFromNodeDOMTree(instance)
+    ) {
       const tagName = instance.tagName.toLowerCase();
       console.error(
         'You are mounting a new %s component when a previous one has not first unmounted. It is an' +

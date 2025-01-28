@@ -601,10 +601,6 @@ describe('ReactDOM', () => {
       '<html lang="en"><head data-h=""><meta itemprop="" content="head"></head><body data-b=""><div>before</div><div>inside</div><div>after</div></body></html>',
     );
 
-    // @TODO remove this warning check when we loosen the tag nesting restrictions to allow arbitrary tags at the
-    // root of the application
-    assertConsoleErrorDev(['In HTML, <div> cannot be a child of <#document>']);
-
     await act(() => {
       root.render(<App phase={1} />);
     });
@@ -666,10 +662,6 @@ describe('ReactDOM', () => {
       '<html><head data-h=""><meta itemprop="" content="head"></head><body data-b=""><div>before</div><div>inside</div><div>after</div></body></html>',
     );
 
-    // @TODO remove this warning check when we loosen the tag nesting restrictions to allow arbitrary tags at the
-    // root of the application
-    assertConsoleErrorDev(['In HTML, <div> cannot be a child of <html>']);
-
     await act(() => {
       root.render(<App phase={1} />);
     });
@@ -728,10 +720,6 @@ describe('ReactDOM', () => {
     expect(document.documentElement.outerHTML).toBe(
       '<html><head data-h=""><meta itemprop="" content="head"></head><body><div>before</div><div>inside</div><div>after</div></body></html>',
     );
-
-    // @TODO remove this warning check when we loosen the tag nesting restrictions to allow arbitrary tags at the
-    // root of the application
-    assertConsoleErrorDev(['In HTML, <head> cannot be a child of <body>']);
 
     await act(() => {
       root.render(<App phase={1} />);
