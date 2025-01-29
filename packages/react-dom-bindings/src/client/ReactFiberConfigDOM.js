@@ -799,24 +799,37 @@ export function appendChildToContainer(
   container: Container,
   child: Instance | TextInstance,
 ): void {
-  let parentNode;
-  if (container.nodeType === COMMENT_NODE) {
-    parentNode = (container.parentNode: any);
-    if (supportsMoveBefore) {
-      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
-      parentNode.moveBefore(child, container);
-    } else {
-      parentNode.insertBefore(child, container);
+  let parentNode: Document | Element;
+  switch (container.nodeType) {
+    case COMMENT_NODE: {
+      parentNode = (container.parentNode: any);
+      if (supportsMoveBefore) {
+        // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+        parentNode.moveBefore(child, container);
+      } else {
+        parentNode.insertBefore(child, container);
+      }
+      return;
     }
-  } else {
-    parentNode = container;
-    if (supportsMoveBefore) {
-      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
-      parentNode.moveBefore(child, null);
-    } else {
-      parentNode.appendChild(child);
+    case DOCUMENT_NODE: {
+      parentNode = (container: any).body;
+      break;
+    }
+    default: {
+      if (container.nodeName === 'HTML') {
+        parentNode = (container.ownerDocument.body: any);
+      } else {
+        parentNode = (container: any);
+      }
     }
   }
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentNode.moveBefore(child, null);
+  } else {
+    parentNode.appendChild(child);
+  }
+
   // This container might be used for a portal.
   // If something inside a portal is clicked, that click should bubble
   // through the React tree. However, on Mobile Safari the click would
@@ -853,21 +866,35 @@ export function insertInContainerBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
-  if (container.nodeType === COMMENT_NODE) {
-    if (supportsMoveBefore) {
-      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
-      (container.parentNode: any).moveBefore(child, beforeChild);
-    } else {
-      (container.parentNode: any).insertBefore(child, beforeChild);
+  let parentNode: Document | Element;
+  switch (container.nodeType) {
+    case COMMENT_NODE: {
+      parentNode = (container.parentNode: any);
+      break;
     }
-  } else {
-    if (supportsMoveBefore) {
-      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
-      container.moveBefore(child, beforeChild);
-    } else {
-      container.insertBefore(child, beforeChild);
+    case DOCUMENT_NODE: {
+      const ownerDocument: Document = (container: any);
+      parentNode = (ownerDocument.body: any);
+      break;
+    }
+    default: {
+      if (container.nodeName === 'HTML') {
+        parentNode = (container.ownerDocument.body: any);
+      } else {
+        parentNode = (container: any);
+      }
     }
   }
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentNode.moveBefore(child, beforeChild);
+  } else {
+    parentNode.insertBefore(child, beforeChild);
+  }
+}
+
+export function isSingletonScope(type: string): boolean {
+  return type === 'head';
 }
 
 function createEvent(type: DOMEventName, bubbles: boolean): Event {
@@ -913,11 +940,22 @@ export function removeChildFromContainer(
   container: Container,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
-  if (container.nodeType === COMMENT_NODE) {
-    (container.parentNode: any).removeChild(child);
-  } else {
-    container.removeChild(child);
+  let parentNode: Document | Element;
+  switch (container.nodeType) {
+    case COMMENT_NODE:
+      parentNode = (container.parentNode: any);
+      break;
+    case DOCUMENT_NODE:
+      parentNode = (container: any).body;
+      break;
+    default:
+      if (container.nodeName === 'HTML') {
+        parentNode = (container.ownerDocument.body: any);
+      } else {
+        parentNode = (container: any);
+      }
   }
+  parentNode.removeChild(child);
 }
 
 export function clearSuspenseBoundary(
@@ -965,10 +1003,15 @@ export function clearSuspenseBoundaryFromContainer(
 ): void {
   if (container.nodeType === COMMENT_NODE) {
     clearSuspenseBoundary((container.parentNode: any), suspenseInstance);
-  } else if (container.nodeType === ELEMENT_NODE) {
-    clearSuspenseBoundary((container: any), suspenseInstance);
+  } else if (container.nodeType === DOCUMENT_NODE) {
+    clearSuspenseBoundary((container: any).body, suspenseInstance);
+  } else if (container.nodeName === 'HTML') {
+    clearSuspenseBoundary(
+      (container.ownerDocument.body: any),
+      suspenseInstance,
+    );
   } else {
-    // Document nodes should never contain suspense boundaries.
+    clearSuspenseBoundary((container: any), suspenseInstance);
   }
   // Retry if any event replaying was blocked on this.
   retryIfBlockedOn(container);
@@ -2297,30 +2340,6 @@ export function releaseSingletonInstance(instance: Instance): void {
     instance.removeAttributeNode(attributes[0]);
   }
   detachDeletedInstance(instance);
-}
-
-export function clearSingleton(instance: Instance): void {
-  const element: Element = (instance: any);
-  let node = element.firstChild;
-  while (node) {
-    const nextNode = node.nextSibling;
-    const nodeName = node.nodeName;
-    if (
-      isMarkedHoistable(node) ||
-      nodeName === 'HEAD' ||
-      nodeName === 'BODY' ||
-      nodeName === 'SCRIPT' ||
-      nodeName === 'STYLE' ||
-      (nodeName === 'LINK' &&
-        ((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet')
-    ) {
-      // retain these nodes
-    } else {
-      element.removeChild(node);
-    }
-    node = nextNode;
-  }
-  return;
 }
 
 // -------------------
