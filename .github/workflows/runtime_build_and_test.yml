@@ -548,7 +548,7 @@ jobs:
 
   run_devtools_e2e_tests:
     name: Run DevTools e2e tests
-    needs: build_devtools_and_process_artifacts
+    needs: build_and_lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
