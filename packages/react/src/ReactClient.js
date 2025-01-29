@@ -65,7 +65,7 @@ import {addTransitionType} from './ReactTransitionType';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
 import * as ReactCompilerRuntime from './ReactCompilerRuntime';
-import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
+import {enableUseEffectCRUDOverload} from 'shared/ReactFeatureFlags';
 
 const Children = {
   map,
@@ -134,4 +134,4 @@ export {
 };
 
 export const experimental_useResourceEffect: typeof useResourceEffect | void =
-  enableUseResourceEffectHook ? useResourceEffect : undefined;
+  enableUseEffectCRUDOverload ? useResourceEffect : undefined;

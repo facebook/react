@@ -396,7 +396,7 @@ export type Dispatcher = {
   ): void,
   // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
   useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
-  // TODO: Non-nullable once `enableUseResourceEffectHook` is on everywhere.
+  // TODO: Non-nullable once `enableUseEffectCRUDOverload` is on everywhere.
   useResourceEffect?: (
     create: () => {...} | void | null,
     createDeps: Array<mixed> | void | null,
