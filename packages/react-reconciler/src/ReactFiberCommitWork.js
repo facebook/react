@@ -152,7 +152,6 @@ import {
   prepareForCommit,
   beforeActiveInstanceBlur,
   detachDeletedInstance,
-  releaseSingletonInstance,
   getHoistableRoot,
   acquireResource,
   releaseResource,
@@ -173,6 +172,7 @@ import {
   hasInstanceChanged,
   hasInstanceAffectedParent,
   wasInstanceInViewport,
+  isSingletonScope,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -246,7 +246,8 @@ import {
   commitHostHydratedSuspense,
   commitHostRemoveChildFromContainer,
   commitHostRemoveChild,
-  commitHostSingleton,
+  commitHostSingletonAcquisition,
+  commitHostSingletonRelease,
 } from './ReactFiberCommitHostEffects';
 import {
   viewTransitionMutationContext,
@@ -1359,22 +1360,24 @@ function commitLayoutEffectOnFiber(
       }
       break;
     }
-    case HostHoistable: {
-      if (supportsResources) {
-        recursivelyTraverseLayoutEffects(
-          finishedRoot,
-          finishedWork,
-          committedLanes,
-        );
-
-        if (flags & Ref) {
-          safelyAttachRef(finishedWork, finishedWork.return);
+    case HostSingleton: {
+      if (supportsSingletons) {
+        // We acquire the singleton instance first so it has appropriate
+        // styles before other layout effects run. This isn't perfect because
+        // an early sibling of the singleton may have an effect that can
+        // observe the singleton before it is acquired.
+        // @TODO move this to the mutation phase. The reason it isn't there yet
+        // is it seemingly requires an extra traversal because we need to move the
+        // disappear effect into a phase before the appear phase
+        if (current === null && flags & Update) {
+          // Unlike in the reappear path we only acquire on new mount
+          commitHostSingletonAcquisition(finishedWork);
         }
-        break;
+        // We fall through to the HostComponent case below.
       }
-      // Fall through
+      // Fallthrough
     }
-    case HostSingleton:
+    case HostHoistable:
     case HostComponent: {
       recursivelyTraverseLayoutEffects(
         finishedRoot,
@@ -1840,8 +1843,7 @@ function hideOrUnhideAllChildren(finishedWork: Fiber, isHidden: boolean) {
     while (true) {
       if (
         node.tag === HostComponent ||
-        (supportsResources ? node.tag === HostHoistable : false) ||
-        (supportsSingletons ? node.tag === HostSingleton : false)
+        (supportsResources ? node.tag === HostHoistable : false)
       ) {
         if (hostSubtreeRoot === null) {
           hostSubtreeRoot = node;
@@ -1994,7 +1996,17 @@ function commitDeletionEffects(
     let parent: null | Fiber = returnFiber;
     findParent: while (parent !== null) {
       switch (parent.tag) {
-        case HostSingleton:
+        case HostSingleton: {
+          if (supportsSingletons) {
+            if (isSingletonScope(parent.type)) {
+              hostParent = parent.stateNode;
+              hostParentIsContainer = false;
+              break findParent;
+            }
+            break;
+          }
+          // Expected fallthrough when supportsSingletons is false
+        }
         case HostComponent: {
           hostParent = parent.stateNode;
           hostParentIsContainer = false;
@@ -2083,7 +2095,10 @@ function commitDeletionEffectsOnFiber(
 
         const prevHostParent = hostParent;
         const prevHostParentIsContainer = hostParentIsContainer;
-        hostParent = deletedFiber.stateNode;
+        if (isSingletonScope(deletedFiber.type)) {
+          hostParent = deletedFiber.stateNode;
+          hostParentIsContainer = false;
+        }
         recursivelyTraverseDeletionEffects(
           finishedRoot,
           nearestMountedAncestor,
@@ -2095,7 +2110,7 @@ function commitDeletionEffectsOnFiber(
         // a different fiber. To increase our chances of avoiding this, specifically
         // if you keyed a HostSingleton so there will be a delete followed by a Placement
         // we treat detach eagerly here
-        releaseSingletonInstance(deletedFiber.stateNode);
+        commitHostSingletonRelease(deletedFiber);
 
         hostParent = prevHostParent;
         hostParentIsContainer = prevHostParentIsContainer;
@@ -2684,12 +2699,19 @@ function commitMutationEffectsOnFiber(
     }
     case HostSingleton: {
       if (supportsSingletons) {
-        if (flags & Update) {
-          const previousWork = finishedWork.alternate;
-          if (previousWork === null) {
-            commitHostSingleton(finishedWork);
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes);
+        if (flags & Ref) {
+          if (!offscreenSubtreeWasHidden && current !== null) {
+            safelyDetachRef(current, current.return);
           }
         }
+        if (current !== null && flags & Update) {
+          const newProps = finishedWork.memoizedProps;
+          const oldProps = current.memoizedProps;
+          commitHostUpdate(finishedWork, newProps, oldProps);
+        }
+        break;
       }
       // Fall through
     }
@@ -2960,15 +2982,18 @@ function commitMutationEffectsOnFiber(
           offscreenInstance._visibility |= OffscreenVisible;
         }
 
+        const isUpdate = current !== null;
         if (isHidden) {
-          const isUpdate = current !== null;
-          const wasHiddenByAncestorOffscreen =
-            offscreenSubtreeIsHidden || offscreenSubtreeWasHidden;
-          // Only trigger disapper layout effects if:
+          // Only trigger disappear layout effects if:
           //   - This is an update, not first mount.
           //   - This Offscreen was not hidden before.
-          //   - Ancestor Offscreen was not hidden in previous commit.
-          if (isUpdate && !wasHidden && !wasHiddenByAncestorOffscreen) {
+          //   - Ancestor Offscreen was not hidden in previous commit or in this commit
+          if (
+            isUpdate &&
+            !wasHidden &&
+            !offscreenSubtreeIsHidden &&
+            !offscreenSubtreeWasHidden
+          ) {
             if (
               disableLegacyMode ||
               (finishedWork.mode & ConcurrentMode) !== NoMode
@@ -3371,8 +3396,14 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
       break;
     }
+    case HostSingleton: {
+      if (supportsSingletons) {
+        // TODO (Offscreen) Check: flags & RefStatic
+        commitHostSingletonRelease(finishedWork);
+      }
+      // Expected fallthrough to HostComponent
+    }
     case HostHoistable:
-    case HostSingleton:
     case HostComponent: {
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
@@ -3428,7 +3459,7 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
 }
 
 function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
-  // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
+  // TODO (Offscreen) Check: subtreeflags & (RefStatic | LayoutStatic)
   let child = parentFiber.child;
   while (child !== null) {
     disappearLayoutEffects(child);
@@ -3488,8 +3519,21 @@ export function reappearLayoutEffects(
     // case HostRoot: {
     //  ...
     // }
+    case HostSingleton: {
+      if (supportsSingletons) {
+        // We acquire the singleton instance first so it has appropriate
+        // styles before other layout effects run. This isn't perfect because
+        // an early sibling of the singleton may have an effect that can
+        // observe the singleton before it is acquired.
+        // @TODO move this to the mutation phase. The reason it isn't there yet
+        // is it seemingly requires an extra traversal because we need to move the
+        // disappear effect into a phase before the appear phase
+        commitHostSingletonAcquisition(finishedWork);
+        // We fall through to the HostComponent case below.
+      }
+      // Fallthrough
+    }
     case HostHoistable:
-    case HostSingleton:
     case HostComponent: {
       recursivelyTraverseReappearLayoutEffects(
         finishedRoot,

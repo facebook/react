@@ -566,4 +566,412 @@ describe('ReactDOM', () => {
         '    in App (at **)',
     ]);
   });
+
+  it('should render root host components into body scope when the container is a Document', async () => {
+    function App({phase}) {
+      return (
+        <>
+          {phase < 1 ? null : <div>..before</div>}
+          {phase < 3 ? <div>before</div> : null}
+          {phase < 2 ? null : <div>before..</div>}
+          <html lang="en">
+            <head data-h="">
+              {phase < 1 ? null : <meta itemProp="" content="..head" />}
+              {phase < 3 ? <meta itemProp="" content="head" /> : null}
+              {phase < 2 ? null : <meta itemProp="" content="head.." />}
+            </head>
+            <body data-b="">
+              {phase < 1 ? null : <div>..inside</div>}
+              {phase < 3 ? <div>inside</div> : null}
+              {phase < 2 ? null : <div>inside..</div>}
+            </body>
+          </html>
+          {phase < 1 ? null : <div>..after</div>}
+          {phase < 3 ? <div>after</div> : null}
+          {phase < 2 ? null : <div>after..</div>}
+        </>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(document);
+    await act(() => {
+      root.render(<App phase={0} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html lang="en"><head data-h=""><meta itemprop="" content="head"></head><body data-b=""><div>before</div><div>inside</div><div>after</div></body></html>',
+    );
+
+    // @TODO remove this warning check when we loosen the tag nesting restrictions to allow arbitrary tags at the
+    // root of the application
+    assertConsoleErrorDev(['In HTML, <div> cannot be a child of <#document>']);
+
+    await act(() => {
+      root.render(<App phase={1} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html lang="en"><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head"></head><body data-b=""><div>..before</div><div>before</div><div>..inside</div><div>inside</div><div>..after</div><div>after</div></body></html>',
+    );
+
+    await act(() => {
+      root.render(<App phase={2} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html lang="en"><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head"><meta itemprop="" content="head.."></head><body data-b=""><div>..before</div><div>before</div><div>before..</div><div>..inside</div><div>inside</div><div>inside..</div><div>..after</div><div>after</div><div>after..</div></body></html>',
+    );
+
+    await act(() => {
+      root.render(<App phase={3} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html lang="en"><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head.."></head><body data-b=""><div>..before</div><div>before..</div><div>..inside</div><div>inside..</div><div>..after</div><div>after..</div></body></html>',
+    );
+
+    await act(() => {
+      root.unmount();
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head></head><body></body></html>',
+    );
+  });
+
+  it('should render root host components into body scope when the container is a the <html> tag', async () => {
+    function App({phase}) {
+      return (
+        <>
+          {phase < 1 ? null : <div>..before</div>}
+          {phase < 3 ? <div>before</div> : null}
+          {phase < 2 ? null : <div>before..</div>}
+          <head data-h="">
+            {phase < 1 ? null : <meta itemProp="" content="..head" />}
+            {phase < 3 ? <meta itemProp="" content="head" /> : null}
+            {phase < 2 ? null : <meta itemProp="" content="head.." />}
+          </head>
+          <body data-b="">
+            {phase < 1 ? null : <div>..inside</div>}
+            {phase < 3 ? <div>inside</div> : null}
+            {phase < 2 ? null : <div>inside..</div>}
+          </body>
+          {phase < 1 ? null : <div>..after</div>}
+          {phase < 3 ? <div>after</div> : null}
+          {phase < 2 ? null : <div>after..</div>}
+        </>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(document.documentElement);
+    await act(() => {
+      root.render(<App phase={0} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="head"></head><body data-b=""><div>before</div><div>inside</div><div>after</div></body></html>',
+    );
+
+    // @TODO remove this warning check when we loosen the tag nesting restrictions to allow arbitrary tags at the
+    // root of the application
+    assertConsoleErrorDev(['In HTML, <div> cannot be a child of <html>']);
+
+    await act(() => {
+      root.render(<App phase={1} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head"></head><body data-b=""><div>..before</div><div>before</div><div>..inside</div><div>inside</div><div>..after</div><div>after</div></body></html>',
+    );
+
+    await act(() => {
+      root.render(<App phase={2} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head"><meta itemprop="" content="head.."></head><body data-b=""><div>..before</div><div>before</div><div>before..</div><div>..inside</div><div>inside</div><div>inside..</div><div>..after</div><div>after</div><div>after..</div></body></html>',
+    );
+
+    await act(() => {
+      root.render(<App phase={3} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head.."></head><body data-b=""><div>..before</div><div>before..</div><div>..inside</div><div>inside..</div><div>..after</div><div>after..</div></body></html>',
+    );
+
+    await act(() => {
+      root.unmount();
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head></head><body></body></html>',
+    );
+  });
+
+  it('should render root host components into body scope when the container is a the <body> tag', async () => {
+    function App({phase}) {
+      return (
+        <>
+          {phase < 1 ? null : <div>..before</div>}
+          {phase < 3 ? <div>before</div> : null}
+          {phase < 2 ? null : <div>before..</div>}
+          <head data-h="">
+            {phase < 1 ? null : <meta itemProp="" content="..head" />}
+            {phase < 3 ? <meta itemProp="" content="head" /> : null}
+            {phase < 2 ? null : <meta itemProp="" content="head.." />}
+          </head>
+          {phase < 1 ? null : <div>..inside</div>}
+          {phase < 3 ? <div>inside</div> : null}
+          {phase < 2 ? null : <div>inside..</div>}
+          {phase < 1 ? null : <div>..after</div>}
+          {phase < 3 ? <div>after</div> : null}
+          {phase < 2 ? null : <div>after..</div>}
+        </>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(document.body);
+    await act(() => {
+      root.render(<App phase={0} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="head"></head><body><div>before</div><div>inside</div><div>after</div></body></html>',
+    );
+
+    // @TODO remove this warning check when we loosen the tag nesting restrictions to allow arbitrary tags at the
+    // root of the application
+    assertConsoleErrorDev(['In HTML, <head> cannot be a child of <body>']);
+
+    await act(() => {
+      root.render(<App phase={1} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head"></head><body><div>..before</div><div>before</div><div>..inside</div><div>inside</div><div>..after</div><div>after</div></body></html>',
+    );
+
+    await act(() => {
+      root.render(<App phase={2} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head"><meta itemprop="" content="head.."></head><body><div>..before</div><div>before</div><div>before..</div><div>..inside</div><div>inside</div><div>inside..</div><div>..after</div><div>after</div><div>after..</div></body></html>',
+    );
+
+    await act(() => {
+      root.render(<App phase={3} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head.."></head><body><div>..before</div><div>before..</div><div>..inside</div><div>inside..</div><div>..after</div><div>after..</div></body></html>',
+    );
+
+    await act(() => {
+      root.unmount();
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head></head><body></body></html>',
+    );
+  });
+
+  it('should render children of <head> into the document head even when the container is inside the document body', async () => {
+    function App({phase}) {
+      return (
+        <>
+          <div>before</div>
+          <head data-h="">
+            {phase < 1 ? null : <meta itemProp="" content="..head" />}
+            {phase < 3 ? <meta itemProp="" content="head" /> : null}
+            {phase < 2 ? null : <meta itemProp="" content="head.." />}
+          </head>
+          <div>after</div>
+        </>
+      );
+    }
+
+    const container = document.createElement('main');
+    document.body.append(container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App phase={0} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="head"></head><body><main><div>before</div><div>after</div></main></body></html>',
+    );
+
+    // @TODO remove this warning check when we loosen the tag nesting restrictions to allow arbitrary tags at the
+    // root of the application
+    assertConsoleErrorDev(['In HTML, <head> cannot be a child of <main>']);
+
+    await act(() => {
+      root.render(<App phase={1} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head"></head><body><main><div>before</div><div>after</div></main></body></html>',
+    );
+
+    await act(() => {
+      root.render(<App phase={2} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head"><meta itemprop="" content="head.."></head><body><main><div>before</div><div>after</div></main></body></html>',
+    );
+
+    await act(() => {
+      root.render(<App phase={3} />);
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head data-h=""><meta itemprop="" content="..head"><meta itemprop="" content="head.."></head><body><main><div>before</div><div>after</div></main></body></html>',
+    );
+
+    await act(() => {
+      root.unmount();
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html><head></head><body><main></main></body></html>',
+    );
+  });
+
+  it('can render a Suspense boundary above the <html> tag', async () => {
+    let suspendOnNewPromise;
+    let resolveCurrentPromise;
+    let currentPromise;
+    function createNewPromise() {
+      currentPromise = new Promise(r => {
+        resolveCurrentPromise = r;
+      });
+      return currentPromise;
+    }
+    createNewPromise();
+    function Comp() {
+      const [promise, setPromise] = React.useState(currentPromise);
+      suspendOnNewPromise = () => {
+        setPromise(createNewPromise());
+      };
+      React.use(promise);
+      return null;
+    }
+
+    const fallback = (
+      <html data-fallback="">
+        <body data-fallback="">
+          <div>fallback</div>
+        </body>
+      </html>
+    );
+
+    const main = (
+      <html lang="en">
+        <head>
+          <meta itemProp="" content="primary" />
+        </head>
+        <body>
+          <div>
+            <Message />
+          </div>
+        </body>
+      </html>
+    );
+
+    let suspendOnNewMessage;
+    let currentMessage;
+    let resolveCurrentMessage;
+    function createNewMessage() {
+      currentMessage = new Promise(r => {
+        resolveCurrentMessage = r;
+      });
+      return currentMessage;
+    }
+    createNewMessage();
+    resolveCurrentMessage('hello world');
+    function Message() {
+      const [pendingMessage, setPendingMessage] =
+        React.useState(currentMessage);
+      suspendOnNewMessage = () => {
+        setPendingMessage(createNewMessage());
+      };
+      return React.use(pendingMessage);
+    }
+
+    function App() {
+      return (
+        <React.Suspense fallback={fallback}>
+          <Comp />
+          {main}
+        </React.Suspense>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(document);
+    await act(() => {
+      root.render(<App />);
+    });
+    // The initial render is blocked by promiseA so we see the fallback Document
+    expect(document.documentElement.outerHTML).toBe(
+      '<html data-fallback=""><head></head><body data-fallback=""><div>fallback</div></body></html>',
+    );
+
+    await act(() => {
+      resolveCurrentPromise();
+    });
+    // When promiseA resolves we see the primary Document
+    expect(document.documentElement.outerHTML).toBe(
+      '<html lang="en"><head><meta itemprop="" content="primary"></head><body><div>hello world</div></body></html>',
+    );
+
+    await act(() => {
+      suspendOnNewPromise();
+    });
+    // When we switch to rendering ComponentB synchronously we have to put the Document back into fallback
+    // The primary content remains hidden until promiseB resolves
+    expect(document.documentElement.outerHTML).toBe(
+      '<html data-fallback=""><head><meta itemprop="" content="primary" style="display: none;"></head><body data-fallback=""><div style="display: none;">hello world</div><div>fallback</div></body></html>',
+    );
+
+    await act(() => {
+      resolveCurrentPromise();
+    });
+    // When promiseB resolves we see the new primary content inside the primary Document
+    // style attributes stick around after being unhidden by the Suspense boundary
+    expect(document.documentElement.outerHTML).toBe(
+      '<html lang="en"><head><meta itemprop="" content="primary" style=""></head><body><div style="">hello world</div></body></html>',
+    );
+
+    await act(() => {
+      React.startTransition(() => {
+        suspendOnNewPromise();
+      });
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html lang="en"><head><meta itemprop="" content="primary" style=""></head><body><div style="">hello world</div></body></html>',
+    );
+
+    await act(() => {
+      resolveCurrentPromise();
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html lang="en"><head><meta itemprop="" content="primary" style=""></head><body><div style="">hello world</div></body></html>',
+    );
+
+    await act(() => {
+      suspendOnNewMessage();
+    });
+    // When we update the message itself we will be causing updates on the primary content of the Suspense boundary.
+    // The reason we also test for this is to make sure we don't double acquire the document singletons while
+    // disappearing and reappearing layout effects
+    expect(document.documentElement.outerHTML).toBe(
+      '<html data-fallback=""><head><meta itemprop="" content="primary" style="display: none;"></head><body data-fallback=""><div style="display: none;">hello world</div><div>fallback</div></body></html>',
+    );
+
+    await act(() => {
+      resolveCurrentMessage('hello you!');
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html lang="en"><head><meta itemprop="" content="primary" style=""></head><body><div style="">hello you!</div></body></html>',
+    );
+
+    await act(() => {
+      React.startTransition(() => {
+        suspendOnNewMessage();
+      });
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html lang="en"><head><meta itemprop="" content="primary" style=""></head><body><div style="">hello you!</div></body></html>',
+    );
+
+    await act(() => {
+      resolveCurrentMessage('goodbye!');
+    });
+    expect(document.documentElement.outerHTML).toBe(
+      '<html lang="en"><head><meta itemprop="" content="primary" style=""></head><body><div style="">goodbye!</div></body></html>',
+    );
+  });
 });

@@ -232,7 +232,7 @@ export const suspendResource = $$$config.suspendResource;
 // -------------------
 export const supportsSingletons = $$$config.supportsSingletons;
 export const resolveSingletonInstance = $$$config.resolveSingletonInstance;
-export const clearSingleton = $$$config.clearSingleton;
 export const acquireSingletonInstance = $$$config.acquireSingletonInstance;
 export const releaseSingletonInstance = $$$config.releaseSingletonInstance;
 export const isHostSingletonType = $$$config.isHostSingletonType;
+export const isSingletonScope = $$$config.isSingletonScope;
