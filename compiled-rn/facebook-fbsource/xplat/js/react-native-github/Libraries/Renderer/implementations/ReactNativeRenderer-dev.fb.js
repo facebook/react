@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d82475401833052153f33999b2fa096b>>
+ * @generated SignedSource<<3f768a7ab2efd0f55a3945aa5ffc21eb>>
  */
 
 "use strict";
@@ -2162,7 +2162,7 @@ __DEV__ &&
     function removeChildFromContainer(parentInstance, child) {
       recursivelyUncacheFiberNode(child);
       ReactNativePrivateInterface.UIManager.manageChildren(
-        parentInstance,
+        parentInstance.containerTag,
         [],
         [],
         [],
@@ -9581,7 +9581,7 @@ __DEV__ &&
             ReactNativePrivateInterface.UIManager.createView(
               current,
               _type2.uiViewClassName,
-              renderLanes,
+              renderLanes.containerTag,
               key
             );
             renderLanes = new ReactNativeFiberHostComponent(
@@ -9637,7 +9637,7 @@ __DEV__ &&
             ReactNativePrivateInterface.UIManager.createView(
               renderLanes,
               "RCTRawText",
-              current,
+              current.containerTag,
               { text: newProps }
             );
             instanceCache.set(renderLanes, workInProgress);
@@ -10572,9 +10572,10 @@ __DEV__ &&
           if ("number" === typeof parent)
             throw Error("Container does not support insertBefore operation");
         } else
-          ReactNativePrivateInterface.UIManager.setChildren(parent, [
-            "number" === typeof node ? node : node._nativeTag
-          ]);
+          ReactNativePrivateInterface.UIManager.setChildren(
+            parent.containerTag,
+            ["number" === typeof node ? node : node._nativeTag]
+          );
       else if (4 !== tag && ((node = node.child), null !== node))
         for (
           insertOrAppendPlacementNodeIntoContainer(node, before, parent),
@@ -17730,11 +17731,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.1.0-native-fb-c492f975-20250128" !== isomorphicReactPackageVersion)
+    if ("19.1.0-native-fb-b2357ecd-20250129" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.1.0-native-fb-c492f975-20250128\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.1.0-native-fb-b2357ecd-20250129\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17760,10 +17761,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-c492f975-20250128",
+        version: "19.1.0-native-fb-b2357ecd-20250129",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-c492f975-20250128"
+        reconcilerVersion: "19.1.0-native-fb-b2357ecd-20250129"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -17872,7 +17873,7 @@ __DEV__ &&
           void 0 !== options.onRecoverableError &&
           (onRecoverableError = options.onRecoverableError);
         options = new FiberRootNode(
-          containerTag,
+          { containerTag: containerTag, publicInstance: null },
           0,
           !1,
           "",

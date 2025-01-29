@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<c6ea057ee85cbc116a083e3a306b2b88>>
+ * @generated SignedSource<<694ba49f9b85f1cc713053fe7628684a>>
  */
 
 import type {ElementRef, ElementType, MixedElement} from 'react';
@@ -232,6 +232,7 @@ export opaque type Node = mixed;
 export opaque type InternalInstanceHandle = mixed;
 type PublicInstance = mixed;
 type PublicTextInstance = mixed;
+export opaque type PublicRootInstance = mixed;
 
 export type ReactFabricType = {
   findHostInstance_DEPRECATED<TElementType: ElementType>(

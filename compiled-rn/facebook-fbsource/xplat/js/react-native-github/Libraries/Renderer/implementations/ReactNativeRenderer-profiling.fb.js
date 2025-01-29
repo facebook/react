@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2cb7bc9d9673b64af8244a21c0385073>>
+ * @generated SignedSource<<58bf929c2998c4e7529276a9b5d94ac6>>
  */
 
 "use strict";
@@ -7745,7 +7745,7 @@ function completeWork(current, workInProgress, renderLanes) {
         ReactNativePrivateInterface.UIManager.createView(
           current,
           type.uiViewClassName,
-          renderLanes,
+          renderLanes.containerTag,
           updatePayload
         );
         renderLanes = new ReactNativeFiberHostComponent(
@@ -7795,7 +7795,7 @@ function completeWork(current, workInProgress, renderLanes) {
         ReactNativePrivateInterface.UIManager.createView(
           renderLanes,
           "RCTRawText",
-          current,
+          current.containerTag,
           { text: newProps }
         );
         instanceCache.set(renderLanes, workInProgress);
@@ -8525,7 +8525,7 @@ function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
       if ("number" === typeof parent)
         throw Error("Container does not support insertBefore operation");
     } else
-      ReactNativePrivateInterface.UIManager.setChildren(parent, [
+      ReactNativePrivateInterface.UIManager.setChildren(parent.containerTag, [
         "number" === typeof node ? node : node._nativeTag
       ]);
   else if (4 !== tag && ((node = node.child), null !== node))
@@ -8888,7 +8888,7 @@ function commitDeletionEffectsOnFiber(
             (finishedRoot = hostParent),
               recursivelyUncacheFiberNode(deletedFiber.stateNode),
               ReactNativePrivateInterface.UIManager.manageChildren(
-                finishedRoot,
+                finishedRoot.containerTag,
                 [],
                 [],
                 [],
@@ -11826,11 +11826,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-c492f975-20250128" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-b2357ecd-20250129" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-c492f975-20250128\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-b2357ecd-20250129\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11879,10 +11879,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1383 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-c492f975-20250128",
+    version: "19.1.0-native-fb-b2357ecd-20250129",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-c492f975-20250128"
+    reconcilerVersion: "19.1.0-native-fb-b2357ecd-20250129"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1383.rendererConfig = extraDevToolsConfig);
@@ -11988,7 +11988,7 @@ exports.render = function (element, containerTag, callback, options) {
       void 0 !== options.onRecoverableError &&
       (onRecoverableError = options.onRecoverableError);
     options = new FiberRootNode(
-      containerTag,
+      { containerTag: containerTag, publicInstance: null },
       0,
       !1,
       "",

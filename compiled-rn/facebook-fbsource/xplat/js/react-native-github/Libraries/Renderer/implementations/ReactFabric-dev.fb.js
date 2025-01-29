@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e3071a71b0a90c432893a2301378e13a>>
+ * @generated SignedSource<<017e205003feddcf330358640ce4f29f>>
  */
 
 "use strict";
@@ -9401,7 +9401,7 @@ __DEV__ &&
         current.pendingChildren = newChildSet;
         workInProgress.flags |= 4;
         enableFabricCompleteRootInCommitPhase ||
-          completeRoot(container, newChildSet);
+          completeRoot(container.containerTag, newChildSet);
       }
     }
     function scheduleRetryEffect(workInProgress, retryQueue) {
@@ -9545,13 +9545,13 @@ __DEV__ &&
         case 27:
         case 5:
           popHostContext(workInProgress);
-          renderLanes = workInProgress.type;
-          if (null !== current && null != workInProgress.stateNode) {
-            renderLanes = current.stateNode;
-            var _oldProps = current.memoizedProps;
+          var _type2 = workInProgress.type;
+          if (null !== current && null != workInProgress.stateNode)
             if (
+              ((renderLanes = current.stateNode),
+              (_type2 = current.memoizedProps),
               (current = doesRequireClone(current, workInProgress)) ||
-              _oldProps !== newProps
+                _type2 !== newProps)
             ) {
               requiredContext(contextStackCursor.current);
               var newChildSet = null;
@@ -9569,17 +9569,17 @@ __DEV__ &&
                 ));
               b: {
                 var keepChildren = !current;
-                _oldProps = diffProperties(
+                _type2 = diffProperties(
                   null,
-                  _oldProps,
+                  _type2,
                   newProps,
                   renderLanes.canonical.viewConfig.validAttributes
                 );
                 renderLanes.canonical.currentProps = newProps;
                 newProps = renderLanes.node;
                 if (keepChildren)
-                  if (null !== _oldProps)
-                    newProps = cloneNodeWithNewProps(newProps, _oldProps);
+                  if (null !== _type2)
+                    newProps = cloneNodeWithNewProps(newProps, _type2);
                   else {
                     newProps = renderLanes;
                     break b;
@@ -9587,15 +9587,15 @@ __DEV__ &&
                 else
                   newProps =
                     null != newChildSet
-                      ? null !== _oldProps
+                      ? null !== _type2
                         ? cloneNodeWithNewChildrenAndProps(
                             newProps,
                             newChildSet,
-                            _oldProps
+                            _type2
                           )
                         : cloneNodeWithNewChildren(newProps, newChildSet)
-                      : null !== _oldProps
-                        ? cloneNodeWithNewChildrenAndProps(newProps, _oldProps)
+                      : null !== _type2
+                        ? cloneNodeWithNewChildrenAndProps(newProps, _type2)
                         : cloneNodeWithNewChildren(newProps);
                 newProps = { node: newProps, canonical: renderLanes.canonical };
               }
@@ -9609,7 +9609,7 @@ __DEV__ &&
                     : enablePersistedModeClonedFlag ||
                       (workInProgress.flags |= 4));
             } else workInProgress.stateNode = renderLanes;
-          } else {
+          else {
             if (!newProps) {
               if (null === workInProgress.stateNode)
                 throw Error(
@@ -9619,11 +9619,11 @@ __DEV__ &&
               return null;
             }
             requiredContext(contextStackCursor.current);
-            _oldProps = requiredContext(rootInstanceStackCursor.current);
+            renderLanes = requiredContext(rootInstanceStackCursor.current);
             current = nextReactTag;
             nextReactTag += 2;
-            renderLanes = getViewConfigForType(renderLanes);
-            for (keepChildren in renderLanes.validAttributes)
+            _type2 = getViewConfigForType(_type2);
+            for (keepChildren in _type2.validAttributes)
               newProps.hasOwnProperty(keepChildren) &&
                 ReactNativePrivateInterface.deepFreezeAndThrowOnMutationInDev(
                   newProps[keepChildren]
@@ -9631,28 +9631,29 @@ __DEV__ &&
             keepChildren = fastAddProperties(
               null,
               newProps,
-              renderLanes.validAttributes
+              _type2.validAttributes
             );
             keepChildren = createNode(
               current,
-              renderLanes.uiViewClassName,
-              _oldProps,
+              _type2.uiViewClassName,
+              renderLanes.containerTag,
               keepChildren,
               workInProgress
             );
-            _oldProps = ReactNativePrivateInterface.createPublicInstance(
+            renderLanes = ReactNativePrivateInterface.createPublicInstance(
               current,
-              renderLanes,
-              workInProgress
+              _type2,
+              workInProgress,
+              renderLanes.publicInstance
             );
             current = {
               node: keepChildren,
               canonical: {
                 nativeTag: current,
-                viewConfig: renderLanes,
+                viewConfig: _type2,
                 currentProps: newProps,
                 internalInstanceHandle: workInProgress,
-                publicInstance: _oldProps
+                publicInstance: renderLanes
               }
             };
             markCloned(workInProgress);
@@ -9716,14 +9717,14 @@ __DEV__ &&
               if (null !== keepChildren) {
                 hydrationDiffRootDEV = null;
                 try {
-                  _oldProps = "\n\n" + describeNode(keepChildren, 0);
+                  _type2 = "\n\n" + describeNode(keepChildren, 0);
                 } catch (x) {
-                  _oldProps = "";
+                  _type2 = "";
                 }
                 error$jscomp$0(
                   "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s",
                   "https://react.dev/link/hydration-mismatch",
-                  _oldProps
+                  _type2
                 );
               }
               0 === (workInProgress.flags & 128) &&
@@ -9768,11 +9769,11 @@ __DEV__ &&
               null !== renderLanes.alternate.memoizedState.cachePool &&
               (keepChildren =
                 renderLanes.alternate.memoizedState.cachePool.pool),
-            (_oldProps = null),
+            (_type2 = null),
             null !== renderLanes.memoizedState &&
               null !== renderLanes.memoizedState.cachePool &&
-              (_oldProps = renderLanes.memoizedState.cachePool.pool),
-            _oldProps !== keepChildren && (renderLanes.flags |= 2048));
+              (_type2 = renderLanes.memoizedState.cachePool.pool),
+            _type2 !== keepChildren && (renderLanes.flags |= 2048));
           newProps !== current &&
             newProps &&
             (workInProgress.child.flags |= 8192);
@@ -9813,8 +9814,8 @@ __DEV__ &&
           if (null === keepChildren)
             return bubbleProperties(workInProgress), null;
           newProps = 0 !== (workInProgress.flags & 128);
-          _oldProps = keepChildren.rendering;
-          if (null === _oldProps)
+          _type2 = keepChildren.rendering;
+          if (null === _type2)
             if (newProps) cutOffTailIfNeeded(keepChildren, !1);
             else {
               if (
@@ -9822,11 +9823,11 @@ __DEV__ &&
                 (null !== current && 0 !== (current.flags & 128))
               )
                 for (current = workInProgress.child; null !== current; ) {
-                  _oldProps = findFirstSuspended(current);
-                  if (null !== _oldProps) {
+                  _type2 = findFirstSuspended(current);
+                  if (null !== _type2) {
                     workInProgress.flags |= 128;
                     cutOffTailIfNeeded(keepChildren, !1);
-                    current = _oldProps.updateQueue;
+                    current = _type2.updateQueue;
                     workInProgress.updateQueue = current;
                     scheduleRetryEffect(workInProgress, current);
                     workInProgress.subtreeFlags = 0;
@@ -9854,9 +9855,7 @@ __DEV__ &&
             }
           else {
             if (!newProps)
-              if (
-                ((current = findFirstSuspended(_oldProps)), null !== current)
-              ) {
+              if (((current = findFirstSuspended(_type2)), null !== current)) {
                 if (
                   ((workInProgress.flags |= 128),
                   (newProps = !0),
@@ -9866,7 +9865,7 @@ __DEV__ &&
                   cutOffTailIfNeeded(keepChildren, !0),
                   null === keepChildren.tail &&
                     "hidden" === keepChildren.tailMode &&
-                    !_oldProps.alternate)
+                    !_type2.alternate)
                 )
                   return bubbleProperties(workInProgress), null;
               } else
@@ -9878,13 +9877,13 @@ __DEV__ &&
                   cutOffTailIfNeeded(keepChildren, !1),
                   (workInProgress.lanes = 4194304));
             keepChildren.isBackwards
-              ? ((_oldProps.sibling = workInProgress.child),
-                (workInProgress.child = _oldProps))
+              ? ((_type2.sibling = workInProgress.child),
+                (workInProgress.child = _type2))
               : ((current = keepChildren.last),
                 null !== current
-                  ? (current.sibling = _oldProps)
-                  : (workInProgress.child = _oldProps),
-                (keepChildren.last = _oldProps));
+                  ? (current.sibling = _type2)
+                  : (workInProgress.child = _type2),
+                (keepChildren.last = _type2));
           }
           if (null !== keepChildren.tail)
             return (
@@ -14525,7 +14524,7 @@ __DEV__ &&
         node: createNode(
           hostContext,
           "RCTRawText",
-          rootContainerInstance,
+          rootContainerInstance.containerTag,
           { text: text },
           internalInstanceHandle
         )
@@ -14565,7 +14564,7 @@ __DEV__ &&
     }
     function replaceContainerChildren(container, newChildren) {
       enableFabricCompleteRootInCommitPhase &&
-        completeRoot(container, newChildren);
+        completeRoot(container.containerTag, newChildren);
     }
     function nativeOnUncaughtError(error, errorInfo) {
       !1 !==
@@ -17516,10 +17515,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-c492f975-20250128",
+        version: "19.1.0-native-fb-b2357ecd-20250129",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-c492f975-20250128"
+        reconcilerVersion: "19.1.0-native-fb-b2357ecd-20250129"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -17608,6 +17607,11 @@ __DEV__ &&
             instance.publicInstance)
           : getPublicInstance(internalInstanceHandle.stateNode);
     };
+    exports.getPublicInstanceFromRootTag = function (rootTag) {
+      return (rootTag = roots.get(rootTag))
+        ? rootTag.containerInfo.publicInstance
+        : null;
+    };
     exports.isChildPublicInstance = function (parentInstance, childInstance) {
       if (
         parentInstance._internalFiberInstanceHandleDEV &&
@@ -17650,9 +17654,14 @@ __DEV__ &&
         options &&
           void 0 !== options.onRecoverableError &&
           (onRecoverableError = options.onRecoverableError);
+        options = {
+          publicInstance:
+            ReactNativePrivateInterface.createPublicRootInstance(containerTag),
+          containerTag: containerTag
+        };
         concurrentRoot = concurrentRoot ? 1 : 0;
-        options = new FiberRootNode(
-          containerTag,
+        root = new FiberRootNode(
+          options,
           concurrentRoot,
           !1,
           "",
@@ -17661,23 +17670,22 @@ __DEV__ &&
           onRecoverableError,
           null
         );
-        options.hydrationCallbacks = null;
+        root.hydrationCallbacks = null;
         concurrentRoot = 1 === concurrentRoot ? 1 : 0;
         isDevToolsPresent && (concurrentRoot |= 2);
         concurrentRoot = createFiber(3, null, null, concurrentRoot);
-        options.current = concurrentRoot;
-        concurrentRoot.stateNode = options;
-        root = createCache();
-        retainCache(root);
-        options.pooledCache = root;
-        retainCache(root);
+        root.current = concurrentRoot;
+        concurrentRoot.stateNode = root;
+        onCaughtError = createCache();
+        retainCache(onCaughtError);
+        root.pooledCache = onCaughtError;
+        retainCache(onCaughtError);
         concurrentRoot.memoizedState = {
           element: null,
           isDehydrated: !1,
-          cache: root
+          cache: onCaughtError
         };
         initializeUpdateQueue(concurrentRoot);
-        root = options;
         roots.set(containerTag, root);
       }
       updateContainer(element, root, null, callback);
@@ -17715,6 +17723,7 @@ __DEV__ &&
       var root = roots.get(containerTag);
       root &&
         updateContainer(null, root, null, function () {
+          root.containerInfo.publicInstance = null;
           roots.delete(containerTag);
         });
     };
