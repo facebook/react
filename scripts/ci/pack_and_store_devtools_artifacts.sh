@@ -17,7 +17,11 @@ npm pack
 mv ./react-devtools-inline*.tgz ../../build/devtools/
 
 cd ../react-devtools-extensions
-yarn build
+if [ -n "$1" ]; then
+  yarn build:$1
+else
+  yarn build
+fi
 mv ./chrome/build/ReactDevTools.zip ../../build/devtools/chrome-extension.zip
 mv ./firefox/build/ReactDevTools.zip ../../build/devtools/firefox-extension.zip
 
