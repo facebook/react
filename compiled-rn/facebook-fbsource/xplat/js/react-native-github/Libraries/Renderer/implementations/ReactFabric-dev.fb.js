@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8bb00e6f8ef242d0a09b53daeb690ec1>>
+ * @generated SignedSource<<e3071a71b0a90c432893a2301378e13a>>
  */
 
 "use strict";
@@ -10782,8 +10782,8 @@ __DEV__ &&
           }
           finishedRoot.effectDuration += popNestedEffectDurations(current);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
           null === current && flags & 4 && commitHostMount(finishedWork);
@@ -11111,11 +11111,11 @@ __DEV__ &&
             offscreenSubtreeIsHidden &&
             ((finishedWork = finishedWork.updateQueue),
             null !== finishedWork &&
-              ((flags = finishedWork.callbacks),
-              null !== flags &&
-                ((root = finishedWork.shared.hiddenCallbacks),
+              ((root = finishedWork.callbacks),
+              null !== root &&
+                ((flags = finishedWork.shared.hiddenCallbacks),
                 (finishedWork.shared.hiddenCallbacks =
-                  null === root ? flags : root.concat(flags)))));
+                  null === flags ? root : flags.concat(root)))));
           break;
         case 26:
         case 27:
@@ -11201,10 +11201,10 @@ __DEV__ &&
                 error$28
               );
             }
-            flags = finishedWork.updateQueue;
-            null !== flags &&
+            root = finishedWork.updateQueue;
+            null !== root &&
               ((finishedWork.updateQueue = null),
-              attachSuspenseRetryListeners(finishedWork, flags));
+              attachSuspenseRetryListeners(finishedWork, root));
           }
           break;
         case 22:
@@ -11212,15 +11212,15 @@ __DEV__ &&
             (offscreenSubtreeWasHidden ||
               null === current ||
               safelyDetachRef(current, current.return));
-          retryQueue = null !== finishedWork.memoizedState;
-          pendingChildren = null !== current && null !== current.memoizedState;
+          pendingChildren = null !== finishedWork.memoizedState;
+          retryQueue = null !== current && null !== current.memoizedState;
           if (finishedWork.mode & 1) {
             var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
               prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
             offscreenSubtreeIsHidden =
-              prevOffscreenSubtreeIsHidden || retryQueue;
+              prevOffscreenSubtreeIsHidden || pendingChildren;
             offscreenSubtreeWasHidden =
-              prevOffscreenSubtreeWasHidden || pendingChildren;
+              prevOffscreenSubtreeWasHidden || retryQueue;
             recursivelyTraverseMutationEffects(root, finishedWork);
             offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
             offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
@@ -11231,32 +11231,32 @@ __DEV__ &&
           root._visibility &= -3;
           root._visibility |= root._pendingVisibility & 2;
           flags & 8192 &&
-            ((root._visibility = retryQueue
+            ((root._visibility = pendingChildren
               ? root._visibility & -2
               : root._visibility | 1),
-            retryQueue &&
-              ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
-              null === current ||
-                pendingChildren ||
-                root ||
+            pendingChildren &&
+              (null === current ||
+                retryQueue ||
+                offscreenSubtreeIsHidden ||
+                offscreenSubtreeWasHidden ||
                 (0 !== (finishedWork.mode & 1) &&
                   recursivelyTraverseDisappearLayoutEffects(finishedWork))));
           flags & 4 &&
-            ((flags = finishedWork.updateQueue),
-            null !== flags &&
-              ((root = flags.retryQueue),
-              null !== root &&
-                ((flags.retryQueue = null),
-                attachSuspenseRetryListeners(finishedWork, root))));
+            ((root = finishedWork.updateQueue),
+            null !== root &&
+              ((flags = root.retryQueue),
+              null !== flags &&
+                ((root.retryQueue = null),
+                attachSuspenseRetryListeners(finishedWork, flags))));
           break;
         case 19:
           recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
           flags & 4 &&
-            ((flags = finishedWork.updateQueue),
-            null !== flags &&
+            ((root = finishedWork.updateQueue),
+            null !== root &&
               ((finishedWork.updateQueue = null),
-              attachSuspenseRetryListeners(finishedWork, flags)));
+              attachSuspenseRetryListeners(finishedWork, root)));
           break;
         case 30:
         case 21:
@@ -11308,8 +11308,8 @@ __DEV__ &&
             );
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           safelyDetachRef(finishedWork, finishedWork.return);
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -11376,8 +11376,8 @@ __DEV__ &&
             commitClassCallbacks(finishedWork);
           safelyAttachRef(finishedWork, finishedWork.return);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
@@ -17516,10 +17516,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-b65afdd0-20250124",
+        version: "19.1.0-native-fb-c492f975-20250128",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-b65afdd0-20250124"
+        reconcilerVersion: "19.1.0-native-fb-c492f975-20250128"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c5ca48df42c7919ea3fa5e57845e79d9>>
+ * @generated SignedSource<<7418a49fbe04d3be552bcff9b6f29c9a>>
  */
 
 "use strict";
@@ -9608,8 +9608,8 @@ __DEV__ &&
           }
           finishedRoot.effectDuration += popNestedEffectDurations(current);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
           null === current && flags & 4 && commitHostMount(finishedWork);
@@ -10017,7 +10017,7 @@ __DEV__ &&
           }
           if (flags & 4 && null != finishedWork.stateNode) {
             existingHiddenCallbacks = finishedWork.memoizedProps;
-            var oldProps =
+            var _oldProps =
               null !== current
                 ? current.memoizedProps
                 : existingHiddenCallbacks;
@@ -10027,7 +10027,7 @@ __DEV__ &&
                 commitUpdate,
                 finishedWork.stateNode,
                 finishedWork.type,
-                oldProps,
+                _oldProps,
                 existingHiddenCallbacks,
                 finishedWork
               );
@@ -10056,12 +10056,12 @@ __DEV__ &&
             flags = finishedWork.memoizedProps;
             existingHiddenCallbacks =
               null !== current ? current.memoizedProps : flags;
-            oldProps = finishedWork.stateNode;
+            _oldProps = finishedWork.stateNode;
             try {
               runWithFiberInDEV(
                 finishedWork,
                 commitTextUpdate,
-                oldProps,
+                _oldProps,
                 existingHiddenCallbacks,
                 flags
               );
@@ -10135,10 +10135,10 @@ __DEV__ &&
               ? root._visibility & -2
               : root._visibility | 1),
             existingHiddenCallbacks &&
-              ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
-              null === current ||
+              (null === current ||
                 wasHidden ||
-                root ||
+                offscreenSubtreeIsHidden ||
+                offscreenSubtreeWasHidden ||
                 (0 !== (finishedWork.mode & 1) &&
                   recursivelyTraverseDisappearLayoutEffects(finishedWork))),
             null === finishedWork.memoizedProps ||
@@ -10149,9 +10149,9 @@ __DEV__ &&
                 if (null === current) {
                   wasHidden = current = root;
                   try {
-                    (oldProps = wasHidden.stateNode),
+                    (_oldProps = wasHidden.stateNode),
                       existingHiddenCallbacks
-                        ? runWithFiberInDEV(wasHidden, hideInstance, oldProps)
+                        ? runWithFiberInDEV(wasHidden, hideInstance, _oldProps)
                         : runWithFiberInDEV(
                             wasHidden,
                             unhideInstance,
@@ -10278,8 +10278,8 @@ __DEV__ &&
             );
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           safelyDetachRef(finishedWork, finishedWork.return);
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -10346,8 +10346,8 @@ __DEV__ &&
             commitClassCallbacks(finishedWork);
           safelyAttachRef(finishedWork, finishedWork.return);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
@@ -15644,10 +15644,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-b65afdd0-20250124",
+        version: "19.1.0-native-fb-c492f975-20250128",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-b65afdd0-20250124"
+        reconcilerVersion: "19.1.0-native-fb-c492f975-20250128"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15792,5 +15792,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-b65afdd0-20250124";
+    exports.version = "19.1.0-native-fb-c492f975-20250128";
   })();
