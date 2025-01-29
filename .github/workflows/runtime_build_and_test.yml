@@ -501,6 +501,9 @@ jobs:
     name: Build DevTools and process artifacts
     needs: build_and_lint
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chrome, firefox, edge]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -525,7 +528,7 @@ jobs:
           pattern: _build_*
           path: build
           merge-multiple: true
-      - run: ./scripts/ci/pack_and_store_devtools_artifacts.sh
+      - run: ./scripts/ci/pack_and_store_devtools_artifacts.sh ${{ matrix.browser }}
         env:
           RELEASE_CHANNEL: experimental
       - name: Display structure of build
