@@ -536,23 +536,18 @@ jobs:
       - name: Archive devtools build
         uses: actions/upload-artifact@v4
         with:
-          name: react-devtools
+          name: react-devtools-${{ matrix.browser }}
           path: build/devtools.tgz
       # Simplifies getting the extension for local testing
-      - name: Archive chrome extension
+      - if: matrix.browser != 'edge'
+        name: Archive ${{ matrix.browser }} extension
         uses: actions/upload-artifact@v4
         with:
-          name: react-devtools-chrome-extension
-          path: build/devtools/chrome-extension.zip
-      - name: Archive firefox extension
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-devtools-firefox-extension
-          path: build/devtools/firefox-extension.zip
+          name: react-devtools-${{ matrix.browser }}-extension
+          path: build/devtools/${{ matrix.browser }}-extension.zip
 
   run_devtools_e2e_tests:
     name: Run DevTools e2e tests
-    needs: build_devtools_and_process_artifacts
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
