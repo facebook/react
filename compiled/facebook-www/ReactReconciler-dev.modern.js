@@ -8848,21 +8848,14 @@ __DEV__ &&
                 (rootOrSingletonContext = !0),
                 (nextHydratableInstance =
                   getFirstHydratableChild(prevSibling))),
-              (returnFiber = workInProgress.pendingProps.children),
-              null !== current || isHydrating
-                ? reconcileChildren(
-                    current,
-                    workInProgress,
-                    returnFiber,
-                    renderLanes
-                  )
-                : (workInProgress.child = reconcileChildFibers(
-                    workInProgress,
-                    null,
-                    returnFiber,
-                    renderLanes
-                  )),
+              reconcileChildren(
+                current,
+                workInProgress,
+                workInProgress.pendingProps.children,
+                renderLanes
+              ),
               markRef(current, workInProgress),
+              null === current && (workInProgress.flags |= 4194304),
               workInProgress.child
             );
         case 5:
@@ -10943,7 +10936,9 @@ __DEV__ &&
         5 === fiber.tag ||
         3 === fiber.tag ||
         (supportsResources ? 26 === fiber.tag : !1) ||
-        (supportsSingletons ? 27 === fiber.tag : !1) ||
+        (supportsSingletons
+          ? 27 === fiber.tag && isSingletonScope(fiber.type)
+          : !1) ||
         4 === fiber.tag
       );
     }
@@ -10956,12 +10951,15 @@ __DEV__ &&
         fiber.sibling.return = fiber.return;
         for (
           fiber = fiber.sibling;
-          5 !== fiber.tag &&
-          6 !== fiber.tag &&
-          (supportsSingletons ? 27 !== fiber.tag : 1) &&
-          18 !== fiber.tag;
+          5 !== fiber.tag && 6 !== fiber.tag && 18 !== fiber.tag;
 
         ) {
+          if (
+            supportsSingletons &&
+            27 === fiber.tag &&
+            isSingletonScope(fiber.type)
+          )
+            continue a;
           if (fiber.flags & 2) continue a;
           if (null === fiber.child || 4 === fiber.tag) continue a;
           else (fiber.child.return = fiber), (fiber = fiber.child);
@@ -10977,8 +10975,13 @@ __DEV__ &&
             ? insertInContainerBefore(parent, node, before)
             : appendChildToContainer(parent, node);
       else if (
-        !(4 === tag || (supportsSingletons && 27 === tag)) &&
-        ((node = node.child), null !== node)
+        4 !== tag &&
+        (supportsSingletons &&
+          27 === tag &&
+          isSingletonScope(node.type) &&
+          (parent = node.stateNode),
+        (node = node.child),
+        null !== node)
       )
         for (
           insertOrAppendPlacementNodeIntoContainer(node, before, parent),
@@ -10997,8 +11000,13 @@ __DEV__ &&
             ? insertBefore(parent, node, before)
             : appendChild(parent, node);
       else if (
-        !(4 === tag || (supportsSingletons && 27 === tag)) &&
-        ((node = node.child), null !== node)
+        4 !== tag &&
+        (supportsSingletons &&
+          27 === tag &&
+          isSingletonScope(node.type) &&
+          (parent = node.stateNode),
+        (node = node.child),
+        null !== node)
       )
         for (
           insertOrAppendPlacementNode(node, before, parent),
@@ -11010,10 +11018,7 @@ __DEV__ &&
             (node = node.sibling);
     }
     function commitPlacement(finishedWork) {
-      if (
-        supportsMutation &&
-        (!supportsSingletons || 27 !== finishedWork.tag)
-      ) {
+      if (supportsMutation) {
         a: {
           for (var parent = finishedWork.return; null !== parent; ) {
             if (isHostParent(parent)) {
@@ -11073,6 +11078,22 @@ __DEV__ &&
         );
       } catch (error$32) {
         captureCommitPhaseError(finishedWork, finishedWork.return, error$32);
+      }
+    }
+    function commitHostSingletonAcquisition(finishedWork) {
+      var singleton = finishedWork.stateNode,
+        props = finishedWork.memoizedProps;
+      try {
+        runWithFiberInDEV(
+          finishedWork,
+          acquireSingletonInstance,
+          finishedWork.type,
+          props,
+          singleton,
+          finishedWork
+        );
+      } catch (error$35) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error$35);
       }
     }
     function commitBeforeMutationEffects(root, firstChild) {
@@ -11295,13 +11316,12 @@ __DEV__ &&
           }
           finishedRoot.effectDuration += popNestedEffectDurations(current);
           break;
-        case 26:
-          if (supportsResources) {
-            recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-            flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
-            break;
-          }
         case 27:
+          supportsSingletons &&
+            null === current &&
+            flags & 4 &&
+            commitHostSingletonAcquisition(finishedWork);
+        case 26:
         case 5:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
           null === current && flags & 4 && commitHostMount(finishedWork);
@@ -11636,13 +11656,19 @@ __DEV__ &&
               safelyDetachRef(deletedFiber, nearestMountedAncestor);
             var prevHostParent = hostParent,
               prevHostParentIsContainer = hostParentIsContainer;
-            hostParent = deletedFiber.stateNode;
+            isSingletonScope(deletedFiber.type) &&
+              ((hostParent = deletedFiber.stateNode),
+              (hostParentIsContainer = !1));
             recursivelyTraverseDeletionEffects(
               finishedRoot,
               nearestMountedAncestor,
               deletedFiber
             );
-            releaseSingletonInstance(deletedFiber.stateNode);
+            runWithFiberInDEV(
+              deletedFiber,
+              releaseSingletonInstance,
+              deletedFiber.stateNode
+            );
             hostParent = prevHostParent;
             hostParentIsContainer = prevHostParentIsContainer;
             break;
@@ -11935,6 +11961,14 @@ __DEV__ &&
             a: for (; null !== parent; ) {
               switch (parent.tag) {
                 case 27:
+                  if (supportsSingletons) {
+                    if (isSingletonScope(parent.type)) {
+                      hostParent = parent.stateNode;
+                      hostParentIsContainer = !1;
+                      break a;
+                    }
+                    break;
+                  }
                 case 5:
                   hostParent = parent.stateNode;
                   hostParentIsContainer = !1;
@@ -12065,30 +12099,21 @@ __DEV__ &&
             break;
           }
         case 27:
-          if (
-            supportsSingletons &&
-            flags & 4 &&
-            null === finishedWork.alternate
-          ) {
-            hoistableRoot = finishedWork.stateNode;
-            var props = finishedWork.memoizedProps;
-            try {
-              clearSingleton(hoistableRoot),
-                runWithFiberInDEV(
-                  finishedWork,
-                  acquireSingletonInstance,
-                  finishedWork.type,
-                  props,
-                  hoistableRoot,
-                  finishedWork
-                );
-            } catch (error$35) {
-              captureCommitPhaseError(
+          if (supportsSingletons) {
+            recursivelyTraverseMutationEffects(root, finishedWork);
+            commitReconciliationEffects(finishedWork);
+            flags & 512 &&
+              (offscreenSubtreeWasHidden ||
+                null === current ||
+                safelyDetachRef(current, current.return));
+            null !== current &&
+              flags & 4 &&
+              commitHostUpdate(
                 finishedWork,
-                finishedWork.return,
-                error$35
+                finishedWork.memoizedProps,
+                current.memoizedProps
               );
-            }
+            break;
           }
         case 5:
           recursivelyTraverseMutationEffects(root, finishedWork);
@@ -12156,13 +12181,13 @@ __DEV__ &&
           break;
         case 3:
           hoistableRoot = pushNestedEffectDurations();
-          supportsResources
-            ? (prepareToCommitHoistables(),
-              (props = currentHoistableRoot),
-              (currentHoistableRoot = getHoistableRoot(root.containerInfo)),
-              recursivelyTraverseMutationEffects(root, finishedWork),
-              (currentHoistableRoot = props))
-            : recursivelyTraverseMutationEffects(root, finishedWork);
+          if (supportsResources) {
+            prepareToCommitHoistables();
+            var previousHoistableRoot = currentHoistableRoot;
+            currentHoistableRoot = getHoistableRoot(root.containerInfo);
+            recursivelyTraverseMutationEffects(root, finishedWork);
+            currentHoistableRoot = previousHoistableRoot;
+          } else recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
           if (flags & 4) {
             if (
@@ -12294,10 +12319,10 @@ __DEV__ &&
               ? root._visibility & -2
               : root._visibility | 1),
             suspenseCallback &&
-              ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
-              null === current ||
+              (null === current ||
                 retryQueue ||
-                root ||
+                offscreenSubtreeIsHidden ||
+                offscreenSubtreeWasHidden ||
                 recursivelyTraverseDisappearLayoutEffects(finishedWork)),
             supportsMutation &&
               (null === finishedWork.memoizedProps ||
@@ -12305,11 +12330,7 @@ __DEV__ &&
           )
             a: if (((current = null), supportsMutation))
               for (root = finishedWork; ; ) {
-                if (
-                  5 === root.tag ||
-                  (supportsResources && 26 === root.tag) ||
-                  (supportsSingletons && 27 === root.tag)
-                ) {
+                if (5 === root.tag || (supportsResources && 26 === root.tag)) {
                   if (null === current) {
                     retryQueue = current = root;
                     try {
@@ -12338,17 +12359,17 @@ __DEV__ &&
                   if (null === current) {
                     retryQueue = root;
                     try {
-                      (props = retryQueue.stateNode),
+                      (previousHoistableRoot = retryQueue.stateNode),
                         suspenseCallback
                           ? runWithFiberInDEV(
                               retryQueue,
                               hideTextInstance,
-                              props
+                              previousHoistableRoot
                             )
                           : runWithFiberInDEV(
                               retryQueue,
                               unhideTextInstance,
-                              props,
+                              previousHoistableRoot,
                               retryQueue.memoizedProps
                             );
                     } catch (error$27) {
@@ -12467,8 +12488,14 @@ __DEV__ &&
             );
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
-        case 26:
         case 27:
+          supportsSingletons &&
+            runWithFiberInDEV(
+              finishedWork,
+              releaseSingletonInstance,
+              finishedWork.stateNode
+            );
+        case 26:
         case 5:
           safelyDetachRef(finishedWork, finishedWork.return);
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -12542,8 +12569,9 @@ __DEV__ &&
             commitClassCallbacks(finishedWork);
           safelyAttachRef(finishedWork, finishedWork.return);
           break;
-        case 26:
         case 27:
+          supportsSingletons && commitHostSingletonAcquisition(finishedWork);
+        case 26:
         case 5:
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
@@ -16321,10 +16349,10 @@ __DEV__ &&
       suspendResource = $$$config.suspendResource,
       supportsSingletons = $$$config.supportsSingletons,
       resolveSingletonInstance = $$$config.resolveSingletonInstance,
-      clearSingleton = $$$config.clearSingleton,
       acquireSingletonInstance = $$$config.acquireSingletonInstance,
       releaseSingletonInstance = $$$config.releaseSingletonInstance,
       isHostSingletonType = $$$config.isHostSingletonType,
+      isSingletonScope = $$$config.isSingletonScope,
       valueStack = [];
     var fiberStack = [];
     var index$jscomp$0 = -1,
@@ -18914,7 +18942,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-b65afdd0-20250124"
+        reconcilerVersion: "19.1.0-www-modern-c492f975-20250128"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

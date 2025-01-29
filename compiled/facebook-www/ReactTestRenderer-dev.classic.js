@@ -9268,8 +9268,8 @@ __DEV__ &&
           }
           finishedRoot.effectDuration += popNestedEffectDurations(current);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
           null === current && flags & 4 && commitHostMount(finishedWork);
@@ -9680,7 +9680,7 @@ __DEV__ &&
           }
           if (flags & 4 && null != finishedWork.stateNode) {
             existingHiddenCallbacks = finishedWork.memoizedProps;
-            var oldProps =
+            var _oldProps =
               null !== current
                 ? current.memoizedProps
                 : existingHiddenCallbacks;
@@ -9690,7 +9690,7 @@ __DEV__ &&
                 commitUpdate,
                 finishedWork.stateNode,
                 finishedWork.type,
-                oldProps,
+                _oldProps,
                 existingHiddenCallbacks,
                 finishedWork
               );
@@ -9719,12 +9719,12 @@ __DEV__ &&
             flags = finishedWork.memoizedProps;
             existingHiddenCallbacks =
               null !== current ? current.memoizedProps : flags;
-            oldProps = finishedWork.stateNode;
+            _oldProps = finishedWork.stateNode;
             try {
               runWithFiberInDEV(
                 finishedWork,
                 commitTextUpdate,
-                oldProps,
+                _oldProps,
                 existingHiddenCallbacks,
                 flags
               );
@@ -9813,10 +9813,10 @@ __DEV__ &&
               ? root._visibility & -2
               : root._visibility | 1),
             suspenseCallback &&
-              ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
-              null === current ||
+              (null === current ||
                 retryQueue ||
-                root ||
+                offscreenSubtreeIsHidden ||
+                offscreenSubtreeWasHidden ||
                 recursivelyTraverseDisappearLayoutEffects(finishedWork)),
             null === finishedWork.memoizedProps ||
               "manual" !== finishedWork.memoizedProps.mode)
@@ -9851,17 +9851,17 @@ __DEV__ &&
                 if (null === current) {
                   retryQueue = root;
                   try {
-                    (oldProps = retryQueue.stateNode),
+                    (_oldProps = retryQueue.stateNode),
                       suspenseCallback
                         ? runWithFiberInDEV(
                             retryQueue,
                             hideTextInstance,
-                            oldProps
+                            _oldProps
                           )
                         : runWithFiberInDEV(
                             retryQueue,
                             unhideTextInstance,
-                            oldProps,
+                            _oldProps,
                             retryQueue.memoizedProps
                           );
                   } catch (error$27) {
@@ -9973,8 +9973,8 @@ __DEV__ &&
             );
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           safelyDetachRef(finishedWork, finishedWork.return);
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -10048,8 +10048,8 @@ __DEV__ &&
             commitClassCallbacks(finishedWork);
           safelyAttachRef(finishedWork, finishedWork.return);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
@@ -15009,10 +15009,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-b65afdd0-20250124",
+        version: "19.1.0-www-classic-c492f975-20250128",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-b65afdd0-20250124"
+        reconcilerVersion: "19.1.0-www-classic-c492f975-20250128"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15147,5 +15147,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-classic-b65afdd0-20250124";
+    exports.version = "19.1.0-www-classic-c492f975-20250128";
   })();

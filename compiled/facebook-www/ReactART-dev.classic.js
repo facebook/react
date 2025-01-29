@@ -10380,8 +10380,8 @@ __DEV__ &&
           }
           finishedRoot.effectDuration += popNestedEffectDurations(current);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
           null === current && flags & 4 && commitHostMount(finishedWork);
@@ -11140,10 +11140,10 @@ __DEV__ &&
               ? root._visibility & -2
               : root._visibility | 1),
             suspenseCallback &&
-              ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
-              null === current ||
+              (null === current ||
                 retryQueue ||
-                root ||
+                offscreenSubtreeIsHidden ||
+                offscreenSubtreeWasHidden ||
                 recursivelyTraverseDisappearLayoutEffects(finishedWork)),
             null === finishedWork.memoizedProps ||
               "manual" !== finishedWork.memoizedProps.mode)
@@ -11292,8 +11292,8 @@ __DEV__ &&
             );
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           safelyDetachRef(finishedWork, finishedWork.return);
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -11367,8 +11367,8 @@ __DEV__ &&
             commitClassCallbacks(finishedWork);
           safelyAttachRef(finishedWork, finishedWork.return);
           break;
-        case 26:
         case 27:
+        case 26:
         case 5:
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
@@ -16950,10 +16950,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-b65afdd0-20250124",
+        version: "19.1.0-www-classic-c492f975-20250128",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-b65afdd0-20250124"
+        reconcilerVersion: "19.1.0-www-classic-c492f975-20250128"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16987,7 +16987,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-classic-b65afdd0-20250124";
+    exports.version = "19.1.0-www-classic-c492f975-20250128";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

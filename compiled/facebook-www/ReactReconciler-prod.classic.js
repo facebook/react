@@ -6053,16 +6053,14 @@ module.exports = function ($$$config) {
               (hydrationParentFiber = workInProgress),
               (rootOrSingletonContext = !0),
               (nextHydratableInstance = getFirstHydratableChild(props))),
-            (props = workInProgress.pendingProps.children),
-            null !== current || isHydrating
-              ? reconcileChildren(current, workInProgress, props, renderLanes)
-              : (workInProgress.child = reconcileChildFibers(
-                  workInProgress,
-                  null,
-                  props,
-                  renderLanes
-                )),
+            reconcileChildren(
+              current,
+              workInProgress,
+              workInProgress.pendingProps.children,
+              renderLanes
+            ),
             markRef(current, workInProgress),
+            null === current && (workInProgress.flags |= 4194304),
             workInProgress.child
           );
       case 5:
@@ -7584,7 +7582,9 @@ module.exports = function ($$$config) {
       5 === fiber.tag ||
       3 === fiber.tag ||
       (supportsResources ? 26 === fiber.tag : !1) ||
-      (supportsSingletons ? 27 === fiber.tag : !1) ||
+      (supportsSingletons
+        ? 27 === fiber.tag && isSingletonScope(fiber.type)
+        : !1) ||
       4 === fiber.tag
     );
   }
@@ -7597,12 +7597,15 @@ module.exports = function ($$$config) {
       fiber.sibling.return = fiber.return;
       for (
         fiber = fiber.sibling;
-        5 !== fiber.tag &&
-        6 !== fiber.tag &&
-        (supportsSingletons ? 27 !== fiber.tag : 1) &&
-        18 !== fiber.tag;
+        5 !== fiber.tag && 6 !== fiber.tag && 18 !== fiber.tag;
 
       ) {
+        if (
+          supportsSingletons &&
+          27 === fiber.tag &&
+          isSingletonScope(fiber.type)
+        )
+          continue a;
         if (fiber.flags & 2) continue a;
         if (null === fiber.child || 4 === fiber.tag) continue a;
         else (fiber.child.return = fiber), (fiber = fiber.child);
@@ -7618,8 +7621,13 @@ module.exports = function ($$$config) {
           ? insertInContainerBefore(parent, node, before)
           : appendChildToContainer(parent, node);
     else if (
-      !(4 === tag || (supportsSingletons && 27 === tag)) &&
-      ((node = node.child), null !== node)
+      4 !== tag &&
+      (supportsSingletons &&
+        27 === tag &&
+        isSingletonScope(node.type) &&
+        (parent = node.stateNode),
+      (node = node.child),
+      null !== node)
     )
       for (
         insertOrAppendPlacementNodeIntoContainer(node, before, parent),
@@ -7636,8 +7644,13 @@ module.exports = function ($$$config) {
       (node = node.stateNode),
         before ? insertBefore(parent, node, before) : appendChild(parent, node);
     else if (
-      !(4 === tag || (supportsSingletons && 27 === tag)) &&
-      ((node = node.child), null !== node)
+      4 !== tag &&
+      (supportsSingletons &&
+        27 === tag &&
+        isSingletonScope(node.type) &&
+        (parent = node.stateNode),
+      (node = node.child),
+      null !== node)
     )
       for (
         insertOrAppendPlacementNode(node, before, parent), node = node.sibling;
@@ -7655,6 +7668,20 @@ module.exports = function ($$$config) {
     portal = portal.containerInfo;
     try {
       replaceContainerChildren(portal, pendingChildren);
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
+    }
+  }
+  function commitHostSingletonAcquisition(finishedWork) {
+    var singleton = finishedWork.stateNode,
+      props = finishedWork.memoizedProps;
+    try {
+      acquireSingletonInstance(
+        finishedWork.type,
+        props,
+        singleton,
+        finishedWork
+      );
     } catch (error) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
@@ -7833,13 +7860,12 @@ module.exports = function ($$$config) {
           }
         }
         break;
-      case 26:
-        if (supportsResources) {
-          recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-          flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
-          break;
-        }
       case 27:
+        supportsSingletons &&
+          null === current &&
+          flags & 4 &&
+          commitHostSingletonAcquisition(finishedWork);
+      case 26:
       case 5:
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
         null === current && flags & 4 && commitHostMount(finishedWork);
@@ -8140,7 +8166,9 @@ module.exports = function ($$$config) {
             safelyDetachRef(deletedFiber, nearestMountedAncestor);
           var prevHostParent = hostParent,
             prevHostParentIsContainer = hostParentIsContainer;
-          hostParent = deletedFiber.stateNode;
+          isSingletonScope(deletedFiber.type) &&
+            ((hostParent = deletedFiber.stateNode),
+            (hostParentIsContainer = !1));
           recursivelyTraverseDeletionEffects(
             finishedRoot,
             nearestMountedAncestor,
@@ -8389,6 +8417,14 @@ module.exports = function ($$$config) {
           a: for (; null !== parent; ) {
             switch (parent.tag) {
               case 27:
+                if (supportsSingletons) {
+                  if (isSingletonScope(parent.type)) {
+                    hostParent = parent.stateNode;
+                    hostParentIsContainer = !1;
+                    break a;
+                  }
+                  break;
+                }
               case 5:
                 hostParent = parent.stateNode;
                 hostParentIsContainer = !1;
@@ -8459,11 +8495,11 @@ module.exports = function ($$$config) {
             (offscreenSubtreeWasHidden ||
               null === current ||
               safelyDetachRef(current, current.return));
-          flags & 4 &&
-            ((flags = null !== current ? current.memoizedState : null),
-            (root = finishedWork.memoizedState),
+          if (flags & 4) {
+            flags = null !== current ? current.memoizedState : null;
+            var newResource = finishedWork.memoizedState;
             null === current
-              ? null === root
+              ? null === newResource
                 ? null === finishedWork.stateNode
                   ? (finishedWork.stateNode = hydrateHoistable(
                       hoistableRoot,
@@ -8478,15 +8514,15 @@ module.exports = function ($$$config) {
                     )
                 : (finishedWork.stateNode = acquireResource(
                     hoistableRoot,
-                    root,
+                    newResource,
                     finishedWork.memoizedProps
                   ))
-              : flags !== root
+              : flags !== newResource
                 ? (null === flags
                     ? null !== current.stateNode &&
                       unmountHoistable(current.stateNode)
                     : releaseResource(flags),
-                  null === root
+                  null === newResource
                     ? mountHoistable(
                         hoistableRoot,
                         finishedWork.type,
@@ -8494,37 +8530,35 @@ module.exports = function ($$$config) {
                       )
                     : acquireResource(
                         hoistableRoot,
-                        root,
+                        newResource,
                         finishedWork.memoizedProps
                       ))
-                : null === root &&
+                : null === newResource &&
                   null !== finishedWork.stateNode &&
                   commitHostUpdate(
                     finishedWork,
                     finishedWork.memoizedProps,
                     current.memoizedProps
-                  ));
+                  );
+          }
           break;
         }
       case 27:
-        if (
-          supportsSingletons &&
-          flags & 4 &&
-          null === finishedWork.alternate
-        ) {
-          hoistableRoot = finishedWork.stateNode;
-          var props = finishedWork.memoizedProps;
-          try {
-            clearSingleton(hoistableRoot),
-              acquireSingletonInstance(
-                finishedWork.type,
-                props,
-                hoistableRoot,
-                finishedWork
-              );
-          } catch (error) {
-            captureCommitPhaseError(finishedWork, finishedWork.return, error);
-          }
+        if (supportsSingletons) {
+          recursivelyTraverseMutationEffects(root, finishedWork);
+          commitReconciliationEffects(finishedWork);
+          flags & 512 &&
+            (offscreenSubtreeWasHidden ||
+              null === current ||
+              safelyDetachRef(current, current.return));
+          null !== current &&
+            flags & 4 &&
+            commitHostUpdate(
+              finishedWork,
+              finishedWork.memoizedProps,
+              current.memoizedProps
+            );
+          break;
         }
       case 5:
         recursivelyTraverseMutationEffects(root, finishedWork);
@@ -8535,20 +8569,20 @@ module.exports = function ($$$config) {
             safelyDetachRef(current, current.return));
         if (supportsMutation) {
           if (finishedWork.flags & 32) {
-            root = finishedWork.stateNode;
+            hoistableRoot = finishedWork.stateNode;
             try {
-              resetTextContent(root);
+              resetTextContent(hoistableRoot);
             } catch (error) {
               captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
           flags & 4 &&
             null != finishedWork.stateNode &&
-            ((root = finishedWork.memoizedProps),
+            ((hoistableRoot = finishedWork.memoizedProps),
             commitHostUpdate(
               finishedWork,
-              root,
-              null !== current ? current.memoizedProps : root
+              hoistableRoot,
+              null !== current ? current.memoizedProps : hoistableRoot
             ));
           flags & 1024 && (needsFormReset = !0);
         }
@@ -8561,9 +8595,9 @@ module.exports = function ($$$config) {
             throw Error(formatProdErrorMessage(162));
           flags = finishedWork.memoizedProps;
           current = null !== current ? current.memoizedProps : flags;
-          root = finishedWork.stateNode;
+          hoistableRoot = finishedWork.stateNode;
           try {
-            commitTextUpdate(root, current, flags);
+            commitTextUpdate(hoistableRoot, current, flags);
           } catch (error) {
             captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
@@ -8630,11 +8664,14 @@ module.exports = function ($$$config) {
         recursivelyTraverseMutationEffects(root, finishedWork);
         commitReconciliationEffects(finishedWork);
         finishedWork.child.flags & 8192 &&
-          ((root = null !== finishedWork.memoizedState),
+          ((hoistableRoot = null !== finishedWork.memoizedState),
           (current = null !== current && null !== current.memoizedState),
           alwaysThrottleRetries
-            ? root !== current && (globalMostRecentFallbackTime = now())
-            : root && !current && (globalMostRecentFallbackTime = now()));
+            ? hoistableRoot !== current &&
+              (globalMostRecentFallbackTime = now())
+            : hoistableRoot &&
+              !current &&
+              (globalMostRecentFallbackTime = now()));
         if (flags & 4) {
           try {
             if (null !== finishedWork.memoizedState) {
@@ -8680,10 +8717,10 @@ module.exports = function ($$$config) {
             ? root._visibility & -2
             : root._visibility | 1),
           suspenseCallback &&
-            ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
-            null === current ||
+            (null === current ||
               retryQueue ||
-              root ||
+              offscreenSubtreeIsHidden ||
+              offscreenSubtreeWasHidden ||
               recursivelyTraverseDisappearLayoutEffects(finishedWork)),
           supportsMutation &&
             (null === finishedWork.memoizedProps ||
@@ -8691,11 +8728,7 @@ module.exports = function ($$$config) {
         )
           a: if (((current = null), supportsMutation))
             for (root = finishedWork; ; ) {
-              if (
-                5 === root.tag ||
-                (supportsResources && 26 === root.tag) ||
-                (supportsSingletons && 27 === root.tag)
-              ) {
+              if (5 === root.tag || (supportsResources && 26 === root.tag)) {
                 if (null === current) {
                   retryQueue = current = root;
                   try {
@@ -8718,10 +8751,13 @@ module.exports = function ($$$config) {
                 if (null === current) {
                   retryQueue = root;
                   try {
-                    (props = retryQueue.stateNode),
+                    (newResource = retryQueue.stateNode),
                       suspenseCallback
-                        ? hideTextInstance(props)
-                        : unhideTextInstance(props, retryQueue.memoizedProps);
+                        ? hideTextInstance(newResource)
+                        : unhideTextInstance(
+                            newResource,
+                            retryQueue.memoizedProps
+                          );
                   } catch (error) {
                     captureCommitPhaseError(
                       retryQueue,
@@ -8789,10 +8825,7 @@ module.exports = function ($$$config) {
     var flags = finishedWork.flags;
     if (flags & 2) {
       try {
-        if (
-          supportsMutation &&
-          (!supportsSingletons || 27 !== finishedWork.tag)
-        ) {
+        if (supportsMutation) {
           a: {
             for (var parent = finishedWork.return; null !== parent; ) {
               if (isHostParent(parent)) {
@@ -8883,8 +8916,10 @@ module.exports = function ($$$config) {
             );
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
-        case 26:
         case 27:
+          supportsSingletons &&
+            releaseSingletonInstance(finishedWork.stateNode);
+        case 26:
         case 5:
           safelyDetachRef(finishedWork, finishedWork.return);
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -8959,8 +8994,9 @@ module.exports = function ($$$config) {
             commitClassCallbacks(finishedWork);
           safelyAttachRef(finishedWork, finishedWork.return);
           break;
-        case 26:
         case 27:
+          supportsSingletons && commitHostSingletonAcquisition(finishedWork);
+        case 26:
         case 5:
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
@@ -9232,7 +9268,7 @@ module.exports = function ($$$config) {
         break;
       case 22:
         nextCache = finishedWork.stateNode;
-        var current$157 = finishedWork.alternate;
+        var current$159 = finishedWork.alternate;
         null !== finishedWork.memoizedState
           ? nextCache._visibility & 4
             ? recursivelyTraversePassiveMountEffects(
@@ -9262,7 +9298,7 @@ module.exports = function ($$$config) {
               ));
         flags & 2048 &&
           commitOffscreenPassiveMountEffects(
-            current$157,
+            current$159,
             finishedWork,
             nextCache
           );
@@ -9343,9 +9379,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$159 = finishedWork.stateNode;
+          var instance$161 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$159._visibility & 4
+            ? instance$161._visibility & 4
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -9357,7 +9393,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-            : ((instance$159._visibility |= 4),
+            : ((instance$161._visibility |= 4),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -9370,7 +9406,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$159
+              instance$161
             );
           break;
         case 24:
@@ -10461,8 +10497,8 @@ module.exports = function ($$$config) {
         workLoopSync();
         exitStatus = workInProgressRootExitStatus;
         break;
-      } catch (thrownValue$174) {
-        handleThrow(root, thrownValue$174);
+      } catch (thrownValue$176) {
+        handleThrow(root, thrownValue$176);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -10583,8 +10619,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrentByScheduler();
         break;
-      } catch (thrownValue$176) {
-        handleThrow(root, thrownValue$176);
+      } catch (thrownValue$178) {
+        handleThrow(root, thrownValue$178);
       }
     while (1);
     lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -11897,10 +11933,10 @@ module.exports = function ($$$config) {
     suspendResource = $$$config.suspendResource,
     supportsSingletons = $$$config.supportsSingletons,
     resolveSingletonInstance = $$$config.resolveSingletonInstance,
-    clearSingleton = $$$config.clearSingleton,
     acquireSingletonInstance = $$$config.acquireSingletonInstance,
     releaseSingletonInstance = $$$config.releaseSingletonInstance,
     isHostSingletonType = $$$config.isHostSingletonType,
+    isSingletonScope = $$$config.isSingletonScope,
     valueStack = [],
     index$jscomp$0 = -1,
     emptyContextObject = {},
@@ -12876,7 +12912,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-b65afdd0-20250124"
+      reconcilerVersion: "19.1.0-www-classic-c492f975-20250128"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

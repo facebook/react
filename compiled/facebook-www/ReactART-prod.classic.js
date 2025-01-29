@@ -7425,8 +7425,8 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
         }
       }
       break;
-    case 26:
     case 27:
+    case 26:
     case 5:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
       flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
@@ -8039,10 +8039,10 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
           ? root._visibility & -2
           : root._visibility | 1),
         instance &&
-          ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
-          null === current ||
+          (null === current ||
             suspenseCallback ||
-            root ||
+            offscreenSubtreeIsHidden ||
+            offscreenSubtreeWasHidden ||
             recursivelyTraverseDisappearLayoutEffects(finishedWork)),
         null === finishedWork.memoizedProps ||
           "manual" !== finishedWork.memoizedProps.mode)
@@ -8196,8 +8196,8 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
           );
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
         break;
-      case 26:
       case 27:
+      case 26:
       case 5:
         safelyDetachRef(finishedWork, finishedWork.return);
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -8271,8 +8271,8 @@ function recursivelyTraverseReappearLayoutEffects(
           commitClassCallbacks(finishedWork);
         safelyAttachRef(finishedWork, finishedWork.return);
         break;
-      case 26:
       case 27:
+      case 26:
       case 5:
         recursivelyTraverseReappearLayoutEffects(
           finishedRoot,
@@ -10830,10 +10830,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1514 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-b65afdd0-20250124",
+  version: "19.1.0-www-classic-c492f975-20250128",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-b65afdd0-20250124"
+  reconcilerVersion: "19.1.0-www-classic-c492f975-20250128"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1515 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10859,4 +10859,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-b65afdd0-20250124";
+exports.version = "19.1.0-www-classic-c492f975-20250128";
