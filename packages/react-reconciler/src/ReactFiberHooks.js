@@ -3989,9 +3989,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
-if (enableUseEffectCRUDOverload) {
-  (ContextOnlyDispatcher: Dispatcher).useResourceEffect = throwInvalidHookError;
-}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -4021,9 +4018,6 @@ const HooksDispatcherOnMount: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
-}
-if (enableUseEffectCRUDOverload) {
-  (HooksDispatcherOnMount: Dispatcher).useResourceEffect = mountResourceEffect;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -4055,10 +4049,6 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
-if (enableUseEffectCRUDOverload) {
-  (HooksDispatcherOnUpdate: Dispatcher).useResourceEffect =
-    updateResourceEffect;
-}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -4088,10 +4078,6 @@ const HooksDispatcherOnRerender: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
-}
-if (enableUseEffectCRUDOverload) {
-  (HooksDispatcherOnRerender: Dispatcher).useResourceEffect =
-    updateResourceEffect;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -4310,27 +4296,6 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseEffectCRUDOverload) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => {...} | void | null,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: {...} | void | null) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: {...} | void | null) => void) | void,
-      ): void {
-        currentHookNameInDev = 'useResourceEffect';
-        mountHookTypesDev();
-        checkDepsAreNonEmptyArrayDev(updateDeps);
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      };
-  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4512,26 +4477,6 @@ if (__DEV__) {
         currentHookNameInDev = 'useEffectEvent';
         updateHookTypesDev();
         return mountEvent(callback);
-      };
-  }
-  if (enableUseEffectCRUDOverload) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => {...} | void | null,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: {...} | void | null) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: {...} | void | null) => void) | void,
-      ): void {
-        currentHookNameInDev = 'useResourceEffect';
-        updateHookTypesDev();
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
       };
   }
 
@@ -4717,26 +4662,6 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseEffectCRUDOverload) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => {...} | void | null,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: {...} | void | null) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: {...} | void | null) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
-        updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      };
-  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4918,26 +4843,6 @@ if (__DEV__) {
         currentHookNameInDev = 'useEffectEvent';
         updateHookTypesDev();
         return updateEvent(callback);
-      };
-  }
-  if (enableUseEffectCRUDOverload) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => {...} | void | null,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: {...} | void | null) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: {...} | void | null) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
-        updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
       };
   }
 
@@ -5148,27 +5053,6 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseEffectCRUDOverload) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => {...} | void | null,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: {...} | void | null) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: {...} | void | null) => void) | void,
-      ): void {
-        currentHookNameInDev = 'useResourceEffect';
-        warnInvalidHookAccess();
-        mountHookTypesDev();
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      };
-  }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5377,27 +5261,6 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseEffectCRUDOverload) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => {...} | void | null,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: {...} | void | null) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: {...} | void | null) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      };
-  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5604,27 +5467,6 @@ if (__DEV__) {
         warnInvalidHookAccess();
         updateHookTypesDev();
         return updateEvent(callback);
-      };
-  }
-  if (enableUseEffectCRUDOverload) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => {...} | void | null,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: {...} | void | null) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: {...} | void | null) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
       };
   }
 }
