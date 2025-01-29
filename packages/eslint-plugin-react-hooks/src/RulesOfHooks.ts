@@ -147,7 +147,10 @@ const rule = {
           parent.init.callee &&
           isUseEffectEventIdentifier(parent.init.callee)
         ) {
-          for (const ref of reference.resolved?.references || []) {
+          if (reference.resolved === null) {
+            throw new Error('Unexpected null reference.resolved');
+          }
+          for (const ref of reference.resolved.references) {
             if (ref !== reference) {
               useEffectEventFunctions.add(ref.identifier);
             }
@@ -196,8 +199,10 @@ const rule = {
       // segment and reachable from every final segment.
       onCodePathEnd(codePath, codePathNode) {
         const reactHooksMap = codePathReactHooksMapStack.pop();
-        if (!reactHooksMap?.size) {
+        if (reactHooksMap?.size === 0) {
           return;
+        } else if (typeof reactHooksMap === 'undefined') {
+          throw new Error('Unexpected undefined reactHooksMap');
         }
 
         // All of the segments which are cyclic are recorded in this set.

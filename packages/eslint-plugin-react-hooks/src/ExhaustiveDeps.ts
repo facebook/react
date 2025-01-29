@@ -237,7 +237,7 @@ const rule = {
           return false;
         }
         const def = resolved.defs[0];
-        if (!def) {
+        if (def == null) {
           return false;
         }
         // Look for `let stuff = ...`
@@ -246,7 +246,7 @@ const rule = {
           return false;
         }
         let init = defNode.init;
-        if (!init) {
+        if (init == null) {
           return false;
         }
         while (init.type === 'TSAsExpression' || init.type === 'AsExpression') {
@@ -255,13 +255,13 @@ const rule = {
         // Detect primitive constants
         // const foo = 42
         let declaration = defNode.parent;
-        if (!declaration && componentScope) {
+        if (declaration == null && componentScope) {
           // This might happen if variable is declared after the callback.
           // In that case ESLint won't set up .parent refs.
           // So we'll set them up manually.
           fastFindReferenceWithParent(componentScope.block, def.node.id);
           declaration = def.node.parent;
-          if (!declaration) {
+          if (declaration == null) {
             return false;
           }
         }
@@ -406,13 +406,13 @@ const rule = {
             break;
           }
         }
-        if (!fnScope) {
+        if (fnScope == null) {
           return false;
         }
         // Does this function capture any values
         // that are in pure scopes (aka render)?
         for (const ref of fnScope.through) {
-          if (!ref.resolved) {
+          if (ref.resolved == null) {
             continue;
           }
           if (
@@ -488,7 +488,7 @@ const rule = {
             node,
             reference.identifier,
           );
-          if (!referenceNode) {
+          if (referenceNode == null) {
             continue;
           }
           const dependencyNode = getDependency(referenceNode);
@@ -525,7 +525,7 @@ const rule = {
           }
 
           const def = reference.resolved.defs[0];
-          if (!def) {
+          if (def == null) {
             continue;
           }
           // Ignore references to the function itself as it's not defined yet.
@@ -1707,7 +1707,7 @@ function scanForConstructions({
   const constructions = declaredDependencies
     .map(({key}) => {
       const ref = componentScope.variables.find(v => v.name === key);
-      if (!ref) {
+      if (ref == null) {
         return null;
       }
 

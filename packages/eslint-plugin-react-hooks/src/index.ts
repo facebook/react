@@ -8,8 +8,6 @@ import RulesOfHooks from './RulesOfHooks';
 import ExhaustiveDeps from './ExhaustiveDeps';
 import type {ESLint, Linter, Rule} from 'eslint';
 
-const packageJson: {name: string; version: string} = require('../package.json');
-
 // All rules
 const rules = {
   'rules-of-hooks': RulesOfHooks,
@@ -30,7 +28,9 @@ const legacyRecommendedConfig = {
 
 // Plugin object
 const plugin = {
-  meta: {name: packageJson.name, version: packageJson.version},
+  // TODO: Make this more dynamic to populate version from package.json.
+  // This can be done by injecting at build time, since importing the package.json isn't an option in Meta
+  meta: {name: 'eslint-plugin-react-hooks'},
   rules,
   configs: {
     /** Legacy recommended config, to be used with rc-based configurations */
@@ -55,8 +55,10 @@ const plugin = {
   },
 } satisfies ESLint.Plugin;
 
-// These exports are for backwards compatibility with eslint versions before v9
 const configs = plugin.configs;
-export {configs, rules};
+const meta = plugin.meta;
+export {configs, meta, rules};
 
-export default plugin;
+// TODO: If the plugin is ever updated to be pure ESM and drops support for rc-based configs, then it should be exporting the plugin as default
+// instead of individual named exports.
+// export default plugin;
