@@ -6,9 +6,15 @@
  */
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import * as dynamicFlagsUntyped from 'ReactNativeInternalFeatureFlags';
+const enableRemoveConsolePatches =
+  dynamicFlagsUntyped && dynamicFlagsUntyped.enableRemoveConsolePatches;
 
 let suppressWarning = false;
 export function setSuppressWarning(newSuppressWarning) {
+  if (enableRemoveConsolePatches) {
+    return;
+  }
   if (__DEV__) {
     suppressWarning = newSuppressWarning;
   }
@@ -21,7 +27,11 @@ export function setSuppressWarning(newSuppressWarning) {
 // they are left as they are instead.
 
 export function warn(format, ...args) {
-  if (__DEV__) {
+  if (enableRemoveConsolePatches) {
+    if (__DEV__) {
+      console['warn'](format, ...args);
+    }
+  } else if (__DEV__) {
     if (!suppressWarning) {
       printWarning('warn', format, args);
     }
@@ -29,7 +39,11 @@ export function warn(format, ...args) {
 }
 
 export function error(format, ...args) {
-  if (__DEV__) {
+  if (enableRemoveConsolePatches) {
+    if (__DEV__) {
+      console['error'](format, ...args);
+    }
+  } else if (__DEV__) {
     if (!suppressWarning) {
       printWarning('error', format, args);
     }
@@ -37,6 +51,9 @@ export function error(format, ...args) {
 }
 
 function printWarning(level, format, args) {
+  if (enableRemoveConsolePatches) {
+    return;
+  }
   if (__DEV__) {
     if (ReactSharedInternals.getCurrentStack) {
       const stack = ReactSharedInternals.getCurrentStack();

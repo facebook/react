@@ -12,6 +12,9 @@ import type {Fiber} from './ReactInternalTypes';
 import type {SuspendedReason} from './ReactFiberWorkLoop';
 
 import type {Lane, Lanes} from './ReactFiberLane';
+
+import type {CapturedValue} from './ReactCapturedValue';
+
 import {
   isTransitionLane,
   isBlockingLane,
@@ -30,6 +33,8 @@ import {
   enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 
+import {isAlreadyRendering} from './ReactFiberWorkLoop';
+
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
@@ -39,17 +44,20 @@ const {unstable_now: now} = Scheduler;
 export let renderStartTime: number = -0;
 export let commitStartTime: number = -0;
 export let commitEndTime: number = -0;
+export let commitErrors: null | Array<CapturedValue<mixed>> = null;
 export let profilerStartTime: number = -1.1;
 export let profilerEffectDuration: number = -0;
 export let componentEffectDuration: number = -0;
 export let componentEffectStartTime: number = -1.1;
 export let componentEffectEndTime: number = -1.1;
+export let componentEffectErrors: null | Array<CapturedValue<mixed>> = null;
 
 export let blockingClampTime: number = -0;
 export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
 export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
 export let blockingEventType: null | string = null; // Event type of the first setState.
 export let blockingEventIsRepeat: boolean = false;
+export let blockingSpawnedUpdate: boolean = false;
 export let blockingSuspendedTime: number = -1.1;
 // TODO: This should really be one per Transition lane.
 export let transitionClampTime: number = -0;
@@ -78,6 +86,9 @@ export function startUpdateTimerByLane(lane: Lane): void {
   if (isSyncLane(lane) || isBlockingLane(lane)) {
     if (blockingUpdateTime < 0) {
       blockingUpdateTime = now();
+      if (isAlreadyRendering()) {
+        blockingSpawnedUpdate = true;
+      }
       const newEventTime = resolveEventTimeStamp();
       const newEventType = resolveEventType();
       if (
@@ -85,6 +96,11 @@ export function startUpdateTimerByLane(lane: Lane): void {
         newEventType !== blockingEventType
       ) {
         blockingEventIsRepeat = false;
+      } else if (newEventType !== null) {
+        // If this is a second update in the same event, we treat it as a spawned update.
+        // This might be a microtask spawned from useEffect, multiple flushSync or
+        // a setState in a microtask spawned after the first setState. Regardless it's bad.
+        blockingSpawnedUpdate = true;
       }
       blockingEventTime = newEventTime;
       blockingEventType = newEventType;
@@ -141,6 +157,7 @@ export function clearBlockingTimers(): void {
   blockingUpdateTime = -1.1;
   blockingSuspendedTime = -1.1;
   blockingEventIsRepeat = true;
+  blockingSpawnedUpdate = false;
 }
 
 export function startAsyncTransitionTimer(): void {
@@ -268,6 +285,26 @@ export function popComponentEffectStart(prevEffectStart: number): void {
     // Otherwise, we restore the previous parent's start time.
     componentEffectStartTime = prevEffectStart;
   }
+}
+
+export function pushComponentEffectErrors(): null | Array<
+  CapturedValue<mixed>,
+> {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return null;
+  }
+  const prevErrors = componentEffectErrors;
+  componentEffectErrors = null;
+  return prevErrors;
+}
+
+export function popComponentEffectErrors(
+  prevErrors: null | Array<CapturedValue<mixed>>,
+): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+  componentEffectErrors = prevErrors;
 }
 
 /**
@@ -402,6 +439,24 @@ export function recordEffectDuration(fiber: Fiber): void {
     // Keep track of the last end time of the effects.
     componentEffectEndTime = endTime;
   }
+}
+
+export function recordEffectError(errorInfo: CapturedValue<mixed>): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+  if (componentEffectErrors === null) {
+    componentEffectErrors = [];
+  }
+  componentEffectErrors.push(errorInfo);
+  if (commitErrors === null) {
+    commitErrors = [];
+  }
+  commitErrors.push(errorInfo);
+}
+
+export function resetCommitErrors(): void {
+  commitErrors = null;
 }
 
 export function startEffectTimer(): void {

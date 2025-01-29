@@ -77,7 +77,7 @@ describe('Activity StrictMode', () => {
     ]);
   });
 
-  // @gate __DEV__ && enableActivity && useModernStrictMode
+  // @gate __DEV__ && enableActivity
   it('should not trigger strict effects when offscreen is hidden', async () => {
     await act(() => {
       ReactNoop.render(

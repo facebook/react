@@ -62,6 +62,12 @@ const argv = yargs
         'experimental',
       ],
     },
+    cleanup: {
+      describe: 'output flags by cleanup category.',
+      requiresArg: false,
+      type: 'boolean',
+      default: false,
+    },
   }).argv;
 
 // Load ReactFeatureFlags with __NEXT_MAJOR__ replaced with 'next'.
@@ -375,53 +381,86 @@ const FLAG_CONFIG = {
 
 const FLAG_COLUMNS = Object.keys(FLAG_CONFIG);
 
+const INTERNAL_VARIANTS = ['WWW Classic', 'WWW Modern', 'RN FB'];
+const OSS_VARIANTS = [
+  'OSS Next Major',
+  'OSS Canary',
+  'OSS Experimental',
+  'RN OSS',
+  'RN Next Major',
+];
+
 // Build the table with the value for each flag.
-const isDiff = argv.diff != null && argv.diff.length > 1;
-const table = {};
-// eslint-disable-next-line no-for-of-loops/no-for-of-loops
-for (const flag of allFlagsUniqueFlags) {
-  const values = FLAG_COLUMNS.reduce((acc, key) => {
-    acc[key] = FLAG_CONFIG[key](flag);
-    return acc;
-  }, {});
+function buildTable(filterFn) {
+  const isDiff = argv.diff != null && argv.diff.length > 1;
+  const table = {};
+  const filteredFlags = filterFn
+    ? allFlagsUniqueFlags.filter(filterFn)
+    : allFlagsUniqueFlags;
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const flag of filteredFlags) {
+    const values = FLAG_COLUMNS.reduce((acc, key) => {
+      acc[key] = FLAG_CONFIG[key](flag);
+      return acc;
+    }, {});
 
-  if (!isDiff) {
-    table[flag] = values;
-    continue;
-  }
-
-  const subset = argv.diff.map(argToHeader).reduce((acc, key) => {
-    if (key in values) {
-      acc[key] = values[key];
+    if (!isDiff) {
+      table[flag] = values;
+      continue;
     }
-    return acc;
-  }, {});
 
-  if (new Set(Object.values(subset)).size !== 1) {
-    table[flag] = subset;
+    const subset = argv.diff.map(argToHeader).reduce((acc, key) => {
+      if (key in values) {
+        acc[key] = values[key];
+      }
+      return acc;
+    }, {});
+
+    if (new Set(Object.values(subset)).size !== 1) {
+      table[flag] = subset;
+    }
   }
+
+  // Sort the table
+  let sorted = table;
+  if (isDiff || argv.sort) {
+    const sortChannel = argToHeader(isDiff ? argv.diff[0] : argv.sort);
+    const sortBy =
+      sortChannel === 'flag'
+        ? ([flagA], [flagB]) => {
+            return flagA.localeCompare(flagB);
+          }
+        : ([, rowA], [, rowB]) => {
+            return rowB[sortChannel]
+              .toString()
+              .localeCompare(rowA[sortChannel]);
+          };
+    sorted = Object.fromEntries(Object.entries(table).sort(sortBy));
+  }
+
+  return sorted;
 }
 
-// Sort the table
-let sorted = table;
-if (isDiff || argv.sort) {
-  const sortChannel = argToHeader(isDiff ? argv.diff[0] : argv.sort);
-  const sortBy =
-    sortChannel === 'flag'
-      ? ([flagA], [flagB]) => {
-          return flagA.localeCompare(flagB);
-        }
-      : ([, rowA], [, rowB]) => {
-          return rowB[sortChannel].toString().localeCompare(rowA[sortChannel]);
-        };
-  sorted = Object.fromEntries(Object.entries(table).sort(sortBy));
+function formatTable(tableData) {
+  // left align the flag names.
+  const maxLength = Math.max(
+    ...Object.keys(tableData).map(item => item.length)
+  );
+  const padded = {};
+  Object.keys(tableData).forEach(key => {
+    const newKey = key.padEnd(maxLength, ' ');
+    padded[newKey] = tableData[key];
+  });
+
+  return padded;
 }
 
 if (argv.csv) {
+  const table = buildTable();
   const csvRows = [
     `Flag name, ${FLAG_COLUMNS.join(', ')}`,
     ...Object.keys(table).map(flag => {
-      const row = sorted[flag];
+      const row = table[flag];
       return `${flag}, ${FLAG_COLUMNS.map(col => row[col]).join(', ')}`;
     }),
   ];
@@ -433,16 +472,108 @@ if (argv.csv) {
   });
 }
 
-// left align the flag names.
-const maxLength = Math.max(...Object.keys(sorted).map(item => item.length));
-const padded = {};
-Object.keys(sorted).forEach(key => {
-  const newKey = key.padEnd(maxLength, ' ');
-  padded[newKey] = sorted[key];
-});
+if (argv.cleanup) {
+  const allPassingFlags = [];
+  const allFailingFlags = [];
+  const needsShippedExperimentFlags = [];
+  const earlyExperimentationFlags = [];
+  const internalOnlyFlags = [];
 
-// print table with formatting
-console.table(padded);
+  const diffedFlagColumns =
+    argv.diff[0] != null ? argv.diff.map(argToHeader) : FLAG_COLUMNS;
+
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const flag of allFlagsUniqueFlags) {
+    const values = diffedFlagColumns.reduce((acc, key) => {
+      acc[key] = FLAG_CONFIG[key](flag);
+      return acc;
+    }, {});
+
+    const uniqueValues = new Set(Object.values(values));
+
+    if (
+      uniqueValues.size === 1 &&
+      (uniqueValues.has('✅') ||
+        typeof uniqueValues.values().next().value === 'number')
+    ) {
+      allPassingFlags.push(flag);
+    }
+
+    if (uniqueValues.size === 1 && uniqueValues.has('❌')) {
+      allFailingFlags.push(flag);
+    }
+
+    const internalVariantValues = INTERNAL_VARIANTS.filter(value =>
+      diffedFlagColumns.includes(value)
+    ).map(v => values[v]);
+    const ossVariantValues = OSS_VARIANTS.filter(value =>
+      diffedFlagColumns.includes(value)
+    ).map(v => values[v]);
+
+    if (
+      internalVariantValues.some(v => v === '✅') &&
+      ossVariantValues.every(v => v === '❌')
+    ) {
+      internalOnlyFlags.push(flag);
+    }
+
+    if (
+      internalVariantValues.some(v => v === '🧪') &&
+      (ossVariantValues.every(v => v === '❌') ||
+        (ossVariantValues.some(v => v === '❌') &&
+          values['OSS Experimental'] === '✅'))
+    ) {
+      earlyExperimentationFlags.push(flag);
+    }
+
+    if (
+      internalVariantValues.some(v => v === '🧪' || v === '❌') &&
+      ossVariantValues.every(v => v === '✅')
+    ) {
+      needsShippedExperimentFlags.push(flag);
+    }
+  }
+
+  if (allPassingFlags.length > 0) {
+    console.log('ALL VARIANTS PASS (✅)');
+    console.table(
+      formatTable(buildTable(flag => allPassingFlags.includes(flag)))
+    );
+  }
+
+  if (allFailingFlags.length > 0) {
+    console.log('ALL VARIANTS FAIL (❌)');
+    console.table(
+      formatTable(buildTable(flag => allFailingFlags.includes(flag)))
+    );
+  }
+
+  if (internalOnlyFlags.length > 0) {
+    console.log('INTERNAL ONLY (✅)');
+    console.table(
+      formatTable(buildTable(flag => internalOnlyFlags.includes(flag)))
+    );
+  }
+
+  if (earlyExperimentationFlags.length > 0) {
+    console.log('WAITING ON RESULTS (🧪)');
+    console.table(
+      formatTable(buildTable(flag => earlyExperimentationFlags.includes(flag)))
+    );
+  }
+
+  if (needsShippedExperimentFlags.length > 0) {
+    console.log('WAITING ON ROLLOUT (🧪)');
+    console.table(
+      formatTable(
+        buildTable(flag => needsShippedExperimentFlags.includes(flag))
+      )
+    );
+  }
+} else {
+  console.table(formatTable(buildTable()));
+}
+
 console.log(`
 Legend:
   ✅ On

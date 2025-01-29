@@ -479,12 +479,14 @@ const skipFilter = new Set([
   // bugs
   'fbt/bug-fbt-plural-multiple-function-calls',
   'fbt/bug-fbt-plural-multiple-mixed-call-tag',
+  `bug-capturing-func-maybealias-captured-mutate`,
   'bug-object-expression-computed-key-modified-during-after-construction-hoisted-sequence-expr',
   'bug-invalid-hoisting-functionexpr',
   'bug-aliased-capture-aliased-mutate',
   'bug-aliased-capture-mutate',
   'bug-functiondecl-hoisting',
   'bug-try-catch-maybe-null-dependency',
+  'bug-invalid-mixedreadonly-map-shape',
   'bug-type-inference-control-flow',
   'reduce-reactive-deps/bug-infer-function-cond-access-not-hoisted',
   'bug-invalid-phi-as-dependency',
@@ -504,6 +506,7 @@ const skipFilter = new Set([
   // Depends on external functions
   'idx-method-no-outlining-wildcard',
   'idx-method-no-outlining',
+  'target-flag-meta-internal',
 
   // needs to be executed as a module
   'meta-property',

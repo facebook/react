@@ -7,7 +7,7 @@
 
 import {transformFromAstSync} from '@babel/core';
 // @ts-expect-error: no types available
-import PluginTransformPrivateMethods from '@babel/plugin-transform-private-methods';
+import PluginProposalPrivateMethods from '@babel/plugin-proposal-private-methods';
 import type {SourceLocation as BabelSourceLocation} from '@babel/types';
 import BabelPluginReactCompiler, {
   CompilerErrorDetailOptions,
@@ -121,7 +121,7 @@ const rule: Rule.RuleModule = {
   },
   create(context: Rule.RuleContext) {
     // Compat with older versions of eslint
-    const sourceCode = context.sourceCode?.text ?? context.getSourceCode().text;
+    const sourceCode = context.sourceCode ?? context.getSourceCode();
     const filename = context.filename ?? context.getFilename();
     const userOpts = context.options[0] ?? {};
     if (
@@ -180,7 +180,7 @@ const rule: Rule.RuleModule = {
               endLoc = {
                 line: event.fnLoc.start.line,
                 // Babel loc line numbers are 1-indexed
-                column: sourceCode.split(
+                column: sourceCode.text.split(
                   /\r?\n|\r|\n/g,
                   event.fnLoc.start.line,
                 )[event.fnLoc.start.line - 1].length,
@@ -234,7 +234,6 @@ const rule: Rule.RuleModule = {
       nodeLoc: BabelSourceLocation,
       suppression: string,
     ): boolean {
-      const sourceCode = context.getSourceCode();
       const comments = sourceCode.getAllComments();
       const flowSuppressionRegex = new RegExp(
         '\\$FlowFixMe\\[' + suppression + '\\]',
@@ -254,7 +253,7 @@ const rule: Rule.RuleModule = {
     if (filename.endsWith('.tsx') || filename.endsWith('.ts')) {
       try {
         const {parse: babelParse} = require('@babel/parser');
-        babelAST = babelParse(sourceCode, {
+        babelAST = babelParse(sourceCode.text, {
           filename,
           sourceType: 'unambiguous',
           plugins: ['typescript', 'jsx'],
@@ -264,7 +263,7 @@ const rule: Rule.RuleModule = {
       }
     } else {
       try {
-        babelAST = HermesParser.parse(sourceCode, {
+        babelAST = HermesParser.parse(sourceCode.text, {
           babel: true,
           enableExperimentalComponentSyntax: true,
           sourceFilename: filename,
@@ -277,12 +276,12 @@ const rule: Rule.RuleModule = {
 
     if (babelAST != null) {
       try {
-        transformFromAstSync(babelAST, sourceCode, {
+        transformFromAstSync(babelAST, sourceCode.text, {
           filename,
           highlightCode: false,
           retainLines: true,
           plugins: [
-            [PluginTransformPrivateMethods, {loose: true}],
+            [PluginProposalPrivateMethods, {loose: true}],
             [BabelPluginReactCompiler, options],
           ],
           sourceType: 'module',

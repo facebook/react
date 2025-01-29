@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cd ../.. && concurrently --kill-others -n compiler,runtime,playground \"yarn workspace babel-plugin-react-compiler run build --watch\" \"yarn workspace react-compiler-runtime run build --watch\" \"wait-on packages/babel-plugin-react-compiler/dist/index.js && cd apps/playground && NODE_ENV=development next dev\"",
+    "dev": "cd ../.. && concurrently --kill-others -n compiler,runtime,playground \"yarn workspace babel-plugin-react-compiler run watch\" \"yarn workspace react-compiler-runtime run watch\" \"wait-on packages/babel-plugin-react-compiler/dist/index.js && cd apps/playground && NODE_ENV=development next dev\"",
     "build:compiler": "cd ../.. && concurrently -n compiler,runtime \"yarn workspace babel-plugin-react-compiler run build\" \"yarn workspace react-compiler-runtime run build\"",
     "build": "yarn build:compiler && next build",
     "postbuild": "node ./scripts/downloadFonts.js",
+    "preinstall": "cd ../.. && yarn install --frozen-lockfile",
     "postinstall": "./scripts/link-compiler.sh",
     "vercel-build": "yarn build",
     "start": "next start",

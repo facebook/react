@@ -9,7 +9,13 @@ import * as t from '@babel/types';
 import {ZodError, z} from 'zod';
 import {fromZodError} from 'zod-validation-error';
 import {CompilerError} from '../CompilerError';
-import {Logger} from '../Entrypoint';
+import {
+  CompilationMode,
+  Logger,
+  PanicThresholdOptions,
+  parsePluginOptions,
+  PluginOptions,
+} from '../Entrypoint';
 import {Err, Ok, Result} from '../Utils/Result';
 import {
   DEFAULT_GLOBALS,
@@ -168,11 +174,19 @@ const EnvironmentConfigSchema = z.object({
   customMacros: z.nullable(z.array(MacroSchema)).default(null),
 
   /**
-   * Enable a check that resets the memoization cache when the source code of the file changes.
-   * This is intended to support hot module reloading (HMR), where the same runtime component
-   * instance will be reused across different versions of the component source.
+   * Enable a check that resets the memoization cache when the source code of
+   * the file changes. This is intended to support hot module reloading (HMR),
+   * where the same runtime component instance will be reused across different
+   * versions of the component source.
+   *
+   * When set to
+   * - true:  code for HMR support is always generated, regardless of NODE_ENV
+   *          or `globalThis.__DEV__`
+   * - false: code for HMR support is not generated
+   * - null:  (default) code for HMR support is conditionally generated dependent
+   *          on `NODE_ENV` and `globalThis.__DEV__` at the time of compilation.
    */
-  enableResetCacheOnSourceFileChanges: z.boolean().default(false),
+  enableResetCacheOnSourceFileChanges: z.nullable(z.boolean()).default(null),
 
   /**
    * Enable using information from existing useMemo/useCallback to understand when a value is done
@@ -240,6 +254,8 @@ const EnvironmentConfigSchema = z.object({
    * the dependency.
    */
   enableOptionalDependencies: z.boolean().default(true),
+
+  enableFire: z.boolean().default(false),
 
   /**
    * Enables inference and auto-insertion of effect dependencies. Takes in an array of
@@ -336,6 +352,11 @@ const EnvironmentConfigSchema = z.object({
    */
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
   validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
+
+  /**
+   * Validate against impure functions called during render
+   */
+  validateNoImpureFunctionsInRender: z.boolean().default(false),
 
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
@@ -660,13 +681,22 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
       },
       numRequiredArgs: 2,
     },
+    {
+      function: {
+        source: 'useEffectWrapper',
+        importSpecifierName: 'default',
+      },
+      numRequiredArgs: 1,
+    },
   ],
 };
 
 /**
  * For snap test fixtures and playground only.
  */
-export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
+function parseConfigPragmaEnvironmentForTest(
+  pragma: string,
+): EnvironmentConfig {
   const maybeConfig: any = {};
   // Get the defaults to programmatically check for boolean properties
   const defaultConfig = EnvironmentConfigSchema.parse({});
@@ -701,7 +731,10 @@ export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
       continue;
     }
 
-    if (typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean') {
+    if (
+      key !== 'enableResetCacheOnSourceFileChanges' &&
+      typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean'
+    ) {
       // skip parsing non-boolean properties
       continue;
     }
@@ -711,9 +744,15 @@ export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
       maybeConfig[key] = false;
     }
   }
-
   const config = EnvironmentConfigSchema.safeParse(maybeConfig);
   if (config.success) {
+    /**
+     * Unless explicitly enabled, do not insert HMR handling code
+     * in test fixtures or playground to reduce visual noise.
+     */
+    if (config.data.enableResetCacheOnSourceFileChanges == null) {
+      config.data.enableResetCacheOnSourceFileChanges = false;
+    }
     return config.data;
   }
   CompilerError.invariant(false, {
@@ -721,6 +760,48 @@ export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
     description: `${fromZodError(config.error)}`,
     loc: null,
     suggestions: null,
+  });
+}
+export function parseConfigPragmaForTests(
+  pragma: string,
+  defaults: {
+    compilationMode: CompilationMode;
+  },
+): PluginOptions {
+  const environment = parseConfigPragmaEnvironmentForTest(pragma);
+  let compilationMode: CompilationMode = defaults.compilationMode;
+  let panicThreshold: PanicThresholdOptions = 'all_errors';
+  for (const token of pragma.split(' ')) {
+    if (!token.startsWith('@')) {
+      continue;
+    }
+    switch (token) {
+      case '@compilationMode(annotation)': {
+        compilationMode = 'annotation';
+        break;
+      }
+      case '@compilationMode(infer)': {
+        compilationMode = 'infer';
+        break;
+      }
+      case '@compilationMode(all)': {
+        compilationMode = 'all';
+        break;
+      }
+      case '@compilationMode(syntax)': {
+        compilationMode = 'syntax';
+        break;
+      }
+      case '@panicThreshold(none)': {
+        panicThreshold = 'none';
+        break;
+      }
+    }
+  }
+  return parsePluginOptions({
+    environment,
+    compilationMode,
+    panicThreshold,
   });
 }
 
@@ -761,6 +842,7 @@ export class Environment {
   fnType: ReactFunctionType;
   useMemoCacheIdentifier: string;
   hasLoweredContextAccess: boolean;
+  hasFireRewrite: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
@@ -785,6 +867,7 @@ export class Environment {
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
     this.hasLoweredContextAccess = false;
+    this.hasFireRewrite = false;
 
     if (
       config.disableMemoizationForDebugging &&
@@ -1147,3 +1230,5 @@ export function tryParseExternalFunction(
     suggestions: null,
   });
 }
+
+export const DEFAULT_EXPORT = 'default';

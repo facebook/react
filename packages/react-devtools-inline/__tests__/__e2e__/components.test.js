@@ -119,7 +119,7 @@ test.describe('Components', () => {
     runOnlyForReactRange('>=16.8');
 
     // Select the first list item in DevTools.
-    await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
+    await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp', true);
 
     // Then read the inspected values.
     const sourceText = await page.evaluate(() => {
@@ -127,7 +127,7 @@ test.describe('Components', () => {
       const container = document.getElementById('devtools');
 
       const source = findAllNodes(container, [
-        createTestNameSelector('InspectedElementView-Source'),
+        createTestNameSelector('InspectedElementView-FormattedSourceString'),
       ])[0];
 
       return source.innerText;
@@ -237,35 +237,35 @@ test.describe('Components', () => {
     }
 
     await focusComponentSearch();
-    page.keyboard.insertText('List');
+    await page.keyboard.insertText('List');
     let count = await getComponentSearchResultsCount();
     expect(count).toBe('1 | 4');
 
-    page.keyboard.insertText('Item');
+    await page.keyboard.insertText('Item');
     count = await getComponentSearchResultsCount();
     expect(count).toBe('1 | 3');
 
-    page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
     count = await getComponentSearchResultsCount();
     expect(count).toBe('2 | 3');
 
-    page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
     count = await getComponentSearchResultsCount();
     expect(count).toBe('3 | 3');
 
-    page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
     count = await getComponentSearchResultsCount();
     expect(count).toBe('1 | 3');
 
-    page.keyboard.press('Shift+Enter');
+    await page.keyboard.press('Shift+Enter');
     count = await getComponentSearchResultsCount();
     expect(count).toBe('3 | 3');
 
-    page.keyboard.press('Shift+Enter');
+    await page.keyboard.press('Shift+Enter');
     count = await getComponentSearchResultsCount();
     expect(count).toBe('2 | 3');
 
-    page.keyboard.press('Shift+Enter');
+    await page.keyboard.press('Shift+Enter');
     count = await getComponentSearchResultsCount();
     expect(count).toBe('1 | 3');
   });

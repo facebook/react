@@ -18,6 +18,7 @@ let ReactNative;
 let ResponderEventPlugin;
 let UIManager;
 let createReactNativeComponentClass;
+let assertConsoleErrorDev;
 
 // Parallels requireNativeComponent() in that it lazily constructs a view config,
 // And registers view manager event types with ReactNativeViewConfigRegistry.
@@ -69,6 +70,7 @@ beforeEach(() => {
     require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').RCTEventEmitter;
   React = require('react');
   act = require('internal-test-utils').act;
+  assertConsoleErrorDev = require('internal-test-utils').assertConsoleErrorDev;
   ReactNative = require('react-native-renderer');
   ResponderEventPlugin =
     require('react-native-renderer/src/legacy-events/ResponderEventPlugin').default;
@@ -227,30 +229,32 @@ test('handles events on text nodes', () => {
   }
 
   const log = [];
-  expect(() => {
-    ReactNative.render(
-      <ContextHack>
-        <Text>
-          <Text
-            onTouchEnd={() => log.push('string touchend')}
-            onTouchEndCapture={() => log.push('string touchend capture')}
-            onTouchStart={() => log.push('string touchstart')}
-            onTouchStartCapture={() => log.push('string touchstart capture')}>
-            Text Content
-          </Text>
-          <Text
-            onTouchEnd={() => log.push('number touchend')}
-            onTouchEndCapture={() => log.push('number touchend capture')}
-            onTouchStart={() => log.push('number touchstart')}
-            onTouchStartCapture={() => log.push('number touchstart capture')}>
-            {123}
-          </Text>
+  ReactNative.render(
+    <ContextHack>
+      <Text>
+        <Text
+          onTouchEnd={() => log.push('string touchend')}
+          onTouchEndCapture={() => log.push('string touchend capture')}
+          onTouchStart={() => log.push('string touchstart')}
+          onTouchStartCapture={() => log.push('string touchstart capture')}>
+          Text Content
         </Text>
-      </ContextHack>,
-      1,
-    );
-  }).toErrorDev([
-    'ContextHack uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        <Text
+          onTouchEnd={() => log.push('number touchend')}
+          onTouchEndCapture={() => log.push('number touchend capture')}
+          onTouchStart={() => log.push('number touchstart')}
+          onTouchStartCapture={() => log.push('number touchstart capture')}>
+          {123}
+        </Text>
+      </Text>
+    </ContextHack>,
+    1,
+  );
+  assertConsoleErrorDev([
+    'ContextHack uses the legacy childContextTypes API which will soon be removed. ' +
+      'Use React.createContext() instead. ' +
+      '(https://react.dev/link/legacy-context)' +
+      '\n    in ContextHack (at **)',
   ]);
 
   expect(UIManager.createView).toHaveBeenCalledTimes(5);

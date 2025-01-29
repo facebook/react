@@ -29,7 +29,6 @@ import {
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';
 
-import {getInspectorDataForInstance} from './ReactNativeFiberInspector';
 import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   findHostInstance_DEPRECATED,
@@ -188,9 +187,6 @@ export {
   unmountComponentAtNode,
   stopSurface,
   createPortal,
-  // This export is typically undefined in production builds.
-  // See the "enableGetInspectorDataForInstanceInProduction" flag.
-  getInspectorDataForInstance,
   // The public instance has a reference to the internal instance handle.
   // This method allows it to acess the most recent shadow node for
   // the instance (it's only accessible through it).

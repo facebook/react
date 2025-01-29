@@ -19,6 +19,7 @@ import NestedProps from './NestedProps';
 import SimpleValues from './SimpleValues';
 import SymbolKeys from './SymbolKeys';
 import UseMemoCache from './UseMemoCache';
+import UseEffectEvent from './UseEffectEvent';
 
 // TODO Add Immutable JS example
 
@@ -36,6 +37,7 @@ export default function InspectableElements(): React.Node {
       <CircularReferences />
       <SymbolKeys />
       <UseMemoCache />
+      <UseEffectEvent />
     </Fragment>
   );
 }

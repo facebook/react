@@ -217,6 +217,8 @@ type FrontendEvents = {
   clearWarningsForElementID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
+  extensionComponentsPanelShown: [],
+  extensionComponentsPanelHidden: [],
   getBackendVersion: [],
   getBridgeProtocol: [],
   getIfHasUnsupportedRendererVersion: [],
