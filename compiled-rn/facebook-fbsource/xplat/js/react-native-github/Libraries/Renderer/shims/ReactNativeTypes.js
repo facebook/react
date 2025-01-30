@@ -262,6 +262,9 @@ export type ReactFabricType = {
   getPublicInstanceFromInternalInstanceHandle(
     internalInstanceHandle: InternalInstanceHandle,
   ): PublicInstance | PublicTextInstance | null,
+  getPublicInstanceFromRootTag(
+    rootTag: number,
+  ): PublicRootInstance | null,
   ...
 };
 
