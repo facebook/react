@@ -72,6 +72,7 @@ export const enableYieldingBeforePassive = false;
 
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
+export const enableFastAddPropertiesInDiffing = false;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;
