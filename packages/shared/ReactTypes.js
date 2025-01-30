@@ -203,6 +203,20 @@ export type ReactEnvironmentInfo = {
   +env: string,
 };
 
+export type ReactErrorInfoProd = {
+  +digest: string,
+};
+
+export type ReactErrorInfoDev = {
+  +digest?: string,
+  +name: string,
+  +message: string,
+  +stack: ReactStackTrace,
+  +env: string,
+};
+
+export type ReactErrorInfo = ReactErrorInfoProd | ReactErrorInfoDev;
+
 export type ReactAsyncInfo = {
   +type: string,
   // Stashed Data for the Specific Execution Environment. Not part of the transport protocol

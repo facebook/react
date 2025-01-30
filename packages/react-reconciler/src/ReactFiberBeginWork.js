@@ -97,6 +97,7 @@ import {
   Passive,
   DidDefer,
   ViewTransitionNamedStatic,
+  LayoutStatic,
 } from './ReactFiberFlags';
 import {
   disableLegacyContext,
@@ -1703,21 +1704,13 @@ function updateHostSingleton(
   }
 
   const nextChildren = workInProgress.pendingProps.children;
-
-  if (current === null && !getIsHydrating()) {
-    // Similar to Portals we append Singleton children in the commit phase. So we
-    // Track insertions even on mount.
-    // TODO: Consider unifying this with how the root works.
-    workInProgress.child = reconcileChildFibers(
-      workInProgress,
-      null,
-      nextChildren,
-      renderLanes,
-    );
-  } else {
-    reconcileChildren(current, workInProgress, nextChildren, renderLanes);
-  }
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   markRef(current, workInProgress);
+  if (current === null) {
+    // We mark Singletons with a static flag to more efficiently manage their
+    // ownership of the singleton host instance when in offscreen trees including Suspense
+    workInProgress.flags |= LayoutStatic;
+  }
   return workInProgress.child;
 }
 

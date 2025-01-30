@@ -37,6 +37,7 @@ export const {
   transitionLaneExpirationMs,
   enableOwnerStacks,
   enableRemoveConsolePatches,
+  enableFastAddPropertiesInDiffing,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

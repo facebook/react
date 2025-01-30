@@ -15,6 +15,7 @@ import {
   ReactNativeViewConfigRegistry,
   UIManager,
   deepFreezeAndThrowOnMutationInDev,
+  type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {create, diff} from './ReactNativeAttributePayload';
@@ -54,7 +55,10 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
 export type Type = string;
 export type Props = Object;
-export type Container = number;
+export type Container = {
+  containerTag: number,
+  publicInstance: PublicRootInstance | null,
+};
 export type Instance = ReactNativeFiberHostComponent;
 export type TextInstance = number;
 export type HydratableInstance = Instance | TextInstance;
@@ -143,7 +147,7 @@ export function createInstance(
   UIManager.createView(
     tag, // reactTag
     viewConfig.uiViewClassName, // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     updatePayload, // props
   );
 
@@ -176,7 +180,7 @@ export function createTextInstance(
   UIManager.createView(
     tag, // reactTag
     'RCTRawText', // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     {text: text}, // props
   );
 
@@ -349,7 +353,7 @@ export function appendChildToContainer(
 ): void {
   const childTag = typeof child === 'number' ? child : child._nativeTag;
   UIManager.setChildren(
-    parentInstance, // containerTag
+    parentInstance.containerTag, // containerTag
     [childTag], // reactTags
   );
 }
@@ -479,7 +483,7 @@ export function removeChildFromContainer(
 ): void {
   recursivelyUncacheFiberNode(child);
   UIManager.manageChildren(
-    parentInstance, // containerID
+    parentInstance.containerTag, // containerID
     [], // moveFromIndices
     [], // moveToIndices
     [], // addChildReactTags
