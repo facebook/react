@@ -1212,7 +1212,7 @@ function measureUpdateViewTransition(
   );
   const layoutClassName: ?string = getViewTransitionClassName(
     props.className,
-    props.update,
+    props.layout,
   );
   let className: ?string;
   if (updateClassName === 'none') {
