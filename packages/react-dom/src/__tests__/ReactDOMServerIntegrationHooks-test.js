@@ -657,7 +657,7 @@ describe('ReactDOMServerHooks', () => {
 
   describe('useResourceEffect', () => {
     gate(flags => {
-      if (flags.enableUseResourceEffectHook) {
+      if (flags.enableUseEffectCRUDOverload) {
         const yields = [];
         itRenders(
           'should ignore resource effects on the server',
