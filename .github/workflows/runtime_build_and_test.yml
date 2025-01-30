@@ -533,11 +533,6 @@ jobs:
           RELEASE_CHANNEL: experimental
       - name: Display structure of build
         run: ls -R build
-      - name: Archive devtools build
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-devtools-${{ matrix.browser }}
-          path: build/devtools.tgz
       # Simplifies getting the extension for local testing
       - name: Archive ${{ matrix.browser }} extension
         uses: actions/upload-artifact@v4
@@ -545,9 +540,20 @@ jobs:
           name: react-devtools-${{ matrix.browser }}-extension
           path: build/devtools/${{ matrix.browser }}-extension.zip
 
+  merge_devtools_artifacts:
+    name: Merge DevTools artifacts
+    needs: build_devtools_and_process_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: react-devtools
+          pattern: react-devtools-*-extension
+
   run_devtools_e2e_tests:
     name: Run DevTools e2e tests
-    needs: build_devtools_and_process_artifacts
+    needs: build_and_lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
