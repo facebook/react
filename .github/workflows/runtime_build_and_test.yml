@@ -476,9 +476,7 @@ jobs:
           fi
       - name: Playwright install deps
         working-directory: fixtures/flight
-        run: |
-          npx playwright install
-          sudo npx playwright install-deps
+        run: npx playwright install --with-deps chromium
       - name: Run tests
         working-directory: fixtures/flight
         run: yarn test
