@@ -43,7 +43,9 @@
   "permissions": [
     "scripting",
     "storage",
-    "tabs",
+    "tabs"
+  ],
+  "optional_permissions": [
     "clipboardWrite"
   ],
   "host_permissions": [
