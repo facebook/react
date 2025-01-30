@@ -10685,7 +10685,6 @@ var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
   workInProgressSuspendedRetryLanes = 0,
   workInProgressRootConcurrentErrors = null,
   workInProgressRootRecoverableErrors = null,
-  workInProgressAppearingViewTransitions = null,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   didIncludeCommitPhaseUpdate = !1,
   globalMostRecentFallbackTime = 0,
@@ -10960,7 +10959,6 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               forceSync,
               workInProgressRootRecoverableErrors,
               workInProgressTransitions,
-              workInProgressAppearingViewTransitions,
               workInProgressRootDidIncludeRecursiveRenderUpdate,
               lanes,
               workInProgressDeferredLane,
@@ -10981,7 +10979,6 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           forceSync,
           workInProgressRootRecoverableErrors,
           workInProgressTransitions,
-          workInProgressAppearingViewTransitions,
           workInProgressRootDidIncludeRecursiveRenderUpdate,
           lanes,
           workInProgressDeferredLane,
@@ -11004,7 +11001,6 @@ function commitRootWhenReady(
   finishedWork,
   recoverableErrors,
   transitions,
-  appearingViewTransitions,
   didIncludeRenderPhaseUpdate,
   lanes,
   spawnedLane,
@@ -11019,13 +11015,12 @@ function commitRootWhenReady(
   root.timeoutHandle = -1;
   suspendedCommitReason = finishedWork.subtreeFlags;
   if (
-    (suspendedCommitReason =
-      suspendedCommitReason & 8192 ||
-      16785408 === (suspendedCommitReason & 16785408))
+    suspendedCommitReason & 8192 ||
+    16785408 === (suspendedCommitReason & 16785408)
   )
     if (
       ((suspendedState = { stylesheets: null, count: 0, unsuspend: noop }),
-      suspendedCommitReason && accumulateSuspenseyCommitOnFiber(finishedWork),
+      accumulateSuspenseyCommitOnFiber(finishedWork),
       (suspendedCommitReason = waitForCommitToBeReady()),
       null !== suspendedCommitReason)
     ) {
@@ -11037,7 +11032,6 @@ function commitRootWhenReady(
           lanes,
           recoverableErrors,
           transitions,
-          appearingViewTransitions,
           didIncludeRenderPhaseUpdate,
           spawnedLane,
           updatedLanes,
@@ -11057,7 +11051,6 @@ function commitRootWhenReady(
     lanes,
     recoverableErrors,
     transitions,
-    appearingViewTransitions,
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
@@ -11179,7 +11172,6 @@ function prepareFreshStack(root, lanes) {
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-  workInProgressAppearingViewTransitions = null;
   0 !== (lanes & 8) && (lanes |= lanes & 32);
   var allEntangledLanes = root.entangledLanes;
   if (0 !== allEntangledLanes)
@@ -11629,7 +11621,6 @@ function commitRoot(
   lanes,
   recoverableErrors,
   transitions,
-  appearingViewTransitions,
   didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
@@ -11680,12 +11671,7 @@ function commitRoot(
       didIncludeRenderPhaseUpdate = executionContext;
       executionContext |= 4;
       try {
-        commitBeforeMutationEffects(
-          root,
-          finishedWork,
-          lanes,
-          appearingViewTransitions
-        );
+        commitBeforeMutationEffects(root, finishedWork, lanes);
       } finally {
         (executionContext = didIncludeRenderPhaseUpdate),
           (Internals.p = transitions),
@@ -13171,14 +13157,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$355;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1576 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1576) {
-      var element$jscomp$inline_1577 = document.createElement("div");
-      element$jscomp$inline_1577.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1576 =
-        "function" === typeof element$jscomp$inline_1577.oninput;
+    var isSupported$jscomp$inline_1575 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1575) {
+      var element$jscomp$inline_1576 = document.createElement("div");
+      element$jscomp$inline_1576.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1575 =
+        "function" === typeof element$jscomp$inline_1576.oninput;
     }
-    JSCompiler_inline_result$jscomp$355 = isSupported$jscomp$inline_1576;
+    JSCompiler_inline_result$jscomp$355 = isSupported$jscomp$inline_1575;
   } else JSCompiler_inline_result$jscomp$355 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$355 &&
@@ -13501,20 +13487,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1617 = 0;
-  i$jscomp$inline_1617 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1617++
+  var i$jscomp$inline_1616 = 0;
+  i$jscomp$inline_1616 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1616++
 ) {
-  var eventName$jscomp$inline_1618 =
-      simpleEventPluginEvents[i$jscomp$inline_1617],
-    domEventName$jscomp$inline_1619 =
-      eventName$jscomp$inline_1618.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1620 =
-      eventName$jscomp$inline_1618[0].toUpperCase() +
-      eventName$jscomp$inline_1618.slice(1);
+  var eventName$jscomp$inline_1617 =
+      simpleEventPluginEvents[i$jscomp$inline_1616],
+    domEventName$jscomp$inline_1618 =
+      eventName$jscomp$inline_1617.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1619 =
+      eventName$jscomp$inline_1617[0].toUpperCase() +
+      eventName$jscomp$inline_1617.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1619,
-    "on" + capitalizedEvent$jscomp$inline_1620
+    domEventName$jscomp$inline_1618,
+    "on" + capitalizedEvent$jscomp$inline_1619
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17094,16 +17080,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1790 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1789 = React.version;
 if (
-  "19.1.0-www-modern-c492f975-20250128" !==
-  isomorphicReactPackageVersion$jscomp$inline_1790
+  "19.1.0-www-modern-4b3728f0-20250130" !==
+  isomorphicReactPackageVersion$jscomp$inline_1789
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1790,
-      "19.1.0-www-modern-c492f975-20250128"
+      isomorphicReactPackageVersion$jscomp$inline_1789,
+      "19.1.0-www-modern-4b3728f0-20250130"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17119,24 +17105,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2314 = {
+var internals$jscomp$inline_2312 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-c492f975-20250128",
+  version: "19.1.0-www-modern-4b3728f0-20250130",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-c492f975-20250128"
+  reconcilerVersion: "19.1.0-www-modern-4b3728f0-20250130"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2315 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2313 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2315.isDisabled &&
-    hook$jscomp$inline_2315.supportsFiber
+    !hook$jscomp$inline_2313.isDisabled &&
+    hook$jscomp$inline_2313.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2315.inject(
-        internals$jscomp$inline_2314
+      (rendererID = hook$jscomp$inline_2313.inject(
+        internals$jscomp$inline_2312
       )),
-        (injectedHook = hook$jscomp$inline_2315);
+        (injectedHook = hook$jscomp$inline_2313);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -17488,4 +17474,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-c492f975-20250128";
+exports.version = "19.1.0-www-modern-4b3728f0-20250130";

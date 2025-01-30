@@ -9899,7 +9899,6 @@ module.exports = function ($$$config) {
                 forceSync,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
-                workInProgressAppearingViewTransitions,
                 workInProgressRootDidIncludeRecursiveRenderUpdate,
                 lanes,
                 workInProgressDeferredLane,
@@ -9920,7 +9919,6 @@ module.exports = function ($$$config) {
             forceSync,
             workInProgressRootRecoverableErrors,
             workInProgressTransitions,
-            workInProgressAppearingViewTransitions,
             workInProgressRootDidIncludeRecursiveRenderUpdate,
             lanes,
             workInProgressDeferredLane,
@@ -9943,7 +9941,6 @@ module.exports = function ($$$config) {
     finishedWork,
     recoverableErrors,
     transitions,
-    appearingViewTransitions,
     didIncludeRenderPhaseUpdate,
     lanes,
     spawnedLane,
@@ -9958,13 +9955,12 @@ module.exports = function ($$$config) {
     root.timeoutHandle = noTimeout;
     suspendedCommitReason = finishedWork.subtreeFlags;
     if (
-      (suspendedCommitReason =
-        suspendedCommitReason & 8192 ||
-        16785408 === (suspendedCommitReason & 16785408))
+      suspendedCommitReason & 8192 ||
+      16785408 === (suspendedCommitReason & 16785408)
     )
       if (
         (startSuspendingCommit(),
-        suspendedCommitReason && accumulateSuspenseyCommitOnFiber(finishedWork),
+        accumulateSuspenseyCommitOnFiber(finishedWork),
         (suspendedCommitReason = waitForCommitToBeReady()),
         null !== suspendedCommitReason)
       ) {
@@ -9976,7 +9972,6 @@ module.exports = function ($$$config) {
             lanes,
             recoverableErrors,
             transitions,
-            appearingViewTransitions,
             didIncludeRenderPhaseUpdate,
             spawnedLane,
             updatedLanes,
@@ -9996,7 +9991,6 @@ module.exports = function ($$$config) {
       lanes,
       recoverableErrors,
       transitions,
-      appearingViewTransitions,
       didIncludeRenderPhaseUpdate,
       spawnedLane,
       updatedLanes,
@@ -10118,7 +10112,6 @@ module.exports = function ($$$config) {
     workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
       null;
     workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-    workInProgressAppearingViewTransitions = null;
     0 !== (lanes & 8) && (lanes |= lanes & 32);
     var allEntangledLanes = root.entangledLanes;
     if (0 !== allEntangledLanes)
@@ -10586,7 +10579,6 @@ module.exports = function ($$$config) {
     lanes,
     recoverableErrors,
     transitions,
-    appearingViewTransitions,
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
@@ -10638,12 +10630,7 @@ module.exports = function ($$$config) {
         didIncludeRenderPhaseUpdate = executionContext;
         executionContext |= 4;
         try {
-          commitBeforeMutationEffects(
-            root,
-            finishedWork,
-            lanes,
-            appearingViewTransitions
-          );
+          commitBeforeMutationEffects(root, finishedWork, lanes);
         } finally {
           (executionContext = didIncludeRenderPhaseUpdate),
             setCurrentUpdatePriority(transitions),
@@ -12266,7 +12253,6 @@ module.exports = function ($$$config) {
     workInProgressSuspendedRetryLanes = 0,
     workInProgressRootConcurrentErrors = null,
     workInProgressRootRecoverableErrors = null,
-    workInProgressAppearingViewTransitions = null,
     workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
     didIncludeCommitPhaseUpdate = !1,
     globalMostRecentFallbackTime = 0,
@@ -12636,7 +12622,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-c492f975-20250128"
+      reconcilerVersion: "19.1.0-www-modern-4b3728f0-20250130"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
