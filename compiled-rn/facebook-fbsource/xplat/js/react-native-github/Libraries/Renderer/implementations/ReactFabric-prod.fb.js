@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0e409e791aa35d34758af84239c8ec1e>>
+ * @generated SignedSource<<1356d0a0ad6a15babe1d7f54f1ee063f>>
  */
 
 "use strict";
@@ -30,6 +30,8 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
+  enableFastAddPropertiesInDiffing =
+    dynamicFlagsUntyped.enableFastAddPropertiesInDiffing,
   ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -1412,12 +1414,9 @@ function diffNestedProperty(
 function addNestedProperty(updatePayload, nextProp, validAttributes) {
   if (!nextProp) return updatePayload;
   if (!isArrayImpl(nextProp))
-    return diffProperties(
-      updatePayload,
-      emptyObject,
-      nextProp,
-      validAttributes
-    );
+    return enableFastAddPropertiesInDiffing
+      ? fastAddProperties(updatePayload, nextProp, validAttributes)
+      : diffProperties(updatePayload, emptyObject, nextProp, validAttributes);
   for (var i = 0; i < nextProp.length; i++)
     updatePayload = addNestedProperty(
       updatePayload,
@@ -11045,10 +11044,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1238 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-b2357ecd-20250129",
+    version: "19.1.0-native-fb-bb9a24d9-20250130",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-b2357ecd-20250129"
+    reconcilerVersion: "19.1.0-native-fb-bb9a24d9-20250130"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1238.rendererConfig = extraDevToolsConfig);

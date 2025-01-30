@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<017e205003feddcf330358640ce4f29f>>
+ * @generated SignedSource<<f85365ee8b1e7de948a38e101aebe217>>
  */
 
 "use strict";
@@ -1328,12 +1328,14 @@ __DEV__ &&
     function addNestedProperty(updatePayload, nextProp, validAttributes) {
       if (!nextProp) return updatePayload;
       if (!isArrayImpl(nextProp))
-        return diffProperties(
-          updatePayload,
-          emptyObject$1,
-          nextProp,
-          validAttributes
-        );
+        return enableFastAddPropertiesInDiffing
+          ? fastAddProperties(updatePayload, nextProp, validAttributes)
+          : diffProperties(
+              updatePayload,
+              emptyObject$1,
+              nextProp,
+              validAttributes
+            );
       for (var i = 0; i < nextProp.length; i++)
         updatePayload = addNestedProperty(
           updatePayload,
@@ -14614,6 +14616,8 @@ __DEV__ &&
         dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
       enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
       enableOwnerStacks = dynamicFlagsUntyped.enableOwnerStacks,
+      enableFastAddPropertiesInDiffing =
+        dynamicFlagsUntyped.enableFastAddPropertiesInDiffing,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -17515,10 +17519,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-b2357ecd-20250129",
+        version: "19.1.0-native-fb-bb9a24d9-20250130",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-b2357ecd-20250129"
+        reconcilerVersion: "19.1.0-native-fb-bb9a24d9-20250130"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
