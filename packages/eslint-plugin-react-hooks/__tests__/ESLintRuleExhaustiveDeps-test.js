@@ -7675,62 +7675,6 @@ const tests = {
   ],
 };
 
-if (__EXPERIMENTAL__) {
-  tests.valid = [
-    ...tests.valid,
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          const onStuff = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          useEffect(() => {
-            onStuff();
-          }, []);
-        }
-      `,
-    },
-  ];
-
-  tests.invalid = [
-    ...tests.invalid,
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          const onStuff = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          useEffect(() => {
-            onStuff();
-          }, [onStuff]);
-        }
-      `,
-      errors: [
-        {
-          message:
-            'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
-            'Remove `onStuff` from the list.',
-          suggestions: [
-            {
-              desc: 'Remove the dependency `onStuff`',
-              output: normalizeIndent`
-                function MyComponent({ theme }) {
-                  const onStuff = useEffectEvent(() => {
-                    showNotification(theme);
-                  });
-                  useEffect(() => {
-                    onStuff();
-                  }, []);
-                }
-              `,
-            },
-          ],
-        },
-      ],
-    },
-  ];
-}
-
 // Tests that are only valid/invalid across parsers supporting Flow
 const testsFlow = {
   valid: [
