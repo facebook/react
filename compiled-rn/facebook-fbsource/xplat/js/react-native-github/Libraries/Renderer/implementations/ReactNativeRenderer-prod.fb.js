@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<77ee4b93e87a0be46b446320150500b1>>
+ * @generated SignedSource<<12d4a8b3bfb91cb6ce7e1c63e68d96ed>>
  */
 
 "use strict";
@@ -9614,7 +9614,6 @@ var DefaultAsyncDispatcher = {
   workInProgressSuspendedRetryLanes = 0,
   workInProgressRootConcurrentErrors = null,
   workInProgressRootRecoverableErrors = null,
-  workInProgressAppearingViewTransitions = null,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   globalMostRecentFallbackTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
@@ -9811,7 +9810,6 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               forceSync,
               workInProgressRootRecoverableErrors,
               workInProgressTransitions,
-              workInProgressAppearingViewTransitions,
               workInProgressRootDidIncludeRecursiveRenderUpdate,
               lanes,
               workInProgressDeferredLane,
@@ -9832,7 +9830,6 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           forceSync,
           workInProgressRootRecoverableErrors,
           workInProgressTransitions,
-          workInProgressAppearingViewTransitions,
           workInProgressRootDidIncludeRecursiveRenderUpdate,
           lanes,
           workInProgressDeferredLane,
@@ -9850,7 +9847,6 @@ function commitRootWhenReady(
   finishedWork,
   recoverableErrors,
   transitions,
-  appearingViewTransitions,
   didIncludeRenderPhaseUpdate,
   lanes,
   spawnedLane,
@@ -9859,9 +9855,7 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   var subtreeFlags = finishedWork.subtreeFlags;
-  (subtreeFlags =
-    subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
-    subtreeFlags &&
+  (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
     accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
@@ -9869,7 +9863,6 @@ function commitRootWhenReady(
     lanes,
     recoverableErrors,
     transitions,
-    appearingViewTransitions,
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
@@ -9976,7 +9969,6 @@ function prepareFreshStack(root, lanes) {
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-  workInProgressAppearingViewTransitions = null;
   0 !== (lanes & 8) && (lanes |= lanes & 32);
   var allEntangledLanes = root.entangledLanes;
   if (0 !== allEntangledLanes)
@@ -10423,7 +10415,6 @@ function commitRoot(
   lanes,
   recoverableErrors,
   transitions,
-  appearingViewTransitions,
   didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
@@ -10476,12 +10467,7 @@ function commitRoot(
       spawnedLane = executionContext;
       executionContext |= 4;
       try {
-        commitBeforeMutationEffects(
-          root,
-          finishedWork,
-          lanes,
-          appearingViewTransitions
-        );
+        commitBeforeMutationEffects(root, finishedWork, lanes);
       } finally {
         (executionContext = spawnedLane),
           (currentUpdatePriority = transitions),
@@ -11174,11 +11160,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-2fe5b572-20250130" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-4b3728f0-20250130" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-2fe5b572-20250130\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-4b3728f0-20250130\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11225,26 +11211,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1290 = {
+  internals$jscomp$inline_1289 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-2fe5b572-20250130",
+    version: "19.1.0-native-fb-4b3728f0-20250130",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-2fe5b572-20250130"
+    reconcilerVersion: "19.1.0-native-fb-4b3728f0-20250130"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1290.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1289.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1623 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1622 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1623.isDisabled &&
-    hook$jscomp$inline_1623.supportsFiber
+    !hook$jscomp$inline_1622.isDisabled &&
+    hook$jscomp$inline_1622.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1623.inject(
-        internals$jscomp$inline_1290
+      (rendererID = hook$jscomp$inline_1622.inject(
+        internals$jscomp$inline_1289
       )),
-        (injectedHook = hook$jscomp$inline_1623);
+        (injectedHook = hook$jscomp$inline_1622);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

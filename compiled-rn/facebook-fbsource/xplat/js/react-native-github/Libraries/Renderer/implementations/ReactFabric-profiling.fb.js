@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<db1e04cbaeb494e1ea9127729fa7b585>>
+ * @generated SignedSource<<567250480dca28bb95b31f54094d1aa5>>
  */
 
 "use strict";
@@ -9806,7 +9806,6 @@ var DefaultAsyncDispatcher = {
   workInProgressSuspendedRetryLanes = 0,
   workInProgressRootConcurrentErrors = null,
   workInProgressRootRecoverableErrors = null,
-  workInProgressAppearingViewTransitions = null,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   globalMostRecentFallbackTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
@@ -10002,7 +10001,6 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               forceSync,
               workInProgressRootRecoverableErrors,
               workInProgressTransitions,
-              workInProgressAppearingViewTransitions,
               workInProgressRootDidIncludeRecursiveRenderUpdate,
               lanes,
               workInProgressDeferredLane,
@@ -10023,7 +10021,6 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           forceSync,
           workInProgressRootRecoverableErrors,
           workInProgressTransitions,
-          workInProgressAppearingViewTransitions,
           workInProgressRootDidIncludeRecursiveRenderUpdate,
           lanes,
           workInProgressDeferredLane,
@@ -10041,7 +10038,6 @@ function commitRootWhenReady(
   finishedWork,
   recoverableErrors,
   transitions,
-  appearingViewTransitions,
   didIncludeRenderPhaseUpdate,
   lanes,
   spawnedLane,
@@ -10050,9 +10046,7 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   var subtreeFlags = finishedWork.subtreeFlags;
-  (subtreeFlags =
-    subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
-    subtreeFlags &&
+  (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
     accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
@@ -10060,7 +10054,6 @@ function commitRootWhenReady(
     lanes,
     recoverableErrors,
     transitions,
-    appearingViewTransitions,
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
@@ -10167,7 +10160,6 @@ function prepareFreshStack(root, lanes) {
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-  workInProgressAppearingViewTransitions = null;
   0 !== (lanes & 8) && (lanes |= lanes & 32);
   var allEntangledLanes = root.entangledLanes;
   if (0 !== allEntangledLanes)
@@ -10687,7 +10679,6 @@ function commitRoot(
   lanes,
   recoverableErrors,
   transitions,
-  appearingViewTransitions,
   didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
@@ -10745,12 +10736,7 @@ function commitRoot(
       spawnedLane = executionContext;
       executionContext |= 4;
       try {
-        commitBeforeMutationEffects(
-          root,
-          finishedWork,
-          lanes,
-          appearingViewTransitions
-        );
+        commitBeforeMutationEffects(root, finishedWork, lanes);
       } finally {
         (executionContext = spawnedLane),
           (currentUpdatePriority = transitions),
@@ -11694,16 +11680,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1331 = {
+  internals$jscomp$inline_1330 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-2fe5b572-20250130",
+    version: "19.1.0-native-fb-4b3728f0-20250130",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-2fe5b572-20250130"
+    reconcilerVersion: "19.1.0-native-fb-4b3728f0-20250130"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1331.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1331.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1330.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1330.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$155 = 0;
     31 > index$155;
@@ -11715,20 +11701,20 @@ internals$jscomp$inline_1331.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1331.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1330.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1609 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1608 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1609.isDisabled &&
-    hook$jscomp$inline_1609.supportsFiber
+    !hook$jscomp$inline_1608.isDisabled &&
+    hook$jscomp$inline_1608.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1609.inject(
-        internals$jscomp$inline_1331
+      (rendererID = hook$jscomp$inline_1608.inject(
+        internals$jscomp$inline_1330
       )),
-        (injectedHook = hook$jscomp$inline_1609);
+        (injectedHook = hook$jscomp$inline_1608);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

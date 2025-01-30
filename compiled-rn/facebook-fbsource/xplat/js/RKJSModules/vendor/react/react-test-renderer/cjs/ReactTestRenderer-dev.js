@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aa3a539ddfd3b435dd3905fdbc4da41e>>
+ * @generated SignedSource<<5befa7553be07dcbc1a57d9d8301ae5e>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1174() {
+    function JSCompiler_object_inline_createNodeMock_1173() {
       return null;
     }
     function findHook(fiber, id) {
@@ -11234,7 +11234,6 @@ __DEV__ &&
                 lanes,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
-                workInProgressAppearingViewTransitions,
                 workInProgressRootDidIncludeRecursiveRenderUpdate,
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
@@ -11264,7 +11263,6 @@ __DEV__ &&
                     forceSync,
                     workInProgressRootRecoverableErrors,
                     workInProgressTransitions,
-                    workInProgressAppearingViewTransitions,
                     workInProgressRootDidIncludeRecursiveRenderUpdate,
                     lanes,
                     workInProgressDeferredLane,
@@ -11285,7 +11283,6 @@ __DEV__ &&
                 forceSync,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
-                workInProgressAppearingViewTransitions,
                 workInProgressRootDidIncludeRecursiveRenderUpdate,
                 lanes,
                 workInProgressDeferredLane,
@@ -11309,7 +11306,6 @@ __DEV__ &&
       finishedWork,
       recoverableErrors,
       transitions,
-      appearingViewTransitions,
       didIncludeRenderPhaseUpdate,
       lanes,
       spawnedLane,
@@ -11318,9 +11314,7 @@ __DEV__ &&
     ) {
       root.timeoutHandle = -1;
       var subtreeFlags = finishedWork.subtreeFlags;
-      (subtreeFlags =
-        subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
-        subtreeFlags &&
+      (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
         accumulateSuspenseyCommitOnFiber(finishedWork);
       commitRoot(
         root,
@@ -11328,7 +11322,6 @@ __DEV__ &&
         lanes,
         recoverableErrors,
         transitions,
-        appearingViewTransitions,
         didIncludeRenderPhaseUpdate,
         spawnedLane,
         updatedLanes,
@@ -11462,7 +11455,6 @@ __DEV__ &&
       workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
         null;
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-      workInProgressAppearingViewTransitions = null;
       0 !== (lanes & 8) && (lanes |= lanes & 32);
       var allEntangledLanes = root.entangledLanes;
       if (0 !== allEntangledLanes)
@@ -12007,7 +11999,6 @@ __DEV__ &&
       lanes,
       recoverableErrors,
       transitions,
-      appearingViewTransitions,
       didIncludeRenderPhaseUpdate,
       spawnedLane,
       updatedLanes,
@@ -12072,12 +12063,7 @@ __DEV__ &&
           spawnedLane = executionContext;
           executionContext |= CommitContext;
           try {
-            commitBeforeMutationEffects(
-              root,
-              finishedWork,
-              lanes,
-              appearingViewTransitions
-            );
+            commitBeforeMutationEffects(root, finishedWork, lanes);
           } finally {
             (executionContext = spawnedLane),
               (currentUpdatePriority = transitions),
@@ -15395,7 +15381,6 @@ __DEV__ &&
       workInProgressSuspendedRetryLanes = 0,
       workInProgressRootConcurrentErrors = null,
       workInProgressRootRecoverableErrors = null,
-      workInProgressAppearingViewTransitions = null,
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
       globalMostRecentFallbackTime = 0,
       FALLBACK_THROTTLE_MS = 300,
@@ -15644,10 +15629,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-2fe5b572-20250130",
+        version: "19.1.0-native-fb-4b3728f0-20250130",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-2fe5b572-20250130"
+        reconcilerVersion: "19.1.0-native-fb-4b3728f0-20250130"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15669,7 +15654,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1174,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1173,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15792,5 +15777,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-2fe5b572-20250130";
+    exports.version = "19.1.0-native-fb-4b3728f0-20250130";
   })();

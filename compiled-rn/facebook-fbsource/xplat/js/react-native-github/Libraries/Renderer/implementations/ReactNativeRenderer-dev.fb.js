@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a1690194010c3a9aac5734b25d11295a>>
+ * @generated SignedSource<<dbbc34651004daf23d98952cb5f57bac>>
  */
 
 "use strict";
@@ -12517,7 +12517,6 @@ __DEV__ &&
                 lanes,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
-                workInProgressAppearingViewTransitions,
                 workInProgressRootDidIncludeRecursiveRenderUpdate,
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
@@ -12547,7 +12546,6 @@ __DEV__ &&
                     forceSync,
                     workInProgressRootRecoverableErrors,
                     workInProgressTransitions,
-                    workInProgressAppearingViewTransitions,
                     workInProgressRootDidIncludeRecursiveRenderUpdate,
                     lanes,
                     workInProgressDeferredLane,
@@ -12568,7 +12566,6 @@ __DEV__ &&
                 forceSync,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
-                workInProgressAppearingViewTransitions,
                 workInProgressRootDidIncludeRecursiveRenderUpdate,
                 lanes,
                 workInProgressDeferredLane,
@@ -12592,7 +12589,6 @@ __DEV__ &&
       finishedWork,
       recoverableErrors,
       transitions,
-      appearingViewTransitions,
       didIncludeRenderPhaseUpdate,
       lanes,
       spawnedLane,
@@ -12601,9 +12597,7 @@ __DEV__ &&
     ) {
       root.timeoutHandle = -1;
       var subtreeFlags = finishedWork.subtreeFlags;
-      (subtreeFlags =
-        subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
-        subtreeFlags &&
+      (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
         accumulateSuspenseyCommitOnFiber(finishedWork);
       commitRoot(
         root,
@@ -12611,7 +12605,6 @@ __DEV__ &&
         lanes,
         recoverableErrors,
         transitions,
-        appearingViewTransitions,
         didIncludeRenderPhaseUpdate,
         spawnedLane,
         updatedLanes,
@@ -12723,7 +12716,6 @@ __DEV__ &&
       workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
         null;
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-      workInProgressAppearingViewTransitions = null;
       0 !== (lanes & 8) && (lanes |= lanes & 32);
       var allEntangledLanes = root.entangledLanes;
       if (0 !== allEntangledLanes)
@@ -13320,7 +13312,6 @@ __DEV__ &&
       lanes,
       recoverableErrors,
       transitions,
-      appearingViewTransitions,
       didIncludeRenderPhaseUpdate,
       spawnedLane,
       updatedLanes,
@@ -13385,12 +13376,7 @@ __DEV__ &&
           spawnedLane = executionContext;
           executionContext |= CommitContext;
           try {
-            commitBeforeMutationEffects(
-              root,
-              finishedWork,
-              lanes,
-              appearingViewTransitions
-            );
+            commitBeforeMutationEffects(root, finishedWork, lanes);
           } finally {
             (executionContext = spawnedLane),
               (currentUpdatePriority = transitions),
@@ -17608,7 +17594,6 @@ __DEV__ &&
       workInProgressSuspendedRetryLanes = 0,
       workInProgressRootConcurrentErrors = null,
       workInProgressRootRecoverableErrors = null,
-      workInProgressAppearingViewTransitions = null,
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
       globalMostRecentFallbackTime = 0,
       FALLBACK_THROTTLE_MS = 300,
@@ -17731,11 +17716,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.1.0-native-fb-2fe5b572-20250130" !== isomorphicReactPackageVersion)
+    if ("19.1.0-native-fb-4b3728f0-20250130" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.1.0-native-fb-2fe5b572-20250130\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.1.0-native-fb-4b3728f0-20250130\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17761,10 +17746,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-2fe5b572-20250130",
+        version: "19.1.0-native-fb-4b3728f0-20250130",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-2fe5b572-20250130"
+        reconcilerVersion: "19.1.0-native-fb-4b3728f0-20250130"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

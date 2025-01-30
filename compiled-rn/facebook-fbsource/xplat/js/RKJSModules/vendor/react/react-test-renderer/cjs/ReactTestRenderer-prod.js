@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fad8da0c4b1965b8ede4327f20c76e1c>>
+ * @generated SignedSource<<f96a337fa19d9161ce019da5420389f4>>
  */
 
 "use strict";
@@ -8008,7 +8008,6 @@ var DefaultAsyncDispatcher = {
   workInProgressSuspendedRetryLanes = 0,
   workInProgressRootConcurrentErrors = null,
   workInProgressRootRecoverableErrors = null,
-  workInProgressAppearingViewTransitions = null,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   globalMostRecentFallbackTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
@@ -8203,7 +8202,6 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               forceSync,
               workInProgressRootRecoverableErrors,
               workInProgressTransitions,
-              workInProgressAppearingViewTransitions,
               workInProgressRootDidIncludeRecursiveRenderUpdate,
               lanes,
               workInProgressDeferredLane,
@@ -8224,7 +8222,6 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           forceSync,
           workInProgressRootRecoverableErrors,
           workInProgressTransitions,
-          workInProgressAppearingViewTransitions,
           workInProgressRootDidIncludeRecursiveRenderUpdate,
           lanes,
           workInProgressDeferredLane,
@@ -8242,7 +8239,6 @@ function commitRootWhenReady(
   finishedWork,
   recoverableErrors,
   transitions,
-  appearingViewTransitions,
   didIncludeRenderPhaseUpdate,
   lanes,
   spawnedLane,
@@ -8251,9 +8247,7 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   var subtreeFlags = finishedWork.subtreeFlags;
-  (subtreeFlags =
-    subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
-    subtreeFlags &&
+  (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
     accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
@@ -8261,7 +8255,6 @@ function commitRootWhenReady(
     lanes,
     recoverableErrors,
     transitions,
-    appearingViewTransitions,
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
@@ -8385,7 +8378,6 @@ function prepareFreshStack(root, lanes) {
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-  workInProgressAppearingViewTransitions = null;
   0 !== (lanes & 8) && (lanes |= lanes & 32);
   var allEntangledLanes = root.entangledLanes;
   if (0 !== allEntangledLanes)
@@ -8800,7 +8792,6 @@ function commitRoot(
   lanes,
   recoverableErrors,
   transitions,
-  appearingViewTransitions,
   didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
@@ -8853,12 +8844,7 @@ function commitRoot(
       spawnedLane = executionContext;
       executionContext |= 4;
       try {
-        commitBeforeMutationEffects(
-          root,
-          finishedWork,
-          lanes,
-          appearingViewTransitions
-        );
+        commitBeforeMutationEffects(root, finishedWork, lanes);
       } finally {
         (executionContext = spawnedLane),
           (currentUpdatePriority = transitions),
@@ -9823,24 +9809,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1402 = {
+var internals$jscomp$inline_1401 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-2fe5b572-20250130",
+  version: "19.1.0-native-fb-4b3728f0-20250130",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-2fe5b572-20250130"
+  reconcilerVersion: "19.1.0-native-fb-4b3728f0-20250130"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1403 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1402 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1403.isDisabled &&
-    hook$jscomp$inline_1403.supportsFiber
+    !hook$jscomp$inline_1402.isDisabled &&
+    hook$jscomp$inline_1402.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1403.inject(
-        internals$jscomp$inline_1402
+      (rendererID = hook$jscomp$inline_1402.inject(
+        internals$jscomp$inline_1401
       )),
-        (injectedHook = hook$jscomp$inline_1403);
+        (injectedHook = hook$jscomp$inline_1402);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9964,4 +9950,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-2fe5b572-20250130";
+exports.version = "19.1.0-native-fb-4b3728f0-20250130";

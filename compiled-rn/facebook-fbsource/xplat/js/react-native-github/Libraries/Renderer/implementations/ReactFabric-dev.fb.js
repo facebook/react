@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f2adc82447a3835e7a61812e1189abc2>>
+ * @generated SignedSource<<d0dbf173de9b24564d8cd033e9545600>>
  */
 
 "use strict";
@@ -12259,7 +12259,6 @@ __DEV__ &&
                 lanes,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
-                workInProgressAppearingViewTransitions,
                 workInProgressRootDidIncludeRecursiveRenderUpdate,
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
@@ -12290,7 +12289,6 @@ __DEV__ &&
                     forceSync,
                     workInProgressRootRecoverableErrors,
                     workInProgressTransitions,
-                    workInProgressAppearingViewTransitions,
                     workInProgressRootDidIncludeRecursiveRenderUpdate,
                     lanes,
                     workInProgressDeferredLane,
@@ -12311,7 +12309,6 @@ __DEV__ &&
                 forceSync,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
-                workInProgressAppearingViewTransitions,
                 workInProgressRootDidIncludeRecursiveRenderUpdate,
                 lanes,
                 workInProgressDeferredLane,
@@ -12335,7 +12332,6 @@ __DEV__ &&
       finishedWork,
       recoverableErrors,
       transitions,
-      appearingViewTransitions,
       didIncludeRenderPhaseUpdate,
       lanes,
       spawnedLane,
@@ -12344,9 +12340,7 @@ __DEV__ &&
     ) {
       root.timeoutHandle = noTimeout;
       var subtreeFlags = finishedWork.subtreeFlags;
-      (subtreeFlags =
-        subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
-        subtreeFlags &&
+      (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
         accumulateSuspenseyCommitOnFiber(finishedWork);
       commitRoot(
         root,
@@ -12354,7 +12348,6 @@ __DEV__ &&
         lanes,
         recoverableErrors,
         transitions,
-        appearingViewTransitions,
         didIncludeRenderPhaseUpdate,
         spawnedLane,
         updatedLanes,
@@ -12466,7 +12459,6 @@ __DEV__ &&
       workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
         null;
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-      workInProgressAppearingViewTransitions = null;
       0 !== (lanes & 8) && (lanes |= lanes & 32);
       var allEntangledLanes = root.entangledLanes;
       if (0 !== allEntangledLanes)
@@ -13063,7 +13055,6 @@ __DEV__ &&
       lanes,
       recoverableErrors,
       transitions,
-      appearingViewTransitions,
       didIncludeRenderPhaseUpdate,
       spawnedLane,
       updatedLanes,
@@ -13128,12 +13119,7 @@ __DEV__ &&
           spawnedLane = executionContext;
           executionContext |= CommitContext;
           try {
-            commitBeforeMutationEffects(
-              root,
-              finishedWork,
-              lanes,
-              appearingViewTransitions
-            );
+            commitBeforeMutationEffects(root, finishedWork, lanes);
           } finally {
             (executionContext = spawnedLane),
               (currentUpdatePriority = transitions),
@@ -17141,7 +17127,6 @@ __DEV__ &&
       workInProgressSuspendedRetryLanes = 0,
       workInProgressRootConcurrentErrors = null,
       workInProgressRootRecoverableErrors = null,
-      workInProgressAppearingViewTransitions = null,
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
       globalMostRecentFallbackTime = 0,
       FALLBACK_THROTTLE_MS = 300,
@@ -17519,10 +17504,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-2fe5b572-20250130",
+        version: "19.1.0-native-fb-4b3728f0-20250130",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-2fe5b572-20250130"
+        reconcilerVersion: "19.1.0-native-fb-4b3728f0-20250130"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
