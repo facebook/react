@@ -11974,9 +11974,6 @@ __DEV__ &&
                   hostParentIsContainer = !1;
                   break a;
                 case 3:
-                  hostParent = parent.stateNode.containerInfo;
-                  hostParentIsContainer = !0;
-                  break a;
                 case 4:
                   hostParent = parent.stateNode.containerInfo;
                   hostParentIsContainer = !0;
@@ -18926,7 +18923,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-9ff42a87-20250130"
+        reconcilerVersion: "19.1.0-www-modern-19ca800c-20250131"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

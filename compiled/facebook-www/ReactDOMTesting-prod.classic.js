@@ -9650,9 +9650,6 @@ function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber) {
             hostParentIsContainer = !1;
             break a;
           case 3:
-            hostParent = parent.stateNode.containerInfo;
-            hostParentIsContainer = !0;
-            break a;
           case 4:
             hostParent = parent.stateNode.containerInfo;
             hostParentIsContainer = !0;
@@ -17675,14 +17672,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1828 = React.version;
 if (
-  "19.1.0-www-classic-9ff42a87-20250130" !==
+  "19.1.0-www-classic-19ca800c-20250131" !==
   isomorphicReactPackageVersion$jscomp$inline_1828
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1828,
-      "19.1.0-www-classic-9ff42a87-20250130"
+      "19.1.0-www-classic-19ca800c-20250131"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17700,10 +17697,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2364 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-9ff42a87-20250130",
+  version: "19.1.0-www-classic-19ca800c-20250131",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-9ff42a87-20250130"
+  reconcilerVersion: "19.1.0-www-classic-19ca800c-20250131"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2365 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18218,4 +18215,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-9ff42a87-20250130";
+exports.version = "19.1.0-www-classic-19ca800c-20250131";

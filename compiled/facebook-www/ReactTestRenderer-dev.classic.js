@@ -9582,9 +9582,6 @@ __DEV__ &&
                 hostParentIsContainer = !1;
                 break a;
               case 3:
-                hostParent = parent.stateNode.containerInfo;
-                hostParentIsContainer = !0;
-                break a;
               case 4:
                 hostParent = parent.stateNode.containerInfo;
                 hostParentIsContainer = !0;
@@ -14994,10 +14991,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-9ff42a87-20250130",
+        version: "19.1.0-www-classic-19ca800c-20250131",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-9ff42a87-20250130"
+        reconcilerVersion: "19.1.0-www-classic-19ca800c-20250131"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15132,5 +15129,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-classic-9ff42a87-20250130";
+    exports.version = "19.1.0-www-classic-19ca800c-20250131";
   })();
