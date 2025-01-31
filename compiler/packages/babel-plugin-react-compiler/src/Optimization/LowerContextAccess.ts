@@ -270,7 +270,6 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
       name: null,
       loweredFunc: {
         func: fn,
-        dependencies: [],
       },
       type: 'ArrowFunctionExpression',
       loc: GeneratedSource,
