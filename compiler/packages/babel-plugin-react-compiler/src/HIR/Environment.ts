@@ -552,6 +552,8 @@ const EnvironmentConfigSchema = z.object({
    */
   disableMemoizationForDebugging: z.boolean().default(false),
 
+  enableMinimalTransformsForRetry: z.boolean().default(false),
+
   /**
    * When true, rather using memoized values, the compiler will always re-compute
    * values, and then use a heuristic to compare the memoized value to the newly
@@ -626,6 +628,17 @@ const EnvironmentConfigSchema = z.object({
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
 
+export const MINIMAL_RETRY_CONFIG: PartialEnvironmentConfig = {
+  validateHooksUsage: false,
+  validateRefAccessDuringRender: false,
+  validateNoSetStateInRender: false,
+  validateNoSetStateInPassiveEffects: false,
+  validateNoJSXInTryStatements: false,
+  validateMemoizedEffectDependencies: false,
+  validateNoCapitalizedCalls: null,
+  validateBlocklistedImports: null,
+  enableMinimalTransformsForRetry: true,
+};
 /**
  * For test fixtures and playground only.
  *

@@ -241,7 +241,7 @@ export default function inferReferenceEffects(
 
   if (options.isFunctionExpression) {
     fn.effects = functionEffects;
-  } else {
+  } else if (!fn.env.config.enableMinimalTransformsForRetry) {
     raiseFunctionEffectErrors(functionEffects);
   }
 }
