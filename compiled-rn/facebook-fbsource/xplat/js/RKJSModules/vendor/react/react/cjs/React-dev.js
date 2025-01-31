@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a8b1764849b8ad5727a65887d6a479a9>>
+ * @generated SignedSource<<3450945c09b0683433a66224f638e6df>>
  */
 
 "use strict";
@@ -668,7 +668,8 @@ __DEV__ &&
         enableOwnerStacks ? oldElement._debugStack : void 0,
         enableOwnerStacks ? oldElement._debugTask : void 0
       );
-      newKey._store.validated = oldElement._store.validated;
+      oldElement._store &&
+        (newKey._store.validated = oldElement._store.validated);
       return newKey;
     }
     function validateChildKeys(node, parentType) {
@@ -1839,7 +1840,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-4b3728f0-20250130";
+    exports.version = "19.1.0-native-fb-9ff42a87-20250130";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
