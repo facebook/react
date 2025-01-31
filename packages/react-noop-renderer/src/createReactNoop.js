@@ -22,6 +22,7 @@ import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue'
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -81,6 +82,7 @@ type CreateRootOptions = {
   onCaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
   ...
 };
+type InstanceMeasurement = null;
 
 type SuspenseyCommitSubscription = {
   pendingCount: number,
@@ -90,6 +92,8 @@ type SuspenseyCommitSubscription = {
 export type TransitionStatus = mixed;
 
 export type FormInstance = Instance;
+
+export type ViewTransitionInstance = null | {name: string, ...};
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -642,6 +646,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       );
     },
 
+    suspendOnActiveViewTransition(container: Container): void {
+      // Not implemented
+    },
+
     waitForCommitToBeReady,
 
     NotPendingTransition: (null: TransitionStatus),
@@ -729,6 +737,61 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         unhideTextInstance(textInstance: TextInstance, text: string): void {
           textInstance.hidden = false;
+        },
+
+        applyViewTransitionName(
+          instance: Instance,
+          name: string,
+          className: ?string,
+        ): void {},
+
+        restoreViewTransitionName(instance: Instance, props: Props): void {},
+
+        cancelViewTransitionName(
+          instance: Instance,
+          name: string,
+          props: Props,
+        ): void {},
+
+        cancelRootViewTransitionName(rootContainer: Container): void {},
+
+        restoreRootViewTransitionName(rootContainer: Container): void {},
+
+        measureInstance(instance: Instance): InstanceMeasurement {
+          return null;
+        },
+
+        wasInstanceInViewport(measurement: InstanceMeasurement): boolean {
+          return true;
+        },
+
+        hasInstanceChanged(
+          oldMeasurement: InstanceMeasurement,
+          newMeasurement: InstanceMeasurement,
+        ): boolean {
+          return false;
+        },
+
+        hasInstanceAffectedParent(
+          oldMeasurement: InstanceMeasurement,
+          newMeasurement: InstanceMeasurement,
+        ): boolean {
+          return false;
+        },
+
+        startViewTransition(
+          rootContainer: Container,
+          transitionTypes: null | TransitionTypes,
+          mutationCallback: () => void,
+          afterMutationCallback: () => void,
+          layoutCallback: () => void,
+          passiveCallback: () => mixed,
+        ): boolean {
+          return false;
+        },
+
+        createViewTransitionInstance(name: string): ViewTransitionInstance {
+          return null;
         },
 
         resetTextContent(instance: Instance): void {

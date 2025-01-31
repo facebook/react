@@ -51,6 +51,8 @@ export {
   unstable_Scope,
   unstable_SuspenseList,
   unstable_TracingMarker,
+  unstable_ViewTransition,
+  unstable_addTransitionType,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
   useId,

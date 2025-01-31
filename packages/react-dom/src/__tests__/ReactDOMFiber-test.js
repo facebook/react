@@ -746,8 +746,13 @@ describe('ReactDOMFiber', () => {
       root.render(<Parent />);
     });
     assertConsoleErrorDev([
-      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'Parent uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Parent (at **)',
+      'Component uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Component (at **)\n') +
+        '    in Parent (at **)',
     ]);
     expect(container.innerHTML).toBe('');
     expect(portalContainer.innerHTML).toBe('<div>bar</div>');
@@ -957,15 +962,14 @@ describe('ReactDOMFiber', () => {
         return <div onClick="woops" />;
       }
     }
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Example />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Example />);
+    });
+    assertConsoleErrorDev([
       'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
         '    in div (at **)\n' +
         '    in Example (at **)',
-    );
+    ]);
   });
 
   it('should warn with a special message for `false` event listeners', () => {
@@ -974,17 +978,16 @@ describe('ReactDOMFiber', () => {
         return <div onClick={false} />;
       }
     }
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Example />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Example />);
+    });
+    assertConsoleErrorDev([
       'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
         'If you used to conditionally omit it with onClick={condition && value}, ' +
         'pass onClick={condition ? value : undefined} instead.\n' +
         '    in div (at **)\n' +
         '    in Example (at **)',
-    );
+    ]);
   });
 
   it('should not update event handlers until commit', async () => {

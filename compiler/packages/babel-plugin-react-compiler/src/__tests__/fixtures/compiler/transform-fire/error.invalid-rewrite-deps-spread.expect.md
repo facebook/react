@@ -12,9 +12,12 @@ function Component(props) {
 
   const deps = [foo, props];
 
-  useEffect(() => {
-    fire(foo(props));
-  }, ...deps);
+  useEffect(
+    () => {
+      fire(foo(props));
+    },
+    ...deps
+  );
 
   return null;
 }
@@ -25,13 +28,13 @@ function Component(props) {
 ## Error
 
 ```
-  11 |   useEffect(() => {
-  12 |     fire(foo(props));
-> 13 |   }, ...deps);
-     |         ^^^^ Invariant: Cannot compile `fire`. You must use an array literal for an effect dependency array when that effect uses `fire()` (13:13)
-  14 |
-  15 |   return null;
-  16 | }
+  13 |       fire(foo(props));
+  14 |     },
+> 15 |     ...deps
+     |        ^^^^ Invariant: Cannot compile `fire`. You must use an array literal for an effect dependency array when that effect uses `fire()` (15:15)
+  16 |   );
+  17 |
+  18 |   return null;
 ```
           
       

@@ -10,7 +10,7 @@
 import type {Node as ReactNode} from 'react';
 
 export type ContextMenuItem = {
-  onClick: () => void,
+  onClick: () => mixed,
   content: ReactNode,
 };
 

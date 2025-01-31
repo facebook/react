@@ -18,6 +18,7 @@ import {
   REACT_OFFSCREEN_TYPE,
   REACT_SCOPE_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -60,9 +61,10 @@ import {
 } from './ReactHooks';
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
+import {addTransitionType} from './ReactTransitionType';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
-import ReactCompilerRuntime from './ReactCompilerRuntime';
+import * as ReactCompilerRuntime from './ReactCompilerRuntime';
 import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
 
 const Children = {
@@ -123,6 +125,9 @@ export {
   REACT_SCOPE_TYPE as unstable_Scope,
   // enableTransitionTracing
   REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
+  // enableViewTransition
+  REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
+  addTransitionType as unstable_addTransitionType,
   useId,
   act, // DEV-only
   captureOwnerStack, // DEV-only

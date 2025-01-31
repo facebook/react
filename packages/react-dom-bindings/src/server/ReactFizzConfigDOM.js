@@ -135,8 +135,7 @@ export type RenderState = {
   // be null or empty when resuming.
 
   // preamble chunks
-  htmlChunks: null | Array<Chunk | PrecomputedChunk>,
-  headChunks: null | Array<Chunk | PrecomputedChunk>,
+  preamble: PreambleState,
 
   // external runtime script chunks
   externalRuntimeScript: null | ExternalRuntimeScript,
@@ -442,8 +441,7 @@ export function createRenderState(
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: stringToPrecomputedChunk(idPrefix + 'B:'),
     startInlineScript: inlineScriptWithNonce,
-    htmlChunks: null,
-    headChunks: null,
+    preamble: createPreambleState(),
 
     externalRuntimeScript: externalRuntimeScript,
     bootstrapChunks: bootstrapChunks,
@@ -686,6 +684,19 @@ export function completeResumableState(resumableState: ResumableState): void {
   resumableState.bootstrapModules = undefined;
 }
 
+export type PreambleState = {
+  htmlChunks: null | Array<Chunk | PrecomputedChunk>,
+  headChunks: null | Array<Chunk | PrecomputedChunk>,
+  bodyChunks: null | Array<Chunk | PrecomputedChunk>,
+};
+export function createPreambleState(): PreambleState {
+  return {
+    htmlChunks: null,
+    headChunks: null,
+    bodyChunks: null,
+  };
+}
+
 // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
 // We don't actually provide the namespace therefore we use constants instead of the string.
@@ -694,16 +705,17 @@ export const ROOT_HTML_MODE = 0; // Used for the root most element tag.
 // still makes sense
 const HTML_HTML_MODE = 1; // Used for the <html> if it is at the top level.
 const HTML_MODE = 2;
-const SVG_MODE = 3;
-const MATHML_MODE = 4;
-const HTML_TABLE_MODE = 5;
-const HTML_TABLE_BODY_MODE = 6;
-const HTML_TABLE_ROW_MODE = 7;
-const HTML_COLGROUP_MODE = 8;
+const HTML_HEAD_MODE = 3;
+const SVG_MODE = 4;
+const MATHML_MODE = 5;
+const HTML_TABLE_MODE = 6;
+const HTML_TABLE_BODY_MODE = 7;
+const HTML_TABLE_ROW_MODE = 8;
+const HTML_COLGROUP_MODE = 9;
 // We have a greater than HTML_TABLE_MODE check elsewhere. If you add more cases here, make sure it
 // still makes sense
 
-type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 const NO_SCOPE = /*         */ 0b00;
 const NOSCRIPT_SCOPE = /*   */ 0b01;
@@ -726,6 +738,10 @@ function createFormatContext(
     selectedValue,
     tagScope,
   };
+}
+
+export function canHavePreamble(formatContext: FormatContext): boolean {
+  return formatContext.insertionMode < HTML_MODE;
 }
 
 export function createRootFormatContext(namespaceURI?: string): FormatContext {
@@ -792,25 +808,40 @@ export function getChildFormatContext(
         null,
         parentContext.tagScope,
       );
+    case 'head':
+      if (parentContext.insertionMode < HTML_MODE) {
+        // We are either at the root or inside the <html> tag and can enter
+        // the <head> scope
+        return createFormatContext(
+          HTML_HEAD_MODE,
+          null,
+          parentContext.tagScope,
+        );
+      }
+      break;
+    case 'html':
+      if (parentContext.insertionMode === ROOT_HTML_MODE) {
+        return createFormatContext(
+          HTML_HTML_MODE,
+          null,
+          parentContext.tagScope,
+        );
+      }
+      break;
   }
   if (parentContext.insertionMode >= HTML_TABLE_MODE) {
     // Whatever tag this was, it wasn't a table parent or other special parent, so we must have
     // entered plain HTML again.
     return createFormatContext(HTML_MODE, null, parentContext.tagScope);
   }
-  if (parentContext.insertionMode === ROOT_HTML_MODE) {
-    if (type === 'html') {
-      // We've emitted the root and is now in <html> mode.
-      return createFormatContext(HTML_HTML_MODE, null, parentContext.tagScope);
-    } else {
-      // We've emitted the root and is now in plain HTML mode.
-      return createFormatContext(HTML_MODE, null, parentContext.tagScope);
-    }
-  } else if (parentContext.insertionMode === HTML_HTML_MODE) {
-    // We've emitted the document element and is now in plain HTML mode.
+  if (parentContext.insertionMode < HTML_MODE) {
     return createFormatContext(HTML_MODE, null, parentContext.tagScope);
   }
   return parentContext;
+}
+
+export function isPreambleContext(formatContext: FormatContext): boolean {
+  return formatContext.insertionMode === HTML_HEAD_MODE;
 }
 
 export function makeId(
@@ -3185,12 +3216,18 @@ function pushStartHead(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   renderState: RenderState,
+  preambleState: null | PreambleState,
   insertionMode: InsertionMode,
 ): ReactNodeList {
-  if (insertionMode < HTML_MODE && renderState.headChunks === null) {
+  if (insertionMode < HTML_MODE) {
     // This <head> is the Document.head and should be part of the preamble
-    renderState.headChunks = [];
-    return pushStartGenericElement(renderState.headChunks, props, 'head');
+    const preamble = preambleState || renderState.preamble;
+
+    if (preamble.headChunks) {
+      throw new Error(`The ${'`<head>`'} tag may only be rendered once.`);
+    }
+    preamble.headChunks = [];
+    return pushStartGenericElement(preamble.headChunks, props, 'head');
   } else {
     // This <head> is deep and is likely just an error. we emit it inline though.
     // Validation should warn that this tag is the the wrong spot.
@@ -3198,16 +3235,47 @@ function pushStartHead(
   }
 }
 
+function pushStartBody(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  renderState: RenderState,
+  preambleState: null | PreambleState,
+  insertionMode: InsertionMode,
+): ReactNodeList {
+  if (insertionMode < HTML_MODE) {
+    // This <body> is the Document.body
+    const preamble = preambleState || renderState.preamble;
+
+    if (preamble.bodyChunks) {
+      throw new Error(`The ${'`<body>`'} tag may only be rendered once.`);
+    }
+
+    preamble.bodyChunks = [];
+    return pushStartGenericElement(preamble.bodyChunks, props, 'body');
+  } else {
+    // This <head> is deep and is likely just an error. we emit it inline though.
+    // Validation should warn that this tag is the the wrong spot.
+    return pushStartGenericElement(target, props, 'body');
+  }
+}
+
 function pushStartHtml(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   renderState: RenderState,
+  preambleState: null | PreambleState,
   insertionMode: InsertionMode,
 ): ReactNodeList {
-  if (insertionMode === ROOT_HTML_MODE && renderState.htmlChunks === null) {
-    // This <html> is the Document.documentElement and should be part of the preamble
-    renderState.htmlChunks = [DOCTYPE];
-    return pushStartGenericElement(renderState.htmlChunks, props, 'html');
+  if (insertionMode === ROOT_HTML_MODE) {
+    // This <html> is the Document.documentElement
+    const preamble = preambleState || renderState.preamble;
+
+    if (preamble.htmlChunks) {
+      throw new Error(`The ${'`<html>`'} tag may only be rendered once.`);
+    }
+
+    preamble.htmlChunks = [DOCTYPE];
+    return pushStartGenericElement(preamble.htmlChunks, props, 'html');
   } else {
     // This <html> is deep and is likely just an error. we emit it inline though.
     // Validation should warn that this tag is the the wrong spot.
@@ -3562,6 +3630,7 @@ export function pushStartInstance(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  preambleState: null | PreambleState,
   hoistableState: null | HoistableState,
   formatContext: FormatContext,
   textEmbedded: boolean,
@@ -3729,6 +3798,15 @@ export function pushStartInstance(
         target,
         props,
         renderState,
+        preambleState,
+        formatContext.insertionMode,
+      );
+    case 'body':
+      return pushStartBody(
+        target,
+        props,
+        renderState,
+        preambleState,
         formatContext.insertionMode,
       );
     case 'html': {
@@ -3736,6 +3814,7 @@ export function pushStartInstance(
         target,
         props,
         renderState,
+        preambleState,
         formatContext.insertionMode,
       );
     }
@@ -3814,8 +3893,48 @@ export function pushEndInstance(
         return;
       }
       break;
+    case 'head':
+      if (formatContext.insertionMode <= HTML_HTML_MODE) {
+        return;
+      }
+      break;
   }
   target.push(endChunkForTag(type));
+}
+
+export function hoistPreambleState(
+  renderState: RenderState,
+  preambleState: PreambleState,
+) {
+  const rootPreamble = renderState.preamble;
+  if (rootPreamble.htmlChunks === null) {
+    rootPreamble.htmlChunks = preambleState.htmlChunks;
+  }
+  if (rootPreamble.headChunks === null) {
+    rootPreamble.headChunks = preambleState.headChunks;
+  }
+  if (rootPreamble.bodyChunks === null) {
+    rootPreamble.bodyChunks = preambleState.bodyChunks;
+  }
+}
+
+export function isPreambleReady(
+  renderState: RenderState,
+  // This means there are unfinished Suspense boundaries which could contain
+  // a preamble. In the case of DOM we constrain valid programs to only having
+  // one instance of each singleton so we can determine the preamble is ready
+  // as long as we have chunks for each of these tags.
+  hasPendingPreambles: boolean,
+): boolean {
+  const preamble = renderState.preamble;
+  return (
+    // There are no remaining boundaries which might contain a preamble so
+    // the preamble is as complete as it is going to get
+    hasPendingPreambles === false ||
+    // we have a head and body tag. we don't need to wait for any more
+    // because it would be invalid to render additional copies of these tags
+    !!(preamble.headChunks && preamble.bodyChunks)
+  );
 }
 
 function writeBootstrap(
@@ -4033,6 +4152,7 @@ export function writeStartSegment(
   switch (formatContext.insertionMode) {
     case ROOT_HTML_MODE:
     case HTML_HTML_MODE:
+    case HTML_HEAD_MODE:
     case HTML_MODE: {
       writeChunk(destination, startSegmentHTML);
       writeChunk(destination, renderState.segmentPrefix);
@@ -4091,6 +4211,7 @@ export function writeEndSegment(
   switch (formatContext.insertionMode) {
     case ROOT_HTML_MODE:
     case HTML_HTML_MODE:
+    case HTML_HEAD_MODE:
     case HTML_MODE: {
       return writeChunkAndReturn(destination, endSegmentHTML);
     }
@@ -4679,7 +4800,7 @@ function preloadLateStyles(this: Destination, styleQueue: StyleQueue) {
 // flush the entire preamble in a single pass. This probably should be modified
 // in the future to be backpressure sensitive but that requires a larger refactor
 // of the flushing code in Fizz.
-export function writePreamble(
+export function writePreambleStart(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
@@ -4700,8 +4821,10 @@ export function writePreamble(
     internalPreinitScript(resumableState, renderState, src, chunks);
   }
 
-  const htmlChunks = renderState.htmlChunks;
-  const headChunks = renderState.headChunks;
+  const preamble = renderState.preamble;
+
+  const htmlChunks = preamble.htmlChunks;
+  const headChunks = preamble.headChunks;
 
   let i = 0;
 
@@ -4773,11 +4896,30 @@ export function writePreamble(
     writeChunk(destination, hoistableChunks[i]);
   }
   hoistableChunks.length = 0;
+}
 
-  if (htmlChunks && headChunks === null) {
+// We don't bother reporting backpressure at the moment because we expect to
+// flush the entire preamble in a single pass. This probably should be modified
+// in the future to be backpressure sensitive but that requires a larger refactor
+// of the flushing code in Fizz.
+export function writePreambleEnd(
+  destination: Destination,
+  renderState: RenderState,
+): void {
+  const preamble = renderState.preamble;
+  const htmlChunks = preamble.htmlChunks;
+  const headChunks = preamble.headChunks;
+  if (htmlChunks || headChunks) {
     // we have an <html> but we inserted an implicit <head> tag. We need
     // to close it since the main content won't have it
     writeChunk(destination, endChunkForTag('head'));
+  }
+
+  const bodyChunks = preamble.bodyChunks;
+  if (bodyChunks) {
+    for (let i = 0; i < bodyChunks.length; i++) {
+      writeChunk(destination, bodyChunks[i]);
+    }
   }
 }
 

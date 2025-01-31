@@ -9,6 +9,8 @@ PropTypes = null
 React = null
 ReactDOM = null
 ReactDOMClient = null
+assertConsoleErrorDev = null
+assertConsoleWarnDev = null
 
 featureFlags = require 'shared/ReactFeatureFlags'
 
@@ -28,6 +30,9 @@ describe 'ReactCoffeeScriptClass', ->
     root = ReactDOMClient.createRoot container
     attachedListener = null
     renderedName = null
+    TestUtils = require 'internal-test-utils'
+    assertConsoleErrorDev = TestUtils.assertConsoleErrorDev
+    assertConsoleWarnDev = TestUtils.assertConsoleWarnDev
     InnerComponent = class extends React.Component
       getName: -> this.props.name
       render: ->
@@ -53,14 +58,15 @@ describe 'ReactCoffeeScriptClass', ->
       event.preventDefault()
       caughtErrors.push(event.error)
     window.addEventListener 'error', errorHandler;
-    expect(->
-      ReactDOM.flushSync ->
-        root.render React.createElement(Foo)
-    ).toErrorDev([
-      # A failed component renders twice in DEV in concurrent mode
-      'No `render` method found on the Foo instance',
-      'No `render` method found on the Foo instance',
-    ])
+    ReactDOM.flushSync ->
+      root.render React.createElement(Foo)
+    assertConsoleErrorDev [
+# A failed component renders twice in DEV in concurrent mode
+      'No `render` method found on the Foo instance: you may have forgotten to define `render`.\n' +
+        '     in Foo (at **)',
+      'No `render` method found on the Foo instance: you may have forgotten to define `render`.\n' +
+        '     in Foo (at **)',
+    ]
     window.removeEventListener 'error', errorHandler;
     expect(caughtErrors).toEqual([
       expect.objectContaining(
@@ -136,11 +142,11 @@ describe 'ReactCoffeeScriptClass', ->
         React.createElement('div')
       getDerivedStateFromProps: ->
         {}
-    expect(->
-      ReactDOM.flushSync ->
-        root.render React.createElement(Foo, foo: 'foo')
-      return
-    ).toErrorDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
+    ReactDOM.flushSync ->
+     root.render React.createElement(Foo, foo: 'foo')
+    assertConsoleErrorDev [
+      'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.\n' +
+        '    in Foo (at **)']
 
   it 'warns if getDerivedStateFromError is not static', ->
     class Foo extends React.Component
@@ -148,11 +154,13 @@ describe 'ReactCoffeeScriptClass', ->
         React.createElement('div')
       getDerivedStateFromError: ->
         {}
-    expect(->
-      ReactDOM.flushSync ->
-        root.render React.createElement(Foo, foo: 'foo')
-      return
-    ).toErrorDev 'Foo: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
+    ReactDOM.flushSync ->
+      root.render React.createElement(Foo, foo: 'foo')
+
+    assertConsoleErrorDev [
+      'Foo: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.\n' +
+        '    in Foo (at **)'
+    ]
 
   it 'warns if getSnapshotBeforeUpdate is static', ->
     class Foo extends React.Component
@@ -160,11 +168,13 @@ describe 'ReactCoffeeScriptClass', ->
         React.createElement('div')
     Foo.getSnapshotBeforeUpdate = () ->
       {}
-    expect(->
-      ReactDOM.flushSync ->
-        root.render React.createElement(Foo, foo: 'foo')
-      return
-    ).toErrorDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.'
+    ReactDOM.flushSync ->
+      root.render React.createElement(Foo, foo: 'foo')
+
+    assertConsoleErrorDev [
+      'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.\n' +
+        '    in Foo (at **)'
+    ]
 
   it 'warns if state not initialized before static getDerivedStateFromProps', ->
     class Foo extends React.Component
@@ -177,16 +187,16 @@ describe 'ReactCoffeeScriptClass', ->
         foo: nextProps.foo
         bar: 'bar'
       }
-    expect(->
-      ReactDOM.flushSync ->
-        root.render React.createElement(Foo, foo: 'foo')
-      return
-    ).toErrorDev (
-      '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
-      'undefined. This is not recommended. Instead, define the initial state by ' +
-      'assigning an object to `this.state` in the constructor of `Foo`. ' +
-      'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.'
-    )
+    ReactDOM.flushSync ->
+      root.render React.createElement(Foo, foo: 'foo')
+
+    assertConsoleErrorDev [
+      '`Foo` uses `getDerivedStateFromProps` but its initial state is
+       undefined. This is not recommended. Instead, define the initial state by
+       assigning an object to `this.state` in the constructor of `Foo`.
+       This ensures that `getDerivedStateFromProps` arguments have a consistent shape.\n' +
+        '     in Foo (at **)'
+    ]
 
   it 'updates initial state with values returned by static getDerivedStateFromProps', ->
     class Foo extends React.Component
@@ -254,12 +264,28 @@ describe 'ReactCoffeeScriptClass', ->
         render: ->
           React.createElement Foo
 
-      expect(->
-        test React.createElement(Outer), 'SPAN', 'foo'
-      ).toErrorDev([
-        'Outer uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-        'Foo uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
-      ])
+      test React.createElement(Outer), 'SPAN', 'foo'
+      
+      if featureFlags.enableOwnerStacks
+        assertConsoleErrorDev([
+          'Outer uses the legacy childContextTypes API which will soon be removed.
+           Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+            '    in Outer (at **)',
+          'Foo uses the legacy contextTypes API which will soon be removed.
+           Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+            '    in Outer (at **)',
+        ]);
+      else
+        assertConsoleErrorDev([
+          'Outer uses the legacy childContextTypes API which will soon be removed.
+           Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+            '    in Outer (at **)',
+          'Foo uses the legacy contextTypes API which will soon be removed.
+           Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+            '    in Foo (at **)\n' +
+            '    in Outer (at **)',
+        ]);
+      
 
   it 'renders only once when setting state in componentWillMount', ->
     renderCount = 0
@@ -286,9 +312,11 @@ describe 'ReactCoffeeScriptClass', ->
         render: ->
           React.createElement('span')
 
-      expect(->
-        test React.createElement(Foo), 'SPAN', ''
-      ).toErrorDev('Foo.state: must be set to an object or null')
+      test React.createElement(Foo), 'SPAN', ''
+      assertConsoleErrorDev [
+        'Foo.state: must be set to an object or null\n' +
+          '    in Foo (at **)'
+      ]
 
   it 'should render with null in the initial state property', ->
     class Foo extends React.Component
@@ -430,14 +458,21 @@ describe 'ReactCoffeeScriptClass', ->
             className: 'foo'
           )
 
-      expect(->
-        test React.createElement(Foo), 'SPAN', 'foo'
-      ).toErrorDev([
-        'getInitialState was defined on Foo, a plain JavaScript class.',
-        'getDefaultProps was defined on Foo, a plain JavaScript class.',
-        'contextTypes was defined as an instance property on Foo.',
-        'contextType was defined as an instance property on Foo.',
-      ])
+      test React.createElement(Foo), 'SPAN', 'foo'
+      assertConsoleErrorDev [
+        'getInitialState was defined on Foo, a plain JavaScript class.
+         This is only supported for classes created using React.createClass.
+         Did you mean to define a state property instead?\n' +
+          '     in Foo (at **)',
+        'getDefaultProps was defined on Foo, a plain JavaScript class.
+         This is only supported for classes created using React.createClass.
+         Use a static property to define defaultProps instead.\n' +
+          '    in Foo (at **)',
+        'contextType was defined as an instance property on Foo. Use a static property to define contextType instead.\n' +
+          '    in Foo (at **)',
+        'contextTypes was defined as an instance property on Foo. Use a static property to define contextTypes instead.\n' +
+          '    in Foo (at **)',
+      ]
       expect(getInitialStateWasCalled).toBe false
       expect(getDefaultPropsWasCalled).toBe false
 
@@ -468,13 +503,13 @@ describe 'ReactCoffeeScriptClass', ->
           className: 'foo'
         )
 
-    expect(->
-      test React.createElement(NamedComponent), 'SPAN', 'foo'
-    ).toErrorDev(
+    test React.createElement(NamedComponent), 'SPAN', 'foo'
+    assertConsoleErrorDev [
       'NamedComponent has a method called componentShouldUpdate().
        Did you mean shouldComponentUpdate()? The name is phrased as a
-       question because the function is expected to return a value.'
-    )
+       question because the function is expected to return a value.\n' +
+        '    in NamedComponent (at **)'
+    ]
 
   it 'should warn when misspelling componentWillReceiveProps', ->
     class NamedComponent extends React.Component
@@ -486,12 +521,12 @@ describe 'ReactCoffeeScriptClass', ->
           className: 'foo'
         )
 
-    expect(->
-      test React.createElement(NamedComponent), 'SPAN', 'foo'
-    ).toErrorDev(
+    test React.createElement(NamedComponent), 'SPAN', 'foo'
+    assertConsoleErrorDev [
       'NamedComponent has a method called componentWillRecieveProps().
-       Did you mean componentWillReceiveProps()?'
-    )
+       Did you mean componentWillReceiveProps()?\n' +
+        '    in NamedComponent (at **)'
+    ]
 
   it 'should warn when misspelling UNSAFE_componentWillReceiveProps', ->
     class NamedComponent extends React.Component
@@ -503,28 +538,28 @@ describe 'ReactCoffeeScriptClass', ->
           className: 'foo'
         )
 
-    expect(->
-      test React.createElement(NamedComponent), 'SPAN', 'foo'
-    ).toErrorDev(
+    test React.createElement(NamedComponent), 'SPAN', 'foo'
+    assertConsoleErrorDev [
       'NamedComponent has a method called UNSAFE_componentWillRecieveProps().
-       Did you mean UNSAFE_componentWillReceiveProps()?'
-    )
+       Did you mean UNSAFE_componentWillReceiveProps()?\n' +
+        '    in NamedComponent (at **)'
+    ]
 
   it 'should throw AND warn when trying to access classic APIs', ->
     ref = React.createRef()
     test React.createElement(InnerComponent, name: 'foo', ref: ref), 'DIV', 'foo'
-    expect(->
-      expect(-> ref.current.replaceState {}).toThrow()
-    ).toWarnDev(
-      'replaceState(...) is deprecated in plain JavaScript React classes',
-      {withoutStack: true}
-    )
-    expect(->
-      expect(-> ref.current.isMounted()).toThrow()
-    ).toWarnDev(
-      'isMounted(...) is deprecated in plain JavaScript React classes',
-      {withoutStack: true}
-    )
+
+    expect(-> ref.current.replaceState {}).toThrow()
+    assertConsoleWarnDev([
+      'replaceState(...) is deprecated in plain JavaScript React classes.
+       Refactor your code to use setState instead (see https://github.com/facebook/react/issues/3236).'
+    ], {withoutStack: true})
+
+    expect(-> ref.current.isMounted()).toThrow()
+    assertConsoleWarnDev([
+      'isMounted(...) is deprecated in plain JavaScript React classes.
+       Instead, make sure to clean up subscriptions and pending requests in componentWillUnmount to prevent memory leaks.',
+    ], {withoutStack: true})
 
   if !featureFlags.disableLegacyContext
     it 'supports this.context passed via getChildContext', ->
@@ -542,13 +577,25 @@ describe 'ReactCoffeeScriptClass', ->
         render: ->
           React.createElement Bar
 
-      expect(->
-        test React.createElement(Foo), 'DIV', 'bar-through-context'
-      ).toErrorDev(
-        [
-          'Foo uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-          'Bar uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
-        ],
-      )
+      test React.createElement(Foo), 'DIV', 'bar-through-context'
+      if featureFlags.enableOwnerStacks
+        assertConsoleErrorDev [
+          'Foo uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.
+           (https://react.dev/link/legacy-context)\n' +
+            '    in Foo (at **)',
+          'Bar uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.
+           (https://react.dev/link/legacy-context)\n' +
+            '    in Foo (at **)'
+        ]
+      else
+        assertConsoleErrorDev [
+          'Foo uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.
+           (https://react.dev/link/legacy-context)\n' +
+            '    in Foo (at **)',
+          'Bar uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.
+           (https://react.dev/link/legacy-context)\n' +
+            '    in Bar (at **)\n' +
+            '    in Foo (at **)'
+        ]
 
   undefined

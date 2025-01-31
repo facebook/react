@@ -18,6 +18,7 @@ let SuspenseList;
 let waitForAll;
 let assertLog;
 let waitFor;
+let assertConsoleErrorDev;
 
 describe('ReactSuspenseList', () => {
   beforeEach(() => {
@@ -37,6 +38,7 @@ describe('ReactSuspenseList', () => {
     assertLog = InternalTestUtils.assertLog;
     waitFor = InternalTestUtils.waitFor;
     act = InternalTestUtils.act;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   function Text(props) {
@@ -72,11 +74,10 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
       '"something" is not a supported revealOrder on ' +
         '<SuspenseList />. Did you mean "together", "forwards" or "backwards"?' +
         '\n    in SuspenseList (at **)' +
@@ -94,11 +95,10 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
       '"TOGETHER" is not a valid value for revealOrder on ' +
         '<SuspenseList />. Use lowercase "together" instead.' +
         '\n    in SuspenseList (at **)' +
@@ -116,11 +116,10 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
       '"forward" is not a valid value for revealOrder on ' +
         '<SuspenseList />. React uses the -s suffix in the spelling. ' +
         'Use "forwards" instead.' +
@@ -147,15 +146,14 @@ describe('ReactSuspenseList', () => {
     // No warning
     await waitForAll([]);
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(
-          <Foo>
-            <Suspense fallback="Loading">Child</Suspense>
-          </Foo>,
-        );
-      });
-    }).toErrorDev([
+    await act(() => {
+      ReactNoop.render(
+        <Foo>
+          <Suspense fallback="Loading">Child</Suspense>
+        </Foo>,
+      );
+    });
+    assertConsoleErrorDev([
       'A single row was passed to a <SuspenseList revealOrder="forwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
@@ -174,11 +172,10 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
       'A single row was passed to a <SuspenseList revealOrder="backwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
@@ -202,11 +199,10 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo items={['A', 'B']} />);
-      });
-    }).toErrorDev([
+    await act(() => {
+      ReactNoop.render(<Foo items={['A', 'B']} />);
+    });
+    assertConsoleErrorDev([
       'A nested array was passed to row #0 in <SuspenseList />. ' +
         'Wrap it in an additional SuspenseList to configure its revealOrder: ' +
         '<SuspenseList revealOrder=...> ... ' +
@@ -1555,11 +1551,10 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
       '"collapse" is not a supported value for tail on ' +
         '<SuspenseList />. Did you mean "collapsed" or "hidden"?' +
         '\n    in SuspenseList (at **)' +
@@ -1577,11 +1572,10 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
       '<SuspenseList tail="collapsed" /> is only valid if ' +
         'revealOrder is "forwards" or "backwards". ' +
         'Did you mean to specify revealOrder="forwards"?' +

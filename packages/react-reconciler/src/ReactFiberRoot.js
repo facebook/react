@@ -61,7 +61,6 @@ function FiberRootNode(
   this.pendingChildren = null;
   this.current = null;
   this.pingCache = null;
-  this.finishedWork = null;
   this.timeoutHandle = noTimeout;
   this.cancelPendingCommit = null;
   this.context = null;
@@ -76,7 +75,6 @@ function FiberRootNode(
   this.pingedLanes = NoLanes;
   this.warmLanes = NoLanes;
   this.expiredLanes = NoLanes;
-  this.finishedLanes = NoLanes;
   this.errorRecoveryDisabledLanes = NoLanes;
   this.shellSuspendCounter = 0;
 

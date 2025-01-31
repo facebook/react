@@ -14,6 +14,7 @@ import {toNormalUrl} from 'jsc-safe-url';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Skeleton from './Skeleton';
+import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
 import type {Source as InspectedElementSource} from 'react-devtools-shared/src/shared/types';
 import styles from './InspectedElementSourcePanel.css';
@@ -28,7 +29,7 @@ function InspectedElementSourcePanel({
   symbolicatedSourcePromise,
 }: Props): React.Node {
   return (
-    <div data-testname="InspectedElementView-Source">
+    <div>
       <div className={styles.SourceHeaderRow}>
         <div className={styles.SourceHeader}>source</div>
 
@@ -59,7 +60,10 @@ function CopySourceButton({source, symbolicatedSourcePromise}: Props) {
   const symbolicatedSource = React.use(symbolicatedSourcePromise);
   if (symbolicatedSource == null) {
     const {sourceURL, line, column} = source;
-    const handleCopy = () => copy(`${sourceURL}:${line}:${column}`);
+    const handleCopy = withPermissionsCheck(
+      {permissions: ['clipboardWrite']},
+      () => copy(`${sourceURL}:${line}:${column}`),
+    );
 
     return (
       <Button onClick={handleCopy} title="Copy to clipboard">
@@ -69,7 +73,10 @@ function CopySourceButton({source, symbolicatedSourcePromise}: Props) {
   }
 
   const {sourceURL, line, column} = symbolicatedSource;
-  const handleCopy = () => copy(`${sourceURL}:${line}:${column}`);
+  const handleCopy = withPermissionsCheck(
+    {permissions: ['clipboardWrite']},
+    () => copy(`${sourceURL}:${line}:${column}`),
+  );
 
   return (
     <Button onClick={handleCopy} title="Copy to clipboard">
@@ -84,7 +91,9 @@ function FormattedSourceString({source, symbolicatedSourcePromise}: Props) {
     const {sourceURL, line} = source;
 
     return (
-      <div className={styles.SourceOneLiner}>
+      <div
+        className={styles.SourceOneLiner}
+        data-testname="InspectedElementView-FormattedSourceString">
         {formatSourceForDisplay(sourceURL, line)}
       </div>
     );
@@ -93,7 +102,9 @@ function FormattedSourceString({source, symbolicatedSourcePromise}: Props) {
   const {sourceURL, line} = symbolicatedSource;
 
   return (
-    <div className={styles.SourceOneLiner}>
+    <div
+      className={styles.SourceOneLiner}
+      data-testname="InspectedElementView-FormattedSourceString">
       {formatSourceForDisplay(sourceURL, line)}
     </div>
   );

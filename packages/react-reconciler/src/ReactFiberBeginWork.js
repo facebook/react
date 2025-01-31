@@ -28,6 +28,11 @@ import type {
   OffscreenQueue,
   OffscreenInstance,
 } from './ReactFiberActivityComponent';
+import type {
+  ViewTransitionProps,
+  ViewTransitionState,
+} from './ReactFiberViewTransitionComponent';
+import {assignViewTransitionAutoName} from './ReactFiberViewTransitionComponent';
 import {OffscreenDetached} from './ReactFiberActivityComponent';
 import type {
   Cache,
@@ -71,6 +76,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -90,6 +96,9 @@ import {
   ForceClientRender,
   Passive,
   DidDefer,
+  ViewTransitionNamedStatic,
+  ViewTransitionNamedMount,
+  LayoutStatic,
 } from './ReactFiberFlags';
 import {
   disableLegacyContext,
@@ -107,6 +116,7 @@ import {
   disableDefaultPropsExceptForClasses,
   enableOwnerStacks,
   enableHydrationLaneScheduling,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -1694,21 +1704,13 @@ function updateHostSingleton(
   }
 
   const nextChildren = workInProgress.pendingProps.children;
-
-  if (current === null && !getIsHydrating()) {
-    // Similar to Portals we append Singleton children in the commit phase. So we
-    // Track insertions even on mount.
-    // TODO: Consider unifying this with how the root works.
-    workInProgress.child = reconcileChildFibers(
-      workInProgress,
-      null,
-      nextChildren,
-      renderLanes,
-    );
-  } else {
-    reconcileChildren(current, workInProgress, nextChildren, renderLanes);
-  }
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   markRef(current, workInProgress);
+  if (current === null) {
+    // We mark Singletons with a static flag to more efficiently manage their
+    // ownership of the singleton host instance when in offscreen trees including Suspense
+    workInProgress.flags |= LayoutStatic;
+  }
   return workInProgress.child;
 }
 
@@ -3231,6 +3233,39 @@ function updateSuspenseListComponent(
   return workInProgress.child;
 }
 
+function updateViewTransition(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
+  const instance: ViewTransitionState = workInProgress.stateNode;
+  if (pendingProps.name != null && pendingProps.name !== 'auto') {
+    // Explicitly named boundary. We track it so that we can pair it up with another explicit
+    // boundary if we get deleted.
+    workInProgress.flags |=
+      current === null
+        ? ViewTransitionNamedMount | ViewTransitionNamedStatic
+        : ViewTransitionNamedStatic;
+  } else {
+    // Assign an auto generated name using the useId algorthim if an explicit one is not provided.
+    // We don't need the name yet but we do it here to allow hydration state to be used.
+    // We might end up needing these to line up if we want to Transition from dehydrated fallback
+    // to client rendered content. If we don't end up using that we could just assign an incremeting
+    // counter in the commit phase instead.
+    assignViewTransitionAutoName(pendingProps, instance);
+  }
+  if (current !== null && current.memoizedProps.name !== pendingProps.name) {
+    // If the name changes, we schedule a ref effect to create a new ref instance.
+    workInProgress.flags |= Ref | RefStatic;
+  } else {
+    markRef(current, workInProgress);
+  }
+  const nextChildren = pendingProps.children;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
+
 function updatePortalComponent(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -4012,6 +4047,12 @@ function beginWork(
           workInProgress,
           renderLanes,
         );
+      }
+      break;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        return updateViewTransition(current, workInProgress, renderLanes);
       }
       break;
     }

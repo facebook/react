@@ -17,7 +17,6 @@ import {
   enablePostpone,
   enableHalt,
   enableTaint,
-  enableServerComponentLogs,
   enableOwnerStacks,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
@@ -65,6 +64,8 @@ import type {
   ReactTimeInfo,
   ReactStackTrace,
   ReactCallSite,
+  ReactErrorInfo,
+  ReactErrorInfoDev,
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
@@ -234,12 +235,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
   }
 }
 
-if (
-  enableServerComponentLogs &&
-  __DEV__ &&
-  typeof console === 'object' &&
-  console !== null
-) {
+if (__DEV__ && typeof console === 'object' && console !== null) {
   // Instrument console to capture logs for replaying on the client.
   patchConsole(console, 'assert');
   patchConsole(console, 'debug');
@@ -3099,10 +3095,12 @@ function emitPostponeChunk(
 
 function serializeErrorValue(request: Request, error: Error): string {
   if (__DEV__) {
-    let message;
+    let name: string = 'Error';
+    let message: string;
     let stack: ReactStackTrace;
     let env = (0, request.environmentName)();
     try {
+      name = error.name;
       // eslint-disable-next-line react-internal/safe-string-coercion
       message = String(error.message);
       stack = filterStackTrace(request, error, 0);
@@ -3116,7 +3114,7 @@ function serializeErrorValue(request: Request, error: Error): string {
       message = 'An error occurred but serializing the error message failed.';
       stack = [];
     }
-    const errorInfo = {message, stack, env};
+    const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
     const id = outlineModel(request, errorInfo);
     return '$Z' + id.toString(16);
   } else {
@@ -3133,13 +3131,15 @@ function emitErrorChunk(
   digest: string,
   error: mixed,
 ): void {
-  let errorInfo: any;
+  let errorInfo: ReactErrorInfo;
   if (__DEV__) {
-    let message;
+    let name: string = 'Error';
+    let message: string;
     let stack: ReactStackTrace;
     let env = (0, request.environmentName)();
     try {
       if (error instanceof Error) {
+        name = error.name;
         // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error.message);
         stack = filterStackTrace(request, error, 0);
@@ -3161,7 +3161,7 @@ function emitErrorChunk(
       message = 'An error occurred but serializing the error message failed.';
       stack = [];
     }
-    errorInfo = {digest, message, stack, env};
+    errorInfo = {digest, name, message, stack, env};
   } else {
     errorInfo = {digest};
   }
