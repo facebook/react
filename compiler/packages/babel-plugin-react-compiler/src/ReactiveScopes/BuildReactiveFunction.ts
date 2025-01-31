@@ -17,11 +17,16 @@ import {
   SourceLocation,
 } from '../HIR';
 import {
+  areEqualPaths,
+  GeneratedSource,
   HIRFunction,
+  PrunedReactiveScopeBlock,
   ReactiveBreakTerminal,
   ReactiveContinueTerminal,
   ReactiveFunction,
+  ReactiveInstructionStatement,
   ReactiveLogicalValue,
+  ReactiveScopeBlock,
   ReactiveSequenceValue,
   ReactiveTerminalStatement,
   ReactiveTerminalTargetKind,
@@ -29,7 +34,12 @@ import {
   ReactiveValue,
   Terminal,
 } from '../HIR/HIR';
+import {
+  readScopeDependencies,
+  readScopeDependenciesRHIR,
+} from '../HIR/PropagateScopeDependenciesHIR';
 import {assertExhaustive} from '../Utils/utils';
+import {printDependency} from './PrintReactiveFunction';
 
 /*
  * Converts from HIR (lower-level CFG) to ReactiveFunction, a tree representation
@@ -38,7 +48,7 @@ import {assertExhaustive} from '../Utils/utils';
  * labels for *all* terminals: see PruneUnusedLabels which removes unnecessary labels.
  */
 export function buildReactiveFunction(fn: HIRFunction): ReactiveFunction {
-  const cx = new Context(fn.body);
+  const cx = new Context(fn);
   const driver = new Driver(cx);
   const body = driver.traverseBlock(cx.block(fn.body.entry));
   return {
@@ -816,15 +826,64 @@ class Driver {
         } else {
           block = this.traverseBlock(this.cx.ir.blocks.get(terminal.block)!);
         }
+        {
+          const scheduleId = this.cx.schedule(terminal.block, 'if');
+          scheduleIds.push(scheduleId);
+          this.cx.scopeFallthroughs.add(terminal.block);
+        }
+        CompilerError.invariant(!this.cx.isScheduled(terminal.dependencies), {
+          reason: `Unexpected 'scope' where the dependencies block is already scheduled`,
+          loc: terminal.loc,
+        });
+        const dependencies: Array<ReactiveInstructionStatement> =
+          this.traverseBlock(this.cx.ir.blocks.get(terminal.dependencies)!).map(
+            dep => {
+              CompilerError.invariant(dep.kind === 'instruction', {
+                reason: '[BuildReactiveFunction] Expected reactive instruction',
+                loc: GeneratedSource,
+              });
+              return dep;
+            },
+          );
 
         this.cx.unscheduleAll(scheduleIds);
-        blockValue.push({
+        const scopeBlock: ReactiveScopeBlock | PrunedReactiveScopeBlock = {
           kind: terminal.kind,
+          dependencyInstructions: dependencies,
           instructions: block,
           scope: terminal.scope,
-        });
+        };
+        blockValue.push(scopeBlock);
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
+        }
+        /**
+         * Sanity check: check that HIR and RHIR dependencies match
+         */
+        const hirDepsSanityCheck = readScopeDependencies(
+          this.cx.fn,
+          terminal.scope.id,
+        );
+        const rhirDeps = readScopeDependenciesRHIR(scopeBlock);
+        CompilerError.invariant(hirDepsSanityCheck.size === rhirDeps.size, {
+          reason: `Mismatch in dependencies`,
+          loc: terminal.loc,
+        });
+        outer: for (const hirDep of hirDepsSanityCheck) {
+          for (const [, rhirDep] of rhirDeps) {
+            if (
+              hirDep.identifier === rhirDep.identifier &&
+              areEqualPaths(hirDep.path, rhirDep.path)
+            ) {
+              continue outer;
+            }
+          }
+          CompilerError.invariant(false, {
+            reason:
+              '[BuildReactiveFunction] Rewrite sanity check: mismatching scope dependencies',
+            description: `No match found for ${printDependency(hirDep)}. Candidates are ${[...rhirDeps.values()].map(printDependency)}`,
+            loc: GeneratedSource,
+          });
         }
 
         break;
@@ -1187,6 +1246,7 @@ class Driver {
     loc: SourceLocation,
   ): ReactiveTerminalStatement<ReactiveBreakTerminal> | null {
     const target = this.cx.getBreakTarget(block);
+    // console.log(target);
     if (target === null) {
       CompilerError.invariant(false, {
         reason: 'Expected a break target',
@@ -1243,6 +1303,7 @@ class Driver {
 }
 
 class Context {
+  fn: HIRFunction;
   ir: HIR;
   #nextScheduleId: number = 0;
 
@@ -1273,8 +1334,9 @@ class Context {
    */
   #controlFlowStack: Array<ControlFlowTarget> = [];
 
-  constructor(ir: HIR) {
-    this.ir = ir;
+  constructor(fn: HIRFunction) {
+    this.fn = fn;
+    this.ir = fn.body;
   }
 
   block(id: BlockId): BasicBlock {
@@ -1405,6 +1467,7 @@ class Context {
            * breaking to the last break point, which is where control will transfer
            * implicitly
            */
+          // console.log(this.#controlFlowStack[i]);
           type = 'implicit';
         } else {
           // breaking somewhere else requires an explicit break
