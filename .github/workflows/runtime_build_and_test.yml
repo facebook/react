@@ -476,9 +476,7 @@ jobs:
           fi
       - name: Playwright install deps
         working-directory: fixtures/flight
-        run: |
-          npx playwright install
-          sudo npx playwright install-deps
+        run: npx playwright install --with-deps chromium
       - name: Run tests
         working-directory: fixtures/flight
         run: yarn test
@@ -501,6 +499,9 @@ jobs:
     name: Build DevTools and process artifacts
     needs: build_and_lint
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chrome, firefox, edge]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -525,31 +526,32 @@ jobs:
           pattern: _build_*
           path: build
           merge-multiple: true
-      - run: ./scripts/ci/pack_and_store_devtools_artifacts.sh
+      - run: ./scripts/ci/pack_and_store_devtools_artifacts.sh ${{ matrix.browser }}
         env:
           RELEASE_CHANNEL: experimental
       - name: Display structure of build
         run: ls -R build
-      - name: Archive devtools build
+      # Simplifies getting the extension for local testing
+      - name: Archive ${{ matrix.browser }} extension
         uses: actions/upload-artifact@v4
+        with:
+          name: react-devtools-${{ matrix.browser }}-extension
+          path: build/devtools/${{ matrix.browser }}-extension.zip
+
+  merge_devtools_artifacts:
+    name: Merge DevTools artifacts
+    needs: build_devtools_and_process_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge artifacts
+        uses: actions/upload-artifact/merge@v4
         with:
           name: react-devtools
-          path: build/devtools.tgz
-      # Simplifies getting the extension for local testing
-      - name: Archive chrome extension
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-devtools-chrome-extension
-          path: build/devtools/chrome-extension.zip
-      - name: Archive firefox extension
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-devtools-firefox-extension
-          path: build/devtools/firefox-extension.zip
+          pattern: react-devtools-*-extension
 
   run_devtools_e2e_tests:
     name: Run DevTools e2e tests
-    needs: build_devtools_and_process_artifacts
+    needs: build_and_lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

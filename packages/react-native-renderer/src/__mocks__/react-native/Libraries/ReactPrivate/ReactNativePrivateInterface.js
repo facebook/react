@@ -9,6 +9,7 @@
 
 export opaque type PublicInstance = mixed;
 export opaque type PublicTextInstance = mixed;
+export opaque type PublicRootInstance = mixed;
 
 module.exports = {
   get BatchedBridge() {
@@ -58,5 +59,8 @@ module.exports = {
   },
   get createPublicTextInstance() {
     return require('./createPublicTextInstance').default;
+  },
+  get createPublicRootInstance() {
+    return require('./createPublicRootInstance').default;
   },
 };

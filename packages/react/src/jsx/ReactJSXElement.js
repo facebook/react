@@ -813,7 +813,9 @@ export function cloneAndReplaceKey(oldElement, newKey) {
   );
   if (__DEV__) {
     // The cloned element should inherit the original element's key validation.
-    clonedElement._store.validated = oldElement._store.validated;
+    if (oldElement._store) {
+      clonedElement._store.validated = oldElement._store.validated;
+    }
   }
   return clonedElement;
 }

@@ -148,6 +148,14 @@ function collectScopeInfo(fn: HIRFunction): ScopeInfo {
     const scope = place.identifier.scope;
     if (scope != null) {
       placeScopes.set(place, scope);
+      /**
+       * Record both mutating and non-mutating scopes to merge scopes with
+       * still-mutating values with inner scopes that alias those values
+       * (see `nonmutating-capture-in-unsplittable-memo-block`)
+       *
+       * Note that this isn't perfect, as it also leads to merging of mutating
+       * scopes with JSX single-instruction scopes (see `mutation-within-jsx`)
+       */
       if (scope.range.start !== scope.range.end) {
         getOrInsertDefault(scopeStarts, scope.range.start, new Set()).add(
           scope,
@@ -254,7 +262,7 @@ function visitPlace(
    * of the stack to the mutated outer scope.
    */
   const placeScope = getPlaceScope(id, place);
-  if (placeScope != null && isMutable({id} as any, place)) {
+  if (placeScope != null && isMutable({id}, place)) {
     const placeScopeIdx = activeScopes.indexOf(placeScope);
     if (placeScopeIdx !== -1 && placeScopeIdx !== activeScopes.length - 1) {
       joined.union([placeScope, ...activeScopes.slice(placeScopeIdx + 1)]);
