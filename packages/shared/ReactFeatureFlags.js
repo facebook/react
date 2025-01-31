@@ -157,6 +157,8 @@ export const enableInfiniteRenderLoopDetection = false;
  */
 export const enableUseResourceEffectHook = false;
 
+export const enableFastAddPropertiesInDiffing = true;
+
 // -----------------------------------------------------------------------------
 // Ready for next major.
 //

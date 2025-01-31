@@ -38,6 +38,7 @@ import {
   currentBridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
 import {StrictMode} from 'react-devtools-shared/src/frontend/types';
+import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
 import type {
   Element,
@@ -1494,7 +1495,7 @@ export default class Store extends EventEmitter<{
   };
 
   onSaveToClipboard: (text: string) => void = text => {
-    copy(text);
+    withPermissionsCheck({permissions: ['clipboardWrite']}, () => copy(text))();
   };
 
   onBackendInitialized: () => void = () => {

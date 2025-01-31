@@ -152,7 +152,6 @@ import {
   prepareForCommit,
   beforeActiveInstanceBlur,
   detachDeletedInstance,
-  releaseSingletonInstance,
   getHoistableRoot,
   acquireResource,
   releaseResource,
@@ -173,6 +172,7 @@ import {
   hasInstanceChanged,
   hasInstanceAffectedParent,
   wasInstanceInViewport,
+  isSingletonScope,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -246,7 +246,8 @@ import {
   commitHostHydratedSuspense,
   commitHostRemoveChildFromContainer,
   commitHostRemoveChild,
-  commitHostSingleton,
+  commitHostSingletonAcquisition,
+  commitHostSingletonRelease,
 } from './ReactFiberCommitHostEffects';
 import {
   viewTransitionMutationContext,
@@ -275,6 +276,10 @@ export let shouldFireAfterActiveInstanceBlur: boolean = false;
 
 export let shouldStartViewTransition: boolean = false;
 
+// This tracks named ViewTransition components found in the accumulateSuspenseyCommit
+// phase that might need to find deleted pairs in the beforeMutation phase.
+let appearingViewTransitions: Map<string, ViewTransitionState> | null = null;
+
 // Used during the commit phase to track whether a parent ViewTransition component
 // might have been affected by any mutations / relayouts below.
 let viewTransitionContextChanged: boolean = false;
@@ -287,7 +292,6 @@ export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
   committedLanes: Lanes,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
 ): void {
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
   shouldFireAfterActiveInstanceBlur = false;
@@ -298,19 +302,15 @@ export function commitBeforeMutationEffects(
     includesOnlyViewTransitionEligibleLanes(committedLanes);
 
   nextEffect = firstChild;
-  commitBeforeMutationEffects_begin(
-    isViewTransitionEligible,
-    appearingViewTransitions,
-  );
+  commitBeforeMutationEffects_begin(isViewTransitionEligible);
 
   // We no longer need to track the active instance fiber
   focusedInstanceHandle = null;
+  // We've found any matched pairs and can now reset.
+  appearingViewTransitions = null;
 }
 
-function commitBeforeMutationEffects_begin(
-  isViewTransitionEligible: boolean,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
-) {
+function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
   // If this commit is eligible for a View Transition we look into all mutated subtrees.
   // TODO: We could optimize this by marking these with the Snapshot subtree flag in the render phase.
   const subtreeMask = isViewTransitionEligible
@@ -330,7 +330,6 @@ function commitBeforeMutationEffects_begin(
           commitBeforeMutationEffectsDeletion(
             deletion,
             isViewTransitionEligible,
-            appearingViewTransitions,
           );
         }
       }
@@ -363,7 +362,7 @@ function commitBeforeMutationEffects_begin(
             isViewTransitionEligible
           ) {
             // Was previously mounted as visible but is now hidden.
-            commitExitViewTransitions(current, appearingViewTransitions);
+            commitExitViewTransitions(current);
           }
           // Skip before mutation effects of the children because they're hidden.
           commitBeforeMutationEffects_complete(isViewTransitionEligible);
@@ -527,7 +526,6 @@ function commitBeforeMutationEffectsOnFiber(
 function commitBeforeMutationEffectsDeletion(
   deletion: Fiber,
   isViewTransitionEligible: boolean,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
 ) {
   if (enableCreateEventHandleAPI) {
     // TODO (effects) It would be nice to avoid calling doesFiberContain()
@@ -540,7 +538,7 @@ function commitBeforeMutationEffectsDeletion(
     }
   }
   if (isViewTransitionEligible) {
-    commitExitViewTransitions(deletion, appearingViewTransitions);
+    commitExitViewTransitions(deletion);
   }
 }
 
@@ -744,14 +742,15 @@ function commitEnterViewTransitions(placement: Fiber): void {
   }
 }
 
-function commitDeletedPairViewTransitions(
-  deletion: Fiber,
-  appearingViewTransitions: Map<string, ViewTransitionState>,
-): void {
-  if (appearingViewTransitions.size === 0) {
+function commitDeletedPairViewTransitions(deletion: Fiber): void {
+  if (
+    appearingViewTransitions === null ||
+    appearingViewTransitions.size === 0
+  ) {
     // We've found all.
     return;
   }
+  const pairs = appearingViewTransitions;
   if ((deletion.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
     // This has no named view transitions in its subtree.
     return;
@@ -768,7 +767,7 @@ function commitDeletedPairViewTransitions(
         const props: ViewTransitionProps = child.memoizedProps;
         const name = props.name;
         if (name != null && name !== 'auto') {
-          const pair = appearingViewTransitions.get(name);
+          const pair = pairs.get(name);
           if (pair !== undefined) {
             const className: ?string = getViewTransitionClassName(
               props.className,
@@ -801,23 +800,20 @@ function commitDeletedPairViewTransitions(
             }
             // Delete the entry so that we know when we've found all of them
             // and can stop searching (size reaches zero).
-            appearingViewTransitions.delete(name);
-            if (appearingViewTransitions.size === 0) {
+            pairs.delete(name);
+            if (pairs.size === 0) {
               break;
             }
           }
         }
       }
-      commitDeletedPairViewTransitions(child, appearingViewTransitions);
+      commitDeletedPairViewTransitions(child);
     }
     child = child.sibling;
   }
 }
 
-function commitExitViewTransitions(
-  deletion: Fiber,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
-): void {
+function commitExitViewTransitions(deletion: Fiber): void {
   if (deletion.tag === ViewTransitionComponent) {
     const props: ViewTransitionProps = deletion.memoizedProps;
     const name = getViewTransitionName(props, deletion.stateNode);
@@ -862,17 +858,17 @@ function commitExitViewTransitions(
     }
     if (appearingViewTransitions !== null) {
       // Look for more pairs deeper in the tree.
-      commitDeletedPairViewTransitions(deletion, appearingViewTransitions);
+      commitDeletedPairViewTransitions(deletion);
     }
   } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = deletion.child;
     while (child !== null) {
-      commitExitViewTransitions(child, appearingViewTransitions);
+      commitExitViewTransitions(child);
       child = child.sibling;
     }
   } else {
     if (appearingViewTransitions !== null) {
-      commitDeletedPairViewTransitions(deletion, appearingViewTransitions);
+      commitDeletedPairViewTransitions(deletion);
     }
   }
 }
@@ -1211,7 +1207,7 @@ function measureUpdateViewTransition(
   );
   const layoutClassName: ?string = getViewTransitionClassName(
     props.className,
-    props.update,
+    props.layout,
   );
   let className: ?string;
   if (updateClassName === 'none') {
@@ -1359,22 +1355,24 @@ function commitLayoutEffectOnFiber(
       }
       break;
     }
-    case HostHoistable: {
-      if (supportsResources) {
-        recursivelyTraverseLayoutEffects(
-          finishedRoot,
-          finishedWork,
-          committedLanes,
-        );
-
-        if (flags & Ref) {
-          safelyAttachRef(finishedWork, finishedWork.return);
+    case HostSingleton: {
+      if (supportsSingletons) {
+        // We acquire the singleton instance first so it has appropriate
+        // styles before other layout effects run. This isn't perfect because
+        // an early sibling of the singleton may have an effect that can
+        // observe the singleton before it is acquired.
+        // @TODO move this to the mutation phase. The reason it isn't there yet
+        // is it seemingly requires an extra traversal because we need to move the
+        // disappear effect into a phase before the appear phase
+        if (current === null && flags & Update) {
+          // Unlike in the reappear path we only acquire on new mount
+          commitHostSingletonAcquisition(finishedWork);
         }
-        break;
+        // We fall through to the HostComponent case below.
       }
-      // Fall through
+      // Fallthrough
     }
-    case HostSingleton:
+    case HostHoistable:
     case HostComponent: {
       recursivelyTraverseLayoutEffects(
         finishedRoot,
@@ -1840,8 +1838,7 @@ function hideOrUnhideAllChildren(finishedWork: Fiber, isHidden: boolean) {
     while (true) {
       if (
         node.tag === HostComponent ||
-        (supportsResources ? node.tag === HostHoistable : false) ||
-        (supportsSingletons ? node.tag === HostSingleton : false)
+        (supportsResources ? node.tag === HostHoistable : false)
       ) {
         if (hostSubtreeRoot === null) {
           hostSubtreeRoot = node;
@@ -1994,7 +1991,17 @@ function commitDeletionEffects(
     let parent: null | Fiber = returnFiber;
     findParent: while (parent !== null) {
       switch (parent.tag) {
-        case HostSingleton:
+        case HostSingleton: {
+          if (supportsSingletons) {
+            if (isSingletonScope(parent.type)) {
+              hostParent = parent.stateNode;
+              hostParentIsContainer = false;
+              break findParent;
+            }
+            break;
+          }
+          // Expected fallthrough when supportsSingletons is false
+        }
         case HostComponent: {
           hostParent = parent.stateNode;
           hostParentIsContainer = false;
@@ -2079,7 +2086,10 @@ function commitDeletionEffectsOnFiber(
 
         const prevHostParent = hostParent;
         const prevHostParentIsContainer = hostParentIsContainer;
-        hostParent = deletedFiber.stateNode;
+        if (isSingletonScope(deletedFiber.type)) {
+          hostParent = deletedFiber.stateNode;
+          hostParentIsContainer = false;
+        }
         recursivelyTraverseDeletionEffects(
           finishedRoot,
           nearestMountedAncestor,
@@ -2091,7 +2101,7 @@ function commitDeletionEffectsOnFiber(
         // a different fiber. To increase our chances of avoiding this, specifically
         // if you keyed a HostSingleton so there will be a delete followed by a Placement
         // we treat detach eagerly here
-        releaseSingletonInstance(deletedFiber.stateNode);
+        commitHostSingletonRelease(deletedFiber);
 
         hostParent = prevHostParent;
         hostParentIsContainer = prevHostParentIsContainer;
@@ -2680,12 +2690,19 @@ function commitMutationEffectsOnFiber(
     }
     case HostSingleton: {
       if (supportsSingletons) {
-        if (flags & Update) {
-          const previousWork = finishedWork.alternate;
-          if (previousWork === null) {
-            commitHostSingleton(finishedWork);
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes);
+        if (flags & Ref) {
+          if (!offscreenSubtreeWasHidden && current !== null) {
+            safelyDetachRef(current, current.return);
           }
         }
+        if (current !== null && flags & Update) {
+          const newProps = finishedWork.memoizedProps;
+          const oldProps = current.memoizedProps;
+          commitHostUpdate(finishedWork, newProps, oldProps);
+        }
+        break;
       }
       // Fall through
     }
@@ -2956,15 +2973,18 @@ function commitMutationEffectsOnFiber(
           offscreenInstance._visibility |= OffscreenVisible;
         }
 
+        const isUpdate = current !== null;
         if (isHidden) {
-          const isUpdate = current !== null;
-          const wasHiddenByAncestorOffscreen =
-            offscreenSubtreeIsHidden || offscreenSubtreeWasHidden;
-          // Only trigger disapper layout effects if:
+          // Only trigger disappear layout effects if:
           //   - This is an update, not first mount.
           //   - This Offscreen was not hidden before.
-          //   - Ancestor Offscreen was not hidden in previous commit.
-          if (isUpdate && !wasHidden && !wasHiddenByAncestorOffscreen) {
+          //   - Ancestor Offscreen was not hidden in previous commit or in this commit
+          if (
+            isUpdate &&
+            !wasHidden &&
+            !offscreenSubtreeIsHidden &&
+            !offscreenSubtreeWasHidden
+          ) {
             if (
               disableLegacyMode ||
               (finishedWork.mode & ConcurrentMode) !== NoMode
@@ -3367,8 +3387,14 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
       break;
     }
+    case HostSingleton: {
+      if (supportsSingletons) {
+        // TODO (Offscreen) Check: flags & RefStatic
+        commitHostSingletonRelease(finishedWork);
+      }
+      // Expected fallthrough to HostComponent
+    }
     case HostHoistable:
-    case HostSingleton:
     case HostComponent: {
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
@@ -3424,7 +3450,7 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
 }
 
 function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
-  // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
+  // TODO (Offscreen) Check: subtreeflags & (RefStatic | LayoutStatic)
   let child = parentFiber.child;
   while (child !== null) {
     disappearLayoutEffects(child);
@@ -3484,8 +3510,21 @@ export function reappearLayoutEffects(
     // case HostRoot: {
     //  ...
     // }
+    case HostSingleton: {
+      if (supportsSingletons) {
+        // We acquire the singleton instance first so it has appropriate
+        // styles before other layout effects run. This isn't perfect because
+        // an early sibling of the singleton may have an effect that can
+        // observe the singleton before it is acquired.
+        // @TODO move this to the mutation phase. The reason it isn't there yet
+        // is it seemingly requires an extra traversal because we need to move the
+        // disappear effect into a phase before the appear phase
+        commitHostSingletonAcquisition(finishedWork);
+        // We fall through to the HostComponent case below.
+      }
+      // Fallthrough
+    }
     case HostHoistable:
-    case HostSingleton:
     case HostComponent: {
       recursivelyTraverseReappearLayoutEffects(
         finishedRoot,
@@ -4765,8 +4804,13 @@ export function commitPassiveUnmountEffects(finishedWork: Fiber): void {
 // already in the "current" tree. Because their visibility has changed, the
 // browser may not have prerendered them yet. So we check the MaySuspendCommit
 // flag instead.
+//
+// Note that MaySuspendCommit and ShouldSuspendCommit also includes named
+// ViewTransitions so that we know to also visit those to collect appearing
+// pairs.
 let suspenseyCommitFlag = ShouldSuspendCommit;
 export function accumulateSuspenseyCommit(finishedWork: Fiber): void {
+  appearingViewTransitions = null;
   accumulateSuspenseyCommitOnFiber(finishedWork);
 }
 
@@ -4844,6 +4888,29 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
         }
       }
       break;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        if ((fiber.flags & suspenseyCommitFlag) !== NoFlags) {
+          const props: ViewTransitionProps = fiber.memoizedProps;
+          const name: ?string | 'auto' = props.name;
+          if (name != null && name !== 'auto') {
+            // This is a named ViewTransition being mounted or reappearing. Let's add it to
+            // the map so we can match it with deletions later.
+            if (appearingViewTransitions === null) {
+              appearingViewTransitions = new Map();
+            }
+            // Reset the pair in case we didn't end up restoring the instance in previous commits.
+            // This shouldn't really happen anymore but just in case. We could maybe add an invariant.
+            const instance: ViewTransitionState = fiber.stateNode;
+            instance.paired = null;
+            appearingViewTransitions.set(name, instance);
+          }
+        }
+        recursivelyAccumulateSuspenseyCommit(fiber);
+        break;
+      }
+      // Fallthrough
     }
     default: {
       recursivelyAccumulateSuspenseyCommit(fiber);

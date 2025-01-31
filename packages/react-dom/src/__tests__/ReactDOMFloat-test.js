@@ -31,7 +31,6 @@ let hasErrored = false;
 let fatalError = undefined;
 let renderOptions;
 let waitForAll;
-let waitForThrow;
 let assertLog;
 let Scheduler;
 let clientAct;
@@ -76,7 +75,6 @@ describe('ReactDOMFloat', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
-    waitForThrow = InternalTestUtils.waitForThrow;
     assertLog = InternalTestUtils.assertLog;
     clientAct = InternalTestUtils.act;
     assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
@@ -507,14 +505,7 @@ describe('ReactDOMFloat', () => {
         </html>
       </>,
     );
-    let aggregateError = await waitForThrow();
-    expect(aggregateError.errors.length).toBe(2);
-    expect(aggregateError.errors[0].message).toContain(
-      'Invalid insertion of NOSCRIPT',
-    );
-    expect(aggregateError.errors[1].message).toContain(
-      'The node to be removed is not a child of this node',
-    );
+    await waitForAll([]);
     assertConsoleErrorDev([
       [
         'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
@@ -579,14 +570,7 @@ describe('ReactDOMFloat', () => {
         <link rel="stylesheet" href="foo" />
       </>,
     );
-    aggregateError = await waitForThrow();
-    expect(aggregateError.errors.length).toBe(2);
-    expect(aggregateError.errors[0].message).toContain(
-      'Invalid insertion of LINK',
-    );
-    expect(aggregateError.errors[1].message).toContain(
-      'The node to be removed is not a child of this node',
-    );
+    await waitForAll([]);
     assertConsoleErrorDev([
       [
         'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. ' +
@@ -644,14 +628,7 @@ describe('ReactDOMFloat', () => {
         </html>
       </>,
     );
-    aggregateError = await waitForThrow();
-    expect(aggregateError.errors.length).toBe(2);
-    expect(aggregateError.errors[0].message).toContain(
-      'Invalid insertion of LINK',
-    );
-    expect(aggregateError.errors[1].message).toContain(
-      'The node to be removed is not a child of this node',
-    );
+    await waitForAll([]);
     assertConsoleErrorDev(
       [
         'Cannot render a <link> with onLoad or onError listeners outside the main document. ' +
@@ -660,6 +637,7 @@ describe('ReactDOMFloat', () => {
       ],
       {withoutStack: true},
     );
+    return;
   });
 
   it('can acquire a resource after releasing it in the same commit', async () => {
@@ -1256,6 +1234,13 @@ body {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>loading...</body>
+      </html>,
+    );
 
     await act(() => {
       resolveText('unblock');
