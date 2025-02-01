@@ -165,7 +165,7 @@ function isFallbackCompositionEnd(
  */
 function getDataFromCustomEvent(nativeEvent: any) {
   const detail = nativeEvent.detail;
-  if (typeof detail === 'object' && 'data' in detail) {
+  if (detail !== null && typeof detail === 'object' && 'data' in detail) {
     return detail.data;
   }
   return null;
