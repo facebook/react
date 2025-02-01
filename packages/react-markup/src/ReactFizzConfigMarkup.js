@@ -174,6 +174,7 @@ export function writeStartClientRenderedSuspenseBoundary(
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
+  preambleState: null | PreambleState,
 ): boolean {
   // Markup doesn't have any instructions.
   return true;
@@ -181,6 +182,7 @@ export function writeEndCompletedSuspenseBoundary(
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
+  preambleState: null | PreambleState,
 ): boolean {
   // Markup doesn't have any instructions.
   return true;
