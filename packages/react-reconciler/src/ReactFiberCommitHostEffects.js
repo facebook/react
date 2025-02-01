@@ -314,6 +314,7 @@ function insertOrAppendPlacementNodeIntoContainer(
     // This singleton is the parent of deeper nodes and needs to become
     // the parent for child insertions and appends
     parent = node.stateNode;
+    before = null;
   }
 
   const child = node.child;

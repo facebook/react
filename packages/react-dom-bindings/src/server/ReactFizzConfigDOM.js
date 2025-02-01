@@ -684,16 +684,23 @@ export function completeResumableState(resumableState: ResumableState): void {
   resumableState.bootstrapModules = undefined;
 }
 
+const NoContribution /*     */ = 0b000;
+const HTMLContribution /*   */ = 0b001;
+const BodyContribution /*   */ = 0b010;
+const HeadContribution /*   */ = 0b100;
+
 export type PreambleState = {
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
   bodyChunks: null | Array<Chunk | PrecomputedChunk>,
+  contribution: number,
 };
 export function createPreambleState(): PreambleState {
   return {
     htmlChunks: null,
     headChunks: null,
     bodyChunks: null,
+    contribution: NoContribution,
   };
 }
 
@@ -3227,7 +3234,7 @@ function pushStartHead(
       throw new Error(`The ${'`<head>`'} tag may only be rendered once.`);
     }
     preamble.headChunks = [];
-    return pushStartGenericElement(preamble.headChunks, props, 'head');
+    return pushStartSingletonElement(preamble.headChunks, props, 'head');
   } else {
     // This <head> is deep and is likely just an error. we emit it inline though.
     // Validation should warn that this tag is the the wrong spot.
@@ -3251,7 +3258,7 @@ function pushStartBody(
     }
 
     preamble.bodyChunks = [];
-    return pushStartGenericElement(preamble.bodyChunks, props, 'body');
+    return pushStartSingletonElement(preamble.bodyChunks, props, 'body');
   } else {
     // This <head> is deep and is likely just an error. we emit it inline though.
     // Validation should warn that this tag is the the wrong spot.
@@ -3275,7 +3282,7 @@ function pushStartHtml(
     }
 
     preamble.htmlChunks = [DOCTYPE];
-    return pushStartGenericElement(preamble.htmlChunks, props, 'html');
+    return pushStartSingletonElement(preamble.htmlChunks, props, 'html');
   } else {
     // This <html> is deep and is likely just an error. we emit it inline though.
     // Validation should warn that this tag is the the wrong spot.
@@ -3414,6 +3421,43 @@ function pushScriptImpl(
   }
   target.push(endChunkForTag('script'));
   return null;
+}
+
+// This is a fork of pushStartGenericElement because we don't ever want to do
+// the children as strign optimization on that path when rendering singletons.
+// When we eliminate that special path we can delete this fork and unify it again
+function pushStartSingletonElement(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  tag: string,
+): ReactNodeList {
+  target.push(startChunkForTag(tag));
+
+  let children = null;
+  let innerHTML = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          innerHTML = propValue;
+          break;
+        default:
+          pushAttribute(target, propKey, propValue);
+          break;
+      }
+    }
+  }
+
+  target.push(endOfStartTag);
+  pushInnerHTML(target, innerHTML, children);
+  return children;
 }
 
 function pushStartGenericElement(
@@ -3907,14 +3951,17 @@ export function hoistPreambleState(
   preambleState: PreambleState,
 ) {
   const rootPreamble = renderState.preamble;
-  if (rootPreamble.htmlChunks === null) {
+  if (rootPreamble.htmlChunks === null && preambleState.htmlChunks) {
     rootPreamble.htmlChunks = preambleState.htmlChunks;
+    preambleState.contribution |= HTMLContribution;
   }
-  if (rootPreamble.headChunks === null) {
+  if (rootPreamble.headChunks === null && preambleState.headChunks) {
     rootPreamble.headChunks = preambleState.headChunks;
+    preambleState.contribution |= HeadContribution;
   }
-  if (rootPreamble.bodyChunks === null) {
+  if (rootPreamble.bodyChunks === null && preambleState.bodyChunks) {
     rootPreamble.bodyChunks = preambleState.bodyChunks;
+    preambleState.contribution |= BodyContribution;
   }
 }
 
@@ -4091,7 +4138,11 @@ export function writeStartClientRenderedSuspenseBoundary(
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
+  preambleState: null | PreambleState,
 ): boolean {
+  if (preambleState) {
+    writePreambleContribution(destination, preambleState);
+  }
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 export function writeEndPendingSuspenseBoundary(
@@ -4103,8 +4154,29 @@ export function writeEndPendingSuspenseBoundary(
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
+  preambleState: null | PreambleState,
 ): boolean {
+  if (preambleState) {
+    writePreambleContribution(destination, preambleState);
+  }
   return writeChunkAndReturn(destination, endSuspenseBoundary);
+}
+
+const boundaryPreambleContributionChunkStart = stringToPrecomputedChunk('<!--');
+const boundaryPreambleContributionChunkEnd = stringToPrecomputedChunk('-->');
+
+function writePreambleContribution(
+  destination: Destination,
+  preambleState: PreambleState,
+) {
+  const contribution = preambleState.contribution;
+  if (contribution !== NoContribution) {
+    writeChunk(destination, boundaryPreambleContributionChunkStart);
+    // This is a number type so we can do the fast path without coercion checking
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    writeChunk(destination, stringToChunk('' + contribution));
+    writeChunk(destination, boundaryPreambleContributionChunkEnd);
+  }
 }
 
 const startSegmentHTML = stringToPrecomputedChunk('<div hidden id="');
