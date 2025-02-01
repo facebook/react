@@ -12,10 +12,9 @@
 
 import type {PriorityLevel} from '../SchedulerPriorities';
 
-import {enableProfiling} from '../SchedulerFeatureFlags';
+import {enableProfiling, getPriorityTimeout} from '../SchedulerFeatureFlags';
 import {push, pop, peek} from '../SchedulerMinHeap';
 
-// TODO: Use symbols?
 import {
   ImmediatePriority,
   UserBlockingPriority,
@@ -47,20 +46,6 @@ type Task = {
   sortIndex: number,
   isQueued?: boolean,
 };
-
-// Max 31 bit integer. The max integer size in V8 for 32-bit systems.
-// Math.pow(2, 30) - 1
-// 0b111111111111111111111111111111
-var maxSigned31BitInt = 1073741823;
-
-// Times out immediately
-var IMMEDIATE_PRIORITY_TIMEOUT = -1;
-// Eventually times out
-var USER_BLOCKING_PRIORITY_TIMEOUT = 250;
-var NORMAL_PRIORITY_TIMEOUT = 5000;
-var LOW_PRIORITY_TIMEOUT = 10000;
-// Never times out
-var IDLE_PRIORITY_TIMEOUT = maxSigned31BitInt;
 
 // Tasks are stored on a min heap
 var taskQueue: Array<Task> = [];
@@ -346,26 +331,7 @@ function unstable_scheduleCallback(
     startTime = currentTime;
   }
 
-  var timeout;
-  switch (priorityLevel) {
-    case ImmediatePriority:
-      timeout = IMMEDIATE_PRIORITY_TIMEOUT;
-      break;
-    case UserBlockingPriority:
-      timeout = USER_BLOCKING_PRIORITY_TIMEOUT;
-      break;
-    case IdlePriority:
-      timeout = IDLE_PRIORITY_TIMEOUT;
-      break;
-    case LowPriority:
-      timeout = LOW_PRIORITY_TIMEOUT;
-      break;
-    case NormalPriority:
-    default:
-      timeout = NORMAL_PRIORITY_TIMEOUT;
-      break;
-  }
-
+  var timeout = getPriorityTimeout(priorityLevel);
   var expirationTime = startTime + timeout;
 
   var newTask: Task = {
