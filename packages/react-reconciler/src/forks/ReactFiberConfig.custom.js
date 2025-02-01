@@ -174,11 +174,15 @@ export const registerSuspenseInstanceRetry =
 export const canHydrateFormStateMarker = $$$config.canHydrateFormStateMarker;
 export const isFormStateMarkerMatching = $$$config.isFormStateMarkerMatching;
 export const getNextHydratableSibling = $$$config.getNextHydratableSibling;
+export const getNextHydratableSiblingAfterSingleton =
+  $$$config.getNextHydratableSiblingAfterSingleton;
 export const getFirstHydratableChild = $$$config.getFirstHydratableChild;
 export const getFirstHydratableChildWithinContainer =
   $$$config.getFirstHydratableChildWithinContainer;
 export const getFirstHydratableChildWithinSuspenseInstance =
   $$$config.getFirstHydratableChildWithinSuspenseInstance;
+export const getFirstHydratableChildWithinSingleton =
+  $$$config.getFirstHydratableChildWithinSingleton;
 export const canHydrateInstance = $$$config.canHydrateInstance;
 export const canHydrateTextInstance = $$$config.canHydrateTextInstance;
 export const canHydrateSuspenseInstance = $$$config.canHydrateSuspenseInstance;

@@ -94,6 +94,7 @@ import {
   enableTrustedTypesIntegration,
   disableLegacyMode,
   enableMoveBefore,
+  disableCommentsAsDOMContainers,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -207,6 +208,9 @@ const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
 const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
+const PREAMBLE_CONTRIBUTION_HTML = 0b001;
+const PREAMBLE_CONTRIBUTION_BODY = 0b010;
+const PREAMBLE_CONTRIBUTION_HEAD = 0b100;
 const FORM_STATE_IS_MATCHING = 'F!';
 const FORM_STATE_IS_NOT_MATCHING = 'F';
 
@@ -255,7 +259,7 @@ export function getRootHostContext(
     }
     default: {
       const container: any =
-        nodeType === COMMENT_NODE
+        !disableCommentsAsDOMContainers && nodeType === COMMENT_NODE
           ? rootContainerInstance.parentNode
           : rootContainerInstance;
       type = container.tagName;
@@ -799,29 +803,25 @@ export function appendChildToContainer(
   container: Container,
   child: Instance | TextInstance,
 ): void {
-  let parentNode: Document | Element;
-  switch (container.nodeType) {
-    case COMMENT_NODE: {
-      parentNode = (container.parentNode: any);
-      if (supportsMoveBefore) {
-        // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
-        parentNode.moveBefore(child, container);
-      } else {
-        parentNode.insertBefore(child, container);
-      }
-      return;
+  let parentNode: DocumentFragment | Element;
+  if (container.nodeType === DOCUMENT_NODE) {
+    parentNode = (container: any).body;
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    container.nodeType === COMMENT_NODE
+  ) {
+    parentNode = (container.parentNode: any);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      parentNode.moveBefore(child, container);
+    } else {
+      parentNode.insertBefore(child, container);
     }
-    case DOCUMENT_NODE: {
-      parentNode = (container: any).body;
-      break;
-    }
-    default: {
-      if (container.nodeName === 'HTML') {
-        parentNode = (container.ownerDocument.body: any);
-      } else {
-        parentNode = (container: any);
-      }
-    }
+    return;
+  } else if (container.nodeName === 'HTML') {
+    parentNode = (container.ownerDocument.body: any);
+  } else {
+    parentNode = (container: any);
   }
   if (supportsMoveBefore) {
     // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
@@ -866,24 +866,18 @@ export function insertInContainerBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
-  let parentNode: Document | Element;
-  switch (container.nodeType) {
-    case COMMENT_NODE: {
-      parentNode = (container.parentNode: any);
-      break;
-    }
-    case DOCUMENT_NODE: {
-      const ownerDocument: Document = (container: any);
-      parentNode = (ownerDocument.body: any);
-      break;
-    }
-    default: {
-      if (container.nodeName === 'HTML') {
-        parentNode = (container.ownerDocument.body: any);
-      } else {
-        parentNode = (container: any);
-      }
-    }
+  let parentNode: DocumentFragment | Element;
+  if (container.nodeType === DOCUMENT_NODE) {
+    parentNode = (container: any).body;
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    container.nodeType === COMMENT_NODE
+  ) {
+    parentNode = (container.parentNode: any);
+  } else if (container.nodeName === 'HTML') {
+    parentNode = (container.ownerDocument.body: any);
+  } else {
+    parentNode = (container: any);
   }
   if (supportsMoveBefore) {
     // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
@@ -940,20 +934,18 @@ export function removeChildFromContainer(
   container: Container,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
-  let parentNode: Document | Element;
-  switch (container.nodeType) {
-    case COMMENT_NODE:
-      parentNode = (container.parentNode: any);
-      break;
-    case DOCUMENT_NODE:
-      parentNode = (container: any).body;
-      break;
-    default:
-      if (container.nodeName === 'HTML') {
-        parentNode = (container.ownerDocument.body: any);
-      } else {
-        parentNode = (container: any);
-      }
+  let parentNode: DocumentFragment | Element;
+  if (container.nodeType === DOCUMENT_NODE) {
+    parentNode = (container: any).body;
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    container.nodeType === COMMENT_NODE
+  ) {
+    parentNode = (container.parentNode: any);
+  } else if (container.nodeName === 'HTML') {
+    parentNode = (container.ownerDocument.body: any);
+  } else {
+    parentNode = (container: any);
   }
   parentNode.removeChild(child);
 }
@@ -987,6 +979,24 @@ export function clearSuspenseBoundary(
         data === SUSPENSE_FALLBACK_START_DATA
       ) {
         depth++;
+      } else if (data.length === 1) {
+        const ownerDocument = parentInstance.ownerDocument;
+        const code = data.charCodeAt(0) - 48;
+        if (code & PREAMBLE_CONTRIBUTION_HTML) {
+          const documentElement: Element = (ownerDocument.documentElement: any);
+          releaseSingletonInstance(documentElement);
+        }
+        if (code & PREAMBLE_CONTRIBUTION_BODY) {
+          const body: Element = (ownerDocument.body: any);
+          releaseSingletonInstance(body);
+        }
+        if (code & PREAMBLE_CONTRIBUTION_HEAD) {
+          const head: Element = (ownerDocument.head: any);
+          releaseSingletonInstance(head);
+          // We need to clear the head because this is the only singleton that can have children that
+          // were part of this boundary but are not inside this boundary.
+          clearHead(head);
+        }
       }
     }
     // $FlowFixMe[incompatible-type] we bail out when we get a null
@@ -1001,18 +1011,20 @@ export function clearSuspenseBoundaryFromContainer(
   container: Container,
   suspenseInstance: SuspenseInstance,
 ): void {
-  if (container.nodeType === COMMENT_NODE) {
-    clearSuspenseBoundary((container.parentNode: any), suspenseInstance);
-  } else if (container.nodeType === DOCUMENT_NODE) {
-    clearSuspenseBoundary((container: any).body, suspenseInstance);
+  let parentNode: DocumentFragment | Element;
+  if (container.nodeType === DOCUMENT_NODE) {
+    parentNode = (container: any).body;
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    container.nodeType === COMMENT_NODE
+  ) {
+    parentNode = (container.parentNode: any);
   } else if (container.nodeName === 'HTML') {
-    clearSuspenseBoundary(
-      (container.ownerDocument.body: any),
-      suspenseInstance,
-    );
+    parentNode = (container.ownerDocument.body: any);
   } else {
-    clearSuspenseBoundary((container: any), suspenseInstance);
+    parentNode = (container: any);
   }
+  clearSuspenseBoundary(parentNode, suspenseInstance);
   // Retry if any event replaying was blocked on this.
   retryIfBlockedOn(container);
 }
@@ -1501,7 +1513,7 @@ function clearContainerSparingly(container: Node) {
       case 'STYLE': {
         continue;
       }
-      // Stylesheet tags are retained because tehy may likely come from 3rd party scripts and extensions
+      // Stylesheet tags are retained because they may likely come from 3rd party scripts and extensions
       case 'LINK': {
         if (((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet') {
           continue;
@@ -1509,6 +1521,27 @@ function clearContainerSparingly(container: Node) {
       }
     }
     container.removeChild(node);
+  }
+  return;
+}
+
+function clearHead(head: Element): void {
+  let node = head.firstChild;
+  while (node) {
+    const nextNode = node.nextSibling;
+    const nodeName = node.nodeName;
+    if (
+      isMarkedHoistable(node) ||
+      nodeName === 'SCRIPT' ||
+      nodeName === 'STYLE' ||
+      (nodeName === 'LINK' &&
+        ((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet')
+    ) {
+      // retain these nodes
+    } else {
+      head.removeChild(node);
+    }
+    node = nextNode;
   }
   return;
 }
@@ -1874,7 +1907,20 @@ export function getFirstHydratableChild(
 export function getFirstHydratableChildWithinContainer(
   parentContainer: Container,
 ): null | HydratableInstance {
-  return getNextHydratable(parentContainer.firstChild);
+  let parentElement: Element;
+  switch (parentContainer.nodeType) {
+    case DOCUMENT_NODE:
+      parentElement = (parentContainer: any).body;
+      break;
+    default: {
+      if (parentContainer.nodeName === 'HTML') {
+        parentElement = (parentContainer: any).ownerDocument.body;
+      } else {
+        parentElement = (parentContainer: any);
+      }
+    }
+  }
+  return getNextHydratable(parentElement.firstChild);
 }
 
 export function getFirstHydratableChildWithinSuspenseInstance(
@@ -1883,10 +1929,44 @@ export function getFirstHydratableChildWithinSuspenseInstance(
   return getNextHydratable(parentInstance.nextSibling);
 }
 
+// If it were possible to have more than one scope singleton in a DOM tree
+// we would need to model this as a stack but since you can only have one <head>
+// and head is the only singleton that is a scope in DOM we can get away with
+// tracking this as a single value.
+let previousHydratableOnEnteringScopedSingleton: null | HydratableInstance =
+  null;
+
+export function getFirstHydratableChildWithinSingleton(
+  type: string,
+  singletonInstance: Instance,
+  currentHydratableInstance: null | HydratableInstance,
+): null | HydratableInstance {
+  if (isSingletonScope(type)) {
+    previousHydratableOnEnteringScopedSingleton = currentHydratableInstance;
+    return getNextHydratable(singletonInstance.firstChild);
+  } else {
+    return currentHydratableInstance;
+  }
+}
+
+export function getNextHydratableSiblingAfterSingleton(
+  type: string,
+  currentHydratableInstance: null | HydratableInstance,
+): null | HydratableInstance {
+  if (isSingletonScope(type)) {
+    const previousHydratableInstance =
+      previousHydratableOnEnteringScopedSingleton;
+    previousHydratableOnEnteringScopedSingleton = null;
+    return previousHydratableInstance;
+  } else {
+    return currentHydratableInstance;
+  }
+}
+
 export function describeHydratableInstanceForDevWarnings(
   instance: HydratableInstance,
 ): string | {type: string, props: $ReadOnly<Props>} {
-  // Reverse engineer a pseudo react-element from hydratable instnace
+  // Reverse engineer a pseudo react-element from hydratable instance
   if (instance.nodeType === ELEMENT_NODE) {
     // Reverse engineer a set of props that can print for dev warnings
     return {
