@@ -50,6 +50,11 @@ describe('isomorphic act()', () => {
     return text;
   }
 
+  // @gate !__DEV__
+  it('is not exported in production builds', () => {
+    expect(React).not.toHaveProperty('act');
+  });
+
   // @gate __DEV__
   it('bypasses queueMicrotask', async () => {
     const root = ReactNoop.createRoot();

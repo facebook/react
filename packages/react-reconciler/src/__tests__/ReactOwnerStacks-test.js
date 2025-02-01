@@ -31,6 +31,15 @@ describe('ReactOwnerStacks', () => {
     );
   }
 
+  it('is not exported in production buids', () => {
+    // awkward to gate because FB builds will have it undefined if disabled
+    // whereas OSS builds will have it stripped if disabled because we only have
+    // it on in experimental which has a separate entrypoint
+    if (!__DEV__) {
+      expect(React).not.toHaveProperty('captureOwnerStack');
+    }
+  });
+
   // @gate __DEV__ && enableOwnerStacks
   it('can get the component owner stacks during rendering in dev', async () => {
     let stack;

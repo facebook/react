@@ -43,9 +43,9 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
       }
 
       resolvedEntry = nodePath.join(resolvedEntry, '..', entrypoint);
-      const developmentEntry = resolvedEntry.replace('.js', '.development.js');
-      if (fs.existsSync(developmentEntry)) {
-        return developmentEntry;
+      const devEntry = resolvedEntry.replace('.js', '.development.js');
+      if (__DEV__ && fs.existsSync(devEntry)) {
+        return devEntry;
       }
       if (fs.existsSync(resolvedEntry)) {
         return resolvedEntry;
@@ -60,13 +60,20 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
       __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
     );
     const devFBEntry = resolvedFBEntry.replace('.js', '.development.js');
-    if (fs.existsSync(devFBEntry)) {
+    if (__DEV__ && fs.existsSync(devFBEntry)) {
       return devFBEntry;
     }
     if (fs.existsSync(resolvedFBEntry)) {
       return resolvedFBEntry;
     }
     const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
+    const devGenericFBEntry = resolvedGenericFBEntry.replace(
+      '.js',
+      '.development.js'
+    );
+    if (__DEV__ && fs.existsSync(devGenericFBEntry)) {
+      return devGenericFBEntry;
+    }
     if (fs.existsSync(resolvedGenericFBEntry)) {
       return resolvedGenericFBEntry;
     }
@@ -77,14 +84,14 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
     __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
   );
   const devForkedEntry = resolvedForkedEntry.replace('.js', '.development.js');
-  if (fs.existsSync(devForkedEntry)) {
+  if (__DEV__ && fs.existsSync(devForkedEntry)) {
     return devForkedEntry;
   }
   if (fs.existsSync(resolvedForkedEntry)) {
     return resolvedForkedEntry;
   }
   const plainDevEntry = resolvedEntry.replace('.js', '.development.js');
-  if (fs.existsSync(plainDevEntry)) {
+  if (__DEV__ && fs.existsSync(plainDevEntry)) {
     return plainDevEntry;
   }
   // Just use the plain .js one.
