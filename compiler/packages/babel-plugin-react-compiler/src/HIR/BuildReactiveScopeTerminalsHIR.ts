@@ -184,6 +184,7 @@ type TerminalRewriteInfo =
   | {
       kind: 'StartScope';
       blockId: BlockId;
+      dependencyId: BlockId;
       fallthroughId: BlockId;
       instrId: InstructionId;
       scope: ReactiveScope;
@@ -208,12 +209,14 @@ function pushStartScopeTerminal(
   scope: ReactiveScope,
   context: ScopeTraversalContext,
 ): void {
+  const dependencyId = context.env.nextBlockId;
   const blockId = context.env.nextBlockId;
   const fallthroughId = context.env.nextBlockId;
   context.rewrites.push({
     kind: 'StartScope',
     blockId,
     fallthroughId,
+    dependencyId,
     instrId: scope.range.start,
     scope,
   });
@@ -255,10 +258,13 @@ type RewriteContext = {
  *     instr1, instr2, instr3, instr4, [[ original terminal ]]
  * Rewritten:
  *   bb0:
- *     instr1, [[ scope start block=bb1]]
+ *     instr1, [[ scope start dependencies=bb1 block=bb2]]
  *   bb1:
- *     instr2, instr3, [[ scope end goto=bb2 ]]
+ *     [[ empty, filled in in PropagateScopeDependenciesHIR ]]
+ *      goto bb2
  *   bb2:
+ *     instr2, instr3, [[ scope end goto=bb3 ]]
+ *   bb3:
  *     instr4, [[ original terminal ]]
  */
 function handleRewrite(
@@ -272,6 +278,7 @@ function handleRewrite(
       ? {
           kind: 'scope',
           fallthrough: terminalInfo.fallthroughId,
+          dependencies: terminalInfo.dependencyId,
           block: terminalInfo.blockId,
           scope: terminalInfo.scope,
           id: terminalInfo.instrId,
@@ -298,7 +305,28 @@ function handleRewrite(
   context.nextPreds = new Set([currBlockId]);
   context.nextBlockId =
     terminalInfo.kind === 'StartScope'
-      ? terminalInfo.blockId
+      ? terminalInfo.dependencyId
       : terminalInfo.fallthroughId;
   context.instrSliceIdx = idx;
+
+  if (terminalInfo.kind === 'StartScope') {
+    const currBlockId = context.nextBlockId;
+    context.rewrites.push({
+      kind: context.source.kind,
+      id: currBlockId,
+      instructions: [],
+      preds: context.nextPreds,
+      // Only the first rewrite should reuse source block phis
+      phis: new Set(),
+      terminal: {
+        kind: 'goto',
+        variant: GotoVariant.Break,
+        block: terminal.block,
+        id: terminalInfo.instrId,
+        loc: GeneratedSource,
+      },
+    });
+    context.nextPreds = new Set([currBlockId]);
+    context.nextBlockId = terminalInfo.blockId;
+  }
 }
