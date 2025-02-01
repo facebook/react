@@ -391,18 +391,21 @@ export type Dispatcher = {
   useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {current: T},
   useEffect(
-    create: () => (() => void) | void,
-    deps: Array<mixed> | void | null,
+    create: (() => (() => void) | void) | (() => {...} | void | null),
+    createDeps: Array<mixed> | void | null,
+    update?: ((resource: {...} | void | null) => void) | void,
+    updateDeps?: Array<mixed> | void | null,
+    destroy?: ((resource: {...} | void | null) => void) | void,
   ): void,
   // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
   useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
-  // TODO: Non-nullable once `enableUseResourceEffectHook` is on everywhere.
+  // TODO: Non-nullable once `enableUseEffectCRUDOverload` is on everywhere.
   useResourceEffect?: (
-    create: () => mixed,
+    create: () => {...} | void | null,
     createDeps: Array<mixed> | void | null,
-    update: ((resource: mixed) => void) | void,
+    update: ((resource: {...} | void | null) => void) | void,
     updateDeps: Array<mixed> | void | null,
-    destroy: ((resource: mixed) => void) | void,
+    destroy: ((resource: {...} | void | null) => void) | void,
   ) => void,
   useInsertionEffect(
     create: () => (() => void) | void,

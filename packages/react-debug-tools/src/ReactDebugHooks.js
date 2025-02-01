@@ -373,8 +373,11 @@ function useInsertionEffect(
 }
 
 function useEffect(
-  create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
+  create: (() => (() => void) | void) | (() => {...} | void | null),
+  createDeps: Array<mixed> | void | null,
+  update?: ((resource: {...} | void | null) => void) | void,
+  updateDeps?: Array<mixed> | void | null,
+  destroy?: ((resource: {...} | void | null) => void) | void,
 ): void {
   nextHook();
   hookLog.push({
@@ -739,11 +742,11 @@ function useHostTransitionStatus(): TransitionStatus {
 }
 
 function useResourceEffect(
-  create: () => mixed,
+  create: () => {...} | void | null,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
+  destroy: ((resource: {...} | void | null) => void) | void,
 ) {
   nextHook();
   hookLog.push({
