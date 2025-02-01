@@ -677,19 +677,6 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
 addObject(BUILTIN_SHAPES, BuiltInJsxId, []);
 addObject(BUILTIN_SHAPES, BuiltInFunctionId, []);
 
-export const DefaultMutatingHook = addHook(
-  BUILTIN_SHAPES,
-  {
-    positionalParams: [],
-    restParam: Effect.ConditionallyMutate,
-    returnType: {kind: 'Poly'},
-    calleeEffect: Effect.Read,
-    hookKind: 'Custom',
-    returnValueKind: ValueKind.Mutable,
-  },
-  'DefaultMutatingHook',
-);
-
 export const DefaultNonmutatingHook = addHook(
   BUILTIN_SHAPES,
   {

@@ -396,10 +396,7 @@ class InferenceState {
         context: new Set(),
       });
       if (value.kind === 'FunctionExpression') {
-        if (
-          this.#env.config.enablePreserveExistingMemoizationGuarantees ||
-          this.#env.config.enableTransitivelyFreezeFunctionExpressions
-        ) {
+        if (this.#env.config.enablePreserveExistingMemoizationGuarantees) {
           if (value.kind === 'FunctionExpression') {
             /*
              * We want to freeze the captured values, not mark the operands

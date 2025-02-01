@@ -47,7 +47,6 @@ import {
 } from './HIR';
 import {
   BuiltInMixedReadonlyId,
-  DefaultMutatingHook,
   DefaultNonmutatingHook,
   FunctionSignature,
   ShapeRegistry,
@@ -357,23 +356,6 @@ const EnvironmentConfigSchema = z.object({
    * Validate against impure functions called during render
    */
   validateNoImpureFunctionsInRender: z.boolean().default(false),
-
-  /*
-   * When enabled, the compiler assumes that hooks follow the Rules of React:
-   * - Hooks may memoize computation based on any of their parameters, thus
-   *   any arguments to a hook are assumed frozen after calling the hook.
-   * - Hooks may memoize the result they return, thus the return value is
-   *   assumed frozen.
-   */
-  enableAssumeHooksFollowRulesOfReact: z.boolean().default(true),
-
-  /**
-   * When enabled, the compiler assumes that any values are not subsequently
-   * modified after they are captured by a function passed to React. For example,
-   * if a value `x` is referenced inside a function expression passed to `useEffect`,
-   * then this flag will assume that `x` is not subusequently modified.
-   */
-  enableTransitivelyFreezeFunctionExpressions: z.boolean().default(true),
 
   /*
    * Enables codegen mutability debugging. This emits a dev-mode only to log mutations
@@ -1008,19 +990,19 @@ export class Environment {
         isHookName(match[1])
       ) {
         const resolvedName = match[1];
-        return this.#globals.get(resolvedName) ?? this.#getCustomHookType();
+        return this.#globals.get(resolvedName) ?? DefaultNonmutatingHook;
       }
     }
 
     switch (binding.kind) {
       case 'ModuleLocal': {
         // don't resolve module locals
-        return isHookName(binding.name) ? this.#getCustomHookType() : null;
+        return isHookName(binding.name) ? DefaultNonmutatingHook : null;
       }
       case 'Global': {
         return (
           this.#globals.get(binding.name) ??
-          (isHookName(binding.name) ? this.#getCustomHookType() : null)
+          (isHookName(binding.name) ? DefaultNonmutatingHook : null)
         );
       }
       case 'ImportSpecifier': {
@@ -1035,7 +1017,7 @@ export class Environment {
           return (
             this.#globals.get(binding.imported) ??
             (isHookName(binding.imported) || isHookName(binding.name)
-              ? this.#getCustomHookType()
+              ? DefaultNonmutatingHook
               : null)
           );
         } else {
@@ -1074,7 +1056,7 @@ export class Environment {
            * `import {foo as useHook} ...`
            */
           return isHookName(binding.imported) || isHookName(binding.name)
-            ? this.#getCustomHookType()
+            ? DefaultNonmutatingHook
             : null;
         }
       }
@@ -1084,7 +1066,7 @@ export class Environment {
           // only resolve imports to modules we know about
           return (
             this.#globals.get(binding.name) ??
-            (isHookName(binding.name) ? this.#getCustomHookType() : null)
+            (isHookName(binding.name) ? DefaultNonmutatingHook : null)
           );
         } else {
           const moduleType = this.#resolveModuleType(binding.module, loc);
@@ -1115,7 +1097,7 @@ export class Environment {
               return importedType;
             }
           }
-          return isHookName(binding.name) ? this.#getCustomHookType() : null;
+          return isHookName(binding.name) ? DefaultNonmutatingHook : null;
         }
       }
     }
@@ -1151,11 +1133,11 @@ export class Environment {
       let value =
         shape.properties.get(property) ?? shape.properties.get('*') ?? null;
       if (value === null && isHookName(property)) {
-        value = this.#getCustomHookType();
+        value = DefaultNonmutatingHook;
       }
       return value;
     } else if (isHookName(property)) {
-      return this.#getCustomHookType();
+      return DefaultNonmutatingHook;
     } else {
       return null;
     }
@@ -1179,14 +1161,6 @@ export class Environment {
   addHoistedIdentifier(node: t.Identifier): void {
     this.#contextIdentifiers.add(node);
     this.#hoistedIdentifiers.add(node);
-  }
-
-  #getCustomHookType(): Global {
-    if (this.config.enableAssumeHooksFollowRulesOfReact) {
-      return DefaultNonmutatingHook;
-    } else {
-      return DefaultMutatingHook;
-    }
   }
 }
 
