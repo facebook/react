@@ -273,13 +273,6 @@ function runWithEnvironment(
     value: hir,
   });
 
-  propagatePhiTypes(hir);
-  log({
-    kind: 'hir',
-    name: 'PropagatePhiTypes',
-    value: hir,
-  });
-
   if (!env.config.enableMinimalTransformsForRetry) {
     inferReactiveScopeVariables(hir);
     log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
