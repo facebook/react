@@ -85,7 +85,7 @@ export default [
 ## Advanced Configuration
 
 `exhaustive-deps` can be configured to validate dependencies of custom Hooks with the `additionalHooks` option.
-This option accepts a regex to match the names of custom Hooks that have dependencies.
+This option accepts a regex to match the names of custom Hooks that have dependencies or an array of [regex, index?] tuples where the regex matches the names of custom Hooks and index is a number indicating the position of the callback (defaults to 0). The dependency array is always callback index + 1.
 
 ```js
 {
@@ -93,6 +93,19 @@ This option accepts a regex to match the names of custom Hooks that have depende
     // ...
     "react-hooks/exhaustive-deps": ["warn", {
       "additionalHooks": "(useMyCustomHook|useMyOtherCustomHook)"
+    }]
+  }
+}
+```
+
+or
+
+```js
+{
+  "rules": {
+    // ...
+    "react-hooks/exhaustive-deps": ["warn", {
+      "additionalHooks": [["(useMyCustomHook|useMyOtherCustomHook)"], ["(useMyThirdCustomHook)", 1]]
     }]
   }
 }
