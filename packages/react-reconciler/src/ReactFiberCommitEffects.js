@@ -455,69 +455,54 @@ export function commitClassLayoutLifecycles(
   current: Fiber | null,
 ) {
   const instance = finishedWork.stateNode;
-  if (current === null) {
-    // We could update instance props and state here,
-    // but instead we rely on them being set during last render.
-    // TODO: revisit this when we implement resuming.
-    if (__DEV__) {
-      if (
-        !finishedWork.type.defaultProps &&
-        !('ref' in finishedWork.memoizedProps) &&
-        !didWarnAboutReassigningProps
-      ) {
-        if (instance.props !== finishedWork.memoizedProps) {
-          console.error(
-            'Expected %s props to match memoized props before ' +
-              'componentDidMount. ' +
-              'This might either be because of a bug in React, or because ' +
-              'a component reassigns its own `this.props`. ' +
-              'Please file an issue.',
-            getComponentNameFromFiber(finishedWork) || 'instance',
-          );
-        }
-        if (instance.state !== finishedWork.memoizedState) {
-          console.error(
-            'Expected %s state to match memoized state before ' +
-              'componentDidMount. ' +
-              'This might either be because of a bug in React, or because ' +
-              'a component reassigns its own `this.state`. ' +
-              'Please file an issue.',
-            getComponentNameFromFiber(finishedWork) || 'instance',
-          );
-        }
+  // We could update instance props and state here,
+  // but instead we rely on them being set during last render.
+  // TODO: revisit this when we implement resuming.
+  if (__DEV__) {
+    if (
+      !finishedWork.type.defaultProps &&
+      !('ref' in finishedWork.memoizedProps) &&
+      !didWarnAboutReassigningProps
+    ) {
+      if (instance.props !== finishedWork.memoizedProps) {
+        console.error(
+          'Expected %s props to match memoized props before ' +
+            'componentDidUpdate. ' +
+            'This might either be because of a bug in React, or because ' +
+            'a component reassigns its own `this.props`. ' +
+            'Please file an issue.',
+          getComponentNameFromFiber(finishedWork) || 'instance',
+        );
+      }
+      if (instance.state !== finishedWork.memoizedState) {
+        console.error(
+          'Expected %s state to match memoized state before ' +
+            'componentDidUpdate. ' +
+            'This might either be because of a bug in React, or because ' +
+            'a component reassigns its own `this.state`. ' +
+            'Please file an issue.',
+          getComponentNameFromFiber(finishedWork) || 'instance',
+        );
       }
     }
-    if (shouldProfile(finishedWork)) {
-      startEffectTimer();
-      if (__DEV__) {
-        runWithFiberInDEV(
-          finishedWork,
-          callComponentDidMountInDEV,
-          finishedWork,
-          instance,
-        );
-      } else {
-        try {
-          instance.componentDidMount();
-        } catch (error) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error);
-        }
-      }
-      recordEffectDuration(finishedWork);
+  }
+  if (shouldProfile(finishedWork)) {
+    startEffectTimer();
+    recordEffectDuration(finishedWork);
+  }
+  if (current === null) {
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        callComponentDidMountInDEV,
+        finishedWork,
+        instance,
+      );
     } else {
-      if (__DEV__) {
-        runWithFiberInDEV(
-          finishedWork,
-          callComponentDidMountInDEV,
-          finishedWork,
-          instance,
-        );
-      } else {
-        try {
-          instance.componentDidMount();
-        } catch (error) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error);
-        }
+      try {
+        instance.componentDidMount();
+      } catch (error) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
     }
   } else {
@@ -527,82 +512,26 @@ export function commitClassLayoutLifecycles(
       finishedWork.elementType === finishedWork.type,
     );
     const prevState = current.memoizedState;
-    // We could update instance props and state here,
-    // but instead we rely on them being set during last render.
-    // TODO: revisit this when we implement resuming.
+    
     if (__DEV__) {
-      if (
-        !finishedWork.type.defaultProps &&
-        !('ref' in finishedWork.memoizedProps) &&
-        !didWarnAboutReassigningProps
-      ) {
-        if (instance.props !== finishedWork.memoizedProps) {
-          console.error(
-            'Expected %s props to match memoized props before ' +
-              'componentDidUpdate. ' +
-              'This might either be because of a bug in React, or because ' +
-              'a component reassigns its own `this.props`. ' +
-              'Please file an issue.',
-            getComponentNameFromFiber(finishedWork) || 'instance',
-          );
-        }
-        if (instance.state !== finishedWork.memoizedState) {
-          console.error(
-            'Expected %s state to match memoized state before ' +
-              'componentDidUpdate. ' +
-              'This might either be because of a bug in React, or because ' +
-              'a component reassigns its own `this.state`. ' +
-              'Please file an issue.',
-            getComponentNameFromFiber(finishedWork) || 'instance',
-          );
-        }
-      }
-    }
-    if (shouldProfile(finishedWork)) {
-      startEffectTimer();
-      if (__DEV__) {
-        runWithFiberInDEV(
-          finishedWork,
-          callComponentDidUpdateInDEV,
-          finishedWork,
-          instance,
-          prevProps,
-          prevState,
-          instance.__reactInternalSnapshotBeforeUpdate,
-        );
-      } else {
-        try {
-          instance.componentDidUpdate(
-            prevProps,
-            prevState,
-            instance.__reactInternalSnapshotBeforeUpdate,
-          );
-        } catch (error) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error);
-        }
-      }
-      recordEffectDuration(finishedWork);
+      runWithFiberInDEV(
+        finishedWork,
+        callComponentDidUpdateInDEV,
+        finishedWork,
+        instance,
+        prevProps,
+        prevState,
+        instance.__reactInternalSnapshotBeforeUpdate,
+      );
     } else {
-      if (__DEV__) {
-        runWithFiberInDEV(
-          finishedWork,
-          callComponentDidUpdateInDEV,
-          finishedWork,
-          instance,
+      try {
+        instance.componentDidUpdate(
           prevProps,
           prevState,
           instance.__reactInternalSnapshotBeforeUpdate,
         );
-      } else {
-        try {
-          instance.componentDidUpdate(
-            prevProps,
-            prevState,
-            instance.__reactInternalSnapshotBeforeUpdate,
-          );
-        } catch (error) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error);
-        }
+      } catch (error) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
     }
   }
