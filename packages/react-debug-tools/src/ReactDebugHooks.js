@@ -128,9 +128,6 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 
       Dispatcher.useId();
 
-      if (typeof Dispatcher.useResourceEffect === 'function') {
-        Dispatcher.useResourceEffect(() => ({}), []);
-      }
       if (typeof Dispatcher.useEffectEvent === 'function') {
         Dispatcher.useEffectEvent((args: empty) => {});
       }
@@ -373,8 +370,11 @@ function useInsertionEffect(
 }
 
 function useEffect(
-  create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
+  create: (() => (() => void) | void) | (() => {...} | void | null),
+  createDeps: Array<mixed> | void | null,
+  update?: ((resource: {...} | void | null) => void) | void,
+  updateDeps?: Array<mixed> | void | null,
+  destroy?: ((resource: {...} | void | null) => void) | void,
 ): void {
   nextHook();
   hookLog.push({
@@ -738,24 +738,6 @@ function useHostTransitionStatus(): TransitionStatus {
   return status;
 }
 
-function useResourceEffect(
-  create: () => mixed,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
-) {
-  nextHook();
-  hookLog.push({
-    displayName: null,
-    primitive: 'ResourceEffect',
-    stackError: new Error(),
-    value: create,
-    debugInfo: null,
-    dispatcherHookName: 'ResourceEffect',
-  });
-}
-
 function useEffectEvent<Args, F: (...Array<Args>) => mixed>(callback: F): F {
   nextHook();
   hookLog.push({
@@ -795,7 +777,6 @@ const Dispatcher: DispatcherType = {
   useActionState,
   useHostTransitionStatus,
   useEffectEvent,
-  useResourceEffect,
 };
 
 // create a proxy to throw a custom error
