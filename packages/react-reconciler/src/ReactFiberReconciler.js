@@ -24,10 +24,7 @@ import type {Lane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {LegacyRoot} from './ReactRootTags';
-import {
-  findCurrentHostFiber,
-  findCurrentHostFiberWithNoPortals,
-} from './ReactFiberTreeReflection';
+import {findCurrentHostFiber} from './ReactFiberTreeReflection';
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import {
   HostComponent,
@@ -555,16 +552,6 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
 export {findHostInstance};
 
 export {findHostInstanceWithWarning};
-
-export function findHostInstanceWithNoPortals(
-  fiber: Fiber,
-): PublicInstance | null {
-  const hostFiber = findCurrentHostFiberWithNoPortals(fiber);
-  if (hostFiber === null) {
-    return null;
-  }
-  return getPublicInstance(hostFiber.stateNode);
-}
 
 let shouldErrorImpl: Fiber => ?boolean = fiber => null;
 

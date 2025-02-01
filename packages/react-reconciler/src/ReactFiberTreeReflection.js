@@ -16,7 +16,6 @@ import {
   HostHoistable,
   HostSingleton,
   HostRoot,
-  HostPortal,
   HostText,
   SuspenseComponent,
 } from './ReactWorkTags';
@@ -254,39 +253,6 @@ function findCurrentHostFiberImpl(node: Fiber): Fiber | null {
     const match = findCurrentHostFiberImpl(child);
     if (match !== null) {
       return match;
-    }
-    child = child.sibling;
-  }
-
-  return null;
-}
-
-export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
-  const currentParent = findCurrentFiberUsingSlowPath(parent);
-  return currentParent !== null
-    ? findCurrentHostFiberWithNoPortalsImpl(currentParent)
-    : null;
-}
-
-function findCurrentHostFiberWithNoPortalsImpl(node: Fiber): Fiber | null {
-  // Next we'll drill down this component to find the first HostComponent/Text.
-  const tag = node.tag;
-  if (
-    tag === HostComponent ||
-    tag === HostHoistable ||
-    tag === HostSingleton ||
-    tag === HostText
-  ) {
-    return node;
-  }
-
-  let child = node.child;
-  while (child !== null) {
-    if (child.tag !== HostPortal) {
-      const match = findCurrentHostFiberWithNoPortalsImpl(child);
-      if (match !== null) {
-        return match;
-      }
     }
     child = child.sibling;
   }
