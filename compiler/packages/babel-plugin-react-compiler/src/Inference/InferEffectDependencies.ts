@@ -49,6 +49,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
     );
   }
   const autodepFnLoads = new Map<IdentifierId, number>();
+  const autodepModuleLoads = new Map<IdentifierId, Map<string, number>>();
 
   const scopeInfos = new Map<
     ScopeId,
@@ -89,9 +90,32 @@ export function inferEffectDependencies(fn: HIRFunction): void {
           lvalue.identifier.id,
           instr as TInstruction<FunctionExpression>,
         );
+      } else if (
+        value.kind === 'PropertyLoad' &&
+        autodepModuleLoads.has(value.object.identifier.id)
+      ) {
+        const moduleTargets = autodepModuleLoads.get(
+          value.object.identifier.id,
+        )!;
+        const propertyName = value.property;
+        const numRequiredArgs = moduleTargets.get(propertyName);
+        if (numRequiredArgs != null) {
+          autodepFnLoads.set(lvalue.identifier.id, numRequiredArgs);
+        }
       } else if (value.kind === 'LoadGlobal') {
         loadGlobals.add(lvalue.identifier.id);
 
+        /*
+         * TODO: Handle properties on default exports, like
+         * import React from 'react';
+         * React.useEffect(...);
+         */
+        if (value.binding.kind === 'ImportNamespace') {
+          const moduleTargets = autodepFnConfigs.get(value.binding.module);
+          if (moduleTargets != null) {
+            autodepModuleLoads.set(lvalue.identifier.id, moduleTargets);
+          }
+        }
         if (
           value.binding.kind === 'ImportSpecifier' ||
           value.binding.kind === 'ImportDefault'
@@ -109,12 +133,14 @@ export function inferEffectDependencies(fn: HIRFunction): void {
           }
         }
       } else if (
-        /*
-         * TODO: Handle method calls
-         */
-        value.kind === 'CallExpression' &&
-        autodepFnLoads.get(value.callee.identifier.id) === value.args.length &&
-        value.args[0].kind === 'Identifier'
+        (value.kind === 'CallExpression' &&
+          autodepFnLoads.get(value.callee.identifier.id) ===
+            value.args.length &&
+          value.args[0].kind === 'Identifier') ||
+        (value.kind === 'MethodCall' &&
+          autodepFnLoads.get(value.property.identifier.id) ===
+            value.args.length &&
+          value.args[0].kind === 'Identifier')
       ) {
         const effectDeps: Array<Place> = [];
         const newInstructions: Array<Instruction> = [];
