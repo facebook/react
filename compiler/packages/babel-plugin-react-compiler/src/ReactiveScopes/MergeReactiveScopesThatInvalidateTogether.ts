@@ -28,6 +28,7 @@ import {
   BuiltInJsxId,
   BuiltInObjectId,
 } from '../HIR/ObjectShape';
+import {readScopeDependenciesRHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {eachInstructionLValue} from '../HIR/visitors';
 import {assertExhaustive, Iterable_some} from '../Utils/utils';
 import {printReactiveScopeSummary} from './PrintReactiveFunction';
@@ -119,21 +120,29 @@ class FindLastUsageVisitor extends ReactiveFunctionVisitor<void> {
 
 class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | null> {
   lastUsage: Map<DeclarationId, InstructionId>;
+  cache: Map<ReactiveScopeBlock, ReactiveScopeDependencies> = new Map();
 
   constructor(lastUsage: Map<DeclarationId, InstructionId>) {
     super();
     this.lastUsage = lastUsage;
   }
 
+  dependency(scopeBlock: ReactiveScopeBlock): ReactiveScopeDependencies {
+    let dependencies = this.cache.get(scopeBlock);
+    if (dependencies == null) {
+      dependencies = new Set(readScopeDependenciesRHIR(scopeBlock).values());
+      this.cache.set(scopeBlock, dependencies);
+    }
+    return dependencies;
+  }
+
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
     state: ReactiveScopeDependencies | null,
   ): Transformed<ReactiveStatement> {
-    this.visitScope(scopeBlock, scopeBlock.scope.dependencies);
-    if (
-      state !== null &&
-      areEqualDependencies(state, scopeBlock.scope.dependencies)
-    ) {
+    const dependencies = this.dependency(scopeBlock);
+    this.visitScope(scopeBlock, dependencies);
+    if (state !== null && areEqualDependencies(state, dependencies)) {
       return {kind: 'replace-many', value: scopeBlock.instructions};
     } else {
       return {kind: 'keep'};
@@ -260,7 +269,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
         case 'scope': {
           if (
             current !== null &&
-            canMergeScopes(current.block, instr) &&
+            canMergeScopes(this, current.block, instr) &&
             areLValuesLastUsedByScope(
               instr.scope,
               current.lvalues,
@@ -424,6 +433,7 @@ function areLValuesLastUsedByScope(
 }
 
 function canMergeScopes(
+  transform: Transform,
   current: ReactiveScopeBlock,
   next: ReactiveScopeBlock,
 ): boolean {
@@ -435,10 +445,10 @@ function canMergeScopes(
     log(`  cannot merge, has reassignments`);
     return false;
   }
+  const currDeps = transform.dependency(current);
+  const nextDeps = transform.dependency(next);
   // Merge scopes whose dependencies are identical
-  if (
-    areEqualDependencies(current.scope.dependencies, next.scope.dependencies)
-  ) {
+  if (areEqualDependencies(currDeps, nextDeps)) {
     log(`  canMergeScopes: dependencies are equal`);
     return true;
   }
@@ -456,13 +466,14 @@ function canMergeScopes(
       new Set(
         [...current.scope.declarations.values()].map(declaration => ({
           identifier: declaration.identifier,
+          reactive: false,
           path: [],
         })),
       ),
-      next.scope.dependencies,
+      nextDeps,
     ) ||
-    (next.scope.dependencies.size !== 0 &&
-      [...next.scope.dependencies].every(
+    (nextDeps.size !== 0 &&
+      [...nextDeps].every(
         dep =>
           isAlwaysInvalidatingType(dep.identifier.type) &&
           Iterable_some(
@@ -537,7 +548,7 @@ function areEqualDependencies(
  * *never* change and it's also eligible for merging.
  */
 function scopeIsEligibleForMerging(scopeBlock: ReactiveScopeBlock): boolean {
-  if (scopeBlock.scope.dependencies.size === 0) {
+  if (scopeBlock.scope.dependencies.length === 0) {
     /*
      * Regardless of the type of value produced, if the scope has no dependencies
      * then its value will never change.

@@ -125,22 +125,21 @@ function Component(t0) {
   } else {
     t1 = $[2];
   }
-  const t2 = jsx[0];
-  let t3;
-  if ($[3] !== t1 || $[4] !== t2) {
-    t3 = (
+  let t2;
+  if ($[3] !== jsx[0] || $[4] !== t1) {
+    t2 = (
       <>
         {t1}
-        {t2}
+        {jsx[0]}
       </>
     );
-    $[3] = t1;
-    $[4] = t2;
-    $[5] = t3;
+    $[3] = jsx[0];
+    $[4] = t1;
+    $[5] = t2;
   } else {
-    t3 = $[5];
+    t2 = $[5];
   }
-  return t3;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

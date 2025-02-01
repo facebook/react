@@ -257,7 +257,9 @@ export function validateHooksUsage(fn: HIRFunction): void {
         }
         case 'PropertyLoad': {
           const objectKind = getKindForPlace(instr.value.object);
-          const isHookProperty = isHookName(instr.value.property);
+          const isHookProperty =
+            typeof instr.value.property === 'string' &&
+            isHookName(instr.value.property);
           let kind: Kind;
           switch (objectKind) {
             case Kind.Error: {

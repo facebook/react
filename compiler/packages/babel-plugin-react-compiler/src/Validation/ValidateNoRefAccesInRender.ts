@@ -285,7 +285,7 @@ function validateNoRefAccessInRenderImpl(
           }
           case 'ComputedLoad':
           case 'PropertyLoad': {
-            if (typeof instr.value.property !== 'string') {
+            if (instr.value.kind === 'ComputedLoad') {
               validateNoDirectRefValueAccess(errors, instr.value.property, env);
             }
             const objType = env.get(instr.value.object.identifier.id);
