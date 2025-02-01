@@ -38,7 +38,7 @@ import {
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableUseEffectEventHook,
-  enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload,
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
@@ -205,8 +205,8 @@ export type Hook = {
 // the additional memory and we can follow up with performance
 // optimizations later.
 type EffectInstance = {
-  resource: mixed,
-  destroy: void | (() => void) | ((resource: mixed) => void),
+  resource: {...} | void | null,
+  destroy: void | (() => void) | ((resource: {...} | void | null) => void),
 };
 
 export const ResourceEffectIdentityKind: 0 = 0;
@@ -229,7 +229,7 @@ export type ResourceEffectIdentity = {
   resourceKind: typeof ResourceEffectIdentityKind,
   tag: HookFlags,
   inst: EffectInstance,
-  create: () => mixed,
+  create: () => {...} | void | null,
   deps: Array<mixed> | void | null,
   next: Effect,
 };
@@ -237,7 +237,7 @@ export type ResourceEffectUpdate = {
   resourceKind: typeof ResourceEffectUpdateKind,
   tag: HookFlags,
   inst: EffectInstance,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   deps: Array<mixed> | void | null,
   next: Effect,
   identity: ResourceEffectIdentity,
@@ -2540,9 +2540,9 @@ function pushResourceEffect(
   identityTag: HookFlags,
   updateTag: HookFlags,
   inst: EffectInstance,
-  create: () => mixed,
+  create: () => {...} | void | null,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   updateDeps: Array<mixed> | void | null,
 ): Effect {
   const effectIdentity: ResourceEffectIdentity = {
@@ -2694,11 +2694,11 @@ function updateEffect(
 }
 
 function mountResourceEffect(
-  create: () => mixed,
+  create: () => {...} | void | null,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
+  destroy: ((resource: {...} | void | null) => void) | void,
 ) {
   if (
     __DEV__ &&
@@ -2730,11 +2730,11 @@ function mountResourceEffect(
 function mountResourceEffectImpl(
   fiberFlags: Flags,
   hookFlags: HookFlags,
-  create: () => mixed,
+  create: () => {...} | void | null,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
+  destroy: ((resource: {...} | void | null) => void) | void,
 ) {
   const hook = mountWorkInProgressHook();
   currentlyRenderingFiber.flags |= fiberFlags;
@@ -2752,11 +2752,11 @@ function mountResourceEffectImpl(
 }
 
 function updateResourceEffect(
-  create: () => mixed,
+  create: () => {...} | void | null,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
+  destroy: ((resource: {...} | void | null) => void) | void,
 ) {
   updateResourceEffectImpl(
     PassiveEffect,
@@ -2772,11 +2772,11 @@ function updateResourceEffect(
 function updateResourceEffectImpl(
   fiberFlags: Flags,
   hookFlags: HookFlags,
-  create: () => mixed,
+  create: () => {...} | void | null,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
+  destroy: ((resource: {...} | void | null) => void) | void,
 ) {
   const hook = updateWorkInProgressHook();
   const effect: Effect = hook.memoizedState;
@@ -3938,7 +3938,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
-if (enableUseResourceEffectHook) {
+if (enableUseEffectCRUDOverload) {
   (ContextOnlyDispatcher: Dispatcher).useResourceEffect = throwInvalidHookError;
 }
 
@@ -3971,7 +3971,7 @@ const HooksDispatcherOnMount: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
 }
-if (enableUseResourceEffectHook) {
+if (enableUseEffectCRUDOverload) {
   (HooksDispatcherOnMount: Dispatcher).useResourceEffect = mountResourceEffect;
 }
 
@@ -4004,7 +4004,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
-if (enableUseResourceEffectHook) {
+if (enableUseEffectCRUDOverload) {
   (HooksDispatcherOnUpdate: Dispatcher).useResourceEffect =
     updateResourceEffect;
 }
@@ -4038,7 +4038,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
 }
-if (enableUseResourceEffectHook) {
+if (enableUseEffectCRUDOverload) {
   (HooksDispatcherOnRerender: Dispatcher).useResourceEffect =
     updateResourceEffect;
 }
@@ -4242,14 +4242,14 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
-        create: () => mixed,
+        create: () => {...} | void | null,
         createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
+        update: ((resource: {...} | void | null) => void) | void,
         updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
+        destroy: ((resource: {...} | void | null) => void) | void,
       ): void {
         currentHookNameInDev = 'useResourceEffect';
         mountHookTypesDev();
@@ -4430,14 +4430,14 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
-        create: () => mixed,
+        create: () => {...} | void | null,
         createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
+        update: ((resource: {...} | void | null) => void) | void,
         updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
+        destroy: ((resource: {...} | void | null) => void) | void,
       ): void {
         currentHookNameInDev = 'useResourceEffect';
         updateHookTypesDev();
@@ -4617,14 +4617,14 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
-        create: () => mixed,
+        create: () => {...} | void | null,
         createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
+        update: ((resource: {...} | void | null) => void) | void,
         updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
+        destroy: ((resource: {...} | void | null) => void) | void,
       ) {
         currentHookNameInDev = 'useResourceEffect';
         updateHookTypesDev();
@@ -4804,14 +4804,14 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
-        create: () => mixed,
+        create: () => {...} | void | null,
         createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
+        update: ((resource: {...} | void | null) => void) | void,
         updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
+        destroy: ((resource: {...} | void | null) => void) | void,
       ) {
         currentHookNameInDev = 'useResourceEffect';
         updateHookTypesDev();
@@ -5016,14 +5016,14 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
-        create: () => mixed,
+        create: () => {...} | void | null,
         createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
+        update: ((resource: {...} | void | null) => void) | void,
         updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
+        destroy: ((resource: {...} | void | null) => void) | void,
       ): void {
         currentHookNameInDev = 'useResourceEffect';
         warnInvalidHookAccess();
@@ -5229,14 +5229,14 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
-        create: () => mixed,
+        create: () => {...} | void | null,
         createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
+        update: ((resource: {...} | void | null) => void) | void,
         updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
+        destroy: ((resource: {...} | void | null) => void) | void,
       ) {
         currentHookNameInDev = 'useResourceEffect';
         warnInvalidHookAccess();
@@ -5442,14 +5442,14 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
-        create: () => mixed,
+        create: () => {...} | void | null,
         createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
+        update: ((resource: {...} | void | null) => void) | void,
         updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
+        destroy: ((resource: {...} | void | null) => void) | void,
       ) {
         currentHookNameInDev = 'useResourceEffect';
         warnInvalidHookAccess();
