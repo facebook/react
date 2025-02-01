@@ -91,7 +91,6 @@ import {
 } from '../Validation';
 import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLocalsNotReassignedAfterRender';
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
-import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
 import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
@@ -100,6 +99,7 @@ import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
 import {transformFire} from '../Transform';
 import {validateNoImpureFunctionsInRender} from '../Validation/ValiateNoImpureFunctionsInRender';
+import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDerivedComputationsInEffects';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -251,6 +251,7 @@ function runWithEnvironment(
     validateNoSetStateInRender(hir);
   }
 
+  validateNoDerivedComputationsInEffects(hir);
   if (env.config.validateNoSetStateInPassiveEffects) {
     validateNoSetStateInPassiveEffects(hir);
   }
