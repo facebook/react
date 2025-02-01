@@ -57,10 +57,7 @@ import {
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {
   removeEventListener,
-  addEventCaptureListener,
-  addEventBubbleListener,
-  addEventBubbleListenerWithPassiveFlag,
-  addEventCaptureListenerWithPassiveFlag,
+  addEventListener,
 } from './EventListener';
 import * as BeforeInputEventPlugin from './plugins/BeforeInputEventPlugin';
 import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
@@ -454,7 +451,7 @@ function addTrappedEventListener(
   );
   // If passive option is not supported, then the event will be
   // active and not passive.
-  let isPassiveListener: void | boolean = undefined;
+  let isPassiveListener: boolean = false;
   if (passiveBrowserEventsSupported) {
     // Browsers introduced an intervention, making these events
     // passive by default on document. React doesn't bind them
@@ -476,6 +473,7 @@ function addTrappedEventListener(
       ? (targetContainer: any).ownerDocument
       : targetContainer;
 
+  // eslint-disable-next-line prefer-const
   let unsubscribeListener;
   // When legacyFBSupport is enabled, it's for when we
   // want to add a one time event listener to a container.
@@ -501,38 +499,13 @@ function addTrappedEventListener(
       return originalListener.apply(this, p);
     };
   }
-  // TODO: There are too many combinations here. Consolidate them.
-  if (isCapturePhaseListener) {
-    if (isPassiveListener !== undefined) {
-      unsubscribeListener = addEventCaptureListenerWithPassiveFlag(
-        targetContainer,
-        domEventName,
-        listener,
-        isPassiveListener,
-      );
-    } else {
-      unsubscribeListener = addEventCaptureListener(
-        targetContainer,
-        domEventName,
-        listener,
-      );
-    }
-  } else {
-    if (isPassiveListener !== undefined) {
-      unsubscribeListener = addEventBubbleListenerWithPassiveFlag(
-        targetContainer,
-        domEventName,
-        listener,
-        isPassiveListener,
-      );
-    } else {
-      unsubscribeListener = addEventBubbleListener(
-        targetContainer,
-        domEventName,
-        listener,
-      );
-    }
-  }
+  unsubscribeListener = addEventListener(
+    targetContainer,
+    domEventName,
+    listener,
+    isCapturePhaseListener,
+    isPassiveListener,
+  );
 }
 
 function deferClickToDocumentForLegacyFBSupport(
