@@ -274,6 +274,7 @@ export function commitHookEffectListMount(
                 addendum =
                   ' You returned null. If your effect does not require clean ' +
                   'up, return undefined (or nothing).';
+                // $FlowFixMe (@poteto) this check is safe on arbitrary non-null/void objects
               } else if (typeof destroy.then === 'function') {
                 addendum =
                   '\n\nIt looks like you wrote ' +
@@ -1036,10 +1037,10 @@ function safelyCallDestroy(
 function safelyCallDestroyWithResource(
   current: Fiber,
   nearestMountedAncestor: Fiber | null,
-  destroy: mixed => void,
-  resource: mixed,
+  destroy: ({...}) => void,
+  resource: {...},
 ) {
-  const destroy_ = resource == null ? destroy : destroy.bind(null, resource);
+  const destroy_ = destroy.bind(null, resource);
   if (__DEV__) {
     runWithFiberInDEV(
       current,
@@ -1050,6 +1051,7 @@ function safelyCallDestroyWithResource(
     );
   } else {
     try {
+      // $FlowFixMe(incompatible-call) Already bound to resource
       destroy_();
     } catch (error) {
       captureCommitPhaseError(current, nearestMountedAncestor, error);

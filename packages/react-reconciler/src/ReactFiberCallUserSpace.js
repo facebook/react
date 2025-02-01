@@ -183,7 +183,7 @@ export const callComponentWillUnmountInDEV: (
 const callCreate = {
   'react-stack-bottom-frame': function (
     effect: Effect,
-  ): (() => void) | mixed | void {
+  ): (() => void) | {...} | void | null {
     if (!enableUseResourceEffectHook) {
       if (effect.resourceKind != null) {
         if (__DEV__) {

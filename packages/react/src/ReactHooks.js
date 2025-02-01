@@ -202,11 +202,11 @@ export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
 }
 
 export function useResourceEffect(
-  create: () => mixed,
+  create: () => {...} | void | null,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
+  destroy: ((resource: {...} | void | null) => void) | void,
 ): void {
   if (!enableUseResourceEffectHook) {
     throw new Error('Not implemented.');
