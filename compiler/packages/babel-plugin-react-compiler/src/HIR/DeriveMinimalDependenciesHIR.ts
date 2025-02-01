@@ -13,7 +13,6 @@ import {
   ReactiveScopeDependency,
 } from '../HIR';
 import {printIdentifier} from '../HIR/PrintHIR';
-import {ReactiveScopePropertyDependency} from '../ReactiveScopes/DeriveMinimalDependencies';
 
 /**
  * Simpler fork of DeriveMinimalDependencies, see PropagateScopeDependenciesHIR
@@ -91,7 +90,7 @@ export class ReactiveScopeDependencyTreeHIR {
    * dependency. This effectively truncates @param dep to its maximal
    * safe-to-evaluate subpath
    */
-  addDependency(dep: ReactiveScopePropertyDependency): void {
+  addDependency(dep: ReactiveScopeDependency): void {
     const {identifier, path} = dep;
     let depCursor = ReactiveScopeDependencyTreeHIR.#getOrCreateRoot(
       identifier,

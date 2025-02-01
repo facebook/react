@@ -30,7 +30,6 @@ function bar(a) {
     const x = [a];
     y = {};
 
-    y;
     y = x[0];
     $[0] = a;
     $[1] = y;

@@ -38,9 +38,8 @@ function useTest() {
 
     const t1 = (w = 42);
     const t2 = w;
-
-    w;
     let t3;
+
     w = 999;
     t3 = 2;
     t0 = makeArray(t1, t2, t3);
