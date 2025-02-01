@@ -251,7 +251,10 @@ function runWithEnvironment(
     validateNoSetStateInRender(hir);
   }
 
-  validateNoDerivedComputationsInEffects(hir);
+  if (env.config.validateNoDerivedComputationsInEffects) {
+    validateNoDerivedComputationsInEffects(hir);
+  }
+
   if (env.config.validateNoSetStateInPassiveEffects) {
     validateNoSetStateInPassiveEffects(hir);
   }

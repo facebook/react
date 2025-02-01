@@ -140,8 +140,27 @@ function validateEffect(
         return;
       }
     }
+    for (const phi of block.phis) {
+      const aggregateDeps: Set<IdentifierId> = new Set();
+      for (const operand of phi.operands.values()) {
+        const deps = values.get(operand.identifier.id);
+        if (deps != null) {
+          for (const dep of deps) {
+            aggregateDeps.add(dep);
+          }
+        }
+      }
+      if (aggregateDeps.size !== 0) {
+        values.set(phi.place.identifier.id, Array.from(aggregateDeps));
+      }
+    }
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
+        case 'Primitive':
+        case 'JSXText':
+        case 'LoadGlobal': {
+          break;
+        }
         case 'LoadLocal': {
           const deps = values.get(instr.value.place.identifier.id);
           if (deps != null) {
@@ -149,11 +168,12 @@ function validateEffect(
           }
           break;
         }
-        case 'Primitive':
-        case 'JSXText':
-        case 'LoadGlobal':
+        case 'ComputedLoad':
+        case 'PropertyLoad':
         case 'BinaryExpression':
-        case 'TemplateLiteral': {
+        case 'TemplateLiteral':
+        case 'CallExpression':
+        case 'MethodCall': {
           const aggregateDeps: Set<IdentifierId> = new Set();
           for (const operand of eachInstructionValueOperand(instr.value)) {
             const deps = values.get(operand.identifier.id);
@@ -166,10 +186,9 @@ function validateEffect(
           if (aggregateDeps.size !== 0) {
             values.set(instr.lvalue.identifier.id, Array.from(aggregateDeps));
           }
-          break;
-        }
-        case 'CallExpression': {
+
           if (
+            instr.value.kind === 'CallExpression' &&
             isSetStateType(instr.value.callee.identifier) &&
             instr.value.args.length === 1 &&
             instr.value.args[0].kind === 'Identifier'
@@ -181,9 +200,6 @@ function validateEffect(
               // doesn't depend on any deps
               return;
             }
-          } else {
-            // some other call
-            return;
           }
           break;
         }
@@ -194,6 +210,7 @@ function validateEffect(
     }
     for (const operand of eachTerminalOperand(block.terminal)) {
       if (values.has(operand.identifier.id)) {
+        //
         return;
       }
     }

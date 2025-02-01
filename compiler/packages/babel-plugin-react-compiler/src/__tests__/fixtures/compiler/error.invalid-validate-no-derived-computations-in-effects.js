@@ -1,3 +1,4 @@
+// @validateNoDerivedComputationsInEffects
 function Form() {
   const [firstName, setFirstName] = useState('Taylor');
   const [lastName, setLastName] = useState('Swift');
@@ -5,7 +6,7 @@ function Form() {
   // 🔴 Avoid: redundant state and unnecessary Effect
   const [fullName, setFullName] = useState('');
   useEffect(() => {
-    setFullName(firstName + ' ' + lastName);
+    setFullName(capitalize(firstName + ' ' + lastName));
   }, [firstName, lastName]);
 
   return <div>{fullName}</div>;

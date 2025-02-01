@@ -325,6 +325,12 @@ const EnvironmentConfigSchema = z.object({
   validateNoSetStateInPassiveEffects: z.boolean().default(false),
 
   /**
+   * Validates that effects are not used to calculate derived data which could instead be computed
+   * during render.
+   */
+  validateNoDerivedComputationsInEffects: z.boolean().default(false),
+
+  /**
    * Validates against creating JSX within a try block and recommends using an error boundary
    * instead.
    */
