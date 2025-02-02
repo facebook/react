@@ -21,6 +21,17 @@ import {
 
 import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
 
+function findSourceMapURL(filename: string, environmentName: string) {
+  const devServer = parcelRequire.meta.devServer;
+  if (devServer != null) {
+    const qs = new URLSearchParams();
+    qs.set('filename', filename);
+    qs.set('env', environmentName);
+    return devServer + '/__parcel_source_map?' + qs.toString();
+  }
+  return null;
+}
+
 function noServerCall() {
   throw new Error(
     'Server Functions cannot be called during initial render. ' +
@@ -33,7 +44,13 @@ export function createServerReference<A: Iterable<any>, T>(
   id: string,
   exportName: string,
 ): (...A) => Promise<T> {
-  return createServerReferenceImpl(id + '#' + exportName, noServerCall);
+  return createServerReferenceImpl(
+    id + '#' + exportName,
+    noServerCall,
+    undefined,
+    findSourceMapURL,
+    exportName,
+  );
 }
 
 type EncodeFormActionCallback = <A>(
@@ -60,7 +77,7 @@ export function createFromNodeStream<T>(
     options ? options.encodeFormAction : undefined,
     options && typeof options.nonce === 'string' ? options.nonce : undefined,
     undefined, // TODO: If encodeReply is supported, this should support temporaryReferences
-    undefined, // TODO: findSourceMapUrl
+    __DEV__ ? findSourceMapURL : undefined,
     __DEV__ && options ? options.replayConsoleLogs === true : false, // defaults to false
     __DEV__ && options && options.environmentName
       ? options.environmentName
