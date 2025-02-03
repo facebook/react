@@ -40,8 +40,6 @@ export {
 export {
   createRoot,
   hydrateRoot,
-  render,
   unstable_batchedUpdates,
   findDOMNode,
-  unmountComponentAtNode,
 } from './client/ReactDOMRootFB';
