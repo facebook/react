@@ -14,9 +14,6 @@ const ESLintTesterV9 = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
 
-global.__EXPERIMENTAL__ =
-  global.__EXPERIMENTAL__ ?? process.env.__EXPERIMENTAL__;
-
 /**
  * A string template tag that removes padding from the left side of multi-line strings
  * @param {Array} strings array of code strings (only one expected)
