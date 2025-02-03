@@ -170,8 +170,9 @@ export function commitHookEffectListMount(
                 );
                 if (effect.inst.resource == null) {
                   console.error(
-                    'useResourceEffect must provide a callback which returns a resource. ' +
-                      'If a managed resource is not needed here, use useEffect. Received %s',
+                    'useEffect must provide a callback which returns a resource. ' +
+                      'If a managed resource is not needed here, do not provide an updater or ' +
+                      'destroy callback. Received %s',
                     effect.inst.resource,
                   );
                 }
@@ -261,11 +262,6 @@ export function commitHookEffectListMount(
                 hookName = 'useLayoutEffect';
               } else if ((effect.tag & HookInsertion) !== NoFlags) {
                 hookName = 'useInsertionEffect';
-              } else if (
-                enableUseEffectCRUDOverload &&
-                effect.resourceKind != null
-              ) {
-                hookName = 'useResourceEffect';
               } else {
                 hookName = 'useEffect';
               }
@@ -363,7 +359,7 @@ export function commitHookEffectListUnmount(
                 effect.resourceKind === ResourceEffectIdentityKind &&
                 effect.inst.resource != null
               ) {
-                safelyCallDestroyWithResource(
+                safelyCallDestroy(
                   finishedWork,
                   nearestMountedAncestor,
                   destroy,
@@ -1015,32 +1011,11 @@ export function safelyDetachRef(
 function safelyCallDestroy(
   current: Fiber,
   nearestMountedAncestor: Fiber | null,
-  destroy: () => void,
+  destroy: (() => void) | (({...}) => void),
+  resource?: {...} | void | null,
 ) {
-  if (__DEV__) {
-    runWithFiberInDEV(
-      current,
-      callDestroyInDEV,
-      current,
-      nearestMountedAncestor,
-      destroy,
-    );
-  } else {
-    try {
-      destroy();
-    } catch (error) {
-      captureCommitPhaseError(current, nearestMountedAncestor, error);
-    }
-  }
-}
-
-function safelyCallDestroyWithResource(
-  current: Fiber,
-  nearestMountedAncestor: Fiber | null,
-  destroy: ({...}) => void,
-  resource: {...},
-) {
-  const destroy_ = destroy.bind(null, resource);
+  // $FlowFixMe[extra-arg] @poteto this is safe either way because the extra arg is ignored if it's not a CRUD effect
+  const destroy_ = resource == null ? destroy : destroy.bind(null, resource);
   if (__DEV__) {
     runWithFiberInDEV(
       current,
