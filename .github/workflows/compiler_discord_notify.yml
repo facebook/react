@@ -14,7 +14,7 @@ jobs:
       actor: ${{ github.event.pull_request.user.login }}
 
   notify:
-    if: ${{ needs.check_maintainer.outputs.is_core_team == 'true' }}
+    if: ${{ needs.check_maintainer.outputs.is_core_team == 'true' && github.event.label.name == 'React Core Team' }}
     needs: check_maintainer
     runs-on: ubuntu-latest
     steps:
