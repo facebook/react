@@ -3311,7 +3311,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  // @gate enableUseResourceEffectHook
+  // @gate enableUseEffectCRUDOverload
   describe('useResourceEffect', () => {
     class Resource {
       isDeleted: false;
@@ -3333,12 +3333,12 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
     }
 
-    // @gate !enableUseResourceEffectHook
+    // @gate !enableUseEffectCRUDOverload
     it('is null when flag is disabled', async () => {
       expect(useResourceEffect).toBeUndefined();
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('validates create return value', async () => {
       function App({id}) {
         useResourceEffect(() => {
@@ -3359,7 +3359,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       );
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('validates non-empty update deps', async () => {
       function App({id}) {
         useResourceEffect(
@@ -3386,7 +3386,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('simple mount and update', async () => {
       function App({id, username}) {
         const opts = useMemo(() => {
@@ -3443,7 +3443,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['destroy(2, Jack)']);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('simple mount with no update', async () => {
       function App({id, username}) {
         const opts = useMemo(() => {
@@ -3480,7 +3480,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['destroy(1, Jack)']);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('calls update on every render if no deps are specified', async () => {
       function App({id, username}) {
         const opts = useMemo(() => {
@@ -3523,7 +3523,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['update(2, Lauren)']);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('does not unmount previous useResourceEffect between updates', async () => {
       function App({id}) {
         useResourceEffect(
@@ -3562,7 +3562,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['update(0)']);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('unmounts only on deletion', async () => {
       function App({id}) {
         useResourceEffect(
@@ -3596,7 +3596,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('unmounts on deletion', async () => {
       function Wrapper(props) {
         return <App {...props} />;
@@ -3650,7 +3650,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('handles errors in create on mount', async () => {
       function App({id}) {
         useResourceEffect(
@@ -3700,7 +3700,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('handles errors in create on update', async () => {
       function App({id}) {
         useResourceEffect(
@@ -3744,7 +3744,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }).rejects.toThrow('Oops error!');
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('handles errors in destroy on update', async () => {
       function App({id, username}) {
         const opts = useMemo(() => {
@@ -3800,7 +3800,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
-    // @gate enableUseResourceEffectHook && enableActivity
+    // @gate enableUseEffectCRUDOverload && enableActivity
     it('composes with activity', async () => {
       function App({id, username}) {
         const opts = useMemo(() => {
@@ -3873,7 +3873,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['destroy(0, Lauren)']);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('composes with suspense', async () => {
       function TextBox({text}) {
         return <AsyncText text={text} ms={0} />;
@@ -3991,7 +3991,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       );
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('composes with other kinds of effects', async () => {
       let rerender;
       function App({id, username}) {
