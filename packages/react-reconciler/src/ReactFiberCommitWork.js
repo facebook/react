@@ -2007,11 +2007,7 @@ function commitDeletionEffects(
           hostParentIsContainer = false;
           break findParent;
         }
-        case HostRoot: {
-          hostParent = parent.stateNode.containerInfo;
-          hostParentIsContainer = true;
-          break findParent;
-        }
+        case HostRoot:
         case HostPortal: {
           hostParent = parent.stateNode.containerInfo;
           hostParentIsContainer = true;

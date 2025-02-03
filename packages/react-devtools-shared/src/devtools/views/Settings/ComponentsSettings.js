@@ -478,8 +478,8 @@ export default function ComponentsSettings({
                     <option value={ElementTypeForwardRef}>forward ref</option>
                     <option value={ElementTypeHostComponent}>
                       {__IS_NATIVE__
-                        ? 'host components (e.g. &lt;RCTText&gt;)'
-                        : 'dom nodes (e.g. &lt;div&gt;)'}
+                        ? 'host components (e.g. <RCTText>)'
+                        : 'dom nodes (e.g. <div>)'}
                     </option>
                     <option value={ElementTypeMemo}>memo</option>
                     <option value={ElementTypeOtherOrUnknown}>other</option>
