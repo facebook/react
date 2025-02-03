@@ -81,7 +81,7 @@ export default function StyleEditor({id, style}: Props): React.Node {
       {keys.length > 0 &&
         keys.map(attribute => (
           <Row
-            key={attribute}
+            key={`${attribute}/${style[attribute]}`}
             attribute={attribute}
             changeAttribute={changeAttribute}
             changeValue={changeValue}
