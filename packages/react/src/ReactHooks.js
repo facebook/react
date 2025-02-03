@@ -18,7 +18,7 @@ import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
+import {enableUseEffectCRUDOverload} from 'shared/ReactFeatureFlags';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -208,7 +208,7 @@ export function useResourceEffect(
   updateDeps: Array<mixed> | void | null,
   destroy: ((resource: {...} | void | null) => void) | void,
 ): void {
-  if (!enableUseResourceEffectHook) {
+  if (!enableUseEffectCRUDOverload) {
     throw new Error('Not implemented.');
   }
   const dispatcher = resolveDispatcher();

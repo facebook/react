@@ -22,7 +22,7 @@ import {
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
   enableSchedulingProfiler,
-  enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload,
   enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -160,7 +160,7 @@ export function commitHookEffectListMount(
 
           // Mount
           let destroy;
-          if (enableUseResourceEffectHook) {
+          if (enableUseEffectCRUDOverload) {
             if (effect.resourceKind === ResourceEffectIdentityKind) {
               if (__DEV__) {
                 effect.inst.resource = runWithFiberInDEV(
@@ -200,7 +200,7 @@ export function commitHookEffectListMount(
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(true);
             }
-            if (enableUseResourceEffectHook) {
+            if (enableUseEffectCRUDOverload) {
               if (effect.resourceKind == null) {
                 destroy = runWithFiberInDEV(
                   finishedWork,
@@ -219,7 +219,7 @@ export function commitHookEffectListMount(
               setIsRunningInsertionEffect(false);
             }
           } else {
-            if (enableUseResourceEffectHook) {
+            if (enableUseEffectCRUDOverload) {
               if (effect.resourceKind == null) {
                 const create = effect.create;
                 const inst = effect.inst;
@@ -230,7 +230,7 @@ export function commitHookEffectListMount(
               if (effect.resourceKind != null) {
                 if (__DEV__) {
                   console.error(
-                    'Expected only SimpleEffects when enableUseResourceEffectHook is disabled, ' +
+                    'Expected only SimpleEffects when enableUseEffectCRUDOverload is disabled, ' +
                       'got %s',
                     effect.resourceKind,
                   );
@@ -262,7 +262,7 @@ export function commitHookEffectListMount(
               } else if ((effect.tag & HookInsertion) !== NoFlags) {
                 hookName = 'useInsertionEffect';
               } else if (
-                enableUseResourceEffectHook &&
+                enableUseEffectCRUDOverload &&
                 effect.resourceKind != null
               ) {
                 hookName = 'useResourceEffect';
@@ -338,7 +338,7 @@ export function commitHookEffectListUnmount(
           const inst = effect.inst;
           const destroy = inst.destroy;
           if (destroy !== undefined) {
-            if (enableUseResourceEffectHook) {
+            if (enableUseEffectCRUDOverload) {
               if (effect.resourceKind == null) {
                 inst.destroy = undefined;
               }
@@ -358,7 +358,7 @@ export function commitHookEffectListUnmount(
                 setIsRunningInsertionEffect(true);
               }
             }
-            if (enableUseResourceEffectHook) {
+            if (enableUseEffectCRUDOverload) {
               if (
                 effect.resourceKind === ResourceEffectIdentityKind &&
                 effect.inst.resource != null
