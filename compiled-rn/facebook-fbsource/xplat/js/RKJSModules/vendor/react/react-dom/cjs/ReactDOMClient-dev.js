@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bc893b40f5241ccc5739e11d06773023>>
+ * @generated SignedSource<<97008c538e5b8f1fb99d5ffc107ddbb3>>
  */
 
 /*
@@ -454,11 +454,7 @@ __DEV__ &&
           break;
         default:
           if (
-            ((nextRootInstance =
-              8 === nextRootContext
-                ? nextRootInstance.parentNode
-                : nextRootInstance),
-            (nextRootContext = nextRootInstance.tagName),
+            ((nextRootContext = nextRootInstance.tagName),
             (nextRootInstance = nextRootInstance.namespaceURI))
           )
             (nextRootInstance = getOwnHostContext(nextRootInstance)),
@@ -11589,48 +11585,31 @@ __DEV__ &&
     function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
       var tag = node.tag;
       if (5 === tag || 6 === tag)
-        if (((node = node.stateNode), before)) {
-          switch (parent.nodeType) {
-            case 8:
-              parent = parent.parentNode;
-              break;
-            case 9:
-              parent = parent.body;
-              break;
-            default:
-              parent =
-                "HTML" === parent.nodeName ? parent.ownerDocument.body : parent;
-          }
-          supportsMoveBefore
-            ? parent.moveBefore(node, before)
-            : parent.insertBefore(node, before);
-        } else
-          a: {
-            before = parent;
-            switch (before.nodeType) {
-              case 8:
-                parent = before.parentNode;
-                supportsMoveBefore
-                  ? parent.moveBefore(node, before)
-                  : parent.insertBefore(node, before);
-                break a;
-              case 9:
-                parent = before.body;
-                break;
-              default:
-                parent =
-                  "HTML" === before.nodeName
+        (node = node.stateNode),
+          before
+            ? ((parent =
+                9 === parent.nodeType
+                  ? parent.body
+                  : "HTML" === parent.nodeName
+                    ? parent.ownerDocument.body
+                    : parent),
+              supportsMoveBefore
+                ? parent.moveBefore(node, before)
+                : parent.insertBefore(node, before))
+            : ((before = parent),
+              (parent =
+                9 === before.nodeType
+                  ? before.body
+                  : "HTML" === before.nodeName
                     ? before.ownerDocument.body
-                    : before;
-            }
-            supportsMoveBefore
-              ? parent.moveBefore(node, null)
-              : parent.appendChild(node);
-            before = before._reactRootContainer;
-            (null !== before && void 0 !== before) ||
-              null !== parent.onclick ||
-              (parent.onclick = noop$1);
-          }
+                    : before),
+              supportsMoveBefore
+                ? parent.moveBefore(node, null)
+                : parent.appendChild(node),
+              (before = before._reactRootContainer),
+              (null !== before && void 0 !== before) ||
+                null !== parent.onclick ||
+                (parent.onclick = noop$1));
       else if (
         4 !== tag &&
         (27 === tag &&
@@ -12225,26 +12204,14 @@ __DEV__ &&
           null !== hostParent &&
             (hostParentIsContainer
               ? ((nearestMountedAncestor = hostParent),
-                (deletedFiber = deletedFiber.stateNode),
-                8 === nearestMountedAncestor.nodeType
-                  ? clearSuspenseBoundary(
-                      nearestMountedAncestor.parentNode,
-                      deletedFiber
-                    )
-                  : 9 === nearestMountedAncestor.nodeType
-                    ? clearSuspenseBoundary(
-                        nearestMountedAncestor.body,
-                        deletedFiber
-                      )
+                clearSuspenseBoundary(
+                  9 === nearestMountedAncestor.nodeType
+                    ? nearestMountedAncestor.body
                     : "HTML" === nearestMountedAncestor.nodeName
-                      ? clearSuspenseBoundary(
-                          nearestMountedAncestor.ownerDocument.body,
-                          deletedFiber
-                        )
-                      : clearSuspenseBoundary(
-                          nearestMountedAncestor,
-                          deletedFiber
-                        ),
+                      ? nearestMountedAncestor.ownerDocument.body
+                      : nearestMountedAncestor,
+                  deletedFiber.stateNode
+                ),
                 retryIfBlockedOn(nearestMountedAncestor))
               : clearSuspenseBoundary(hostParent, deletedFiber.stateNode));
           break;
@@ -17535,23 +17502,15 @@ __DEV__ &&
           var nodeTag = targetInst$jscomp$0.tag;
           if (3 === nodeTag || 4 === nodeTag) {
             var container = targetInst$jscomp$0.stateNode.containerInfo;
-            if (
-              container === targetContainer ||
-              (8 === container.nodeType &&
-                container.parentNode === targetContainer)
-            )
-              break;
+            if (container === targetContainer) break;
             if (4 === nodeTag)
               for (nodeTag = targetInst$jscomp$0.return; null !== nodeTag; ) {
                 var grandTag = nodeTag.tag;
-                if (3 === grandTag || 4 === grandTag)
-                  if (
-                    ((grandTag = nodeTag.stateNode.containerInfo),
-                    grandTag === targetContainer ||
-                      (8 === grandTag.nodeType &&
-                        grandTag.parentNode === targetContainer))
-                  )
-                    return;
+                if (
+                  (3 === grandTag || 4 === grandTag) &&
+                  nodeTag.stateNode.containerInfo === targetContainer
+                )
+                  return;
                 nodeTag = nodeTag.return;
               }
             for (; null !== container; ) {
@@ -20359,20 +20318,12 @@ __DEV__ &&
       parentInstance.removeChild(child);
     }
     function removeChildFromContainer(container, child) {
-      switch (container.nodeType) {
-        case 8:
-          container = container.parentNode;
-          break;
-        case 9:
-          container = container.body;
-          break;
-        default:
-          container =
-            "HTML" === container.nodeName
-              ? container.ownerDocument.body
-              : container;
-      }
-      container.removeChild(child);
+      (9 === container.nodeType
+        ? container.body
+        : "HTML" === container.nodeName
+          ? container.ownerDocument.body
+          : container
+      ).removeChild(child);
     }
     function clearSuspenseBoundary(parentInstance, suspenseInstance) {
       var node = suspenseInstance,
@@ -26052,11 +26003,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-native-fb-8bda7155-20250204" !== isomorphicReactPackageVersion)
+      if ("19.1.0-native-fb-0605cd9f-20250204" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-native-fb-8bda7155-20250204\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-native-fb-0605cd9f-20250204\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26093,10 +26044,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-native-fb-8bda7155-20250204",
+          version: "19.1.0-native-fb-0605cd9f-20250204",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-native-fb-8bda7155-20250204"
+          reconcilerVersion: "19.1.0-native-fb-0605cd9f-20250204"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26179,9 +26130,7 @@ __DEV__ &&
         null
       );
       container[internalContainerInstanceKey] = options.current;
-      listenToAllSupportedEvents(
-        8 === container.nodeType ? container.parentNode : container
-      );
+      listenToAllSupportedEvents(container);
       return new ReactDOMRoot(options);
     };
     exports.hydrateRoot = function (container, initialChildren, options) {
@@ -26242,5 +26191,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.1.0-native-fb-8bda7155-20250204";
+    exports.version = "19.1.0-native-fb-0605cd9f-20250204";
   })();
