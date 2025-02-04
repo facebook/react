@@ -244,20 +244,30 @@ export function writeStartClientRenderedSuspenseBoundary(
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
+  preambleState: null | PreambleState,
 ): boolean {
   if (renderState.generateStaticMarkup) {
     return true;
   }
-  return writeEndCompletedSuspenseBoundaryImpl(destination, renderState);
+  return writeEndCompletedSuspenseBoundaryImpl(
+    destination,
+    renderState,
+    preambleState,
+  );
 }
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
+  preambleState: null | PreambleState,
 ): boolean {
   if (renderState.generateStaticMarkup) {
     return true;
   }
-  return writeEndClientRenderedSuspenseBoundaryImpl(destination, renderState);
+  return writeEndClientRenderedSuspenseBoundaryImpl(
+    destination,
+    renderState,
+    preambleState,
+  );
 }
 
 export type TransitionStatus = FormStatus;
