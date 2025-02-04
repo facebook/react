@@ -329,6 +329,16 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
     ]),
   ],
   [
+    'BigInt',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
     'Boolean',
     addFunction(DEFAULT_SHAPES, [], {
       positionalParams: [],

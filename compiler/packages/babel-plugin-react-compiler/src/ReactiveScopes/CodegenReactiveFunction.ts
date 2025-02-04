@@ -1677,7 +1677,12 @@ function codegenInstructionValue(
       break;
     }
     case 'Primitive': {
-      value = codegenValue(cx, instrValue.loc, instrValue.value);
+      value = codegenValue(
+        cx,
+        instrValue.loc,
+        instrValue.value,
+        instrValue.isBigInt,
+      );
       break;
     }
     case 'CallExpression': {
@@ -2514,12 +2519,16 @@ function codegenValue(
   cx: Context,
   loc: SourceLocation,
   value: boolean | number | string | null | undefined,
+  isBigInt?: boolean,
 ): t.Expression {
   if (typeof value === 'number') {
     return t.numericLiteral(value);
   } else if (typeof value === 'boolean') {
     return t.booleanLiteral(value);
   } else if (typeof value === 'string') {
+    if (isBigInt) {
+      return t.bigIntLiteral(value);
+    }
     return createStringLiteral(loc, value);
   } else if (value === null) {
     return t.nullLiteral();
