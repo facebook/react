@@ -39,6 +39,7 @@ export const enableSiblingPrerendering = __VARIANT__;
 export const enableUseResourceEffectHook = __VARIANT__;
 export const enableRemoveConsolePatches = __VARIANT__;
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
+export const enableViewTransition = __VARIANT__;
 
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these

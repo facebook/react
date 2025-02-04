@@ -37,6 +37,7 @@ export {
   unstable_LegacyHidden,
   unstable_Scope,
   unstable_SuspenseList,
+  unstable_ViewTransition,
   unstable_TracingMarker,
   unstable_useCacheRefresh,
   use,
