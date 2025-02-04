@@ -1940,13 +1940,13 @@ __DEV__ &&
     function popToNextHostParent(fiber) {
       for (hydrationParentFiber = fiber.return; hydrationParentFiber; )
         switch (hydrationParentFiber.tag) {
-          case 3:
-          case 27:
-            rootOrSingletonContext = !0;
-            return;
           case 5:
           case 13:
             rootOrSingletonContext = !1;
+            return;
+          case 27:
+          case 3:
+            rootOrSingletonContext = !0;
             return;
           default:
             hydrationParentFiber = hydrationParentFiber.return;
@@ -1956,33 +1956,23 @@ __DEV__ &&
       if (!supportsHydration || fiber !== hydrationParentFiber) return !1;
       if (!isHydrating)
         return popToNextHostParent(fiber), (isHydrating = !0), !1;
-      var shouldClear = !1;
+      var tag = fiber.tag;
       supportsSingletons
-        ? 3 !== fiber.tag &&
-          27 !== fiber.tag &&
-          (5 !== fiber.tag ||
+        ? 3 !== tag &&
+          27 !== tag &&
+          (5 !== tag ||
             (shouldDeleteUnhydratedTailInstances(fiber.type) &&
               !shouldSetTextContent(fiber.type, fiber.memoizedProps))) &&
-          (shouldClear = !0)
-        : 3 !== fiber.tag &&
-          (5 !== fiber.tag ||
+          nextHydratableInstance &&
+          (warnIfUnhydratedTailNodes(fiber), throwOnHydrationMismatch(fiber))
+        : 3 !== tag &&
+          (5 !== tag ||
             (shouldDeleteUnhydratedTailInstances(fiber.type) &&
               !shouldSetTextContent(fiber.type, fiber.memoizedProps))) &&
-          (shouldClear = !0);
-      if (shouldClear && nextHydratableInstance) {
-        for (shouldClear = nextHydratableInstance; shouldClear; ) {
-          var diffNode = buildHydrationDiffNode(fiber, 0),
-            description = describeHydratableInstanceForDevWarnings(shouldClear);
-          diffNode.serverTail.push(description);
-          shouldClear =
-            "Suspense" === description.type
-              ? getNextHydratableInstanceAfterSuspenseInstance(shouldClear)
-              : getNextHydratableSibling(shouldClear);
-        }
-        throwOnHydrationMismatch(fiber);
-      }
+          nextHydratableInstance &&
+          (warnIfUnhydratedTailNodes(fiber), throwOnHydrationMismatch(fiber));
       popToNextHostParent(fiber);
-      if (13 === fiber.tag) {
+      if (13 === tag) {
         if (!supportsHydration)
           throw Error(
             "Expected skipPastDehydratedSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue."
@@ -1996,10 +1986,27 @@ __DEV__ &&
         nextHydratableInstance =
           getNextHydratableInstanceAfterSuspenseInstance(fiber);
       } else
-        nextHydratableInstance = hydrationParentFiber
-          ? getNextHydratableSibling(fiber.stateNode)
-          : null;
+        nextHydratableInstance =
+          supportsSingletons && 27 === tag
+            ? getNextHydratableSiblingAfterSingleton(
+                fiber.type,
+                nextHydratableInstance
+              )
+            : hydrationParentFiber
+              ? getNextHydratableSibling(fiber.stateNode)
+              : null;
       return !0;
+    }
+    function warnIfUnhydratedTailNodes(fiber) {
+      for (var nextInstance = nextHydratableInstance; nextInstance; ) {
+        var diffNode = buildHydrationDiffNode(fiber, 0),
+          description = describeHydratableInstanceForDevWarnings(nextInstance);
+        diffNode.serverTail.push(description);
+        nextInstance =
+          "Suspense" === description.type
+            ? getNextHydratableInstanceAfterSuspenseInstance(nextInstance)
+            : getNextHydratableSibling(nextInstance);
+      }
     }
     function resetHydrationState() {
       supportsHydration &&
@@ -8847,7 +8854,11 @@ __DEV__ &&
                 (hydrationParentFiber = workInProgress),
                 (rootOrSingletonContext = !0),
                 (nextHydratableInstance =
-                  getFirstHydratableChild(prevSibling))),
+                  getFirstHydratableChildWithinSingleton(
+                    workInProgress.type,
+                    prevSibling,
+                    nextHydratableInstance
+                  ))),
               reconcileChildren(
                 current,
                 workInProgress,
@@ -10979,7 +10990,7 @@ __DEV__ &&
         (supportsSingletons &&
           27 === tag &&
           isSingletonScope(node.type) &&
-          (parent = node.stateNode),
+          ((parent = node.stateNode), (before = null)),
         (node = node.child),
         null !== node)
       )
@@ -16288,11 +16299,15 @@ __DEV__ &&
       canHydrateFormStateMarker = $$$config.canHydrateFormStateMarker,
       isFormStateMarkerMatching = $$$config.isFormStateMarkerMatching,
       getNextHydratableSibling = $$$config.getNextHydratableSibling,
+      getNextHydratableSiblingAfterSingleton =
+        $$$config.getNextHydratableSiblingAfterSingleton,
       getFirstHydratableChild = $$$config.getFirstHydratableChild,
       getFirstHydratableChildWithinContainer =
         $$$config.getFirstHydratableChildWithinContainer,
       getFirstHydratableChildWithinSuspenseInstance =
         $$$config.getFirstHydratableChildWithinSuspenseInstance,
+      getFirstHydratableChildWithinSingleton =
+        $$$config.getFirstHydratableChildWithinSingleton,
       canHydrateInstance = $$$config.canHydrateInstance,
       canHydrateTextInstance = $$$config.canHydrateTextInstance,
       canHydrateSuspenseInstance = $$$config.canHydrateSuspenseInstance,
@@ -18923,7 +18938,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-19ca800c-20250131"
+        reconcilerVersion: "19.1.0-www-modern-8bda7155-20250204"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

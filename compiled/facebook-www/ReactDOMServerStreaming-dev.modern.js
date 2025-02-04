@@ -781,7 +781,12 @@ __DEV__ &&
       return ("" + scriptText).replace(scriptRegex, scriptReplacer);
     }
     function createPreambleState() {
-      return { htmlChunks: null, headChunks: null, bodyChunks: null };
+      return {
+        htmlChunks: null,
+        headChunks: null,
+        bodyChunks: null,
+        contribution: NoContribution
+      };
     }
     function createFormatContext(insertionMode, selectedValue, tagScope) {
       return {
@@ -1462,6 +1467,29 @@ __DEV__ &&
         target.push(escapeEntireInlineScriptContent(children));
       target.push(endChunkForTag("script"));
       return null;
+    }
+    function pushStartSingletonElement(target, props, tag) {
+      target.push(startChunkForTag(tag));
+      var innerHTML = (tag = null),
+        propKey;
+      for (propKey in props)
+        if (hasOwnProperty.call(props, propKey)) {
+          var propValue = props[propKey];
+          if (null != propValue)
+            switch (propKey) {
+              case "children":
+                tag = propValue;
+                break;
+              case "dangerouslySetInnerHTML":
+                innerHTML = propValue;
+                break;
+              default:
+                pushAttribute(target, propKey, propValue);
+            }
+        }
+      target.push(endOfStartTag);
+      pushInnerHTML(target, innerHTML, tag);
+      return tag;
     }
     function pushStartGenericElement(target, props, tag) {
       target.push(startChunkForTag(tag));
@@ -2663,7 +2691,7 @@ __DEV__ &&
             if (preamble.headChunks)
               throw Error("The `<head>` tag may only be rendered once.");
             preamble.headChunks = [];
-            var JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
+            var JSCompiler_inline_result$jscomp$9 = pushStartSingletonElement(
               preamble.headChunks,
               props,
               "head"
@@ -2681,7 +2709,7 @@ __DEV__ &&
             if (preamble$jscomp$0.bodyChunks)
               throw Error("The `<body>` tag may only be rendered once.");
             preamble$jscomp$0.bodyChunks = [];
-            var JSCompiler_inline_result$jscomp$10 = pushStartGenericElement(
+            var JSCompiler_inline_result$jscomp$10 = pushStartSingletonElement(
               preamble$jscomp$0.bodyChunks,
               props,
               "body"
@@ -2699,7 +2727,7 @@ __DEV__ &&
             if (preamble$jscomp$1.htmlChunks)
               throw Error("The `<html>` tag may only be rendered once.");
             preamble$jscomp$1.htmlChunks = [doctypeChunk];
-            var JSCompiler_inline_result$jscomp$11 = pushStartGenericElement(
+            var JSCompiler_inline_result$jscomp$11 = pushStartSingletonElement(
               preamble$jscomp$1.htmlChunks,
               props,
               "html"
@@ -2780,11 +2808,17 @@ __DEV__ &&
     function hoistPreambleState(renderState, preambleState) {
       renderState = renderState.preamble;
       null === renderState.htmlChunks &&
-        (renderState.htmlChunks = preambleState.htmlChunks);
+        preambleState.htmlChunks &&
+        ((renderState.htmlChunks = preambleState.htmlChunks),
+        (preambleState.contribution |= 1));
       null === renderState.headChunks &&
-        (renderState.headChunks = preambleState.headChunks);
+        preambleState.headChunks &&
+        ((renderState.headChunks = preambleState.headChunks),
+        (preambleState.contribution |= 4));
       null === renderState.bodyChunks &&
-        (renderState.bodyChunks = preambleState.bodyChunks);
+        preambleState.bodyChunks &&
+        ((renderState.bodyChunks = preambleState.bodyChunks),
+        (preambleState.contribution |= 2));
     }
     function writeBootstrap(destination, renderState) {
       renderState = renderState.bootstrapChunks;
@@ -2806,6 +2840,13 @@ __DEV__ &&
       renderState = id.toString(16);
       destination.buffer += renderState;
       return writeChunkAndReturn(destination, '"></template>');
+    }
+    function writePreambleContribution(destination, preambleState) {
+      preambleState = preambleState.contribution;
+      preambleState !== NoContribution &&
+        ((destination.buffer += boundaryPreambleContributionChunkStart),
+        (destination.buffer += "" + preambleState),
+        (destination.buffer += boundaryPreambleContributionChunkEnd));
     }
     function writeStartSegment(destination, renderState, formatContext, id) {
       switch (formatContext.insertionMode) {
@@ -6584,8 +6625,8 @@ __DEV__ &&
       if (4 === boundary.status) {
         var errorDigest = boundary.errorDigest,
           errorMessage = boundary.errorMessage,
-          errorStack = boundary.errorStack;
-        boundary = boundary.errorComponentStack;
+          errorStack = boundary.errorStack,
+          errorComponentStack = boundary.errorComponentStack;
         writeChunkAndReturn(destination, "\x3c!--$!--\x3e");
         writeChunk(destination, "<template");
         errorDigest &&
@@ -6600,15 +6641,20 @@ __DEV__ &&
           (writeChunk(destination, ' data-stck="'),
           writeChunk(destination, escapeTextForBrowser(errorStack)),
           writeChunk(destination, '"'));
-        boundary &&
+        errorComponentStack &&
           (writeChunk(destination, ' data-cstck="'),
-          writeChunk(destination, escapeTextForBrowser(boundary)),
+          writeChunk(destination, escapeTextForBrowser(errorComponentStack)),
           writeChunk(destination, '"'));
         writeChunkAndReturn(destination, "></template>");
         flushSubtree(request, destination, segment, hoistableState);
-      } else if (1 !== boundary.status)
-        0 === boundary.status &&
-          (boundary.rootSegmentID = request.nextSegmentId++),
+        (request = boundary.fallbackPreamble) &&
+          writePreambleContribution(destination, request);
+        return writeChunkAndReturn(destination, "\x3c!--/$--\x3e");
+      }
+      if (1 !== boundary.status)
+        return (
+          0 === boundary.status &&
+            (boundary.rootSegmentID = request.nextSegmentId++),
           0 < boundary.completedSegments.length &&
             request.partialBoundaries.push(boundary),
           writeStartPendingSuspenseBoundary(
@@ -6623,32 +6669,34 @@ __DEV__ &&
               hoistStylesheetDependency,
               hoistableState
             )),
-          flushSubtree(request, destination, segment, hoistableState);
-      else if (boundary.byteSize > request.progressiveChunkSize)
-        (boundary.rootSegmentID = request.nextSegmentId++),
+          flushSubtree(request, destination, segment, hoistableState),
+          writeChunkAndReturn(destination, "\x3c!--/$--\x3e")
+        );
+      if (boundary.byteSize > request.progressiveChunkSize)
+        return (
+          (boundary.rootSegmentID = request.nextSegmentId++),
           request.completedBoundaries.push(boundary),
           writeStartPendingSuspenseBoundary(
             destination,
             request.renderState,
             boundary.rootSegmentID
           ),
-          flushSubtree(request, destination, segment, hoistableState);
-      else {
-        hoistableState &&
-          ((segment = boundary.contentState),
-          segment.styles.forEach(hoistStyleQueueDependency, hoistableState),
-          segment.stylesheets.forEach(
-            hoistStylesheetDependency,
-            hoistableState
-          ));
-        writeChunkAndReturn(destination, "\x3c!--$--\x3e");
-        segment = boundary.completedSegments;
-        if (1 !== segment.length)
-          throw Error(
-            "A previously unvisited boundary must have exactly one root segment. This is a bug in React."
-          );
-        flushSegment(request, destination, segment[0], hoistableState);
-      }
+          flushSubtree(request, destination, segment, hoistableState),
+          writeChunkAndReturn(destination, "\x3c!--/$--\x3e")
+        );
+      hoistableState &&
+        ((segment = boundary.contentState),
+        segment.styles.forEach(hoistStyleQueueDependency, hoistableState),
+        segment.stylesheets.forEach(hoistStylesheetDependency, hoistableState));
+      writeChunkAndReturn(destination, "\x3c!--$--\x3e");
+      segment = boundary.completedSegments;
+      if (1 !== segment.length)
+        throw Error(
+          "A previously unvisited boundary must have exactly one root segment. This is a bug in React."
+        );
+      flushSegment(request, destination, segment[0], hoistableState);
+      (request = boundary.contentPreamble) &&
+        writePreambleContribution(destination, request);
       return writeChunkAndReturn(destination, "\x3c!--/$--\x3e");
     }
     function flushSegmentContainer(
@@ -8243,7 +8291,8 @@ __DEV__ &&
     Object.freeze(PRELOAD_NO_CREDS);
     var scriptRegex = /(<\/|<)(s)(cript)/gi;
     var didWarnForNewBooleanPropsWithEmptyValue = {};
-    var styleNameCache = new Map(),
+    var NoContribution = 0,
+      styleNameCache = new Map(),
       styleAttributeStart = ' style="',
       styleAssign = ":",
       styleSeparator = ";",
@@ -8275,6 +8324,8 @@ __DEV__ &&
       validatedTagCache = new Map(),
       doctypeChunk = "<!DOCTYPE html>",
       endTagCache = new Map(),
+      boundaryPreambleContributionChunkStart = "\x3c!--",
+      boundaryPreambleContributionChunkEnd = "--\x3e",
       regexForJSStringsInInstructionScripts = /[<\u2028\u2029]/g,
       regexForJSStringsInScripts = /[&><\u2028\u2029]/g,
       currentlyRenderingBoundaryHasStylesToHoist = !1,
