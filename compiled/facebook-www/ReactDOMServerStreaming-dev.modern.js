@@ -123,6 +123,8 @@ __DEV__ &&
           return "Suspense";
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
+        case REACT_VIEW_TRANSITION_TYPE:
+          if (enableViewTransition) return "ViewTransition";
       }
       if ("object" === typeof type)
         switch (type.$$typeof) {
@@ -3432,6 +3434,7 @@ __DEV__ &&
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
         case REACT_VIEW_TRANSITION_TYPE:
+          if (enableViewTransition) return "ViewTransition";
         case REACT_TRACING_MARKER_TYPE:
           if (enableTransitionTracing) return "TracingMarker";
       }
@@ -4182,6 +4185,9 @@ __DEV__ &&
           return describeBuiltInComponentFrame("SuspenseList");
         case REACT_SUSPENSE_TYPE:
           return describeBuiltInComponentFrame("Suspense");
+        case REACT_VIEW_TRANSITION_TYPE:
+          if (enableViewTransition)
+            return describeBuiltInComponentFrame("ViewTransition");
       }
       return "";
     }
@@ -5247,6 +5253,13 @@ __DEV__ &&
             task.keyPath = type;
             return;
           case REACT_VIEW_TRANSITION_TYPE:
+            if (enableViewTransition) {
+              type = task.keyPath;
+              task.keyPath = keyPath;
+              renderNodeDestructive(request, task, props.children, -1);
+              task.keyPath = type;
+              return;
+            }
           case REACT_SCOPE_TYPE:
             type = task.keyPath;
             task.keyPath = keyPath;
@@ -7222,6 +7235,7 @@ __DEV__ &&
         dynamicFeatureFlags.enableUseResourceEffectHook,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableOwnerStacks = dynamicFeatureFlags.enableOwnerStacks,
+      enableViewTransition = dynamicFeatureFlags.enableViewTransition,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")

@@ -15,6 +15,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
+  enableViewTransition = dynamicFeatureFlags.enableViewTransition,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
     ? Symbol.for("react.transitional.element")
@@ -143,6 +144,7 @@ exports.isValidElementType = function (type) {
     type === REACT_OFFSCREEN_TYPE ||
     type === REACT_SCOPE_TYPE ||
     (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE) ||
+    (enableViewTransition && type === REACT_VIEW_TRANSITION_TYPE) ||
     ("object" === typeof type &&
       null !== type &&
       (type.$$typeof === REACT_LAZY_TYPE ||

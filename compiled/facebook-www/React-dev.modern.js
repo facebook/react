@@ -145,6 +145,7 @@ __DEV__ &&
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
         case REACT_VIEW_TRANSITION_TYPE:
+          if (enableViewTransition) return "ViewTransition";
         case REACT_TRACING_MARKER_TYPE:
           if (enableTransitionTracing) return "TracingMarker";
       }
@@ -202,6 +203,7 @@ __DEV__ &&
         type === REACT_OFFSCREEN_TYPE ||
         type === REACT_SCOPE_TYPE ||
         (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE) ||
+        (enableViewTransition && type === REACT_VIEW_TRANSITION_TYPE) ||
         ("object" === typeof type &&
           null !== type &&
           (type.$$typeof === REACT_LAZY_TYPE ||
@@ -451,6 +453,9 @@ __DEV__ &&
           return describeBuiltInComponentFrame("Suspense");
         case REACT_SUSPENSE_LIST_TYPE:
           return describeBuiltInComponentFrame("SuspenseList");
+        case REACT_VIEW_TRANSITION_TYPE:
+          if (enableViewTransition)
+            return describeBuiltInComponentFrame("ViewTransition");
       }
       if ("object" === typeof type)
         switch (type.$$typeof) {
@@ -1125,6 +1130,7 @@ __DEV__ &&
         dynamicFeatureFlags.enableUseResourceEffectHook,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableOwnerStacks = dynamicFeatureFlags.enableOwnerStacks,
+      enableViewTransition = dynamicFeatureFlags.enableViewTransition,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")
@@ -1877,6 +1883,7 @@ __DEV__ &&
     exports.unstable_Scope = REACT_SCOPE_TYPE;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
+    exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
     exports.unstable_getCacheForType = function (resourceType) {
       var dispatcher = ReactSharedInternals.A;
       return dispatcher
@@ -1958,7 +1965,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-www-modern-0605cd9f-20250204";
+    exports.version = "19.1.0-www-modern-32b41149-20250204";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -44,6 +44,7 @@ var React = require("react"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableUseResourceEffectHook = dynamicFeatureFlags.enableUseResourceEffectHook,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
+  enableViewTransition = dynamicFeatureFlags.enableViewTransition,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
     ? Symbol.for("react.transitional.element")
@@ -2784,6 +2785,7 @@ function getComponentNameFromType(type) {
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
     case REACT_VIEW_TRANSITION_TYPE:
+      if (enableViewTransition) return "ViewTransition";
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) return "TracingMarker";
   }
@@ -3509,6 +3511,9 @@ function describeComponentStackByType(type) {
       return describeBuiltInComponentFrame("SuspenseList");
     case REACT_SUSPENSE_TYPE:
       return describeBuiltInComponentFrame("Suspense");
+    case REACT_VIEW_TRANSITION_TYPE:
+      if (enableViewTransition)
+        return describeBuiltInComponentFrame("ViewTransition");
   }
   return "";
 }
@@ -4111,6 +4116,13 @@ function renderElement(request, task, keyPath, type, props, ref) {
         task.keyPath = type;
         return;
       case REACT_VIEW_TRANSITION_TYPE:
+        if (enableViewTransition) {
+          type = task.keyPath;
+          task.keyPath = keyPath;
+          renderNodeDestructive(request, task, props.children, -1);
+          task.keyPath = type;
+          return;
+        }
       case REACT_SCOPE_TYPE:
         type = task.keyPath;
         task.keyPath = keyPath;
@@ -4818,15 +4830,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$51) {
+    } catch (thrownValue$52) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$51 === SuspenseException
+          thrownValue$52 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$51),
+            : thrownValue$52),
         "object" === typeof node && null !== node)
       ) {
         if ("function" === typeof node.then) {
@@ -5603,11 +5615,11 @@ function flushCompletedQueues(request, destination) {
       completedBoundaries.splice(0, i);
       var partialBoundaries = request.partialBoundaries;
       for (i = 0; i < partialBoundaries.length; i++) {
-        var boundary$54 = partialBoundaries[i];
+        var boundary$55 = partialBoundaries[i];
         a: {
           clientRenderedBoundaries = request;
           boundary = destination;
-          var completedSegments = boundary$54.completedSegments;
+          var completedSegments = boundary$55.completedSegments;
           for (
             JSCompiler_inline_result = 0;
             JSCompiler_inline_result < completedSegments.length;
@@ -5617,7 +5629,7 @@ function flushCompletedQueues(request, destination) {
               !flushPartiallyCompletedSegment(
                 clientRenderedBoundaries,
                 boundary,
-                boundary$54,
+                boundary$55,
                 completedSegments[JSCompiler_inline_result]
               )
             ) {
@@ -5629,7 +5641,7 @@ function flushCompletedQueues(request, destination) {
           completedSegments.splice(0, JSCompiler_inline_result);
           JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
             boundary,
-            boundary$54.contentState,
+            boundary$55.contentState,
             clientRenderedBoundaries.renderState
           );
         }
@@ -5692,8 +5704,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$56) {
-    logRecoverableError(request, error$56, {}), fatalError(request, error$56);
+  } catch (error$57) {
+    logRecoverableError(request, error$57, {}), fatalError(request, error$57);
   }
 }
 exports.abortStream = function (stream, reason) {

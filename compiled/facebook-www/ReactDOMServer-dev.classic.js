@@ -123,6 +123,8 @@ __DEV__ &&
           return "Suspense";
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
+        case REACT_VIEW_TRANSITION_TYPE:
+          if (enableViewTransition) return "ViewTransition";
       }
       if ("object" === typeof type)
         switch (type.$$typeof) {
@@ -3653,6 +3655,7 @@ __DEV__ &&
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
         case REACT_VIEW_TRANSITION_TYPE:
+          if (enableViewTransition) return "ViewTransition";
         case REACT_TRACING_MARKER_TYPE:
           if (enableTransitionTracing) return "TracingMarker";
       }
@@ -4411,6 +4414,9 @@ __DEV__ &&
           return describeBuiltInComponentFrame("SuspenseList");
         case REACT_SUSPENSE_TYPE:
           return describeBuiltInComponentFrame("Suspense");
+        case REACT_VIEW_TRANSITION_TYPE:
+          if (enableViewTransition)
+            return describeBuiltInComponentFrame("ViewTransition");
       }
       return "";
     }
@@ -5644,6 +5650,13 @@ __DEV__ &&
             task.keyPath = _prevKeyPath3;
             return;
           case REACT_VIEW_TRANSITION_TYPE:
+            if (enableViewTransition) {
+              var _prevKeyPath4 = task.keyPath;
+              task.keyPath = keyPath;
+              renderNodeDestructive(request, task, props.children, -1);
+              task.keyPath = _prevKeyPath4;
+              return;
+            }
           case REACT_SCOPE_TYPE:
             var _prevKeyPath5 = task.keyPath;
             task.keyPath = keyPath;
@@ -7997,6 +8010,7 @@ __DEV__ &&
         dynamicFeatureFlags.enableUseResourceEffectHook,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableOwnerStacks = dynamicFeatureFlags.enableOwnerStacks,
+      enableViewTransition = dynamicFeatureFlags.enableViewTransition,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")
@@ -9465,5 +9479,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.1.0-www-classic-0605cd9f-20250204";
+    exports.version = "19.1.0-www-classic-32b41149-20250204";
   })();

@@ -59,6 +59,7 @@ __DEV__ &&
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
         case REACT_VIEW_TRANSITION_TYPE:
+          if (enableViewTransition) return "ViewTransition";
         case REACT_TRACING_MARKER_TYPE:
           if (enableTransitionTracing) return "TracingMarker";
       }
@@ -363,6 +364,9 @@ __DEV__ &&
           return describeBuiltInComponentFrame("Suspense");
         case REACT_SUSPENSE_LIST_TYPE:
           return describeBuiltInComponentFrame("SuspenseList");
+        case REACT_VIEW_TRANSITION_TYPE:
+          if (enableViewTransition)
+            return describeBuiltInComponentFrame("ViewTransition");
       }
       if ("object" === typeof type)
         switch (type.$$typeof) {
@@ -506,6 +510,7 @@ __DEV__ &&
         type === REACT_OFFSCREEN_TYPE ||
         type === REACT_SCOPE_TYPE ||
         (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE) ||
+        (enableViewTransition && type === REACT_VIEW_TRANSITION_TYPE) ||
         ("object" === typeof type &&
           null !== type &&
           (type.$$typeof === REACT_LAZY_TYPE ||
@@ -709,7 +714,8 @@ __DEV__ &&
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-      enableOwnerStacks = dynamicFeatureFlags.enableOwnerStacks;
+      enableOwnerStacks = dynamicFeatureFlags.enableOwnerStacks,
+      enableViewTransition = dynamicFeatureFlags.enableViewTransition;
     dynamicFeatureFlags = Symbol.for("react.element");
     var REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")
