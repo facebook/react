@@ -12627,35 +12627,25 @@ __DEV__ &&
     function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
       var tag = node.tag;
       if (5 === tag || 6 === tag)
-        if (((node = node.stateNode), before)) {
-          switch (parent.nodeType) {
-            case COMMENT_NODE:
-              parent = parent.parentNode;
-              break;
-            case DOCUMENT_NODE:
-              parent = parent.body;
-              break;
-            default:
-              parent =
-                "HTML" === parent.nodeName ? parent.ownerDocument.body : parent;
-          }
-          parent.insertBefore(node, before);
-        } else
+        if (((node = node.stateNode), before))
+          (parent.nodeType === DOCUMENT_NODE
+            ? parent.body
+            : parent.nodeType === COMMENT_NODE
+              ? parent.parentNode
+              : "HTML" === parent.nodeName
+                ? parent.ownerDocument.body
+                : parent
+          ).insertBefore(node, before);
+        else
           a: {
-            switch (parent.nodeType) {
-              case COMMENT_NODE:
-                before = parent.parentNode;
-                before.insertBefore(node, parent);
-                break a;
-              case DOCUMENT_NODE:
-                before = parent.body;
-                break;
-              default:
-                before =
-                  "HTML" === parent.nodeName
-                    ? parent.ownerDocument.body
-                    : parent;
-            }
+            if (parent.nodeType === DOCUMENT_NODE) before = parent.body;
+            else if (parent.nodeType === COMMENT_NODE) {
+              before = parent.parentNode;
+              before.insertBefore(node, parent);
+              break a;
+            } else
+              before =
+                "HTML" === parent.nodeName ? parent.ownerDocument.body : parent;
             before.appendChild(node);
             parent = parent._reactRootContainer;
             (null !== parent && void 0 !== parent) ||
@@ -13486,26 +13476,16 @@ __DEV__ &&
           null !== hostParent &&
             (hostParentIsContainer
               ? ((nearestMountedAncestor = hostParent),
-                (deletedFiber = deletedFiber.stateNode),
-                nearestMountedAncestor.nodeType === COMMENT_NODE
-                  ? clearSuspenseBoundary(
-                      nearestMountedAncestor.parentNode,
-                      deletedFiber
-                    )
-                  : nearestMountedAncestor.nodeType === DOCUMENT_NODE
-                    ? clearSuspenseBoundary(
-                        nearestMountedAncestor.body,
-                        deletedFiber
-                      )
-                    : "HTML" === nearestMountedAncestor.nodeName
-                      ? clearSuspenseBoundary(
-                          nearestMountedAncestor.ownerDocument.body,
-                          deletedFiber
-                        )
-                      : clearSuspenseBoundary(
-                          nearestMountedAncestor,
-                          deletedFiber
-                        ),
+                clearSuspenseBoundary(
+                  nearestMountedAncestor.nodeType === DOCUMENT_NODE
+                    ? nearestMountedAncestor.body
+                    : nearestMountedAncestor.nodeType === COMMENT_NODE
+                      ? nearestMountedAncestor.parentNode
+                      : "HTML" === nearestMountedAncestor.nodeName
+                        ? nearestMountedAncestor.ownerDocument.body
+                        : nearestMountedAncestor,
+                  deletedFiber.stateNode
+                ),
                 retryIfBlockedOn(nearestMountedAncestor))
               : clearSuspenseBoundary(hostParent, deletedFiber.stateNode));
           break;
@@ -21646,20 +21626,14 @@ __DEV__ &&
       parentInstance.removeChild(child);
     }
     function removeChildFromContainer(container, child) {
-      switch (container.nodeType) {
-        case COMMENT_NODE:
-          container = container.parentNode;
-          break;
-        case DOCUMENT_NODE:
-          container = container.body;
-          break;
-        default:
-          container =
-            "HTML" === container.nodeName
-              ? container.ownerDocument.body
-              : container;
-      }
-      container.removeChild(child);
+      (container.nodeType === DOCUMENT_NODE
+        ? container.body
+        : container.nodeType === COMMENT_NODE
+          ? container.parentNode
+          : "HTML" === container.nodeName
+            ? container.ownerDocument.body
+            : container
+      ).removeChild(child);
     }
     function clearSuspenseBoundary(parentInstance, suspenseInstance) {
       var node = suspenseInstance,
@@ -27318,11 +27292,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-modern-8bda7155-20250204" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-modern-0605cd9f-20250204" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-modern-8bda7155-20250204\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-modern-0605cd9f-20250204\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27365,10 +27339,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-modern-8bda7155-20250204",
+          version: "19.1.0-www-modern-0605cd9f-20250204",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-modern-8bda7155-20250204"
+          reconcilerVersion: "19.1.0-www-modern-0605cd9f-20250204"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27966,7 +27940,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-modern-8bda7155-20250204";
+    exports.version = "19.1.0-www-modern-0605cd9f-20250204";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

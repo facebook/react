@@ -8409,33 +8409,25 @@ function getHostSibling(fiber) {
 function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
   var tag = node.tag;
   if (5 === tag || 6 === tag)
-    if (((node = node.stateNode), before)) {
-      switch (parent.nodeType) {
-        case 8:
-          parent = parent.parentNode;
-          break;
-        case 9:
-          parent = parent.body;
-          break;
-        default:
-          parent =
-            "HTML" === parent.nodeName ? parent.ownerDocument.body : parent;
-      }
-      parent.insertBefore(node, before);
-    } else
+    if (((node = node.stateNode), before))
+      (9 === parent.nodeType
+        ? parent.body
+        : 8 === parent.nodeType
+          ? parent.parentNode
+          : "HTML" === parent.nodeName
+            ? parent.ownerDocument.body
+            : parent
+      ).insertBefore(node, before);
+    else
       a: {
-        switch (parent.nodeType) {
-          case 8:
-            before = parent.parentNode;
-            before.insertBefore(node, parent);
-            break a;
-          case 9:
-            before = parent.body;
-            break;
-          default:
-            before =
-              "HTML" === parent.nodeName ? parent.ownerDocument.body : parent;
-        }
+        if (9 === parent.nodeType) before = parent.body;
+        else if (8 === parent.nodeType) {
+          before = parent.parentNode;
+          before.insertBefore(node, parent);
+          break a;
+        } else
+          before =
+            "HTML" === parent.nodeName ? parent.ownerDocument.body : parent;
         before.appendChild(node);
         parent = parent._reactRootContainer;
         (null !== parent && void 0 !== parent) ||
@@ -9087,33 +9079,27 @@ function commitDeletionEffectsOnFiber(
       offscreenSubtreeWasHidden ||
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
     case 6:
-      prevHostParentIsContainer = hostParent;
-      var prevHostParentIsContainer$167 = hostParentIsContainer;
+      prevHostParent = hostParent;
+      prevHostParentIsContainer = hostParentIsContainer;
       hostParent = null;
       recursivelyTraverseDeletionEffects(
         finishedRoot,
         nearestMountedAncestor,
         deletedFiber
       );
-      hostParent = prevHostParentIsContainer;
-      hostParentIsContainer = prevHostParentIsContainer$167;
+      hostParent = prevHostParent;
+      hostParentIsContainer = prevHostParentIsContainer;
       if (null !== hostParent)
         if (hostParentIsContainer)
           try {
-            switch (hostParent.nodeType) {
-              case 8:
-                prevHostParent = hostParent.parentNode;
-                break;
-              case 9:
-                prevHostParent = hostParent.body;
-                break;
-              default:
-                prevHostParent =
-                  "HTML" === hostParent.nodeName
-                    ? hostParent.ownerDocument.body
-                    : hostParent;
-            }
-            prevHostParent.removeChild(deletedFiber.stateNode);
+            (9 === hostParent.nodeType
+              ? hostParent.body
+              : 8 === hostParent.nodeType
+                ? hostParent.parentNode
+                : "HTML" === hostParent.nodeName
+                  ? hostParent.ownerDocument.body
+                  : hostParent
+            ).removeChild(deletedFiber.stateNode);
           } catch (error) {
             captureCommitPhaseError(
               deletedFiber,
@@ -9136,31 +9122,24 @@ function commitDeletionEffectsOnFiber(
       finishedRoot = finishedRoot.hydrationCallbacks;
       if (null !== finishedRoot)
         try {
-          (prevHostParentIsContainer = finishedRoot.onDeleted) &&
-            prevHostParentIsContainer(deletedFiber.stateNode);
+          (prevHostParent = finishedRoot.onDeleted) &&
+            prevHostParent(deletedFiber.stateNode);
         } catch (error) {
           captureCommitPhaseError(deletedFiber, nearestMountedAncestor, error);
         }
       null !== hostParent &&
         (hostParentIsContainer
           ? ((nearestMountedAncestor = hostParent),
-            (deletedFiber = deletedFiber.stateNode),
-            8 === nearestMountedAncestor.nodeType
-              ? clearSuspenseBoundary(
-                  nearestMountedAncestor.parentNode,
-                  deletedFiber
-                )
-              : 9 === nearestMountedAncestor.nodeType
-                ? clearSuspenseBoundary(
-                    nearestMountedAncestor.body,
-                    deletedFiber
-                  )
-                : "HTML" === nearestMountedAncestor.nodeName
-                  ? clearSuspenseBoundary(
-                      nearestMountedAncestor.ownerDocument.body,
-                      deletedFiber
-                    )
-                  : clearSuspenseBoundary(nearestMountedAncestor, deletedFiber),
+            clearSuspenseBoundary(
+              9 === nearestMountedAncestor.nodeType
+                ? nearestMountedAncestor.body
+                : 8 === nearestMountedAncestor.nodeType
+                  ? nearestMountedAncestor.parentNode
+                  : "HTML" === nearestMountedAncestor.nodeName
+                    ? nearestMountedAncestor.ownerDocument.body
+                    : nearestMountedAncestor,
+              deletedFiber.stateNode
+            ),
             retryIfBlockedOn(nearestMountedAncestor))
           : clearSuspenseBoundary(hostParent, deletedFiber.stateNode));
       break;
@@ -17133,14 +17112,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1798 = React.version;
 if (
-  "19.1.0-www-modern-8bda7155-20250204" !==
+  "19.1.0-www-modern-0605cd9f-20250204" !==
   isomorphicReactPackageVersion$jscomp$inline_1798
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1798,
-      "19.1.0-www-modern-8bda7155-20250204"
+      "19.1.0-www-modern-0605cd9f-20250204"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17158,10 +17137,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2321 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-8bda7155-20250204",
+  version: "19.1.0-www-modern-0605cd9f-20250204",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-8bda7155-20250204"
+  reconcilerVersion: "19.1.0-www-modern-0605cd9f-20250204"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2322 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17525,4 +17504,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-8bda7155-20250204";
+exports.version = "19.1.0-www-modern-0605cd9f-20250204";
