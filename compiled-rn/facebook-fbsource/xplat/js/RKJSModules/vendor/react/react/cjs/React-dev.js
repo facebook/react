@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<15b97abd06855cff5f16856f05b4a666>>
+ * @generated SignedSource<<53529b17c8243e7efed2c2ccf8e6b408>>
  */
 
 "use strict";
@@ -1761,6 +1761,13 @@ __DEV__ &&
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
+    exports.unstable_addTransitionType = function (type) {
+      var pendingTransitionTypes = ReactSharedInternals.V;
+      null === pendingTransitionTypes
+        ? (ReactSharedInternals.V = [type])
+        : -1 === pendingTransitionTypes.indexOf(type) &&
+          pendingTransitionTypes.push(type);
+    };
     exports.unstable_getCacheForType = function (resourceType) {
       var dispatcher = ReactSharedInternals.A;
       return dispatcher
@@ -1842,7 +1849,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-32b41149-20250204";
+    exports.version = "19.1.0-native-fb-ff628334-20250205";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
