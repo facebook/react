@@ -49,6 +49,7 @@ const UNTYPED_GLOBALS: Set<string> = new Set([
   'Object',
   'Function',
   'Number',
+  'BigInt',
   'RegExp',
   'Date',
   'Error',

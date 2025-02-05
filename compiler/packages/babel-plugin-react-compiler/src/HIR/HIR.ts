@@ -1111,9 +1111,8 @@ export type Place = {
 // A primitive value with a specific (constant) value.
 export type Primitive = {
   kind: 'Primitive';
-  value: number | boolean | string | null | undefined;
+  value: number | boolean | string | bigint | null | undefined;
   loc: SourceLocation;
-  isBigInt?: boolean;
 };
 
 export type JSXText = {kind: 'JSXText'; value: string; loc: SourceLocation};

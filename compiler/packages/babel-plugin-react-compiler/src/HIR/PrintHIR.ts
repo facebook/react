@@ -404,7 +404,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     case 'Primitive': {
       if (instrValue.value === undefined) {
         value = '<undefined>';
-      } else if (instrValue.isBigInt) {
+      } else if (typeof instrValue.value === 'bigint') {
         value = instrValue.value + 'n';
       } else {
         value = JSON.stringify(instrValue.value);

@@ -25,6 +25,10 @@ function foo() {
         s0: !'',
         s1: !'a',
         s2: !'ab',
+        bi0: !0n,
+        bi1: !1n,
+        bi2: !2n,
+        bi3: !-1n,
         u: !undefined,
         n: !null,
       }}
@@ -62,6 +66,10 @@ function foo() {
           s0: true,
           s1: false,
           s2: false,
+          bi0: true,
+          bi1: false,
+          bi2: false,
+          bi3: !-1n,
           u: !undefined,
           n: true,
         }}
@@ -83,4 +91,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div>{"value":{"_b":"baz","b0":false,"n0":true,"n1":false,"n2":false,"n3":false,"s0":true,"s1":false,"s2":false,"u":true,"n":true}}</div>
+(kind: ok) <div>{"value":{"_b":"baz","b0":false,"n0":true,"n1":false,"n2":false,"n3":false,"s0":true,"s1":false,"s2":false,"bi0":true,"bi1":false,"bi2":false,"bi3":false,"u":true,"n":true}}</div>

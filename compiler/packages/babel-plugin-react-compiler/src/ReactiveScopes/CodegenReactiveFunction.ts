@@ -28,6 +28,7 @@ import {
   ObjectPropertyKey,
   Pattern,
   Place,
+  Primitive,
   PrunedReactiveScopeBlock,
   ReactiveBlock,
   ReactiveFunction,
@@ -1677,12 +1678,7 @@ function codegenInstructionValue(
       break;
     }
     case 'Primitive': {
-      value = codegenValue(
-        cx,
-        instrValue.loc,
-        instrValue.value,
-        instrValue.isBigInt,
-      );
+      value = codegenValue(cx, instrValue.loc, instrValue.value);
       break;
     }
     case 'CallExpression': {
@@ -2518,18 +2514,16 @@ function codegenLValue(
 function codegenValue(
   cx: Context,
   loc: SourceLocation,
-  value: boolean | number | string | null | undefined,
-  isBigInt?: boolean,
+  value: Primitive['value'],
 ): t.Expression {
   if (typeof value === 'number') {
     return t.numericLiteral(value);
   } else if (typeof value === 'boolean') {
     return t.booleanLiteral(value);
   } else if (typeof value === 'string') {
-    if (isBigInt) {
-      return t.bigIntLiteral(value);
-    }
     return createStringLiteral(loc, value);
+  } else if (typeof value === 'bigint') {
+    return t.bigIntLiteral(value + '');
   } else if (value === null) {
     return t.nullLiteral();
   } else if (value === undefined) {

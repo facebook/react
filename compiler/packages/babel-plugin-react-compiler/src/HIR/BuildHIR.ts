@@ -1498,9 +1498,8 @@ function lowerExpression(
       const value = expr.node.value;
       return {
         kind: 'Primitive',
-        value,
+        value: exprNode.type === 'BigIntLiteral' ? BigInt(value) : value,
         loc: exprLoc,
-        isBigInt: exprNode.type === 'BigIntLiteral',
       };
     }
     case 'ObjectExpression': {
