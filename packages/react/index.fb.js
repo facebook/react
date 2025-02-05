@@ -39,6 +39,7 @@ export {
   unstable_SuspenseList,
   unstable_ViewTransition,
   unstable_TracingMarker,
+  unstable_addTransitionType,
   unstable_useCacheRefresh,
   use,
   useActionState,
