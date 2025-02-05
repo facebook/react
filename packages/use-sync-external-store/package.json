@@ -5,12 +5,16 @@
   "exports": {
     ".": "./index.js",
     "./with-selector": "./with-selector.js",
+    "./with-selector.js": "./with-selector.js",
     "./shim": {
       "react-native": "./shim/index.native.js",
       "default": "./shim/index.js"
     },
+    "./shim/index.js": "./shim/index.js",
     "./shim/index.native": "./shim/index.native.js",
+    "./shim/index.native.js": "./shim/index.native.js",
     "./shim/with-selector": "./shim/with-selector.js",
+    "./shim/with-selector.js": "./shim/with-selector.js",
     "./package.json": "./package.json",
     "./src/*": "./src/*.js"
   },
