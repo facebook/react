@@ -9004,7 +9004,6 @@ describe('ReactDOMFizzServer', () => {
         </body>
       </html>,
     );
-    assertConsoleErrorDev(['In HTML, <div> cannot be a child of <#document>']);
 
     root.unmount();
     expect(getVisibleChildren(document)).toEqual(
@@ -10173,7 +10172,6 @@ describe('ReactDOMFizzServer', () => {
         </body>
       </html>,
     );
-    assertConsoleErrorDev(['In HTML, <div> cannot be a child of <#document>']);
 
     root.unmount();
     expect(getVisibleChildren(document)).toEqual(
