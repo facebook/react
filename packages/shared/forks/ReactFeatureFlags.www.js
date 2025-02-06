@@ -26,7 +26,6 @@ export const {
   enableObjectFiber,
   enableRenderableContext,
   enableRetryLaneExpiration,
-  enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
   favorSafetyOverHydrationPerf,
