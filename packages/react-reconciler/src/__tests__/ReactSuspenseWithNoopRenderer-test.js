@@ -347,7 +347,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Resolve first Suspense's promise so that it switches switches back to the
     // normal view. The second Suspense should still show the placeholder.
     await act(() => resolveText('A'));
-    assertLog(['A', 'Suspend! [B]', 'Suspend! [B]']);
+    assertLog([
+      'A',
+      ...(gate('alwaysThrottleRetries')
+        ? ['Suspend! [B]', 'Suspend! [B]']
+        : []),
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
         <span prop="A" />

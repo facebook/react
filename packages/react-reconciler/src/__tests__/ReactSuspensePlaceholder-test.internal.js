@@ -382,7 +382,9 @@ describe('ReactSuspensePlaceholder', () => {
         // Since this is initial render we immediately commit the fallback. Another test below
         // deals with the update case where this suspends.
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
-        expect(onRender).toHaveBeenCalledTimes(1);
+        expect(onRender).toHaveBeenCalledTimes(
+          gate('alwaysThrottleRetries') ? 1 : 2,
+        );
 
         // Initial mount only shows the "Loading..." Fallback.
         // The treeBaseDuration then should be 10ms spent rendering Fallback,
@@ -532,7 +534,9 @@ describe('ReactSuspensePlaceholder', () => {
         ]);
         // Show the fallback UI.
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
-        expect(onRender).toHaveBeenCalledTimes(2);
+        expect(onRender).toHaveBeenCalledTimes(
+          gate('alwaysThrottleRetries') ? 2 : 3,
+        );
 
         jest.advanceTimersByTime(900);
 
@@ -575,7 +579,9 @@ describe('ReactSuspensePlaceholder', () => {
         ]);
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
-        expect(onRender).toHaveBeenCalledTimes(4);
+        expect(onRender).toHaveBeenCalledTimes(
+          gate('alwaysThrottleRetries') ? 4 : 5,
+        );
 
         // Resolve the pending promise.
         await act(async () => {
@@ -587,13 +593,17 @@ describe('ReactSuspensePlaceholder', () => {
           await waitForAll(['Suspending', 'Loaded', 'New', 'Sibling']);
         });
 
-        expect(onRender).toHaveBeenCalledTimes(5);
+        expect(onRender).toHaveBeenCalledTimes(
+          gate('alwaysThrottleRetries') ? 5 : 6,
+        );
 
         // When the suspending data is resolved and our final UI is rendered,
         // both times should include the 6ms rendering Text,
         // the 2ms rendering Suspending, and the 1ms rendering AsyncText.
         expect(onRender.mock.calls[4][2]).toBe(9);
-        expect(onRender.mock.calls[4][3]).toBe(9);
+        expect(onRender.mock.calls[4][3]).toBe(
+          gate('alwaysThrottleRetries') ? 9 : 10,
+        );
       });
     });
   });

@@ -2087,12 +2087,12 @@ describe('ReactUse', () => {
     assertLog(['Async text requested [World]']);
 
     await act(() => resolveTextRequests('World'));
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
         '    in App (at **)',
-    );
+    ]);
 
     assertLog(['Hi', 'World']);
     expect(root).toMatchRenderedOutput('Hi World');
@@ -2139,13 +2139,13 @@ describe('ReactUse', () => {
     assertLog(['Async text requested [World]']);
 
     await act(() => resolveTextRequests('World'));
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
         '    in div (at **)\n' +
         '    in App (at **)',
-    );
+    ]);
 
     assertLog(['Hi', 'World']);
     expect(root).toMatchRenderedOutput(<div>Hi World</div>);

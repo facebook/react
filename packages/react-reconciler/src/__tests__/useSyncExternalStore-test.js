@@ -428,7 +428,14 @@ describe('useSyncExternalStore', () => {
     await act(() => {
       resolveText('A');
     });
-    assertLog(['A', 'B', 'A', 'B', 'B']);
+    assertLog([
+      'A',
+      'B',
+      'A',
+      'B',
+      'B',
+      ...(gate('alwaysThrottleRetries') ? [] : ['B']),
+    ]);
 
     expect(root).toMatchRenderedOutput('AB');
   });

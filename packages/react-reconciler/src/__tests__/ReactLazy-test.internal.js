@@ -198,7 +198,10 @@ describe('ReactLazy', () => {
 
     await resolveFakeImport(Foo);
 
-    await waitForAll(['Foo']);
+    await waitForAll([
+      'Foo',
+      ...(gate('alwaysThrottleRetries') ? [] : ['Foo']),
+    ]);
     expect(root).not.toMatchRenderedOutput('FooBar');
 
     await act(() => resolveFakeImport(Bar));

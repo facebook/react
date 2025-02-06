@@ -218,15 +218,28 @@ describe('ReactCache', () => {
     await waitForPaint(['Suspend! [1]', 'Loading...']);
     jest.advanceTimersByTime(100);
     assertLog(['Promise resolved [1]']);
-    await waitForAll([1, 'Suspend! [2]']);
+    await waitForAll([
+      1,
+      'Suspend! [2]',
+      ...(gate('alwaysThrottleRetries')
+        ? []
+        : [1, 'Suspend! [2]', 'Suspend! [3]']),
+    ]);
 
     jest.advanceTimersByTime(100);
-    assertLog(['Promise resolved [2]']);
-    await waitForAll([1, 2, 'Suspend! [3]']);
+    assertLog([
+      'Promise resolved [2]',
+      ...(gate('alwaysThrottleRetries') ? [] : ['Promise resolved [3]']),
+    ]);
+    await waitForAll([
+      1,
+      2,
+      ...(gate('alwaysThrottleRetries') ? ['Suspend! [3]'] : [3]),
+    ]);
 
     jest.advanceTimersByTime(100);
-    assertLog(['Promise resolved [3]']);
-    await waitForAll([1, 2, 3]);
+    assertLog(gate('alwaysThrottleRetries') ? ['Promise resolved [3]'] : []);
+    await waitForAll(gate('alwaysThrottleRetries') ? [1, 2, 3] : []);
 
     await act(() => jest.advanceTimersByTime(100));
     expect(root).toMatchRenderedOutput('123');

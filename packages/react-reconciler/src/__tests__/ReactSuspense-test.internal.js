@@ -175,7 +175,12 @@ describe('ReactSuspense', () => {
     // Resolve first Suspense's promise and switch back to the normal view. The
     // second Suspense should still show the placeholder
     await act(() => resolveText('A'));
-    assertLog(['A', 'Suspend! [B]', 'Suspend! [B]']);
+    assertLog([
+      'A',
+      ...(gate('alwaysThrottleRetries')
+        ? ['Suspend! [B]', 'Suspend! [B]']
+        : []),
+    ]);
     expect(container.textContent).toEqual('ALoading B...');
 
     // Resolve the second Suspense's promise resolves and switche back to the
@@ -686,7 +691,13 @@ describe('ReactSuspense', () => {
       'Suspend! [Child 2]',
     ]);
     await resolveText('Child 1');
-    await waitForAll(['Child 1', 'Suspend! [Child 2]']);
+    await waitForAll([
+      'Child 1',
+      'Suspend! [Child 2]',
+      ...(gate('alwaysThrottleRetries')
+        ? []
+        : ['Child 1', 'Suspend! [Child 2]']),
+    ]);
 
     jest.advanceTimersByTime(6000);
 
