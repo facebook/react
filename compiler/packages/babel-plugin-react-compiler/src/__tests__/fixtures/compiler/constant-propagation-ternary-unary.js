@@ -4,7 +4,7 @@ import {Stringify} from 'shared-runtime';
 function foo() {
   let _b;
   const b = true;
-  _b = !b ? 'bar' : false ? 'foo' : 'baz';
+  _b = !b ? 'bar' : 'baz';
 
   return (
     <Stringify

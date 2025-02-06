@@ -190,8 +190,16 @@ function runWithEnvironment(
 
   assertConsistentIdentifiers(hir);
 
+  const wasTernaryConstantPropagationEnabled =
+    env.config.enableTernaryConstantPropagation;
+  env.config.enableTernaryConstantPropagation = false;
   constantPropagation(hir);
   log({kind: 'hir', name: 'ConstantPropagation', value: hir});
+
+  env.config.enableTernaryConstantPropagation =
+    wasTernaryConstantPropagationEnabled;
+  constantPropagation(hir);
+  log({kind: 'hir', name: 'ConstantPropagationTernary', value: hir});
 
   inferTypes(hir);
   log({kind: 'hir', name: 'InferTypes', value: hir});
