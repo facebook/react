@@ -240,6 +240,64 @@ describe('StrictEffectsMode defaults', () => {
       });
     });
 
+    it('should double invoke effects in a mounted strict subtree', async () => {
+      const log = [];
+      function ComponentWithEffects({label}) {
+        React.useEffect(() => {
+          log.push(`useEffect mount "${label}"`);
+          Scheduler.log(`useEffect mount "${label}"`);
+          return () => {
+            log.push(`useEffect unmount "${label}"`);
+            Scheduler.log(`useEffect unmount "${label}"`);
+          };
+        });
+
+        React.useLayoutEffect(() => {
+          log.push(`useLayoutEffect mount "${label}"`);
+          Scheduler.log(`useLayoutEffect mount "${label}"`);
+          return () => {
+            log.push(`useLayoutEffect unmount "${label}"`);
+            Scheduler.log(`useLayoutEffect unmount "${label}"`);
+          };
+        });
+
+        return label;
+      }
+
+      // this component intentionally introduces a component layer between the root and the StrictMode
+      function RenderChildren({children}) {
+        return children;
+      }
+
+      await act(async () => {
+        ReactNoop.render(
+          <RenderChildren>
+            <ComponentWithEffects label={'one'} />
+            <React.StrictMode>
+              <ComponentWithEffects label={'two'} />
+            </React.StrictMode>
+          </RenderChildren>,
+        );
+
+        await waitForAll([
+          'useLayoutEffect mount "one"',
+          'useLayoutEffect mount "two"',
+          'useEffect mount "one"',
+          'useEffect mount "two"',
+        ]);
+        expect(log).toEqual([
+          'useLayoutEffect mount "one"',
+          'useLayoutEffect mount "two"',
+          'useEffect mount "one"',
+          'useEffect mount "two"',
+          'useLayoutEffect unmount "two"',
+          'useEffect unmount "two"',
+          'useLayoutEffect mount "two"',
+          'useEffect mount "two"',
+        ]);
+      });
+    });
+
     it('double invoking for effects for modern roots', async () => {
       const log = [];
       function App({text}) {
