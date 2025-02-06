@@ -634,7 +634,7 @@ const EnvironmentConfigSchema = z.object({
    * // output
    * const x = b;
    */
-  enableTernaryConstantPropagation: z.boolean().default(false),
+  enableTernaryConstantPropagation: z.boolean().default(true),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;

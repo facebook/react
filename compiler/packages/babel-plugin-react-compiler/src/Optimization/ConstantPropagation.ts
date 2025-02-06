@@ -190,8 +190,20 @@ function applyConstantPropagation(
             loc: terminal.loc,
           };
 
-          fn.body.blocks.get(branchBlock.terminal.consequent)!.kind = 'block';
-          fn.body.blocks.get(branchBlock.terminal.alternate)!.kind = 'block';
+          block.kind = 'block';
+
+          const consequent = fn.body.blocks.get(
+            branchBlock.terminal.consequent,
+          )!;
+          const alternate = fn.body.blocks.get(branchBlock.terminal.alternate)!;
+
+          if (consequent.terminal.kind === 'goto') {
+            consequent.kind = 'block';
+          }
+
+          if (alternate.terminal.kind === 'goto') {
+            alternate.kind = 'block';
+          }
         }
 
         break;
