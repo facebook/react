@@ -533,6 +533,37 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('{"foo":1}{"foo":1}');
   });
 
+  it('should resolve deduped references in maps used in client component props', async () => {
+    const ClientComponent = clientExports(function ClientComponent({shared}) {
+      return JSON.stringify(shared);
+    });
+
+    function Server() {
+      const shared = {id: 42};
+      const map = new Map([[42, shared]]);
+
+      return <ClientComponent shared={shared} map={map} />;
+    }
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<Server />, webpackMap),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('{"id":42}');
+  });
+
   it('should handle deduped props of re-used elements in fragments (same-chunk reference)', async () => {
     let resolveFooClientComponentChunk;
 
