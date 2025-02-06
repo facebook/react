@@ -2523,10 +2523,13 @@ export type HoistableRoot = Document | ShadowRoot;
 export function getHoistableRoot(container: Container): HoistableRoot {
   // $FlowFixMe[method-unbinding]
   return typeof container.getRootNode === 'function'
-    ? /* $FlowFixMe[incompatible-return] Flow types this as returning a `Node`,
+    ? /* $FlowFixMe[incompatible-cast] Flow types this as returning a `Node`,
        * but it's either a `Document` or `ShadowRoot`. */
-      container.getRootNode()
-    : container.ownerDocument;
+      (container.getRootNode(): Document | ShadowRoot)
+    : container.nodeType === DOCUMENT_NODE
+      ? // $FlowFixMe[incompatible-cast] We've constrained this to be a Document which satisfies the return type
+        (container: Document)
+      : container.ownerDocument;
 }
 
 function getCurrentResourceRoot(): null | HoistableRoot {
