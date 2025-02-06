@@ -182,6 +182,7 @@ function applyConstantPropagation(
                */
               branchBlock.terminal.consequent
             : branchBlock.terminal.alternate;
+          block.kind = 'block';
           block.terminal = {
             kind: 'goto',
             variant: GotoVariant.Break,
@@ -190,7 +191,13 @@ function applyConstantPropagation(
             loc: terminal.loc,
           };
 
-          block.kind = 'block';
+          const fallthrough = fn.body.blocks.get(
+            branchBlock.terminal.fallthrough,
+          );
+
+          if (fallthrough?.terminal.kind == 'goto') {
+            fallthrough.kind = 'block';
+          }
 
           const consequent = fn.body.blocks.get(
             branchBlock.terminal.consequent,

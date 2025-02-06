@@ -22,12 +22,14 @@ import { c as _c } from "react/compiler-runtime";
 function Foo(props) {
   const $ = _c(1);
   let x;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    true ? (x = []) : (x = {});
-    $[0] = x;
+    t0 = [];
+    $[0] = t0;
   } else {
-    x = $[0];
+    t0 = $[0];
   }
+  x = t0;
   return x;
 }
 
