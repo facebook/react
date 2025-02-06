@@ -2532,33 +2532,41 @@ __DEV__ &&
       return null !== node ? describeDiff(node).replaceAll(/^[+-]/gm, ">") : "";
     }
     function updatedAncestorInfoDev(oldInfo, tag) {
-      oldInfo = assign({}, oldInfo || emptyAncestorInfoDev);
-      var info = { tag: tag };
+      var ancestorInfo = assign({}, oldInfo || emptyAncestorInfoDev),
+        info = { tag: tag };
       -1 !== inScopeTags.indexOf(tag) &&
-        ((oldInfo.aTagInScope = null),
-        (oldInfo.buttonTagInScope = null),
-        (oldInfo.nobrTagInScope = null));
-      -1 !== buttonScopeTags.indexOf(tag) && (oldInfo.pTagInButtonScope = null);
+        ((ancestorInfo.aTagInScope = null),
+        (ancestorInfo.buttonTagInScope = null),
+        (ancestorInfo.nobrTagInScope = null));
+      -1 !== buttonScopeTags.indexOf(tag) &&
+        (ancestorInfo.pTagInButtonScope = null);
       -1 !== specialTags.indexOf(tag) &&
         "address" !== tag &&
         "div" !== tag &&
         "p" !== tag &&
-        ((oldInfo.listItemTagAutoclosing = null),
-        (oldInfo.dlItemTagAutoclosing = null));
-      oldInfo.current = info;
-      "form" === tag && (oldInfo.formTag = info);
-      "a" === tag && (oldInfo.aTagInScope = info);
-      "button" === tag && (oldInfo.buttonTagInScope = info);
-      "nobr" === tag && (oldInfo.nobrTagInScope = info);
-      "p" === tag && (oldInfo.pTagInButtonScope = info);
-      "li" === tag && (oldInfo.listItemTagAutoclosing = info);
-      if ("dd" === tag || "dt" === tag) oldInfo.dlItemTagAutoclosing = info;
+        ((ancestorInfo.listItemTagAutoclosing = null),
+        (ancestorInfo.dlItemTagAutoclosing = null));
+      ancestorInfo.current = info;
+      "form" === tag && (ancestorInfo.formTag = info);
+      "a" === tag && (ancestorInfo.aTagInScope = info);
+      "button" === tag && (ancestorInfo.buttonTagInScope = info);
+      "nobr" === tag && (ancestorInfo.nobrTagInScope = info);
+      "p" === tag && (ancestorInfo.pTagInButtonScope = info);
+      "li" === tag && (ancestorInfo.listItemTagAutoclosing = info);
+      if ("dd" === tag || "dt" === tag)
+        ancestorInfo.dlItemTagAutoclosing = info;
       "#document" === tag || "html" === tag
-        ? (oldInfo.containerTagInScope = null)
-        : oldInfo.containerTagInScope || (oldInfo.containerTagInScope = info);
-      return oldInfo;
+        ? (ancestorInfo.containerTagInScope = null)
+        : ancestorInfo.containerTagInScope ||
+          (ancestorInfo.containerTagInScope = info);
+      null !== oldInfo ||
+      ("#document" !== tag && "html" !== tag && "body" !== tag)
+        ? !0 === ancestorInfo.implicitRootScope &&
+          (ancestorInfo.implicitRootScope = !1)
+        : (ancestorInfo.implicitRootScope = !0);
+      return ancestorInfo;
     }
-    function isTagValidWithParent(tag, parentTag) {
+    function isTagValidWithParent(tag, parentTag, implicitRootScope) {
       switch (parentTag) {
         case "select":
           return (
@@ -2618,11 +2626,12 @@ __DEV__ &&
             "template" === tag
           );
         case "html":
+          if (implicitRootScope) break;
           return "head" === tag || "body" === tag || "frameset" === tag;
         case "frameset":
           return "frame" === tag;
         case "#document":
-          return "html" === tag;
+          if (!implicitRootScope) return "html" === tag;
       }
       switch (tag) {
         case "h1":
@@ -2642,14 +2651,11 @@ __DEV__ &&
         case "rp":
         case "rt":
           return -1 === impliedEndTags.indexOf(parentTag);
-        case "body":
         case "caption":
         case "col":
         case "colgroup":
         case "frameset":
         case "frame":
-        case "head":
-        case "html":
         case "tbody":
         case "td":
         case "tfoot":
@@ -2657,6 +2663,19 @@ __DEV__ &&
         case "thead":
         case "tr":
           return null == parentTag;
+        case "head":
+          return implicitRootScope || null === parentTag;
+        case "html":
+          return (
+            (implicitRootScope && "#document" === parentTag) ||
+            null === parentTag
+          );
+        case "body":
+          return (
+            (implicitRootScope &&
+              ("#document" === parentTag || "html" === parentTag)) ||
+            null === parentTag
+          );
       }
       return !0;
     }
@@ -2731,7 +2750,8 @@ __DEV__ &&
       var parentInfo = ancestorInfo.current;
       ancestorInfo = (parentInfo = isTagValidWithParent(
         childTag,
-        parentInfo && parentInfo.tag
+        parentInfo && parentInfo.tag,
+        ancestorInfo.implicitRootScope
       )
         ? null
         : parentInfo)
@@ -2786,32 +2806,33 @@ __DEV__ &&
           }));
       return !1;
     }
-    function validateTextNesting(childText, parentTag) {
-      if (isTagValidWithParent("#text", parentTag)) return !0;
-      var warnKey = "#text|" + parentTag;
-      if (didWarn[warnKey]) return !1;
-      didWarn[warnKey] = !0;
-      var ancestor = (warnKey = current)
-        ? findAncestor(warnKey, parentTag)
+    function validateTextNesting(childText, parentTag, implicitRootScope) {
+      if (implicitRootScope || isTagValidWithParent("#text", parentTag, !1))
+        return !0;
+      implicitRootScope = "#text|" + parentTag;
+      if (didWarn[implicitRootScope]) return !1;
+      didWarn[implicitRootScope] = !0;
+      var ancestor = (implicitRootScope = current)
+        ? findAncestor(implicitRootScope, parentTag)
         : null;
-      warnKey =
-        null !== warnKey && null !== ancestor
+      implicitRootScope =
+        null !== implicitRootScope && null !== ancestor
           ? describeAncestors(
               ancestor,
-              warnKey,
-              6 !== warnKey.tag ? { children: null } : null
+              implicitRootScope,
+              6 !== implicitRootScope.tag ? { children: null } : null
             )
           : "";
       /\S/.test(childText)
         ? error$jscomp$0(
             "In HTML, text nodes cannot be a child of <%s>.\nThis will cause a hydration error.%s",
             parentTag,
-            warnKey
+            implicitRootScope
           )
         : error$jscomp$0(
             "In HTML, whitespace text nodes cannot be a child of <%s>. Make sure you don't have any extra whitespace between tags on each line of your source code.\nThis will cause a hydration error.%s",
             parentTag,
-            warnKey
+            implicitRootScope
           );
       return !1;
     }
@@ -11029,9 +11050,16 @@ __DEV__ &&
         case 6:
           if (null === current && isHydrating) {
             var text = workInProgress.pendingProps,
-              ancestor = getHostContext().ancestorInfo.current;
+              currentHostContext$jscomp$1 = getHostContext(),
+              ancestor = currentHostContext$jscomp$1.ancestorInfo.current;
             var shouldKeepWarning$jscomp$0 =
-              null != ancestor ? validateTextNesting(text, ancestor.tag) : !0;
+              null != ancestor
+                ? validateTextNesting(
+                    text,
+                    ancestor.tag,
+                    currentHostContext$jscomp$1.ancestorInfo.implicitRootScope
+                  )
+                : !0;
             var nextInstance$jscomp$0 = nextHydratableInstance,
               JSCompiler_temp$jscomp$1;
             if (!(JSCompiler_temp$jscomp$1 = !nextInstance$jscomp$0)) {
@@ -11902,9 +11930,13 @@ __DEV__ &&
                 favorSafetyOverHydrationPerf &&
                 throwOnHydrationMismatch(workInProgress);
             } else
-              (renderLanes = renderLanes.ancestorInfo.current),
-                null != renderLanes &&
-                  validateTextNesting(newProps, renderLanes.tag),
+              (_type = renderLanes.ancestorInfo.current),
+                null != _type &&
+                  validateTextNesting(
+                    newProps,
+                    _type.tag,
+                    renderLanes.ancestorInfo.implicitRootScope
+                  ),
                 (current =
                   getOwnerDocumentFromRootContainer(current).createTextNode(
                     newProps
@@ -20776,12 +20808,12 @@ __DEV__ &&
       switch (key) {
         case "children":
           if ("string" === typeof value)
-            validateTextNesting(value, tag),
+            validateTextNesting(value, tag, !1),
               "body" === tag ||
                 ("textarea" === tag && "" === value) ||
                 setTextContent(domElement, value);
           else if ("number" === typeof value || "bigint" === typeof value)
-            validateTextNesting("" + value, tag),
+            validateTextNesting("" + value, tag, !1),
               "body" !== tag && setTextContent(domElement, "" + value);
           else return;
           break;
@@ -23556,7 +23588,10 @@ __DEV__ &&
       instance,
       internalInstanceHandle
     ) {
-      if (getInstanceFromNode(instance)) {
+      if (
+        !instance[internalContainerInstanceKey] &&
+        getInstanceFromNode(instance)
+      ) {
         var tagName = instance.tagName.toLowerCase();
         error$jscomp$0(
           "You are mounting a new %s component when a previous one has not first unmounted. It is an error to render more than one %s component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <%s> and if you need to mount a new one, ensure any previous ones have unmounted first.",
@@ -25292,7 +25327,8 @@ __DEV__ &&
         pTagInButtonScope: null,
         listItemTagAutoclosing: null,
         dlItemTagAutoclosing: null,
-        containerTagInScope: null
+        containerTagInScope: null,
+        implicitRootScope: !1
       },
       didWarn = {},
       COMMENT_NODE = 8,
@@ -28951,11 +28987,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-classic-b48e7399-20250206" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-classic-a0fdb630-20250206" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-classic-b48e7399-20250206\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-classic-a0fdb630-20250206\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -28998,10 +29034,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-classic-b48e7399-20250206",
+          version: "19.1.0-www-classic-a0fdb630-20250206",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-classic-b48e7399-20250206"
+          reconcilerVersion: "19.1.0-www-classic-a0fdb630-20250206"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -29765,5 +29801,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-classic-b48e7399-20250206";
+    exports.version = "19.1.0-www-classic-a0fdb630-20250206";
   })();
