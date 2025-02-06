@@ -61,7 +61,6 @@ export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const enableFabricCompleteRootInCommitPhase = false;
 export const enableSiblingPrerendering = true;
 export const enableUseResourceEffectHook = true;
 export const enableHydrationLaneScheduling = true;
