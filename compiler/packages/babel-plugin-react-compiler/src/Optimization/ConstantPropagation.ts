@@ -175,14 +175,13 @@ function applyConstantPropagation(
         if (testValue !== null && testValue.kind === 'Primitive') {
           hasChanges = true;
           const targetBlockId = testValue.value
-            ? /*
-               * Do I need to change these from being value blocks?
-               * Currently getting
-               * Invariant: Expected a fallthrough for value block (6:6)
-               */
-              branchBlock.terminal.consequent
+            ? branchBlock.terminal.consequent
             : branchBlock.terminal.alternate;
+
+          // I think I can only set this if the block isn't
+          // used in a value position by its predecessor
           block.kind = 'block';
+
           block.terminal = {
             kind: 'goto',
             variant: GotoVariant.Break,
