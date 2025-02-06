@@ -342,9 +342,14 @@ function setProp(
 ): void {
   switch (key) {
     case 'children': {
-      if (typeof value === 'string') {
+      if (
+        typeof value === 'string' ||
+        typeof value === 'number' ||
+        typeof value === 'bigint'
+      ) {
         if (__DEV__) {
-          validateTextNesting(value, tag, false);
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
+          validateTextNesting('' + value, tag, false);
         }
         // Avoid setting initial textContent when the text is empty. In IE11 setting
         // textContent on a <textarea> will cause the placeholder to not
@@ -352,15 +357,6 @@ function setProp(
         // https://github.com/facebook/react/issues/6731#issuecomment-254874553
         const canSetTextContent =
           tag !== 'body' && (tag !== 'textarea' || value !== '');
-        if (canSetTextContent) {
-          setTextContent(domElement, value);
-        }
-      } else if (typeof value === 'number' || typeof value === 'bigint') {
-        if (__DEV__) {
-          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
-          validateTextNesting('' + value, tag, false);
-        }
-        const canSetTextContent = tag !== 'body';
         if (canSetTextContent) {
           // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           setTextContent(domElement, '' + value);
