@@ -534,8 +534,11 @@ describe('ReactFlightDOMBrowser', () => {
   });
 
   it('should resolve deduped references in maps used in client component props', async () => {
-    const ClientComponent = clientExports(function ClientComponent({shared}) {
-      return JSON.stringify(shared);
+    const ClientComponent = clientExports(function ClientComponent({
+      shared,
+      map,
+    }) {
+      return JSON.stringify({shared, map: Array.from(map)});
     });
 
     function Server() {
@@ -561,7 +564,9 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<ClientRoot response={response} />);
     });
 
-    expect(container.innerHTML).toBe('{"id":42}');
+    expect(container.innerHTML).toBe(
+      '{"shared":{"id":42},"map":[[42,{"id":42}]]}',
+    );
   });
 
   it('should handle deduped props of re-used elements in fragments (same-chunk reference)', async () => {
