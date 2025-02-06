@@ -301,10 +301,8 @@ describe('ReactAsyncActions', () => {
       'Async action ended',
       'Pending: false',
       'Suspend! [A1]',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [B1]', 'Suspend! [C1]']
-        : []),
+      'Suspend! [B1]',
+      'Suspend! [C1]',
     ]);
     expect(root).toMatchRenderedOutput(
       <>
@@ -317,13 +315,7 @@ describe('ReactAsyncActions', () => {
     // together, only when the all of A, B, and C updates are unblocked is the
     // render allowed to proceed.
     await act(() => resolveText('A1'));
-    assertLog([
-      'Pending: false',
-      'A1',
-      'Suspend! [B1]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [C1]'] : []),
-    ]);
+    assertLog(['Pending: false', 'A1', 'Suspend! [B1]', 'Suspend! [C1]']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Pending: true</span>

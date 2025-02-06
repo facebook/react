@@ -73,7 +73,6 @@ export const renameElementSymbol = false;
 export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
-export const enableSiblingPrerendering = true;
 
 export const enableUseResourceEffectHook = false;
 

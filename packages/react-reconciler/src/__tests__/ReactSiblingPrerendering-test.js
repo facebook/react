@@ -171,7 +171,7 @@ describe('ReactSiblingPrerendering', () => {
       // After B suspends, we're still able to prerender C without starting
       // over because there's no fallback, so the root is blocked from
       // committing anyway.
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [C]'] : []),
+      'Suspend! [C]',
     ]);
   });
 
@@ -207,12 +207,10 @@ describe('ReactSiblingPrerendering', () => {
       // The second render is a prerender of the hidden content.
       await waitForPaint([
         'Suspend! [B]',
-
         // If B and C were visible, C would not have been attempted
         // during this pass, because it would prevented the fallback
         // from showing.
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [C]'] : []),
-
+        'Suspend! [C]',
         'Loading...',
       ]);
       expect(root).toMatchRenderedOutput('A');
@@ -240,13 +238,11 @@ describe('ReactSiblingPrerendering', () => {
 
       // Immediately after the fallback commits, retry the boundary again. This
       // time we include B, since we're not blocking the fallback from showing.
-      if (gate('enableSiblingPrerendering')) {
-        if (gate(flags => flags.enableYieldingBeforePassive)) {
-          // Passive effects.
-          await waitForPaint([]);
-        }
-        await waitForPaint(['Suspend! [A]', 'Suspend! [B]']);
+      if (gate(flags => flags.enableYieldingBeforePassive)) {
+        // Passive effects.
+        await waitForPaint([]);
       }
+      await waitForPaint(['Suspend! [A]', 'Suspend! [B]']);
     });
     expect(root).toMatchRenderedOutput('Loading...');
   });
@@ -282,11 +278,7 @@ describe('ReactSiblingPrerendering', () => {
 
       // Now that the fallback is visible, we can prerender the siblings. Start
       // prerendering, then yield to simulate an interleaved event.
-      if (gate('enableSiblingPrerendering')) {
-        await waitFor(['A']);
-      } else {
-        await waitForAll([]);
-      }
+      await waitFor(['A']);
 
       // To avoid the Suspense throttling mechanism, let's pretend there's been
       // more than a Just Noticeable Difference since we rendered the
@@ -298,10 +290,6 @@ describe('ReactSiblingPrerendering', () => {
       // shouldn't unwind and lose our work-in-progress.
       await resolveText('B');
       await waitForPaint([
-        // When sibling prerendering is not enabled, we weren't already rendering
-        // when the data for B came in, so A doesn't get rendered until now.
-        ...(gate('enableSiblingPrerendering') ? [] : ['A']),
-
         'B',
         'Suspend! [C]',
 
@@ -321,23 +309,19 @@ describe('ReactSiblingPrerendering', () => {
 
     // Now that the inner fallback is showing, we can prerender the rest of
     // the tree.
-    assertLog(
-      gate('enableSiblingPrerendering')
-        ? [
-            // NOTE: C renders twice instead of once because when B resolved, it
-            // was treated like a retry update, not just a ping. So first it
-            // regular renders, then it prerenders. TODO: We should be able to
-            // optimize this by detecting inside the retry listener that the
-            // outer boundary is no longer suspended, and therefore doesn't need
-            // to be updated.
-            'Suspend! [C]',
+    assertLog([
+      // NOTE: C renders twice instead of once because when B resolved, it
+      // was treated like a retry update, not just a ping. So first it
+      // regular renders, then it prerenders. TODO: We should be able to
+      // optimize this by detecting inside the retry listener that the
+      // outer boundary is no longer suspended, and therefore doesn't need
+      // to be updated.
+      'Suspend! [C]',
 
-            // Now we're in prerender mode, so D is incuded in this attempt.
-            'Suspend! [C]',
-            'Suspend! [D]',
-          ]
-        : [],
-    );
+      // Now we're in prerender mode, so D is incuded in this attempt.
+      'Suspend! [C]',
+      'Suspend! [D]',
+    ]);
     expect(root).toMatchRenderedOutput(
       <div>
         <div>AB</div>
@@ -402,9 +386,7 @@ describe('ReactSiblingPrerendering', () => {
       );
     });
     // Once the inner fallback is committed, we can start prerendering C.
-    assertLog(
-      gate('enableSiblingPrerendering') ? ['Suspend! [B]', 'Suspend! [C]'] : [],
-    );
+    assertLog(['Suspend! [B]', 'Suspend! [C]']);
   });
 
   it(
@@ -488,9 +470,7 @@ describe('ReactSiblingPrerendering', () => {
           await waitForPaint([]);
         }
         // Now we can proceed to prerendering C.
-        if (gate('enableSiblingPrerendering')) {
-          await waitForPaint(['Suspend! [B]', 'Suspend! [C]']);
-        }
+        await waitForPaint(['Suspend! [B]', 'Suspend! [C]']);
       });
       assertLog([]);
     },
@@ -519,12 +499,10 @@ describe('ReactSiblingPrerendering', () => {
       // Synchronously render everything until we suspend in the shell
       assertLog(['A', 'B', 'Suspend! [Async]']);
 
-      if (gate('enableSiblingPrerendering')) {
-        // The rest of the siblings begin to prerender concurrently. Notice
-        // that we don't unwind here; we pick up where we left off above.
-        await waitFor(['C']);
-        await waitFor(['D']);
-      }
+      // The rest of the siblings begin to prerender concurrently. Notice
+      // that we don't unwind here; we pick up where we left off above.
+      await waitFor(['C']);
+      await waitFor(['D']);
 
       assertLog([]);
       expect(root).toMatchRenderedOutput(null);
@@ -555,10 +533,8 @@ describe('ReactSiblingPrerendering', () => {
     // Synchronously render everything until we suspend in the shell
     assertLog(['A', 'B', 'Suspend! [Async]']);
 
-    if (gate('enableSiblingPrerendering')) {
-      // The rest of the siblings begin to prerender concurrently
-      await waitFor(['C']);
-    }
+    // The rest of the siblings begin to prerender concurrently
+    await waitFor(['C']);
 
     // While we're prerendering, Async resolves. We should unwind and
     // start over, rather than continue prerendering D.

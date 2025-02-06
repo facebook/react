@@ -193,12 +193,7 @@ describe('ReactUse', () => {
     await act(() => {
       root.render(<App />);
     });
-    assertLog([
-      'Suspend!',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend!'] : []),
-    ]);
+    assertLog(['Suspend!', 'Loading...', 'Suspend!']);
     expect(root).toMatchRenderedOutput('Loading...');
   });
 
@@ -1136,13 +1131,7 @@ describe('ReactUse', () => {
         </Suspense>,
       );
     });
-    assertLog([
-      '(Loading A...)',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['(Loading C...)', '(Loading B...)']
-        : []),
-    ]);
+    assertLog(['(Loading A...)', '(Loading C...)', '(Loading B...)']);
     expect(root).toMatchRenderedOutput('(Loading A...)');
 
     await act(() => {
@@ -2099,14 +2088,10 @@ describe('ReactUse', () => {
 
     await act(() => resolveTextRequests('World'));
     assertConsoleErrorDev(
-      gate('enableSiblingPrerendering')
-        ? [
-            'A component was suspended by an uncached promise. ' +
-              'Creating promises inside a Client Component or hook is not yet supported, ' +
-              'except via a Suspense-compatible library or framework.\n' +
-              '    in App (at **)',
-          ]
-        : [],
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in App (at **)',
     );
 
     assertLog(['Hi', 'World']);
@@ -2155,15 +2140,11 @@ describe('ReactUse', () => {
 
     await act(() => resolveTextRequests('World'));
     assertConsoleErrorDev(
-      gate('enableSiblingPrerendering')
-        ? [
-            'A component was suspended by an uncached promise. ' +
-              'Creating promises inside a Client Component or hook is not yet supported, ' +
-              'except via a Suspense-compatible library or framework.\n' +
-              '    in div (at **)\n' +
-              '    in App (at **)',
-          ]
-        : [],
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
     );
 
     assertLog(['Hi', 'World']);

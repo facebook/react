@@ -139,12 +139,7 @@ describe('ReactSuspenseFallback', () => {
       </Suspense>,
     );
 
-    await waitForAll([
-      'Suspend! [A]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
-    ]);
+    await waitForAll(['Suspend! [A]', 'Loading...', 'Suspend! [A]']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
   });
 
@@ -159,8 +154,7 @@ describe('ReactSuspenseFallback', () => {
     await waitForAll([
       'Suspend! [A]',
       // null
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
+      'Suspend! [A]',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
@@ -176,8 +170,7 @@ describe('ReactSuspenseFallback', () => {
     await waitForAll([
       'Suspend! [A]',
       // null
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
+      'Suspend! [A]',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
@@ -192,12 +185,7 @@ describe('ReactSuspenseFallback', () => {
       </Suspense>,
     );
 
-    await waitForAll([
-      'Suspend! [A]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
-    ]);
+    await waitForAll(['Suspend! [A]', 'Loading...', 'Suspend! [A]']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
   });
 
@@ -214,8 +202,7 @@ describe('ReactSuspenseFallback', () => {
     await waitForAll([
       'Suspend! [A]',
       // null
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
+      'Suspend! [A]',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
@@ -233,8 +220,7 @@ describe('ReactSuspenseFallback', () => {
     await waitForAll([
       'Suspend! [A]',
       // null
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
+      'Suspend! [A]',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
   });

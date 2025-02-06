@@ -160,13 +160,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     });
 
     expect(container.textContent).toEqual('Loading...');
-    assertLog([
-      'A',
-      'Suspend! [B]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['A', 'Suspend! [B]', 'C'] : []),
-    ]);
+    assertLog(['A', 'Suspend! [B]', 'Loading...', 'A', 'Suspend! [B]', 'C']);
     await act(() => {
       resolveText('B');
     });

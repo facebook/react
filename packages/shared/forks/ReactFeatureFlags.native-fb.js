@@ -27,7 +27,6 @@ export const {
   enableShallowPropDiffing,
   enableUseResourceEffectHook,
   passChildrenWhenCloningPersistedNodes,
-  enableSiblingPrerendering,
   enableOwnerStacks,
   enableRemoveConsolePatches,
   enableFastAddPropertiesInDiffing,

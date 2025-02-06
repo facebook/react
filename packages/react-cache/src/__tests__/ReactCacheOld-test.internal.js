@@ -123,12 +123,7 @@ describe('ReactCache', () => {
     const root = ReactNoop.createRoot();
     root.render(<App />);
 
-    await waitForAll([
-      'Suspend! [Hi]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Hi]'] : []),
-    ]);
+    await waitForAll(['Suspend! [Hi]', 'Loading...', 'Suspend! [Hi]']);
 
     jest.advanceTimersByTime(100);
     assertLog(['Promise resolved [Hi]']);
@@ -147,12 +142,7 @@ describe('ReactCache', () => {
     const root = ReactNoop.createRoot();
     root.render(<App />);
 
-    await waitForAll([
-      'Suspend! [Hi]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Hi]'] : []),
-    ]);
+    await waitForAll(['Suspend! [Hi]', 'Loading...', 'Suspend! [Hi]']);
 
     textResourceShouldFail = true;
     let error;
@@ -192,12 +182,7 @@ describe('ReactCache', () => {
     );
 
     if (__DEV__) {
-      await waitForAll([
-        'App',
-        'Loading...',
-
-        ...(gate('enableSiblingPrerendering') ? ['App'] : []),
-      ]);
+      await waitForAll(['App', 'Loading...', 'App']);
       assertConsoleErrorDev([
         'Invalid key type. Expected a string, number, symbol, or ' +
           "boolean, but instead received: [ 'Hi', 100 ]\n\n" +
@@ -207,28 +192,17 @@ describe('ReactCache', () => {
           (gate(flags => flags.enableOwnerStacks)
             ? ''
             : '\n    in Suspense (at **)'),
-
-        ...(gate('enableSiblingPrerendering')
-          ? [
-              'Invalid key type. Expected a string, number, symbol, or ' +
-                "boolean, but instead received: [ 'Hi', 100 ]\n\n" +
-                'To use non-primitive values as keys, you must pass a hash ' +
-                'function as the second argument to createResource().\n' +
-                '    in App (at **)',
-            ]
-          : []),
+        'Invalid key type. Expected a string, number, symbol, or ' +
+          "boolean, but instead received: [ 'Hi', 100 ]\n\n" +
+          'To use non-primitive values as keys, you must pass a hash ' +
+          'function as the second argument to createResource().\n' +
+          '    in App (at **)',
       ]);
     } else {
-      await waitForAll([
-        'App',
-        'Loading...',
-
-        ...(gate('enableSiblingPrerendering') ? ['App'] : []),
-      ]);
+      await waitForAll(['App', 'Loading...', 'App']);
     }
   });
 
-  // @gate enableSiblingPrerendering
   it('evicts least recently used values', async () => {
     ReactCache.unstable_setGlobalCacheLimit(3);
 
@@ -379,12 +353,7 @@ describe('ReactCache', () => {
       </Suspense>,
     );
 
-    await waitForAll([
-      'Suspend! [Hi]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Hi]'] : []),
-    ]);
+    await waitForAll(['Suspend! [Hi]', 'Loading...', 'Suspend! [Hi]']);
 
     resolveThenable('Hi');
     // This thenable improperly resolves twice. We should not update the

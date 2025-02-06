@@ -113,8 +113,9 @@ describe('ReactBlockingMode', () => {
       'A',
       'Suspend! [B]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['A', 'Suspend! [B]', 'C'] : []),
+      'A',
+      'Suspend! [B]',
+      'C',
     ]);
     // In Legacy Mode, A and B would mount in a hidden primary tree. In
     // Concurrent Mode, nothing in the primary tree should mount. But the
