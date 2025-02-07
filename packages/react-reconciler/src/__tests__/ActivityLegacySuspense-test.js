@@ -203,12 +203,7 @@ describe('Activity Suspense', () => {
     await React.act(() => {
       root.render(<Container text="hello" />);
     });
-    assertLog([
-      'Suspend! [hello]',
-      ...(gate(flags => flags.enableSiblingPrerendering)
-        ? ['Suspend! [hello]']
-        : []),
-    ]);
+    assertLog(['Suspend! [hello]', 'Suspend! [hello]']);
     expect(root).toMatchRenderedOutput('Loading');
 
     await React.act(async () => {

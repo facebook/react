@@ -63,7 +63,6 @@ export const enableInfiniteRenderLoopDetection = false;
 
 export const renameElementSymbol = true;
 export const enableShallowPropDiffing = false;
-export const enableSiblingPrerendering = true;
 
 export const enableUseResourceEffectHook = false;
 

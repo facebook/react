@@ -4410,13 +4410,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.render(<App />);
       });
 
-      assertLog([
-        'A',
-        'Suspend! [A]',
-        'Loading',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
-      ]);
+      assertLog(['A', 'Suspend! [A]', 'Loading', 'Suspend! [A]']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="A" />

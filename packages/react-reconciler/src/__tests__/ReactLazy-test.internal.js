@@ -198,7 +198,10 @@ describe('ReactLazy', () => {
 
     await resolveFakeImport(Foo);
 
-    await waitForAll(['Foo']);
+    await waitForAll([
+      'Foo',
+      ...(gate('alwaysThrottleRetries') ? [] : ['Foo']),
+    ]);
     expect(root).not.toMatchRenderedOutput('FooBar');
 
     await act(() => resolveFakeImport(Bar));
@@ -332,8 +335,7 @@ describe('ReactLazy', () => {
     await waitForAll([
       'Suspend! [LazyChildA]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [LazyChildB]'] : []),
+      'Suspend! [LazyChildB]',
     ]);
     expect(root).not.toMatchRenderedOutput('AB');
 
@@ -345,21 +347,12 @@ describe('ReactLazy', () => {
       // we can unwrap the result synchronously if it already loaded. Like `use`.
       await waitFor([
         'A',
-
-        // When enableSiblingPrerendering is on, LazyChildB was already
-        // initialized. So it also already resolved when we called
-        // resolveFakeImport above. So it doesn't suspend again.
-        ...(gate('enableSiblingPrerendering')
-          ? ['B']
-          : ['Suspend! [LazyChildB]']),
+        // LazyChildB was already initialized. So it also already resolved
+        // when we called resolveFakeImport above. So it doesn't suspend again.
+        'B',
       ]);
     });
-    assertLog([
-      ...(gate('enableSiblingPrerendering') ? [] : ['A', 'B']),
-
-      'Did mount: A',
-      'Did mount: B',
-    ]);
+    assertLog(['Did mount: A', 'Did mount: B']);
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
@@ -1123,7 +1116,7 @@ describe('ReactLazy', () => {
     expect(ref.current).toBe(null);
 
     await act(() => resolveFakeImport(Foo));
-    assertLog(['Foo', ...(gate('enableSiblingPrerendering') ? ['Foo'] : [])]);
+    assertLog(['Foo', 'Foo']);
 
     await act(() => resolveFakeImport(ForwardRefBar));
     assertLog(['Foo', 'forwardRef', 'Bar']);
@@ -1415,21 +1408,11 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
-    await waitForAll([
-      'Init A',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Init B'] : []),
-    ]);
+    await waitForAll(['Init A', 'Loading...', 'Init B']);
     expect(root).not.toMatchRenderedOutput('AB');
 
     await act(() => resolveFakeImport(ChildA));
-    assertLog([
-      'A',
-
-      // When enableSiblingPrerendering is on, B was already initialized.
-      ...(gate('enableSiblingPrerendering') ? ['A'] : ['Init B']),
-    ]);
+    assertLog(['A', 'A']);
 
     await act(() => resolveFakeImport(ChildB));
     assertLog(['A', 'B', 'Did mount: A', 'Did mount: B']);

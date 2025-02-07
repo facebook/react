@@ -135,9 +135,7 @@ describe('ReactSuspense', () => {
       'Bar',
       // A suspends
       'Suspend! [A]',
-
-      ...(gate('enableSiblingPrerendering') ? ['B'] : []),
-
+      'B',
       'Loading...',
     ]);
     expect(container.textContent).toEqual('');
@@ -169,10 +167,8 @@ describe('ReactSuspense', () => {
       'Loading A...',
       'Suspend! [B]',
       'Loading B...',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [A]', 'Suspend! [B]']
-        : []),
+      'Suspend! [A]',
+      'Suspend! [B]',
     ]);
     expect(container.innerHTML).toEqual('Loading A...Loading B...');
 
@@ -181,8 +177,7 @@ describe('ReactSuspense', () => {
     await act(() => resolveText('A'));
     assertLog([
       'A',
-
-      ...(gate('enableSiblingPrerendering')
+      ...(gate('alwaysThrottleRetries')
         ? ['Suspend! [B]', 'Suspend! [B]']
         : []),
     ]);
@@ -288,10 +283,9 @@ describe('ReactSuspense', () => {
       'Foo',
       'Suspend! [A]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [A]', 'Suspend! [B]', 'Loading more...']
-        : []),
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading more...',
     ]);
     expect(container.textContent).toEqual('Loading...');
 
@@ -341,10 +335,9 @@ describe('ReactSuspense', () => {
       'Foo',
       'Suspend! [A]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [A]', 'Suspend! [B]', 'Loading more...']
-        : []),
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading more...',
     ]);
     expect(container.textContent).toEqual('Loading...');
 
@@ -390,10 +383,9 @@ describe('ReactSuspense', () => {
       'Foo',
       'Suspend! [A]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [A]', 'Suspend! [B]', 'Loading more...']
-        : []),
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading more...',
     ]);
     expect(container.textContent).toEqual('Loading...');
 
@@ -479,24 +471,14 @@ describe('ReactSuspense', () => {
     await act(() => {
       root.render(<App />);
     });
-    assertLog([
-      'Suspend! [default]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [default]'] : []),
-    ]);
+    assertLog(['Suspend! [default]', 'Loading...', 'Suspend! [default]']);
 
     await act(() => resolveText('default'));
     assertLog(['default']);
     expect(container.textContent).toEqual('default');
 
     await act(() => setValue('new value'));
-    assertLog([
-      'Suspend! [new value]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [new value]'] : []),
-    ]);
+    assertLog(['Suspend! [new value]', 'Loading...', 'Suspend! [new value]']);
 
     await act(() => resolveText('new value'));
     assertLog(['new value']);
@@ -536,24 +518,14 @@ describe('ReactSuspense', () => {
     await act(() => {
       root.render(<App />);
     });
-    assertLog([
-      'Suspend! [default]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [default]'] : []),
-    ]);
+    assertLog(['Suspend! [default]', 'Loading...', 'Suspend! [default]']);
 
     await act(() => resolveText('default'));
     assertLog(['default']);
     expect(container.textContent).toEqual('default');
 
     await act(() => setValue('new value'));
-    assertLog([
-      'Suspend! [new value]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [new value]'] : []),
-    ]);
+    assertLog(['Suspend! [new value]', 'Loading...', 'Suspend! [new value]']);
 
     await act(() => resolveText('new value'));
     assertLog(['new value']);
@@ -590,24 +562,14 @@ describe('ReactSuspense', () => {
         </App>,
       );
     });
-    assertLog([
-      'Suspend! [default]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [default]'] : []),
-    ]);
+    assertLog(['Suspend! [default]', 'Loading...', 'Suspend! [default]']);
 
     await act(() => resolveText('default'));
     assertLog(['default']);
     expect(container.textContent).toEqual('default');
 
     await act(() => setValue('new value'));
-    assertLog([
-      'Suspend! [new value]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [new value]'] : []),
-    ]);
+    assertLog(['Suspend! [new value]', 'Loading...', 'Suspend! [new value]']);
 
     await act(() => resolveText('new value'));
     assertLog(['new value']);
@@ -644,24 +606,14 @@ describe('ReactSuspense', () => {
         </App>,
       );
     });
-    assertLog([
-      'Suspend! [default]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [default]'] : []),
-    ]);
+    assertLog(['Suspend! [default]', 'Loading...', 'Suspend! [default]']);
 
     await act(() => resolveText('default'));
     assertLog(['default']);
     expect(container.textContent).toEqual('default');
 
     await act(() => setValue('new value'));
-    assertLog([
-      'Suspend! [new value]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [new value]'] : []),
-    ]);
+    assertLog(['Suspend! [new value]', 'Loading...', 'Suspend! [new value]']);
 
     await act(() => resolveText('new value'));
     assertLog(['new value']);
@@ -708,10 +660,8 @@ describe('ReactSuspense', () => {
       'Suspend! [Child 2]',
       'Loading...',
       'destroy layout',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Child 1', 'Suspend! [Child 2]']
-        : []),
+      'Child 1',
+      'Suspend! [Child 2]',
     ]);
 
     await act(() => resolveText('Child 2'));
@@ -737,13 +687,17 @@ describe('ReactSuspense', () => {
     assertLog([
       'Suspend! [Child 1]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [Child 1]', 'Suspend! [Child 2]']
-        : []),
+      'Suspend! [Child 1]',
+      'Suspend! [Child 2]',
     ]);
     await resolveText('Child 1');
-    await waitForAll(['Child 1', 'Suspend! [Child 2]']);
+    await waitForAll([
+      'Child 1',
+      'Suspend! [Child 2]',
+      ...(gate('alwaysThrottleRetries')
+        ? []
+        : ['Child 1', 'Suspend! [Child 2]']),
+    ]);
 
     jest.advanceTimersByTime(6000);
 

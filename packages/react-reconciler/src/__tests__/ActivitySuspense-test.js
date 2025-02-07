@@ -200,12 +200,7 @@ describe('Activity Suspense', () => {
     await React.act(() => {
       root.render(<Container text="hello" />);
     });
-    assertLog([
-      'Suspend! [hello]',
-      ...(gate(flags => flags.enableSiblingPrerendering)
-        ? ['Suspend! [hello]']
-        : []),
-    ]);
+    assertLog(['Suspend! [hello]', 'Suspend! [hello]']);
     expect(root).toMatchRenderedOutput('Loading');
 
     await React.act(async () => {
@@ -262,11 +257,7 @@ describe('Activity Suspense', () => {
         );
       });
     });
-    assertLog([
-      'Open',
-      'Suspend! [Async]',
-      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Loading...'] : []),
-    ]);
+    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(<span>Closed</span>);
@@ -275,10 +266,7 @@ describe('Activity Suspense', () => {
     await act(async () => {
       await resolveText('Async');
     });
-    assertLog([
-      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Open'] : []),
-      'Async',
-    ]);
+    assertLog(['Open', 'Async']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Open</span>
@@ -330,11 +318,7 @@ describe('Activity Suspense', () => {
         );
       });
     });
-    assertLog([
-      'Open',
-      'Suspend! [Async]',
-      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Loading...'] : []),
-    ]);
+    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(
