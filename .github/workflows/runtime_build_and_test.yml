@@ -585,52 +585,10 @@ jobs:
           RELEASE_CHANNEL: experimental
 
   # ----- SIZEBOT -----
-  download_base_build_for_sizebot:
-    if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' }}
-    name: Download base build for sizebot
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
-      - name: Restore cached node_modules
-        uses: actions/cache@v4
-        id: node_modules
-        with:
-          path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
-      - name: Ensure clean build directory
-        run: rm -rf build
-      - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
-        working-directory: scripts/release
-      - name: Download artifacts for base revision
-        run: |
-          git fetch origin main
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse origin/main)
-          mv ./build ./base-build
-      # TODO: The `download-experimental-build` script copies the npm
-      # packages into the `node_modules` directory. This is a historical
-      # quirk of how the release script works. Let's pretend they
-      # don't exist.
-      - name: Delete extraneous files
-        run: rm -rf ./base-build/node_modules
-      - name: Display structure of base-build
-        run: ls -R base-build
-      - name: Archive base-build
-        uses: actions/upload-artifact@v4
-        with:
-          name: base-build
-          path: base-build
-
   sizebot:
+    if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' && github.event.pull_request.base.ref == 'main' }}
     name: Run sizebot
-    needs: [build_and_lint, download_base_build_for_sizebot]
+    needs: [build_and_lint]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -650,6 +608,22 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        working-directory: scripts/release
+      - name: Download artifacts for base revision
+        run: |
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse ${{ github.event.pull_request.base.sha }})
+          mv ./build ./base-build
+      # TODO: The `download-experimental-build` script copies the npm
+      # packages into the `node_modules` directory. This is a historical
+      # quirk of how the release script works. Let's pretend they
+      # don't exist.
+      - name: Delete extraneous files
+        run: rm -rf ./base-build/node_modules
+      - name: Display structure of base-build from origin/main
+        run: ls -R base-build
+      - name: Ensure clean build directory
+        run: rm -rf build
+      - run: yarn install --frozen-lockfile
       - name: Restore archived build for PR
         uses: actions/download-artifact@v4
         with:
@@ -662,13 +636,6 @@ jobs:
           node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
       - name: Display structure of build for PR
         run: ls -R build
-      - name: Restore archived base-build from origin/main
-        uses: actions/download-artifact@v4
-        with:
-          name: base-build
-          path: base-build
-      - name: Display structure of base-build from origin/main
-        run: ls -R base-build
       - run: echo ${{ github.sha }} >> build/COMMIT_SHA
       - run: node ./scripts/tasks/danger
       - name: Archive sizebot results
