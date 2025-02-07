@@ -57,10 +57,7 @@ import {
   getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
 
-import {
-  enableFabricCompleteRootInCommitPhase,
-  passChildrenWhenCloningPersistedNodes,
-} from 'shared/ReactFeatureFlags';
+import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {ReactContext} from 'shared/ReactTypes';
 
@@ -505,19 +502,14 @@ export function finalizeContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  if (!enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container.containerTag, newChildren);
-  }
+  // Noop - children will be finalized in replaceContainerChildren
 }
 
 export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  // Noop - children will be replaced in finalizeContainerChildren
-  if (enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container.containerTag, newChildren);
-  }
+  completeRoot(container.containerTag, newChildren);
 }
 
 export {getClosestInstanceFromNode as getInstanceFromNode};
