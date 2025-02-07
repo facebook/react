@@ -9,7 +9,13 @@
  * @flow strict
  */
 
-import type {ElementRef, ElementType, MixedElement} from 'react';
+import type {
+  Component as ReactComponent,
+  ElementRef,
+  ElementType,
+  MixedElement,
+  RefSetter,
+} from 'react';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -133,7 +139,7 @@ declare const ensureNativeMethodsAreSynced: NativeMethods;
 
 export type HostInstance = NativeMethods;
 export type HostComponent<Config: {...}> = component(
-  ref: React$RefSetter<HostInstance>,
+  ref: RefSetter<HostInstance>,
   ...Config
 );
 
@@ -185,7 +191,8 @@ export type RenderRootOptions = {
     errorInfo: {
       +componentStack?: ?string,
       // $FlowFixMe[unclear-type] unknown props and state.
-      +errorBoundary?: ?React$Component<any, any>,
+      // $FlowFixMe[value-as-type] Component in react repo is any-typed, but it will be well typed externally.
+      +errorBoundary?: ?ReactComponent<any, any>,
     },
   ) => void,
   onRecoverableError?: (
