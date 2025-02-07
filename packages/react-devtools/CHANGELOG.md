@@ -4,6 +4,15 @@
 
 ---
 
+### 6.1.1
+February 7, 2025
+
+* DevTools: refactor NativeStyleEditor, don't use custom cache implementation ([hoxyq](https://github.com/hoxyq) in [#32298](https://github.com/facebook/react/pull/32298))
+* DevTools: fix host component filter option title ([hoxyq](https://github.com/hoxyq) in [#32296](https://github.com/facebook/react/pull/32296))
+* chore[DevTools]: make clipboardWrite optional for chromium ([hoxyq](https://github.com/hoxyq) in [#32262](https://github.com/facebook/react/pull/32262))
+
+---
+
 ### 6.1.0
 January 16, 2025
 
