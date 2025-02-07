@@ -94,6 +94,7 @@ import {
   enableTrustedTypesIntegration,
   disableLegacyMode,
   enableMoveBefore,
+  disableCommentsAsDOMContainers,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -207,6 +208,9 @@ const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
 const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
+const PREAMBLE_CONTRIBUTION_HTML = 0b001;
+const PREAMBLE_CONTRIBUTION_BODY = 0b010;
+const PREAMBLE_CONTRIBUTION_HEAD = 0b100;
 const FORM_STATE_IS_MATCHING = 'F!';
 const FORM_STATE_IS_NOT_MATCHING = 'F';
 
@@ -255,7 +259,7 @@ export function getRootHostContext(
     }
     default: {
       const container: any =
-        nodeType === COMMENT_NODE
+        !disableCommentsAsDOMContainers && nodeType === COMMENT_NODE
           ? rootContainerInstance.parentNode
           : rootContainerInstance;
       type = container.tagName;
@@ -591,7 +595,11 @@ export function createTextInstance(
     const hostContextDev = ((hostContext: any): HostContextDev);
     const ancestor = hostContextDev.ancestorInfo.current;
     if (ancestor != null) {
-      validateTextNesting(text, ancestor.tag);
+      validateTextNesting(
+        text,
+        ancestor.tag,
+        hostContextDev.ancestorInfo.implicitRootScope,
+      );
     }
   }
   const textNode: TextInstance = getOwnerDocumentFromRootContainer(
@@ -799,29 +807,25 @@ export function appendChildToContainer(
   container: Container,
   child: Instance | TextInstance,
 ): void {
-  let parentNode: Document | Element;
-  switch (container.nodeType) {
-    case COMMENT_NODE: {
-      parentNode = (container.parentNode: any);
-      if (supportsMoveBefore) {
-        // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
-        parentNode.moveBefore(child, container);
-      } else {
-        parentNode.insertBefore(child, container);
-      }
-      return;
+  let parentNode: DocumentFragment | Element;
+  if (container.nodeType === DOCUMENT_NODE) {
+    parentNode = (container: any).body;
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    container.nodeType === COMMENT_NODE
+  ) {
+    parentNode = (container.parentNode: any);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      parentNode.moveBefore(child, container);
+    } else {
+      parentNode.insertBefore(child, container);
     }
-    case DOCUMENT_NODE: {
-      parentNode = (container: any).body;
-      break;
-    }
-    default: {
-      if (container.nodeName === 'HTML') {
-        parentNode = (container.ownerDocument.body: any);
-      } else {
-        parentNode = (container: any);
-      }
-    }
+    return;
+  } else if (container.nodeName === 'HTML') {
+    parentNode = (container.ownerDocument.body: any);
+  } else {
+    parentNode = (container: any);
   }
   if (supportsMoveBefore) {
     // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
@@ -866,24 +870,18 @@ export function insertInContainerBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
-  let parentNode: Document | Element;
-  switch (container.nodeType) {
-    case COMMENT_NODE: {
-      parentNode = (container.parentNode: any);
-      break;
-    }
-    case DOCUMENT_NODE: {
-      const ownerDocument: Document = (container: any);
-      parentNode = (ownerDocument.body: any);
-      break;
-    }
-    default: {
-      if (container.nodeName === 'HTML') {
-        parentNode = (container.ownerDocument.body: any);
-      } else {
-        parentNode = (container: any);
-      }
-    }
+  let parentNode: DocumentFragment | Element;
+  if (container.nodeType === DOCUMENT_NODE) {
+    parentNode = (container: any).body;
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    container.nodeType === COMMENT_NODE
+  ) {
+    parentNode = (container.parentNode: any);
+  } else if (container.nodeName === 'HTML') {
+    parentNode = (container.ownerDocument.body: any);
+  } else {
+    parentNode = (container: any);
   }
   if (supportsMoveBefore) {
     // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
@@ -940,20 +938,18 @@ export function removeChildFromContainer(
   container: Container,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
-  let parentNode: Document | Element;
-  switch (container.nodeType) {
-    case COMMENT_NODE:
-      parentNode = (container.parentNode: any);
-      break;
-    case DOCUMENT_NODE:
-      parentNode = (container: any).body;
-      break;
-    default:
-      if (container.nodeName === 'HTML') {
-        parentNode = (container.ownerDocument.body: any);
-      } else {
-        parentNode = (container: any);
-      }
+  let parentNode: DocumentFragment | Element;
+  if (container.nodeType === DOCUMENT_NODE) {
+    parentNode = (container: any).body;
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    container.nodeType === COMMENT_NODE
+  ) {
+    parentNode = (container.parentNode: any);
+  } else if (container.nodeName === 'HTML') {
+    parentNode = (container.ownerDocument.body: any);
+  } else {
+    parentNode = (container: any);
   }
   parentNode.removeChild(child);
 }
@@ -963,6 +959,7 @@ export function clearSuspenseBoundary(
   suspenseInstance: SuspenseInstance,
 ): void {
   let node: Node = suspenseInstance;
+  let possiblePreambleContribution: number = 0;
   // Delete all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
   // deep we are and only break out when we're back on top.
@@ -973,6 +970,36 @@ export function clearSuspenseBoundary(
     if (nextNode && nextNode.nodeType === COMMENT_NODE) {
       const data = ((nextNode: any).data: string);
       if (data === SUSPENSE_END_DATA) {
+        if (
+          // represents 3 bits where at least one bit is set (1-7)
+          possiblePreambleContribution > 0 &&
+          possiblePreambleContribution < 8
+        ) {
+          const code = possiblePreambleContribution;
+          // It's not normally possible to insert a comment immediately preceding Suspense boundary
+          // closing comment marker so we can infer that if the comment preceding starts with "1" through "7"
+          // then it is in fact a preamble contribution marker comment. We do this value test to avoid the case
+          // where the Suspense boundary is empty and the preceding comment marker is the Suspense boundary
+          // opening marker or the closing marker of an inner boundary. In those cases the first character won't
+          // have the requisite value to be interpreted as a Preamble contribution
+          const ownerDocument = parentInstance.ownerDocument;
+          if (code & PREAMBLE_CONTRIBUTION_HTML) {
+            const documentElement: Element =
+              (ownerDocument.documentElement: any);
+            releaseSingletonInstance(documentElement);
+          }
+          if (code & PREAMBLE_CONTRIBUTION_BODY) {
+            const body: Element = (ownerDocument.body: any);
+            releaseSingletonInstance(body);
+          }
+          if (code & PREAMBLE_CONTRIBUTION_HEAD) {
+            const head: Element = (ownerDocument.head: any);
+            releaseSingletonInstance(head);
+            // We need to clear the head because this is the only singleton that can have children that
+            // were part of this boundary but are not inside this boundary.
+            clearHead(head);
+          }
+        }
         if (depth === 0) {
           parentInstance.removeChild(nextNode);
           // Retry if any event replaying was blocked on this.
@@ -987,7 +1014,11 @@ export function clearSuspenseBoundary(
         data === SUSPENSE_FALLBACK_START_DATA
       ) {
         depth++;
+      } else {
+        possiblePreambleContribution = data.charCodeAt(0) - 48;
       }
+    } else {
+      possiblePreambleContribution = 0;
     }
     // $FlowFixMe[incompatible-type] we bail out when we get a null
     node = nextNode;
@@ -1001,18 +1032,20 @@ export function clearSuspenseBoundaryFromContainer(
   container: Container,
   suspenseInstance: SuspenseInstance,
 ): void {
-  if (container.nodeType === COMMENT_NODE) {
-    clearSuspenseBoundary((container.parentNode: any), suspenseInstance);
-  } else if (container.nodeType === DOCUMENT_NODE) {
-    clearSuspenseBoundary((container: any).body, suspenseInstance);
+  let parentNode: DocumentFragment | Element;
+  if (container.nodeType === DOCUMENT_NODE) {
+    parentNode = (container: any).body;
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    container.nodeType === COMMENT_NODE
+  ) {
+    parentNode = (container.parentNode: any);
   } else if (container.nodeName === 'HTML') {
-    clearSuspenseBoundary(
-      (container.ownerDocument.body: any),
-      suspenseInstance,
-    );
+    parentNode = (container.ownerDocument.body: any);
   } else {
-    clearSuspenseBoundary((container: any), suspenseInstance);
+    parentNode = (container: any);
   }
+  clearSuspenseBoundary(parentNode, suspenseInstance);
   // Retry if any event replaying was blocked on this.
   retryIfBlockedOn(container);
 }
@@ -1501,7 +1534,7 @@ function clearContainerSparingly(container: Node) {
       case 'STYLE': {
         continue;
       }
-      // Stylesheet tags are retained because tehy may likely come from 3rd party scripts and extensions
+      // Stylesheet tags are retained because they may likely come from 3rd party scripts and extensions
       case 'LINK': {
         if (((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet') {
           continue;
@@ -1509,6 +1542,27 @@ function clearContainerSparingly(container: Node) {
       }
     }
     container.removeChild(node);
+  }
+  return;
+}
+
+function clearHead(head: Element): void {
+  let node = head.firstChild;
+  while (node) {
+    const nextNode = node.nextSibling;
+    const nodeName = node.nodeName;
+    if (
+      isMarkedHoistable(node) ||
+      nodeName === 'SCRIPT' ||
+      nodeName === 'STYLE' ||
+      (nodeName === 'LINK' &&
+        ((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet')
+    ) {
+      // retain these nodes
+    } else {
+      head.removeChild(node);
+    }
+    node = nextNode;
   }
   return;
 }
@@ -1874,7 +1928,20 @@ export function getFirstHydratableChild(
 export function getFirstHydratableChildWithinContainer(
   parentContainer: Container,
 ): null | HydratableInstance {
-  return getNextHydratable(parentContainer.firstChild);
+  let parentElement: Element;
+  switch (parentContainer.nodeType) {
+    case DOCUMENT_NODE:
+      parentElement = (parentContainer: any).body;
+      break;
+    default: {
+      if (parentContainer.nodeName === 'HTML') {
+        parentElement = (parentContainer: any).ownerDocument.body;
+      } else {
+        parentElement = (parentContainer: any);
+      }
+    }
+  }
+  return getNextHydratable(parentElement.firstChild);
 }
 
 export function getFirstHydratableChildWithinSuspenseInstance(
@@ -1883,10 +1950,44 @@ export function getFirstHydratableChildWithinSuspenseInstance(
   return getNextHydratable(parentInstance.nextSibling);
 }
 
+// If it were possible to have more than one scope singleton in a DOM tree
+// we would need to model this as a stack but since you can only have one <head>
+// and head is the only singleton that is a scope in DOM we can get away with
+// tracking this as a single value.
+let previousHydratableOnEnteringScopedSingleton: null | HydratableInstance =
+  null;
+
+export function getFirstHydratableChildWithinSingleton(
+  type: string,
+  singletonInstance: Instance,
+  currentHydratableInstance: null | HydratableInstance,
+): null | HydratableInstance {
+  if (isSingletonScope(type)) {
+    previousHydratableOnEnteringScopedSingleton = currentHydratableInstance;
+    return getNextHydratable(singletonInstance.firstChild);
+  } else {
+    return currentHydratableInstance;
+  }
+}
+
+export function getNextHydratableSiblingAfterSingleton(
+  type: string,
+  currentHydratableInstance: null | HydratableInstance,
+): null | HydratableInstance {
+  if (isSingletonScope(type)) {
+    const previousHydratableInstance =
+      previousHydratableOnEnteringScopedSingleton;
+    previousHydratableOnEnteringScopedSingleton = null;
+    return previousHydratableInstance;
+  } else {
+    return currentHydratableInstance;
+  }
+}
+
 export function describeHydratableInstanceForDevWarnings(
   instance: HydratableInstance,
 ): string | {type: string, props: $ReadOnly<Props>} {
-  // Reverse engineer a pseudo react-element from hydratable instnace
+  // Reverse engineer a pseudo react-element from hydratable instance
   if (instance.nodeType === ELEMENT_NODE) {
     // Reverse engineer a set of props that can print for dev warnings
     return {
@@ -1949,7 +2050,11 @@ export function validateHydratableTextInstance(
     const hostContextDev = ((hostContext: any): HostContextDev);
     const ancestor = hostContextDev.ancestorInfo.current;
     if (ancestor != null) {
-      return validateTextNesting(text, ancestor.tag);
+      return validateTextNesting(
+        text,
+        ancestor.tag,
+        hostContextDev.ancestorInfo.implicitRootScope,
+      );
     }
   }
   return true;
@@ -2297,8 +2402,15 @@ export function acquireSingletonInstance(
   internalInstanceHandle: Object,
 ): void {
   if (__DEV__) {
-    const currentInstanceHandle = getInstanceFromNodeDOMTree(instance);
-    if (currentInstanceHandle) {
+    if (
+      // If this instance is the container then it is invalid to acquire it as a singleton however
+      // the DOM nesting validation will already warn for this and the message below isn't semantically
+      // aligned with the actual fix you need to make so we omit the warning in this case
+      !isContainerMarkedAsRoot(instance) &&
+      // If this instance isn't the root but is currently owned by a different HostSingleton instance then
+      // we we need to warn that you are rendering more than one singleton at a time.
+      getInstanceFromNodeDOMTree(instance)
+    ) {
       const tagName = instance.tagName.toLowerCase();
       console.error(
         'You are mounting a new %s component when a previous one has not first unmounted. It is an' +
@@ -2426,10 +2538,13 @@ export type HoistableRoot = Document | ShadowRoot;
 export function getHoistableRoot(container: Container): HoistableRoot {
   // $FlowFixMe[method-unbinding]
   return typeof container.getRootNode === 'function'
-    ? /* $FlowFixMe[incompatible-return] Flow types this as returning a `Node`,
+    ? /* $FlowFixMe[incompatible-cast] Flow types this as returning a `Node`,
        * but it's either a `Document` or `ShadowRoot`. */
-      container.getRootNode()
-    : container.ownerDocument;
+      (container.getRootNode(): Document | ShadowRoot)
+    : container.nodeType === DOCUMENT_NODE
+      ? // $FlowFixMe[incompatible-cast] We've constrained this to be a Document which satisfies the return type
+        (container: Document)
+      : container.ownerDocument;
 }
 
 function getCurrentResourceRoot(): null | HoistableRoot {

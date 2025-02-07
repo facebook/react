@@ -109,6 +109,7 @@ declare var parcelRequire: {
   extendImportMap: (importMap: {[string]: string}) => void,
   meta: {
     publicUrl: string,
+    devServer: string | null,
   },
 };
 
