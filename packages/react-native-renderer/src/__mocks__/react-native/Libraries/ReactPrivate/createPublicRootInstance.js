@@ -12,5 +12,5 @@ import type {PublicRootInstance} from './ReactNativePrivateInterface';
 export default function createPublicRootInstance(
   rootTag: number,
 ): PublicRootInstance {
-  return null;
+  return {__publicRootInstanceFor: rootTag};
 }

@@ -533,7 +533,7 @@ describe('ReactFabric', () => {
     expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
   });
 
-  it('calls the callback with the correct instance and returns null', async () => {
+  it('calls the callback with the correct instance and returns the public root instance', async () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
       uiViewClassName: 'RCTView',
@@ -555,7 +555,7 @@ describe('ReactFabric', () => {
 
     expect(a).toBeTruthy();
     expect(a).toBe(b);
-    expect(c).toBe(null);
+    expect(c).toEqual({__publicRootInstanceFor: 11});
   });
 
   // @gate !disableLegacyMode

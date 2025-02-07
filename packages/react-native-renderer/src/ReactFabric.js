@@ -105,7 +105,7 @@ function render(
   callback: ?() => void,
   concurrentRoot: ?boolean,
   options: ?RenderRootOptions,
-): ?ElementRef<ElementType> {
+): PublicRootInstance {
   if (disableLegacyMode && !concurrentRoot) {
     throw new Error('render: Unsupported Legacy Mode API.');
   }
@@ -155,7 +155,8 @@ function render(
   }
   updateContainer(element, root, null, callback);
 
-  return getPublicRootInstance(root);
+  // $FlowExpectedError[incompatible-return] at this point we know publicInstance cannot be null.
+  return root.containerInfo.publicInstance;
 }
 
 // $FlowFixMe[missing-this-annot]
