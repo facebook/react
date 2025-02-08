@@ -190,24 +190,13 @@ function applyConstantPropagation(
         }
 
         const testValue = read(constants, branchBlock.terminal.test);
-
         if (testValue !== null && testValue.kind === 'Primitive') {
           hasChanges = true;
           const targetBlockId = testValue.value
             ? branchBlock.terminal.consequent
             : branchBlock.terminal.alternate;
 
-          // I think I can only set this if the block isn't
-          // used in a value position by its predecessor
-          // block.kind = 'block';
-
           const chosenBlock = fn.body.blocks.get(targetBlockId);
-          const otherBlock = fn.body.blocks.get(
-            branchBlock.terminal.consequent === targetBlockId
-              ? branchBlock.terminal.alternate
-              : branchBlock.terminal.consequent,
-          );
-
           if (chosenBlock?.terminal.kind === 'goto') {
             block.terminal = {
               kind: 'goto',
@@ -216,44 +205,7 @@ function applyConstantPropagation(
               id: terminal.id,
               loc: terminal.loc,
             };
-
-            // debugger;
-            // console.log(chosenBlock.id, Array.from(chosenBlock.preds));
-            // const allPredsAreBlockBlocks = Array.from(chosenBlock.preds).every(
-            //   predId => {
-            //     const predBlock = fn.body.blocks.get(predId);
-            //     return predBlock?.kind === 'block';
-            //   },
-            // );
-
-            // console.log('allPredsAreBlockBlocks', allPredsAreBlockBlocks);
-
-            // chosenBlock.kind = 'block';
-            // if (allPredsAreBlockBlocks) {
-            //   block.kind = 'block';
-            // }
           }
-
-          // const fallthrough = fn.body.blocks.get(
-          //   branchBlock.terminal.fallthrough,
-          // );
-
-          // if (fallthrough?.terminal.kind == 'goto') {
-          //   fallthrough.kind = 'block';
-          // }
-
-          // const consequent = fn.body.blocks.get(
-          //   branchBlock.terminal.consequent,
-          // )!;
-          // const alternate = fn.body.blocks.get(branchBlock.terminal.alternate)!;
-
-          // if (consequent.terminal.kind === 'goto') {
-          //   consequent.kind = 'block';
-          // }
-
-          // if (alternate.terminal.kind === 'goto') {
-          //   alternate.kind = 'block';
-          // }
         }
 
         break;

@@ -63,7 +63,13 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
       loc: null,
       suggestions: null,
     });
-    if (predecessor.terminal.kind !== 'goto' || predecessor.kind !== 'block') {
+
+    const predecessorValueWithNoInstructions =
+      predecessor.kind === 'value' && predecessor.instructions.length === 0;
+    if (
+      predecessor.terminal.kind !== 'goto' ||
+      (predecessor.kind !== 'block' && !predecessorValueWithNoInstructions)
+    ) {
       /*
        * The predecessor is not guaranteed to transfer control to this block,
        * they aren't consecutive.
