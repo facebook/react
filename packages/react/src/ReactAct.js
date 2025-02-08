@@ -46,8 +46,9 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
     const prevActQueue = ReactSharedInternals.actQueue;
     const prevActScopeDepth = actScopeDepth;
     actScopeDepth++;
-    const queue = (ReactSharedInternals.actQueue =
-      prevActQueue !== null ? prevActQueue : []);
+    const queue = (ReactSharedInternals.actQueue = prevActQueue
+      ? prevActQueue
+      : []);
     // Used to reproduce behavior of `batchedUpdates` in legacy mode. Only
     // set to `true` while the given callback is executed, not for updates
     // triggered during an async event, because this is how the legacy
