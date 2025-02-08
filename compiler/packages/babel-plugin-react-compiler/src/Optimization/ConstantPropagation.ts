@@ -119,6 +119,8 @@ function applyConstantPropagation(
       }
     }
 
+    const localReassignments = new Map<IdentifierId, Place>();
+
     for (let i = 0; i < block.instructions.length; i++) {
       if (block.kind === 'sequence' && i === block.instructions.length - 1) {
         /*
@@ -131,6 +133,23 @@ function applyConstantPropagation(
       const value = evaluateInstruction(constants, instr);
       if (value !== null) {
         constants.set(instr.lvalue.identifier.id, value);
+      }
+
+      switch (instr.value.kind) {
+        case 'StoreLocal': {
+          const identifierValue = localReassignments.get(
+            instr.value.value.identifier.id,
+          );
+          if (identifierValue != null) {
+            // constants.set(value.lvalue.place.identifier.id, placeValue);
+            instr.value.value = identifierValue;
+          }
+
+          localReassignments.set(
+            instr.value.lvalue.place.identifier.id,
+            instr.value.value,
+          );
+        }
       }
     }
   }
