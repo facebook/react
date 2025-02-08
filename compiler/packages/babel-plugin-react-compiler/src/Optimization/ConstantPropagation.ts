@@ -180,36 +180,61 @@ function applyConstantPropagation(
 
           // I think I can only set this if the block isn't
           // used in a value position by its predecessor
-          block.kind = 'block';
+          // block.kind = 'block';
 
-          block.terminal = {
-            kind: 'goto',
-            variant: GotoVariant.Break,
-            block: targetBlockId,
-            id: terminal.id,
-            loc: terminal.loc,
-          };
-
-          const fallthrough = fn.body.blocks.get(
-            branchBlock.terminal.fallthrough,
+          const chosenBlock = fn.body.blocks.get(targetBlockId);
+          const otherBlock = fn.body.blocks.get(
+            branchBlock.terminal.consequent === targetBlockId
+              ? branchBlock.terminal.alternate
+              : branchBlock.terminal.consequent,
           );
 
-          if (fallthrough?.terminal.kind == 'goto') {
-            fallthrough.kind = 'block';
+          if (chosenBlock?.terminal.kind === 'goto') {
+            block.terminal = {
+              kind: 'goto',
+              variant: GotoVariant.Break,
+              block: targetBlockId,
+              id: terminal.id,
+              loc: terminal.loc,
+            };
+
+            // debugger;
+            // console.log(chosenBlock.id, Array.from(chosenBlock.preds));
+            // const allPredsAreBlockBlocks = Array.from(chosenBlock.preds).every(
+            //   predId => {
+            //     const predBlock = fn.body.blocks.get(predId);
+            //     return predBlock?.kind === 'block';
+            //   },
+            // );
+
+            // console.log('allPredsAreBlockBlocks', allPredsAreBlockBlocks);
+
+            // chosenBlock.kind = 'block';
+            // if (allPredsAreBlockBlocks) {
+            //   block.kind = 'block';
+            // }
           }
 
-          const consequent = fn.body.blocks.get(
-            branchBlock.terminal.consequent,
-          )!;
-          const alternate = fn.body.blocks.get(branchBlock.terminal.alternate)!;
+          // const fallthrough = fn.body.blocks.get(
+          //   branchBlock.terminal.fallthrough,
+          // );
 
-          if (consequent.terminal.kind === 'goto') {
-            consequent.kind = 'block';
-          }
+          // if (fallthrough?.terminal.kind == 'goto') {
+          //   fallthrough.kind = 'block';
+          // }
 
-          if (alternate.terminal.kind === 'goto') {
-            alternate.kind = 'block';
-          }
+          // const consequent = fn.body.blocks.get(
+          //   branchBlock.terminal.consequent,
+          // )!;
+          // const alternate = fn.body.blocks.get(branchBlock.terminal.alternate)!;
+
+          // if (consequent.terminal.kind === 'goto') {
+          //   consequent.kind = 'block';
+          // }
+
+          // if (alternate.terminal.kind === 'goto') {
+          //   alternate.kind = 'block';
+          // }
         }
 
         break;
