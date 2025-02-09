@@ -163,6 +163,7 @@ type BlockedChunk<T> = {
   status: 'blocked',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
+  intermediaryValue?: mixed,
   _response: Response,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
@@ -568,6 +569,7 @@ type InitializationHandler = {
 };
 let initializingHandler: null | InitializationHandler = null;
 let initializingChunk: null | BlockedChunk<any> = null;
+let isParsingRootModel = false;
 
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   const prevHandler = initializingHandler;
@@ -584,9 +586,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   cyclicChunk.value = null;
   cyclicChunk.reason = null;
 
-  if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    initializingChunk = cyclicChunk;
-  }
+  initializingChunk = cyclicChunk;
 
   try {
     const value: T = parseModel(chunk._response, resolvedModel);
@@ -620,9 +620,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     erroredChunk.reason = error;
   } finally {
     initializingHandler = prevHandler;
-    if (enableProfilerTimer && enableComponentPerformanceTrack) {
-      initializingChunk = prevChunk;
-    }
+    initializingChunk = prevChunk;
   }
 }
 
@@ -876,8 +874,18 @@ function createElement(
       return createLazyChunkWrapper(erroredChunk);
     }
     if (handler.deps > 0) {
-      // We have blocked references inside this Element but we can turn this into
-      // a Lazy node referencing this Element to let everything around it proceed.
+      // We have blocked references inside this element but we can turn this
+      // into a Lazy node referencing this element to let everything around it
+      // proceed. If the element is for the root model, we store it as an
+      // intermediary value on the initializing chunk, so that referencing
+      // models can peek into it to resolve their value.
+      if (
+        isParsingRootModel &&
+        initializingChunk &&
+        !initializingChunk.intermediaryValue
+      ) {
+        initializingChunk.intermediaryValue = element;
+      }
       const blockedChunk: BlockedChunk<React$Element<any>> =
         createBlockedChunk(response);
       handler.value = element;
@@ -967,6 +975,15 @@ function waitForReference<T>(
         } else if (chunk.status === INITIALIZED) {
           value = chunk.value;
           continue;
+        } else if (
+          // For the first iteration of the path we need the root model of the
+          // referenced chunk. If we have an intermediary value for it, we can
+          // peek into it, even if it's not fully resolved yet.
+          i === 1 &&
+          referencedChunk.status === BLOCKED &&
+          referencedChunk.intermediaryValue
+        ) {
+          value = referencedChunk.intermediaryValue;
         } else {
           // If we're not yet initialized we need to skip what we've already drilled
           // through and then wait for the next value to become available.
@@ -1410,13 +1427,11 @@ function parseModelString(
         // Lazy node
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
-        if (enableProfilerTimer && enableComponentPerformanceTrack) {
-          if (
-            initializingChunk !== null &&
-            isArray(initializingChunk._children)
-          ) {
-            initializingChunk._children.push(chunk);
-          }
+        if (
+          initializingChunk !== null &&
+          isArray(initializingChunk._children)
+        ) {
+          initializingChunk._children.push(chunk);
         }
         // We create a React.lazy wrapper around any lazy values.
         // When passed into React, we'll know how to suspend on this.
@@ -1430,13 +1445,11 @@ function parseModelString(
         }
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
-        if (enableProfilerTimer && enableComponentPerformanceTrack) {
-          if (
-            initializingChunk !== null &&
-            isArray(initializingChunk._children)
-          ) {
-            initializingChunk._children.push(chunk);
-          }
+        if (
+          initializingChunk !== null &&
+          isArray(initializingChunk._children)
+        ) {
+          initializingChunk._children.push(chunk);
         }
         return chunk;
       }
@@ -3393,6 +3406,7 @@ function parseModel<T>(response: Response, json: UninitializedModel): T {
 function createFromJSONCallback(response: Response) {
   // $FlowFixMe[missing-this-annot]
   return function (key: string, value: JSONValue) {
+    isParsingRootModel = key === '';
     if (typeof value === 'string') {
       // We can't use .bind here because we need the "this" value.
       return parseModelString(response, this, key, value);
