@@ -538,6 +538,7 @@ describe('ReactFlightDOMBrowser', () => {
       shared,
       map,
     }) {
+      expect(map.get(42)).toBe(shared);
       return JSON.stringify({shared, map: Array.from(map)});
     });
 
