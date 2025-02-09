@@ -16,6 +16,7 @@ import type {
   Usable,
   ReactCustomFormAction,
   Awaited,
+  StartGesture,
 } from 'shared/ReactTypes';
 
 import type {ResumableState} from './ReactFizzConfig';
@@ -38,7 +39,10 @@ import {
 } from './ReactFizzConfig';
 import {createFastHash} from './ReactServerStreamConfig';
 
-import {enableUseEffectEventHook} from 'shared/ReactFeatureFlags';
+import {
+  enableUseEffectEventHook,
+  enableSwipeTransition,
+} from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
   REACT_CONTEXT_TYPE,
@@ -795,6 +799,19 @@ function useMemoCache(size: number): Array<mixed> {
   return data;
 }
 
+function unsupportedStartGesture() {
+  throw new Error('startGesture cannot be called during server rendering.');
+}
+
+function useSwipeTransition<T>(
+  previous: T,
+  current: T,
+  next: T,
+): [T, StartGesture] {
+  resolveCurrentlyRenderingComponent();
+  return [current, unsupportedStartGesture];
+}
+
 function noop(): void {}
 
 function clientHookNotSupported() {
@@ -837,31 +854,36 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
   : {
       readContext,
       use,
+      useCallback,
       useContext,
+      useEffect: clientHookNotSupported,
+      useImperativeHandle: clientHookNotSupported,
+      useInsertionEffect: clientHookNotSupported,
+      useLayoutEffect: clientHookNotSupported,
       useMemo,
       useReducer: clientHookNotSupported,
       useRef: clientHookNotSupported,
       useState: clientHookNotSupported,
-      useInsertionEffect: clientHookNotSupported,
-      useLayoutEffect: clientHookNotSupported,
-      useCallback,
-      useImperativeHandle: clientHookNotSupported,
-      useEffect: clientHookNotSupported,
       useDebugValue: noop,
       useDeferredValue: clientHookNotSupported,
       useTransition: clientHookNotSupported,
-      useId,
       useSyncExternalStore: clientHookNotSupported,
-      useOptimistic,
-      useActionState,
-      useFormState: useActionState,
+      useId,
       useHostTransitionStatus,
+      useFormState: useActionState,
+      useActionState,
+      useOptimistic,
       useMemoCache,
       useCacheRefresh,
     };
 
 if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = useEffectEvent;
+}
+if (enableSwipeTransition) {
+  HooksDispatcher.useSwipeTransition = supportsClientAPIs
+    ? useSwipeTransition
+    : clientHookNotSupported;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);

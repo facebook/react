@@ -14,6 +14,8 @@ import type {
   Thenable,
   RejectedThenable,
   Awaited,
+  StartGesture,
+  GestureProvider,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -42,6 +44,7 @@ import {
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
+  enableSwipeTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -3960,6 +3963,47 @@ function markUpdateInDevTools<A>(fiber: Fiber, lane: Lane, action: A): void {
   }
 }
 
+type SwipeTransitionUpdateQueue = {
+  dispatch: StartGesture,
+};
+
+function startGesture(
+  fiber: Fiber,
+  queue: SwipeTransitionUpdateQueue,
+  gestureProvider: GestureProvider,
+): () => void {
+  return function cancelGesture() {};
+}
+
+function mountSwipeTransition<T>(
+  previous: T,
+  current: T,
+  next: T,
+): [T, StartGesture] {
+  const queue: SwipeTransitionUpdateQueue = {
+    dispatch: (null: any),
+  };
+  const startGestureOnHook: StartGesture = (queue.dispatch = (startGesture.bind(
+    null,
+    currentlyRenderingFiber,
+    queue,
+  ): any));
+  const hook = mountWorkInProgressHook();
+  hook.queue = queue;
+  return [current, startGestureOnHook];
+}
+
+function updateSwipeTransition<T>(
+  previous: T,
+  current: T,
+  next: T,
+): [T, StartGesture] {
+  const hook = updateWorkInProgressHook();
+  const queue: SwipeTransitionUpdateQueue = hook.queue;
+  const startGestureOnHook: StartGesture = queue.dispatch;
+  return [current, startGestureOnHook];
+}
+
 export const ContextOnlyDispatcher: Dispatcher = {
   readContext,
 
@@ -3988,6 +4032,10 @@ export const ContextOnlyDispatcher: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
+}
+if (enableSwipeTransition) {
+  (ContextOnlyDispatcher: Dispatcher).useSwipeTransition =
+    throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -4019,6 +4067,10 @@ const HooksDispatcherOnMount: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
 }
+if (enableSwipeTransition) {
+  (HooksDispatcherOnMount: Dispatcher).useSwipeTransition =
+    mountSwipeTransition;
+}
 
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
@@ -4049,6 +4101,10 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
+if (enableSwipeTransition) {
+  (HooksDispatcherOnUpdate: Dispatcher).useSwipeTransition =
+    updateSwipeTransition;
+}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -4078,6 +4134,10 @@ const HooksDispatcherOnRerender: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
+}
+if (enableSwipeTransition) {
+  (HooksDispatcherOnRerender: Dispatcher).useSwipeTransition =
+    updateSwipeTransition;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -4296,6 +4356,18 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
+  if (enableSwipeTransition) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
+        mountHookTypesDev();
+        return mountSwipeTransition(previous, current, next);
+      };
+  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4477,6 +4549,18 @@ if (__DEV__) {
         currentHookNameInDev = 'useEffectEvent';
         updateHookTypesDev();
         return mountEvent(callback);
+      };
+  }
+  if (enableSwipeTransition) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
+        updateHookTypesDev();
+        return updateSwipeTransition(previous, current, next);
       };
   }
 
@@ -4662,6 +4746,18 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
+  if (enableSwipeTransition) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
+        updateHookTypesDev();
+        return updateSwipeTransition(previous, current, next);
+      };
+  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4843,6 +4939,18 @@ if (__DEV__) {
         currentHookNameInDev = 'useEffectEvent';
         updateHookTypesDev();
         return updateEvent(callback);
+      };
+  }
+  if (enableSwipeTransition) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
+        updateHookTypesDev();
+        return updateSwipeTransition(previous, current, next);
       };
   }
 
@@ -5053,6 +5161,19 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
+  if (enableSwipeTransition) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountSwipeTransition(previous, current, next);
+      };
+  }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5261,6 +5382,19 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
+  if (enableSwipeTransition) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateSwipeTransition(previous, current, next);
+      };
+  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5467,6 +5601,19 @@ if (__DEV__) {
         warnInvalidHookAccess();
         updateHookTypesDev();
         return updateEvent(callback);
+      };
+  }
+  if (enableSwipeTransition) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateSwipeTransition(previous, current, next);
       };
   }
 }
