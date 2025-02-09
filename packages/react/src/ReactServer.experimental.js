@@ -30,7 +30,6 @@ import {
   useCallback,
   useDebugValue,
   useMemo,
-  useActionState,
   getCacheForType,
 } from './ReactHooks';
 import {forwardRef} from './ReactForwardRef';
@@ -77,7 +76,6 @@ export {
   useCallback,
   useDebugValue,
   useMemo,
-  useActionState,
   version,
   // Experimental
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
