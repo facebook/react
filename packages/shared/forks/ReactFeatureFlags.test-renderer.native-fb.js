@@ -67,6 +67,7 @@ export const enableHydrationLaneScheduling = true;
 export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
+export const enableSwipeTransition = false;
 export const enableRemoveConsolePatches = false;
 export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
