@@ -2,7 +2,7 @@ name: (Runtime) Discord Notify
 
 on:
   pull_request_target:
-    types: [opened]
+    types: [opened, ready_for_review]
     paths-ignore:
       - compiler/**
       - .github/workflows/compiler_**.yml
