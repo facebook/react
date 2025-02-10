@@ -1427,11 +1427,13 @@ function parseModelString(
         // Lazy node
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
-        if (
-          initializingChunk !== null &&
-          isArray(initializingChunk._children)
-        ) {
-          initializingChunk._children.push(chunk);
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          if (
+            initializingChunk !== null &&
+            isArray(initializingChunk._children)
+          ) {
+            initializingChunk._children.push(chunk);
+          }
         }
         // We create a React.lazy wrapper around any lazy values.
         // When passed into React, we'll know how to suspend on this.
@@ -1445,11 +1447,13 @@ function parseModelString(
         }
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
-        if (
-          initializingChunk !== null &&
-          isArray(initializingChunk._children)
-        ) {
-          initializingChunk._children.push(chunk);
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          if (
+            initializingChunk !== null &&
+            isArray(initializingChunk._children)
+          ) {
+            initializingChunk._children.push(chunk);
+          }
         }
         return chunk;
       }
