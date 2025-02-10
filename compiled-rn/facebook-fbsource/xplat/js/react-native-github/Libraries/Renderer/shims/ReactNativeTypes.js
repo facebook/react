@@ -7,10 +7,11 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<694ba49f9b85f1cc713053fe7628684a>>
+ * @generated SignedSource<<e30e25c8e1f9ee174d679979f0ee3fba>>
  */
 
 import type {ElementRef, ElementType, MixedElement} from 'react';
+import {type PublicRootInstance} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -232,7 +233,6 @@ export opaque type Node = mixed;
 export opaque type InternalInstanceHandle = mixed;
 type PublicInstance = mixed;
 type PublicTextInstance = mixed;
-export opaque type PublicRootInstance = mixed;
 
 export type ReactFabricType = {
   findHostInstance_DEPRECATED<TElementType: ElementType>(
@@ -262,6 +262,7 @@ export type ReactFabricType = {
   getPublicInstanceFromInternalInstanceHandle(
     internalInstanceHandle: InternalInstanceHandle,
   ): PublicInstance | PublicTextInstance | null,
+  getPublicInstanceFromRootTag(rootTag: number): PublicRootInstance | null,
   ...
 };
 
