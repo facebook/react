@@ -7,10 +7,11 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<e30e25c8e1f9ee174d679979f0ee3fba>>
+ * @generated SignedSource<<c1ce40ef01008fe3cd38df1d9ff46f56>>
  */
 
 import type {ElementRef, ElementType, MixedElement} from 'react';
+// $FlowFixMe[nonstrict-import] TODO(@rubennorte)
 import {type PublicRootInstance} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 export type MeasureOnSuccessCallback = (
