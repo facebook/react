@@ -14,13 +14,13 @@
     "jest-diff": "^29.4.1",
     "prop-types": "^15.6.0",
     "query-string": "^4.2.3",
-    "react": "^15.4.1",
-    "react-dom": "^15.4.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "semver": "^5.5.0"
   },
   "scripts": {
     "dev": "react-scripts start",
-    "predev": "cp -a ../../build/oss-stable/. node_modules",
+    "predev": "cp -a ../../build/oss-experimental/. node_modules",
     "build": "react-scripts build && cp build/index.html build/200.html",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"

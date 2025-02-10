@@ -8,6 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
@@ -224,10 +225,11 @@ export function resolveUpdatePriority(): EventPriority {
   }
   return DefaultEventPriority;
 }
+
+export function trackSchedulerEvent(): void {}
 export function resolveEventType(): null | string {
   return null;
 }
-
 export function resolveEventTimeStamp(): number {
   return -1.1;
 }
@@ -304,6 +306,83 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
+export function applyViewTransitionName(
+  instance: Instance,
+  name: string,
+  className: ?string,
+): void {
+  // Noop
+}
+
+export function restoreViewTransitionName(
+  instance: Instance,
+  props: Props,
+): void {
+  // Noop
+}
+
+export function cancelViewTransitionName(
+  instance: Instance,
+  name: string,
+  props: Props,
+): void {
+  // Noop
+}
+
+export function cancelRootViewTransitionName(rootContainer: Container): void {
+  // Noop
+}
+
+export function restoreRootViewTransitionName(rootContainer: Container): void {
+  // Noop
+}
+
+export type InstanceMeasurement = null;
+
+export function measureInstance(instance: Instance): InstanceMeasurement {
+  return null;
+}
+
+export function wasInstanceInViewport(
+  measurement: InstanceMeasurement,
+): boolean {
+  return true;
+}
+
+export function hasInstanceChanged(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  return false;
+}
+
+export function hasInstanceAffectedParent(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  return false;
+}
+
+export function startViewTransition(
+  rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  layoutCallback: () => void,
+  afterMutationCallback: () => void,
+  spawnedWorkCallback: () => void,
+  passiveCallback: () => mixed,
+): boolean {
+  return false;
+}
+
+export type ViewTransitionInstance = null | {name: string, ...};
+
+export function createViewTransitionInstance(
+  name: string,
+): ViewTransitionInstance {
+  return null;
+}
+
 export function getInstanceFromNode(mockNode: Object): Object | null {
   const instance = nodeToInstanceMap.get(mockNode);
   if (instance !== undefined) {
@@ -356,6 +435,8 @@ export function preloadInstance(type: Type, props: Props): boolean {
 export function startSuspendingCommit(): void {}
 
 export function suspendInstance(type: Type, props: Props): void {}
+
+export function suspendOnActiveViewTransition(container: Container): void {}
 
 export function waitForCommitToBeReady(): null {
   return null;

@@ -8,16 +8,21 @@
 import {codeFrameColumns} from '@babel/code-frame';
 import type {PluginObj} from '@babel/core';
 import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/HIR/Environment';
+import type {printFunctionWithOutlined as PrintFunctionWithOutlined} from 'babel-plugin-react-compiler/src/HIR/PrintHIR';
+import type {printReactiveFunctionWithOutlined as PrintReactiveFunctionWithOutlined} from 'babel-plugin-react-compiler/src/ReactiveScopes/PrintReactiveFunction';
 import {TransformResult, transformFixtureInput} from './compiler';
 import {
   COMPILER_PATH,
   COMPILER_INDEX_PATH,
-  LOGGER_PATH,
   PARSE_CONFIG_PRAGMA_PATH,
+  PRINT_HIR_PATH,
+  PRINT_REACTIVE_IR_PATH,
 } from './constants';
 import {TestFixture, getBasename, isExpectError} from './fixture-utils';
 import {TestResult, writeOutputToString} from './reporter';
 import {runSprout} from './sprout';
+import {CompilerPipelineValue} from 'babel-plugin-react-compiler/src';
+import chalk from 'chalk';
 
 const originalConsoleError = console.error;
 
@@ -64,20 +69,56 @@ async function compile(
     const {Effect: EffectEnum, ValueKind: ValueKindEnum} = require(
       COMPILER_INDEX_PATH,
     );
-    const {toggleLogging} = require(LOGGER_PATH);
+    const {printFunctionWithOutlined} = require(PRINT_HIR_PATH) as {
+      printFunctionWithOutlined: typeof PrintFunctionWithOutlined;
+    };
+    const {printReactiveFunctionWithOutlined} = require(
+      PRINT_REACTIVE_IR_PATH,
+    ) as {
+      printReactiveFunctionWithOutlined: typeof PrintReactiveFunctionWithOutlined;
+    };
+
+    let lastLogged: string | null = null;
+    const debugIRLogger = shouldLog
+      ? (value: CompilerPipelineValue) => {
+          let printed: string;
+          switch (value.kind) {
+            case 'hir':
+              printed = printFunctionWithOutlined(value.value);
+              break;
+            case 'reactive':
+              printed = printReactiveFunctionWithOutlined(value.value);
+              break;
+            case 'debug':
+              printed = value.value;
+              break;
+            case 'ast':
+              // skip printing ast as we already write fixture output JS
+              printed = '(ast)';
+              break;
+          }
+
+          if (printed !== lastLogged) {
+            lastLogged = printed;
+            console.log(`${chalk.green(value.name)}:\n ${printed}\n`);
+          } else {
+            console.log(`${chalk.blue(value.name)}: (no change)\n`);
+          }
+        }
+      : () => {};
     const {parseConfigPragmaForTests} = require(PARSE_CONFIG_PRAGMA_PATH) as {
       parseConfigPragmaForTests: typeof ParseConfigPragma;
     };
 
     // only try logging if we filtered out all but one fixture,
     // since console log order is non-deterministic
-    toggleLogging(shouldLog);
     const result = await transformFixtureInput(
       input,
       fixturePath,
       parseConfigPragmaForTests,
       BabelPluginReactCompiler,
       includeEvaluator,
+      debugIRLogger,
       EffectEnum,
       ValueKindEnum,
     );

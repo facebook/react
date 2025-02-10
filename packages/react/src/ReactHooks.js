@@ -18,11 +18,7 @@ import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {enableAsyncActions} from 'shared/ReactFeatureFlags';
-import {
-  enableContextProfiling,
-  enableLazyContextPropagation,
-} from '../../shared/ReactFeatureFlags';
+import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -67,27 +63,6 @@ export function useContext<T>(Context: ReactContext<T>): T {
     }
   }
   return dispatcher.useContext(Context);
-}
-
-export function unstable_useContextWithBailout<T>(
-  context: ReactContext<T>,
-  select: (T => Array<mixed>) | null,
-): T {
-  if (!(enableLazyContextPropagation && enableContextProfiling)) {
-    throw new Error('Not implemented.');
-  }
-
-  const dispatcher = resolveDispatcher();
-  if (__DEV__) {
-    if (context.$$typeof === REACT_CONSUMER_TYPE) {
-      console.error(
-        'Calling useContext(Context.Consumer) is not supported and will cause bugs. ' +
-          'Did you mean to call useContext(Context) instead?',
-      );
-    }
-  }
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
-  return dispatcher.unstable_useContextWithBailout(context, select);
 }
 
 export function useState<S>(
@@ -212,7 +187,7 @@ export function use<T>(usable: Usable<T>): T {
   return dispatcher.use(usable);
 }
 
-export function useMemoCache(size: number): Array<any> {
+export function useMemoCache(size: number): Array<mixed> {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useMemoCache(size);
@@ -226,12 +201,32 @@ export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   return dispatcher.useEffectEvent(callback);
 }
 
+export function useResourceEffect(
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+): void {
+  if (!enableUseResourceEffectHook) {
+    throw new Error('Not implemented.');
+  }
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
+  return dispatcher.useResourceEffect(
+    create,
+    createDeps,
+    update,
+    updateDeps,
+    destroy,
+  );
+}
+
 export function useOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useOptimistic(passthrough, reducer);
 }
 
@@ -240,11 +235,6 @@ export function useActionState<S, P>(
   initialState: Awaited<S>,
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  } else {
-    const dispatcher = resolveDispatcher();
-    // $FlowFixMe[not-a-function] This is unstable, thus optional
-    return dispatcher.useActionState(action, initialState, permalink);
-  }
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useActionState(action, initialState, permalink);
 }

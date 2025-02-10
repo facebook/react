@@ -420,7 +420,10 @@ function* generateInstructionTypes(
       break;
     }
     default:
-      assertExhaustive(value, `Unhandled instruction value kind: ${value}`);
+      assertExhaustive(
+        value,
+        `Unhandled instruction value kind: ${(value as any).kind}`,
+      );
   }
 }
 

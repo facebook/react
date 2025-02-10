@@ -1798,9 +1798,19 @@ describe('ReactIncremental', () => {
       'ShowBoth {"locale":"fr"}',
     ]);
     assertConsoleErrorDev([
-      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'ShowLocale uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
-      'ShowBoth uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+      'Intl uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Intl (at **)',
+      'ShowLocale uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ShowLocale (at **)' +
+        (gate('enableOwnerStacks') ? '' : '\n    in Intl (at **)'),
+      'ShowBoth uses the legacy contextTypes API which will be removed soon. ' +
+        'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ShowBoth (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in div (at **)' + '\n    in Intl (at **)'),
     ]);
 
     ReactNoop.render(
@@ -1853,8 +1863,18 @@ describe('ReactIncremental', () => {
       'ShowBoth {"locale":"en"}',
     ]);
     assertConsoleErrorDev([
-      'Router uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'ShowRoute uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'Router uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Router (at **)' +
+        (gate('enableOwnerStacks') ? '' : '\n    in Intl (at **)'),
+      'ShowRoute uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks')
+          ? '    in Indirection (at **)'
+          : '    in ShowRoute (at **)\n' +
+            '    in Indirection (at **)\n' +
+            '    in Router (at **)\n' +
+            '    in Intl (at **)'),
     ]);
   });
 
@@ -1890,8 +1910,12 @@ describe('ReactIncremental', () => {
       'Recurse {"n":0}',
     ]);
     assertConsoleErrorDev([
-      'Recurse uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Recurse uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'Recurse uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Recurse (at **)',
+      'Recurse uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Recurse (at **)',
     ]);
   });
 
@@ -1943,8 +1967,13 @@ describe('ReactIncremental', () => {
       'ShowLocale {"locale":"fr"}',
     ]);
     assertConsoleErrorDev([
-      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'ShowLocale uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'Intl uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Intl (at **)',
+      'ShowLocale uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ShowLocale (at **)' +
+        (gate('enableOwnerStacks') ? '' : '\n    in Intl (at **)'),
     ]);
 
     await waitForAll([
@@ -2034,9 +2063,27 @@ describe('ReactIncremental', () => {
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
     assertConsoleErrorDev([
-      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'ShowLocaleClass uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
-      'ShowLocaleFn uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+      'Intl uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Intl (at **)',
+      'ShowLocaleClass uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ShowLocaleClass (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in Stateful (at **)' +
+            '\n    in IndirectionClass (at **)' +
+            '\n    in IndirectionFn (at **)' +
+            '    in Intl (at **)'),
+      'ShowLocaleFn uses the legacy contextTypes API which will be removed soon. ' +
+        'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ShowLocaleFn (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in Stateful (at **)' +
+            '\n    in IndirectionClass (at **)' +
+            '\n    in IndirectionFn (at **)' +
+            '    in Intl (at **)'),
     ]);
 
     statefulInst.setState({x: 1});
@@ -2125,9 +2172,28 @@ describe('ReactIncremental', () => {
     ]);
 
     assertConsoleErrorDev([
-      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'ShowLocaleClass uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
-      'ShowLocaleFn uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+      'Intl uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Intl (at **)\n') +
+        '    in Stateful (at **)',
+      'ShowLocaleClass uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ShowLocaleClass (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in IndirectionClass (at **)' +
+            '\n    in IndirectionFn (at **)' +
+            '\n    in Intl (at **)' +
+            '\n    in Stateful (at **)'),
+      'ShowLocaleFn uses the legacy contextTypes API which will be removed soon. ' +
+        'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ShowLocaleFn (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in IndirectionClass (at **)' +
+            '\n    in IndirectionFn (at **)' +
+            '\n    in Intl (at **)' +
+            '\n    in Stateful (at **)'),
     ]);
 
     statefulInst.setState({locale: 'gr'});
@@ -2187,7 +2253,11 @@ describe('ReactIncremental', () => {
     await waitForAll([]);
 
     assertConsoleErrorDev([
-      'Child uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Child (at **)\n') +
+        '    in Middle (at **)\n' +
+        '    in Root (at **)',
     ]);
 
     // Trigger an update in the middle of the tree
@@ -2235,8 +2305,12 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Root />);
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'ContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'ContextProvider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in ContextProvider (at **)\n') +
+        '    in Root (at **)',
     ]);
 
     // Trigger an update in the middle of the tree
@@ -2244,9 +2318,12 @@ describe('ReactIncremental', () => {
     instance.setState({
       throwError: true,
     });
-    await expect(async () => await waitForAll([])).toErrorDev(
-      'Error boundaries should implement getDerivedStateFromError()',
-    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Root: Error boundaries should implement getDerivedStateFromError(). ' +
+        'In that method, return a state update to display an error message or fallback UI.\n' +
+        '    in Root (at **)',
+    ]);
   });
 
   // @gate !disableLegacyContext || !__DEV__
@@ -2292,7 +2369,9 @@ describe('ReactIncremental', () => {
     ]);
 
     assertConsoleErrorDev([
-      'MyComponent uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'MyComponent uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in MyComponent (at **)',
     ]);
   });
 
@@ -2427,8 +2506,15 @@ describe('ReactIncremental', () => {
 
     await waitForAll(['count:0']);
     assertConsoleErrorDev([
-      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in TopContextProvider (at **)',
+      'Child uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Child (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in Middle (at **)' + '\n    in TopContextProvider (at **)'),
     ]);
     instance.updateCount();
     await waitForAll(['count:1']);
@@ -2487,9 +2573,22 @@ describe('ReactIncremental', () => {
 
     await waitForAll(['count:0']);
     assertConsoleErrorDev([
-      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in TopContextProvider (at **)',
+      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in MiddleContextProvider (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in TopContextProvider (at **)'),
+      'Child uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Child (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in MiddleContextProvider (at **)' +
+            '\n    in TopContextProvider (at **)'),
     ]);
     instance.updateCount();
     await waitForAll(['count:1']);
@@ -2557,9 +2656,24 @@ describe('ReactIncremental', () => {
 
     await waitForAll(['count:0']);
     assertConsoleErrorDev([
-      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in TopContextProvider (at **)',
+      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in MiddleContextProvider (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in MiddleScu (at **)' +
+            '\n    in TopContextProvider (at **)'),
+      'Child uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Child (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in MiddleContextProvider (at **)' +
+            '\n    in MiddleScu (at **)' +
+            '\n    in TopContextProvider (at **)'),
     ]);
     instance.updateCount();
     await waitForAll([]);
@@ -2637,9 +2751,24 @@ describe('ReactIncremental', () => {
 
     await waitForAll(['count:0, name:brian']);
     assertConsoleErrorDev([
-      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in TopContextProvider (at **)',
+      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in MiddleContextProvider (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in MiddleScu (at **)' +
+            '\n    in TopContextProvider (at **)'),
+      'Child uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Child (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in MiddleContextProvider (at **)' +
+            '\n    in MiddleScu (at **)' +
+            '\n    in TopContextProvider (at **)'),
     ]);
     topInstance.updateCount();
     await waitForAll([]);
@@ -2743,11 +2872,19 @@ describe('ReactIncremental', () => {
           <Boundary />
         </React.StrictMode>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev([
-        'Boundary uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
-        'Legacy context API has been detected within a strict-mode tree',
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'Boundary uses the legacy contextTypes API which will soon be removed. ' +
+          'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+          '    in Boundary (at **)',
+        'Legacy context API has been detected within a strict-mode tree.\n' +
+          '\n' +
+          'The old API will be supported in all 16.x releases, but applications using it should migrate to the new version.\n' +
+          '\n' +
+          'Please update the following components: Boundary\n' +
+          '\n' +
+          'Learn more about this warning here: https://react.dev/link/legacy-context\n' +
+          '    in Boundary (at **)',
       ]);
     }
 

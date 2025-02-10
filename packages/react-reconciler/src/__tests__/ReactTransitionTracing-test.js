@@ -14,6 +14,7 @@ let Scheduler;
 let act;
 let waitForAll;
 let assertLog;
+let assertConsoleErrorDev;
 
 let getCacheForType;
 let useState;
@@ -43,11 +44,11 @@ describe('ReactInteractionTracing', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
 
-    act = require('internal-test-utils').act;
-
     const InternalTestUtils = require('internal-test-utils');
+    act = InternalTestUtils.act;
     waitForAll = InternalTestUtils.waitForAll;
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
 
     useState = React.useState;
     startTransition = React.startTransition;
@@ -1412,14 +1413,12 @@ describe('ReactInteractionTracing', () => {
       root.render(<App navigate={true} markerName="marker two" />);
       ReactNoop.expire(1000);
       await advanceTimers(1000);
-      await expect(
-        async () =>
-          await waitForAll([
-            'Suspend [Page Two]',
-            'Loading...',
-            'onMarkerIncomplete(transition one, marker one, 1000, [{endTime: 3000, name: marker one, newName: marker two, type: marker}])',
-          ]),
-      ).toErrorDev('');
+
+      await waitForAll([
+        'Suspend [Page Two]',
+        'Loading...',
+        'onMarkerIncomplete(transition one, marker one, 1000, [{endTime: 3000, name: marker one, newName: marker two, type: marker}])',
+      ]);
 
       resolveText('Page Two');
       ReactNoop.expire(1000);
@@ -2220,17 +2219,18 @@ describe('ReactInteractionTracing', () => {
       );
       ReactNoop.expire(1000);
       await advanceTimers(1000);
-      await expect(async () => {
-        // onMarkerComplete shouldn't be called for transitions with
-        // new keys
-        await waitForAll([
-          'two',
-          'onTransitionStart(transition two, 1000)',
-          'onTransitionComplete(transition two, 1000, 2000)',
-        ]);
-      }).toErrorDev(
-        'Changing the name of a tracing marker after mount is not supported.',
-      );
+      // onMarkerComplete shouldn't be called for transitions with
+      // new keys
+      await waitForAll([
+        'two',
+        'onTransitionStart(transition two, 1000)',
+        'onTransitionComplete(transition two, 1000, 2000)',
+      ]);
+      assertConsoleErrorDev([
+        'Changing the name of a tracing marker after mount is not supported. ' +
+          'To remount the tracing marker, pass it a new key.\n' +
+          '    in App (at **)',
+      ]);
       startTransition(
         () => root.render(<App markerName="three" markerKey="new key" />),
         {

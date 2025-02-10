@@ -111,8 +111,14 @@ describe('ReactFunctionComponent', () => {
     });
 
     assertConsoleErrorDev([
-      'GrandParent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'GrandParent uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in GrandParent (at **)',
+      'Child uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Child (at **)\n') +
+        '    in Parent (at **)\n' +
+        '    in GrandParent (at **)',
     ]);
 
     expect(el.textContent).toBe('test');
@@ -132,15 +138,15 @@ describe('ReactFunctionComponent', () => {
 
     const container = document.createElement('div');
 
-    await expect(async () => {
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<FunctionComponentWithChildContext />);
-      });
-    }).toErrorDev(
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<FunctionComponentWithChildContext />);
+    });
+    assertConsoleErrorDev([
       'FunctionComponentWithChildContext: Function ' +
-        'components do not support getDerivedStateFromProps.',
-    );
+        'components do not support getDerivedStateFromProps.\n' +
+        '    in FunctionComponentWithChildContext (at **)',
+    ]);
   });
 
   it('should warn for childContextTypes on a function component', async () => {
@@ -154,14 +160,16 @@ describe('ReactFunctionComponent', () => {
 
     const container = document.createElement('div');
 
-    await expect(async () => {
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<FunctionComponentWithChildContext name="A" />);
-      });
-    }).toErrorDev(
-      'childContextTypes cannot ' + 'be defined on a function component.',
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<FunctionComponentWithChildContext name="A" />);
+    });
+    assertConsoleErrorDev([
+      'childContextTypes cannot ' +
+        'be defined on a function component.\n' +
+        '  FunctionComponentWithChildContext.childContextTypes = ...\n' +
+        '    in FunctionComponentWithChildContext (at **)',
+    ]);
   });
 
   it('should not throw when stateless component returns undefined', async () => {
@@ -184,16 +192,18 @@ describe('ReactFunctionComponent', () => {
       return <div>{[<span />]}</div>;
     }
 
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<Child />);
-      });
-    }).toErrorDev(
-      'Each child in a list should have a unique "key" prop.\n\n' +
-        'Check the render method of `Child`.',
-    );
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Child />);
+    });
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n' +
+        '\n' +
+        'Check the render method of `Child`. See https://react.dev/link/warning-keys for more information.\n' +
+        '    in span (at **)\n' +
+        '    in Child (at **)',
+    ]);
   });
 
   // @gate !disableDefaultPropsExceptForClasses
@@ -203,16 +213,17 @@ describe('ReactFunctionComponent', () => {
     }
     Child.defaultProps = {test: 2};
 
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
 
-      await act(() => {
-        root.render(<Child />);
-      });
-      expect(container.textContent).toBe('2');
-    }).toErrorDev([
-      'Child: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+    await act(() => {
+      root.render(<Child />);
+    });
+    expect(container.textContent).toBe('2');
+    assertConsoleErrorDev([
+      'Child: Support for defaultProps will be removed from function components in a future major release. ' +
+        'Use JavaScript default parameters instead.\n' +
+        '    in Child (at **)',
     ]);
   });
 
@@ -244,8 +255,13 @@ describe('ReactFunctionComponent', () => {
       root.render(<Parent />);
     });
     assertConsoleErrorDev([
-      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Child uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+      'Parent uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Parent (at **)',
+      'Child uses the legacy contextTypes API which will be removed soon. ' +
+        'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Child (at **)\n' +
+        '    in Parent (at **)',
     ]);
     expect(el.textContent).toBe('en');
   });

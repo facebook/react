@@ -16,6 +16,7 @@ import {
   EnvironmentConfig,
   ExternalFunction,
   ReactFunctionType,
+  MINIMAL_RETRY_CONFIG,
   tryParseExternalFunction,
 } from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
@@ -42,10 +43,10 @@ export type CompilerPass = {
   comments: Array<t.CommentBlock | t.CommentLine>;
   code: string | null;
 };
-const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
+export const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
 export const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
 
-function findDirectiveEnablingMemoization(
+export function findDirectiveEnablingMemoization(
   directives: Array<t.Directive>,
 ): Array<t.Directive> {
   return directives.filter(directive =>
@@ -53,7 +54,7 @@ function findDirectiveEnablingMemoization(
   );
 }
 
-function findDirectiveDisablingMemoization(
+export function findDirectiveDisablingMemoization(
   directives: Array<t.Directive>,
 ): Array<t.Directive> {
   return directives.filter(directive =>
@@ -382,66 +383,92 @@ export function compileProgram(
       );
     }
 
-    let compiledFn: CodegenFunction;
-    try {
-      /**
-       * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
-       * Program node itself. We need to figure out whether an eslint suppression range
-       * applies to this function first.
-       */
-      const suppressionsInFunction = filterSuppressionsThatAffectFunction(
-        suppressions,
-        fn,
-      );
-      if (suppressionsInFunction.length > 0) {
-        const lintError = suppressionsToCompilerError(suppressionsInFunction);
-        if (optOutDirectives.length > 0) {
-          logError(lintError, pass, fn.node.loc ?? null);
-        } else {
-          handleError(lintError, pass, fn.node.loc ?? null);
-        }
-        return null;
+    /**
+     * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
+     * Program node itself. We need to figure out whether an eslint suppression range
+     * applies to this function first.
+     */
+    const suppressionsInFunction = filterSuppressionsThatAffectFunction(
+      suppressions,
+      fn,
+    );
+    let compileResult:
+      | {kind: 'compile'; compiledFn: CodegenFunction}
+      | {kind: 'error'; error: unknown};
+    if (suppressionsInFunction.length > 0) {
+      compileResult = {
+        kind: 'error',
+        error: suppressionsToCompilerError(suppressionsInFunction),
+      };
+    } else {
+      try {
+        compileResult = {
+          kind: 'compile',
+          compiledFn: compileFn(
+            fn,
+            environment,
+            fnType,
+            useMemoCacheIdentifier.name,
+            pass.opts.logger,
+            pass.filename,
+            pass.code,
+          ),
+        };
+      } catch (err) {
+        compileResult = {kind: 'error', error: err};
       }
-
-      compiledFn = compileFn(
-        fn,
-        environment,
-        fnType,
-        useMemoCacheIdentifier.name,
-        pass.opts.logger,
-        pass.filename,
-        pass.code,
-      );
-      pass.opts.logger?.logEvent(pass.filename, {
-        kind: 'CompileSuccess',
-        fnLoc: fn.node.loc ?? null,
-        fnName: compiledFn.id?.name ?? null,
-        memoSlots: compiledFn.memoSlotsUsed,
-        memoBlocks: compiledFn.memoBlocks,
-        memoValues: compiledFn.memoValues,
-        prunedMemoBlocks: compiledFn.prunedMemoBlocks,
-        prunedMemoValues: compiledFn.prunedMemoValues,
-      });
-    } catch (err) {
+    }
+    // If non-memoization features are enabled, retry regardless of error kind
+    if (compileResult.kind === 'error' && environment.enableFire) {
+      try {
+        compileResult = {
+          kind: 'compile',
+          compiledFn: compileFn(
+            fn,
+            {
+              ...environment,
+              ...MINIMAL_RETRY_CONFIG,
+            },
+            fnType,
+            useMemoCacheIdentifier.name,
+            pass.opts.logger,
+            pass.filename,
+            pass.code,
+          ),
+        };
+      } catch (err) {
+        compileResult = {kind: 'error', error: err};
+      }
+    }
+    if (compileResult.kind === 'error') {
       /**
        * If an opt out directive is present, log only instead of throwing and don't mark as
        * containing a critical error.
        */
-      if (fn.node.body.type === 'BlockStatement') {
-        if (optOutDirectives.length > 0) {
-          logError(err, pass, fn.node.loc ?? null);
-          return null;
-        }
+      if (optOutDirectives.length > 0) {
+        logError(compileResult.error, pass, fn.node.loc ?? null);
+      } else {
+        handleError(compileResult.error, pass, fn.node.loc ?? null);
       }
-      handleError(err, pass, fn.node.loc ?? null);
       return null;
     }
+
+    pass.opts.logger?.logEvent(pass.filename, {
+      kind: 'CompileSuccess',
+      fnLoc: fn.node.loc ?? null,
+      fnName: compileResult.compiledFn.id?.name ?? null,
+      memoSlots: compileResult.compiledFn.memoSlotsUsed,
+      memoBlocks: compileResult.compiledFn.memoBlocks,
+      memoValues: compileResult.compiledFn.memoValues,
+      prunedMemoBlocks: compileResult.compiledFn.prunedMemoBlocks,
+      prunedMemoValues: compileResult.compiledFn.prunedMemoValues,
+    });
 
     /**
      * Always compile functions with opt in directives.
      */
     if (optInDirectives.length > 0) {
-      return compiledFn;
+      return compileResult.compiledFn;
     } else if (pass.opts.compilationMode === 'annotation') {
       /**
        * No opt-in directive in annotation mode, so don't insert the compiled function.
@@ -467,7 +494,7 @@ export function compileProgram(
     }
 
     if (!pass.opts.noEmit) {
-      return compiledFn;
+      return compileResult.compiledFn;
     }
     return null;
   };
@@ -563,6 +590,14 @@ export function compileProgram(
 
     if (environment.enableChangeDetectionForDebugging != null) {
       externalFunctions.push(environment.enableChangeDetectionForDebugging);
+    }
+
+    const hasFireRewrite = compiledFns.some(c => c.compiledFn.hasFireRewrite);
+    if (environment.enableFire && hasFireRewrite) {
+      externalFunctions.push({
+        source: getReactCompilerRuntimeModule(pass.opts),
+        importSpecifierName: 'useFire',
+      });
     }
   } catch (err) {
     handleError(err, pass, null);
@@ -984,9 +1019,11 @@ function returnsNonNode(
         }
       }
     },
+    // Skip traversing all nested functions and their return statements
     ArrowFunctionExpression: skipNestedFunctions(node),
     FunctionExpression: skipNestedFunctions(node),
     FunctionDeclaration: skipNestedFunctions(node),
+    ObjectMethod: node => node.skip(),
   });
 
   return !hasReturn || returnsNonNode;
@@ -1123,30 +1160,23 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
   return errors.details.length > 0 ? errors : null;
 }
 
-type ReactCompilerRuntimeModule =
-  | 'react/compiler-runtime' // from react namespace
-  | 'react-compiler-runtime'; // npm package
-function getReactCompilerRuntimeModule(
-  opts: PluginOptions,
-): ReactCompilerRuntimeModule {
-  let moduleName: ReactCompilerRuntimeModule | null = null;
-  switch (opts.target) {
-    case '17':
-    case '18': {
-      moduleName = 'react-compiler-runtime';
-      break;
-    }
-    case '19': {
-      moduleName = 'react/compiler-runtime';
-      break;
-    }
-    default:
-      CompilerError.invariant(moduleName != null, {
+function getReactCompilerRuntimeModule(opts: PluginOptions): string {
+  if (opts.target === '19') {
+    return 'react/compiler-runtime'; // from react namespace
+  } else if (opts.target === '17' || opts.target === '18') {
+    return 'react-compiler-runtime'; // npm package
+  } else {
+    CompilerError.invariant(
+      opts.target != null &&
+        opts.target.kind === 'donotuse_meta_internal' &&
+        typeof opts.target.runtimeModule === 'string',
+      {
         reason: 'Expected target to already be validated',
         description: null,
         loc: null,
         suggestions: null,
-      });
+      },
+    );
+    return opts.target.runtimeModule;
   }
-  return moduleName;
 }

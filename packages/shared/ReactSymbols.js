@@ -33,9 +33,6 @@ export const REACT_SUSPENSE_LIST_TYPE: symbol = Symbol.for(
 export const REACT_MEMO_TYPE: symbol = Symbol.for('react.memo');
 export const REACT_LAZY_TYPE: symbol = Symbol.for('react.lazy');
 export const REACT_SCOPE_TYPE: symbol = Symbol.for('react.scope');
-export const REACT_DEBUG_TRACING_MODE_TYPE: symbol = Symbol.for(
-  'react.debug_trace_mode',
-);
 export const REACT_OFFSCREEN_TYPE: symbol = Symbol.for('react.offscreen');
 export const REACT_LEGACY_HIDDEN_TYPE: symbol = Symbol.for(
   'react.legacy_hidden',
@@ -49,6 +46,10 @@ export const REACT_MEMO_CACHE_SENTINEL: symbol = Symbol.for(
 );
 
 export const REACT_POSTPONE_TYPE: symbol = Symbol.for('react.postpone');
+
+export const REACT_VIEW_TRANSITION_TYPE: symbol = Symbol.for(
+  'react.view_transition',
+);
 
 const MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';

@@ -15,38 +15,34 @@
     "start": "yarn workspace playground run start",
     "next": "yarn workspace playground run dev",
     "build": "yarn workspaces run build",
-    "dev": "echo 'DEPRECATED: use `cd apps/playground && yarn dev` instead!' && sleep 5 && cd apps/playground && yarn dev",
+    "dev": "cd apps/playground && yarn dev",
     "test": "yarn workspaces run test",
     "snap": "yarn workspace babel-plugin-react-compiler run snap",
     "snap:build": "yarn workspace snap run build",
     "npm:publish": "node scripts/release/publish"
   },
   "dependencies": {
-    "fs-extra": "^4.0.2"
+    "fs-extra": "^4.0.2",
+    "react-is": "0.0.0-experimental-4beb1fd8-20241118"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^11.1.6",
     "@tsconfig/strictest": "^2.0.5",
     "concurrently": "^7.4.0",
+    "esbuild": "^0.24.2",
     "folder-hash": "^4.0.4",
+    "npm-dts": "^1.3.13",
     "object-assign": "^4.1.1",
     "ora": "5.4.1",
     "prettier": "^3.3.3",
-    "prettier-plugin-hermes-parser": "^0.23.0",
+    "prettier-plugin-hermes-parser": "^0.26.0",
     "prompt-promise": "^1.0.3",
-    "rollup": "^4.22.4",
-    "rollup-plugin-banner2": "^1.2.3",
-    "rollup-plugin-prettier": "^4.1.1",
+    "rimraf": "^5.0.10",
     "typescript": "^5.4.3",
     "wait-on": "^7.2.0",
     "yargs": "^17.7.2"
   },
   "resolutions": {
-    "react-is": "19.0.0-beta-b498834eab-20240506"
+    "rimraf": "5.0.10"
   },
   "packageManager": "yarn@1.22.22"
 }

@@ -64,6 +64,7 @@ import {getIsHydrating} from './ReactFiberHydrationContext';
 import {pushTreeFork} from './ReactFiberTreeContext';
 import {
   SuspenseException,
+  SuspenseActionException,
   createThenableState,
   trackUsedThenable,
 } from './ReactFiberThenable';
@@ -1950,6 +1951,7 @@ function createChildReconciler(
     } catch (x) {
       if (
         x === SuspenseException ||
+        x === SuspenseActionException ||
         (!disableLegacyMode &&
           (returnFiber.mode & ConcurrentMode) === NoMode &&
           typeof x === 'object' &&

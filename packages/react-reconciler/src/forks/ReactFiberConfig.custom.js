@@ -40,6 +40,8 @@ export opaque type NoTimeout = mixed;
 export opaque type RendererInspectionConfig = mixed;
 export opaque type TransitionStatus = mixed;
 export opaque type FormInstance = mixed;
+export type ViewTransitionInstance = null | {name: string, ...};
+export opaque type InstanceMeasurement = mixed;
 export type EventResponder = any;
 
 export const rendererVersion = $$$config.rendererVersion;
@@ -73,6 +75,7 @@ export const getInstanceFromScope = $$$config.getInstanceFromScope;
 export const setCurrentUpdatePriority = $$$config.setCurrentUpdatePriority;
 export const getCurrentUpdatePriority = $$$config.getCurrentUpdatePriority;
 export const resolveUpdatePriority = $$$config.resolveUpdatePriority;
+export const trackSchedulerEvent = $$$config.trackSchedulerEvent;
 export const resolveEventType = $$$config.resolveEventType;
 export const resolveEventTimeStamp = $$$config.resolveEventTimeStamp;
 export const shouldAttemptEagerTransition =
@@ -83,6 +86,8 @@ export const maySuspendCommit = $$$config.maySuspendCommit;
 export const preloadInstance = $$$config.preloadInstance;
 export const startSuspendingCommit = $$$config.startSuspendingCommit;
 export const suspendInstance = $$$config.suspendInstance;
+export const suspendOnActiveViewTransition =
+  $$$config.suspendOnActiveViewTransition;
 export const waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
 export const NotPendingTransition = $$$config.NotPendingTransition;
 export const HostTransitionContext = $$$config.HostTransitionContext;
@@ -127,6 +132,20 @@ export const hideInstance = $$$config.hideInstance;
 export const hideTextInstance = $$$config.hideTextInstance;
 export const unhideInstance = $$$config.unhideInstance;
 export const unhideTextInstance = $$$config.unhideTextInstance;
+export const applyViewTransitionName = $$$config.applyViewTransitionName;
+export const restoreViewTransitionName = $$$config.restoreViewTransitionName;
+export const cancelViewTransitionName = $$$config.cancelViewTransitionName;
+export const cancelRootViewTransitionName =
+  $$$config.cancelRootViewTransitionName;
+export const restoreRootViewTransitionName =
+  $$$config.restoreRootViewTransitionName;
+export const measureInstance = $$$config.measureInstance;
+export const wasInstanceInViewport = $$$config.wasInstanceInViewport;
+export const hasInstanceChanged = $$$config.hasInstanceChanged;
+export const hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent;
+export const startViewTransition = $$$config.startViewTransition;
+export const createViewTransitionInstance =
+  $$$config.createViewTransitionInstance;
 export const clearContainer = $$$config.clearContainer;
 
 // -------------------
@@ -155,11 +174,15 @@ export const registerSuspenseInstanceRetry =
 export const canHydrateFormStateMarker = $$$config.canHydrateFormStateMarker;
 export const isFormStateMarkerMatching = $$$config.isFormStateMarkerMatching;
 export const getNextHydratableSibling = $$$config.getNextHydratableSibling;
+export const getNextHydratableSiblingAfterSingleton =
+  $$$config.getNextHydratableSiblingAfterSingleton;
 export const getFirstHydratableChild = $$$config.getFirstHydratableChild;
 export const getFirstHydratableChildWithinContainer =
   $$$config.getFirstHydratableChildWithinContainer;
 export const getFirstHydratableChildWithinSuspenseInstance =
   $$$config.getFirstHydratableChildWithinSuspenseInstance;
+export const getFirstHydratableChildWithinSingleton =
+  $$$config.getFirstHydratableChildWithinSingleton;
 export const canHydrateInstance = $$$config.canHydrateInstance;
 export const canHydrateTextInstance = $$$config.canHydrateTextInstance;
 export const canHydrateSuspenseInstance = $$$config.canHydrateSuspenseInstance;
@@ -213,7 +236,7 @@ export const suspendResource = $$$config.suspendResource;
 // -------------------
 export const supportsSingletons = $$$config.supportsSingletons;
 export const resolveSingletonInstance = $$$config.resolveSingletonInstance;
-export const clearSingleton = $$$config.clearSingleton;
 export const acquireSingletonInstance = $$$config.acquireSingletonInstance;
 export const releaseSingletonInstance = $$$config.releaseSingletonInstance;
 export const isHostSingletonType = $$$config.isHostSingletonType;
+export const isSingletonScope = $$$config.isSingletonScope;

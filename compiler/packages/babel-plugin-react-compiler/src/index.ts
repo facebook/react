@@ -17,9 +17,10 @@ export {
   compileFn as compile,
   compileProgram,
   parsePluginOptions,
-  run,
-  runPlayground,
   OPT_OUT_DIRECTIVES,
+  OPT_IN_DIRECTIVES,
+  findDirectiveEnablingMemoization,
+  findDirectiveDisablingMemoization,
   type CompilerPipelineValue,
   type PluginOptions,
 } from './Entrypoint';

@@ -13,7 +13,7 @@
 // Flags that can likely be deleted or landed without consequences
 // -----------------------------------------------------------------------------
 
-export const enableComponentStackLocations = true;
+// None
 
 // -----------------------------------------------------------------------------
 // Killswitch
@@ -21,6 +21,8 @@ export const enableComponentStackLocations = true;
 // Flags that exist solely to turn off a change in case it causes a regression
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
+
+export const enableHydrationLaneScheduling = true;
 
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
@@ -31,14 +33,9 @@ export const enableComponentStackLocations = true;
 
 // TODO: Finish rolling out in www
 export const favorSafetyOverHydrationPerf = true;
-export const enableAsyncActions = true;
 
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
-
-// This will break some internal tests at Meta so we need to gate this until
-// those can be fixed.
-export const enableDeferRootSchedulingToMicrotask = true;
 
 // TODO: Land at Meta before removing.
 export const disableDefaultPropsExceptForClasses = true;
@@ -76,11 +73,15 @@ export const enableLegacyFBSupport = false;
 // likely to include in an upcoming release.
 // -----------------------------------------------------------------------------
 
-export const enableCache = true;
+// Yield to the browser event loop and not just the scheduler event loop before passive effects.
+// Fix gated tests that fail with this flag enabled before turning it back on.
+export const enableYieldingBeforePassive = false;
+
+// Experiment to intentionally yield less to block high framerate animations.
+export const enableThrottledScheduling = false;
+
 export const enableLegacyCache = __EXPERIMENTAL__;
 
-export const enableBinaryFlight = true;
-export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
@@ -89,10 +90,7 @@ export const enablePostpone = __EXPERIMENTAL__;
 
 export const enableHalt = __EXPERIMENTAL__;
 
-/**
- * Switches the Fabric API from doing layout in commit work instead of complete work.
- */
-export const enableFabricCompleteRootInCommitPhase = false;
+export const enableViewTransition = __EXPERIMENTAL__;
 
 /**
  * Switches Fiber creation to a simple object instead of a constructor.
@@ -101,24 +99,14 @@ export const enableObjectFiber = false;
 
 export const enableTransitionTracing = false;
 
-export const enableLazyContextPropagation = true;
-
-// Expose unstable useContext for performance testing
-export const enableContextProfiling = false;
-
 // FB-only usage. The new API has different semantics.
 export const enableLegacyHidden = false;
 
 // Enables unstable_avoidThisFallback feature in Fiber
 export const enableSuspenseAvoidThisFallback = false;
-// Enables unstable_avoidThisFallback feature in Fizz
-export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-// Enables useMemoCache hook, intended as a compilation target for
-// auto-memoization.
-export const enableUseMemoCacheHook = true;
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache = false;
 
@@ -133,8 +121,6 @@ export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 
-export const enableServerComponentLogs = true;
-
 /**
  * Enables a new Fiber flag used in persisted mode to reduce the number
  * of cloned host components.
@@ -145,7 +131,7 @@ export const enableOwnerStacks = __EXPERIMENTAL__;
 
 export const enableShallowPropDiffing = false;
 
-export const enableSiblingPrerendering = false;
+export const enableSiblingPrerendering = true;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
@@ -160,6 +146,13 @@ export const transitionLaneExpirationMs = 5000;
  * by setState or similar outside of the component owning the state.
  */
 export const enableInfiniteRenderLoopDetection = false;
+
+/**
+ * Experimental new hook for better managing resources in effects.
+ */
+export const enableUseResourceEffectHook = false;
+
+export const enableFastAddPropertiesInDiffing = true;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -190,20 +183,8 @@ export const disableLegacyContext = true;
  */
 export const disableLegacyContextForFunctionComponents = true;
 
-// Not ready to break experimental yet.
-// Modern <StrictMode /> behaviour aligns more with what components
-// components will encounter in production, especially when used With <Offscreen />.
-// TODO: clean up legacy <StrictMode /> once tests pass WWW.
-export const useModernStrictMode = true;
-
-// Not ready to break experimental yet.
-// Remove IE and MsApp specific workarounds for innerHTML
-export const disableIEWorkarounds = true;
-
-// Filter certain DOM attributes (e.g. src, href) if their values are empty
-// strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
-// request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = true;
+// Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
+export const enableMoveBefore = false;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = true;
@@ -250,10 +231,6 @@ export const disableTextareaChildren = false;
 // Debugging and DevTools
 // -----------------------------------------------------------------------------
 
-// Helps identify side effects in render-phase lifecycle hooks and setState
-// reducers by double invoking them in StrictLegacyMode.
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
-
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
@@ -274,19 +251,12 @@ export const enableProfilerCommitHooks = __PROFILE__;
 // Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 
-// Adds verbose console logging for e.g. state updates, suspense, and work loop
-// stuff. Intended to enable React core members to more easily debug scheduling
-// issues in DEV builds.
-export const enableDebugTracing = false;
-
 export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
-export const enableGetInspectorDataForInstanceInProduction = false;
-
-export const consoleManagedByDevToolsDuringStrictMode = true;
-
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+
+export const enableRemoveConsolePatches = true;

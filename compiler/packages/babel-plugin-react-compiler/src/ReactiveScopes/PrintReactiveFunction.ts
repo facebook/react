@@ -394,7 +394,10 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       break;
     }
     default:
-      assertExhaustive(terminal, `Unhandled terminal ${terminal}`);
+      assertExhaustive(
+        terminal,
+        `Unhandled terminal kind \`${(terminal as any).kind}\``,
+      );
   }
 }
 

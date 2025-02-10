@@ -103,6 +103,11 @@ export type CodegenFunction = {
    * This is true if the compiler has the lowered useContext calls.
    */
   hasLoweredContextAccess: boolean;
+
+  /**
+   * This is true if the compiler has compiled a fire to a useFire call
+   */
+  hasFireRewrite: boolean;
 };
 
 export function codegenFunction(
@@ -355,6 +360,7 @@ function codegenReactiveFunction(
     prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
     outlined: [],
     hasLoweredContextAccess: fn.env.hasLoweredContextAccess,
+    hasFireRewrite: fn.env.hasFireRewrite,
   });
 }
 
@@ -1354,20 +1360,6 @@ function codegenForInit(
   init: ReactiveValue,
 ): t.Expression | t.VariableDeclaration | null {
   if (init.kind === 'SequenceExpression') {
-    for (const instr of init.instructions) {
-      if (instr.value.kind === 'DeclareContext') {
-        CompilerError.throwTodo({
-          reason: `Support for loops where the index variable is a context variable`,
-          loc: instr.loc,
-          description:
-            instr.value.lvalue.place.identifier.name != null
-              ? `\`${instr.value.lvalue.place.identifier.name.value}\` is a context variable`
-              : null,
-          suggestions: null,
-        });
-      }
-    }
-
     const body = codegenBlock(
       cx,
       init.instructions.map(instruction => ({
@@ -1378,20 +1370,33 @@ function codegenForInit(
     const declarators: Array<t.VariableDeclarator> = [];
     let kind: 'let' | 'const' = 'const';
     body.forEach(instr => {
-      CompilerError.invariant(
-        instr.type === 'VariableDeclaration' &&
-          (instr.kind === 'let' || instr.kind === 'const'),
-        {
-          reason: 'Expected a variable declaration',
-          loc: init.loc,
-          description: `Got ${instr.type}`,
-          suggestions: null,
-        },
-      );
-      if (instr.kind === 'let') {
-        kind = 'let';
+      let top: undefined | t.VariableDeclarator = undefined;
+      if (
+        instr.type === 'ExpressionStatement' &&
+        instr.expression.type === 'AssignmentExpression' &&
+        instr.expression.operator === '=' &&
+        instr.expression.left.type === 'Identifier' &&
+        (top = declarators.at(-1))?.id.type === 'Identifier' &&
+        top?.id.name === instr.expression.left.name &&
+        top?.init == null
+      ) {
+        top.init = instr.expression.right;
+      } else {
+        CompilerError.invariant(
+          instr.type === 'VariableDeclaration' &&
+            (instr.kind === 'let' || instr.kind === 'const'),
+          {
+            reason: 'Expected a variable declaration',
+            loc: init.loc,
+            description: `Got ${instr.type}`,
+            suggestions: null,
+          },
+        );
+        if (instr.kind === 'let') {
+          kind = 'let';
+        }
+        declarators.push(...instr.declarations);
       }
-      declarators.push(...instr.declarations);
     });
     CompilerError.invariant(declarators.length > 0, {
       reason: 'Expected a variable declaration',
@@ -2264,7 +2269,7 @@ function codegenInstructionValue(
  * https://en.wikipedia.org/wiki/List_of_Unicode_characters#Control_codes
  */
 const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
-  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}]|"/u;
+  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}]|"|\\/u;
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute,
@@ -2322,7 +2327,7 @@ function codegenJsxAttribute(
   }
 }
 
-const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN = /[<>&]/;
+const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN = /[<>&{}]/;
 function codegenJsxElement(
   cx: Context,
   place: Place,

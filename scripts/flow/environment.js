@@ -103,6 +103,16 @@ declare const __turbopack_require__: ((id: string) => any) & {
   u: string => string,
 };
 
+declare var parcelRequire: {
+  (id: string): any,
+  load: (url: string) => Promise<mixed>,
+  extendImportMap: (importMap: {[string]: string}) => void,
+  meta: {
+    publicUrl: string,
+    devServer: string | null,
+  },
+};
+
 declare module 'fs/promises' {
   declare const access: (path: string, mode?: number) => Promise<void>;
   declare const lstat: (

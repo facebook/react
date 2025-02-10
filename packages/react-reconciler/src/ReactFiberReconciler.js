@@ -38,11 +38,14 @@ import {
 } from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import isArray from 'shared/isArray';
-import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
+import {
+  enableSchedulingProfiler,
+  enableHydrationLaneScheduling,
+  disableLegacyMode,
+} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   getPublicInstance,
-  getInstanceFromNode,
   rendererVersion,
   rendererPackageName,
   extraDevToolsConfig,
@@ -73,7 +76,7 @@ import {
   isAlreadyRendering,
   deferredUpdates,
   discreteUpdates,
-  flushPassiveEffects,
+  flushPendingEffects,
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {
@@ -92,6 +95,7 @@ import {
   SelectiveHydrationLane,
   getHighestPriorityPendingLanes,
   higherPriorityLane,
+  getBumpedLaneForHydrationByLane,
 } from './ReactFiberLane';
 import {
   scheduleRefresh,
@@ -323,7 +327,10 @@ export function createHydrationContainer(
   // the update to schedule work on the root fiber (and, for legacy roots, to
   // enqueue the callback if one is provided).
   const current = root.current;
-  const lane = requestUpdateLane(current);
+  let lane = requestUpdateLane(current);
+  if (enableHydrationLaneScheduling) {
+    lane = getBumpedLaneForHydrationByLane(lane);
+  }
   const update = createUpdate(lane);
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
@@ -358,8 +365,8 @@ export function updateContainerSync(
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): Lane {
-  if (container.tag === LegacyRoot) {
-    flushPassiveEffects();
+  if (!disableLegacyMode && container.tag === LegacyRoot) {
+    flushPendingEffects();
   }
   const current = container.current;
   updateContainerImpl(
@@ -447,7 +454,7 @@ export {
   flushSyncFromReconciler,
   flushSyncWork,
   isAlreadyRendering,
-  flushPassiveEffects,
+  flushPendingEffects as flushPassiveEffects,
 };
 
 export function getPublicRootInstance(
@@ -534,7 +541,10 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     // their priority other than synchronously flush it.
     return;
   }
-  const lane = requestUpdateLane(fiber);
+  let lane = requestUpdateLane(fiber);
+  if (enableHydrationLaneScheduling) {
+    lane = getBumpedLaneForHydrationByLane(lane);
+  }
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     scheduleUpdateOnFiber(root, fiber, lane);
@@ -847,7 +857,6 @@ export function injectIntoDevTools(): boolean {
     version: rendererVersion,
     rendererPackageName: rendererPackageName,
     currentDispatcherRef: ReactSharedInternals,
-    findFiberByHostInstance: getInstanceFromNode,
     // Enables DevTools to detect reconciler version rather than renderer version
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion,

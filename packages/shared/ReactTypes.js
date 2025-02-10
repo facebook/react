@@ -188,7 +188,7 @@ export type ReactCallSite = [
 export type ReactStackTrace = Array<ReactCallSite>;
 
 export type ReactComponentInfo = {
-  +name?: string,
+  +name: string,
   +env?: string,
   +key?: null | string,
   +owner?: null | ReactComponentInfo,
@@ -199,10 +199,36 @@ export type ReactComponentInfo = {
   +debugTask?: null | ConsoleTask,
 };
 
+export type ReactEnvironmentInfo = {
+  +env: string,
+};
+
+export type ReactErrorInfoProd = {
+  +digest: string,
+};
+
+export type ReactErrorInfoDev = {
+  +digest?: string,
+  +name: string,
+  +message: string,
+  +stack: ReactStackTrace,
+  +env: string,
+};
+
+export type ReactErrorInfo = ReactErrorInfoProd | ReactErrorInfoDev;
+
 export type ReactAsyncInfo = {
-  +started?: number,
-  +completed?: number,
+  +type: string,
+  // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
+  +debugStack?: null | Error,
+  +debugTask?: null | ConsoleTask,
   +stack?: null | ReactStackTrace,
 };
 
-export type ReactDebugInfo = Array<ReactComponentInfo | ReactAsyncInfo>;
+export type ReactTimeInfo = {
+  +time: number, // performance.now
+};
+
+export type ReactDebugInfo = Array<
+  ReactComponentInfo | ReactEnvironmentInfo | ReactAsyncInfo | ReactTimeInfo,
+>;
