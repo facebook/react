@@ -178,6 +178,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
+      - uses: actions/checkout@v4
+        with:
           ref: builds/facebook-www
       - name: Ensure clean directory
         run: rm -rf compiled
@@ -260,6 +263,9 @@ jobs:
     if: inputs.force == true || (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/checkout@v4
         with:
           ref: builds/facebook-fbsource
