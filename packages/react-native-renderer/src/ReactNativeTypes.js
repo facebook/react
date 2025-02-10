@@ -16,6 +16,7 @@ import type {
   MixedElement,
   RefSetter,
 } from 'react';
+// $FlowFixMe[nonstrict-import] TODO(@rubennorte)
 import {type PublicRootInstance} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 export type MeasureOnSuccessCallback = (
