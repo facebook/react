@@ -6,11 +6,14 @@
  */
 
 import type * as BabelCore from '@babel/core';
-import {compileProgram, parsePluginOptions} from '../Entrypoint';
+import {compileProgram, Logger, parsePluginOptions} from '../Entrypoint';
 import {
   injectReanimatedFlag,
   pipelineUsesReanimatedPlugin,
 } from '../Entrypoint/Reanimated';
+
+const ENABLE_REACT_COMPILER_TIMINGS =
+  process.env['ENABLE_REACT_COMPILER_TIMINGS'] === '1';
 
 /*
  * The React Forget Babel Plugin
@@ -28,35 +31,65 @@ export default function BabelPluginReactCompiler(
        * prior to B, if A does not have a Program visitor and B does, B will run first. We always
        * want Forget to run true to source as possible.
        */
-      Program(prog, pass): void {
-        let opts = parsePluginOptions(pass.opts);
-        const isDev =
-          (typeof __DEV__ !== 'undefined' && __DEV__ === true) ||
-          process.env['NODE_ENV'] === 'development';
-        if (
-          opts.enableReanimatedCheck === true &&
-          pipelineUsesReanimatedPlugin(pass.file.opts.plugins)
-        ) {
-          opts = injectReanimatedFlag(opts);
-        }
-        if (
-          opts.environment.enableResetCacheOnSourceFileChanges !== false &&
-          isDev
-        ) {
-          opts = {
-            ...opts,
-            environment: {
-              ...opts.environment,
-              enableResetCacheOnSourceFileChanges: true,
-            },
-          };
-        }
-        compileProgram(prog, {
-          opts,
-          filename: pass.filename ?? null,
-          comments: pass.file.ast.comments ?? [],
-          code: pass.file.code,
-        });
+      Program: {
+        enter(prog, pass): void {
+          const filename = pass.filename ?? 'unknown';
+          if (ENABLE_REACT_COMPILER_TIMINGS === true) {
+            performance.mark(`${filename}:start`, {
+              detail: 'BabelPlugin:Program:start',
+            });
+          }
+          let opts = parsePluginOptions(pass.opts);
+          const isDev =
+            (typeof __DEV__ !== 'undefined' && __DEV__ === true) ||
+            process.env['NODE_ENV'] === 'development';
+          if (
+            opts.enableReanimatedCheck === true &&
+            pipelineUsesReanimatedPlugin(pass.file.opts.plugins)
+          ) {
+            opts = injectReanimatedFlag(opts);
+          }
+          if (
+            opts.environment.enableResetCacheOnSourceFileChanges !== false &&
+            isDev
+          ) {
+            opts = {
+              ...opts,
+              environment: {
+                ...opts.environment,
+                enableResetCacheOnSourceFileChanges: true,
+              },
+            };
+          }
+          compileProgram(prog, {
+            opts,
+            filename: pass.filename ?? null,
+            comments: pass.file.ast.comments ?? [],
+            code: pass.file.code,
+          });
+          if (ENABLE_REACT_COMPILER_TIMINGS === true) {
+            performance.mark(`${filename}:end`, {
+              detail: 'BabelPlugin:Program:end',
+            });
+          }
+        },
+        exit(_, pass): void {
+          if (ENABLE_REACT_COMPILER_TIMINGS === true) {
+            const filename = pass.filename ?? 'unknown';
+            const measurement = performance.measure(filename, {
+              start: `${filename}:start`,
+              end: `${filename}:end`,
+              detail: 'BabelPlugin:Program',
+            });
+            if ('logger' in pass.opts && pass.opts.logger != null) {
+              const logger: Logger = pass.opts.logger as Logger;
+              logger.logEvent(filename, {
+                kind: 'Timing',
+                measurement,
+              });
+            }
+          }
+        },
       },
     },
   };
