@@ -64,7 +64,7 @@ export const renameElementSymbol = true;
 export const enableShallowPropDiffing = false;
 export const enableSiblingPrerendering = true;
 
-export const enableUseResourceEffectHook = false;
+export const enableUseEffectCRUDOverload = false;
 
 export const enableYieldingBeforePassive = true;
 

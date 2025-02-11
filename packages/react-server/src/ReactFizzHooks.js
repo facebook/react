@@ -40,7 +40,7 @@ import {createFastHash} from './ReactServerStreamConfig';
 
 import {
   enableUseEffectEventHook,
-  enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -866,7 +866,7 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
 if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = useEffectEvent;
 }
-if (enableUseResourceEffectHook) {
+if (enableUseEffectCRUDOverload) {
   HooksDispatcher.useResourceEffect = supportsClientAPIs
     ? noop
     : clientHookNotSupported;

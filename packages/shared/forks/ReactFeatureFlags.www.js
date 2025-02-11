@@ -29,7 +29,7 @@ export const {
   enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
-  enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
