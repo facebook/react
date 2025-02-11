@@ -254,7 +254,7 @@ const callDestroy = {
 export const callDestroyInDEV: (
   current: Fiber,
   nearestMountedAncestor: Fiber | null,
-  destroy: () => void,
+  destroy: (() => void) | (({...}) => void),
 ) => void = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
     (callDestroy['react-stack-bottom-frame'].bind(callDestroy): any)

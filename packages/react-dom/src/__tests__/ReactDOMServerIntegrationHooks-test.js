@@ -27,7 +27,6 @@ let useRef;
 let useImperativeHandle;
 let useInsertionEffect;
 let useLayoutEffect;
-let useResourceEffect;
 let useDebugValue;
 let forwardRef;
 let yieldedValues;
@@ -52,7 +51,6 @@ function initModules() {
   useImperativeHandle = React.useImperativeHandle;
   useInsertionEffect = React.useInsertionEffect;
   useLayoutEffect = React.useLayoutEffect;
-  useResourceEffect = React.experimental_useResourceEffect;
   forwardRef = React.forwardRef;
 
   yieldedValues = [];
@@ -655,7 +653,7 @@ describe('ReactDOMServerHooks', () => {
     });
   });
 
-  describe('useResourceEffect', () => {
+  describe('useEffect with CRUD overload', () => {
     gate(flags => {
       if (flags.enableUseEffectCRUDOverload) {
         const yields = [];
@@ -663,7 +661,7 @@ describe('ReactDOMServerHooks', () => {
           'should ignore resource effects on the server',
           async render => {
             function Counter(props) {
-              useResourceEffect(
+              useEffect(
                 () => {
                   yieldValue('created on client');
                   return {resource_counter: props.count};
