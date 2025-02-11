@@ -31,12 +31,13 @@ describe('ReactOwnerStacks', () => {
     );
   }
 
-  it('is not exported in production buids', () => {
-    // awkward to gate because FB builds will have it undefined if disabled
-    // whereas OSS builds will have it stripped if disabled because we only have
-    // it on in experimental which has a separate entrypoint
+  it('behavior in production', () => {
     if (!__DEV__) {
-      expect(React).not.toHaveProperty('captureOwnerStack');
+      if (gate('fb')) {
+        expect(React).toHaveProperty('captureOwnerStack', undefined);
+      } else {
+        expect(React).not.toHaveProperty('captureOwnerStack');
+      }
     }
   });
 

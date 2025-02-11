@@ -7,9 +7,12 @@
  * @flow
  */
 
+import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
+import {captureOwnerStack as captureOwnerStackImpl} from './src/ReactClient';
 export {
   __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   __COMPILER_RUNTIME,
+  act,
   cache,
   Children,
   cloneElement,
@@ -66,3 +69,11 @@ export {useMemoCache as unstable_useMemoCache} from './src/ReactHooks';
 // export to match the name of the OSS function typically exported from
 // react/compiler-runtime
 export {useMemoCache as c} from './src/ReactHooks';
+
+// Only export captureOwnerStack in development.
+let captureOwnerStack: ?() => null | string;
+if (__DEV__ && enableOwnerStacks) {
+  captureOwnerStack = captureOwnerStackImpl;
+}
+
+export {captureOwnerStack};
