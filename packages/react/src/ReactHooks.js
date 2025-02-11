@@ -221,27 +221,6 @@ export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   return dispatcher.useEffectEvent(callback);
 }
 
-export function useResourceEffect(
-  create: () => {...} | void | null,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: {...} | void | null) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: {...} | void | null) => void) | void,
-): void {
-  if (!enableUseEffectCRUDOverload) {
-    throw new Error('Not implemented.');
-  }
-  const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
-  return dispatcher.useResourceEffect(
-    create,
-    createDeps,
-    update,
-    updateDeps,
-    destroy,
-  );
-}
-
 export function useOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
