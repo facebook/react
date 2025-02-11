@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a8b75c38f811eb2f3ef02767f520eb65>>
+ * @generated SignedSource<<2f2fe25466f4659f560a43e5978eff13>>
  */
 
 "use strict";
@@ -10258,11 +10258,7 @@ __DEV__ &&
                     lastEffect = finishedWork;
                     var nearestMountedAncestor =
                         nearestMountedAncestor$jscomp$0,
-                      resource = updateQueue.inst.resource,
-                      destroy_ =
-                        null == resource
-                          ? destroy
-                          : destroy.bind(null, resource);
+                      destroy_ = destroy.bind(null, updateQueue.inst.resource);
                     runWithFiberInDEV(
                       lastEffect,
                       callDestroyInDEV,
@@ -17498,10 +17494,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-cd90a4d8-20250210",
+        version: "19.1.0-native-fb-899e3d12-20250211",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-cd90a4d8-20250210"
+        reconcilerVersion: "19.1.0-native-fb-899e3d12-20250211"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<de460d42788d92eac2f929e87037fa1f>>
+ * @generated SignedSource<<9c25cf65401fa72fcc0f0a1bd4c4a5c4>>
  */
 
 "use strict";
@@ -6796,9 +6796,7 @@ function commitHookEffectListUnmount(
             ) {
               lastEffect = finishedWork;
               var nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
-                resource = updateQueue.inst.resource,
-                destroy_ =
-                  null == resource ? destroy : destroy.bind(null, resource);
+                destroy_ = destroy.bind(null, updateQueue.inst.resource);
               try {
                 destroy_();
               } catch (error) {
@@ -10379,10 +10377,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1219 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-cd90a4d8-20250210",
+  version: "19.1.0-native-fb-899e3d12-20250211",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-cd90a4d8-20250210",
+  reconcilerVersion: "19.1.0-native-fb-899e3d12-20250211",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$147 = 0;
@@ -10533,4 +10531,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-cd90a4d8-20250210";
+exports.version = "19.1.0-native-fb-899e3d12-20250211";

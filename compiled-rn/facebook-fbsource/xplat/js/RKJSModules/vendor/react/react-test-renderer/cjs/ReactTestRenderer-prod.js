@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fb6f1aa287d76a0d0b67e952d6234511>>
+ * @generated SignedSource<<fe2c1aa92201a7ef2d5ab68f5a1f313b>>
  */
 
 "use strict";
@@ -6518,9 +6518,7 @@ function commitHookEffectListUnmount(
             ) {
               lastEffect = finishedWork;
               var nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
-                resource = updateQueue.inst.resource,
-                destroy_ =
-                  null == resource ? destroy : destroy.bind(null, resource);
+                destroy_ = destroy.bind(null, updateQueue.inst.resource);
               try {
                 destroy_();
               } catch (error) {
@@ -9808,10 +9806,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1401 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-cd90a4d8-20250210",
+  version: "19.1.0-native-fb-899e3d12-20250211",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-cd90a4d8-20250210"
+  reconcilerVersion: "19.1.0-native-fb-899e3d12-20250211"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1402 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9947,4 +9945,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-cd90a4d8-20250210";
+exports.version = "19.1.0-native-fb-899e3d12-20250211";

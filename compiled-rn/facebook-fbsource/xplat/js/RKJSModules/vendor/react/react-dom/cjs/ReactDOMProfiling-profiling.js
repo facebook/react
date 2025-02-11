@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f6f287ef9aeeeabbf9a95100b67b9680>>
+ * @generated SignedSource<<4ee6a26294e56139ad47dd9437f765f8>>
  */
 
 /*
@@ -8071,9 +8071,7 @@ function commitHookEffectListUnmount(
               ) {
                 lastEffect = finishedWork;
                 var nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
-                  resource = updateQueue.inst.resource,
-                  destroy_ =
-                    null == resource ? destroy : destroy.bind(null, resource);
+                  destroy_ = destroy.bind(null, updateQueue.inst.resource);
                 try {
                   destroy_();
                 } catch (error) {
@@ -16682,14 +16680,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1898 = React.version;
 if (
-  "19.1.0-native-fb-cd90a4d8-20250210" !==
+  "19.1.0-native-fb-899e3d12-20250211" !==
   isomorphicReactPackageVersion$jscomp$inline_1898
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1898,
-      "19.1.0-native-fb-cd90a4d8-20250210"
+      "19.1.0-native-fb-899e3d12-20250211"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16711,10 +16709,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1905 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-cd90a4d8-20250210",
+  version: "19.1.0-native-fb-899e3d12-20250211",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-cd90a4d8-20250210",
+  reconcilerVersion: "19.1.0-native-fb-899e3d12-20250211",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$294 = 0;
@@ -16987,7 +16985,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-cd90a4d8-20250210";
+exports.version = "19.1.0-native-fb-899e3d12-20250211";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

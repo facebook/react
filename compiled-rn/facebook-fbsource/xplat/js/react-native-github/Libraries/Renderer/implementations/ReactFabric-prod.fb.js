@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<800d615b2da88f899dc135ffd7c8ed4b>>
+ * @generated SignedSource<<45f774b0d1534210b01178469326ecab>>
  */
 
 "use strict";
@@ -7966,9 +7966,7 @@ function commitHookEffectListUnmount(
               ) {
                 lastEffect = finishedWork;
                 var nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
-                  resource = updateQueue.inst.resource,
-                  destroy_ =
-                    null == resource ? destroy : destroy.bind(null, resource);
+                  destroy_ = destroy.bind(null, updateQueue.inst.resource);
                 try {
                   destroy_();
                 } catch (error) {
@@ -11023,10 +11021,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1234 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-cd90a4d8-20250210",
+    version: "19.1.0-native-fb-899e3d12-20250211",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-cd90a4d8-20250210"
+    reconcilerVersion: "19.1.0-native-fb-899e3d12-20250211"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1234.rendererConfig = extraDevToolsConfig);

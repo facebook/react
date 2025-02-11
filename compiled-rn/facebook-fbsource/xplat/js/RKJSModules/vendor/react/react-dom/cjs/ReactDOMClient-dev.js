@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5ea84f48b670a960c55ddb28fdb2f05a>>
+ * @generated SignedSource<<c1f359240fa459f07017c0b9d6825895>>
  */
 
 /*
@@ -11228,11 +11228,7 @@ __DEV__ &&
                     lastEffect = finishedWork;
                     var nearestMountedAncestor =
                         nearestMountedAncestor$jscomp$0,
-                      resource = updateQueue.inst.resource,
-                      destroy_ =
-                        null == resource
-                          ? destroy
-                          : destroy.bind(null, resource);
+                      destroy_ = destroy.bind(null, updateQueue.inst.resource);
                     runWithFiberInDEV(
                       lastEffect,
                       callDestroyInDEV,
@@ -26039,11 +26035,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-native-fb-cd90a4d8-20250210" !== isomorphicReactPackageVersion)
+      if ("19.1.0-native-fb-899e3d12-20250211" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-native-fb-cd90a4d8-20250210\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-native-fb-899e3d12-20250211\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26080,10 +26076,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-native-fb-cd90a4d8-20250210",
+          version: "19.1.0-native-fb-899e3d12-20250211",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-native-fb-cd90a4d8-20250210"
+          reconcilerVersion: "19.1.0-native-fb-899e3d12-20250211"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26227,5 +26223,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.1.0-native-fb-cd90a4d8-20250210";
+    exports.version = "19.1.0-native-fb-899e3d12-20250211";
   })();
