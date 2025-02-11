@@ -150,7 +150,7 @@ export const enableInfiniteRenderLoopDetection = false;
 /**
  * Experimental new hook for better managing resources in effects.
  */
-export const enableUseResourceEffectHook = false;
+export const enableUseEffectCRUDOverload = false;
 
 export const enableFastAddPropertiesInDiffing = true;
 

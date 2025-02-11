@@ -74,7 +74,7 @@ export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
 export const enableSiblingPrerendering = true;
 
-export const enableUseResourceEffectHook = false;
+export const enableUseEffectCRUDOverload = false;
 
 export const enableHydrationLaneScheduling = true;
 

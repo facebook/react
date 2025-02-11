@@ -42,7 +42,6 @@ export {
   useDeferredValue,
   useEffect,
   experimental_useEffectEvent,
-  experimental_useResourceEffect,
   useImperativeHandle,
   useInsertionEffect,
   useLayoutEffect,
