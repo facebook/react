@@ -47,7 +47,6 @@ export type HookType =
   | 'useRef'
   | 'useEffect'
   | 'useEffectEvent'
-  | 'useResourceEffect'
   | 'useInsertionEffect'
   | 'useLayoutEffect'
   | 'useCallback'
@@ -399,14 +398,6 @@ export type Dispatcher = {
   ): void,
   // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
   useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
-  // TODO: Non-nullable once `enableUseEffectCRUDOverload` is on everywhere.
-  useResourceEffect?: (
-    create: () => {...} | void | null,
-    createDeps: Array<mixed> | void | null,
-    update: ((resource: {...} | void | null) => void) | void,
-    updateDeps: Array<mixed> | void | null,
-    destroy: ((resource: {...} | void | null) => void) | void,
-  ) => void,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
