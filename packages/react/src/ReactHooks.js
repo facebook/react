@@ -93,6 +93,12 @@ export function useEffect(
   updateDeps?: Array<mixed> | void | null,
   destroy?: ((resource: {...} | void | null) => void) | void,
 ): void {
+  if (__DEV__ && create == null) {
+    console.warn(
+      'React Hook useEffect requires an effect callback. Did you forget to pass a callback to the hook?',
+    );
+  }
+
   const dispatcher = resolveDispatcher();
   if (
     enableUseEffectCRUDOverload &&
@@ -118,6 +124,12 @@ export function useInsertionEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__ && create == null) {
+    console.warn(
+      'React Hook useInsertionEffect requires an effect callback. Did you forget to pass a callback to the hook?',
+    );
+  }
+
   const dispatcher = resolveDispatcher();
   return dispatcher.useInsertionEffect(create, deps);
 }
@@ -126,6 +138,12 @@ export function useLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__ && create == null) {
+    console.warn(
+      'React Hook useLayoutEffect requires an effect callback. Did you forget to pass a callback to the hook?',
+    );
+  }
+
   const dispatcher = resolveDispatcher();
   return dispatcher.useLayoutEffect(create, deps);
 }
