@@ -7457,7 +7457,7 @@ module.exports = function ($$$config) {
           if ((updateQueue.tag & flags) === flags)
             if (
               ((lastEffect = void 0),
-              enableUseResourceEffectHook &&
+              enableUseEffectCRUDOverload &&
                 (0 === updateQueue.resourceKind &&
                   ((updateQueue.inst.resource = updateQueue.create()),
                   (lastEffect = updateQueue.inst.destroy)),
@@ -7466,7 +7466,7 @@ module.exports = function ($$$config) {
                   "function" === typeof updateQueue.update &&
                   null != updateQueue.inst.resource &&
                   updateQueue.update(updateQueue.inst.resource)),
-              enableUseResourceEffectHook)
+              enableUseEffectCRUDOverload)
             ) {
               if (null == updateQueue.resourceKind) {
                 var create = updateQueue.create,
@@ -7504,10 +7504,10 @@ module.exports = function ($$$config) {
               destroy = inst.destroy;
             if (void 0 !== destroy)
               if (
-                (enableUseResourceEffectHook
+                (enableUseEffectCRUDOverload
                   ? null == updateQueue.resourceKind && (inst.destroy = void 0)
                   : (inst.destroy = void 0),
-                enableUseResourceEffectHook)
+                enableUseEffectCRUDOverload)
               ) {
                 if (
                   0 === updateQueue.resourceKind &&
@@ -12608,8 +12608,8 @@ module.exports = function ($$$config) {
     enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
     enableSiblingPrerendering = dynamicFeatureFlags.enableSiblingPrerendering,
     enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-    enableUseResourceEffectHook =
-      dynamicFeatureFlags.enableUseResourceEffectHook,
+    enableUseEffectCRUDOverload =
+      dynamicFeatureFlags.enableUseEffectCRUDOverload,
     favorSafetyOverHydrationPerf =
       dynamicFeatureFlags.favorSafetyOverHydrationPerf,
     renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -12941,7 +12941,7 @@ module.exports = function ($$$config) {
       useCacheRefresh: throwInvalidHookError
     };
   ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
-  enableUseResourceEffectHook &&
+  enableUseEffectCRUDOverload &&
     (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
   var HooksDispatcherOnMount = {
     readContext: readContext,
@@ -13134,7 +13134,7 @@ module.exports = function ($$$config) {
       };
     }
   };
-  enableUseResourceEffectHook &&
+  enableUseEffectCRUDOverload &&
     (HooksDispatcherOnMount.useResourceEffect = mountResourceEffect);
   var HooksDispatcherOnUpdate = {
     readContext: readContext,
@@ -13184,7 +13184,7 @@ module.exports = function ($$$config) {
     useCacheRefresh: updateRefresh
   };
   HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
-  enableUseResourceEffectHook &&
+  enableUseEffectCRUDOverload &&
     (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
   var HooksDispatcherOnRerender = {
     readContext: readContext,
@@ -13239,7 +13239,7 @@ module.exports = function ($$$config) {
     useCacheRefresh: updateRefresh
   };
   HooksDispatcherOnRerender.useEffectEvent = updateEvent;
-  enableUseResourceEffectHook &&
+  enableUseEffectCRUDOverload &&
     (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
   var thenableState = null,
     thenableIndexCounter = 0,
@@ -13762,7 +13762,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-899e3d12-20250211"
+      reconcilerVersion: "19.1.0-www-classic-0461c0d8-20250211"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

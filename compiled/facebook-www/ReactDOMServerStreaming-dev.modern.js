@@ -7231,8 +7231,8 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableUseResourceEffectHook =
-        dynamicFeatureFlags.enableUseResourceEffectHook,
+      enableUseEffectCRUDOverload =
+        dynamicFeatureFlags.enableUseEffectCRUDOverload,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableOwnerStacks = dynamicFeatureFlags.enableOwnerStacks,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition,
@@ -8526,7 +8526,7 @@ __DEV__ &&
           return throwOnUseEffectEventCall;
         }
       };
-    enableUseResourceEffectHook && (HooksDispatcher.useResourceEffect = noop$1);
+    enableUseEffectCRUDOverload && (HooksDispatcher.useResourceEffect = noop$1);
     var currentResumableState = null,
       currentTaskInDEV = null,
       DefaultAsyncDispatcher = {

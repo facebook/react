@@ -57,7 +57,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableUseResourceEffectHook = dynamicFeatureFlags.enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload = dynamicFeatureFlags.enableUseEffectCRUDOverload,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   enableViewTransition = dynamicFeatureFlags.enableViewTransition,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -3429,7 +3429,7 @@ var HooksDispatcher = {
     return throwOnUseEffectEventCall;
   }
 };
-enableUseResourceEffectHook && (HooksDispatcher.useResourceEffect = noop$1);
+enableUseEffectCRUDOverload && (HooksDispatcher.useResourceEffect = noop$1);
 var currentResumableState = null,
   DefaultAsyncDispatcher = {
     getCacheForType: function () {
@@ -6106,4 +6106,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.1.0-www-modern-899e3d12-20250211";
+exports.version = "19.1.0-www-modern-0461c0d8-20250211";

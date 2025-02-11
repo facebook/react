@@ -54,7 +54,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
-  enableUseResourceEffectHook = dynamicFeatureFlags.enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload = dynamicFeatureFlags.enableUseEffectCRUDOverload,
   favorSafetyOverHydrationPerf =
     dynamicFeatureFlags.favorSafetyOverHydrationPerf,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -4270,7 +4270,7 @@ var ContextOnlyDispatcher = {
   useCacheRefresh: throwInvalidHookError
 };
 ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
 var HooksDispatcherOnMount = {
   readContext: readContext,
@@ -4462,7 +4462,7 @@ var HooksDispatcherOnMount = {
     };
   }
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnMount.useResourceEffect = mountResourceEffect);
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
@@ -4512,7 +4512,7 @@ var HooksDispatcherOnUpdate = {
   useCacheRefresh: updateRefresh
 };
 HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
 var HooksDispatcherOnRerender = {
   readContext: readContext,
@@ -4567,7 +4567,7 @@ var HooksDispatcherOnRerender = {
   useCacheRefresh: updateRefresh
 };
 HooksDispatcherOnRerender.useEffectEvent = updateEvent;
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
 var thenableState = null,
   thenableIndexCounter = 0;
@@ -8570,7 +8570,7 @@ function commitHookEffectListMount(flags, finishedWork) {
         if ((updateQueue.tag & flags) === flags)
           if (
             ((lastEffect = void 0),
-            enableUseResourceEffectHook &&
+            enableUseEffectCRUDOverload &&
               (0 === updateQueue.resourceKind &&
                 ((updateQueue.inst.resource = updateQueue.create()),
                 (lastEffect = updateQueue.inst.destroy)),
@@ -8579,7 +8579,7 @@ function commitHookEffectListMount(flags, finishedWork) {
                 "function" === typeof updateQueue.update &&
                 null != updateQueue.inst.resource &&
                 updateQueue.update(updateQueue.inst.resource)),
-            enableUseResourceEffectHook)
+            enableUseEffectCRUDOverload)
           ) {
             if (null == updateQueue.resourceKind) {
               var create = updateQueue.create,
@@ -8617,10 +8617,10 @@ function commitHookEffectListUnmount(
             destroy = inst.destroy;
           if (void 0 !== destroy)
             if (
-              (enableUseResourceEffectHook
+              (enableUseEffectCRUDOverload
                 ? null == updateQueue.resourceKind && (inst.destroy = void 0)
                 : (inst.destroy = void 0),
-              enableUseResourceEffectHook)
+              enableUseEffectCRUDOverload)
             ) {
               if (
                 0 === updateQueue.resourceKind &&
@@ -18769,14 +18769,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1900 = React.version;
 if (
-  "19.1.0-www-classic-899e3d12-20250211" !==
+  "19.1.0-www-classic-0461c0d8-20250211" !==
   isomorphicReactPackageVersion$jscomp$inline_1900
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1900,
-      "19.1.0-www-classic-899e3d12-20250211"
+      "19.1.0-www-classic-0461c0d8-20250211"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18794,10 +18794,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2465 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-899e3d12-20250211",
+  version: "19.1.0-www-classic-0461c0d8-20250211",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-899e3d12-20250211"
+  reconcilerVersion: "19.1.0-www-classic-0461c0d8-20250211"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2466 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -19312,4 +19312,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-899e3d12-20250211";
+exports.version = "19.1.0-www-classic-0461c0d8-20250211";

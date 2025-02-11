@@ -42,7 +42,7 @@ var React = require("react"),
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableUseResourceEffectHook = dynamicFeatureFlags.enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload = dynamicFeatureFlags.enableUseEffectCRUDOverload,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   enableViewTransition = dynamicFeatureFlags.enableViewTransition,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -3316,7 +3316,7 @@ var HooksDispatcher = {
     return throwOnUseEffectEventCall;
   }
 };
-enableUseResourceEffectHook && (HooksDispatcher.useResourceEffect = noop$1);
+enableUseEffectCRUDOverload && (HooksDispatcher.useResourceEffect = noop$1);
 var currentResumableState = null,
   DefaultAsyncDispatcher = {
     getCacheForType: function () {

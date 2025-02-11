@@ -1018,7 +1018,7 @@ __DEV__ &&
       updateDeps,
       destroy
     ) {
-      if (!enableUseResourceEffectHook) throw Error("Not implemented.");
+      if (!enableUseEffectCRUDOverload) throw Error("Not implemented.");
       return resolveDispatcher().useResourceEffect(
         create,
         createDeps,
@@ -1126,8 +1126,8 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableUseResourceEffectHook =
-        dynamicFeatureFlags.enableUseResourceEffectHook,
+      enableUseEffectCRUDOverload =
+        dynamicFeatureFlags.enableUseEffectCRUDOverload,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableOwnerStacks = dynamicFeatureFlags.enableOwnerStacks,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition,
@@ -1334,7 +1334,7 @@ __DEV__ &&
           return children;
         }
       },
-      experimental_useResourceEffect = enableUseResourceEffectHook
+      experimental_useResourceEffect = enableUseEffectCRUDOverload
         ? useResourceEffect
         : void 0;
     exports.captureOwnerStack = void 0;
@@ -1972,7 +1972,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-www-modern-899e3d12-20250211";
+    exports.version = "19.1.0-www-modern-0461c0d8-20250211";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

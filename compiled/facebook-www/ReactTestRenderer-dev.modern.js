@@ -14470,7 +14470,7 @@ __DEV__ &&
         "react-stack-bottom-frame": function (effect) {
           null != effect.resourceKind &&
             error$jscomp$0(
-              "Expected only SimpleEffects when enableUseResourceEffectHook is disabled, got %s",
+              "Expected only SimpleEffects when enableUseEffectCRUDOverload is disabled, got %s",
               effect.resourceKind
             );
           var create = effect.create;
@@ -14991,10 +14991,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-899e3d12-20250211",
+        version: "19.1.0-www-modern-0461c0d8-20250211",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-899e3d12-20250211"
+        reconcilerVersion: "19.1.0-www-modern-0461c0d8-20250211"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15129,5 +15129,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-modern-899e3d12-20250211";
+    exports.version = "19.1.0-www-modern-0461c0d8-20250211";
   })();

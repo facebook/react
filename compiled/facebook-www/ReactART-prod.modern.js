@@ -77,7 +77,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
   enableSiblingPrerendering = dynamicFeatureFlags.enableSiblingPrerendering,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableUseResourceEffectHook = dynamicFeatureFlags.enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload = dynamicFeatureFlags.enableUseEffectCRUDOverload,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
@@ -3069,7 +3069,7 @@ var ContextOnlyDispatcher = {
   useCacheRefresh: throwInvalidHookError
 };
 ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
 var HooksDispatcherOnMount = {
   readContext: readContext,
@@ -3242,7 +3242,7 @@ var HooksDispatcherOnMount = {
     };
   }
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnMount.useResourceEffect = mountResourceEffect);
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
@@ -3292,7 +3292,7 @@ var HooksDispatcherOnUpdate = {
   useCacheRefresh: updateRefresh
 };
 HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
 var HooksDispatcherOnRerender = {
   readContext: readContext,
@@ -3347,7 +3347,7 @@ var HooksDispatcherOnRerender = {
   useCacheRefresh: updateRefresh
 };
 HooksDispatcherOnRerender.useEffectEvent = updateEvent;
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
 var thenableState = null,
   thenableIndexCounter = 0;
@@ -6824,7 +6824,7 @@ function commitHookEffectListMount(flags, finishedWork) {
         if ((updateQueue.tag & flags) === flags)
           if (
             ((lastEffect = void 0),
-            enableUseResourceEffectHook &&
+            enableUseEffectCRUDOverload &&
               (0 === updateQueue.resourceKind &&
                 ((updateQueue.inst.resource = updateQueue.create()),
                 (lastEffect = updateQueue.inst.destroy)),
@@ -6833,7 +6833,7 @@ function commitHookEffectListMount(flags, finishedWork) {
                 "function" === typeof updateQueue.update &&
                 null != updateQueue.inst.resource &&
                 updateQueue.update(updateQueue.inst.resource)),
-            enableUseResourceEffectHook)
+            enableUseEffectCRUDOverload)
           ) {
             if (null == updateQueue.resourceKind) {
               var create = updateQueue.create,
@@ -6871,10 +6871,10 @@ function commitHookEffectListUnmount(
             destroy = inst.destroy;
           if (void 0 !== destroy)
             if (
-              (enableUseResourceEffectHook
+              (enableUseEffectCRUDOverload
                 ? null == updateQueue.resourceKind && (inst.destroy = void 0)
                 : (inst.destroy = void 0),
-              enableUseResourceEffectHook)
+              enableUseEffectCRUDOverload)
             ) {
               if (
                 0 === updateQueue.resourceKind &&
@@ -10988,10 +10988,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1540 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-899e3d12-20250211",
+  version: "19.1.0-www-modern-0461c0d8-20250211",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-899e3d12-20250211"
+  reconcilerVersion: "19.1.0-www-modern-0461c0d8-20250211"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1541 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11017,4 +11017,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-899e3d12-20250211";
+exports.version = "19.1.0-www-modern-0461c0d8-20250211";
