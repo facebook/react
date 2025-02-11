@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6730d691eea915bb7f1ef31430132bf7>>
+ * @generated SignedSource<<0f5cd29bf0d44036c48eff5f0e4d80ae>>
  */
 
 "use strict";
@@ -1792,6 +1792,10 @@ __DEV__ &&
       updateDeps,
       destroy
     ) {
+      null == create &&
+        warn(
+          "React Hook useEffect requires an effect callback. Did you forget to pass a callback to the hook?"
+        );
       var dispatcher = resolveDispatcher();
       if (
         enableUseEffectCRUDOverload &&
@@ -1817,9 +1821,17 @@ __DEV__ &&
       return resolveDispatcher().useImperativeHandle(ref, create, deps);
     };
     exports.useInsertionEffect = function (create, deps) {
+      null == create &&
+        warn(
+          "React Hook useInsertionEffect requires an effect callback. Did you forget to pass a callback to the hook?"
+        );
       return resolveDispatcher().useInsertionEffect(create, deps);
     };
     exports.useLayoutEffect = function (create, deps) {
+      null == create &&
+        warn(
+          "React Hook useLayoutEffect requires an effect callback. Did you forget to pass a callback to the hook?"
+        );
       return resolveDispatcher().useLayoutEffect(create, deps);
     };
     exports.useMemo = function (create, deps) {
@@ -1851,7 +1863,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-a69b80d0-20250211";
+    exports.version = "19.1.0-native-fb-192555bb-20250211";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

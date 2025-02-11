@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6f32d77966d10f70442f237317346685>>
+ * @generated SignedSource<<e5fd0e98e588d17eab0c0a94ddc2534a>>
  */
 
 "use strict";
@@ -11137,11 +11137,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-a69b80d0-20250211" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-192555bb-20250211" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-a69b80d0-20250211\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-192555bb-20250211\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11190,10 +11190,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1272 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-a69b80d0-20250211",
+    version: "19.1.0-native-fb-192555bb-20250211",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-a69b80d0-20250211"
+    reconcilerVersion: "19.1.0-native-fb-192555bb-20250211"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1272.rendererConfig = extraDevToolsConfig);
