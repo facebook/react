@@ -7515,9 +7515,7 @@ module.exports = function ($$$config) {
                 ) {
                   lastEffect = finishedWork;
                   var nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
-                    resource = updateQueue.inst.resource,
-                    destroy_ =
-                      null == resource ? destroy : destroy.bind(null, resource);
+                    destroy_ = destroy.bind(null, updateQueue.inst.resource);
                   try {
                     destroy_();
                   } catch (error) {
@@ -13764,7 +13762,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-a0fdb630-20250206"
+      reconcilerVersion: "19.1.0-www-classic-899e3d12-20250211"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

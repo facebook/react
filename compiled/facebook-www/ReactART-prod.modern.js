@@ -6882,9 +6882,7 @@ function commitHookEffectListUnmount(
               ) {
                 lastEffect = finishedWork;
                 var nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
-                  resource = updateQueue.inst.resource,
-                  destroy_ =
-                    null == resource ? destroy : destroy.bind(null, resource);
+                  destroy_ = destroy.bind(null, updateQueue.inst.resource);
                 try {
                   destroy_();
                 } catch (error) {
@@ -10990,10 +10988,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1540 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-a0fdb630-20250206",
+  version: "19.1.0-www-modern-899e3d12-20250211",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-a0fdb630-20250206"
+  reconcilerVersion: "19.1.0-www-modern-899e3d12-20250211"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1541 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11019,4 +11017,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-a0fdb630-20250206";
+exports.version = "19.1.0-www-modern-899e3d12-20250211";

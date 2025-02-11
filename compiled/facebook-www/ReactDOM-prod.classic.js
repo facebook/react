@@ -8542,9 +8542,7 @@ function commitHookEffectListUnmount(
               ) {
                 lastEffect = finishedWork;
                 var nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
-                  resource = updateQueue.inst.resource,
-                  destroy_ =
-                    null == resource ? destroy : destroy.bind(null, resource);
+                  destroy_ = destroy.bind(null, updateQueue.inst.resource);
                 try {
                   destroy_();
                 } catch (error) {
@@ -18442,14 +18440,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1871 = React.version;
 if (
-  "19.1.0-www-classic-a0fdb630-20250206" !==
+  "19.1.0-www-classic-899e3d12-20250211" !==
   isomorphicReactPackageVersion$jscomp$inline_1871
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1871,
-      "19.1.0-www-classic-a0fdb630-20250206"
+      "19.1.0-www-classic-899e3d12-20250211"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18467,10 +18465,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2431 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-a0fdb630-20250206",
+  version: "19.1.0-www-classic-899e3d12-20250211",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-a0fdb630-20250206"
+  reconcilerVersion: "19.1.0-www-classic-899e3d12-20250211"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2432 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18834,4 +18832,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-a0fdb630-20250206";
+exports.version = "19.1.0-www-classic-899e3d12-20250211";
