@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8dd2ac311d2e2dc613dcbeef55494db3>>
+ * @generated SignedSource<<b620555a3a3561ea5940264c39ecb792>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1173() {
+    function JSCompiler_object_inline_createNodeMock_1136() {
       return null;
     }
     function findHook(fiber, id) {
@@ -3468,8 +3468,9 @@ __DEV__ &&
       )
         (hook.memoizedState = nextSnapshot), (didReceiveUpdate = !0);
       hook = hook.queue;
-      var create = subscribeToStore.bind(null, fiber, hook, subscribe);
-      updateEffectImpl(2048, Passive, create, [subscribe]);
+      updateEffect(subscribeToStore.bind(null, fiber, hook, subscribe), [
+        subscribe
+      ]);
       if (
         hook.getSnapshot !== getSnapshot ||
         cachedSnapshot ||
@@ -3824,11 +3825,11 @@ __DEV__ &&
       currentStateHook.memoizedState = action;
       return [stateHook, dispatch, !1];
     }
-    function pushSimpleEffect(tag, inst, create, deps) {
+    function pushSimpleEffect(tag, inst, create, createDeps) {
       return pushEffectImpl({
         tag: tag,
         create: create,
-        deps: deps,
+        deps: createDeps,
         inst: inst,
         next: null
       });
@@ -3885,15 +3886,15 @@ __DEV__ &&
       initialValue = { current: initialValue };
       return (hook.memoizedState = initialValue);
     }
-    function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
+    function mountEffectImpl(fiberFlags, hookFlags, create, createDeps) {
       var hook = mountWorkInProgressHook();
-      deps = void 0 === deps ? null : deps;
+      createDeps = void 0 === createDeps ? null : createDeps;
       currentlyRenderingFiber.flags |= fiberFlags;
       hook.memoizedState = pushSimpleEffect(
         HasEffect | hookFlags,
         createEffectInstance(),
         create,
-        deps
+        createDeps
       );
     }
     function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
@@ -3912,11 +3913,44 @@ __DEV__ &&
             deps
           )));
     }
-    function mountEffect(create, deps) {
+    function mountEffect(create, createDeps, update, updateDeps, destroy) {
       0 !== (currentlyRenderingFiber.mode & 16) &&
       0 === (currentlyRenderingFiber.mode & 64)
-        ? mountEffectImpl(276826112, Passive, create, deps)
-        : mountEffectImpl(8390656, Passive, create, deps);
+        ? "function" === typeof update || "function" === typeof destroy
+          ? mountResourceEffectImpl(
+              276826112,
+              Passive,
+              create,
+              createDeps,
+              update,
+              updateDeps,
+              destroy
+            )
+          : mountEffectImpl(276826112, Passive, create, createDeps)
+        : "function" === typeof update || "function" === typeof destroy
+          ? mountResourceEffectImpl(
+              8390656,
+              Passive,
+              create,
+              createDeps,
+              update,
+              updateDeps,
+              destroy
+            )
+          : mountEffectImpl(8390656, Passive, create, createDeps);
+    }
+    function updateEffect(create, createDeps, update, updateDeps, destroy) {
+      "function" === typeof update || "function" === typeof destroy
+        ? updateResourceEffectImpl(
+            2048,
+            Passive,
+            create,
+            createDeps,
+            update,
+            updateDeps,
+            destroy
+          )
+        : updateEffectImpl(2048, Passive, create, createDeps);
     }
     function mountResourceEffect(
       create,
@@ -3925,39 +3959,40 @@ __DEV__ &&
       updateDeps,
       destroy
     ) {
-      if (
-        0 !== (currentlyRenderingFiber.mode & 16) &&
-        0 === (currentlyRenderingFiber.mode & 64)
-      ) {
-        var hookFlags = Passive,
-          hook = mountWorkInProgressHook();
-        currentlyRenderingFiber.flags |= 276826112;
-        var inst = createEffectInstance();
-        inst.destroy = destroy;
-        hook.memoizedState = pushResourceEffect(
-          HasEffect | hookFlags,
-          hookFlags,
-          inst,
+      (0 !== (currentlyRenderingFiber.mode & 16) &&
+        0 === (currentlyRenderingFiber.mode & 64)) ||
+        mountResourceEffectImpl(
+          8390656,
+          Passive,
           create,
           createDeps,
           update,
-          updateDeps
+          updateDeps,
+          destroy
         );
-      } else
-        (hookFlags = Passive),
-          (hook = mountWorkInProgressHook()),
-          (currentlyRenderingFiber.flags |= 8390656),
-          (inst = createEffectInstance()),
-          (inst.destroy = destroy),
-          (hook.memoizedState = pushResourceEffect(
-            HasEffect | hookFlags,
-            hookFlags,
-            inst,
-            create,
-            createDeps,
-            update,
-            updateDeps
-          ));
+    }
+    function mountResourceEffectImpl(
+      fiberFlags,
+      hookFlags,
+      create,
+      createDeps,
+      update,
+      updateDeps,
+      destroy
+    ) {
+      var hook = mountWorkInProgressHook();
+      currentlyRenderingFiber.flags |= fiberFlags;
+      fiberFlags = createEffectInstance();
+      fiberFlags.destroy = destroy;
+      hook.memoizedState = pushResourceEffect(
+        HasEffect | hookFlags,
+        hookFlags,
+        fiberFlags,
+        create,
+        createDeps,
+        update,
+        updateDeps
+      );
     }
     function updateResourceEffectImpl(
       fiberFlags,
@@ -8909,7 +8944,7 @@ __DEV__ &&
                 )),
                 null == updateQueue.inst.resource &&
                   error$jscomp$0(
-                    "useResourceEffect must provide a callback which returns a resource. If a managed resource is not needed here, use useEffect. Received %s",
+                    "useEffect must provide a callback which returns a resource. If a managed resource is not needed here, do not provide an updater or destroy callback. Received %s",
                     updateQueue.inst.resource
                   ),
                 (lastEffect = updateQueue.inst.destroy)),
@@ -8946,9 +8981,7 @@ __DEV__ &&
                   ? "useLayoutEffect"
                   : 0 !== (updateQueue.tag & Insertion)
                     ? "useInsertionEffect"
-                    : null != updateQueue.resourceKind
-                      ? "useResourceEffect"
-                      : "useEffect";
+                    : "useEffect";
               var addendum = void 0;
               addendum =
                 null === lastEffect
@@ -9019,7 +9052,9 @@ __DEV__ &&
                 ) {
                   lastEffect = finishedWork;
                   var nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
-                    destroy_ = destroy.bind(null, updateQueue.inst.resource);
+                    resource = updateQueue.inst.resource,
+                    destroy_ =
+                      null == resource ? destroy : destroy.bind(null, resource);
                   runWithFiberInDEV(
                     lastEffect,
                     callDestroyInDEV,
@@ -9036,13 +9071,14 @@ __DEV__ &&
                   updateQueue.inst.resource = null;
                 }
                 null == updateQueue.resourceKind &&
+                  ((lastEffect = finishedWork),
                   runWithFiberInDEV(
-                    finishedWork,
+                    lastEffect,
                     callDestroyInDEV,
-                    finishedWork,
+                    lastEffect,
                     nearestMountedAncestor$jscomp$0,
                     destroy
-                  );
+                  ));
                 (flags & Insertion) !== NoFlags &&
                   (isRunningInsertionEffect = !1);
                 (flags & Passive) !== NoFlags
@@ -13930,9 +13966,8 @@ __DEV__ &&
         useOptimistic: throwInvalidHookError,
         useMemoCache: throwInvalidHookError,
         useCacheRefresh: throwInvalidHookError
-      };
-    ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError;
-    var HooksDispatcherOnMountInDEV = null,
+      },
+      HooksDispatcherOnMountInDEV = null,
       HooksDispatcherOnMountWithHookTypesInDEV = null,
       HooksDispatcherOnUpdateInDEV = null,
       HooksDispatcherOnRerenderInDEV = null,
@@ -13955,11 +13990,23 @@ __DEV__ &&
         mountHookTypesDev();
         return readContext(context);
       },
-      useEffect: function (create, deps) {
+      useEffect: function (create, createDeps, update, updateDeps, destroy) {
         currentHookNameInDev = "useEffect";
         mountHookTypesDev();
-        checkDepsAreArrayDev(deps);
-        return mountEffect(create, deps);
+        if ("function" === typeof update || "function" === typeof destroy)
+          return (
+            void 0 !== updateDeps &&
+              null !== updateDeps &&
+              isArrayImpl(updateDeps) &&
+              0 === updateDeps.length &&
+              error$jscomp$0(
+                "%s received a dependency array with no dependencies. When specified, the dependency array must have at least one dependency.",
+                currentHookNameInDev
+              ),
+            mountResourceEffect(create, createDeps, update, updateDeps, destroy)
+          );
+        checkDepsAreArrayDev(createDeps);
+        return mountEffect(create, createDeps);
       },
       useImperativeHandle: function (ref, create, deps) {
         currentHookNameInDev = "useImperativeHandle";
@@ -14064,31 +14111,6 @@ __DEV__ &&
         currentHookNameInDev = "useCacheRefresh";
         mountHookTypesDev();
         return mountRefresh();
-      },
-      useResourceEffect: function (
-        create,
-        createDeps,
-        update,
-        updateDeps,
-        destroy
-      ) {
-        currentHookNameInDev = "useResourceEffect";
-        mountHookTypesDev();
-        void 0 !== updateDeps &&
-          null !== updateDeps &&
-          isArrayImpl(updateDeps) &&
-          0 === updateDeps.length &&
-          error$jscomp$0(
-            "%s received a dependency array with no dependencies. When specified, the dependency array must have at least one dependency.",
-            currentHookNameInDev
-          );
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy
-        );
       }
     };
     HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -14106,10 +14128,12 @@ __DEV__ &&
         updateHookTypesDev();
         return readContext(context);
       },
-      useEffect: function (create, deps) {
+      useEffect: function (create, createDeps, update, updateDeps, destroy) {
         currentHookNameInDev = "useEffect";
         updateHookTypesDev();
-        return mountEffect(create, deps);
+        return "function" === typeof update || "function" === typeof destroy
+          ? mountResourceEffect(create, createDeps, update, updateDeps, destroy)
+          : mountEffect(create, createDeps);
       },
       useImperativeHandle: function (ref, create, deps) {
         currentHookNameInDev = "useImperativeHandle";
@@ -14210,23 +14234,6 @@ __DEV__ &&
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return mountRefresh();
-      },
-      useResourceEffect: function (
-        create,
-        createDeps,
-        update,
-        updateDeps,
-        destroy
-      ) {
-        currentHookNameInDev = "useResourceEffect";
-        updateHookTypesDev();
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy
-        );
       }
     };
     HooksDispatcherOnUpdateInDEV = {
@@ -14244,10 +14251,20 @@ __DEV__ &&
         updateHookTypesDev();
         return readContext(context);
       },
-      useEffect: function (create, deps) {
+      useEffect: function (create, createDeps, update, updateDeps, destroy) {
         currentHookNameInDev = "useEffect";
         updateHookTypesDev();
-        updateEffectImpl(2048, Passive, create, deps);
+        if ("function" === typeof update || "function" === typeof destroy)
+          updateResourceEffectImpl(
+            2048,
+            Passive,
+            create,
+            createDeps,
+            update,
+            updateDeps,
+            destroy
+          );
+        else return updateEffect(create, createDeps);
       },
       useImperativeHandle: function (ref, create, deps) {
         currentHookNameInDev = "useImperativeHandle";
@@ -14348,25 +14365,6 @@ __DEV__ &&
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
-      },
-      useResourceEffect: function (
-        create,
-        createDeps,
-        update,
-        updateDeps,
-        destroy
-      ) {
-        currentHookNameInDev = "useResourceEffect";
-        updateHookTypesDev();
-        updateResourceEffectImpl(
-          2048,
-          Passive,
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy
-        );
       }
     };
     HooksDispatcherOnRerenderInDEV = {
@@ -14384,10 +14382,20 @@ __DEV__ &&
         updateHookTypesDev();
         return readContext(context);
       },
-      useEffect: function (create, deps) {
+      useEffect: function (create, createDeps, update, updateDeps, destroy) {
         currentHookNameInDev = "useEffect";
         updateHookTypesDev();
-        updateEffectImpl(2048, Passive, create, deps);
+        if ("function" === typeof update || "function" === typeof destroy)
+          updateResourceEffectImpl(
+            2048,
+            Passive,
+            create,
+            createDeps,
+            update,
+            updateDeps,
+            destroy
+          );
+        else return updateEffect(create, createDeps);
       },
       useImperativeHandle: function (ref, create, deps) {
         currentHookNameInDev = "useImperativeHandle";
@@ -14488,25 +14496,6 @@ __DEV__ &&
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
-      },
-      useResourceEffect: function (
-        create,
-        createDeps,
-        update,
-        updateDeps,
-        destroy
-      ) {
-        currentHookNameInDev = "useResourceEffect";
-        updateHookTypesDev();
-        updateResourceEffectImpl(
-          2048,
-          Passive,
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy
-        );
       }
     };
     InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -14530,11 +14519,13 @@ __DEV__ &&
         mountHookTypesDev();
         return readContext(context);
       },
-      useEffect: function (create, deps) {
+      useEffect: function (create, createDeps, update, updateDeps, destroy) {
         currentHookNameInDev = "useEffect";
         warnInvalidHookAccess();
         mountHookTypesDev();
-        return mountEffect(create, deps);
+        return "function" === typeof update || "function" === typeof destroy
+          ? mountResourceEffect(create, createDeps, update, updateDeps, destroy)
+          : mountEffect(create, createDeps);
       },
       useImperativeHandle: function (ref, create, deps) {
         currentHookNameInDev = "useImperativeHandle";
@@ -14652,24 +14643,6 @@ __DEV__ &&
         currentHookNameInDev = "useCacheRefresh";
         mountHookTypesDev();
         return mountRefresh();
-      },
-      useResourceEffect: function (
-        create,
-        createDeps,
-        update,
-        updateDeps,
-        destroy
-      ) {
-        currentHookNameInDev = "useResourceEffect";
-        warnInvalidHookAccess();
-        mountHookTypesDev();
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy
-        );
       }
     };
     InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -14693,11 +14666,21 @@ __DEV__ &&
         updateHookTypesDev();
         return readContext(context);
       },
-      useEffect: function (create, deps) {
+      useEffect: function (create, createDeps, update, updateDeps, destroy) {
         currentHookNameInDev = "useEffect";
         warnInvalidHookAccess();
         updateHookTypesDev();
-        updateEffectImpl(2048, Passive, create, deps);
+        if ("function" === typeof update || "function" === typeof destroy)
+          updateResourceEffectImpl(
+            2048,
+            Passive,
+            create,
+            createDeps,
+            update,
+            updateDeps,
+            destroy
+          );
+        else return updateEffect(create, createDeps);
       },
       useImperativeHandle: function (ref, create, deps) {
         currentHookNameInDev = "useImperativeHandle";
@@ -14815,26 +14798,6 @@ __DEV__ &&
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
-      },
-      useResourceEffect: function (
-        create,
-        createDeps,
-        update,
-        updateDeps,
-        destroy
-      ) {
-        currentHookNameInDev = "useResourceEffect";
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        updateResourceEffectImpl(
-          2048,
-          Passive,
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy
-        );
       }
     };
     InvalidNestedHooksDispatcherOnRerenderInDEV = {
@@ -14858,11 +14821,21 @@ __DEV__ &&
         updateHookTypesDev();
         return readContext(context);
       },
-      useEffect: function (create, deps) {
+      useEffect: function (create, createDeps, update, updateDeps, destroy) {
         currentHookNameInDev = "useEffect";
         warnInvalidHookAccess();
         updateHookTypesDev();
-        updateEffectImpl(2048, Passive, create, deps);
+        if ("function" === typeof update || "function" === typeof destroy)
+          updateResourceEffectImpl(
+            2048,
+            Passive,
+            create,
+            createDeps,
+            update,
+            updateDeps,
+            destroy
+          );
+        else return updateEffect(create, createDeps);
       },
       useImperativeHandle: function (ref, create, deps) {
         currentHookNameInDev = "useImperativeHandle";
@@ -14980,26 +14953,6 @@ __DEV__ &&
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
-      },
-      useResourceEffect: function (
-        create,
-        createDeps,
-        update,
-        updateDeps,
-        destroy
-      ) {
-        currentHookNameInDev = "useResourceEffect";
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        updateResourceEffectImpl(
-          2048,
-          Passive,
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy
-        );
       }
     };
     var callComponent = {
@@ -15624,10 +15577,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-0461c0d8-20250211",
+        version: "19.1.0-native-fb-a69b80d0-20250211",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-0461c0d8-20250211"
+        reconcilerVersion: "19.1.0-native-fb-a69b80d0-20250211"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15649,7 +15602,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1173,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1136,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15772,5 +15725,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-0461c0d8-20250211";
+    exports.version = "19.1.0-native-fb-a69b80d0-20250211";
   })();

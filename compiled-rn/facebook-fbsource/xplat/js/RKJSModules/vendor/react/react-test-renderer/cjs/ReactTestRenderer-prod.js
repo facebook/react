@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8c00c4bac91e016e519ffa2b7099b2b2>>
+ * @generated SignedSource<<c10028814fea6a84988629861caf8f81>>
  */
 
 "use strict";
@@ -2560,11 +2560,11 @@ function rerenderActionState(action) {
   currentStateHook.memoizedState = action;
   return [stateHook, dispatch, !1];
 }
-function pushSimpleEffect(tag, inst, create, deps) {
+function pushSimpleEffect(tag, inst, create, createDeps) {
   return pushEffectImpl({
     tag: tag,
     create: create,
-    deps: deps,
+    deps: createDeps,
     inst: inst,
     next: null
   });
@@ -2619,15 +2619,15 @@ function createEffectInstance() {
 function updateRef() {
   return updateWorkInProgressHook().memoizedState;
 }
-function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
+function mountEffectImpl(fiberFlags, hookFlags, create, createDeps) {
   var hook = mountWorkInProgressHook();
-  deps = void 0 === deps ? null : deps;
+  createDeps = void 0 === createDeps ? null : createDeps;
   currentlyRenderingFiber.flags |= fiberFlags;
   hook.memoizedState = pushSimpleEffect(
     1 | hookFlags,
     createEffectInstance(),
     create,
-    deps
+    createDeps
   );
 }
 function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
@@ -2646,51 +2646,64 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
         deps
       )));
 }
-function mountEffect(create, deps) {
-  mountEffectImpl(8390656, 8, create, deps);
+function mountEffect(create, createDeps, update, updateDeps, destroy) {
+  if ("function" === typeof update || "function" === typeof destroy) {
+    var hook = mountWorkInProgressHook();
+    currentlyRenderingFiber.flags |= 8390656;
+    var inst = createEffectInstance();
+    inst.destroy = destroy;
+    hook.memoizedState = pushResourceEffect(
+      9,
+      8,
+      inst,
+      create,
+      createDeps,
+      update,
+      updateDeps
+    );
+  } else mountEffectImpl(8390656, 8, create, createDeps);
 }
-function updateEffect(create, deps) {
-  updateEffectImpl(2048, 8, create, deps);
-}
-function updateResourceEffect(create, createDeps, update, updateDeps, destroy) {
-  var hook = updateWorkInProgressHook(),
-    inst = hook.memoizedState.inst;
-  inst.destroy = destroy;
-  createDeps = void 0 === createDeps ? null : createDeps;
-  updateDeps = void 0 === updateDeps ? null : updateDeps;
-  if (null !== currentHook) {
-    destroy = currentHook.memoizedState;
-    if (null !== createDeps) {
-      if (null != destroy.resourceKind && 1 === destroy.resourceKind)
-        var isCreateDepsSame =
-          null != destroy.identity.deps ? destroy.identity.deps : null;
-      else
-        throw Error(
-          "Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React."
-        );
-      isCreateDepsSame = areHookInputsEqual(createDeps, isCreateDepsSame);
+function updateEffect(create, createDeps, update, updateDeps, destroy) {
+  if ("function" === typeof update || "function" === typeof destroy) {
+    var hook = updateWorkInProgressHook(),
+      inst = hook.memoizedState.inst;
+    inst.destroy = destroy;
+    createDeps = void 0 === createDeps ? null : createDeps;
+    updateDeps = void 0 === updateDeps ? null : updateDeps;
+    if (null !== currentHook) {
+      destroy = currentHook.memoizedState;
+      if (null !== createDeps) {
+        if (null != destroy.resourceKind && 1 === destroy.resourceKind)
+          var isCreateDepsSame =
+            null != destroy.identity.deps ? destroy.identity.deps : null;
+        else
+          throw Error(
+            "Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React."
+          );
+        isCreateDepsSame = areHookInputsEqual(createDeps, isCreateDepsSame);
+      }
+      if (null !== updateDeps) {
+        if (null != destroy.resourceKind && 1 === destroy.resourceKind)
+          var isUpdateDepsSame = null != destroy.deps ? destroy.deps : null;
+        else
+          throw Error(
+            "Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React."
+          );
+        isUpdateDepsSame = areHookInputsEqual(updateDeps, isUpdateDepsSame);
+      }
     }
-    if (null !== updateDeps) {
-      if (null != destroy.resourceKind && 1 === destroy.resourceKind)
-        var isUpdateDepsSame = null != destroy.deps ? destroy.deps : null;
-      else
-        throw Error(
-          "Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React."
-        );
-      isUpdateDepsSame = areHookInputsEqual(updateDeps, isUpdateDepsSame);
-    }
-  }
-  (isCreateDepsSame && isUpdateDepsSame) ||
-    (currentlyRenderingFiber.flags |= 2048);
-  hook.memoizedState = pushResourceEffect(
-    isCreateDepsSame ? 8 : 9,
-    isUpdateDepsSame ? 8 : 9,
-    inst,
-    create,
-    createDeps,
-    update,
-    updateDeps
-  );
+    (isCreateDepsSame && isUpdateDepsSame) ||
+      (currentlyRenderingFiber.flags |= 2048);
+    hook.memoizedState = pushResourceEffect(
+      isCreateDepsSame ? 8 : 9,
+      isUpdateDepsSame ? 8 : 9,
+      inst,
+      create,
+      createDeps,
+      update,
+      updateDeps
+    );
+  } else updateEffectImpl(2048, 8, create, createDeps);
 }
 function updateInsertionEffect(create, deps) {
   return updateEffectImpl(4, 2, create, deps);
@@ -2955,32 +2968,31 @@ function entangleTransitionUpdate(root, queue, lane) {
   }
 }
 var ContextOnlyDispatcher = {
-  readContext: readContext,
-  use: use,
-  useCallback: throwInvalidHookError,
-  useContext: throwInvalidHookError,
-  useEffect: throwInvalidHookError,
-  useImperativeHandle: throwInvalidHookError,
-  useLayoutEffect: throwInvalidHookError,
-  useInsertionEffect: throwInvalidHookError,
-  useMemo: throwInvalidHookError,
-  useReducer: throwInvalidHookError,
-  useRef: throwInvalidHookError,
-  useState: throwInvalidHookError,
-  useDebugValue: throwInvalidHookError,
-  useDeferredValue: throwInvalidHookError,
-  useTransition: throwInvalidHookError,
-  useSyncExternalStore: throwInvalidHookError,
-  useId: throwInvalidHookError,
-  useHostTransitionStatus: throwInvalidHookError,
-  useFormState: throwInvalidHookError,
-  useActionState: throwInvalidHookError,
-  useOptimistic: throwInvalidHookError,
-  useMemoCache: throwInvalidHookError,
-  useCacheRefresh: throwInvalidHookError
-};
-ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError;
-var HooksDispatcherOnMount = {
+    readContext: readContext,
+    use: use,
+    useCallback: throwInvalidHookError,
+    useContext: throwInvalidHookError,
+    useEffect: throwInvalidHookError,
+    useImperativeHandle: throwInvalidHookError,
+    useLayoutEffect: throwInvalidHookError,
+    useInsertionEffect: throwInvalidHookError,
+    useMemo: throwInvalidHookError,
+    useReducer: throwInvalidHookError,
+    useRef: throwInvalidHookError,
+    useState: throwInvalidHookError,
+    useDebugValue: throwInvalidHookError,
+    useDeferredValue: throwInvalidHookError,
+    useTransition: throwInvalidHookError,
+    useSyncExternalStore: throwInvalidHookError,
+    useId: throwInvalidHookError,
+    useHostTransitionStatus: throwInvalidHookError,
+    useFormState: throwInvalidHookError,
+    useActionState: throwInvalidHookError,
+    useOptimistic: throwInvalidHookError,
+    useMemoCache: throwInvalidHookError,
+    useCacheRefresh: throwInvalidHookError
+  },
+  HooksDispatcherOnMount = {
     readContext: readContext,
     use: use,
     useCallback: function (callback, deps) {
@@ -3142,27 +3154,6 @@ var HooksDispatcherOnMount = {
         null,
         currentlyRenderingFiber
       ));
-    },
-    useResourceEffect: function (
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    ) {
-      var hook = mountWorkInProgressHook();
-      currentlyRenderingFiber.flags |= 8390656;
-      var inst = createEffectInstance();
-      inst.destroy = destroy;
-      hook.memoizedState = pushResourceEffect(
-        9,
-        8,
-        inst,
-        create,
-        createDeps,
-        update,
-        updateDeps
-      );
     }
   },
   HooksDispatcherOnUpdate = {
@@ -3211,62 +3202,60 @@ var HooksDispatcherOnMount = {
     },
     useMemoCache: useMemoCache,
     useCacheRefresh: updateRefresh
-  };
-HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect;
-var HooksDispatcherOnRerender = {
-  readContext: readContext,
-  use: use,
-  useCallback: updateCallback,
-  useContext: readContext,
-  useEffect: updateEffect,
-  useImperativeHandle: updateImperativeHandle,
-  useInsertionEffect: updateInsertionEffect,
-  useLayoutEffect: updateLayoutEffect,
-  useMemo: updateMemo,
-  useReducer: rerenderReducer,
-  useRef: updateRef,
-  useState: function () {
-    return rerenderReducer(basicStateReducer);
   },
-  useDebugValue: mountDebugValue,
-  useDeferredValue: function (value, initialValue) {
-    var hook = updateWorkInProgressHook();
-    return null === currentHook
-      ? mountDeferredValueImpl(hook, value, initialValue)
-      : updateDeferredValueImpl(
-          hook,
-          currentHook.memoizedState,
-          value,
-          initialValue
-        );
+  HooksDispatcherOnRerender = {
+    readContext: readContext,
+    use: use,
+    useCallback: updateCallback,
+    useContext: readContext,
+    useEffect: updateEffect,
+    useImperativeHandle: updateImperativeHandle,
+    useInsertionEffect: updateInsertionEffect,
+    useLayoutEffect: updateLayoutEffect,
+    useMemo: updateMemo,
+    useReducer: rerenderReducer,
+    useRef: updateRef,
+    useState: function () {
+      return rerenderReducer(basicStateReducer);
+    },
+    useDebugValue: mountDebugValue,
+    useDeferredValue: function (value, initialValue) {
+      var hook = updateWorkInProgressHook();
+      return null === currentHook
+        ? mountDeferredValueImpl(hook, value, initialValue)
+        : updateDeferredValueImpl(
+            hook,
+            currentHook.memoizedState,
+            value,
+            initialValue
+          );
+    },
+    useTransition: function () {
+      var booleanOrThenable = rerenderReducer(basicStateReducer)[0],
+        start = updateWorkInProgressHook().memoizedState;
+      return [
+        "boolean" === typeof booleanOrThenable
+          ? booleanOrThenable
+          : useThenable(booleanOrThenable),
+        start
+      ];
+    },
+    useSyncExternalStore: updateSyncExternalStore,
+    useId: updateId,
+    useHostTransitionStatus: useHostTransitionStatus,
+    useFormState: rerenderActionState,
+    useActionState: rerenderActionState,
+    useOptimistic: function (passthrough, reducer) {
+      var hook = updateWorkInProgressHook();
+      if (null !== currentHook)
+        return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+      hook.baseState = passthrough;
+      return [passthrough, hook.queue.dispatch];
+    },
+    useMemoCache: useMemoCache,
+    useCacheRefresh: updateRefresh
   },
-  useTransition: function () {
-    var booleanOrThenable = rerenderReducer(basicStateReducer)[0],
-      start = updateWorkInProgressHook().memoizedState;
-    return [
-      "boolean" === typeof booleanOrThenable
-        ? booleanOrThenable
-        : useThenable(booleanOrThenable),
-      start
-    ];
-  },
-  useSyncExternalStore: updateSyncExternalStore,
-  useId: updateId,
-  useHostTransitionStatus: useHostTransitionStatus,
-  useFormState: rerenderActionState,
-  useActionState: rerenderActionState,
-  useOptimistic: function (passthrough, reducer) {
-    var hook = updateWorkInProgressHook();
-    if (null !== currentHook)
-      return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
-    hook.baseState = passthrough;
-    return [passthrough, hook.queue.dispatch];
-  },
-  useMemoCache: useMemoCache,
-  useCacheRefresh: updateRefresh
-};
-HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect;
-var thenableState = null,
+  thenableState = null,
   thenableIndexCounter = 0;
 function unwrapThenable(thenable) {
   var index = thenableIndexCounter;
@@ -6498,7 +6487,7 @@ function commitHookEffectListMount(flags, finishedWork) {
 function commitHookEffectListUnmount(
   flags,
   finishedWork,
-  nearestMountedAncestor$jscomp$0
+  nearestMountedAncestor
 ) {
   try {
     var updateQueue = finishedWork.updateQueue,
@@ -6510,42 +6499,21 @@ function commitHookEffectListUnmount(
         if ((updateQueue.tag & flags) === flags) {
           var inst = updateQueue.inst,
             destroy = inst.destroy;
-          if (void 0 !== destroy) {
-            null == updateQueue.resourceKind && (inst.destroy = void 0);
-            if (
-              0 === updateQueue.resourceKind &&
-              null != updateQueue.inst.resource
-            ) {
-              lastEffect = finishedWork;
-              var nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
-                destroy_ = destroy.bind(null, updateQueue.inst.resource);
-              try {
-                destroy_();
-              } catch (error) {
-                captureCommitPhaseError(
-                  lastEffect,
-                  nearestMountedAncestor,
-                  error
-                );
-              }
+          void 0 !== destroy &&
+            (null == updateQueue.resourceKind && (inst.destroy = void 0),
+            0 === updateQueue.resourceKind &&
+              null != updateQueue.inst.resource &&
+              (safelyCallDestroy(
+                finishedWork,
+                nearestMountedAncestor,
+                destroy,
+                updateQueue.inst.resource
+              ),
               1 === updateQueue.next.resourceKind &&
-                (updateQueue.next.update = void 0);
-              updateQueue.inst.resource = null;
-            }
-            if (null == updateQueue.resourceKind) {
-              lastEffect = finishedWork;
-              nearestMountedAncestor = nearestMountedAncestor$jscomp$0;
-              try {
-                destroy();
-              } catch (error) {
-                captureCommitPhaseError(
-                  lastEffect,
-                  nearestMountedAncestor,
-                  error
-                );
-              }
-            }
-          }
+                (updateQueue.next.update = void 0),
+              (updateQueue.inst.resource = null)),
+            null == updateQueue.resourceKind &&
+              safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy));
         }
         updateQueue = updateQueue.next;
       } while (updateQueue !== firstEffect);
@@ -6623,6 +6591,14 @@ function safelyDetachRef(current, nearestMountedAncestor) {
         captureCommitPhaseError(current, nearestMountedAncestor, error$112);
       }
     else ref.current = null;
+}
+function safelyCallDestroy(current, nearestMountedAncestor, destroy, resource) {
+  destroy = null == resource ? destroy : destroy.bind(null, resource);
+  try {
+    destroy();
+  } catch (error) {
+    captureCommitPhaseError(current, nearestMountedAncestor, error);
+  }
 }
 function isHostParent(fiber) {
   return 5 === fiber.tag || 3 === fiber.tag || 4 === fiber.tag;
@@ -9804,24 +9780,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1401 = {
+var internals$jscomp$inline_1389 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-0461c0d8-20250211",
+  version: "19.1.0-native-fb-a69b80d0-20250211",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-0461c0d8-20250211"
+  reconcilerVersion: "19.1.0-native-fb-a69b80d0-20250211"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1402 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1390 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1402.isDisabled &&
-    hook$jscomp$inline_1402.supportsFiber
+    !hook$jscomp$inline_1390.isDisabled &&
+    hook$jscomp$inline_1390.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1402.inject(
-        internals$jscomp$inline_1401
+      (rendererID = hook$jscomp$inline_1390.inject(
+        internals$jscomp$inline_1389
       )),
-        (injectedHook = hook$jscomp$inline_1402);
+        (injectedHook = hook$jscomp$inline_1390);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9945,4 +9921,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-0461c0d8-20250211";
+exports.version = "19.1.0-native-fb-a69b80d0-20250211";
