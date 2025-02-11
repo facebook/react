@@ -72,7 +72,7 @@ export function runWithFiberInDEV<A0, A1, A2, A3, A4, T>(
       }
       return callback(arg0, arg1, arg2, arg3, arg4);
     } finally {
-      current = previousFiber;
+      setCurrentFiber(previousFiber);
     }
   }
   // These errors should never make it into a build so we don't need to encode them in codes.json
