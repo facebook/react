@@ -18,7 +18,7 @@ import {
   ResourceEffectIdentityKind,
   ResourceEffectUpdateKind,
 } from './ReactFiberHooks';
-import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
+import {enableUseEffectCRUDOverload} from 'shared/ReactFeatureFlags';
 
 // These indirections exists so we can exclude its stack frame in DEV (and anything below it).
 // TODO: Consider marking the whole bundle instead of these boundaries.
@@ -184,11 +184,11 @@ const callCreate = {
   'react-stack-bottom-frame': function (
     effect: Effect,
   ): (() => void) | {...} | void | null {
-    if (!enableUseResourceEffectHook) {
+    if (!enableUseEffectCRUDOverload) {
       if (effect.resourceKind != null) {
         if (__DEV__) {
           console.error(
-            'Expected only SimpleEffects when enableUseResourceEffectHook is disabled, ' +
+            'Expected only SimpleEffects when enableUseEffectCRUDOverload is disabled, ' +
               'got %s',
             effect.resourceKind,
           );
