@@ -93,10 +93,12 @@ export function useEffect(
   updateDeps?: Array<mixed> | void | null,
   destroy?: ((resource: {...} | void | null) => void) | void,
 ): void {
-  if (__DEV__ && create == null) {
-    console.warn(
-      'React Hook useEffect requires an effect callback. Did you forget to pass a callback to the hook?',
-    );
+  if (__DEV__ ) {
+    if (create == null) {
+      console.warn(
+        'React Hook useEffect requires an effect callback. Did you forget to pass a callback to the hook?',
+      );
+    }
   }
 
   const dispatcher = resolveDispatcher();
