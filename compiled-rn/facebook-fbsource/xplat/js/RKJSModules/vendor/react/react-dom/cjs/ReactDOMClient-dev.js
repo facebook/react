@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c1f359240fa459f07017c0b9d6825895>>
+ * @generated SignedSource<<51dcff26f888a254bec325f280da642d>>
  */
 
 /*
@@ -11094,7 +11094,7 @@ __DEV__ &&
                     finishedWork
                   ),
               (lastEffect = void 0),
-              enableUseResourceEffectHook &&
+              enableUseEffectCRUDOverload &&
                 (updateQueue.resourceKind === ResourceEffectIdentityKind &&
                   ((updateQueue.inst.resource = runWithFiberInDEV(
                     finishedWork,
@@ -11118,7 +11118,7 @@ __DEV__ &&
                   )),
               (flags & Insertion) !== NoFlags &&
                 (isRunningInsertionEffect = !0),
-              enableUseResourceEffectHook
+              enableUseEffectCRUDOverload
                 ? null == updateQueue.resourceKind &&
                   (lastEffect = runWithFiberInDEV(
                     finishedWork,
@@ -11150,7 +11150,7 @@ __DEV__ &&
                   ? "useLayoutEffect"
                   : 0 !== (updateQueue.tag & Insertion)
                     ? "useInsertionEffect"
-                    : enableUseResourceEffectHook &&
+                    : enableUseEffectCRUDOverload &&
                         null != updateQueue.resourceKind
                       ? "useResourceEffect"
                       : "useEffect";
@@ -11201,7 +11201,7 @@ __DEV__ &&
               var inst = updateQueue.inst,
                 destroy = inst.destroy;
               if (void 0 !== destroy) {
-                enableUseResourceEffectHook
+                enableUseEffectCRUDOverload
                   ? null == updateQueue.resourceKind && (inst.destroy = void 0)
                   : (inst.destroy = void 0);
                 (flags & Passive) !== NoFlags
@@ -11220,7 +11220,7 @@ __DEV__ &&
                     );
                 (flags & Insertion) !== NoFlags &&
                   (isRunningInsertionEffect = !0);
-                if (enableUseResourceEffectHook) {
+                if (enableUseEffectCRUDOverload) {
                   if (
                     updateQueue.resourceKind === ResourceEffectIdentityKind &&
                     null != updateQueue.inst.resource
@@ -22283,8 +22283,8 @@ __DEV__ &&
       enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
       enablePersistedModeClonedFlag =
         dynamicFlagsUntyped.enablePersistedModeClonedFlag,
-      enableUseResourceEffectHook =
-        dynamicFlagsUntyped.enableUseResourceEffectHook,
+      enableUseEffectCRUDOverload =
+        dynamicFlagsUntyped.enableUseEffectCRUDOverload,
       enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
       enableOwnerStacks = dynamicFlagsUntyped.enableOwnerStacks,
       assign = Object.assign,
@@ -23982,7 +23982,7 @@ __DEV__ &&
         useMemoCache: throwInvalidHookError,
         useCacheRefresh: throwInvalidHookError
       };
-    enableUseResourceEffectHook &&
+    enableUseEffectCRUDOverload &&
       (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
     var HooksDispatcherOnMountInDEV = null,
       HooksDispatcherOnMountWithHookTypesInDEV = null,
@@ -24126,7 +24126,7 @@ __DEV__ &&
         return mountRefresh();
       }
     };
-    enableUseResourceEffectHook &&
+    enableUseEffectCRUDOverload &&
       (HooksDispatcherOnMountInDEV.useResourceEffect = function (
         create,
         createDeps,
@@ -24281,7 +24281,7 @@ __DEV__ &&
         return mountRefresh();
       }
     };
-    enableUseResourceEffectHook &&
+    enableUseEffectCRUDOverload &&
       (HooksDispatcherOnMountWithHookTypesInDEV.useResourceEffect = function (
         create,
         createDeps,
@@ -24428,7 +24428,7 @@ __DEV__ &&
         return updateWorkInProgressHook().memoizedState;
       }
     };
-    enableUseResourceEffectHook &&
+    enableUseEffectCRUDOverload &&
       (HooksDispatcherOnUpdateInDEV.useResourceEffect = function (
         create,
         createDeps,
@@ -24577,7 +24577,7 @@ __DEV__ &&
         return updateWorkInProgressHook().memoizedState;
       }
     };
-    enableUseResourceEffectHook &&
+    enableUseEffectCRUDOverload &&
       (HooksDispatcherOnRerenderInDEV.useResourceEffect = function (
         create,
         createDeps,
@@ -24750,7 +24750,7 @@ __DEV__ &&
         return mountRefresh();
       }
     };
-    enableUseResourceEffectHook &&
+    enableUseEffectCRUDOverload &&
       (InvalidNestedHooksDispatcherOnMountInDEV.useResourceEffect = function (
         create,
         createDeps,
@@ -24922,7 +24922,7 @@ __DEV__ &&
         return updateWorkInProgressHook().memoizedState;
       }
     };
-    enableUseResourceEffectHook &&
+    enableUseEffectCRUDOverload &&
       (InvalidNestedHooksDispatcherOnUpdateInDEV.useResourceEffect = function (
         create,
         createDeps,
@@ -25096,7 +25096,7 @@ __DEV__ &&
         return updateWorkInProgressHook().memoizedState;
       }
     };
-    enableUseResourceEffectHook &&
+    enableUseEffectCRUDOverload &&
       (InvalidNestedHooksDispatcherOnRerenderInDEV.useResourceEffect =
         function (create, createDeps, update, updateDeps, destroy) {
           currentHookNameInDev = "useResourceEffect";
@@ -25196,7 +25196,7 @@ __DEV__ &&
       ].bind(callComponentWillUnmount),
       callCreate = {
         "react-stack-bottom-frame": function (effect) {
-          if (enableUseResourceEffectHook) {
+          if (enableUseEffectCRUDOverload) {
             if (null == effect.resourceKind) {
               var _create = effect.create;
               effect = effect.inst;
@@ -25220,7 +25220,7 @@ __DEV__ &&
             return (
               null != effect.resourceKind &&
                 error$jscomp$0(
-                  "Expected only SimpleEffects when enableUseResourceEffectHook is disabled, got %s",
+                  "Expected only SimpleEffects when enableUseEffectCRUDOverload is disabled, got %s",
                   effect.resourceKind
                 ),
               (_create = effect.create),
@@ -26035,11 +26035,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-native-fb-899e3d12-20250211" !== isomorphicReactPackageVersion)
+      if ("19.1.0-native-fb-0461c0d8-20250211" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-native-fb-899e3d12-20250211\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-native-fb-0461c0d8-20250211\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26076,10 +26076,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-native-fb-899e3d12-20250211",
+          version: "19.1.0-native-fb-0461c0d8-20250211",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-native-fb-899e3d12-20250211"
+          reconcilerVersion: "19.1.0-native-fb-0461c0d8-20250211"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26223,5 +26223,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.1.0-native-fb-899e3d12-20250211";
+    exports.version = "19.1.0-native-fb-0461c0d8-20250211";
   })();

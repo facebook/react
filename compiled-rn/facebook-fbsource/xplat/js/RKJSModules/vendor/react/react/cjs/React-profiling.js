@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fbfd54bd1ba1f3bcc29e1c3f300a2d74>>
+ * @generated SignedSource<<17282f598c77c0d0effde72075ca5cef>>
  */
 
 "use strict";
@@ -15,8 +15,8 @@
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-var enableUseResourceEffectHook =
-    require("ReactNativeInternalFeatureFlags").enableUseResourceEffectHook,
+var enableUseEffectCRUDOverload =
+    require("ReactNativeInternalFeatureFlags").enableUseEffectCRUDOverload,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -315,7 +315,7 @@ function useMemoCache(size) {
   return ReactSharedInternals.H.useMemoCache(size);
 }
 function useResourceEffect(create, createDeps, update, updateDeps, destroy) {
-  if (!enableUseResourceEffectHook) throw Error("Not implemented.");
+  if (!enableUseEffectCRUDOverload) throw Error("Not implemented.");
   return ReactSharedInternals.H.useResourceEffect(
     create,
     createDeps,
@@ -355,7 +355,7 @@ var reportGlobalError =
       };
 function noop() {}
 var ReactCompilerRuntime = { __proto__: null, c: useMemoCache },
-  experimental_useResourceEffect = enableUseResourceEffectHook
+  experimental_useResourceEffect = enableUseEffectCRUDOverload
     ? useResourceEffect
     : void 0;
 exports.Children = {
@@ -605,7 +605,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.1.0-native-fb-899e3d12-20250211";
+exports.version = "19.1.0-native-fb-0461c0d8-20250211";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

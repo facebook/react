@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b779385d565ae6160e3bdd822322c603>>
+ * @generated SignedSource<<9cd98d2368a7cd120297fd4820c68f50>>
  */
 
 /*
@@ -39,7 +39,7 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
   enablePersistedModeClonedFlag =
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
-  enableUseResourceEffectHook = dynamicFlagsUntyped.enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload = dynamicFlagsUntyped.enableUseEffectCRUDOverload,
   enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering;
 function isValidContainer(node) {
   return !(
@@ -4611,7 +4611,7 @@ var ContextOnlyDispatcher = {
   useMemoCache: throwInvalidHookError,
   useCacheRefresh: throwInvalidHookError
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
 var HooksDispatcherOnMount = {
   readContext: readContext,
@@ -4804,7 +4804,7 @@ var HooksDispatcherOnMount = {
     ));
   }
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnMount.useResourceEffect = mountResourceEffect);
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
@@ -4853,7 +4853,7 @@ var HooksDispatcherOnUpdate = {
   useMemoCache: useMemoCache,
   useCacheRefresh: updateRefresh
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
 var HooksDispatcherOnRerender = {
   readContext: readContext,
@@ -4907,7 +4907,7 @@ var HooksDispatcherOnRerender = {
   useMemoCache: useMemoCache,
   useCacheRefresh: updateRefresh
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
 var thenableState = null,
   thenableIndexCounter = 0;
@@ -7763,7 +7763,7 @@ function commitHookEffectListMount(flags, finishedWork) {
         if ((updateQueue.tag & flags) === flags)
           if (
             ((lastEffect = void 0),
-            enableUseResourceEffectHook &&
+            enableUseEffectCRUDOverload &&
               (0 === updateQueue.resourceKind &&
                 ((updateQueue.inst.resource = updateQueue.create()),
                 (lastEffect = updateQueue.inst.destroy)),
@@ -7772,7 +7772,7 @@ function commitHookEffectListMount(flags, finishedWork) {
                 "function" === typeof updateQueue.update &&
                 null != updateQueue.inst.resource &&
                 updateQueue.update(updateQueue.inst.resource)),
-            enableUseResourceEffectHook)
+            enableUseEffectCRUDOverload)
           ) {
             if (null == updateQueue.resourceKind) {
               var create = updateQueue.create,
@@ -7810,10 +7810,10 @@ function commitHookEffectListUnmount(
             destroy = inst.destroy;
           if (void 0 !== destroy)
             if (
-              (enableUseResourceEffectHook
+              (enableUseEffectCRUDOverload
                 ? null == updateQueue.resourceKind && (inst.destroy = void 0)
                 : (inst.destroy = void 0),
-              enableUseResourceEffectHook)
+              enableUseEffectCRUDOverload)
             ) {
               if (
                 0 === updateQueue.resourceKind &&
@@ -16016,14 +16016,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1802 = React.version;
 if (
-  "19.1.0-native-fb-899e3d12-20250211" !==
+  "19.1.0-native-fb-0461c0d8-20250211" !==
   isomorphicReactPackageVersion$jscomp$inline_1802
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1802,
-      "19.1.0-native-fb-899e3d12-20250211"
+      "19.1.0-native-fb-0461c0d8-20250211"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16045,10 +16045,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2262 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-899e3d12-20250211",
+  version: "19.1.0-native-fb-0461c0d8-20250211",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-899e3d12-20250211"
+  reconcilerVersion: "19.1.0-native-fb-0461c0d8-20250211"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2263 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16152,4 +16152,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-899e3d12-20250211";
+exports.version = "19.1.0-native-fb-0461c0d8-20250211";

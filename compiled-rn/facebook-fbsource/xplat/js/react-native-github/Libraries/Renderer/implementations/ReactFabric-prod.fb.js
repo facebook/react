@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<45f774b0d1534210b01178469326ecab>>
+ * @generated SignedSource<<c9182afd16c4f4785d16ff02e1594028>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   enablePersistedModeClonedFlag =
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
   enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
-  enableUseResourceEffectHook = dynamicFlagsUntyped.enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload = dynamicFlagsUntyped.enableUseEffectCRUDOverload,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
@@ -4248,7 +4248,7 @@ var ContextOnlyDispatcher = {
   useMemoCache: throwInvalidHookError,
   useCacheRefresh: throwInvalidHookError
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
 var HooksDispatcherOnMount = {
   readContext: readContext,
@@ -4414,7 +4414,7 @@ var HooksDispatcherOnMount = {
     ));
   }
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnMount.useResourceEffect = mountResourceEffect);
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
@@ -4463,7 +4463,7 @@ var HooksDispatcherOnUpdate = {
   useMemoCache: useMemoCache,
   useCacheRefresh: updateRefresh
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
 var HooksDispatcherOnRerender = {
   readContext: readContext,
@@ -4517,7 +4517,7 @@ var HooksDispatcherOnRerender = {
   useMemoCache: useMemoCache,
   useCacheRefresh: updateRefresh
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
 var thenableState = null,
   thenableIndexCounter = 0;
@@ -7908,7 +7908,7 @@ function commitHookEffectListMount(flags, finishedWork) {
         if ((updateQueue.tag & flags) === flags)
           if (
             ((lastEffect = void 0),
-            enableUseResourceEffectHook &&
+            enableUseEffectCRUDOverload &&
               (0 === updateQueue.resourceKind &&
                 ((updateQueue.inst.resource = updateQueue.create()),
                 (lastEffect = updateQueue.inst.destroy)),
@@ -7917,7 +7917,7 @@ function commitHookEffectListMount(flags, finishedWork) {
                 "function" === typeof updateQueue.update &&
                 null != updateQueue.inst.resource &&
                 updateQueue.update(updateQueue.inst.resource)),
-            enableUseResourceEffectHook)
+            enableUseEffectCRUDOverload)
           ) {
             if (null == updateQueue.resourceKind) {
               var create$118 = updateQueue.create,
@@ -7955,10 +7955,10 @@ function commitHookEffectListUnmount(
             destroy = inst.destroy;
           if (void 0 !== destroy)
             if (
-              (enableUseResourceEffectHook
+              (enableUseEffectCRUDOverload
                 ? null == updateQueue.resourceKind && (inst.destroy = void 0)
                 : (inst.destroy = void 0),
-              enableUseResourceEffectHook)
+              enableUseEffectCRUDOverload)
             ) {
               if (
                 0 === updateQueue.resourceKind &&
@@ -11021,10 +11021,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1234 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-899e3d12-20250211",
+    version: "19.1.0-native-fb-0461c0d8-20250211",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-899e3d12-20250211"
+    reconcilerVersion: "19.1.0-native-fb-0461c0d8-20250211"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1234.rendererConfig = extraDevToolsConfig);

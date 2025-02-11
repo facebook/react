@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aa83eb3b4de81ce391a93bc32e5ebbb7>>
+ * @generated SignedSource<<801bacaf9d07781b4736ea9f4414122d>>
  */
 
 "use strict";
@@ -989,7 +989,7 @@ __DEV__ &&
       updateDeps,
       destroy
     ) {
-      if (!enableUseResourceEffectHook) throw Error("Not implemented.");
+      if (!enableUseEffectCRUDOverload) throw Error("Not implemented.");
       return resolveDispatcher().useResourceEffect(
         create,
         createDeps,
@@ -1093,8 +1093,8 @@ __DEV__ &&
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
-      enableUseResourceEffectHook =
-        dynamicFlagsUntyped.enableUseResourceEffectHook,
+      enableUseEffectCRUDOverload =
+        dynamicFlagsUntyped.enableUseEffectCRUDOverload,
       enableOwnerStacks = dynamicFlagsUntyped.enableOwnerStacks,
       REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -1295,7 +1295,7 @@ __DEV__ &&
           return children;
         }
       },
-      experimental_useResourceEffect = enableUseResourceEffectHook
+      experimental_useResourceEffect = enableUseEffectCRUDOverload
         ? useResourceEffect
         : void 0;
     exports.captureOwnerStack = void 0;
@@ -1849,7 +1849,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-899e3d12-20250211";
+    exports.version = "19.1.0-native-fb-0461c0d8-20250211";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

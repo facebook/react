@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<674615c61fb4901587174d8a053e1428>>
+ * @generated SignedSource<<1931cab27d93265858bc81f5ba619730>>
  */
 
 "use strict";
@@ -23,7 +23,7 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
   enablePersistedModeClonedFlag =
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
-  enableUseResourceEffectHook = dynamicFlagsUntyped.enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload = dynamicFlagsUntyped.enableUseEffectCRUDOverload,
   enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
   ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
@@ -4416,7 +4416,7 @@ var ContextOnlyDispatcher = {
   useMemoCache: throwInvalidHookError,
   useCacheRefresh: throwInvalidHookError
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
 var HooksDispatcherOnMount = {
   readContext: readContext,
@@ -4582,7 +4582,7 @@ var HooksDispatcherOnMount = {
     ));
   }
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnMount.useResourceEffect = mountResourceEffect);
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
@@ -4631,7 +4631,7 @@ var HooksDispatcherOnUpdate = {
   useMemoCache: useMemoCache,
   useCacheRefresh: updateRefresh
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
 var HooksDispatcherOnRerender = {
   readContext: readContext,
@@ -4685,7 +4685,7 @@ var HooksDispatcherOnRerender = {
   useMemoCache: useMemoCache,
   useCacheRefresh: updateRefresh
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
 var thenableState = null,
   thenableIndexCounter = 0;
@@ -7910,7 +7910,7 @@ function commitHookEffectListMount(flags, finishedWork) {
         if ((updateQueue.tag & flags) === flags)
           if (
             ((lastEffect = void 0),
-            enableUseResourceEffectHook &&
+            enableUseEffectCRUDOverload &&
               (0 === updateQueue.resourceKind &&
                 ((updateQueue.inst.resource = updateQueue.create()),
                 (lastEffect = updateQueue.inst.destroy)),
@@ -7919,7 +7919,7 @@ function commitHookEffectListMount(flags, finishedWork) {
                 "function" === typeof updateQueue.update &&
                 null != updateQueue.inst.resource &&
                 updateQueue.update(updateQueue.inst.resource)),
-            enableUseResourceEffectHook)
+            enableUseEffectCRUDOverload)
           ) {
             if (null == updateQueue.resourceKind) {
               var create$118 = updateQueue.create,
@@ -7957,10 +7957,10 @@ function commitHookEffectListUnmount(
             destroy = inst.destroy;
           if (void 0 !== destroy)
             if (
-              (enableUseResourceEffectHook
+              (enableUseEffectCRUDOverload
                 ? null == updateQueue.resourceKind && (inst.destroy = void 0)
                 : (inst.destroy = void 0),
-              enableUseResourceEffectHook)
+              enableUseEffectCRUDOverload)
             ) {
               if (
                 0 === updateQueue.resourceKind &&
@@ -11155,11 +11155,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-899e3d12-20250211" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-0461c0d8-20250211" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-899e3d12-20250211\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-0461c0d8-20250211\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11208,10 +11208,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1289 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-899e3d12-20250211",
+    version: "19.1.0-native-fb-0461c0d8-20250211",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-899e3d12-20250211"
+    reconcilerVersion: "19.1.0-native-fb-0461c0d8-20250211"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1289.rendererConfig = extraDevToolsConfig);

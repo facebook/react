@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<af201a9921af252aa508aa6df3d92d29>>
+ * @generated SignedSource<<02911c5f88d6a126931e1d6dff65c2e5>>
  */
 
 "use strict";
@@ -28,7 +28,7 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   enablePersistedModeClonedFlag =
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
   enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
-  enableUseResourceEffectHook = dynamicFlagsUntyped.enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload = dynamicFlagsUntyped.enableUseEffectCRUDOverload,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
@@ -4390,7 +4390,7 @@ var ContextOnlyDispatcher = {
   useMemoCache: throwInvalidHookError,
   useCacheRefresh: throwInvalidHookError
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
 var HooksDispatcherOnMount = {
   readContext: readContext,
@@ -4556,7 +4556,7 @@ var HooksDispatcherOnMount = {
     ));
   }
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnMount.useResourceEffect = mountResourceEffect);
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
@@ -4605,7 +4605,7 @@ var HooksDispatcherOnUpdate = {
   useMemoCache: useMemoCache,
   useCacheRefresh: updateRefresh
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
 var HooksDispatcherOnRerender = {
   readContext: readContext,
@@ -4659,7 +4659,7 @@ var HooksDispatcherOnRerender = {
   useMemoCache: useMemoCache,
   useCacheRefresh: updateRefresh
 };
-enableUseResourceEffectHook &&
+enableUseEffectCRUDOverload &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
 var thenableState = null,
   thenableIndexCounter = 0;
@@ -8197,7 +8197,7 @@ function commitHookEffectListMount(flags, finishedWork) {
                 finishedWork
               );
           lastEffect = void 0;
-          enableUseResourceEffectHook &&
+          enableUseEffectCRUDOverload &&
             (0 === updateQueue.resourceKind &&
               ((updateQueue.inst.resource = updateQueue.create()),
               (lastEffect = updateQueue.inst.destroy)),
@@ -8206,7 +8206,7 @@ function commitHookEffectListMount(flags, finishedWork) {
               "function" === typeof updateQueue.update &&
               null != updateQueue.inst.resource &&
               updateQueue.update(updateQueue.inst.resource));
-          if (enableUseResourceEffectHook) {
+          if (enableUseEffectCRUDOverload) {
             if (null == updateQueue.resourceKind) {
               var create$126 = updateQueue.create,
                 inst = updateQueue.inst;
@@ -8253,7 +8253,7 @@ function commitHookEffectListUnmount(
           var inst = updateQueue.inst,
             destroy = inst.destroy;
           if (void 0 !== destroy) {
-            enableUseResourceEffectHook
+            enableUseEffectCRUDOverload
               ? null == updateQueue.resourceKind && (inst.destroy = void 0)
               : (inst.destroy = void 0);
             0 !== (flags & 8)
@@ -8270,7 +8270,7 @@ function commitHookEffectListUnmount(
                 injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(
                   finishedWork
                 );
-            if (enableUseResourceEffectHook) {
+            if (enableUseEffectCRUDOverload) {
               if (
                 0 === updateQueue.resourceKind &&
                 null != updateQueue.inst.resource
@@ -11673,10 +11673,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1327 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-899e3d12-20250211",
+    version: "19.1.0-native-fb-0461c0d8-20250211",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-899e3d12-20250211"
+    reconcilerVersion: "19.1.0-native-fb-0461c0d8-20250211"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1327.rendererConfig = extraDevToolsConfig);
