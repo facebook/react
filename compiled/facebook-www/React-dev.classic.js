@@ -1011,22 +1011,6 @@ __DEV__ &&
     function useMemoCache(size) {
       return resolveDispatcher().useMemoCache(size);
     }
-    function useResourceEffect(
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    ) {
-      if (!enableUseEffectCRUDOverload) throw Error("Not implemented.");
-      return resolveDispatcher().useResourceEffect(
-        create,
-        createDeps,
-        update,
-        updateDeps,
-        destroy
-      );
-    }
     function noop() {}
     function enqueueTask(task) {
       if (null === enqueueTaskImpl)
@@ -1333,10 +1317,7 @@ __DEV__ &&
             );
           return children;
         }
-      },
-      experimental_useResourceEffect = enableUseEffectCRUDOverload
-        ? useResourceEffect
-        : void 0;
+      };
     exports.captureOwnerStack = void 0;
     enableOwnerStacks && (exports.captureOwnerStack = captureOwnerStack);
     exports.Children = Children;
@@ -1703,7 +1684,6 @@ __DEV__ &&
     exports.experimental_useEffectEvent = function (callback) {
       return resolveDispatcher().useEffectEvent(callback);
     };
-    exports.experimental_useResourceEffect = experimental_useResourceEffect;
     exports.forwardRef = function (render) {
       null != render && render.$$typeof === REACT_MEMO_TYPE
         ? error$jscomp$0(
@@ -1928,8 +1908,30 @@ __DEV__ &&
     exports.useDeferredValue = function (value, initialValue) {
       return resolveDispatcher().useDeferredValue(value, initialValue);
     };
-    exports.useEffect = function (create, deps) {
-      return resolveDispatcher().useEffect(create, deps);
+    exports.useEffect = function (
+      create,
+      createDeps,
+      update,
+      updateDeps,
+      destroy
+    ) {
+      var dispatcher = resolveDispatcher();
+      if (
+        enableUseEffectCRUDOverload &&
+        ("function" === typeof update || "function" === typeof destroy)
+      )
+        return dispatcher.useEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy
+        );
+      if ("function" === typeof update)
+        throw Error(
+          "useEffect CRUD overload is not enabled in this build of React."
+        );
+      return dispatcher.useEffect(create, createDeps);
     };
     exports.useId = function () {
       return resolveDispatcher().useId();
@@ -1972,7 +1974,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-www-classic-0461c0d8-20250211";
+    exports.version = "19.1.0-www-classic-a69b80d0-20250211";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -390,7 +390,7 @@ export default [
   "unmountComponentAtNode was removed in React 19. Use root.unmount() instead.",
   "unmountComponentAtNode(): The node you're attempting to unmount was rendered by React and is not a top-level container. %s",
   "unmountComponentAtNode(): The node you're attempting to unmount was rendered by another copy of React.",
+  "useEffect must provide a callback which returns a resource. If a managed resource is not needed here, do not provide an updater or destroy callback. Received %s",
   "useInsertionEffect must not schedule updates.",
-  "useOptimistic is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release.",
-  "useResourceEffect must provide a callback which returns a resource. If a managed resource is not needed here, use useEffect. Received %s"
+  "useOptimistic is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release."
 ];

@@ -329,16 +329,6 @@ function lazyInitializer(payload) {
 function useMemoCache(size) {
   return ReactSharedInternals.H.useMemoCache(size);
 }
-function useResourceEffect(create, createDeps, update, updateDeps, destroy) {
-  if (!enableUseEffectCRUDOverload) throw Error("Not implemented.");
-  return ReactSharedInternals.H.useResourceEffect(
-    create,
-    createDeps,
-    update,
-    updateDeps,
-    destroy
-  );
-}
 var reportGlobalError =
   "function" === typeof reportError
     ? reportError
@@ -369,10 +359,7 @@ var reportGlobalError =
         console.error(error);
       };
 function noop() {}
-var ReactCompilerRuntime = { __proto__: null, c: useMemoCache },
-  experimental_useResourceEffect = enableUseEffectCRUDOverload
-    ? useResourceEffect
-    : void 0;
+var ReactCompilerRuntime = { __proto__: null, c: useMemoCache };
 exports.Children = {
   map: mapChildren,
   forEach: function (children, forEachFunc, forEachContext) {
@@ -516,7 +503,6 @@ exports.createRef = function () {
 exports.experimental_useEffectEvent = function (callback) {
   return ReactSharedInternals.H.useEffectEvent(callback);
 };
-exports.experimental_useResourceEffect = experimental_useResourceEffect;
 exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
 };
@@ -599,8 +585,24 @@ exports.useDebugValue = function () {};
 exports.useDeferredValue = function (value, initialValue) {
   return ReactSharedInternals.H.useDeferredValue(value, initialValue);
 };
-exports.useEffect = function (create, deps) {
-  return ReactSharedInternals.H.useEffect(create, deps);
+exports.useEffect = function (create, createDeps, update, updateDeps, destroy) {
+  var dispatcher = ReactSharedInternals.H;
+  if (
+    enableUseEffectCRUDOverload &&
+    ("function" === typeof update || "function" === typeof destroy)
+  )
+    return dispatcher.useEffect(
+      create,
+      createDeps,
+      update,
+      updateDeps,
+      destroy
+    );
+  if ("function" === typeof update)
+    throw Error(
+      "useEffect CRUD overload is not enabled in this build of React."
+    );
+  return dispatcher.useEffect(create, createDeps);
 };
 exports.useId = function () {
   return ReactSharedInternals.H.useId();
@@ -643,7 +645,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.1.0-www-classic-0461c0d8-20250211";
+exports.version = "19.1.0-www-classic-a69b80d0-20250211";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
