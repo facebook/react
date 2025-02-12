@@ -157,7 +157,10 @@ import {requestCurrentTransition} from './ReactFiberTransition';
 
 import {callComponentInDEV} from './ReactFiberCallUserSpace';
 
-import {scheduleGesture} from './ReactFiberGestureScheduler';
+import {
+  scheduleGesture,
+  cancelScheduledGesture,
+} from './ReactFiberGestureScheduler';
 
 export type Update<S, A> = {
   lane: Lane,
@@ -3976,8 +3979,24 @@ function startGesture(
   gestureProvider: GestureProvider,
 ): () => void {
   const root = enqueueGestureRender(fiber);
-  scheduleGesture(root);
-  return function cancelGesture() {};
+  if (root === null) {
+    // Already unmounted.
+    // TODO: Should we warn here about starting on an unmounted Fiber?
+    return function cancelGesture() {
+      // Noop.
+    };
+  }
+  const scheduledGesture = scheduleGesture(root, gestureProvider);
+  let cancelled = false;
+  return function cancelGesture(): void {
+    if (cancelled) {
+      // Avoid double decrementing if someone calls this twice by accident.
+      // TODO: Should we warn here about double cancelling?
+      return;
+    }
+    cancelled = true;
+    cancelScheduledGesture(root, scheduledGesture);
+  };
 }
 
 function mountSwipeTransition<T>(

@@ -39,6 +39,7 @@ import type {
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
 import type {ComponentStackNode} from 'react-server/src/ReactFizzComponentStack';
 import type {ThenableState} from './ReactFiberThenable';
+import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -281,6 +282,9 @@ type BaseFiberRootProperties = {
   ) => void,
 
   formState: ReactFormState<any, any> | null,
+
+  // enableSwipeTransition only
+  gestures: null | ScheduledGesture,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.
