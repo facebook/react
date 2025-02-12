@@ -154,6 +154,8 @@ export const enableUseEffectCRUDOverload = false;
 
 export const enableFastAddPropertiesInDiffing = true;
 
+export const enableLazyPublicInstanceInFabric = false;
+
 // -----------------------------------------------------------------------------
 // Ready for next major.
 //
