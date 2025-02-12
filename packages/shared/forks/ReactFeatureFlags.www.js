@@ -37,6 +37,7 @@ export const {
   transitionLaneExpirationMs,
   enableFastAddPropertiesInDiffing,
   enableViewTransition,
+  enableComponentPerformanceTrack,
   enableScrollEndPolyfill,
 } = dynamicFeatureFlags;
 
@@ -62,8 +63,6 @@ export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
 
 export const enableHydrationLaneScheduling = true;
-
-export const enableComponentPerformanceTrack = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
