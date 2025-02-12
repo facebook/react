@@ -71,6 +71,7 @@ export const enableYieldingBeforePassive = true;
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
 export const enableFastAddPropertiesInDiffing = true;
+export const enableLazyPublicInstanceInFabric = false;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the

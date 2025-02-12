@@ -110,5 +110,7 @@ export const disableLegacyMode = true;
 
 export const enableShallowPropDiffing = false;
 
+export const enableLazyPublicInstanceInFabric = false;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

@@ -28,3 +28,4 @@ export const enableUseEffectCRUDOverload = __VARIANT__;
 export const enableOwnerStacks = __VARIANT__;
 export const enableRemoveConsolePatches = __VARIANT__;
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
+export const enableLazyPublicInstanceInFabric = __VARIANT__;
