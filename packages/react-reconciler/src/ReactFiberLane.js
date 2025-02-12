@@ -667,6 +667,11 @@ export function isTransitionLane(lane: Lane): boolean {
   return (lane & TransitionLanes) !== NoLanes;
 }
 
+export function isGestureRender(lanes: Lanes): boolean {
+  // This should render only the one lane.
+  return lanes === GestureLane;
+}
+
 export function claimNextTransitionLane(): Lane {
   // Cycle through the lanes, assigning each new transition to the next lane.
   // In most cases, this means every transition gets its own lane, until we

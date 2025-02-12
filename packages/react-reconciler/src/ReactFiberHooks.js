@@ -28,6 +28,7 @@ import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Flags} from './ReactFiberFlags';
 import type {TransitionStatus} from './ReactFiberConfig';
+import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 import {
   HostTransitionContext,
@@ -73,6 +74,8 @@ import {
   isTransitionLane,
   markRootEntangled,
   includesSomeLane,
+  isGestureRender,
+  GestureLane,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -3969,7 +3972,14 @@ function markUpdateInDevTools<A>(fiber: Fiber, lane: Lane, action: A): void {
   }
 }
 
+type SwipeTransitionGestureUpdate = {
+  gesture: ScheduledGesture,
+  prev: SwipeTransitionGestureUpdate | null,
+  next: SwipeTransitionGestureUpdate | null,
+};
+
 type SwipeTransitionUpdateQueue = {
+  pending: null | SwipeTransitionGestureUpdate,
   dispatch: StartGesture,
 };
 
@@ -3987,15 +3997,39 @@ function startGesture(
     };
   }
   const scheduledGesture = scheduleGesture(root, gestureProvider);
-  let cancelled = false;
+  // Add this particular instance to the queue.
+  // We add multiple of the same provider even if they get batched so
+  // that if we cancel one but not the other we can keep track of this.
+  // Order doesn't matter but we insert in the beginning to avoid two fields.
+  const update: SwipeTransitionGestureUpdate = {
+    gesture: scheduledGesture,
+    prev: null,
+    next: queue.pending,
+  };
+  if (queue.pending !== null) {
+    queue.pending.prev = update;
+  }
+  queue.pending = update;
   return function cancelGesture(): void {
-    if (cancelled) {
-      // Avoid double decrementing if someone calls this twice by accident.
-      // TODO: Should we warn here about double cancelling?
-      return;
+    if (update.prev === null) {
+      if (queue.pending === update) {
+        queue.pending = update.next;
+      } else {
+        // This was already cancelled. Avoid double decrementing if someone calls this twice by accident.
+        // TODO: Should we warn here about double cancelling?
+        return;
+      }
+    } else {
+      update.prev.next = update.next;
+      if (update.next !== null) {
+        update.next.prev = update.prev;
+      }
+      update.prev = null;
+      update.next = null;
     }
-    cancelled = true;
-    cancelScheduledGesture(root, scheduledGesture);
+    const cancelledGestured = update.gesture;
+    // Decrement ref count of the root schedule.
+    cancelScheduledGesture(root, cancelledGestured);
   };
 }
 
@@ -4005,6 +4039,7 @@ function mountSwipeTransition<T>(
   next: T,
 ): [T, StartGesture] {
   const queue: SwipeTransitionUpdateQueue = {
+    pending: null,
     dispatch: (null: any),
   };
   const startGestureOnHook: StartGesture = (queue.dispatch = (startGesture.bind(
@@ -4025,7 +4060,43 @@ function updateSwipeTransition<T>(
   const hook = updateWorkInProgressHook();
   const queue: SwipeTransitionUpdateQueue = hook.queue;
   const startGestureOnHook: StartGesture = queue.dispatch;
-  return [current, startGestureOnHook];
+  const rootRenderLanes = getWorkInProgressRootRenderLanes();
+  let value = current;
+  if (isGestureRender(rootRenderLanes)) {
+    // We're inside a gesture render. We'll traverse the queue to see if
+    // this specific Hook is part of this gesture and, if so, which
+    // direction to render.
+    const root: FiberRoot | null = getWorkInProgressRoot();
+    if (root === null) {
+      throw new Error(
+        'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+      );
+    }
+    // We assume that the currently rendering gesture is the one first in the queue.
+    const rootRenderGesture = root.gestures;
+    let update = queue.pending;
+    while (update !== null) {
+      if (rootRenderGesture === update.gesture) {
+        // We had a match, meaning we're currently rendering a direction of this
+        // hook for this gesture.
+        // TODO: Determine which direction this gesture is currently rendering.
+        value = previous;
+        break;
+      }
+      update = update.next;
+    }
+  }
+  if (queue.pending !== null) {
+    // As long as there are any active gestures we need to leave the lane on
+    // in case we need to render it later. Since a gesture render doesn't commit
+    // the only time it really fully gets cleared is if something else rerenders
+    // this component after all the active gestures has cleared.
+    currentlyRenderingFiber.lanes = mergeLanes(
+      currentlyRenderingFiber.lanes,
+      GestureLane,
+    );
+  }
+  return [value, startGestureOnHook];
 }
 
 export const ContextOnlyDispatcher: Dispatcher = {
