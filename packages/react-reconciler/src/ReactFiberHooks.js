@@ -133,6 +133,7 @@ import {
   enqueueConcurrentHookUpdate,
   enqueueConcurrentHookUpdateAndEagerlyBailout,
   enqueueConcurrentRenderForLane,
+  enqueueGestureRender,
 } from './ReactFiberConcurrentUpdates';
 import {getTreeId} from './ReactFiberTreeContext';
 import {now} from './Scheduler';
@@ -155,6 +156,8 @@ import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
 import {requestCurrentTransition} from './ReactFiberTransition';
 
 import {callComponentInDEV} from './ReactFiberCallUserSpace';
+
+import {scheduleGesture} from './ReactFiberGestureScheduler';
 
 export type Update<S, A> = {
   lane: Lane,
@@ -3972,6 +3975,8 @@ function startGesture(
   queue: SwipeTransitionUpdateQueue,
   gestureProvider: GestureProvider,
 ): () => void {
+  const root = enqueueGestureRender(fiber);
+  scheduleGesture(root);
   return function cancelGesture() {};
 }
 
