@@ -18,6 +18,7 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
+let assertConsoleErrorDev;
 
 function initModules() {
   jest.resetModules();
@@ -25,6 +26,7 @@ function initModules() {
   ReactDOM = require('react-dom');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
+  assertConsoleErrorDev = require('internal-test-utils').assertConsoleErrorDev;
 
   // Make them available to the helpers.
   return {
@@ -46,6 +48,14 @@ const {
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
     resetModules();
+  });
+
+  afterEach(() => {
+    // TODO: This is a hack because expectErrors does not restore mock,
+    // however fixing it requires a major refactor to all these tests.
+    if (console.error.mockClear) {
+      console.error.mockRestore();
+    }
   });
 
   describe('elements and children', function () {
@@ -134,15 +144,15 @@ describe('ReactDOMServerIntegration', () => {
         // However this particular warning fires only when creating
         // DOM nodes on the client side. We force it to fire early
         // so that it gets deduplicated later, and doesn't fail the test.
-        expect(() => {
-          ReactDOM.flushSync(() => {
-            const root = ReactDOMClient.createRoot(
-              document.createElement('div'),
-            );
-
-            root.render(<nonstandard />);
-          });
-        }).toErrorDev('The tag <nonstandard> is unrecognized in this browser.');
+        ReactDOM.flushSync(() => {
+          const root = ReactDOMClient.createRoot(document.createElement('div'));
+          root.render(<nonstandard />);
+        });
+        assertConsoleErrorDev([
+          'The tag <nonstandard> is unrecognized in this browser. ' +
+            'If you meant to render a React component, start its name with an uppercase letter.\n' +
+            '    in nonstandard (at **)',
+        ]);
 
         const e = await render(<nonstandard>Text</nonstandard>);
         expect(e.tagName).toBe('NONSTANDARD');
@@ -984,16 +994,17 @@ describe('ReactDOMServerIntegration', () => {
         'object',
         async render => {
           let EmptyComponent = {};
-          expect(() => {
-            EmptyComponent = <EmptyComponent />;
-          }).toErrorDev(
+          EmptyComponent = <EmptyComponent />;
+          assertConsoleErrorDev(
             gate(flags => flags.enableOwnerStacks)
               ? []
-              : 'React.jsx: type is invalid -- expected a string ' +
-                  '(for built-in components) or a class/function (for composite ' +
-                  'components) but got: object. You likely forgot to export your ' +
-                  "component from the file it's defined in, or you might have mixed up " +
-                  'default and named imports.',
+              : [
+                  'React.jsx: type is invalid -- expected a string ' +
+                    '(for built-in components) or a class/function (for composite ' +
+                    'components) but got: object. You likely forgot to export your ' +
+                    "component from the file it's defined in, or you might have mixed up " +
+                    'default and named imports.',
+                ],
             {withoutStack: true},
           );
           await render(EmptyComponent);
@@ -1010,14 +1021,15 @@ describe('ReactDOMServerIntegration', () => {
         'null',
         async render => {
           let NullComponent = null;
-          expect(() => {
-            NullComponent = <NullComponent />;
-          }).toErrorDev(
+          NullComponent = <NullComponent />;
+          assertConsoleErrorDev(
             gate(flags => flags.enableOwnerStacks)
               ? []
-              : 'React.jsx: type is invalid -- expected a string ' +
-                  '(for built-in components) or a class/function (for composite ' +
-                  'components) but got: null.',
+              : [
+                  'React.jsx: type is invalid -- expected a string ' +
+                    '(for built-in components) or a class/function (for composite ' +
+                    'components) but got: null.',
+                ],
             {withoutStack: true},
           );
           await render(NullComponent);
@@ -1030,16 +1042,17 @@ describe('ReactDOMServerIntegration', () => {
         'undefined',
         async render => {
           let UndefinedComponent = undefined;
-          expect(() => {
-            UndefinedComponent = <UndefinedComponent />;
-          }).toErrorDev(
+          UndefinedComponent = <UndefinedComponent />;
+          assertConsoleErrorDev(
             gate(flags => flags.enableOwnerStacks)
               ? []
-              : 'React.jsx: type is invalid -- expected a string ' +
-                  '(for built-in components) or a class/function (for composite ' +
-                  'components) but got: undefined. You likely forgot to export your ' +
-                  "component from the file it's defined in, or you might have mixed up " +
-                  'default and named imports.',
+              : [
+                  'React.jsx: type is invalid -- expected a string ' +
+                    '(for built-in components) or a class/function (for composite ' +
+                    'components) but got: undefined. You likely forgot to export your ' +
+                    "component from the file it's defined in, or you might have mixed up " +
+                    'default and named imports.',
+                ],
             {withoutStack: true},
           );
 

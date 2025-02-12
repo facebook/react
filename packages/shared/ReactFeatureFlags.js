@@ -37,10 +37,6 @@ export const favorSafetyOverHydrationPerf = true;
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
 
-// This will break some internal tests at Meta so we need to gate this until
-// those can be fixed.
-export const enableDeferRootSchedulingToMicrotask = true;
-
 // TODO: Land at Meta before removing.
 export const disableDefaultPropsExceptForClasses = true;
 
@@ -77,6 +73,13 @@ export const enableLegacyFBSupport = false;
 // likely to include in an upcoming release.
 // -----------------------------------------------------------------------------
 
+// Yield to the browser event loop and not just the scheduler event loop before passive effects.
+// Fix gated tests that fail with this flag enabled before turning it back on.
+export const enableYieldingBeforePassive = false;
+
+// Experiment to intentionally yield less to block high framerate animations.
+export const enableThrottledScheduling = false;
+
 export const enableLegacyCache = __EXPERIMENTAL__;
 
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
@@ -87,10 +90,7 @@ export const enablePostpone = __EXPERIMENTAL__;
 
 export const enableHalt = __EXPERIMENTAL__;
 
-/**
- * Switches the Fabric API from doing layout in commit work instead of complete work.
- */
-export const enableFabricCompleteRootInCommitPhase = false;
+export const enableViewTransition = __EXPERIMENTAL__;
 
 /**
  * Switches Fiber creation to a simple object instead of a constructor.
@@ -98,8 +98,6 @@ export const enableFabricCompleteRootInCommitPhase = false;
 export const enableObjectFiber = false;
 
 export const enableTransitionTracing = false;
-
-export const enableLazyContextPropagation = true;
 
 // FB-only usage. The new API has different semantics.
 export const enableLegacyHidden = false;
@@ -122,8 +120,6 @@ export const enableFizzExternalRuntime = __EXPERIMENTAL__;
 export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
-
-export const enableServerComponentLogs = true;
 
 /**
  * Enables a new Fiber flag used in persisted mode to reduce the number
@@ -154,7 +150,9 @@ export const enableInfiniteRenderLoopDetection = false;
 /**
  * Experimental new hook for better managing resources in effects.
  */
-export const enableUseResourceEffectHook = false;
+export const enableUseEffectCRUDOverload = false;
+
+export const enableFastAddPropertiesInDiffing = true;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -184,12 +182,6 @@ export const disableLegacyContext = true;
  * Removes legacy style context just from function components.
  */
 export const disableLegacyContextForFunctionComponents = true;
-
-// Not ready to break experimental yet.
-// Modern <StrictMode /> behaviour aligns more with what components
-// components will encounter in production, especially when used With <Offscreen />.
-// TODO: clean up legacy <StrictMode /> once tests pass WWW.
-export const useModernStrictMode = true;
 
 // Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
 export const enableMoveBefore = false;
@@ -239,10 +231,6 @@ export const disableTextareaChildren = false;
 // Debugging and DevTools
 // -----------------------------------------------------------------------------
 
-// Helps identify side effects in render-phase lifecycle hooks and setState
-// reducers by double invoking them in StrictLegacyMode.
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
-
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
@@ -269,6 +257,6 @@ export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
-export const enableGetInspectorDataForInstanceInProduction = false;
-
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+
+export const enableRemoveConsolePatches = true;

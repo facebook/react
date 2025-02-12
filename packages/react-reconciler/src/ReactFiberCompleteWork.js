@@ -42,6 +42,7 @@ import {
   passChildrenWhenCloningPersistedNodes,
   disableLegacyMode,
   enableSiblingPrerendering,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 
 import {now} from './Scheduler';
@@ -74,6 +75,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
@@ -92,6 +94,7 @@ import {
   ScheduleRetry,
   ShouldSuspendCommit,
   Cloned,
+  ViewTransitionStatic,
 } from './ReactFiberFlags';
 
 import {
@@ -926,9 +929,13 @@ function completeDehydratedSuspenseBoundary(
     // Successfully completed this tree. If this was a forced client render,
     // there may have been recoverable errors during first hydration
     // attempt. If so, add them to a queue so we can log them in the
-    // commit phase.
-    upgradeHydrationErrorsToRecoverable();
-
+    // commit phase. We also add them to prev state so we can get to them
+    // from the Suspense Boundary.
+    const hydrationErrors = upgradeHydrationErrorsToRecoverable();
+    if (current !== null && current.memoizedState !== null) {
+      const prevState: SuspenseState = current.memoizedState;
+      prevState.hydrationErrors = hydrationErrors;
+    }
     // Fall through to normal Suspense path
     return true;
   }
@@ -1181,6 +1188,11 @@ function completeWork(
 
             // This can happen when we abort work.
             bubbleProperties(workInProgress);
+            if (enableViewTransition) {
+              // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+              // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+              workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+            }
             return null;
           }
 
@@ -1206,6 +1218,11 @@ function completeWork(
           }
         }
         bubbleProperties(workInProgress);
+        if (enableViewTransition) {
+          // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+          // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+          workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+        }
         return null;
       }
       // Fall through
@@ -1232,6 +1249,11 @@ function completeWork(
 
           // This can happen when we abort work.
           bubbleProperties(workInProgress);
+          if (enableViewTransition) {
+            // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+            // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+            workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+          }
           return null;
         }
 
@@ -1276,6 +1298,11 @@ function completeWork(
         }
       }
       bubbleProperties(workInProgress);
+      if (enableViewTransition) {
+        // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+        // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+        workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+      }
 
       // This must come at the very end of the complete phase, because it might
       // throw to suspend, and if the resource immediately loads, the work loop
@@ -1824,6 +1851,16 @@ function completeWork(
         if (instance !== null) {
           popMarkerInstance(workInProgress);
         }
+        bubbleProperties(workInProgress);
+      }
+      return null;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        // We're a component that might need an exit transition. This flag will
+        // bubble up to the parent tree to indicate that there's a child that
+        // might need an exit View Transition upon unmount.
+        workInProgress.flags |= ViewTransitionStatic;
         bubbleProperties(workInProgress);
       }
       return null;

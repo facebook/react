@@ -12,12 +12,8 @@ import typeof * as ExportsType from './ReactFeatureFlags.native-oss';
 
 // TODO: Align these flags with canary and delete this file once RN ships from Canary.
 
-// DEV-only but enabled in the next RN Major.
-// Not supported by flag script to avoid the special case.
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
-
 // -----------------------------------------------------------------------------
-// All other flags
+// All flags
 // -----------------------------------------------------------------------------
 export const alwaysThrottleRetries = false;
 export const disableClientCache = true;
@@ -33,16 +29,12 @@ export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;
 export const enableCPUSuspense = false;
 export const enableCreateEventHandleAPI = false;
-export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-export const enableFabricCompleteRootInCommitPhase = false;
 export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
-export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableHalt = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
 export const enableInfiniteRenderLoopDetection = false;
-export const enableLazyContextPropagation = true;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
@@ -57,7 +49,6 @@ export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
-export const enableServerComponentLogs = true;
 export const enableShallowPropDiffing = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseCallback = false;
@@ -71,17 +62,23 @@ export const renameElementSymbol = true;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const useModernStrictMode = true;
 export const enableSiblingPrerendering = true;
-export const enableUseResourceEffectHook = false;
+export const enableUseEffectCRUDOverload = false;
 
 export const enableHydrationLaneScheduling = true;
+
+export const enableYieldingBeforePassive = false;
+
+export const enableThrottledScheduling = false;
+export const enableViewTransition = false;
+export const enableFastAddPropertiesInDiffing = false;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
+export const enableRemoveConsolePatches = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

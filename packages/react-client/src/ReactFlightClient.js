@@ -16,6 +16,7 @@ import type {
   ReactTimeInfo,
   ReactStackTrace,
   ReactCallSite,
+  ReactErrorInfoDev,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -45,7 +46,6 @@ import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 import {
   enablePostpone,
   enableOwnerStacks,
-  enableServerComponentLogs,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
@@ -73,6 +73,7 @@ import {
   markAllTracksInOrder,
   logComponentRender,
   logDedupedComponentRender,
+  logComponentErrored,
 } from './ReactFlightPerformanceTrack';
 
 import {
@@ -307,6 +308,8 @@ export type Response = {
   _rowTag: number, // 0 indicates that we're currently parsing the row ID
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
+  _closed: boolean,
+  _closedReason: mixed,
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
   _timeOrigin: number, // Profiling-only
   _debugRootOwner?: null | ReactComponentInfo, // DEV-only
@@ -358,7 +361,7 @@ function createBlockedChunk<T>(response: Response): BlockedChunk<T> {
 
 function createErrorChunk<T>(
   response: Response,
-  error: Error | Postpone,
+  error: mixed,
 ): ErroredChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new ReactPromise(ERRORED, null, error, response);
@@ -639,6 +642,8 @@ function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): void {
 // Report that any missing chunks in the model is now going to throw this
 // error upon read. Also notify any pending promises.
 export function reportGlobalError(response: Response, error: Error): void {
+  response._closed = true;
+  response._closedReason = error;
   response._chunks.forEach(chunk => {
     // If this chunk was already resolved or errored, it won't
     // trigger an error but if it wasn't then we need to
@@ -913,7 +918,13 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   const chunks = response._chunks;
   let chunk = chunks.get(id);
   if (!chunk) {
-    chunk = createPendingChunk(response);
+    if (response._closed) {
+      // We have already errored the response and we're not going to get
+      // anything more streaming in so this will immediately error.
+      chunk = createErrorChunk(response, response._closedReason);
+    } else {
+      chunk = createPendingChunk(response);
+    }
     chunks.set(id, chunk);
   }
   return chunk;
@@ -1640,6 +1651,8 @@ function ResponseInstance(
   this._rowTag = 0;
   this._rowLength = 0;
   this._buffer = [];
+  this._closed = false;
+  this._closedReason = null;
   this._tempRefs = temporaryReferences;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     this._timeOrigin = 0;
@@ -2111,11 +2124,12 @@ function resolveErrorProd(response: Response): Error {
 
 function resolveErrorDev(
   response: Response,
-  errorInfo: {message: string, stack: ReactStackTrace, env: string, ...},
+  errorInfo: ReactErrorInfoDev,
 ): Error {
-  const message: string = errorInfo.message;
-  const stack: ReactStackTrace = errorInfo.stack;
-  const env: string = errorInfo.env;
+  const name = errorInfo.name;
+  const message = errorInfo.message;
+  const stack = errorInfo.stack;
+  const env = errorInfo.env;
 
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -2126,36 +2140,25 @@ function resolveErrorDev(
   }
 
   let error;
-  if (!enableOwnerStacks && !enableServerComponentLogs) {
-    // Executing Error within a native stack isn't really limited to owner stacks
-    // but we gate it behind the same flag for now while iterating.
-    // eslint-disable-next-line react-internal/prod-error-codes
-    error = Error(
+  const callStack = buildFakeCallStack(
+    response,
+    stack,
+    env,
+    // $FlowFixMe[incompatible-use]
+    Error.bind(
+      null,
       message ||
         'An error occurred in the Server Components render but no message was provided',
-    );
-    // For backwards compat we use the V8 formatting when the flag is off.
-    error.stack = formatV8Stack(error.name, error.message, stack);
+    ),
+  );
+  const rootTask = getRootTask(response, env);
+  if (rootTask != null) {
+    error = rootTask.run(callStack);
   } else {
-    const callStack = buildFakeCallStack(
-      response,
-      stack,
-      env,
-      // $FlowFixMe[incompatible-use]
-      Error.bind(
-        null,
-        message ||
-          'An error occurred in the Server Components render but no message was provided',
-      ),
-    );
-    const rootTask = getRootTask(response, env);
-    if (rootTask != null) {
-      error = rootTask.run(callStack);
-    } else {
-      error = callStack();
-    }
+    error = callStack();
   }
 
+  (error: any).name = name;
   (error: any).environmentName = env;
   return error;
 }
@@ -2686,11 +2689,6 @@ function resolveConsoleEntry(
   const env = payload[3];
   const args = payload.slice(4);
 
-  if (!enableOwnerStacks && !enableServerComponentLogs) {
-    bindToConsole(methodName, args, env)();
-    return;
-  }
-
   replayConsoleWithCallStackInDEV(
     response,
     methodName,
@@ -2864,6 +2862,7 @@ function flushComponentPerformance(
 
   if (debugInfo) {
     let endTime = 0;
+    let isLastComponent = true;
     for (let i = debugInfo.length - 1; i >= 0; i--) {
       const info = debugInfo[i];
       if (typeof info.time === 'number') {
@@ -2878,17 +2877,37 @@ function flushComponentPerformance(
         const startTimeInfo = debugInfo[i - 1];
         if (typeof startTimeInfo.time === 'number') {
           const startTime = startTimeInfo.time;
-          logComponentRender(
-            componentInfo,
-            trackIdx,
-            startTime,
-            endTime,
-            childrenEndTime,
-            response._rootEnvironmentName,
-          );
+          if (
+            isLastComponent &&
+            root.status === ERRORED &&
+            root.reason !== response._closedReason
+          ) {
+            // If this is the last component to render before this chunk rejected, then conceptually
+            // this component errored. If this was a cancellation then it wasn't this component that
+            // errored.
+            logComponentErrored(
+              componentInfo,
+              trackIdx,
+              startTime,
+              endTime,
+              childrenEndTime,
+              response._rootEnvironmentName,
+              root.reason,
+            );
+          } else {
+            logComponentRender(
+              componentInfo,
+              trackIdx,
+              startTime,
+              endTime,
+              childrenEndTime,
+              response._rootEnvironmentName,
+            );
+          }
           // Track the root most component of the result for deduping logging.
           result.component = componentInfo;
         }
+        isLastComponent = false;
       }
     }
   }

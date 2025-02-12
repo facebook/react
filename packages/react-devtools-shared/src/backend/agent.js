@@ -148,7 +148,6 @@ export default class Agent extends EventEmitter<{
   getIfHasUnsupportedRendererVersion: [],
   updateHookSettings: [$ReadOnly<DevToolsHookSettings>],
   getHookSettings: [],
-  showNamesWhenTracing: [boolean],
 }> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
@@ -159,7 +158,6 @@ export default class Agent extends EventEmitter<{
   _onReloadAndProfile:
     | ((recordChangeDescriptions: boolean, recordTimeline: boolean) => void)
     | void;
-  _showNamesWhenTracing: boolean = true;
 
   constructor(
     bridge: BackendBridge,
@@ -204,7 +202,6 @@ export default class Agent extends EventEmitter<{
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
     bridge.addListener('renamePath', this.renamePath);
     bridge.addListener('setTraceUpdatesEnabled', this.setTraceUpdatesEnabled);
-    bridge.addListener('setShowNamesWhenTracing', this.setShowNamesWhenTracing);
     bridge.addListener('startProfiling', this.startProfiling);
     bridge.addListener('stopProfiling', this.stopProfiling);
     bridge.addListener('storeAsGlobal', this.storeAsGlobal);
@@ -727,7 +724,6 @@ export default class Agent extends EventEmitter<{
       this._traceUpdatesEnabled = traceUpdatesEnabled;
 
       setTraceUpdatesEnabled(traceUpdatesEnabled);
-      this.emit('showNamesWhenTracing', this._showNamesWhenTracing);
 
       for (const rendererID in this._rendererInterfaces) {
         const renderer = ((this._rendererInterfaces[
@@ -736,14 +732,6 @@ export default class Agent extends EventEmitter<{
         renderer.setTraceUpdatesEnabled(traceUpdatesEnabled);
       }
     };
-
-  setShowNamesWhenTracing: (show: boolean) => void = show => {
-    if (this._showNamesWhenTracing === show) {
-      return;
-    }
-    this._showNamesWhenTracing = show;
-    this.emit('showNamesWhenTracing', show);
-  };
 
   syncSelectionFromBuiltinElementsPanel: () => void = () => {
     const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;

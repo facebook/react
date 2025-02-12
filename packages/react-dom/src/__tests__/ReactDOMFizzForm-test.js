@@ -26,6 +26,7 @@ let useFormStatus;
 let useOptimistic;
 let useActionState;
 let Scheduler;
+let assertConsoleErrorDev;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
@@ -38,6 +39,8 @@ describe('ReactDOMFizzForm', () => {
     useFormStatus = require('react-dom').useFormStatus;
     useOptimistic = require('react').useOptimistic;
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     container = document.createElement('div');
     document.body.appendChild(container);
     // TODO: Test the old api but it warns so needs warnings to be asserted.
@@ -195,12 +198,26 @@ describe('ReactDOMFizzForm', () => {
       ReactDOMServer.renderToReadableStream(<App />),
     );
     await readIntoContainer(stream);
-    await expect(async () => {
-      await act(async () => {
-        ReactDOMClient.hydrateRoot(container, <App isClient={true} />);
-      });
-    }).toErrorDev(
-      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(container, <App isClient={true} />);
+    });
+    assertConsoleErrorDev(
+      [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
+          "This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n" +
+          "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+          "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+          "- Date formatting in a user's locale which doesn't match the server.\n" +
+          '- External changing data without sending a snapshot of it along with the HTML.\n' +
+          '- Invalid HTML tag nesting.\n\n' +
+          'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n' +
+          'https://react.dev/link/hydration-mismatch\n\n' +
+          '  <App isClient={true}>\n' +
+          '    <form\n' +
+          '+     action="action"\n' +
+          '-     action="function"\n' +
+          '    >\n',
+      ],
       {withoutStack: true},
     );
   });
@@ -357,23 +374,56 @@ describe('ReactDOMFizzForm', () => {
 
     // Specifying the extra form fields are a DEV error, but we expect it
     // to eventually still be patched up after an update.
-    await expect(async () => {
-      const stream = await serverAct(() =>
-        ReactDOMServer.renderToReadableStream(<App />),
-      );
-      await readIntoContainer(stream);
-    }).toErrorDev([
-      'Cannot specify a encType or method for a form that specifies a function as the action.',
-      'Cannot specify a formTarget for a button that specifies a function as a formAction.',
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
+    await readIntoContainer(stream);
+    assertConsoleErrorDev([
+      'Cannot specify a encType or method for a form that specifies a function as the action. ' +
+        'React provides those automatically. They will get overridden.\n' +
+        '    in form (at **)\n' +
+        '    in App (at **)',
+      'Cannot specify a formTarget for a button that specifies a function as a formAction. ' +
+        'The function will always be executed in the same window.\n' +
+        '    in input (at **)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in form (at **)\n') +
+        '    in App (at **)',
     ]);
     let root;
-    await expect(async () => {
-      await act(async () => {
-        root = ReactDOMClient.hydrateRoot(container, <App />);
-      });
-    }).toErrorDev(
+    await act(async () => {
+      root = ReactDOMClient.hydrateRoot(container, <App />);
+    });
+    assertConsoleErrorDev(
       [
-        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
+          "This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n" +
+          "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+          "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+          "- Date formatting in a user's locale which doesn't match the server.\n" +
+          '- External changing data without sending a snapshot of it along with the HTML.\n' +
+          '- Invalid HTML tag nesting.\n\n' +
+          'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n' +
+          'https://react.dev/link/hydration-mismatch\n\n' +
+          '  <App>\n' +
+          '    <form\n' +
+          '      action={function action}\n' +
+          '      ref={{current:null}}\n' +
+          '+     method="DELETE"\n' +
+          '-     method={null}\n' +
+          '    >\n' +
+          '      <input\n' +
+          '        type="submit"\n' +
+          '        formAction={function action}\n' +
+          '        ref={{current:null}}\n' +
+          '+       formTarget="elsewhere"\n' +
+          '-       formTarget={null}\n' +
+          '      >\n' +
+          '      <button\n' +
+          '        formAction={function action}\n' +
+          '        ref={{current:null}}\n' +
+          '+       formEncType="text/plain"\n' +
+          '-       formEncType={null}\n' +
+          '      >\n',
       ],
       {withoutStack: true},
     );

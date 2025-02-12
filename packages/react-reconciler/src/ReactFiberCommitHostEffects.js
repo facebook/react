@@ -47,10 +47,12 @@ import {
   commitHydratedSuspenseInstance,
   removeChildFromContainer,
   removeChild,
-  clearSingleton,
   acquireSingletonInstance,
+  releaseSingletonInstance,
+  isSingletonScope,
 } from './ReactFiberConfig';
 import {captureCommitPhaseError} from './ReactFiberWorkLoop';
+import {trackHostMutation} from './ReactFiberMutationTracking';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
 
@@ -80,7 +82,7 @@ export function commitHostUpdate(
   finishedWork: Fiber,
   newProps: any,
   oldProps: any,
-) {
+): void {
   try {
     if (__DEV__) {
       runWithFiberInDEV(
@@ -101,6 +103,7 @@ export function commitHostUpdate(
         finishedWork,
       );
     }
+    // Mutations are tracked manually from within commitUpdate.
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -124,6 +127,7 @@ export function commitHostTextUpdate(
     } else {
       commitTextUpdate(textInstance, oldText, newText);
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -137,6 +141,7 @@ export function commitHostResetTextContent(finishedWork: Fiber) {
     } else {
       resetTextContent(instance);
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -214,7 +219,9 @@ function isHostParent(fiber: Fiber): boolean {
     fiber.tag === HostComponent ||
     fiber.tag === HostRoot ||
     (supportsResources ? fiber.tag === HostHoistable : false) ||
-    (supportsSingletons ? fiber.tag === HostSingleton : false) ||
+    (supportsSingletons
+      ? fiber.tag === HostSingleton && isSingletonScope(fiber.type)
+      : false) ||
     fiber.tag === HostPortal
   );
 }
@@ -241,9 +248,19 @@ function getHostSibling(fiber: Fiber): ?Instance {
     while (
       node.tag !== HostComponent &&
       node.tag !== HostText &&
-      (!supportsSingletons ? true : node.tag !== HostSingleton) &&
       node.tag !== DehydratedFragment
     ) {
+      // If this is a host singleton we go deeper if it's not a special
+      // singleton scope. If it is a singleton scope we skip over it because
+      // you only insert against this scope when you are already inside of it
+      if (
+        supportsSingletons &&
+        node.tag === HostSingleton &&
+        isSingletonScope(node.type)
+      ) {
+        continue siblings;
+      }
+
       // If it is not host node and, we might have a host node inside it.
       // Try to search down until we find one.
       if (node.flags & Placement) {
@@ -281,23 +298,32 @@ function insertOrAppendPlacementNodeIntoContainer(
     } else {
       appendChildToContainer(parent, stateNode);
     }
-  } else if (
-    tag === HostPortal ||
-    (supportsSingletons ? tag === HostSingleton : false)
-  ) {
+    trackHostMutation();
+    return;
+  } else if (tag === HostPortal) {
     // If the insertion itself is a portal, then we don't want to traverse
     // down its children. Instead, we'll get insertions from each child in
     // the portal directly.
-    // If the insertion is a HostSingleton then it will be placed independently
-  } else {
-    const child = node.child;
-    if (child !== null) {
-      insertOrAppendPlacementNodeIntoContainer(child, before, parent);
-      let sibling = child.sibling;
-      while (sibling !== null) {
-        insertOrAppendPlacementNodeIntoContainer(sibling, before, parent);
-        sibling = sibling.sibling;
-      }
+    return;
+  }
+
+  if (
+    (supportsSingletons ? tag === HostSingleton : false) &&
+    isSingletonScope(node.type)
+  ) {
+    // This singleton is the parent of deeper nodes and needs to become
+    // the parent for child insertions and appends
+    parent = node.stateNode;
+    before = null;
+  }
+
+  const child = node.child;
+  if (child !== null) {
+    insertOrAppendPlacementNodeIntoContainer(child, before, parent);
+    let sibling = child.sibling;
+    while (sibling !== null) {
+      insertOrAppendPlacementNodeIntoContainer(sibling, before, parent);
+      sibling = sibling.sibling;
     }
   }
 }
@@ -316,23 +342,31 @@ function insertOrAppendPlacementNode(
     } else {
       appendChild(parent, stateNode);
     }
-  } else if (
-    tag === HostPortal ||
-    (supportsSingletons ? tag === HostSingleton : false)
-  ) {
+    trackHostMutation();
+    return;
+  } else if (tag === HostPortal) {
     // If the insertion itself is a portal, then we don't want to traverse
     // down its children. Instead, we'll get insertions from each child in
     // the portal directly.
-    // If the insertion is a HostSingleton then it will be placed independently
-  } else {
-    const child = node.child;
-    if (child !== null) {
-      insertOrAppendPlacementNode(child, before, parent);
-      let sibling = child.sibling;
-      while (sibling !== null) {
-        insertOrAppendPlacementNode(sibling, before, parent);
-        sibling = sibling.sibling;
-      }
+    return;
+  }
+
+  if (
+    (supportsSingletons ? tag === HostSingleton : false) &&
+    isSingletonScope(node.type)
+  ) {
+    // This singleton is the parent of deeper nodes and needs to become
+    // the parent for child insertions and appends
+    parent = node.stateNode;
+  }
+
+  const child = node.child;
+  if (child !== null) {
+    insertOrAppendPlacementNode(child, before, parent);
+    let sibling = child.sibling;
+    while (sibling !== null) {
+      insertOrAppendPlacementNode(sibling, before, parent);
+      sibling = sibling.sibling;
     }
   }
 }
@@ -342,14 +376,6 @@ function commitPlacement(finishedWork: Fiber): void {
     return;
   }
 
-  if (supportsSingletons) {
-    if (finishedWork.tag === HostSingleton) {
-      // Singletons are already in the Host and don't need to be placed
-      // Since they operate somewhat like Portals though their children will
-      // have Placement and will get placed inside them
-      return;
-    }
-  }
   // Recursively insert all host nodes into the parent.
   const parentFiber = getHostParentFiber(finishedWork);
 
@@ -424,6 +450,7 @@ export function commitHostRemoveChildFromContainer(
     } else {
       removeChildFromContainer(parentContainer, hostInstance);
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(deletedFiber, nearestMountedAncestor, error);
   }
@@ -446,6 +473,7 @@ export function commitHostRemoveChild(
     } else {
       removeChild(parentInstance, hostInstance);
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(deletedFiber, nearestMountedAncestor, error);
   }
@@ -468,6 +496,7 @@ export function commitHostRootContainerChildren(
     } else {
       replaceContainerChildren(containerInfo, pendingChildren);
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -537,13 +566,12 @@ export function commitHostHydratedSuspense(
   }
 }
 
-export function commitHostSingleton(finishedWork: Fiber) {
+export function commitHostSingletonAcquisition(finishedWork: Fiber) {
   const singleton = finishedWork.stateNode;
   const props = finishedWork.memoizedProps;
 
   try {
-    // This was a new mount, we need to clear and set initial properties
-    clearSingleton(singleton);
+    // This was a new mount, acquire the DOM instance and set initial properties
     if (__DEV__) {
       runWithFiberInDEV(
         finishedWork,
@@ -563,5 +591,17 @@ export function commitHostSingleton(finishedWork: Fiber) {
     }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
+  }
+}
+
+export function commitHostSingletonRelease(releasingWork: Fiber) {
+  if (__DEV__) {
+    runWithFiberInDEV(
+      releasingWork,
+      releaseSingletonInstance,
+      releasingWork.stateNode,
+    );
+  } else {
+    releaseSingletonInstance(releasingWork.stateNode);
   }
 }

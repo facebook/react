@@ -28,6 +28,11 @@ import type {
   OffscreenQueue,
   OffscreenInstance,
 } from './ReactFiberActivityComponent';
+import type {
+  ViewTransitionProps,
+  ViewTransitionState,
+} from './ReactFiberViewTransitionComponent';
+import {assignViewTransitionAutoName} from './ReactFiberViewTransitionComponent';
 import {OffscreenDetached} from './ReactFiberActivityComponent';
 import type {
   Cache,
@@ -37,8 +42,6 @@ import type {
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {RootState} from './ReactFiberRoot';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
-import type {TransitionStatus} from './ReactFiberConfig';
-import type {Hook} from './ReactFiberHooks';
 
 import {
   markComponentRenderStarted,
@@ -73,6 +76,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -92,15 +96,16 @@ import {
   ForceClientRender,
   Passive,
   DidDefer,
+  ViewTransitionNamedStatic,
+  ViewTransitionNamedMount,
+  LayoutStatic,
 } from './ReactFiberFlags';
 import {
-  debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   disableLegacyContextForFunctionComponents,
   enableProfilerCommitHooks,
   enableProfilerTimer,
   enableScopeAPI,
-  enableLazyContextPropagation,
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableLegacyHidden,
@@ -111,6 +116,7 @@ import {
   disableDefaultPropsExceptForClasses,
   enableOwnerStacks,
   enableHydrationLaneScheduling,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -272,7 +278,6 @@ import {
   createClassErrorUpdate,
   initializeClassErrorUpdate,
 } from './ReactFiberThrow';
-import is from 'shared/objectIs';
 import {
   getForksAtLevel,
   isForkedChild,
@@ -843,7 +848,7 @@ function deferHiddenOffscreenComponent(
 
   pushOffscreenSuspenseHandler(workInProgress);
 
-  if (enableLazyContextPropagation && current !== null) {
+  if (current !== null) {
     // Since this tree will resume rendering in a separate render, we need
     // to propagate parent contexts now so we don't lose track of which
     // ones changed.
@@ -1379,10 +1384,7 @@ function finishClassComponent(
     }
     if (__DEV__) {
       nextChildren = callRenderInDEV(instance);
-      if (
-        debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictLegacyMode
-      ) {
+      if (workInProgress.mode & StrictLegacyMode) {
         setIsStrictModeForDevtools(true);
         try {
           callRenderInDEV(instance);
@@ -1636,26 +1638,6 @@ function updateHostComponent(
     } else {
       HostTransitionContext._currentValue2 = newState;
     }
-    if (enableLazyContextPropagation) {
-      // In the lazy propagation implementation, we don't scan for matching
-      // consumers until something bails out.
-    } else {
-      if (didReceiveUpdate) {
-        if (current !== null) {
-          const oldStateHook: Hook = current.memoizedState;
-          const oldState: TransitionStatus = oldStateHook.memoizedState;
-          // This uses regular equality instead of Object.is because we assume
-          // that host transition state doesn't include NaN as a valid type.
-          if (oldState !== newState) {
-            propagateContextChange(
-              workInProgress,
-              HostTransitionContext,
-              renderLanes,
-            );
-          }
-        }
-      }
-    }
   }
 
   markRef(current, workInProgress);
@@ -1722,21 +1704,13 @@ function updateHostSingleton(
   }
 
   const nextChildren = workInProgress.pendingProps.children;
-
-  if (current === null && !getIsHydrating()) {
-    // Similar to Portals we append Singleton children in the commit phase. So we
-    // Track insertions even on mount.
-    // TODO: Consider unifying this with how the root works.
-    workInProgress.child = reconcileChildFibers(
-      workInProgress,
-      null,
-      nextChildren,
-      renderLanes,
-    );
-  } else {
-    reconcileChildren(current, workInProgress, nextChildren, renderLanes);
-  }
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   markRef(current, workInProgress);
+  if (current === null) {
+    // We mark Singletons with a static flag to more efficiently manage their
+    // ownership of the singleton host instance when in offscreen trees including Suspense
+    workInProgress.flags |= LayoutStatic;
+  }
   return workInProgress.child;
 }
 
@@ -1961,6 +1935,7 @@ const SUSPENDED_MARKER: SuspenseState = {
   dehydrated: null,
   treeContext: null,
   retryLane: NoLane,
+  hydrationErrors: null,
 };
 
 function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
@@ -2706,10 +2681,7 @@ function updateDehydratedSuspenseComponent(
     }
 
     if (
-      enableLazyContextPropagation &&
       // TODO: Factoring is a little weird, since we check this right below, too.
-      // But don't want to re-arrange the if-else chain until/unless this
-      // feature lands.
       !didReceiveUpdate
     ) {
       // We need to check if any children have context before we decide to bail
@@ -3261,6 +3233,39 @@ function updateSuspenseListComponent(
   return workInProgress.child;
 }
 
+function updateViewTransition(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
+  const instance: ViewTransitionState = workInProgress.stateNode;
+  if (pendingProps.name != null && pendingProps.name !== 'auto') {
+    // Explicitly named boundary. We track it so that we can pair it up with another explicit
+    // boundary if we get deleted.
+    workInProgress.flags |=
+      current === null
+        ? ViewTransitionNamedMount | ViewTransitionNamedStatic
+        : ViewTransitionNamedStatic;
+  } else {
+    // Assign an auto generated name using the useId algorthim if an explicit one is not provided.
+    // We don't need the name yet but we do it here to allow hydration state to be used.
+    // We might end up needing these to line up if we want to Transition from dehydrated fallback
+    // to client rendered content. If we don't end up using that we could just assign an incremeting
+    // counter in the commit phase instead.
+    assignViewTransitionAutoName(pendingProps, instance);
+  }
+  if (current !== null && current.memoizedProps.name !== pendingProps.name) {
+    // If the name changes, we schedule a ref effect to create a new ref instance.
+    workInProgress.flags |= Ref | RefStatic;
+  } else {
+    markRef(current, workInProgress);
+  }
+  const nextChildren = pendingProps.children;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
+
 function updatePortalComponent(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -3300,8 +3305,6 @@ function updateContextProvider(
     context = workInProgress.type._context;
   }
   const newProps = workInProgress.pendingProps;
-  const oldProps = workInProgress.memoizedProps;
-
   const newValue = newProps.value;
 
   if (__DEV__) {
@@ -3316,34 +3319,6 @@ function updateContextProvider(
   }
 
   pushProvider(workInProgress, context, newValue);
-
-  if (enableLazyContextPropagation) {
-    // In the lazy propagation implementation, we don't scan for matching
-    // consumers until something bails out, because until something bails out
-    // we're going to visit those nodes, anyway. The trade-off is that it shifts
-    // responsibility to the consumer to track whether something has changed.
-  } else {
-    if (oldProps !== null) {
-      const oldValue = oldProps.value;
-      if (is(oldValue, newValue)) {
-        // No change. Bailout early if children are the same.
-        if (
-          oldProps.children === newProps.children &&
-          !hasLegacyContextChanged()
-        ) {
-          return bailoutOnAlreadyFinishedWork(
-            current,
-            workInProgress,
-            renderLanes,
-          );
-        }
-      } else {
-        // The context value changed. Search for matching consumers and schedule
-        // them to update.
-        propagateContextChange(workInProgress, context, renderLanes);
-      }
-    }
-  }
 
   const newChildren = newProps.children;
   reconcileChildren(current, workInProgress, newChildren, renderLanes);
@@ -3463,7 +3438,7 @@ function bailoutOnAlreadyFinishedWork(
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
 
-    if (enableLazyContextPropagation && current !== null) {
+    if (current !== null) {
       // Before bailing out, check if there are any context changes in
       // the children.
       lazilyPropagateParentContextChanges(current, workInProgress, renderLanes);
@@ -3564,11 +3539,9 @@ function checkScheduledUpdateOrContext(
   }
   // No pending update, but because context is propagated lazily, we need
   // to check for a context change before we bail out.
-  if (enableLazyContextPropagation) {
-    const dependencies = current.dependencies;
-    if (dependencies !== null && checkIfContextChanged(dependencies)) {
-      return true;
-    }
+  const dependencies = current.dependencies;
+  if (dependencies !== null && checkIfContextChanged(dependencies)) {
+    return true;
   }
   return false;
 }
@@ -3706,7 +3679,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         workInProgress.childLanes,
       );
 
-      if (enableLazyContextPropagation && !hasChildWork) {
+      if (!hasChildWork) {
         // Context changes may not have been propagated yet. We need to do
         // that now, before we can decide whether to bail out.
         // TODO: We use `childLanes` as a heuristic for whether there is
@@ -4074,6 +4047,12 @@ function beginWork(
           workInProgress,
           renderLanes,
         );
+      }
+      break;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        return updateViewTransition(current, workInProgress, renderLanes);
       }
       break;
     }

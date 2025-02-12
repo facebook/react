@@ -15,6 +15,7 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
@@ -22,6 +23,8 @@ import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import DefaultPrepareStackTrace from 'shared/DefaultPrepareStackTrace';
+
+import {enableViewTransition} from 'shared/ReactFeatureFlags';
 
 let prefix;
 let suffix;
@@ -322,6 +325,10 @@ export function describeUnknownElementTypeFrameInDEV(type: any): string {
       return describeBuiltInComponentFrame('Suspense');
     case REACT_SUSPENSE_LIST_TYPE:
       return describeBuiltInComponentFrame('SuspenseList');
+    case REACT_VIEW_TRANSITION_TYPE:
+      if (enableViewTransition) {
+        return describeBuiltInComponentFrame('ViewTransition');
+      }
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {

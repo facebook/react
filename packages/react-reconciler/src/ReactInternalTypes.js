@@ -47,7 +47,6 @@ export type HookType =
   | 'useRef'
   | 'useEffect'
   | 'useEffectEvent'
-  | 'useResourceEffect'
   | 'useInsertionEffect'
   | 'useLayoutEffect'
   | 'useCallback'
@@ -220,8 +219,6 @@ type BaseFiberRootProperties = {
 
   pingCache: WeakMap<Wakeable, Set<mixed>> | Map<Wakeable, Set<mixed>> | null,
 
-  // A finished work-in-progress HostRoot that's ready to be committed.
-  finishedWork: Fiber | null,
   // Timeout handle returned by setTimeout. Used to cancel a pending timeout, if
   // it's superseded by a new one.
   timeoutHandle: TimeoutHandle | NoTimeout,
@@ -251,8 +248,6 @@ type BaseFiberRootProperties = {
   expiredLanes: Lanes,
   errorRecoveryDisabledLanes: Lanes,
   shellSuspendCounter: number,
-
-  finishedLanes: Lanes,
 
   entangledLanes: Lanes,
   entanglements: LaneMap<Lanes>,
@@ -395,17 +390,14 @@ export type Dispatcher = {
   useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {current: T},
   useEffect(
-    create: () => (() => void) | void,
-    deps: Array<mixed> | void | null,
-  ): void,
-  useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
-  useResourceEffect?: (
-    create: () => mixed,
+    create: (() => (() => void) | void) | (() => {...} | void | null),
     createDeps: Array<mixed> | void | null,
-    update: ((resource: mixed) => void) | void,
-    updateDeps: Array<mixed> | void | null,
-    destroy: ((resource: mixed) => void) | void,
-  ) => void,
+    update?: ((resource: {...} | void | null) => void) | void,
+    updateDeps?: Array<mixed> | void | null,
+    destroy?: ((resource: {...} | void | null) => void) | void,
+  ): void,
+  // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
+  useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
@@ -433,8 +425,8 @@ export type Dispatcher = {
     getServerSnapshot?: () => T,
   ): T,
   useId(): string,
-  useCacheRefresh?: () => <T>(?() => T, ?T) => void,
-  useMemoCache?: (size: number) => Array<any>,
+  useCacheRefresh: () => <T>(?() => T, ?T) => void,
+  useMemoCache: (size: number) => Array<any>,
   useHostTransitionStatus: () => TransitionStatus,
   useOptimistic: <S, A>(
     passthrough: S,

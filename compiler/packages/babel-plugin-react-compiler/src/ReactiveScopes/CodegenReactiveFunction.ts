@@ -103,6 +103,11 @@ export type CodegenFunction = {
    * This is true if the compiler has the lowered useContext calls.
    */
   hasLoweredContextAccess: boolean;
+
+  /**
+   * This is true if the compiler has compiled a fire to a useFire call
+   */
+  hasFireRewrite: boolean;
 };
 
 export function codegenFunction(
@@ -355,6 +360,7 @@ function codegenReactiveFunction(
     prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
     outlined: [],
     hasLoweredContextAccess: fn.env.hasLoweredContextAccess,
+    hasFireRewrite: fn.env.hasFireRewrite,
   });
 }
 
@@ -2263,7 +2269,7 @@ function codegenInstructionValue(
  * https://en.wikipedia.org/wiki/List_of_Unicode_characters#Control_codes
  */
 const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
-  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}]|"/u;
+  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}]|"|\\/u;
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute,
@@ -2321,7 +2327,7 @@ function codegenJsxAttribute(
   }
 }
 
-const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN = /[<>&]/;
+const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN = /[<>&{}]/;
 function codegenJsxElement(
   cx: Context,
   place: Place,

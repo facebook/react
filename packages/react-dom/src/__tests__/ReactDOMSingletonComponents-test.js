@@ -23,6 +23,7 @@ let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
 let waitForAll;
+let assertConsoleErrorDev;
 
 function normalizeError(msg) {
   // Take the first sentence to make it easier to assert on.
@@ -45,6 +46,7 @@ describe('ReactDOM HostSingleton', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
 
     // Test Environment
     const jsdom = new JSDOM(
@@ -162,11 +164,16 @@ describe('ReactDOM HostSingleton', () => {
         <body />
       </html>,
     );
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev(
-      'You are mounting a new head component when a previous one has not first unmounted. It is an error to render more than one head component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <head> and if you need to mount a new one, ensure any previous ones have unmounted first',
-    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'You are mounting a new head component when a previous one has not first unmounted. ' +
+        'It is an error to render more than one head component at a time and attributes and ' +
+        'children of these components will likely fail in unpredictable ways. ' +
+        'Please only render a single instance of <head> and if you need to mount a new one, ' +
+        'ensure any previous ones have unmounted first.\n' +
+        '    in head (at **)' +
+        (gate('enableOwnerStacks') ? '' : '\n    in html (at **)'),
+    ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head lang="es" data-foo="foo">
@@ -540,10 +547,31 @@ describe('ReactDOM HostSingleton', () => {
       },
     );
     expect(hydrationErrors).toEqual([]);
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev(
-      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+    await waitForAll([]);
+    assertConsoleErrorDev(
+      [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
+          "This won't be patched up. This can happen if a SSR-ed Client Component used:\n" +
+          '\n' +
+          "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+          "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+          "- Date formatting in a user's locale which doesn't match the server.\n" +
+          '- External changing data without sending a snapshot of it along with the HTML.\n' +
+          '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed ' +
+          'which messes with the HTML before React loaded.\n' +
+          '\n' +
+          'https://react.dev/link/hydration-mismatch\n' +
+          '\n' +
+          '  <html\n' +
+          '+   data-client-foo="foo"\n' +
+          '-   data-client-foo={null}\n' +
+          '  >\n' +
+          '    <head>\n' +
+          '    <body\n' +
+          '+     data-client-baz="baz"\n' +
+          '-     data-client-baz={null}\n' +
+          '    >\n',
+      ],
       {withoutStack: true},
     );
     expect(persistentElements).toEqual([

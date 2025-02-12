@@ -245,4 +245,67 @@ describe('ReactFlightDOMReplyEdge', () => {
       ),
     );
   });
+
+  it('should abort when parsing an incomplete payload', async () => {
+    const infinitePromise = new Promise(() => {});
+    const controller = new AbortController();
+    const promiseForResult = ReactServerDOMClient.encodeReply(
+      {promise: infinitePromise},
+      {
+        signal: controller.signal,
+      },
+    );
+    controller.abort();
+    const body = await promiseForResult;
+
+    const decoded = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    let error = null;
+    try {
+      await decoded.promise;
+    } catch (x) {
+      error = x;
+    }
+    expect(error).not.toBe(null);
+    expect(error.message).toBe('Connection closed.');
+  });
+
+  it('can stream the decoding using an async iterable', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+
+    const buffer = new Uint8Array([
+      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+    ]);
+
+    const formData = await ReactServerDOMClient.encodeReply({
+      a: Promise.resolve('hello'),
+      b: Promise.resolve(buffer),
+    });
+
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const entry of formData) {
+          yield entry;
+          await promise;
+        }
+      },
+    };
+
+    const decoded = await ReactServerDOMServer.decodeReplyFromAsyncIterable(
+      iterable,
+      webpackServerMap,
+    );
+
+    expect(Object.keys(decoded)).toEqual(['a', 'b']);
+
+    await resolve();
+
+    expect(await decoded.a).toBe('hello');
+    expect(Array.from(await decoded.b)).toEqual(Array.from(buffer));
+  });
 });

@@ -549,7 +549,8 @@ export default {
             } else if (
               codePathNode.parent &&
               (codePathNode.parent.type === 'MethodDefinition' ||
-                codePathNode.parent.type === 'ClassProperty') &&
+                codePathNode.parent.type === 'ClassProperty' ||
+                codePathNode.parent.type === 'PropertyDefinition') &&
               codePathNode.parent.value === codePathNode
             ) {
               // Custom message for hooks inside a class

@@ -16,6 +16,7 @@ import type {
 import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {disableCommentsAsDOMContainers} from 'shared/ReactFeatureFlags';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -106,17 +107,19 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
     }
 
     if (__DEV__) {
-      if (typeof arguments[1] === 'function') {
+      // using a reference to `arguments` bails out of GCC optimizations which affect function arity
+      const args = arguments;
+      if (typeof args[1] === 'function') {
         console.error(
           'does not support the second callback argument. ' +
             'To execute a side effect after rendering, declare it in a component body with useEffect().',
         );
-      } else if (isValidContainer(arguments[1])) {
+      } else if (isValidContainer(args[1])) {
         console.error(
           'You passed a container to the second argument of root.render(...). ' +
             "You don't need to pass it again since you already passed it to create the root.",
         );
-      } else if (typeof arguments[1] !== 'undefined') {
+      } else if (typeof args[1] !== 'undefined') {
         console.error(
           'You passed a second argument to root.render(...) but it only accepts ' +
             'one argument.',
@@ -131,7 +134,9 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
   // $FlowFixMe[missing-this-annot]
   function (): void {
     if (__DEV__) {
-      if (typeof arguments[0] === 'function') {
+      // using a reference to `arguments` bails out of GCC optimizations which affect function arity
+      const args = arguments;
+      if (typeof args[0] === 'function') {
         console.error(
           'does not support a callback argument. ' +
             'To execute a side effect after rendering, declare it in a component body with useEffect().',
@@ -232,7 +237,7 @@ export function createRoot(
   markContainerAsRoot(root.current, container);
 
   const rootContainerElement: Document | Element | DocumentFragment =
-    container.nodeType === COMMENT_NODE
+    !disableCommentsAsDOMContainers && container.nodeType === COMMENT_NODE
       ? (container.parentNode: any)
       : container;
   listenToAllSupportedEvents(rootContainerElement);

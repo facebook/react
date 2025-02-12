@@ -31,6 +31,17 @@ import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryR
 export {createTemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
 export type {TemporaryReferenceSet};
 
+function findSourceMapURL(filename: string, environmentName: string) {
+  const devServer = parcelRequire.meta.devServer;
+  if (devServer != null) {
+    const qs = new URLSearchParams();
+    qs.set('filename', filename);
+    qs.set('env', environmentName);
+    return devServer + '/__parcel_source_map?' + qs.toString();
+  }
+  return null;
+}
+
 type CallServerCallback = <A, T>(id: string, args: A) => Promise<T>;
 
 let callServer: CallServerCallback | null = null;
@@ -57,6 +68,9 @@ export function createServerReference<A: Iterable<any>, T>(
   return createServerReferenceImpl(
     id + '#' + exportName,
     callCurrentServerCallback,
+    undefined,
+    findSourceMapURL,
+    exportName,
   );
 }
 
@@ -107,7 +121,7 @@ export function createFromReadableStream<T>(
     options && options.temporaryReferences
       ? options.temporaryReferences
       : undefined,
-    undefined, // TODO: findSourceMapUrl
+    __DEV__ ? findSourceMapURL : undefined,
     __DEV__ ? (options ? options.replayConsoleLogs !== false : true) : false, // defaults to true
     __DEV__ && options && options.environmentName
       ? options.environmentName
@@ -131,7 +145,7 @@ export function createFromFetch<T>(
     options && options.temporaryReferences
       ? options.temporaryReferences
       : undefined,
-    undefined, // TODO: findSourceMapUrl
+    __DEV__ ? findSourceMapURL : undefined,
     __DEV__ ? (options ? options.replayConsoleLogs !== false : true) : false, // defaults to true
     __DEV__ && options && options.environmentName
       ? options.environmentName

@@ -31,6 +31,7 @@ import {
   createPublicTextInstance,
   type PublicInstance as ReactNativePublicInstance,
   type PublicTextInstance,
+  type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 const {
@@ -56,10 +57,7 @@ import {
   getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
 
-import {
-  enableFabricCompleteRootInCommitPhase,
-  passChildrenWhenCloningPersistedNodes,
-} from 'shared/ReactFeatureFlags';
+import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {ReactContext} from 'shared/ReactTypes';
 
@@ -108,7 +106,10 @@ export type TextInstance = {
 };
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
-export type Container = number;
+export type Container = {
+  containerTag: number,
+  publicInstance: PublicRootInstance | null,
+};
 export type ChildSet = Object | Array<Node>;
 export type HostContext = $ReadOnly<{
   isInAParentText: boolean,
@@ -180,7 +181,7 @@ export function createInstance(
   const node = createNode(
     tag, // reactTag
     viewConfig.uiViewClassName, // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     updatePayload, // props
     internalInstanceHandle, // internalInstanceHandle
   );
@@ -189,6 +190,7 @@ export function createInstance(
     tag,
     viewConfig,
     internalInstanceHandle,
+    rootContainerInstance.publicInstance,
   );
 
   return {
@@ -221,7 +223,7 @@ export function createTextInstance(
   const node = createNode(
     tag, // reactTag
     'RCTRawText', // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     {text: text}, // props
     internalInstanceHandle, // instance handle
   );
@@ -500,19 +502,14 @@ export function finalizeContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  if (!enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container, newChildren);
-  }
+  // Noop - children will be finalized in replaceContainerChildren
 }
 
 export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  // Noop - children will be replaced in finalizeContainerChildren
-  if (enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container, newChildren);
-  }
+  completeRoot(container.containerTag, newChildren);
 }
 
 export {getClosestInstanceFromNode as getInstanceFromNode};
@@ -550,6 +547,8 @@ export function preloadInstance(type: Type, props: Props): boolean {
 export function startSuspendingCommit(): void {}
 
 export function suspendInstance(type: Type, props: Props): void {}
+
+export function suspendOnActiveViewTransition(container: Container): void {}
 
 export function waitForCommitToBeReady(): null {
   return null;

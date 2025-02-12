@@ -18,7 +18,7 @@ import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
+import {enableUseEffectCRUDOverload} from 'shared/ReactFeatureFlags';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -87,17 +87,53 @@ export function useRef<T>(initialValue: T): {current: T} {
 }
 
 export function useEffect(
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
+  create: (() => (() => void) | void) | (() => {...} | void | null),
+  createDeps: Array<mixed> | void | null,
+  update?: ((resource: {...} | void | null) => void) | void,
+  updateDeps?: Array<mixed> | void | null,
+  destroy?: ((resource: {...} | void | null) => void) | void,
 ): void {
+  if (__DEV__) {
+    if (create == null) {
+      console.warn(
+        'React Hook useEffect requires an effect callback. Did you forget to pass a callback to the hook?',
+      );
+    }
+  }
+
   const dispatcher = resolveDispatcher();
-  return dispatcher.useEffect(create, deps);
+  if (
+    enableUseEffectCRUDOverload &&
+    (typeof update === 'function' || typeof destroy === 'function')
+  ) {
+    // $FlowFixMe[not-a-function] This is unstable, thus optional
+    return dispatcher.useEffect(
+      create,
+      createDeps,
+      update,
+      updateDeps,
+      destroy,
+    );
+  } else if (typeof update === 'function') {
+    throw new Error(
+      'useEffect CRUD overload is not enabled in this build of React.',
+    );
+  }
+  return dispatcher.useEffect(create, createDeps);
 }
 
 export function useInsertionEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    if (create == null) {
+      console.warn(
+        'React Hook useInsertionEffect requires an effect callback. Did you forget to pass a callback to the hook?',
+      );
+    }
+  }
+
   const dispatcher = resolveDispatcher();
   return dispatcher.useInsertionEffect(create, deps);
 }
@@ -106,6 +142,14 @@ export function useLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    if (create == null) {
+      console.warn(
+        'React Hook useLayoutEffect requires an effect callback. Did you forget to pass a callback to the hook?',
+      );
+    }
+  }
+
   const dispatcher = resolveDispatcher();
   return dispatcher.useLayoutEffect(create, deps);
 }
@@ -199,27 +243,6 @@ export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   const dispatcher = resolveDispatcher();
   // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useEffectEvent(callback);
-}
-
-export function useResourceEffect(
-  create: () => mixed,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
-): void {
-  if (!enableUseResourceEffectHook) {
-    throw new Error('Not implemented.');
-  }
-  const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
-  return dispatcher.useResourceEffect(
-    create,
-    createDeps,
-    update,
-    updateDeps,
-    destroy,
-  );
 }
 
 export function useOptimistic<S, A>(
