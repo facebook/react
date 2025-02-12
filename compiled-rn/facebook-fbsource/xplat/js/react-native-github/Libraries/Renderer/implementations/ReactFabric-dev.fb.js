@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<935c877554bffd14c0abe60f5bbd3605>>
+ * @generated SignedSource<<6effb1e1a500fc17b105721f2b3e4748>>
  */
 
 "use strict";
@@ -319,16 +319,16 @@ __DEV__ &&
                 } else {
                   try {
                     Fake.call();
-                  } catch (x$0) {
-                    control = x$0;
+                  } catch (x$1) {
+                    control = x$1;
                   }
                   fn.call(Fake.prototype);
                 }
               } else {
                 try {
                   throw Error();
-                } catch (x$1) {
-                  control = x$1;
+                } catch (x$2) {
+                  control = x$2;
                 }
                 (Fake = fn()) &&
                   "function" === typeof Fake.catch &&
@@ -740,8 +740,8 @@ __DEV__ &&
       event.currentTarget = getNodeFromInstance$1(inst);
       try {
         listener(event);
-      } catch (error$2) {
-        hasError || ((hasError = !0), (caughtError = error$2));
+      } catch (error$3) {
+        hasError || ((hasError = !0), (caughtError = error$3));
       }
       event.currentTarget = null;
     }
@@ -4534,7 +4534,7 @@ __DEV__ &&
       try {
         var nextValue = latestGetSnapshot();
         return !objectIs(inst, nextValue);
-      } catch (error$3) {
+      } catch (error$4) {
         return !0;
       }
     }
@@ -4663,8 +4663,8 @@ __DEV__ &&
           null !== onStartTransitionFinish &&
             onStartTransitionFinish(currentTransition, returnValue);
           handleActionReturnValue(actionQueue, node, returnValue);
-        } catch (error$4) {
-          onActionError(actionQueue, node, error$4);
+        } catch (error$5) {
+          onActionError(actionQueue, node, error$5);
         } finally {
           (ReactSharedInternals.T = prevTransition),
             null === prevTransition &&
@@ -4680,8 +4680,8 @@ __DEV__ &&
         try {
           (currentTransition = action(prevState, payload)),
             handleActionReturnValue(actionQueue, node, currentTransition);
-        } catch (error$5) {
-          onActionError(actionQueue, node, error$5);
+        } catch (error$6) {
+          onActionError(actionQueue, node, error$6);
         }
     }
     function handleActionReturnValue(actionQueue, node, returnValue) {
@@ -5255,11 +5255,11 @@ __DEV__ &&
             finishedState,
             requestUpdateLane(fiber)
           );
-      } catch (error$6) {
+      } catch (error$7) {
         dispatchSetStateInternal(
           fiber,
           queue,
-          { then: function () {}, status: "rejected", reason: error$6 },
+          { then: function () {}, status: "rejected", reason: error$7 },
           requestUpdateLane(fiber)
         );
       } finally {
@@ -5412,7 +5412,7 @@ __DEV__ &&
                   finishQueueingConcurrentUpdates(),
                 !1
               );
-          } catch (error$7) {
+          } catch (error$8) {
           } finally {
             ReactSharedInternals.H = prevDispatcher;
           }
@@ -9677,22 +9677,35 @@ __DEV__ &&
               keepChildren,
               workInProgress
             );
-            renderLanes = ReactNativePrivateInterface.createPublicInstance(
-              current,
-              _type2,
-              workInProgress,
-              renderLanes.publicInstance
-            );
-            current = {
-              node: keepChildren,
-              canonical: {
-                nativeTag: current,
-                viewConfig: _type2,
-                currentProps: newProps,
-                internalInstanceHandle: workInProgress,
-                publicInstance: renderLanes
-              }
-            };
+            enableLazyPublicInstanceInFabric
+              ? (current = {
+                  node: keepChildren,
+                  canonical: {
+                    nativeTag: current,
+                    viewConfig: _type2,
+                    currentProps: newProps,
+                    internalInstanceHandle: workInProgress,
+                    publicInstance: null,
+                    publicRootInstance: renderLanes.publicInstance
+                  }
+                })
+              : ((renderLanes =
+                  ReactNativePrivateInterface.createPublicInstance(
+                    current,
+                    _type2,
+                    workInProgress,
+                    renderLanes.publicInstance
+                  )),
+                (current = {
+                  node: keepChildren,
+                  canonical: {
+                    nativeTag: current,
+                    viewConfig: _type2,
+                    currentProps: newProps,
+                    internalInstanceHandle: workInProgress,
+                    publicInstance: renderLanes
+                  }
+                }));
             markCloned(workInProgress);
             appendAllChildren(current, workInProgress, !1, !1);
             workInProgress.stateNode = current;
@@ -10246,8 +10259,8 @@ __DEV__ &&
             updateQueue = updateQueue.next;
           } while (updateQueue !== firstEffect);
         }
-      } catch (error$12) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$12);
+      } catch (error$13) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error$13);
       }
     }
     function commitHookEffectListUnmount(
@@ -10328,8 +10341,8 @@ __DEV__ &&
             updateQueue = updateQueue.next;
           } while (updateQueue !== firstEffect);
         }
-      } catch (error$13) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$13);
+      } catch (error$14) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error$14);
       }
     }
     function commitHookPassiveMountEffects(finishedWork, hookFlags) {
@@ -10392,8 +10405,8 @@ __DEV__ &&
             updateQueue,
             instance
           );
-        } catch (error$14) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error$14);
+        } catch (error$15) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$15);
         }
       }
     }
@@ -10441,8 +10454,8 @@ __DEV__ &&
             );
           }));
         current.__reactInternalSnapshotBeforeUpdate = snapshot;
-      } catch (error$17) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$17);
+      } catch (error$18) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error$18);
       }
     }
     function safelyCallComponentWillUnmount(
@@ -10508,8 +10521,8 @@ __DEV__ &&
     function safelyAttachRef(current, nearestMountedAncestor) {
       try {
         runWithFiberInDEV(current, commitAttachRef, current);
-      } catch (error$18) {
-        captureCommitPhaseError(current, nearestMountedAncestor, error$18);
+      } catch (error$19) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error$19);
       }
     }
     function safelyDetachRef(current, nearestMountedAncestor) {
@@ -10525,8 +10538,8 @@ __DEV__ &&
                 recordEffectDuration(current);
               }
             else runWithFiberInDEV(current, refCleanup);
-          } catch (error$19) {
-            captureCommitPhaseError(current, nearestMountedAncestor, error$19);
+          } catch (error$20) {
+            captureCommitPhaseError(current, nearestMountedAncestor, error$20);
           } finally {
             (current.refCleanup = null),
               (current = current.alternate),
@@ -10541,8 +10554,8 @@ __DEV__ &&
                 recordEffectDuration(current);
               }
             else runWithFiberInDEV(current, ref, null);
-          } catch (error$20) {
-            captureCommitPhaseError(current, nearestMountedAncestor, error$20);
+          } catch (error$21) {
+            captureCommitPhaseError(current, nearestMountedAncestor, error$21);
           }
         else ref.current = null;
     }
@@ -10622,8 +10635,8 @@ __DEV__ &&
           props,
           finishedWork
         );
-      } catch (error$23) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$23);
+      } catch (error$24) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error$24);
       }
     }
     function commitPlacement() {}
@@ -10640,8 +10653,8 @@ __DEV__ &&
           portal,
           pendingChildren
         );
-      } catch (error$26) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$26);
+      } catch (error$27) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error$27);
       }
     }
     function commitBeforeMutationEffects(root, firstChild) {
@@ -10802,11 +10815,11 @@ __DEV__ &&
                 flags,
                 prevProps
               );
-            } catch (error$16) {
+            } catch (error$17) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$16
+                error$17
               );
             }
           }
@@ -10834,11 +10847,11 @@ __DEV__ &&
                 commitStartTime,
                 finishedRoot.effectDuration
               );
-            } catch (error$21) {
+            } catch (error$22) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$21
+                error$22
               );
             }
           } else recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
@@ -10955,11 +10968,11 @@ __DEV__ &&
             try {
               var onDeleted = finishedRoot.onDeleted;
               onDeleted && onDeleted(deletedFiber.stateNode);
-            } catch (error$27) {
+            } catch (error$28) {
               captureCommitPhaseError(
                 deletedFiber,
                 nearestMountedAncestor,
-                error$27
+                error$28
               );
             }
           break;
@@ -11175,11 +11188,11 @@ __DEV__ &&
                 flags,
                 pendingChildren
               );
-            } catch (error$25) {
+            } catch (error$26) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$25
+                error$26
               );
             }
           }
@@ -11224,11 +11237,11 @@ __DEV__ &&
                 } else
                   void 0 !== pendingChildren &&
                     error$jscomp$0("Unexpected type for suspenseCallback.");
-            } catch (error$28) {
+            } catch (error$29) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$28
+                error$29
               );
             }
             root = finishedWork.updateQueue;
@@ -11301,8 +11314,8 @@ __DEV__ &&
       if (flags & 2) {
         try {
           runWithFiberInDEV(finishedWork, commitPlacement, finishedWork);
-        } catch (error$24) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error$24);
+        } catch (error$25) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$25);
         }
         finishedWork.flags &= -3;
       }
@@ -11393,11 +11406,11 @@ __DEV__ &&
                 current,
                 finishedRoot
               );
-            } catch (error$15) {
+            } catch (error$16) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$15
+                error$16
               );
             }
           }
@@ -11440,11 +11453,11 @@ __DEV__ &&
                 commitStartTime,
                 includeWorkInProgressEffects.effectDuration
               );
-            } catch (error$21) {
+            } catch (error$22) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$21
+                error$22
               );
             }
           } else
@@ -11600,11 +11613,11 @@ __DEV__ &&
                 commitStartTime,
                 finishedRoot.passiveEffectDuration
               );
-            } catch (error$22) {
+            } catch (error$23) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$22
+                error$23
               );
             }
           } else
@@ -12398,7 +12411,7 @@ __DEV__ &&
             check = check.value;
             try {
               if (!objectIs(getSnapshot(), check)) return !1;
-            } catch (error$29) {
+            } catch (error$30) {
               return !1;
             }
           }
@@ -12683,8 +12696,8 @@ __DEV__ &&
           workLoopSync();
           memoizedUpdaters = workInProgressRootExitStatus;
           break;
-        } catch (thrownValue$30) {
-          handleThrow(root, thrownValue$30);
+        } catch (thrownValue$31) {
+          handleThrow(root, thrownValue$31);
         }
       while (1);
       lanes && root.shellSuspendCounter++;
@@ -12847,8 +12860,8 @@ __DEV__ &&
             ? workLoopSync()
             : workLoopConcurrentByScheduler();
           break;
-        } catch (thrownValue$31) {
-          handleThrow(root, thrownValue$31);
+        } catch (thrownValue$32) {
+          handleThrow(root, thrownValue$32);
         }
       while (1);
       resetContextDependencies();
@@ -12974,9 +12987,9 @@ __DEV__ &&
           workInProgress = null;
           return;
         }
-      } catch (error$32) {
+      } catch (error$33) {
         if (null !== returnFiber)
-          throw ((workInProgress = returnFiber), error$32);
+          throw ((workInProgress = returnFiber), error$33);
         workInProgressRootExitStatus = RootFatalErrored;
         logUncaughtError(
           root,
@@ -14304,7 +14317,7 @@ __DEV__ &&
       try {
         testStringCoercion(key);
         var JSCompiler_inline_result = !1;
-      } catch (e$33) {
+      } catch (e$34) {
         JSCompiler_inline_result = !0;
       }
       JSCompiler_inline_result &&
@@ -14548,12 +14561,24 @@ __DEV__ &&
       };
     }
     function getPublicInstance(instance) {
-      return null != instance.canonical &&
-        null != instance.canonical.publicInstance
-        ? instance.canonical.publicInstance
-        : null != instance._nativeTag
-          ? instance
-          : null;
+      if (null != instance.canonical) {
+        if (null == instance.canonical.publicInstance) {
+          var $jscomp$nullish$tmp0;
+          instance.canonical.publicInstance =
+            ReactNativePrivateInterface.createPublicInstance(
+              instance.canonical.nativeTag,
+              instance.canonical.viewConfig,
+              instance.canonical.internalInstanceHandle,
+              null !=
+                ($jscomp$nullish$tmp0 = instance.canonical.publicRootInstance)
+                ? $jscomp$nullish$tmp0
+                : null
+            );
+          instance.canonical.publicRootInstance = null;
+        }
+        return instance.canonical.publicInstance;
+      }
+      return null != instance._nativeTag ? instance : null;
     }
     function resolveUpdatePriority() {
       if (0 !== currentUpdatePriority) return currentUpdatePriority;
@@ -14630,6 +14655,8 @@ __DEV__ &&
       enableOwnerStacks = dynamicFlagsUntyped.enableOwnerStacks,
       enableFastAddPropertiesInDiffing =
         dynamicFlagsUntyped.enableFastAddPropertiesInDiffing,
+      enableLazyPublicInstanceInFabric =
+        dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -16743,8 +16770,8 @@ __DEV__ &&
         "react-stack-bottom-frame": function (finishedWork, instance) {
           try {
             instance.componentDidMount();
-          } catch (error$8) {
-            captureCommitPhaseError(finishedWork, finishedWork.return, error$8);
+          } catch (error$9) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error$9);
           }
         }
       },
@@ -16761,8 +16788,12 @@ __DEV__ &&
         ) {
           try {
             instance.componentDidUpdate(prevProps, prevState, snapshot);
-          } catch (error$9) {
-            captureCommitPhaseError(finishedWork, finishedWork.return, error$9);
+          } catch (error$10) {
+            captureCommitPhaseError(
+              finishedWork,
+              finishedWork.return,
+              error$10
+            );
           }
         }
       },
@@ -16788,8 +16819,8 @@ __DEV__ &&
         ) {
           try {
             instance.componentWillUnmount();
-          } catch (error$10) {
-            captureCommitPhaseError(current, nearestMountedAncestor, error$10);
+          } catch (error$11) {
+            captureCommitPhaseError(current, nearestMountedAncestor, error$11);
           }
         }
       },
@@ -16841,8 +16872,8 @@ __DEV__ &&
         ) {
           try {
             destroy();
-          } catch (error$11) {
-            captureCommitPhaseError(current, nearestMountedAncestor, error$11);
+          } catch (error$12) {
+            captureCommitPhaseError(current, nearestMountedAncestor, error$12);
           }
         }
       },
@@ -17478,10 +17509,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-192555bb-20250211",
+        version: "19.1.0-native-fb-f83903bf-20250212",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-192555bb-20250211"
+        reconcilerVersion: "19.1.0-native-fb-f83903bf-20250212"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
