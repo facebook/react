@@ -64,7 +64,7 @@ describe('ReactOwnerStacks', () => {
   });
 
   it('returns null outside of render', async () => {
-    // Akward to gate since some builds will have `captureOwnerStack` return null in prod
+    // Awkward to gate since some builds will have `captureOwnerStack` return null in prod
     if (__DEV__ && gate('enableOwnerStacks')) {
       expect(React.captureOwnerStack()).toBe(null);
 
