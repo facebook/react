@@ -176,6 +176,8 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
       return DefaultHydrationLane;
     case DefaultLane:
       return DefaultLane;
+    case GestureLane:
+      return GestureLane;
     case TransitionHydrationLane:
       return TransitionHydrationLane;
     case TransitionLane1:
@@ -209,10 +211,6 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
     case DeferredLane:
       // This shouldn't be reachable because deferred work is always entangled
       // with something else.
-      return NoLanes;
-    case GestureLane:
-      // This shouldn't typically be reached because we should've already finished this
-      // work before starting a regular render.
       return NoLanes;
     default:
       if (__DEV__) {
@@ -644,7 +642,8 @@ export function includesBlockingLane(lanes: Lanes): boolean {
     InputContinuousHydrationLane |
     InputContinuousLane |
     DefaultHydrationLane |
-    DefaultLane;
+    DefaultLane |
+    GestureLane;
   return (lanes & SyncDefaultLanes) !== NoLanes;
 }
 
