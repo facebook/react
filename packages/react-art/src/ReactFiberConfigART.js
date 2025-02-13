@@ -508,6 +508,15 @@ export function createViewTransitionInstance(
   return null;
 }
 
+export type GestureProvider = null;
+
+export function subscribeToGestureDirection(
+  provider: GestureProvider,
+  directionCallback: (direction: boolean) => void,
+): () => void {
+  throw new Error('useSwipeTransition is not yet supported in react-art.');
+}
+
 export function clearContainer(container) {
   // TODO Implement this
 }

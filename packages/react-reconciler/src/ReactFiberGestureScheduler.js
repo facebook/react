@@ -12,11 +12,14 @@ import type {GestureProvider} from 'shared/ReactTypes';
 
 import {GestureLane} from './ReactFiberLane';
 import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
+import {subscribeToGestureDirection} from './ReactFiberConfig';
 
 // This type keeps track of any scheduled or active gestures.
 export type ScheduledGesture = {
   provider: GestureProvider,
   count: number, // The number of times this same provider has been started.
+  direction: boolean, // false = previous, true = next
+  cancel: () => void, // Cancel the subscription to direction change.
   prev: null | ScheduledGesture, // The previous scheduled gesture in the queue for this root.
   next: null | ScheduledGesture, // The next scheduled gesture in the queue for this root.
 };
@@ -24,6 +27,7 @@ export type ScheduledGesture = {
 export function scheduleGesture(
   root: FiberRoot,
   provider: GestureProvider,
+  initialDirection: boolean,
 ): ScheduledGesture {
   let prev = root.gestures;
   while (prev !== null) {
@@ -39,9 +43,17 @@ export function scheduleGesture(
     prev = next;
   }
   // Add new instance to the end of the queue.
+  const cancel = subscribeToGestureDirection(provider, (direction: boolean) => {
+    if (gesture.direction !== direction) {
+      gesture.direction = direction;
+      // TODO: Reschedule a new render in the other direction.
+    }
+  });
   const gesture: ScheduledGesture = {
     provider: provider,
     count: 1,
+    direction: initialDirection,
+    cancel: cancel,
     prev: prev,
     next: null,
   };
@@ -60,6 +72,8 @@ export function cancelScheduledGesture(
 ): void {
   gesture.count--;
   if (gesture.count === 0) {
+    const cancelDirectionSubscription = gesture.cancel;
+    cancelDirectionSubscription();
     // Delete the scheduled gesture from the queue.
     deleteScheduledGesture(root, gesture);
   }

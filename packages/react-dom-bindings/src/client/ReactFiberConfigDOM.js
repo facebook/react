@@ -1478,6 +1478,60 @@ export function createViewTransitionInstance(
   };
 }
 
+export type GestureProvider = AnimationTimeline; // TODO: More provider types.
+
+export function subscribeToGestureDirection(
+  provider: GestureProvider,
+  directionCallback: (direction: boolean) => void,
+): () => void {
+  const time = provider.currentTime;
+  if (time === null) {
+    throw new Error(
+      'Cannot start a gesture with a disconnected AnimationTimeline.',
+    );
+  }
+  const startTime = typeof time === 'number' ? time : time.value;
+  if (
+    typeof ScrollTimeline === 'function' &&
+    provider instanceof ScrollTimeline
+  ) {
+    // For ScrollTimeline we optimize to only update the current time on scroll events.
+    const element = provider.source;
+    const scrollCallback = () => {
+      const newTime = provider.currentTime;
+      if (newTime !== null) {
+        directionCallback(
+          typeof newTime === 'number'
+            ? newTime > startTime
+            : newTime.value > startTime,
+        );
+      }
+    };
+    element.addEventListener('scroll', scrollCallback, false);
+    return () => {
+      element.removeEventListener('scroll', scrollCallback, false);
+    };
+  } else {
+    // For other AnimationTimelines, such as DocumentTimeline, we just update every rAF.
+    // TODO: Optimize ViewTimeline using an IntersectionObserver if it becomes common.
+    const rafCallback = () => {
+      const newTime = provider.currentTime;
+      if (newTime !== null) {
+        directionCallback(
+          typeof newTime === 'number'
+            ? newTime > startTime
+            : newTime.value > startTime,
+        );
+      }
+      callbackID = requestAnimationFrame(rafCallback);
+    };
+    let callbackID = requestAnimationFrame(rafCallback);
+    return () => {
+      cancelAnimationFrame(callbackID);
+    };
+  }
+}
+
 export function clearContainer(container: Container): void {
   const nodeType = container.nodeType;
   if (nodeType === DOCUMENT_NODE) {

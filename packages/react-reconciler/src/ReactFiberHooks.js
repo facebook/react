@@ -3981,6 +3981,7 @@ type SwipeTransitionGestureUpdate = {
 type SwipeTransitionUpdateQueue = {
   pending: null | SwipeTransitionGestureUpdate,
   dispatch: StartGesture,
+  initialDirection: boolean,
 };
 
 function startGesture(
@@ -3996,7 +3997,11 @@ function startGesture(
       // Noop.
     };
   }
-  const scheduledGesture = scheduleGesture(root, gestureProvider);
+  const scheduledGesture = scheduleGesture(
+    root,
+    gestureProvider,
+    queue.initialDirection,
+  );
   // Add this particular instance to the queue.
   // We add multiple of the same provider even if they get batched so
   // that if we cancel one but not the other we can keep track of this.
@@ -4041,6 +4046,7 @@ function mountSwipeTransition<T>(
   const queue: SwipeTransitionUpdateQueue = {
     pending: null,
     dispatch: (null: any),
+    initialDirection: previous === current,
   };
   const startGestureOnHook: StartGesture = (queue.dispatch = (startGesture.bind(
     null,
@@ -4074,16 +4080,17 @@ function updateSwipeTransition<T>(
     }
     // We assume that the currently rendering gesture is the one first in the queue.
     const rootRenderGesture = root.gestures;
-    let update = queue.pending;
-    while (update !== null) {
-      if (rootRenderGesture === update.gesture) {
-        // We had a match, meaning we're currently rendering a direction of this
-        // hook for this gesture.
-        // TODO: Determine which direction this gesture is currently rendering.
-        value = previous;
-        break;
+    if (rootRenderGesture !== null) {
+      let update = queue.pending;
+      while (update !== null) {
+        if (rootRenderGesture === update.gesture) {
+          // We had a match, meaning we're currently rendering a direction of this
+          // hook for this gesture.
+          value = rootRenderGesture.direction ? next : previous;
+          break;
+        }
+        update = update.next;
       }
-      update = update.next;
     }
   }
   if (queue.pending !== null) {
@@ -4096,6 +4103,11 @@ function updateSwipeTransition<T>(
       GestureLane,
     );
   }
+  // By default, we don't know which direction we should start until a movement
+  // has happened. However, if one direction has the same value as current we
+  // know that it's probably not that direction since it won't do anything anyway.
+  // TODO: Add an explicit option to provide this.
+  queue.initialDirection = previous === current;
   return [value, startGestureOnHook];
 }
 
