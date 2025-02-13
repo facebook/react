@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<02ba85934cbd1b6a3301f7b9354e67d0>>
+ * @generated SignedSource<<5c9b0c7d6ed43e7e86b1790665ee79aa>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1136() {
+    function JSCompiler_object_inline_createNodeMock_1132() {
       return null;
     }
     function findHook(fiber, id) {
@@ -2318,18 +2318,21 @@ __DEV__ &&
     }
     function runWithFiberInDEV(fiber, callback, arg0, arg1, arg2, arg3, arg4) {
       var previousFiber = current;
-      ReactSharedInternals.getCurrentStack =
-        null === fiber ? null : getCurrentFiberStackInDev;
-      isRendering = !1;
-      current = fiber;
+      setCurrentFiber(fiber);
       try {
         return callback(arg0, arg1, arg2, arg3, arg4);
       } finally {
-        current = previousFiber;
+        setCurrentFiber(previousFiber);
       }
       throw Error(
         "runWithFiberInDEV should never be called in production. This is a bug in React."
       );
+    }
+    function setCurrentFiber(fiber) {
+      ReactSharedInternals.getCurrentStack =
+        null === fiber ? null : getCurrentFiberStackInDev;
+      isRendering = !1;
+      current = fiber;
     }
     function createThenableState() {
       return { didWarnAboutUncachedPromise: !1, thenables: [] };
@@ -6946,30 +6949,23 @@ __DEV__ &&
       return current;
     }
     function finishClassComponent(
-      current$jscomp$0,
+      current,
       workInProgress,
       Component,
       shouldUpdate,
       hasContext,
       renderLanes
     ) {
-      markRef(current$jscomp$0, workInProgress);
+      markRef(current, workInProgress);
       var didCaptureError = 0 !== (workInProgress.flags & 128);
       if (!shouldUpdate && !didCaptureError)
         return (
           hasContext &&
             invalidateContextProvider(workInProgress, Component, !1),
-          bailoutOnAlreadyFinishedWork(
-            current$jscomp$0,
-            workInProgress,
-            renderLanes
-          )
+          bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
         );
       shouldUpdate = workInProgress.stateNode;
-      ReactSharedInternals.getCurrentStack =
-        null === workInProgress ? null : getCurrentFiberStackInDev;
-      isRendering = !1;
-      current = workInProgress;
+      setCurrentFiber(workInProgress);
       if (
         didCaptureError &&
         "function" !== typeof Component.getDerivedStateFromError
@@ -6990,11 +6986,11 @@ __DEV__ &&
         markComponentRenderStopped();
       }
       workInProgress.flags |= 1;
-      null !== current$jscomp$0 && didCaptureError
+      null !== current && didCaptureError
         ? ((didCaptureError = nextChildren),
           (workInProgress.child = reconcileChildFibers(
             workInProgress,
-            current$jscomp$0.child,
+            current.child,
             null,
             renderLanes
           )),
@@ -7004,12 +7000,7 @@ __DEV__ &&
             didCaptureError,
             renderLanes
           )))
-        : reconcileChildren(
-            current$jscomp$0,
-            workInProgress,
-            nextChildren,
-            renderLanes
-          );
+        : reconcileChildren(current, workInProgress, nextChildren, renderLanes);
       workInProgress.memoizedState = shouldUpdate.state;
       hasContext && invalidateContextProvider(workInProgress, Component, !0);
       return workInProgress.child;
@@ -15577,10 +15568,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-f83903bf-20250212",
+        version: "19.1.0-native-fb-c6a7e186-20250213",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-f83903bf-20250212"
+        reconcilerVersion: "19.1.0-native-fb-c6a7e186-20250213"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15602,7 +15593,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1136,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1132,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15725,5 +15716,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-f83903bf-20250212";
+    exports.version = "19.1.0-native-fb-c6a7e186-20250213";
   })();

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6effb1e1a500fc17b105721f2b3e4748>>
+ * @generated SignedSource<<be9aa9a1bcbcc6d7d17fffe1ad6eae40>>
  */
 
 "use strict";
@@ -702,10 +702,7 @@ __DEV__ &&
     }
     function runWithFiberInDEV(fiber, callback, arg0, arg1, arg2, arg3, arg4) {
       var previousFiber = current;
-      ReactSharedInternals.getCurrentStack =
-        null === fiber ? null : getCurrentFiberStackInDev;
-      isRendering = !1;
-      current = fiber;
+      setCurrentFiber(fiber);
       try {
         return enableOwnerStacks && null !== fiber && fiber._debugTask
           ? fiber._debugTask.run(
@@ -713,11 +710,17 @@ __DEV__ &&
             )
           : callback(arg0, arg1, arg2, arg3, arg4);
       } finally {
-        current = previousFiber;
+        setCurrentFiber(previousFiber);
       }
       throw Error(
         "runWithFiberInDEV should never be called in production. This is a bug in React."
       );
+    }
+    function setCurrentFiber(fiber) {
+      ReactSharedInternals.getCurrentStack =
+        null === fiber ? null : getCurrentFiberStackInDev;
+      isRendering = !1;
+      current = fiber;
     }
     function validateEventDispatches(event) {
       var dispatchListeners = event._dispatchListeners,
@@ -7973,30 +7976,23 @@ __DEV__ &&
       return current;
     }
     function finishClassComponent(
-      current$jscomp$0,
+      current,
       workInProgress,
       Component,
       shouldUpdate,
       hasContext,
       renderLanes
     ) {
-      markRef(current$jscomp$0, workInProgress);
+      markRef(current, workInProgress);
       var didCaptureError = 0 !== (workInProgress.flags & 128);
       if (!shouldUpdate && !didCaptureError)
         return (
           hasContext &&
             invalidateContextProvider(workInProgress, Component, !1),
-          bailoutOnAlreadyFinishedWork(
-            current$jscomp$0,
-            workInProgress,
-            renderLanes
-          )
+          bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
         );
       shouldUpdate = workInProgress.stateNode;
-      ReactSharedInternals.getCurrentStack =
-        null === workInProgress ? null : getCurrentFiberStackInDev;
-      isRendering = !1;
-      current = workInProgress;
+      setCurrentFiber(workInProgress);
       if (
         didCaptureError &&
         "function" !== typeof Component.getDerivedStateFromError
@@ -8017,11 +8013,11 @@ __DEV__ &&
         markComponentRenderStopped();
       }
       workInProgress.flags |= 1;
-      null !== current$jscomp$0 && didCaptureError
+      null !== current && didCaptureError
         ? ((didCaptureError = nextChildren),
           (workInProgress.child = reconcileChildFibers(
             workInProgress,
-            current$jscomp$0.child,
+            current.child,
             null,
             renderLanes
           )),
@@ -8031,12 +8027,7 @@ __DEV__ &&
             didCaptureError,
             renderLanes
           )))
-        : reconcileChildren(
-            current$jscomp$0,
-            workInProgress,
-            nextChildren,
-            renderLanes
-          );
+        : reconcileChildren(current, workInProgress, nextChildren, renderLanes);
       workInProgress.memoizedState = shouldUpdate.state;
       hasContext && invalidateContextProvider(workInProgress, Component, !0);
       return workInProgress.child;
@@ -17509,10 +17500,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-f83903bf-20250212",
+        version: "19.1.0-native-fb-c6a7e186-20250213",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-f83903bf-20250212"
+        reconcilerVersion: "19.1.0-native-fb-c6a7e186-20250213"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
