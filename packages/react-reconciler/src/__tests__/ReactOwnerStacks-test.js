@@ -62,4 +62,17 @@ describe('ReactOwnerStacks', () => {
       '\n    in Bar (at **)' + '\n    in Foo (at **)',
     );
   });
+
+  it('returns null outside of render', async () => {
+    // Awkward to gate since some builds will have `captureOwnerStack` return null in prod
+    if (__DEV__ && gate('enableOwnerStacks')) {
+      expect(React.captureOwnerStack()).toBe(null);
+
+      await act(() => {
+        ReactNoop.render(<div />);
+      });
+
+      expect(React.captureOwnerStack()).toBe(null);
+    }
+  });
 });
