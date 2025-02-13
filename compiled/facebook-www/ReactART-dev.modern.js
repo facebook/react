@@ -443,8 +443,8 @@ __DEV__ &&
         if (lane & 8) return "InputContinuous";
         if (lane & 16) return "DefaultHydration";
         if (lane & 32) return "Default";
-        if (lane & 64) return "TransitionHydration";
-        if (lane & 4194176) return "Transition";
+        if (lane & 128) return "TransitionHydration";
+        if (lane & 4194048) return "Transition";
         if (lane & 62914560) return "Retry";
         if (lane & 67108864) return "SelectiveHydration";
         if (lane & 134217728) return "IdleHydration";
@@ -472,6 +472,7 @@ __DEV__ &&
         case 64:
           return 64;
         case 128:
+          return 128;
         case 256:
         case 512:
         case 1024:
@@ -486,7 +487,7 @@ __DEV__ &&
         case 524288:
         case 1048576:
         case 2097152:
-          return lanes & 4194176;
+          return lanes & 4194048;
         case 4194304:
         case 8388608:
         case 16777216:
@@ -550,7 +551,7 @@ __DEV__ &&
             ((suspendedLanes = nextLanes & -nextLanes),
             (rootHasPendingCommit = wipLanes & -wipLanes),
             suspendedLanes >= rootHasPendingCommit ||
-              (32 === suspendedLanes && 0 !== (rootHasPendingCommit & 4194176)))
+              (32 === suspendedLanes && 0 !== (rootHasPendingCommit & 4194048)))
           ? wipLanes
           : nextLanes;
     }
@@ -568,10 +569,10 @@ __DEV__ &&
         case 2:
         case 4:
         case 8:
+        case 64:
           return currentTime + syncLaneExpirationMs;
         case 16:
         case 32:
-        case 64:
         case 128:
         case 256:
         case 512:
@@ -613,7 +614,7 @@ __DEV__ &&
     function claimNextTransitionLane() {
       var lane = nextTransitionLane;
       nextTransitionLane <<= 1;
-      0 === (nextTransitionLane & 4194176) && (nextTransitionLane = 128);
+      0 === (nextTransitionLane & 4194048) && (nextTransitionLane = 256);
       return lane;
     }
     function claimNextRetryLane() {
@@ -683,7 +684,7 @@ __DEV__ &&
       root.entanglements[spawnedLaneIndex] =
         root.entanglements[spawnedLaneIndex] |
         1073741824 |
-        (entangledLanes & 4194218);
+        (entangledLanes & 4194090);
     }
     function markRootEntangled(root, entangledLanes) {
       var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
@@ -2190,8 +2191,8 @@ __DEV__ &&
                     (1 << (31 - clz32(42 | syncTransitionLanes) + 1)) - 1;
                   nextLanes &= pendingLanes & ~(suspendedLanes & ~pingedLanes);
                   nextLanes =
-                    nextLanes & 201326677
-                      ? (nextLanes & 201326677) | 1
+                    nextLanes & 201326741
+                      ? (nextLanes & 201326741) | 1
                       : nextLanes
                         ? nextLanes | 2
                         : 0;
@@ -2681,17 +2682,19 @@ __DEV__ &&
               (isHidden = !0)),
           (sourceFiber = parent),
           (parent = parent.return);
-      isHidden &&
-        null !== update &&
-        3 === sourceFiber.tag &&
-        ((parent = sourceFiber.stateNode),
-        (isHidden = 31 - clz32(lane)),
-        (parent = parent.hiddenUpdates),
-        (sourceFiber = parent[isHidden]),
-        null === sourceFiber
-          ? (parent[isHidden] = [update])
-          : sourceFiber.push(update),
-        (update.lane = lane | 536870912));
+      return 3 === sourceFiber.tag
+        ? ((parent = sourceFiber.stateNode),
+          isHidden &&
+            null !== update &&
+            ((isHidden = 31 - clz32(lane)),
+            (sourceFiber = parent.hiddenUpdates),
+            (alternate = sourceFiber[isHidden]),
+            null === alternate
+              ? (sourceFiber[isHidden] = [update])
+              : alternate.push(update),
+            (update.lane = lane | 536870912)),
+          parent)
+        : null;
     }
     function getRootForUpdatedFiber(sourceFiber) {
       throwIfInfiniteUpdateLoopDetected();
@@ -2767,7 +2770,7 @@ __DEV__ &&
     }
     function entangleTransitions(root, fiber, lane) {
       fiber = fiber.updateQueue;
-      if (null !== fiber && ((fiber = fiber.shared), 0 !== (lane & 4194176))) {
+      if (null !== fiber && ((fiber = fiber.shared), 0 !== (lane & 4194048))) {
         var queueLanes = fiber.lanes;
         queueLanes &= root.pendingLanes;
         lane |= queueLanes;
@@ -3608,7 +3611,7 @@ __DEV__ &&
         throw Error(
           "Expected a work-in-progress root. This is a bug in React. Please file an issue."
         );
-      0 !== (workInProgressRootRenderLanes & 60) ||
+      0 !== (workInProgressRootRenderLanes & 124) ||
         pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
       hook.memoizedState = nextSnapshot;
       cachedSnapshot = { value: nextSnapshot, getSnapshot: getSnapshot };
@@ -3678,7 +3681,7 @@ __DEV__ &&
           throw Error(
             "Expected a work-in-progress root. This is a bug in React. Please file an issue."
           );
-        0 !== (renderLanes & 60) ||
+        0 !== (renderLanes & 124) ||
           pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
       }
       return nextSnapshot;
@@ -4697,7 +4700,7 @@ __DEV__ &&
       queue.pending = update;
     }
     function entangleTransitionUpdate(root, queue, lane) {
-      if (0 !== (lane & 4194176)) {
+      if (0 !== (lane & 4194048)) {
         var queueLanes = queue.lanes;
         queueLanes &= root.pendingLanes;
         lane |= queueLanes;
@@ -7490,7 +7493,6 @@ __DEV__ &&
                 case 32:
                   nextProps = 16;
                   break;
-                case 128:
                 case 256:
                 case 512:
                 case 1024:
@@ -7509,7 +7511,7 @@ __DEV__ &&
                 case 8388608:
                 case 16777216:
                 case 33554432:
-                  nextProps = 64;
+                  nextProps = 128;
                   break;
                 case 268435456:
                   nextProps = 134217728;
@@ -10122,7 +10124,7 @@ __DEV__ &&
       focusedInstanceHandle = null;
       shouldFireAfterActiveInstanceBlur = !1;
       root =
-        enableViewTransition && (committedLanes & 335544192) === committedLanes;
+        enableViewTransition && (committedLanes & 335544064) === committedLanes;
       nextEffect = firstChild;
       for (firstChild = root ? 9238 : 9236; null !== nextEffect; ) {
         committedLanes = nextEffect;
@@ -11436,7 +11438,7 @@ __DEV__ &&
             recursivelyTraverseMutationEffects(root, finishedWork, lanes);
             commitReconciliationEffects(finishedWork);
             enableViewTransition &&
-              (lanes & 335544192) === lanes &&
+              (lanes & 335544064) === lanes &&
               null !== current &&
               viewTransitionMutationContext &&
               (finishedWork.flags |= 4);
@@ -11758,7 +11760,7 @@ __DEV__ &&
       committedTransitions
     ) {
       var isViewTransitionEligible =
-        enableViewTransition && (committedLanes & 335544192) === committedLanes;
+        enableViewTransition && (committedLanes & 335544064) === committedLanes;
       if (parentFiber.subtreeFlags & (isViewTransitionEligible ? 10262 : 10256))
         for (parentFiber = parentFiber.child; null !== parentFiber; )
           commitPassiveMountOnFiber(
@@ -11778,7 +11780,7 @@ __DEV__ &&
       committedTransitions
     ) {
       var isViewTransitionEligible = enableViewTransition
-        ? (committedLanes & 335544192) === committedLanes
+        ? (committedLanes & 335544064) === committedLanes
         : !1;
       isViewTransitionEligible &&
         null === finishedWork.alternate &&
@@ -12643,7 +12645,7 @@ __DEV__ &&
         throw Error("Should not already be working.");
       var shouldTimeSlice =
           (!forceSync &&
-            0 === (lanes & 60) &&
+            0 === (lanes & 124) &&
             0 === (lanes & root.expiredLanes)) ||
           (enableSiblingPrerendering && checkIfRootIsPrerendering(root, lanes)),
         exitStatus = shouldTimeSlice
@@ -12726,7 +12728,7 @@ __DEV__ &&
               case RootFatalErrored:
                 throw Error("Root did not complete. This is a bug in React.");
               case RootSuspendedWithDelay:
-                if ((lanes & 4194176) !== lanes) break;
+                if ((lanes & 4194048) !== lanes) break;
               case RootSuspendedAtTheShell:
                 markRootSuspended(
                   shouldTimeSlice,
@@ -12832,7 +12834,7 @@ __DEV__ &&
       root.timeoutHandle = -1;
       var subtreeFlags = finishedWork.subtreeFlags;
       if (
-        (enableViewTransition && (lanes & 335544192) === lanes) ||
+        (enableViewTransition && (lanes & 335544064) === lanes) ||
         subtreeFlags & 8192 ||
         16785408 === (subtreeFlags & 16785408)
       )
@@ -13003,7 +13005,7 @@ __DEV__ &&
             (JSCompiler_temp =
               null === JSCompiler_temp
                 ? !0
-                : (workInProgressRootRenderLanes & 4194176) ===
+                : (workInProgressRootRenderLanes & 4194048) ===
                     workInProgressRootRenderLanes
                   ? null === shellBoundary
                     ? !0
@@ -13087,7 +13089,7 @@ __DEV__ &&
     function renderDidSuspendDelayIfPossible() {
       workInProgressRootExitStatus = RootSuspendedWithDelay;
       workInProgressRootDidSkipSuspendedSiblings ||
-        ((workInProgressRootRenderLanes & 4194176) !==
+        ((workInProgressRootRenderLanes & 4194048) !==
           workInProgressRootRenderLanes &&
           null !== suspenseHandlerStackCursor.current) ||
         (workInProgressRootIsPrerendering = !0);
@@ -13632,7 +13634,7 @@ __DEV__ &&
         pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
         enableViewTransition
           ? ((pendingViewTransitionEvents = null),
-            (lanes & 335544192) === lanes
+            (lanes & 335544064) === lanes
               ? ((pendingTransitionTypes = ReactSharedInternals.V),
                 (ReactSharedInternals.V = null),
                 (recoverableErrors = 10262))
@@ -13759,7 +13761,7 @@ __DEV__ &&
           recoverableErrors = pendingRecoverableErrors,
           didIncludeRenderPhaseUpdate = pendingDidIncludeRenderPhaseUpdate,
           passiveSubtreeMask =
-            enableViewTransition && (lanes & 335544192) === lanes
+            enableViewTransition && (lanes & 335544064) === lanes
               ? 10262
               : 10256;
         (passiveSubtreeMask =
@@ -13859,7 +13861,7 @@ __DEV__ &&
         remainingLanes = root.pendingLanes;
         (enableInfiniteRenderLoopDetection &&
           (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-        (0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42))
+        (0 !== (lanes & 4194090) && 0 !== (remainingLanes & 42))
           ? ((nestedUpdateScheduled = !0),
             root === rootWithNestedUpdates
               ? nestedUpdateCount++
@@ -15042,7 +15044,7 @@ __DEV__ &&
       clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
       log = Math.log,
       LN2 = Math.LN2,
-      nextTransitionLane = 128,
+      nextTransitionLane = 256,
       nextRetryLane = 4194304,
       DiscreteEventPriority = 2,
       ContinuousEventPriority = 8,
@@ -17164,10 +17166,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-c6a7e186-20250213",
+        version: "19.1.0-www-modern-a53da6ab-20250213",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-c6a7e186-20250213"
+        reconcilerVersion: "19.1.0-www-modern-a53da6ab-20250213"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -17201,7 +17203,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-modern-c6a7e186-20250213";
+    exports.version = "19.1.0-www-modern-a53da6ab-20250213";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

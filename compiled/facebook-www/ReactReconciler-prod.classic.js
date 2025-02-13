@@ -402,6 +402,7 @@ module.exports = function ($$$config) {
       case 64:
         return 64;
       case 128:
+        return 128;
       case 256:
       case 512:
       case 1024:
@@ -416,7 +417,7 @@ module.exports = function ($$$config) {
       case 524288:
       case 1048576:
       case 2097152:
-        return lanes & 4194176;
+        return lanes & 4194048;
       case 4194304:
       case 8388608:
       case 16777216:
@@ -474,7 +475,7 @@ module.exports = function ($$$config) {
           ((suspendedLanes = nextLanes & -nextLanes),
           (rootHasPendingCommit = wipLanes & -wipLanes),
           suspendedLanes >= rootHasPendingCommit ||
-            (32 === suspendedLanes && 0 !== (rootHasPendingCommit & 4194176)))
+            (32 === suspendedLanes && 0 !== (rootHasPendingCommit & 4194048)))
         ? wipLanes
         : nextLanes;
   }
@@ -492,10 +493,10 @@ module.exports = function ($$$config) {
       case 2:
       case 4:
       case 8:
+      case 64:
         return currentTime + syncLaneExpirationMs;
       case 16:
       case 32:
-      case 64:
       case 128:
       case 256:
       case 512:
@@ -532,7 +533,7 @@ module.exports = function ($$$config) {
   function claimNextTransitionLane() {
     var lane = nextTransitionLane;
     nextTransitionLane <<= 1;
-    0 === (nextTransitionLane & 4194176) && (nextTransitionLane = 128);
+    0 === (nextTransitionLane & 4194048) && (nextTransitionLane = 256);
     return lane;
   }
   function claimNextRetryLane() {
@@ -602,7 +603,7 @@ module.exports = function ($$$config) {
     root.entanglements[spawnedLaneIndex] =
       root.entanglements[spawnedLaneIndex] |
       1073741824 |
-      (entangledLanes & 4194218);
+      (entangledLanes & 4194090);
   }
   function markRootEntangled(root, entangledLanes) {
     var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
@@ -625,7 +626,6 @@ module.exports = function ($$$config) {
       case 32:
         lane = 16;
         break;
-      case 128:
       case 256:
       case 512:
       case 1024:
@@ -644,7 +644,7 @@ module.exports = function ($$$config) {
       case 8388608:
       case 16777216:
       case 33554432:
-        lane = 64;
+        lane = 128;
         break;
       case 268435456:
         lane = 134217728;
@@ -1352,8 +1352,8 @@ module.exports = function ($$$config) {
                 JSCompiler_inline_result &=
                   pendingLanes & ~(suspendedLanes & ~pingedLanes);
                 JSCompiler_inline_result =
-                  JSCompiler_inline_result & 201326677
-                    ? (JSCompiler_inline_result & 201326677) | 1
+                  JSCompiler_inline_result & 201326741
+                    ? (JSCompiler_inline_result & 201326741) | 1
                     : JSCompiler_inline_result
                       ? JSCompiler_inline_result | 2
                       : 0;
@@ -1781,17 +1781,19 @@ module.exports = function ($$$config) {
             (isHidden = !0)),
         (sourceFiber = parent),
         (parent = parent.return);
-    isHidden &&
-      null !== update &&
-      3 === sourceFiber.tag &&
-      ((parent = sourceFiber.stateNode),
-      (isHidden = 31 - clz32(lane)),
-      (parent = parent.hiddenUpdates),
-      (sourceFiber = parent[isHidden]),
-      null === sourceFiber
-        ? (parent[isHidden] = [update])
-        : sourceFiber.push(update),
-      (update.lane = lane | 536870912));
+    return 3 === sourceFiber.tag
+      ? ((parent = sourceFiber.stateNode),
+        isHidden &&
+          null !== update &&
+          ((isHidden = 31 - clz32(lane)),
+          (sourceFiber = parent.hiddenUpdates),
+          (alternate = sourceFiber[isHidden]),
+          null === alternate
+            ? (sourceFiber[isHidden] = [update])
+            : alternate.push(update),
+          (update.lane = lane | 536870912)),
+        parent)
+      : null;
   }
   function getRootForUpdatedFiber(sourceFiber) {
     throwIfInfiniteUpdateLoopDetected();
@@ -1841,7 +1843,7 @@ module.exports = function ($$$config) {
   }
   function entangleTransitions(root, fiber, lane) {
     fiber = fiber.updateQueue;
-    if (null !== fiber && ((fiber = fiber.shared), 0 !== (lane & 4194176))) {
+    if (null !== fiber && ((fiber = fiber.shared), 0 !== (lane & 4194048))) {
       var queueLanes = fiber.lanes;
       queueLanes &= root.pendingLanes;
       lane |= queueLanes;
@@ -2461,7 +2463,7 @@ module.exports = function ($$$config) {
       );
       if (null === workInProgressRoot) throw Error(formatProdErrorMessage(349));
       isHydrating$jscomp$0 ||
-        0 !== (renderLanes & 60) ||
+        0 !== (renderLanes & 124) ||
         pushStoreConsistencyCheck(fiber, getSnapshot, getServerSnapshot);
     }
     return getServerSnapshot;
@@ -3253,7 +3255,7 @@ module.exports = function ($$$config) {
     queue.pending = update;
   }
   function entangleTransitionUpdate(root, queue, lane) {
-    if (0 !== (lane & 4194176)) {
+    if (0 !== (lane & 4194048)) {
       var queueLanes = queue.lanes;
       queueLanes &= root.pendingLanes;
       lane |= queueLanes;
@@ -7788,7 +7790,7 @@ module.exports = function ($$$config) {
     focusedInstanceHandle = prepareForCommit(root.containerInfo);
     shouldStartViewTransition = shouldFireAfterActiveInstanceBlur = !1;
     root =
-      enableViewTransition && (committedLanes & 335544192) === committedLanes;
+      enableViewTransition && (committedLanes & 335544064) === committedLanes;
     nextEffect = firstChild;
     for (firstChild = root ? 9238 : 9236; null !== nextEffect; ) {
       committedLanes = nextEffect;
@@ -9378,7 +9380,7 @@ module.exports = function ($$$config) {
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           enableViewTransition &&
-            (lanes & 335544192) === lanes &&
+            (lanes & 335544064) === lanes &&
             null !== current &&
             viewTransitionMutationContext &&
             (finishedWork.flags |= 4);
@@ -9833,7 +9835,7 @@ module.exports = function ($$$config) {
     committedTransitions
   ) {
     var isViewTransitionEligible =
-      enableViewTransition && (committedLanes & 335544192) === committedLanes;
+      enableViewTransition && (committedLanes & 335544064) === committedLanes;
     if (parentFiber.subtreeFlags & (isViewTransitionEligible ? 10262 : 10256))
       for (parentFiber = parentFiber.child; null !== parentFiber; )
         commitPassiveMountOnFiber(
@@ -9852,7 +9854,7 @@ module.exports = function ($$$config) {
     committedTransitions
   ) {
     var isViewTransitionEligible = enableViewTransition
-      ? (committedLanes & 335544192) === committedLanes
+      ? (committedLanes & 335544064) === committedLanes
       : !1;
     isViewTransitionEligible &&
       null === finishedWork.alternate &&
@@ -10785,7 +10787,7 @@ module.exports = function ($$$config) {
     if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
     var shouldTimeSlice =
         (!forceSync &&
-          0 === (lanes & 60) &&
+          0 === (lanes & 124) &&
           0 === (lanes & root$jscomp$0.expiredLanes)) ||
         (enableSiblingPrerendering &&
           checkIfRootIsPrerendering(root$jscomp$0, lanes)),
@@ -10879,7 +10881,7 @@ module.exports = function ($$$config) {
             case 1:
               throw Error(formatProdErrorMessage(345));
             case 4:
-              if ((lanes & 4194176) !== lanes) break;
+              if ((lanes & 4194048) !== lanes) break;
             case 6:
               markRootSuspended(
                 shouldTimeSlice,
@@ -10973,7 +10975,7 @@ module.exports = function ($$$config) {
     root.timeoutHandle = noTimeout;
     suspendedCommitReason = finishedWork.subtreeFlags;
     var isViewTransitionEligible =
-      enableViewTransition && (lanes & 335544192) === lanes;
+      enableViewTransition && (lanes & 335544064) === lanes;
     if (
       isViewTransitionEligible ||
       suspendedCommitReason & 8192 ||
@@ -11190,7 +11192,7 @@ module.exports = function ($$$config) {
     var handler = suspenseHandlerStackCursor.current;
     return null === handler
       ? !0
-      : (workInProgressRootRenderLanes & 4194176) ===
+      : (workInProgressRootRenderLanes & 4194048) ===
           workInProgressRootRenderLanes
         ? null === shellBoundary
           ? !0
@@ -11214,7 +11216,7 @@ module.exports = function ($$$config) {
   function renderDidSuspendDelayIfPossible() {
     workInProgressRootExitStatus = 4;
     workInProgressRootDidSkipSuspendedSiblings ||
-      ((workInProgressRootRenderLanes & 4194176) !==
+      ((workInProgressRootRenderLanes & 4194048) !==
         workInProgressRootRenderLanes &&
         null !== suspenseHandlerStackCursor.current) ||
       (workInProgressRootIsPrerendering = !0);
@@ -11642,7 +11644,7 @@ module.exports = function ($$$config) {
       pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
       enableViewTransition
         ? ((pendingViewTransitionEvents = null),
-          (lanes & 335544192) === lanes
+          (lanes & 335544064) === lanes
             ? ((pendingTransitionTypes = ReactSharedInternals.V),
               (ReactSharedInternals.V = null),
               (recoverableErrors = 10262))
@@ -11760,7 +11762,7 @@ module.exports = function ($$$config) {
         recoverableErrors = pendingRecoverableErrors,
         didIncludeRenderPhaseUpdate = pendingDidIncludeRenderPhaseUpdate,
         passiveSubtreeMask =
-          enableViewTransition && (lanes & 335544192) === lanes ? 10262 : 10256;
+          enableViewTransition && (lanes & 335544064) === lanes ? 10262 : 10256;
       0 !== (finishedWork.subtreeFlags & passiveSubtreeMask) ||
       0 !== (finishedWork.flags & passiveSubtreeMask)
         ? (pendingEffectsStatus = 5)
@@ -11813,7 +11815,7 @@ module.exports = function ($$$config) {
       passiveSubtreeMask = root.pendingLanes;
       (enableInfiniteRenderLoopDetection &&
         (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-      (0 !== (lanes & 4194218) && 0 !== (passiveSubtreeMask & 42))
+      (0 !== (lanes & 4194090) && 0 !== (passiveSubtreeMask & 42))
         ? root === rootWithNestedUpdates
           ? nestedUpdateCount++
           : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -12782,7 +12784,7 @@ module.exports = function ($$$config) {
     clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
     log$1 = Math.log,
     LN2 = Math.LN2,
-    nextTransitionLane = 128,
+    nextTransitionLane = 256,
     nextRetryLane = 4194304,
     scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
     cancelCallback$1 = Scheduler.unstable_cancelCallback,
@@ -13043,7 +13045,7 @@ module.exports = function ($$$config) {
           getServerSnapshot = getSnapshot();
           if (null === workInProgressRoot)
             throw Error(formatProdErrorMessage(349));
-          0 !== (workInProgressRootRenderLanes & 60) ||
+          0 !== (workInProgressRootRenderLanes & 124) ||
             pushStoreConsistencyCheck(fiber, getSnapshot, getServerSnapshot);
         }
         hook.memoizedState = getServerSnapshot;
@@ -13745,7 +13747,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-c6a7e186-20250213"
+      reconcilerVersion: "19.1.0-www-classic-a53da6ab-20250213"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
