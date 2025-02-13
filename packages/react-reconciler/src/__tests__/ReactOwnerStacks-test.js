@@ -31,6 +31,16 @@ describe('ReactOwnerStacks', () => {
     );
   }
 
+  it('behavior in production', () => {
+    if (!__DEV__) {
+      if (gate('fb')) {
+        expect(React).toHaveProperty('captureOwnerStack', undefined);
+      } else {
+        expect(React).not.toHaveProperty('captureOwnerStack');
+      }
+    }
+  });
+
   // @gate __DEV__ && enableOwnerStacks
   it('can get the component owner stacks during rendering in dev', async () => {
     let stack;
