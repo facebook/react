@@ -17,6 +17,7 @@ import type {
   Awaited,
   ReactComponentInfo,
   ReactDebugInfo,
+  StartGesture,
 } from 'shared/ReactTypes';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -38,6 +39,7 @@ import type {
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
 import type {ComponentStackNode} from 'react-server/src/ReactFizzComponentStack';
 import type {ThenableState} from './ReactFiberThenable';
+import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -60,7 +62,8 @@ export type HookType =
   | 'useCacheRefresh'
   | 'useOptimistic'
   | 'useFormState'
-  | 'useActionState';
+  | 'useActionState'
+  | 'useSwipeTransition';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -279,6 +282,9 @@ type BaseFiberRootProperties = {
   ) => void,
 
   formState: ReactFormState<any, any> | null,
+
+  // enableSwipeTransition only
+  gestures: null | ScheduledGesture,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.
@@ -442,6 +448,12 @@ export type Dispatcher = {
     initialState: Awaited<S>,
     permalink?: string,
   ) => [Awaited<S>, (P) => void, boolean],
+  // TODO: Non-nullable once `enableSwipeTransition` is on everywhere.
+  useSwipeTransition?: <T>(
+    previous: T,
+    current: T,
+    next: T,
+  ) => [T, StartGesture],
 };
 
 export type AsyncDispatcher = {

@@ -13,12 +13,16 @@ import type {
   StartTransitionOptions,
   Usable,
   Awaited,
+  StartGesture,
 } from 'shared/ReactTypes';
 import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {enableUseEffectCRUDOverload} from 'shared/ReactFeatureFlags';
+import {
+  enableUseEffectCRUDOverload,
+  enableSwipeTransition,
+} from 'shared/ReactFeatureFlags';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -260,4 +264,17 @@ export function useActionState<S, P>(
 ): [Awaited<S>, (P) => void, boolean] {
   const dispatcher = resolveDispatcher();
   return dispatcher.useActionState(action, initialState, permalink);
+}
+
+export function useSwipeTransition<T>(
+  previous: T,
+  current: T,
+  next: T,
+): [T, StartGesture] {
+  if (!enableSwipeTransition) {
+    throw new Error('Not implemented.');
+  }
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
+  return dispatcher.useSwipeTransition(previous, current, next);
 }

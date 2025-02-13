@@ -47,6 +47,7 @@ import {
   enableYieldingBeforePassive,
   enableThrottledScheduling,
   enableViewTransition,
+  enableSwipeTransition,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -184,6 +185,8 @@ import {
   claimNextTransitionLane,
   checkIfRootIsPrerendering,
   includesOnlyViewTransitionEligibleLanes,
+  isGestureRender,
+  GestureLane,
 } from './ReactFiberLane';
 import {
   DiscreteEventPriority,
@@ -338,6 +341,7 @@ import {
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
 import {peekEntangledActionLane} from './ReactFiberAsyncAction';
 import {logUncaughtError} from './ReactFiberErrorLogger';
+import {deleteScheduledGesture} from './ReactFiberGestureScheduler';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -3287,6 +3291,13 @@ function commitRoot(
   const concurrentlyUpdatedLanes = getConcurrentlyUpdatedLanes();
   remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
 
+  if (enableSwipeTransition && root.gestures === null) {
+    // Gestures don't clear their lanes while the gesture is still active but it
+    // might not be scheduled to do any more renders and so we shouldn't schedule
+    // any more gesture lane work until a new gesture is scheduled.
+    remainingLanes &= ~GestureLane;
+  }
+
   markRootFinished(
     root,
     lanes,
@@ -3308,6 +3319,21 @@ function commitRoot(
     // This indicates that the last root we worked on is not the same one that
     // we're committing now. This most commonly happens when a suspended root
     // times out.
+  }
+
+  if (enableSwipeTransition && isGestureRender(lanes)) {
+    // This is a special kind of render that doesn't commit regular effects.
+    commitGestureOnRoot(
+      root,
+      finishedWork,
+      recoverableErrors,
+      enableProfilerTimer
+        ? suspendedCommitReason === IMMEDIATE_COMMIT
+          ? completedRenderEndTime
+          : commitStartTime
+        : 0,
+    );
+    return;
   }
 
   // workInProgressX might be overwritten, so we want
@@ -3800,6 +3826,24 @@ function flushSpawnedWork(): void {
       });
     }
   }
+}
+
+function commitGestureOnRoot(
+  root: FiberRoot,
+  finishedWork: null | Fiber,
+  recoverableErrors: null | Array<CapturedValue<mixed>>,
+  renderEndTime: number, // Profiling-only
+): void {
+  // We assume that the gesture we just rendered was the first one in the queue.
+  const finishedGesture = root.gestures;
+  if (finishedGesture === null) {
+    throw new Error(
+      'Finished rendering the gesture lane but there were no pending gestures. ' +
+        'React should not have started a render in this case. This is a bug in React.',
+    );
+  }
+  deleteScheduledGesture(root, finishedGesture);
+  // TODO: Run the gesture
 }
 
 function makeErrorInfo(componentStack: ?string) {

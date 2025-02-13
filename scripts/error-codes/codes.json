@@ -531,5 +531,7 @@
   "543": "Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React.",
   "544": "Found a pair with an auto name. This is a bug in React.",
   "545": "The %s tag may only be rendered once.",
-  "546": "useEffect CRUD overload is not enabled in this build of React."
+  "546": "useEffect CRUD overload is not enabled in this build of React.",
+  "547": "startGesture cannot be called during server rendering.",
+  "548": "Finished rendering the gesture lane but there were no pending gestures. React should not have started a render in this case. This is a bug in React."
 }
