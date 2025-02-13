@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9b16d5828df0743c0b6a891e069e1542>>
+ * @generated SignedSource<<8e39aa9ec3672936e787a20b477cef96>>
  */
 
 "use strict";
@@ -1753,8 +1753,8 @@ __DEV__ &&
       if (lane & 8) return "InputContinuous";
       if (lane & 16) return "DefaultHydration";
       if (lane & 32) return "Default";
-      if (lane & 64) return "TransitionHydration";
-      if (lane & 4194176) return "Transition";
+      if (lane & 128) return "TransitionHydration";
+      if (lane & 4194048) return "Transition";
       if (lane & 62914560) return "Retry";
       if (lane & 67108864) return "SelectiveHydration";
       if (lane & 134217728) return "IdleHydration";
@@ -1781,6 +1781,7 @@ __DEV__ &&
         case 64:
           return 64;
         case 128:
+          return 128;
         case 256:
         case 512:
         case 1024:
@@ -1795,7 +1796,7 @@ __DEV__ &&
         case 524288:
         case 1048576:
         case 2097152:
-          return lanes & 4194176;
+          return lanes & 4194048;
         case 4194304:
         case 8388608:
         case 16777216:
@@ -1859,7 +1860,7 @@ __DEV__ &&
             ((suspendedLanes = nextLanes & -nextLanes),
             (rootHasPendingCommit = wipLanes & -wipLanes),
             suspendedLanes >= rootHasPendingCommit ||
-              (32 === suspendedLanes && 0 !== (rootHasPendingCommit & 4194176)))
+              (32 === suspendedLanes && 0 !== (rootHasPendingCommit & 4194048)))
           ? wipLanes
           : nextLanes;
     }
@@ -1877,10 +1878,10 @@ __DEV__ &&
         case 2:
         case 4:
         case 8:
+        case 64:
           return currentTime + 250;
         case 16:
         case 32:
-        case 64:
         case 128:
         case 256:
         case 512:
@@ -1920,7 +1921,7 @@ __DEV__ &&
     function claimNextTransitionLane() {
       var lane = nextTransitionLane;
       nextTransitionLane <<= 1;
-      0 === (nextTransitionLane & 4194176) && (nextTransitionLane = 128);
+      0 === (nextTransitionLane & 4194048) && (nextTransitionLane = 256);
       return lane;
     }
     function claimNextRetryLane() {
@@ -1996,7 +1997,7 @@ __DEV__ &&
       root.entanglements[spawnedLaneIndex] =
         root.entanglements[spawnedLaneIndex] |
         1073741824 |
-        (entangledLanes & 4194218);
+        (entangledLanes & 4194090);
     }
     function markRootEntangled(root, entangledLanes) {
       var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
@@ -3182,8 +3183,8 @@ __DEV__ &&
                     (1 << (31 - clz32(42 | syncTransitionLanes) + 1)) - 1;
                   nextLanes &= pendingLanes & ~(suspendedLanes & ~pingedLanes);
                   nextLanes =
-                    nextLanes & 201326677
-                      ? (nextLanes & 201326677) | 1
+                    nextLanes & 201326741
+                      ? (nextLanes & 201326741) | 1
                       : nextLanes
                         ? nextLanes | 2
                         : 0;
@@ -3618,17 +3619,19 @@ __DEV__ &&
               (isHidden = !0)),
           (sourceFiber = parent),
           (parent = parent.return);
-      isHidden &&
-        null !== update &&
-        3 === sourceFiber.tag &&
-        ((parent = sourceFiber.stateNode),
-        (isHidden = 31 - clz32(lane)),
-        (parent = parent.hiddenUpdates),
-        (sourceFiber = parent[isHidden]),
-        null === sourceFiber
-          ? (parent[isHidden] = [update])
-          : sourceFiber.push(update),
-        (update.lane = lane | 536870912));
+      return 3 === sourceFiber.tag
+        ? ((parent = sourceFiber.stateNode),
+          isHidden &&
+            null !== update &&
+            ((isHidden = 31 - clz32(lane)),
+            (sourceFiber = parent.hiddenUpdates),
+            (alternate = sourceFiber[isHidden]),
+            null === alternate
+              ? (sourceFiber[isHidden] = [update])
+              : alternate.push(update),
+            (update.lane = lane | 536870912)),
+          parent)
+        : null;
     }
     function getRootForUpdatedFiber(sourceFiber) {
       if (nestedUpdateCount > NESTED_UPDATE_LIMIT)
@@ -3717,7 +3720,7 @@ __DEV__ &&
     }
     function entangleTransitions(root, fiber, lane) {
       fiber = fiber.updateQueue;
-      if (null !== fiber && ((fiber = fiber.shared), 0 !== (lane & 4194176))) {
+      if (null !== fiber && ((fiber = fiber.shared), 0 !== (lane & 4194048))) {
         var queueLanes = fiber.lanes;
         queueLanes &= root.pendingLanes;
         lane |= queueLanes;
@@ -4557,7 +4560,7 @@ __DEV__ &&
         throw Error(
           "Expected a work-in-progress root. This is a bug in React. Please file an issue."
         );
-      0 !== (workInProgressRootRenderLanes & 60) ||
+      0 !== (workInProgressRootRenderLanes & 124) ||
         pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
       hook.memoizedState = nextSnapshot;
       cachedSnapshot = { value: nextSnapshot, getSnapshot: getSnapshot };
@@ -4627,7 +4630,7 @@ __DEV__ &&
           throw Error(
             "Expected a work-in-progress root. This is a bug in React. Please file an issue."
           );
-        0 !== (renderLanes & 60) ||
+        0 !== (renderLanes & 124) ||
           pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
       }
       return nextSnapshot;
@@ -5605,7 +5608,7 @@ __DEV__ &&
       queue.pending = update;
     }
     function entangleTransitionUpdate(root, queue, lane) {
-      if (0 !== (lane & 4194176)) {
+      if (0 !== (lane & 4194048)) {
         var queueLanes = queue.lanes;
         queueLanes &= root.pendingLanes;
         lane |= queueLanes;
@@ -8384,7 +8387,6 @@ __DEV__ &&
                 case 32:
                   nextProps = 16;
                   break;
-                case 128:
                 case 256:
                 case 512:
                 case 1024:
@@ -8403,7 +8405,7 @@ __DEV__ &&
                 case 8388608:
                 case 16777216:
                 case 33554432:
-                  nextProps = 64;
+                  nextProps = 128;
                   break;
                 case 268435456:
                   nextProps = 134217728;
@@ -12429,7 +12431,7 @@ __DEV__ &&
         throw Error("Should not already be working.");
       var shouldTimeSlice =
           (!forceSync &&
-            0 === (lanes & 60) &&
+            0 === (lanes & 124) &&
             0 === (lanes & root.expiredLanes)) ||
           (enableSiblingPrerendering && checkIfRootIsPrerendering(root, lanes)),
         exitStatus = shouldTimeSlice
@@ -12512,7 +12514,7 @@ __DEV__ &&
               case RootFatalErrored:
                 throw Error("Root did not complete. This is a bug in React.");
               case RootSuspendedWithDelay:
-                if ((lanes & 4194176) !== lanes) break;
+                if ((lanes & 4194048) !== lanes) break;
               case RootSuspendedAtTheShell:
                 markRootSuspended(
                   shouldTimeSlice,
@@ -12771,7 +12773,7 @@ __DEV__ &&
             (JSCompiler_temp =
               null === JSCompiler_temp
                 ? !0
-                : (workInProgressRootRenderLanes & 4194176) ===
+                : (workInProgressRootRenderLanes & 4194048) ===
                     workInProgressRootRenderLanes
                   ? null === shellBoundary
                     ? !0
@@ -12854,7 +12856,7 @@ __DEV__ &&
     function renderDidSuspendDelayIfPossible() {
       workInProgressRootExitStatus = RootSuspendedWithDelay;
       workInProgressRootDidSkipSuspendedSiblings ||
-        ((workInProgressRootRenderLanes & 4194176) !==
+        ((workInProgressRootRenderLanes & 4194048) !==
           workInProgressRootRenderLanes &&
           null !== suspenseHandlerStackCursor.current) ||
         (workInProgressRootIsPrerendering = !0);
@@ -13575,7 +13577,7 @@ __DEV__ &&
           flushPendingEffects();
         ensureRootIsScheduled(root);
         remainingLanes = root.pendingLanes;
-        0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42)
+        0 !== (lanes & 4194090) && 0 !== (remainingLanes & 42)
           ? ((nestedUpdateScheduled = !0),
             root === rootWithNestedUpdates
               ? nestedUpdateCount++
@@ -15621,7 +15623,7 @@ __DEV__ &&
       clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
       log = Math.log,
       LN2 = Math.LN2,
-      nextTransitionLane = 128,
+      nextTransitionLane = 256,
       nextRetryLane = 4194304,
       DiscreteEventPriority = 2,
       ContinuousEventPriority = 8,
@@ -17684,11 +17686,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.1.0-native-fb-c6a7e186-20250213" !== isomorphicReactPackageVersion)
+    if ("19.1.0-native-fb-a53da6ab-20250213" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.1.0-native-fb-c6a7e186-20250213\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.1.0-native-fb-a53da6ab-20250213\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17714,10 +17716,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-c6a7e186-20250213",
+        version: "19.1.0-native-fb-a53da6ab-20250213",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-c6a7e186-20250213"
+        reconcilerVersion: "19.1.0-native-fb-a53da6ab-20250213"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
