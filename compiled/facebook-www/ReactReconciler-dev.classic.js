@@ -2865,10 +2865,7 @@ __DEV__ &&
     }
     function runWithFiberInDEV(fiber, callback, arg0, arg1, arg2, arg3, arg4) {
       var previousFiber = current;
-      ReactSharedInternals.getCurrentStack =
-        null === fiber ? null : getCurrentFiberStackInDev;
-      isRendering = !1;
-      current = fiber;
+      setCurrentFiber(fiber);
       try {
         return enableOwnerStacks && null !== fiber && fiber._debugTask
           ? fiber._debugTask.run(
@@ -2876,11 +2873,17 @@ __DEV__ &&
             )
           : callback(arg0, arg1, arg2, arg3, arg4);
       } finally {
-        current = previousFiber;
+        setCurrentFiber(previousFiber);
       }
       throw Error(
         "runWithFiberInDEV should never be called in production. This is a bug in React."
       );
+    }
+    function setCurrentFiber(fiber) {
+      ReactSharedInternals.getCurrentStack =
+        null === fiber ? null : getCurrentFiberStackInDev;
+      isRendering = !1;
+      current = fiber;
     }
     function createThenableState() {
       return { didWarnAboutUncachedPromise: !1, thenables: [] };
@@ -7223,7 +7226,7 @@ __DEV__ &&
       return workInProgress.child;
     }
     function updateClassComponent(
-      current$jscomp$0,
+      current,
       workInProgress,
       Component,
       nextProps,
@@ -7577,7 +7580,7 @@ __DEV__ &&
         (workInProgress.mode & 16) !== NoMode &&
           (workInProgress.flags |= 134217728);
         state = !0;
-      } else if (null === current$jscomp$0)
+      } else if (null === current)
         (state = workInProgress.stateNode),
           (foundWillUpdateName = workInProgress.memoizedProps),
           (lane = resolveClassComponentProps(
@@ -7667,7 +7670,7 @@ __DEV__ &&
               (state = !1));
       else {
         state = workInProgress.stateNode;
-        cloneUpdateQueue(current$jscomp$0, workInProgress);
+        cloneUpdateQueue(current, workInProgress);
         lane = workInProgress.memoizedProps;
         context = resolveClassComponentProps(
           Component,
@@ -7710,9 +7713,9 @@ __DEV__ &&
         foundWillUpdateName !== newState ||
         didPerformWorkStackCursor.current ||
         hasForceUpdate ||
-        (null !== current$jscomp$0 &&
-          null !== current$jscomp$0.dependencies &&
-          checkIfContextChanged(current$jscomp$0.dependencies))
+        (null !== current &&
+          null !== current.dependencies &&
+          checkIfContextChanged(current.dependencies))
           ? ("function" === typeof newApiName &&
               (applyDerivedStateFromProps(
                 workInProgress,
@@ -7732,9 +7735,9 @@ __DEV__ &&
                 newState,
                 state$jscomp$0
               ) ||
-              (null !== current$jscomp$0 &&
-                null !== current$jscomp$0.dependencies &&
-                checkIfContextChanged(current$jscomp$0.dependencies)))
+              (null !== current &&
+                null !== current.dependencies &&
+                checkIfContextChanged(current.dependencies)))
               ? (foundWillReceivePropsName ||
                   ("function" !== typeof state.UNSAFE_componentWillUpdate &&
                     "function" !== typeof state.componentWillUpdate) ||
@@ -7755,12 +7758,12 @@ __DEV__ &&
                 "function" === typeof state.getSnapshotBeforeUpdate &&
                   (workInProgress.flags |= 1024))
               : ("function" !== typeof state.componentDidUpdate ||
-                  (lane === current$jscomp$0.memoizedProps &&
-                    foundWillUpdateName === current$jscomp$0.memoizedState) ||
+                  (lane === current.memoizedProps &&
+                    foundWillUpdateName === current.memoizedState) ||
                   (workInProgress.flags |= 4),
                 "function" !== typeof state.getSnapshotBeforeUpdate ||
-                  (lane === current$jscomp$0.memoizedProps &&
-                    foundWillUpdateName === current$jscomp$0.memoizedState) ||
+                  (lane === current.memoizedProps &&
+                    foundWillUpdateName === current.memoizedState) ||
                   (workInProgress.flags |= 1024),
                 (workInProgress.memoizedProps = nextProps),
                 (workInProgress.memoizedState = newState)),
@@ -7769,24 +7772,21 @@ __DEV__ &&
             (state.context = state$jscomp$0),
             (state = context))
           : ("function" !== typeof state.componentDidUpdate ||
-              (lane === current$jscomp$0.memoizedProps &&
-                foundWillUpdateName === current$jscomp$0.memoizedState) ||
+              (lane === current.memoizedProps &&
+                foundWillUpdateName === current.memoizedState) ||
               (workInProgress.flags |= 4),
             "function" !== typeof state.getSnapshotBeforeUpdate ||
-              (lane === current$jscomp$0.memoizedProps &&
-                foundWillUpdateName === current$jscomp$0.memoizedState) ||
+              (lane === current.memoizedProps &&
+                foundWillUpdateName === current.memoizedState) ||
               (workInProgress.flags |= 1024),
             (state = !1));
       }
       context = state;
-      markRef(current$jscomp$0, workInProgress);
+      markRef(current, workInProgress);
       lane = 0 !== (workInProgress.flags & 128);
       if (context || lane) {
         context = workInProgress.stateNode;
-        ReactSharedInternals.getCurrentStack =
-          null === workInProgress ? null : getCurrentFiberStackInDev;
-        isRendering = !1;
-        current = workInProgress;
+        setCurrentFiber(workInProgress);
         if (lane && "function" !== typeof Component.getDerivedStateFromError)
           (addendum = null), (profilerStartTime = -1);
         else {
@@ -7804,11 +7804,11 @@ __DEV__ &&
           enableSchedulingProfiler && markComponentRenderStopped();
         }
         workInProgress.flags |= 1;
-        null !== current$jscomp$0 && lane
+        null !== current && lane
           ? ((lane = addendum),
             (workInProgress.child = reconcileChildFibers(
               workInProgress,
-              current$jscomp$0.child,
+              current.child,
               null,
               renderLanes
             )),
@@ -7818,19 +7818,14 @@ __DEV__ &&
               lane,
               renderLanes
             )))
-          : reconcileChildren(
-              current$jscomp$0,
-              workInProgress,
-              addendum,
-              renderLanes
-            );
+          : reconcileChildren(current, workInProgress, addendum, renderLanes);
         workInProgress.memoizedState = context.state;
         _instance && invalidateContextProvider(workInProgress, Component, !0);
-        current$jscomp$0 = workInProgress.child;
+        current = workInProgress.child;
       } else
         _instance && invalidateContextProvider(workInProgress, Component, !1),
-          (current$jscomp$0 = bailoutOnAlreadyFinishedWork(
-            current$jscomp$0,
+          (current = bailoutOnAlreadyFinishedWork(
+            current,
             workInProgress,
             renderLanes
           ));
@@ -7843,7 +7838,7 @@ __DEV__ &&
             getComponentNameFromFiber(workInProgress) || "a component"
           ),
         (didWarnAboutReassigningProps = !0));
-      return current$jscomp$0;
+      return current;
     }
     function pushHostRootContext(workInProgress) {
       var root = workInProgress.stateNode;
@@ -20027,7 +20022,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-192555bb-20250211"
+        reconcilerVersion: "19.1.0-www-classic-c6a7e186-20250213"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
