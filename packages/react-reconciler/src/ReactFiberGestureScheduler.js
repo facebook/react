@@ -46,7 +46,22 @@ export function scheduleGesture(
   const cancel = subscribeToGestureDirection(provider, (direction: boolean) => {
     if (gesture.direction !== direction) {
       gesture.direction = direction;
-      // TODO: Reschedule a new render in the other direction.
+      if (gesture.prev === null && root.gestures !== gesture) {
+        // This gesture is not in the schedule, meaning it was already rendered.
+        // We need to rerender in the new direction. Insert it into the first slot
+        // in case other gestures are queued after the on-going one.
+        const existing = root.gestures;
+        gesture.next = existing;
+        if (existing !== null) {
+          existing.prev = gesture;
+        }
+        root.gestures = gesture;
+        // Schedule the lane on the root. The Fibers will already be marked as
+        // long as the gesture is active on that Hook.
+        root.pendingLanes |= GestureLane;
+        ensureRootIsScheduled(root);
+      }
+      // TODO: If we're currently rendering this gesture, we need to restart it.
     }
   });
   const gesture: ScheduledGesture = {
