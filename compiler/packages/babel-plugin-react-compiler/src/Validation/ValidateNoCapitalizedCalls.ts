@@ -61,7 +61,10 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
         }
         case 'PropertyLoad': {
           // Start conservative and disallow all capitalized method calls
-          if (/^[A-Z]/.test(value.property)) {
+          if (
+            typeof value.property === 'string' &&
+            /^[A-Z]/.test(value.property)
+          ) {
             capitalizedProperties.set(lvalue.identifier.id, value.property);
           }
           break;

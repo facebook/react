@@ -94,69 +94,67 @@ export function Component(t0) {
   } else {
     t6 = $[8];
   }
-  const t7 = items_0[0];
-  let t8;
-  if ($[9] !== t6 || $[10] !== t7) {
-    t8 = <ValidateMemoization inputs={t6} output={t7} />;
-    $[9] = t6;
-    $[10] = t7;
-    $[11] = t8;
+  let t7;
+  if ($[9] !== items_0[0] || $[10] !== t6) {
+    t7 = <ValidateMemoization inputs={t6} output={items_0[0]} />;
+    $[9] = items_0[0];
+    $[10] = t6;
+    $[11] = t7;
   } else {
-    t8 = $[11];
+    t7 = $[11];
+  }
+  let t8;
+  if ($[12] !== b) {
+    t8 = [b];
+    $[12] = b;
+    $[13] = t8;
+  } else {
+    t8 = $[13];
   }
   let t9;
-  if ($[12] !== b) {
-    t9 = [b];
-    $[12] = b;
-    $[13] = t9;
+  if ($[14] !== items_0[1] || $[15] !== t8) {
+    t9 = <ValidateMemoization inputs={t8} output={items_0[1]} />;
+    $[14] = items_0[1];
+    $[15] = t8;
+    $[16] = t9;
   } else {
-    t9 = $[13];
+    t9 = $[16];
   }
-  const t10 = items_0[1];
-  let t11;
-  if ($[14] !== t10 || $[15] !== t9) {
-    t11 = <ValidateMemoization inputs={t9} output={t10} />;
-    $[14] = t10;
-    $[15] = t9;
-    $[16] = t11;
-  } else {
-    t11 = $[16];
-  }
-  let t12;
+  let t10;
   if ($[17] !== a || $[18] !== b) {
-    t12 = [a, b];
+    t10 = [a, b];
     $[17] = a;
     $[18] = b;
-    $[19] = t12;
+    $[19] = t10;
   } else {
-    t12 = $[19];
+    t10 = $[19];
   }
-  let t13;
-  if ($[20] !== items_0 || $[21] !== t12) {
-    t13 = <ValidateMemoization inputs={t12} output={items_0} />;
+  let t11;
+  if ($[20] !== items_0 || $[21] !== t10) {
+    t11 = <ValidateMemoization inputs={t10} output={items_0} />;
     $[20] = items_0;
-    $[21] = t12;
-    $[22] = t13;
+    $[21] = t10;
+    $[22] = t11;
   } else {
-    t13 = $[22];
+    t11 = $[22];
   }
-  let t14;
-  if ($[23] !== t11 || $[24] !== t13 || $[25] !== t8) {
-    t14 = (
+  let t12;
+  if ($[23] !== t11 || $[24] !== t7 || $[25] !== t9) {
+    t12 = (
       <>
-        {t8}
+        {t7}
+        {t9}
         {t11}
-        {t13}
       </>
     );
     $[23] = t11;
-    $[24] = t13;
-    $[25] = t8;
-    $[26] = t14;
+    $[24] = t7;
+    $[25] = t9;
+    $[26] = t12;
   } else {
-    t14 = $[26];
+    t12 = $[26];
   }
-  return t14;
+  return t12;
 }
 
 export const FIXTURE_ENTRYPOINT = {
