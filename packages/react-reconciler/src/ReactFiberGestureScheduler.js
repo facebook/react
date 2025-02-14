@@ -91,6 +91,8 @@ export function cancelScheduledGesture(
     cancelDirectionSubscription();
     // Delete the scheduled gesture from the queue.
     deleteScheduledGesture(root, gesture);
+    // TODO: If we're currently rendering this gesture, we need to restart the render
+    // on a different gesture or cancel the render..
   }
 }
 
