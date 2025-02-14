@@ -10,9 +10,8 @@ import {
   Effect,
   HIRFunction,
   Identifier,
-  IdentifierName,
+  IdentifierId,
   LoweredFunction,
-  Place,
   isRefOrRefValue,
   makeInstructionId,
 } from '../HIR';
@@ -23,78 +22,39 @@ import {inferMutableContextVariables} from './InferMutableContextVariables';
 import {inferMutableRanges} from './InferMutableRanges';
 import inferReferenceEffects from './InferReferenceEffects';
 
-type Dependency = {
-  identifier: Identifier;
-  path: Array<string>;
-};
-
 // Helper class to track indirections such as LoadLocal and PropertyLoad.
 export class IdentifierState {
-  properties: Map<Identifier, Dependency> = new Map();
+  properties: Map<IdentifierId, Identifier> = new Map();
 
   resolve(identifier: Identifier): Identifier {
-    const resolved = this.properties.get(identifier);
+    const resolved = this.properties.get(identifier.id);
     if (resolved !== undefined) {
-      return resolved.identifier;
+      return resolved;
     }
     return identifier;
   }
 
-  declareProperty(lvalue: Place, object: Place, property: string): void {
-    const objectDependency = this.properties.get(object.identifier);
-    let nextDependency: Dependency;
-    if (objectDependency === undefined) {
-      nextDependency = {identifier: object.identifier, path: [property]};
-    } else {
-      nextDependency = {
-        identifier: objectDependency.identifier,
-        path: [...objectDependency.path, property],
-      };
-    }
-    this.properties.set(lvalue.identifier, nextDependency);
-  }
-
-  declareTemporary(lvalue: Place, value: Place): void {
-    const resolved: Dependency = this.properties.get(value.identifier) ?? {
-      identifier: value.identifier,
-      path: [],
-    };
-    this.properties.set(lvalue.identifier, resolved);
+  alias(lvalue: Identifier, value: Identifier): void {
+    this.properties.set(lvalue.id, this.properties.get(value.id) ?? value);
   }
 }
 
 export default function analyseFunctions(func: HIRFunction): void {
-  const state = new IdentifierState();
-
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
         case 'ObjectMethod':
         case 'FunctionExpression': {
           lower(instr.value.loweredFunc.func);
-          infer(instr.value.loweredFunc, state, func.context);
-          break;
-        }
-        case 'PropertyLoad': {
-          state.declareProperty(
-            instr.lvalue,
-            instr.value.object,
-            instr.value.property,
-          );
-          break;
-        }
-        case 'ComputedLoad': {
-          /*
-           * The path is set to an empty string as the path doesn't really
-           * matter for a computed load.
+          infer(instr.value.loweredFunc);
+
+          /**
+           * Reset mutable range for outer inferReferenceEffects
            */
-          state.declareProperty(instr.lvalue, instr.value.object, '');
-          break;
-        }
-        case 'LoadLocal':
-        case 'LoadContext': {
-          if (instr.lvalue.identifier.name === null) {
-            state.declareTemporary(instr.lvalue, instr.value.place);
+          for (const operand of instr.value.loweredFunc.func.context) {
+            operand.identifier.mutableRange.start = makeInstructionId(0);
+            operand.identifier.mutableRange.end = makeInstructionId(0);
+            operand.identifier.scope = null;
           }
           break;
         }
@@ -110,7 +70,6 @@ function lower(func: HIRFunction): void {
   inferMutableRanges(func);
   rewriteInstructionKindsBasedOnReassignment(func);
   inferReactiveScopeVariables(func);
-  inferMutableContextVariables(func);
   func.env.logger?.debugLogIRs?.({
     kind: 'hir',
     name: 'AnalyseFunction (inner)',
@@ -118,32 +77,16 @@ function lower(func: HIRFunction): void {
   });
 }
 
-function infer(
-  loweredFunc: LoweredFunction,
-  state: IdentifierState,
-  context: Array<Place>,
-): void {
-  const mutations = new Map<string, Effect>();
+function infer(loweredFunc: LoweredFunction): void {
+  const knownMutated = inferMutableContextVariables(loweredFunc.func);
   for (const operand of loweredFunc.func.context) {
-    if (
-      isMutatedOrReassigned(operand.identifier) &&
-      operand.identifier.name !== null
-    ) {
-      mutations.set(operand.identifier.name.value, operand.effect);
-    }
-  }
-
-  for (const dep of loweredFunc.dependencies) {
-    let name: IdentifierName | null = null;
-
-    if (state.properties.has(dep.identifier)) {
-      const receiver = state.properties.get(dep.identifier)!;
-      name = receiver.identifier.name;
-    } else {
-      name = dep.identifier.name;
-    }
-
-    if (isRefOrRefValue(dep.identifier)) {
+    const identifier = operand.identifier;
+    CompilerError.invariant(operand.effect === Effect.Unknown, {
+      reason:
+        '[AnalyseFunctions] Expected Function context effects to not have been set',
+      loc: operand.loc,
+    });
+    if (isRefOrRefValue(identifier)) {
       /*
        * TODO: this is a hack to ensure we treat functions which reference refs
        * as having a capture and therefore being considered mutable. this ensures
@@ -151,42 +94,15 @@ function infer(
        * could be called, and allows us to help ensure it isn't called during
        * render
        */
-      dep.effect = Effect.Capture;
-    } else if (name !== null) {
-      const effect = mutations.get(name.value);
-      if (effect !== undefined) {
-        dep.effect = effect === Effect.Unknown ? Effect.Capture : effect;
-      }
+      operand.effect = Effect.Capture;
+    } else if (knownMutated.has(operand)) {
+      operand.effect = Effect.Mutate;
+    } else if (isMutatedOrReassigned(identifier)) {
+      // Note that this also reflects if identifier is ConditionallyMutated
+      operand.effect = Effect.Capture;
+    } else {
+      operand.effect = Effect.Read;
     }
-  }
-
-  /*
-   * This could potentially add duplicate deps to mutatedDeps in the case of
-   * mutating a context ref in the child function and in this parent function.
-   * It might be useful to dedupe this.
-   *
-   * In practice this never really matters because the Component function has no
-   * context refs, so it will never have duplicate deps.
-   */
-  for (const place of context) {
-    CompilerError.invariant(place.identifier.name !== null, {
-      reason: 'context refs should always have a name',
-      description: null,
-      loc: place.loc,
-      suggestions: null,
-    });
-
-    const effect = mutations.get(place.identifier.name.value);
-    if (effect !== undefined) {
-      place.effect = effect === Effect.Unknown ? Effect.Capture : effect;
-      loweredFunc.dependencies.push(place);
-    }
-  }
-
-  for (const operand of loweredFunc.func.context) {
-    operand.identifier.mutableRange.start = makeInstructionId(0);
-    operand.identifier.mutableRange.end = makeInstructionId(0);
-    operand.identifier.scope = null;
   }
 }
 
