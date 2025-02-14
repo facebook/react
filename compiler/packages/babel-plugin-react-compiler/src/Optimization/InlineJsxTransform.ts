@@ -386,12 +386,10 @@ export function inlineJsxTransform(
 
     if (block.terminal.kind === 'scope') {
       const scope = block.terminal.scope;
-      for (const dep of scope.dependencies) {
-        dep.identifier = handleIdentifier(
-          dep.identifier,
-          inlinedJsxDeclarations,
-        );
-      }
+      /**
+       * Note that scope dependencies don't need to be renamed explicitly
+       * as they will be visited when traversing scope terminal successors.
+       */
 
       for (const [origId, decl] of [...scope.declarations]) {
         const newDecl = handleIdentifier(
