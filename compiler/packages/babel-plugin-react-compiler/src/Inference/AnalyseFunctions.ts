@@ -18,26 +18,9 @@ import {
 import {deadCodeElimination} from '../Optimization';
 import {inferReactiveScopeVariables} from '../ReactiveScopes';
 import {rewriteInstructionKindsBasedOnReassignment} from '../SSA';
-import {inferMutableContextVariables} from './InferMutableContextVariables';
 import {inferMutableRanges} from './InferMutableRanges';
 import inferReferenceEffects from './InferReferenceEffects';
 
-// Helper class to track indirections such as LoadLocal and PropertyLoad.
-export class IdentifierState {
-  properties: Map<IdentifierId, Identifier> = new Map();
-
-  resolve(identifier: Identifier): Identifier {
-    const resolved = this.properties.get(identifier.id);
-    if (resolved !== undefined) {
-      return resolved;
-    }
-    return identifier;
-  }
-
-  alias(lvalue: Identifier, value: Identifier): void {
-    this.properties.set(lvalue.id, this.properties.get(value.id) ?? value);
-  }
-}
 
 export default function analyseFunctions(func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
@@ -78,7 +61,6 @@ function lower(func: HIRFunction): void {
 }
 
 function infer(loweredFunc: LoweredFunction): void {
-  const knownMutated = inferMutableContextVariables(loweredFunc.func);
   for (const operand of loweredFunc.func.context) {
     const identifier = operand.identifier;
     CompilerError.invariant(operand.effect === Effect.Unknown, {
@@ -95,10 +77,11 @@ function infer(loweredFunc: LoweredFunction): void {
        * render
        */
       operand.effect = Effect.Capture;
-    } else if (knownMutated.has(operand)) {
-      operand.effect = Effect.Mutate;
     } else if (isMutatedOrReassigned(identifier)) {
-      // Note that this also reflects if identifier is ConditionallyMutated
+      /**
+       * Reflects direct reassignments, PropertyStores, and ConditionallyMutate
+       * (directly or through maybe-aliases)
+       */
       operand.effect = Effect.Capture;
     } else {
       operand.effect = Effect.Read;
