@@ -34,6 +34,7 @@ import {
   ReactiveValue,
   ReactiveScopeBlock,
   PrunedReactiveScopeBlock,
+  PropertyLiteral,
 } from './HIR';
 import {
   collectHoistablePropertyLoads,
@@ -417,7 +418,7 @@ function collectTemporariesSidemapImpl(
 
 function getProperty(
   object: Place,
-  propertyName: string,
+  propertyName: PropertyLiteral,
   optional: boolean,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): ReactiveScopeDependency {
@@ -618,7 +619,11 @@ class Context {
     );
   }
 
-  visitProperty(object: Place, property: string, optional: boolean): void {
+  visitProperty(
+    object: Place,
+    property: PropertyLiteral,
+    optional: boolean,
+  ): void {
     const nextDependency = getProperty(
       object,
       property,
