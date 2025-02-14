@@ -12,6 +12,7 @@ import {
   IdentifierId,
   InstructionId,
   Place,
+  PropertyLiteral,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
@@ -21,6 +22,7 @@ import {
   isUseRefType,
   isUseStateType,
 } from '../HIR';
+import {readScopeDependenciesRHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {eachCallArgument, eachInstructionLValue} from '../HIR/visitors';
 import DisjointSet from '../Utils/DisjointSet';
 import {assertExhaustive} from '../Utils/utils';
@@ -64,13 +66,13 @@ type KindMap = Map<IdentifierId, CreateUpdate>;
 class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
   map: KindMap = new Map();
   aliases: DisjointSet<IdentifierId>;
-  paths: Map<IdentifierId, Map<string, IdentifierId>>;
+  paths: Map<IdentifierId, Map<PropertyLiteral, IdentifierId>>;
   env: Environment;
 
   constructor(
     env: Environment,
     aliases: DisjointSet<IdentifierId>,
-    paths: Map<IdentifierId, Map<string, IdentifierId>>,
+    paths: Map<IdentifierId, Map<PropertyLiteral, IdentifierId>>,
   ) {
     super();
     this.aliases = aliases;
@@ -177,14 +179,22 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
       ].map(id => this.map.get(id) ?? 'Unknown'),
     );
     super.visitScope(scope, state);
-    [...scope.scope.dependencies].forEach(ident => {
+    // TODO
+    const scopeDeps = readScopeDependenciesRHIR(scope);
+    [...scopeDeps].forEach(([place, dep]) => {
       let target: undefined | IdentifierId =
-        this.aliases.find(ident.identifier.id) ?? ident.identifier.id;
-      ident.path.forEach(token => {
+        this.aliases.find(dep.identifier.id) ?? dep.identifier.id;
+      dep.path.forEach(token => {
         target &&= this.paths.get(target)?.get(token.property);
       });
       if (target && this.map.get(target) === 'Create') {
-        scope.scope.dependencies.delete(ident);
+        const idx = scope.scope.dependencies.indexOf(place);
+        CompilerError.invariant(idx !== -1, {
+          reason: 'Expected dependency to be found',
+          loc: place.loc,
+        });
+
+        scope.scope.dependencies.splice(idx, 1);
       }
     });
   }
@@ -218,9 +228,9 @@ export default function pruneInitializationDependencies(
 }
 
 function update(
-  map: Map<IdentifierId, Map<string, IdentifierId>>,
+  map: Map<IdentifierId, Map<PropertyLiteral, IdentifierId>>,
   key: IdentifierId,
-  path: string,
+  path: PropertyLiteral,
   value: IdentifierId,
 ): void {
   const inner = map.get(key) ?? new Map();
@@ -230,7 +240,7 @@ function update(
 
 class AliasVisitor extends ReactiveFunctionVisitor {
   scopeIdentifiers: DisjointSet<IdentifierId> = new DisjointSet<IdentifierId>();
-  scopePaths: Map<IdentifierId, Map<string, IdentifierId>> = new Map();
+  scopePaths: Map<IdentifierId, Map<PropertyLiteral, IdentifierId>> = new Map();
 
   override visitInstruction(instr: ReactiveInstruction): void {
     if (
@@ -271,11 +281,14 @@ class AliasVisitor extends ReactiveFunctionVisitor {
 
 function getAliases(
   fn: ReactiveFunction,
-): [DisjointSet<IdentifierId>, Map<IdentifierId, Map<string, IdentifierId>>] {
+): [
+  DisjointSet<IdentifierId>,
+  Map<IdentifierId, Map<PropertyLiteral, IdentifierId>>,
+] {
   const visitor = new AliasVisitor();
   visitReactiveFunction(fn, visitor, null);
   let disjoint = visitor.scopeIdentifiers;
-  let scopePaths = new Map<IdentifierId, Map<string, IdentifierId>>();
+  let scopePaths = new Map<IdentifierId, Map<PropertyLiteral, IdentifierId>>();
   for (const [key, value] of visitor.scopePaths) {
     for (const [path, id] of value) {
       update(

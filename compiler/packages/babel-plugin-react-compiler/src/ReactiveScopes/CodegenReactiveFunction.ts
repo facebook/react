@@ -32,10 +32,10 @@ import {
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
+  ReactiveInstructionStatement,
   ReactiveScope,
   ReactiveScopeBlock,
   ReactiveScopeDeclaration,
-  ReactiveScopeDependency,
   ReactiveTerminal,
   ReactiveValue,
   SourceLocation,
@@ -53,6 +53,7 @@ import {buildReactiveFunction} from './BuildReactiveFunction';
 import {SINGLE_CHILD_FBT_TAGS} from './MemoizeFbtAndMacroOperandsInSameScope';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 import {ReactFunctionType} from '../HIR/Environment';
+import generate from '@babel/generator';
 
 export const MEMO_CACHE_SENTINEL = 'react.memo_cache_sentinel';
 export const EARLY_RETURN_SENTINEL = 'react.early_return_sentinel';
@@ -509,7 +510,13 @@ function codegenBlockNoReset(
       }
       case 'scope': {
         const temp = new Map(cx.temp);
-        codegenReactiveScope(cx, statements, item.scope, item.instructions);
+        codegenReactiveScope(
+          cx,
+          statements,
+          item.scope,
+          item.instructions,
+          item.dependencyInstructions,
+        );
         cx.temp = temp;
         break;
       }
@@ -568,6 +575,7 @@ function codegenReactiveScope(
   statements: Array<t.Statement>,
   scope: ReactiveScope,
   block: ReactiveBlock,
+  dependencyInstructions: Array<ReactiveInstructionStatement>,
 ): void {
   const cacheStoreStatements: Array<t.Statement> = [];
   const cacheLoadStatements: Array<t.Statement> = [];
@@ -580,9 +588,35 @@ function codegenReactiveScope(
   const changeExpressionComments: Array<string> = [];
   const outputComments: Array<string> = [];
 
-  for (const dep of [...scope.dependencies].sort(compareScopeDependency)) {
+  /**
+   * Step 1: Dependency instructions should codegen their expressions into
+   * the `Context.Temporaries` map.
+   */
+  for (const instr of dependencyInstructions) {
+    const result = codegenInstructionNullable(cx, instr.instruction);
+    CompilerError.invariant(result == null, {
+      reason: 'Expected dependency instructions to be inlined',
+      loc: instr.instruction.loc,
+    });
+  }
+  const sortedDependencies: Array<[string, t.Expression]> = scope.dependencies
+    .map<[string, t.Expression]>(dep => {
+      const dependency = codegenPlace(cx, dep);
+      CompilerError.invariant(dependency.type !== 'JSXText', {
+        reason: 'Expected dependency to not be JSXText',
+        loc: GeneratedSource,
+      });
+      return [generate(dependency).code, dependency];
+    })
+    .sort(([aName], [bName]) => {
+      if (aName < bName) return -1;
+      else if (aName > bName) return 1;
+      else return 0;
+    });
+
+  for (const [code, dep] of sortedDependencies) {
     const index = cx.nextCacheIndex;
-    changeExpressionComments.push(printDependencyComment(dep));
+    changeExpressionComments.push(code);
     const comparison = t.binaryExpression(
       '!==',
       t.memberExpression(
@@ -590,7 +624,7 @@ function codegenReactiveScope(
         t.numericLiteral(index),
         true,
       ),
-      codegenDependency(cx, dep),
+      dep,
     );
 
     if (cx.env.config.enableChangeVariableCodegen) {
@@ -617,7 +651,7 @@ function codegenReactiveScope(
             t.numericLiteral(index),
             true,
           ),
-          codegenDependency(cx, dep),
+          t.cloneNode(dep, true),
         ),
       ),
     );
@@ -1410,17 +1444,6 @@ function codegenForInit(
   }
 }
 
-function printDependencyComment(dependency: ReactiveScopeDependency): string {
-  const identifier = convertIdentifier(dependency.identifier);
-  let name = identifier.name;
-  if (dependency.path !== null) {
-    for (const path of dependency.path) {
-      name += `.${path.property}`;
-    }
-  }
-  return name;
-}
-
 function printDelimitedCommentList(
   items: Array<string>,
   finalCompletion: string,
@@ -1443,29 +1466,6 @@ function printDelimitedCommentList(
     }
   }
   return output.join('');
-}
-
-function codegenDependency(
-  cx: Context,
-  dependency: ReactiveScopeDependency,
-): t.Expression {
-  let object: t.Expression = convertIdentifier(dependency.identifier);
-  if (dependency.path.length !== 0) {
-    const hasOptional = dependency.path.some(path => path.optional);
-    for (const path of dependency.path) {
-      if (hasOptional) {
-        object = t.optionalMemberExpression(
-          object,
-          t.identifier(path.property),
-          false,
-          path.optional,
-        );
-      } else {
-        object = t.memberExpression(object, t.identifier(path.property));
-      }
-    }
-  }
-  return object;
 }
 
 function withLoc<T extends (...args: Array<any>) => t.Node>(
@@ -1963,12 +1963,22 @@ function codegenInstructionValue(
       break;
     }
     case 'PropertyStore': {
-      value = t.assignmentExpression(
-        '=',
-        t.memberExpression(
+      let memberExpr;
+      if (typeof instrValue.property === 'string') {
+        memberExpr = t.memberExpression(
           codegenPlaceToExpression(cx, instrValue.object),
           t.identifier(instrValue.property),
-        ),
+        );
+      } else {
+        memberExpr = t.memberExpression(
+          codegenPlaceToExpression(cx, instrValue.object),
+          t.numericLiteral(instrValue.property),
+          true,
+        );
+      }
+      value = t.assignmentExpression(
+        '=',
+        memberExpr,
         codegenPlaceToExpression(cx, instrValue.value),
       );
       break;
@@ -1979,21 +1989,36 @@ function codegenInstructionValue(
        * We currently only lower single chains of optional memberexpr.
        * (See BuildHIR.ts for more detail.)
        */
-      value = t.memberExpression(
-        object,
-        t.identifier(instrValue.property),
-        undefined,
-      );
+      if (typeof instrValue.property === 'string') {
+        value = t.memberExpression(
+          object,
+          t.identifier(instrValue.property),
+          undefined,
+        );
+      } else {
+        value = t.memberExpression(
+          object,
+          t.numericLiteral(instrValue.property),
+          true,
+        );
+      }
       break;
     }
     case 'PropertyDelete': {
-      value = t.unaryExpression(
-        'delete',
-        t.memberExpression(
+      let memberexpr;
+      if (typeof instrValue.property === 'string') {
+        memberexpr = t.memberExpression(
           codegenPlaceToExpression(cx, instrValue.object),
           t.identifier(instrValue.property),
-        ),
-      );
+        );
+      } else {
+        memberexpr = t.memberExpression(
+          codegenPlaceToExpression(cx, instrValue.object),
+          t.numericLiteral(instrValue.property),
+          true,
+        );
+      }
+      value = t.unaryExpression('delete', memberexpr);
       break;
     }
     case 'ComputedStore': {
@@ -2231,7 +2256,6 @@ function codegenInstructionValue(
       );
       break;
     }
-    case 'ReactiveFunctionValue':
     case 'StartMemoize':
     case 'FinishMemoize':
     case 'Debugger':
@@ -2575,30 +2599,6 @@ function convertIdentifier(identifier: Identifier): t.Identifier {
     },
   );
   return t.identifier(identifier.name.value);
-}
-
-function compareScopeDependency(
-  a: ReactiveScopeDependency,
-  b: ReactiveScopeDependency,
-): number {
-  CompilerError.invariant(
-    a.identifier.name?.kind === 'named' && b.identifier.name?.kind === 'named',
-    {
-      reason: '[Codegen] Expected named identifier for dependency',
-      loc: a.identifier.loc,
-    },
-  );
-  const aName = [
-    a.identifier.name.value,
-    ...a.path.map(entry => `${entry.optional ? '?' : ''}${entry.property}`),
-  ].join('.');
-  const bName = [
-    b.identifier.name.value,
-    ...b.path.map(entry => `${entry.optional ? '?' : ''}${entry.property}`),
-  ].join('.');
-  if (aName < bName) return -1;
-  else if (aName > bName) return 1;
-  else return 0;
 }
 
 function compareScopeDeclaration(

@@ -24,6 +24,7 @@ import {
   SourceLocation,
 } from '../HIR';
 import {printIdentifier, printManualMemoDependency} from '../HIR/PrintHIR';
+import {readScopeDependenciesRHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {collectMaybeMemoDependencies} from '../Inference/DropManualMemoization';
 import {
@@ -327,13 +328,6 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       case 'OptionalExpression': {
         return this.recordDepsInValue(value.value, state);
       }
-      case 'ReactiveFunctionValue': {
-        CompilerError.throwTodo({
-          reason:
-            'Handle ReactiveFunctionValue in ValidatePreserveManualMemoization',
-          loc: value.loc,
-        });
-      }
       case 'ConditionalExpression': {
         this.recordDepsInValue(value.test, state);
         this.recordDepsInValue(value.consequent, state);
@@ -411,7 +405,8 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       state.manualMemoState != null &&
       state.manualMemoState.depsFromSource != null
     ) {
-      for (const dep of scopeBlock.scope.dependencies) {
+      const deps = readScopeDependenciesRHIR(scopeBlock).values();
+      for (const dep of deps) {
         validateInferredDep(
           dep,
           this.temporaries,

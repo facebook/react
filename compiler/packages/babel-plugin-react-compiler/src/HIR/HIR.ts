@@ -62,12 +62,14 @@ export type ReactiveFunction = {
 
 export type ReactiveScopeBlock = {
   kind: 'scope';
+  dependencyInstructions: Array<ReactiveInstructionStatement>;
   scope: ReactiveScope;
   instructions: ReactiveBlock;
 };
 
 export type PrunedReactiveScopeBlock = {
   kind: 'pruned-scope';
+  dependencyInstructions: Array<ReactiveInstructionStatement>;
   scope: ReactiveScope;
   instructions: ReactiveBlock;
 };
@@ -108,16 +110,7 @@ export type ReactiveValue =
   | ReactiveLogicalValue
   | ReactiveSequenceValue
   | ReactiveTernaryValue
-  | ReactiveOptionalCallValue
-  | ReactiveFunctionValue;
-
-export type ReactiveFunctionValue = {
-  kind: 'ReactiveFunctionValue';
-  fn: ReactiveFunction;
-  dependencies: Array<Place>;
-  returnType: t.FlowType | t.TSType | null;
-  loc: SourceLocation;
-};
+  | ReactiveOptionalCallValue;
 
 export type ReactiveLogicalValue = {
   kind: 'LogicalExpression';
@@ -623,6 +616,7 @@ export type MaybeThrowTerminal = {
 export type ReactiveScopeTerminal = {
   kind: 'scope';
   fallthrough: BlockId;
+  dependencies: BlockId;
   block: BlockId;
   scope: ReactiveScope;
   id: InstructionId;
@@ -632,6 +626,7 @@ export type ReactiveScopeTerminal = {
 export type PrunedScopeTerminal = {
   kind: 'pruned-scope';
   fallthrough: BlockId;
+  dependencies: BlockId;
   block: BlockId;
   scope: ReactiveScope;
   id: InstructionId;
@@ -946,7 +941,7 @@ export type InstructionValue =
   | {
       kind: 'PropertyStore';
       object: Place;
-      property: string;
+      property: PropertyLiteral;
       value: Place;
       loc: SourceLocation;
     }
@@ -956,7 +951,7 @@ export type InstructionValue =
   | {
       kind: 'PropertyDelete';
       object: Place;
-      property: string;
+      property: PropertyLiteral;
       loc: SourceLocation;
     }
 
@@ -1130,7 +1125,7 @@ export type StoreLocal = {
 export type PropertyLoad = {
   kind: 'PropertyLoad';
   object: Place;
-  property: string;
+  property: PropertyLiteral;
   loc: SourceLocation;
 };
 
@@ -1462,9 +1457,10 @@ export type ReactiveScope = {
   range: MutableRange;
 
   /**
-   * The inputs to this reactive scope
+   * Note the dependencies of a reactive scope are tracked in HIR and
+   * ReactiveFunction
    */
-  dependencies: ReactiveScopeDependencies;
+  dependencies: Array<Place>;
 
   /**
    * The set of values produced by this scope. This may be empty
@@ -1511,10 +1507,32 @@ export type ReactiveScopeDeclaration = {
   scope: ReactiveScope; // the scope in which the variable was originally declared
 };
 
-export type DependencyPathEntry = {property: string; optional: boolean};
+const opaquePropertyLiteral = Symbol();
+export type PropertyLiteral = (string | number) & {
+  [opaquePropertyLiteral]: 'PropertyLiteral';
+};
+export function makePropertyLiteral(value: string | number): PropertyLiteral {
+  return value as PropertyLiteral;
+}
+export type DependencyPathEntry = {
+  property: PropertyLiteral;
+  optional: boolean;
+};
 export type DependencyPath = Array<DependencyPathEntry>;
 export type ReactiveScopeDependency = {
   identifier: Identifier;
+  /**
+   * Reflects whether the base identifier is reactive. Note that some reactive
+   * objects may have non-reactive properties, but we do not currently track
+   * this.
+   *
+   * ```js
+   * // Technically, result[0] is reactive and result[1] is not.
+   * // Currently, both dependencies would be marked as reactive.
+   * const result = useState();
+   * ```
+   */
+  reactive: boolean;
   path: DependencyPath;
 };
 
