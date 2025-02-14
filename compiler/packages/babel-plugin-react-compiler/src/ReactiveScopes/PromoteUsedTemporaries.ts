@@ -26,18 +26,13 @@ import {
 } from '../HIR/HIR';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 import {eachInstructionValueLValue, eachPatternOperand} from '../HIR/visitors';
+import {scopeDependenciesDCE} from '../HIR/PropagateScopeDependenciesHIR';
 
 /**
  * Phase 2: Promote identifiers which are used in a place that requires a named variable.
  */
 class PromoteTemporaries extends ReactiveFunctionVisitor<State> {
   override visitScope(scopeBlock: ReactiveScopeBlock, state: State): void {
-    for (const dep of scopeBlock.scope.dependencies) {
-      const {identifier} = dep;
-      if (identifier.name == null) {
-        promoteIdentifier(identifier, state);
-      }
-    }
     /*
      * This is technically optional. We could prune ReactiveScopes
      * whose outputs are not used in another computation or return
@@ -50,7 +45,29 @@ class PromoteTemporaries extends ReactiveFunctionVisitor<State> {
         promoteIdentifier(declaration.identifier, state);
       }
     }
-    this.traverseScope(scopeBlock, state);
+    /**
+     * Run DCE to remove dependency instructions that are no longer used due to
+     * pruning passes.
+     */
+    scopeDependenciesDCE(scopeBlock);
+    /**
+     * Traverse into scope dependency instructions to promote references to
+     * unnamed outer identifiers.
+     */
+    CompilerError.invariant(state.scopeDepContext == null, {
+      reason: 'PromoteTemporaries: unexpected nested scopeDepContext',
+      loc: GeneratedSource,
+    });
+    this.visitBlock(scopeBlock.dependencyInstructions, {
+      ...state,
+      scopeDepContext: {
+        declarations: new Set(),
+        dependencies: new Set(
+          [...scopeBlock.scope.dependencies].map(dep => dep.identifier),
+        ),
+      },
+    });
+    this.visitBlock(scopeBlock.instructions, state);
   }
 
   override visitPrunedScope(
@@ -75,11 +92,33 @@ class PromoteTemporaries extends ReactiveFunctionVisitor<State> {
     }
   }
 
+  override visitLValue(_id: InstructionId, lvalue: Place, state: State): void {
+    // Track lvalues from within scope dependency blocks to avoid promoting them.
+    state.scopeDepContext?.declarations.add(lvalue.identifier.declarationId);
+  }
+
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
     state: State,
   ): void {
+    if (
+      state.scopeDepContext &&
+      (value.kind === 'LoadLocal' || value.kind === 'LoadContext')
+    ) {
+      /**
+       * Scope dependency LoadLocal sources (defined by instructions external to
+       * that scope) should be promoted, as scope boundaries represent
+       * re-ordering barriers
+       */
+      const identifier = value.place.identifier;
+      if (
+        !state.scopeDepContext.declarations.has(identifier.declarationId) &&
+        identifier.name === null
+      ) {
+        promoteIdentifier(identifier, state);
+      }
+    }
     this.traverseValue(id, value, state);
     if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
       this.visitHirFunction(value.loweredFunc.func, state);
@@ -177,6 +216,10 @@ type State = {
     DeclarationId,
     {activeScopes: Array<ScopeId>; usedOutsideScope: boolean}
   >; // true if referenced within another scope, false if only accessed outside of scopes
+  scopeDepContext: {
+    declarations: Set<DeclarationId>;
+    dependencies: ReadonlySet<Identifier>;
+  } | null;
 };
 
 /**
@@ -427,6 +470,7 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
     tags: new Set(),
     promoted: new Set(),
     pruned: new Map(),
+    scopeDepContext: null,
   };
   visitReactiveFunction(fn, new CollectPromotableTemporaries(), state);
   for (const operand of fn.params) {
