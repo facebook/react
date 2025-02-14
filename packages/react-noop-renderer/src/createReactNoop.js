@@ -95,7 +95,7 @@ export type FormInstance = Instance;
 
 export type ViewTransitionInstance = null | {name: string, ...};
 
-export type GestureProvider = null;
+export type GestureTimeline = null;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -797,7 +797,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         },
 
         subscribeToGestureDirection(
-          provider: GestureProvider,
+          provider: GestureTimeline,
           directionCallback: (direction: boolean) => void,
         ): () => void {
           return () => {};

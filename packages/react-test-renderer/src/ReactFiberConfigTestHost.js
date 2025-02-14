@@ -391,10 +391,10 @@ export function getInstanceFromNode(mockNode: Object): Object | null {
   return null;
 }
 
-export type GestureProvider = null;
+export type GestureTimeline = null;
 
 export function subscribeToGestureDirection(
-  provider: GestureProvider,
+  provider: GestureTimeline,
   directionCallback: (direction: boolean) => void,
 ): () => void {
   return () => {};

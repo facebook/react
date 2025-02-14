@@ -1478,10 +1478,10 @@ export function createViewTransitionInstance(
   };
 }
 
-export type GestureProvider = AnimationTimeline; // TODO: More provider types.
+export type GestureTimeline = AnimationTimeline; // TODO: More provider types.
 
 export function subscribeToGestureDirection(
-  provider: GestureProvider,
+  provider: GestureTimeline,
   directionCallback: (direction: boolean) => void,
 ): () => void {
   const time = provider.currentTime;

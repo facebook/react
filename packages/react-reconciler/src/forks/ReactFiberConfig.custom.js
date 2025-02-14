@@ -43,7 +43,7 @@ export opaque type FormInstance = mixed;
 export type ViewTransitionInstance = null | {name: string, ...};
 export opaque type InstanceMeasurement = mixed;
 export type EventResponder = any;
-export type GestureProvider = any;
+export type GestureTimeline = any;
 
 export const rendererVersion = $$$config.rendererVersion;
 export const rendererPackageName = $$$config.rendererPackageName;

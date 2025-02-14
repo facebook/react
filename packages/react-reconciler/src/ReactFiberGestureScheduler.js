@@ -8,7 +8,7 @@
  */
 
 import type {FiberRoot} from './ReactInternalTypes';
-import type {GestureProvider} from 'shared/ReactTypes';
+import type {GestureTimeline} from './ReactFiberConfig';
 
 import {GestureLane} from './ReactFiberLane';
 import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
@@ -16,7 +16,7 @@ import {subscribeToGestureDirection} from './ReactFiberConfig';
 
 // This type keeps track of any scheduled or active gestures.
 export type ScheduledGesture = {
-  provider: GestureProvider,
+  provider: GestureTimeline,
   count: number, // The number of times this same provider has been started.
   direction: boolean, // false = previous, true = next
   cancel: () => void, // Cancel the subscription to direction change.
@@ -26,7 +26,7 @@ export type ScheduledGesture = {
 
 export function scheduleGesture(
   root: FiberRoot,
-  provider: GestureProvider,
+  provider: GestureTimeline,
   initialDirection: boolean,
 ): ScheduledGesture {
   let prev = root.gestures;

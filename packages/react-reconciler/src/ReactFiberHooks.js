@@ -27,7 +27,7 @@ import type {
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Flags} from './ReactFiberFlags';
-import type {TransitionStatus} from './ReactFiberConfig';
+import type {TransitionStatus, GestureTimeline} from './ReactFiberConfig';
 import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 import {
@@ -3997,13 +3997,14 @@ function startGesture(
       // Noop.
     };
   }
+  const gestureTimeline: GestureTimeline = gestureProvider;
   const scheduledGesture = scheduleGesture(
     root,
-    gestureProvider,
+    gestureTimeline,
     queue.initialDirection,
   );
   // Add this particular instance to the queue.
-  // We add multiple of the same provider even if they get batched so
+  // We add multiple of the same timeline even if they get batched so
   // that if we cancel one but not the other we can keep track of this.
   // Order doesn't matter but we insert in the beginning to avoid two fields.
   const update: SwipeTransitionGestureUpdate = {
