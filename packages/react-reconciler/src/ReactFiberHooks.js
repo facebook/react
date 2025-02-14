@@ -4068,32 +4068,34 @@ function updateSwipeTransition<T>(
   const startGestureOnHook: StartGesture = queue.dispatch;
   const rootRenderLanes = getWorkInProgressRootRenderLanes();
   let value = current;
-  if (isGestureRender(rootRenderLanes)) {
-    // We're inside a gesture render. We'll traverse the queue to see if
-    // this specific Hook is part of this gesture and, if so, which
-    // direction to render.
-    const root: FiberRoot | null = getWorkInProgressRoot();
-    if (root === null) {
-      throw new Error(
-        'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-      );
-    }
-    // We assume that the currently rendering gesture is the one first in the queue.
-    const rootRenderGesture = root.gestures;
-    if (rootRenderGesture !== null) {
-      let update = queue.pending;
-      while (update !== null) {
-        if (rootRenderGesture === update.gesture) {
-          // We had a match, meaning we're currently rendering a direction of this
-          // hook for this gesture.
-          value = rootRenderGesture.direction ? next : previous;
-          break;
-        }
-        update = update.next;
-      }
-    }
-  }
   if (queue.pending !== null) {
+    if (isGestureRender(rootRenderLanes)) {
+      // We're inside a gesture render. We'll traverse the queue to see if
+      // this specific Hook is part of this gesture and, if so, which
+      // direction to render.
+      const root: FiberRoot | null = getWorkInProgressRoot();
+      if (root === null) {
+        throw new Error(
+          'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+        );
+      }
+      // We assume that the currently rendering gesture is the one first in the queue.
+      const rootRenderGesture = root.gestures;
+      if (rootRenderGesture !== null) {
+        let update = queue.pending;
+        while (update !== null) {
+          if (rootRenderGesture === update.gesture) {
+            // We had a match, meaning we're currently rendering a direction of this
+            // hook for this gesture.
+            value = rootRenderGesture.direction ? next : previous;
+            break;
+          }
+          update = update.next;
+        }
+      }
+      // This lane cannot be cleared as long as we have active gestures.
+      markWorkInProgressReceivedUpdate();
+    }
     // As long as there are any active gestures we need to leave the lane on
     // in case we need to render it later. Since a gesture render doesn't commit
     // the only time it really fully gets cleared is if something else rerenders
