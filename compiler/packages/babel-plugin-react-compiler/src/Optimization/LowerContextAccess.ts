@@ -23,6 +23,7 @@ import {
   isUseContextHookType,
   makeBlockId,
   makeInstructionId,
+  makePropertyLiteral,
   makeType,
   markInstructionIds,
   promoteTemporary,
@@ -195,7 +196,7 @@ function emitPropertyLoad(
   const loadProp: PropertyLoad = {
     kind: 'PropertyLoad',
     object,
-    property,
+    property: makePropertyLiteral(property),
     loc: GeneratedSource,
   };
   const element: Place = createTemporaryPlace(env, GeneratedSource);

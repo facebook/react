@@ -19,6 +19,7 @@ import {
   Primitive,
   assertConsistentIdentifiers,
   assertTerminalSuccessorsExist,
+  makePropertyLiteral,
   markInstructionIds,
   markPredecessors,
   mergeConsecutiveBlocks,
@@ -238,13 +239,14 @@ function evaluateInstruction(
       if (
         property !== null &&
         property.kind === 'Primitive' &&
-        typeof property.value === 'string' &&
-        isValidIdentifier(property.value)
+        ((typeof property.value === 'string' &&
+          isValidIdentifier(property.value)) ||
+          typeof property.value === 'number')
       ) {
         const nextValue: InstructionValue = {
           kind: 'PropertyLoad',
           loc: value.loc,
-          property: property.value,
+          property: makePropertyLiteral(property.value),
           object: value.object,
         };
         instr.value = nextValue;
@@ -256,13 +258,14 @@ function evaluateInstruction(
       if (
         property !== null &&
         property.kind === 'Primitive' &&
-        typeof property.value === 'string' &&
-        isValidIdentifier(property.value)
+        ((typeof property.value === 'string' &&
+          isValidIdentifier(property.value)) ||
+          typeof property.value === 'number')
       ) {
         const nextValue: InstructionValue = {
           kind: 'PropertyStore',
           loc: value.loc,
-          property: property.value,
+          property: makePropertyLiteral(property.value),
           object: value.object,
           value: value.value,
         };

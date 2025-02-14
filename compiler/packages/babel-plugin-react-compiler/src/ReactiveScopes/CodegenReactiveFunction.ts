@@ -1967,12 +1967,22 @@ function codegenInstructionValue(
       break;
     }
     case 'PropertyStore': {
-      value = t.assignmentExpression(
-        '=',
-        t.memberExpression(
+      let memberExpr;
+      if (typeof instrValue.property === 'string') {
+        memberExpr = t.memberExpression(
           codegenPlaceToExpression(cx, instrValue.object),
           t.identifier(instrValue.property),
-        ),
+        );
+      } else {
+        memberExpr = t.memberExpression(
+          codegenPlaceToExpression(cx, instrValue.object),
+          t.numericLiteral(instrValue.property),
+          true,
+        );
+      }
+      value = t.assignmentExpression(
+        '=',
+        memberExpr,
         codegenPlaceToExpression(cx, instrValue.value),
       );
       break;
@@ -1983,21 +1993,36 @@ function codegenInstructionValue(
        * We currently only lower single chains of optional memberexpr.
        * (See BuildHIR.ts for more detail.)
        */
-      value = t.memberExpression(
-        object,
-        t.identifier(instrValue.property),
-        undefined,
-      );
+      if (typeof instrValue.property === 'string') {
+        value = t.memberExpression(
+          object,
+          t.identifier(instrValue.property),
+          undefined,
+        );
+      } else {
+        value = t.memberExpression(
+          object,
+          t.numericLiteral(instrValue.property),
+          true,
+        );
+      }
       break;
     }
     case 'PropertyDelete': {
-      value = t.unaryExpression(
-        'delete',
-        t.memberExpression(
+      let memberexpr;
+      if (typeof instrValue.property === 'string') {
+        memberexpr = t.memberExpression(
           codegenPlaceToExpression(cx, instrValue.object),
           t.identifier(instrValue.property),
-        ),
-      );
+        );
+      } else {
+        memberexpr = t.memberExpression(
+          codegenPlaceToExpression(cx, instrValue.object),
+          t.numericLiteral(instrValue.property),
+          true,
+        );
+      }
+      value = t.unaryExpression('delete', memberexpr);
       break;
     }
     case 'ComputedStore': {
