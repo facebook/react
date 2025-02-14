@@ -131,15 +131,7 @@ function collectHoistablePropertyLoadsImpl(
   fn: HIRFunction,
   context: CollectHoistablePropertyLoadsContext,
 ): ReadonlyMap<BlockId, BlockInfo> {
-  const functionExpressionLoads = collectFunctionExpressionFakeLoads(fn);
-  const actuallyEvaluatedTemporaries = new Map(
-    [...context.temporaries].filter(([id]) => !functionExpressionLoads.has(id)),
-  );
-
-  const nodes = collectNonNullsInBlocks(fn, {
-    ...context,
-    temporaries: actuallyEvaluatedTemporaries,
-  });
+  const nodes = collectNonNullsInBlocks(fn, context);
   propagateNonNull(fn, nodes, context.registry);
 
   if (DEBUG_PRINT) {
@@ -597,31 +589,4 @@ function reduceMaybeOptionalChains(
       }
     }
   } while (changed);
-}
-
-function collectFunctionExpressionFakeLoads(
-  fn: HIRFunction,
-): Set<IdentifierId> {
-  const sources = new Map<IdentifierId, IdentifierId>();
-  const functionExpressionReferences = new Set<IdentifierId>();
-
-  for (const [_, block] of fn.body.blocks) {
-    for (const {lvalue, value} of block.instructions) {
-      if (
-        value.kind === 'FunctionExpression' ||
-        value.kind === 'ObjectMethod'
-      ) {
-        for (const reference of value.loweredFunc.dependencies) {
-          let curr: IdentifierId | undefined = reference.identifier.id;
-          while (curr != null) {
-            functionExpressionReferences.add(curr);
-            curr = sources.get(curr);
-          }
-        }
-      } else if (value.kind === 'PropertyLoad') {
-        sources.set(lvalue.identifier.id, value.object.identifier.id);
-      }
-    }
-  }
-  return functionExpressionReferences;
 }
