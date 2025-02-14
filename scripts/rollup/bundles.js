@@ -1188,6 +1188,7 @@ const bundles = [
     // no reason to have both dev and prod for this package.  It's
     // currently required in order for the package to be copied over correctly.
     // So, it would be worth improving that flow.
+    name: 'eslint-plugin-react-hooks',
     bundleTypes: [NODE_DEV, NODE_PROD, CJS_DTS],
     moduleType: ISOMORPHIC,
     entry: 'eslint-plugin-react-hooks/src/index.ts',
