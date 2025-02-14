@@ -21,22 +21,6 @@ import {rewriteInstructionKindsBasedOnReassignment} from '../SSA';
 import {inferMutableRanges} from './InferMutableRanges';
 import inferReferenceEffects from './InferReferenceEffects';
 
-// Helper class to track indirections such as LoadLocal and PropertyLoad.
-export class IdentifierState {
-  properties: Map<IdentifierId, Identifier> = new Map();
-
-  resolve(identifier: Identifier): Identifier {
-    const resolved = this.properties.get(identifier.id);
-    if (resolved !== undefined) {
-      return resolved;
-    }
-    return identifier;
-  }
-
-  alias(lvalue: Identifier, value: Identifier): void {
-    this.properties.set(lvalue.id, this.properties.get(value.id) ?? value);
-  }
-}
 
 export default function analyseFunctions(func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
