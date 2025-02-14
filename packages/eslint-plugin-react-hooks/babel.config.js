@@ -4,8 +4,5 @@
 'use strict';
 
 module.exports = {
-  plugins: [
-    '@babel/plugin-syntax-jsx',
-    '@babel/plugin-transform-flow-strip-types',
-  ],
+  extends: '../../babel.config-ts.js',
 };
