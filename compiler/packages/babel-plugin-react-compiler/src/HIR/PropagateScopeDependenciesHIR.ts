@@ -22,6 +22,18 @@ import {
   TInstruction,
   FunctionExpression,
   ObjectMethod,
+  BlockId,
+  makeTemporaryIdentifier,
+  Effect,
+  OptionalTerminal,
+  TBasicBlock,
+  ReactiveScopeTerminal,
+  GotoVariant,
+  PrunedScopeTerminal,
+  ReactiveInstruction,
+  ReactiveValue,
+  ReactiveScopeBlock,
+  PrunedReactiveScopeBlock,
 } from './HIR';
 import {
   collectHoistablePropertyLoads,
@@ -38,7 +50,25 @@ import {Stack, empty} from '../Utils/Stack';
 import {CompilerError} from '../CompilerError';
 import {Iterable_some} from '../Utils/utils';
 import {ReactiveScopeDependencyTreeHIR} from './DeriveMinimalDependenciesHIR';
-import {collectOptionalChainSidemap} from './CollectOptionalChainDependencies';
+import {
+  collectOptionalChainSidemap,
+  OptionalTraversalContext,
+  traverseOptionalBlock,
+} from './CollectOptionalChainDependencies';
+import {Environment} from './Environment';
+import HIRBuilder, {
+  fixScopeAndIdentifierRanges,
+  markInstructionIds,
+  markPredecessors,
+  reversePostorderBlocks,
+} from './HIRBuilder';
+import {lowerValueToTemporary} from './BuildHIR';
+import {printDependency} from '../ReactiveScopes/PrintReactiveFunction';
+import {printPlace} from './PrintHIR';
+import {
+  readScopeDependencies,
+  writeScopeDependencies,
+} from './ScopeDependencyUtils';
 
 export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   const usedOutsideDeclaringScope =
@@ -65,8 +95,10 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   /**
    * Derive the minimal set of hoistable dependencies for each scope.
    */
+  const minimalDeps = new Map<ReactiveScope, Set<ReactiveScopeDependency>>();
   for (const [scope, deps] of scopeDeps) {
     if (deps.length === 0) {
+      minimalDeps.set(scope, new Set());
       continue;
     }
 
@@ -93,17 +125,80 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
      * Step 3: Reduce dependencies to a minimal set.
      */
     const candidates = tree.deriveMinimalDependencies();
+    const dependencies = new Set<ReactiveScopeDependency>();
     for (const candidateDep of candidates) {
       if (
         !Iterable_some(
-          scope.dependencies,
+          dependencies,
           existingDep =>
             existingDep.identifier.declarationId ===
               candidateDep.identifier.declarationId &&
             areEqualPaths(existingDep.path, candidateDep.path),
         )
       )
-        scope.dependencies.add(candidateDep);
+        dependencies.add(candidateDep);
+    }
+    minimalDeps.set(scope, dependencies);
+  }
+
+  let changed = false;
+  /**
+   * Step 4: inject dependencies
+   */
+  for (const [_, {terminal}] of fn.body.blocks) {
+    if (terminal.kind !== 'scope' && terminal.kind !== 'pruned-scope') {
+      continue;
+    }
+    const scope = terminal.scope;
+    const deps = minimalDeps.get(scope);
+    if (deps == null || deps.size === 0) {
+      continue;
+    }
+    writeScopeDependencies(terminal, deps, fn);
+    changed = true;
+  }
+
+  /**
+   * Step 5: fix scope and identifier ranges to account for renumbered
+   * instructions
+   */
+  if (changed) {
+    reversePostorderBlocks(fn.body);
+    markPredecessors(fn.body);
+    markInstructionIds(fn.body);
+
+    fixScopeAndIdentifierRanges(fn.body);
+  }
+
+  // Sanity check
+  {
+    for (const [scope, deps] of minimalDeps) {
+      const checkedDeps = readScopeDependencies(fn, scope.id);
+      CompilerError.invariant(checkedDeps != null, {
+        reason: '[Rewrite] Cannot find scope dep when reading',
+        loc: scope.loc,
+      });
+      CompilerError.invariant(checkedDeps.size === deps.size, {
+        reason: '[Rewrite] non matching sizes when reading',
+        description: `scopeId=${scope.id} deps=${[...deps].map(printDependency)} checkedDeps=${[...checkedDeps].map(printDependency)}`,
+        loc: scope.loc,
+      });
+      label: for (const dep of deps) {
+        for (const checkedDep of checkedDeps) {
+          if (
+            dep.identifier === checkedDep.identifier &&
+            areEqualPaths(dep.path, checkedDep.path)
+          ) {
+            continue label;
+          }
+        }
+        CompilerError.invariant(false, {
+          reason:
+            '[Rewrite] could not find match for dependency when re-reading',
+          description: `${printDependency(dep)}`,
+          loc: scope.loc,
+        });
+      }
     }
   }
 }
@@ -301,6 +396,7 @@ function collectTemporariesSidemapImpl(
         ) {
           temporaries.set(lvalue.identifier.id, {
             identifier: value.place.identifier,
+            reactive: value.place.reactive,
             path: [],
           });
         }
@@ -354,11 +450,13 @@ function getProperty(
   if (resolvedDependency == null) {
     property = {
       identifier: object.identifier,
+      reactive: object.reactive,
       path: [{property: propertyName, optional}],
     };
   } else {
     property = {
       identifier: resolvedDependency.identifier,
+      reactive: resolvedDependency.reactive,
       path: [...resolvedDependency.path, {property: propertyName, optional}],
     };
   }
@@ -514,6 +612,7 @@ class Context {
     this.visitDependency(
       this.#temporaries.get(place.identifier.id) ?? {
         identifier: place.identifier,
+        reactive: place.reactive,
         path: [],
       },
     );
@@ -574,6 +673,7 @@ class Context {
     ) {
       maybeDependency = {
         identifier: maybeDependency.identifier,
+        reactive: maybeDependency.reactive,
         path: [],
       };
     }
@@ -595,7 +695,11 @@ class Context {
         identifier =>
           identifier.declarationId === place.identifier.declarationId,
       ) &&
-      this.#checkValidDependency({identifier: place.identifier, path: []})
+      this.#checkValidDependency({
+        identifier: place.identifier,
+        reactive: place.reactive,
+        path: [],
+      })
     ) {
       currentScope.reassignments.add(place.identifier);
     }
