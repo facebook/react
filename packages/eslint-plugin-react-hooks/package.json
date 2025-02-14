@@ -21,7 +21,8 @@
     "react"
   ],
   "scripts": {
-    "test": "jest",
+    "build": "tsup",
+    "test": "tsup && jest",
     "typecheck": "tsc --noEmit"
   },
   "license": "MIT",
