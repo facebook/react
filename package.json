@@ -35,6 +35,7 @@
     "@babel/plugin-transform-template-literals": "^7.10.5",
     "@babel/preset-flow": "^7.10.4",
     "@babel/preset-react": "^7.23.3",
+    "@babel/preset-typescript": "^7.26.0",
     "@babel/traverse": "^7.11.0",
     "@rollup/plugin-babel": "^6.0.3",
     "@rollup/plugin-commonjs": "^24.0.1",
