@@ -26,6 +26,8 @@ const bundleTypes = {
   RN_FB_PROD: 'RN_FB_PROD',
   RN_FB_PROFILING: 'RN_FB_PROFILING',
   BROWSER_SCRIPT: 'BROWSER_SCRIPT',
+  CJS_DTS: 'CJS_DTS',
+  ESM_DTS: 'ESM_DTS',
 };
 
 const {
@@ -47,6 +49,8 @@ const {
   RN_FB_PROD,
   RN_FB_PROFILING,
   BROWSER_SCRIPT,
+  CJS_DTS,
+  ESM_DTS,
 } = bundleTypes;
 
 const moduleTypes = {
@@ -1270,6 +1274,9 @@ function getFilename(bundle, bundleType) {
       return `${globalName}-profiling.js`;
     case BROWSER_SCRIPT:
       return `${name}.js`;
+    case CJS_DTS:
+    case ESM_DTS:
+      return `${name}.d.ts`;
   }
 }
 
