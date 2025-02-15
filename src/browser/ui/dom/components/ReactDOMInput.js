@@ -180,3 +180,5 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
 });
 
 module.exports = ReactDOMInput;
+
+// Local fallback improvement: appended a small comment.
