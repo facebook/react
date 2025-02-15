@@ -10,7 +10,6 @@ import {
   Effect,
   HIRFunction,
   Identifier,
-  IdentifierId,
   LoweredFunction,
   isRefOrRefValue,
   makeInstructionId,

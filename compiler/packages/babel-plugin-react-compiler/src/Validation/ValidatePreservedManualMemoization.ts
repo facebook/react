@@ -327,13 +327,6 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       case 'OptionalExpression': {
         return this.recordDepsInValue(value.value, state);
       }
-      case 'ReactiveFunctionValue': {
-        CompilerError.throwTodo({
-          reason:
-            'Handle ReactiveFunctionValue in ValidatePreserveManualMemoization',
-          loc: value.loc,
-        });
-      }
       case 'ConditionalExpression': {
         this.recordDepsInValue(value.test, state);
         this.recordDepsInValue(value.consequent, state);
