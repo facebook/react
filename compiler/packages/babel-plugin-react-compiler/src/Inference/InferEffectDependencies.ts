@@ -22,6 +22,7 @@ import {
   fixScopeAndIdentifierRanges,
   markInstructionIds,
 } from '../HIR/HIRBuilder';
+import {readScopeDependencies} from '../HIR/ScopeDependencyUtils';
 import {eachInstructionOperand, eachTerminalOperand} from '../HIR/visitors';
 import {getOrInsertWith} from '../Utils/utils';
 
@@ -74,7 +75,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
       const scopeBlock = fn.body.blocks.get(block.terminal.block)!;
       scopeInfos.set(block.terminal.scope.id, {
         pruned: block.terminal.kind === 'pruned-scope',
-        deps: block.terminal.scope.dependencies,
+        deps: readScopeDependencies(fn, block.terminal.scope.id),
         hasSingleInstr:
           scopeBlock.instructions.length === 1 &&
           scopeBlock.terminal.kind === 'goto' &&
