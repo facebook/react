@@ -563,7 +563,7 @@ const rule = {
                 context.report({node: hook, message});
               }
             } else if (
-              codePathNode.parent &&
+              codePathNode.parent != null &&
               (codePathNode.parent.type === 'MethodDefinition' ||
                 // @ts-expect-error `ClassProperty` was removed from typescript-estree in https://github.com/typescript-eslint/typescript-eslint/pull/3806
                 codePathNode.parent.type === 'ClassProperty' ||

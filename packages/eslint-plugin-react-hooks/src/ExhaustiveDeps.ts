@@ -184,7 +184,7 @@ const rule = {
       // Get the current scope.
       const scope = scopeManager.acquire(node);
       if (!scope) {
-        return;
+        throw new Error('Unable to acquire scope for the current node.');
       }
 
       // Find all our "pure scopes". On every re-render of a component these
@@ -255,7 +255,7 @@ const rule = {
         // Detect primitive constants
         // const foo = 42
         let declaration = defNode.parent;
-        if (declaration == null && componentScope) {
+        if (declaration == null && componentScope != null) {
           // This might happen if variable is declared after the callback.
           // In that case ESLint won't set up .parent refs.
           // So we'll set them up manually.
@@ -266,7 +266,7 @@ const rule = {
           }
         }
         if (
-          declaration &&
+          declaration != null &&
           'kind' in declaration &&
           declaration.kind === 'const' &&
           init.type === 'Literal' &&
@@ -454,7 +454,7 @@ const rule = {
       function isInsideEffectCleanup(reference: Scope.Reference): boolean {
         let curScope: Scope.Scope | null = reference.from;
         let isInReturnedFunction = false;
-        while (curScope && curScope.block !== node) {
+        while (curScope != null && curScope.block !== node) {
           if (curScope.type === 'function') {
             isInReturnedFunction =
               curScope.block.parent != null &&
@@ -529,7 +529,7 @@ const rule = {
             continue;
           }
           // Ignore references to the function itself as it's not defined yet.
-          if (def.node && def.node.init === node.parent) {
+          if (def.node != null && def.node.init === node.parent) {
             continue;
           }
           // Ignore Flow type parameters
@@ -660,7 +660,7 @@ const rule = {
             }
 
             let fnScope: Scope.Scope | null = reference.from;
-            while (fnScope && fnScope.type !== 'function') {
+            while (fnScope != null && fnScope.type !== 'function') {
               fnScope = fnScope.upper;
             }
             const isDirectlyInsideEffect = fnScope?.block === node;
