@@ -1,0 +1,56 @@
+name: (Runtime) ESLint Plugin E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths-ignore:
+      - compiler/**
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+jobs:
+  # ----- TESTS -----
+  test:
+    name: ESLint v${{ matrix.eslint_major }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        eslint_major:
+          - "6"
+          - "7"
+          - "8"
+          - "9"
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: runtime-eslint_e2e-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
+      - run: yarn install --frozen-lockfile
+      - name: Build plugin
+        working-directory: fixtures/eslint-v${{ matrix.eslint_major }}
+        run: node build.mjs
+      - name: Install fixture dependencies
+        working-directory: ./fixtures/eslint-v${{ matrix.eslint_major }}
+        run: yarn --frozen-lockfile
+      - name: Run lint test
+        working-directory: ./fixtures/eslint-v${{ matrix.eslint_major }}
+        run: yarn lint
