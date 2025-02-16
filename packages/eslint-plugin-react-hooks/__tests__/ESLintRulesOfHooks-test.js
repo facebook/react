@@ -561,6 +561,15 @@ const tests = {
         };
       `,
     },
+    {
+      code: normalizeIndent`
+        // Valid because React supports international languages
+        function ÄndraVärdeComponent() {
+          useHook();
+          return <div />;
+        }
+      `
+    },
   ],
   invalid: [
     {
