@@ -184,7 +184,9 @@ const rule = {
       // Get the current scope.
       const scope = scopeManager.acquire(node);
       if (!scope) {
-        throw new Error('Unable to acquire scope for the current node.');
+        throw new Error(
+          'Unable to acquire scope for the current node. This is a bug in eslint-plugin-react-hooks, please file an issue.',
+        );
       }
 
       // Find all our "pure scopes". On every re-render of a component these
