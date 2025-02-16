@@ -106,9 +106,6 @@
     "web-streams-polyfill": "^3.1.1",
     "yargs": "^15.3.1"
   },
-  "devEngines": {
-    "node": "16.x || 18.x || 20.x || 22.x"
-  },
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
   },
@@ -122,7 +119,7 @@
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
     "extract-errors": "node scripts/error-codes/extract-errors.js",
-    "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json && node ./scripts/flow/createFlowConfigs.js",
+    "postinstall": "node ./scripts/flow/createFlowConfigs.js",
     "test": "node ./scripts/jest/jest-cli.js",
     "test-stable": "node ./scripts/jest/jest-cli.js --release-channel=stable",
     "test-www": "node ./scripts/jest/jest-cli.js --release-channel=www-modern",
