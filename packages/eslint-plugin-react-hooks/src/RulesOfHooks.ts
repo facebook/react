@@ -4,18 +4,16 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
-/* global BigInt */
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
-'use strict';
+import type {Rule, Scope} from 'eslint';
+import type {CallExpression, DoWhileStatement, Node} from 'estree';
 
 /**
  * Catch all identifiers that begin with "use" followed by an uppercase Latin
  * character to exclude identifiers like "user".
  */
-
-function isHookName(s) {
+function isHookName(s: string): boolean {
   return s === 'use' || /^use[A-Z0-9]/.test(s);
 }
 
@@ -23,8 +21,7 @@ function isHookName(s) {
  * We consider hooks to be a hook name identifier or a member expression
  * containing a hook name.
  */
-
-function isHook(node) {
+function isHook(node: Node): boolean {
   if (node.type === 'Identifier') {
     return isHookName(node.name);
   } else if (
@@ -44,16 +41,17 @@ function isHook(node) {
  * Checks if the node is a React component name. React component names must
  * always start with an uppercase letter.
  */
-
-function isComponentName(node) {
+function isComponentName(node: Node): boolean {
   return node.type === 'Identifier' && /^[A-Z]/.test(node.name);
 }
 
-function isReactFunction(node, functionName) {
+function isReactFunction(node: Node, functionName: string): boolean {
   return (
-    node.name === functionName ||
+    ('name' in node && node.name === functionName) ||
     (node.type === 'MemberExpression' &&
+      'name' in node.object &&
       node.object.name === 'React' &&
+      'name' in node.property &&
       node.property.name === functionName)
   );
 }
@@ -62,10 +60,10 @@ function isReactFunction(node, functionName) {
  * Checks if the node is a callback argument of forwardRef. This render function
  * should follow the rules of hooks.
  */
-
-function isForwardRefCallback(node) {
+function isForwardRefCallback(node: Node): boolean {
   return !!(
     node.parent &&
+    'callee' in node.parent &&
     node.parent.callee &&
     isReactFunction(node.parent.callee, 'forwardRef')
   );
@@ -75,16 +73,16 @@ function isForwardRefCallback(node) {
  * Checks if the node is a callback argument of React.memo. This anonymous
  * functional component should follow the rules of hooks.
  */
-
-function isMemoCallback(node) {
+function isMemoCallback(node: Node): boolean {
   return !!(
     node.parent &&
+    'callee' in node.parent &&
     node.parent.callee &&
     isReactFunction(node.parent.callee, 'memo')
   );
 }
 
-function isInsideComponentOrHook(node) {
+function isInsideComponentOrHook(node: Node | undefined): boolean {
   while (node) {
     const functionName = getFunctionName(node);
     if (functionName) {
@@ -100,7 +98,7 @@ function isInsideComponentOrHook(node) {
   return false;
 }
 
-function isInsideDoWhileLoop(node) {
+function isInsideDoWhileLoop(node: Node | undefined): node is DoWhileStatement {
   while (node) {
     if (node.type === 'DoWhileStatement') {
       return true;
@@ -110,18 +108,18 @@ function isInsideDoWhileLoop(node) {
   return false;
 }
 
-function isUseEffectEventIdentifier(node) {
+function isUseEffectEventIdentifier(node: Node): boolean {
   if (__EXPERIMENTAL__) {
     return node.type === 'Identifier' && node.name === 'useEffectEvent';
   }
   return false;
 }
 
-function isUseIdentifier(node) {
+function isUseIdentifier(node: Node): boolean {
   return isReactFunction(node, 'use');
 }
 
-export default {
+const rule = {
   meta: {
     type: 'problem',
     docs: {
@@ -130,25 +128,28 @@ export default {
       url: 'https://reactjs.org/docs/hooks-rules.html',
     },
   },
-  create(context) {
-    let lastEffect = null;
-    const codePathReactHooksMapStack = [];
-    const codePathSegmentStack = [];
+  create(context: Rule.RuleContext) {
+    let lastEffect: CallExpression | null = null;
+    const codePathReactHooksMapStack: Map<Rule.CodePathSegment, Node[]>[] = [];
+    const codePathSegmentStack: Rule.CodePathSegment[] = [];
     const useEffectEventFunctions = new WeakSet();
 
     // For a given scope, iterate through the references and add all useEffectEvent definitions. We can
     // do this in non-Program nodes because we can rely on the assumption that useEffectEvent functions
     // can only be declared within a component or hook at its top level.
-    function recordAllUseEffectEventFunctions(scope) {
+    function recordAllUseEffectEventFunctions(scope: Scope.Scope): void {
       for (const reference of scope.references) {
         const parent = reference.identifier.parent;
         if (
-          parent.type === 'VariableDeclarator' &&
+          parent?.type === 'VariableDeclarator' &&
           parent.init &&
           parent.init.type === 'CallExpression' &&
           parent.init.callee &&
           isUseEffectEventIdentifier(parent.init.callee)
         ) {
+          if (reference.resolved === null) {
+            throw new Error('Unexpected null reference.resolved');
+          }
           for (const ref of reference.resolved.references) {
             if (ref !== reference) {
               useEffectEventFunctions.add(ref.identifier);
@@ -159,26 +160,26 @@ export default {
     }
 
     /**
-     * SourceCode#getText that also works down to ESLint 3.0.0
+     * SourceCode that also works down to ESLint 3.0.0
      */
-    const getSource =
-      typeof context.getSource === 'function'
-        ? node => {
-            return context.getSource(node);
+    const getSourceCode =
+      typeof context.getSourceCode === 'function'
+        ? () => {
+            return context.getSourceCode();
           }
-        : node => {
-            return context.sourceCode.getText(node);
+        : () => {
+            return context.sourceCode;
           };
     /**
      * SourceCode#getScope that also works down to ESLint 3.0.0
      */
     const getScope =
       typeof context.getScope === 'function'
-        ? () => {
+        ? (): Scope.Scope => {
             return context.getScope();
           }
-        : node => {
-            return context.sourceCode.getScope(node);
+        : (node: Node): Scope.Scope => {
+            return getSourceCode().getScope(node);
           };
 
     return {
@@ -187,7 +188,10 @@ export default {
       onCodePathSegmentEnd: () => codePathSegmentStack.pop(),
 
       // Maintain code path stack as we traverse.
-      onCodePathStart: () => codePathReactHooksMapStack.push(new Map()),
+      onCodePathStart: () =>
+        codePathReactHooksMapStack.push(
+          new Map<Rule.CodePathSegment, Node[]>(),
+        ),
 
       // Process our code path.
       //
@@ -195,8 +199,10 @@ export default {
       // segment and reachable from every final segment.
       onCodePathEnd(codePath, codePathNode) {
         const reactHooksMap = codePathReactHooksMapStack.pop();
-        if (reactHooksMap.size === 0) {
+        if (reactHooksMap?.size === 0) {
           return;
+        } else if (typeof reactHooksMap === 'undefined') {
+          throw new Error('Unexpected undefined reactHooksMap');
         }
 
         // All of the segments which are cyclic are recorded in this set.
@@ -223,11 +229,13 @@ export default {
          *
          * Populates `cyclic` with cyclic segments.
          */
-
-        function countPathsFromStart(segment, pathHistory) {
+        function countPathsFromStart(
+          segment: Rule.CodePathSegment,
+          pathHistory?: Set<string>,
+        ): bigint {
           const {cache} = countPathsFromStart;
           let paths = cache.get(segment.id);
-          const pathList = new Set(pathHistory);
+          const pathList = new Set<string>(pathHistory);
 
           // If `pathList` includes the current segment then we've found a cycle!
           // We need to fill `cyclic` with all segments inside cycle
@@ -295,7 +303,10 @@ export default {
          * Populates `cyclic` with cyclic segments.
          */
 
-        function countPathsToEnd(segment, pathHistory) {
+        function countPathsToEnd(
+          segment: Rule.CodePathSegment,
+          pathHistory?: Set<string>,
+        ): bigint {
           const {cache} = countPathsToEnd;
           let paths = cache.get(segment.id);
           const pathList = new Set(pathHistory);
@@ -359,7 +370,9 @@ export default {
          * so we would return that.
          */
 
-        function shortestPathLengthToStart(segment) {
+        function shortestPathLengthToStart(
+          segment: Rule.CodePathSegment,
+        ): number {
           const {cache} = shortestPathLengthToStart;
           let length = cache.get(segment.id);
 
@@ -392,9 +405,9 @@ export default {
           return length;
         }
 
-        countPathsFromStart.cache = new Map();
-        countPathsToEnd.cache = new Map();
-        shortestPathLengthToStart.cache = new Map();
+        countPathsFromStart.cache = new Map<string, bigint>();
+        countPathsToEnd.cache = new Map<string, bigint>();
+        shortestPathLengthToStart.cache = new Map<string, number | null>();
 
         // Count all code paths to the end of our component/hook. Also primes
         // the `countPathsToEnd` cache.
@@ -502,7 +515,7 @@ export default {
               context.report({
                 node: hook,
                 message:
-                  `React Hook "${getSource(hook)}" may be executed ` +
+                  `React Hook "${getSourceCode().getText(hook)}" may be executed ` +
                   'more than once. Possibly because it is called in a loop. ' +
                   'React Hooks must be called in the exact same order in ' +
                   'every component render.',
@@ -516,12 +529,13 @@ export default {
             // called in.
             if (isDirectlyInsideComponentOrHook) {
               // Report an error if the hook is called inside an async function.
+              // @ts-expect-error the above check hasn't properly type-narrowed `codePathNode` (async doesn't exist on Node)
               const isAsyncFunction = codePathNode.async;
               if (isAsyncFunction) {
                 context.report({
                   node: hook,
                   message:
-                    `React Hook "${getSource(hook)}" cannot be ` +
+                    `React Hook "${getSourceCode().getText(hook)}" cannot be ` +
                     'called in an async function.',
                 });
               }
@@ -537,7 +551,7 @@ export default {
                 !isInsideDoWhileLoop(hook) // wrapping do/while loops are checked separately.
               ) {
                 const message =
-                  `React Hook "${getSource(hook)}" is called ` +
+                  `React Hook "${getSourceCode().getText(hook)}" is called ` +
                   'conditionally. React Hooks must be called in the exact ' +
                   'same order in every component render.' +
                   (possiblyHasEarlyReturn
@@ -549,21 +563,22 @@ export default {
             } else if (
               codePathNode.parent &&
               (codePathNode.parent.type === 'MethodDefinition' ||
+                // @ts-expect-error `ClassProperty` was removed from typescript-estree in https://github.com/typescript-eslint/typescript-eslint/pull/3806
                 codePathNode.parent.type === 'ClassProperty' ||
                 codePathNode.parent.type === 'PropertyDefinition') &&
               codePathNode.parent.value === codePathNode
             ) {
               // Custom message for hooks inside a class
               const message =
-                `React Hook "${getSource(hook)}" cannot be called ` +
+                `React Hook "${getSourceCode().getText(hook)}" cannot be called ` +
                 'in a class component. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
               context.report({node: hook, message});
             } else if (codePathFunctionName) {
               // Custom message if we found an invalid function name.
               const message =
-                `React Hook "${getSource(hook)}" is called in ` +
-                `function "${getSource(codePathFunctionName)}" ` +
+                `React Hook "${getSourceCode().getText(hook)}" is called in ` +
+                `function "${getSourceCode().getText(codePathFunctionName)}" ` +
                 'that is neither a React function component nor a custom ' +
                 'React Hook function.' +
                 ' React component names must start with an uppercase letter.' +
@@ -572,7 +587,7 @@ export default {
             } else if (codePathNode.type === 'Program') {
               // These are dangerous if you have inline requires enabled.
               const message =
-                `React Hook "${getSource(hook)}" cannot be called ` +
+                `React Hook "${getSourceCode().getText(hook)}" cannot be called ` +
                 'at the top level. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
               context.report({node: hook, message});
@@ -585,7 +600,7 @@ export default {
               // `use(...)` can be called in callbacks.
               if (isSomewhereInsideComponentOrHook && !isUseIdentifier(hook)) {
                 const message =
-                  `React Hook "${getSource(hook)}" cannot be called ` +
+                  `React Hook "${getSourceCode().getText(hook)}" cannot be called ` +
                   'inside a callback. React Hooks must be called in a ' +
                   'React function component or a custom React Hook function.';
                 context.report({node: hook, message});
@@ -638,7 +653,7 @@ export default {
           context.report({
             node,
             message:
-              `\`${getSource(
+              `\`${getSourceCode().getText(
                 node,
               )}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
               'the same component. They cannot be assigned to variables or passed down.',
@@ -667,7 +682,7 @@ export default {
       },
     };
   },
-};
+} satisfies Rule.RuleModule;
 
 /**
  * Gets the static name of a function AST node. For function declarations it is
@@ -677,7 +692,7 @@ export default {
  * same AST nodes with some exceptions to better fit our use case.
  */
 
-function getFunctionName(node) {
+function getFunctionName(node: Node) {
   if (
     node.type === 'FunctionDeclaration' ||
     (node.type === 'FunctionExpression' && node.id)
@@ -693,20 +708,20 @@ function getFunctionName(node) {
     node.type === 'ArrowFunctionExpression'
   ) {
     if (
-      node.parent.type === 'VariableDeclarator' &&
+      node.parent?.type === 'VariableDeclarator' &&
       node.parent.init === node
     ) {
       // const useHook = () => {};
       return node.parent.id;
     } else if (
-      node.parent.type === 'AssignmentExpression' &&
+      node.parent?.type === 'AssignmentExpression' &&
       node.parent.right === node &&
       node.parent.operator === '='
     ) {
       // useHook = () => {};
       return node.parent.left;
     } else if (
-      node.parent.type === 'Property' &&
+      node.parent?.type === 'Property' &&
       node.parent.value === node &&
       !node.parent.computed
     ) {
@@ -721,8 +736,9 @@ function getFunctionName(node) {
       // class {useHook = () => {}}
       // class {useHook() {}}
     } else if (
-      node.parent.type === 'AssignmentPattern' &&
+      node.parent?.type === 'AssignmentPattern' &&
       node.parent.right === node &&
+      // @ts-expect-error Property computed does not exist on type `AssignmentPattern`.
       !node.parent.computed
     ) {
       // const {useHook = () => {}} = {};
@@ -742,7 +758,8 @@ function getFunctionName(node) {
 /**
  * Convenience function for peeking the last item in a stack.
  */
-
-function last(array) {
-  return array[array.length - 1];
+function last<T>(array: T[]): T {
+  return array[array.length - 1] as T;
 }
+
+export default rule;

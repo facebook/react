@@ -1184,17 +1184,19 @@ const bundles = [
 
   /******* ESLint Plugin for Hooks *******/
   {
-    // TODO: it's awkward to create a bundle for this but if we don't, the package
-    // won't get copied. We also can't create just DEV bundle because it contains a
-    // NODE_ENV check inside. We should probably tweak our build process to allow
-    // "raw" packages that don't get bundled.
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    // TODO: we're building this from typescript source now, but there's really
+    // no reason to have both dev and prod for this package.  It's
+    // currently required in order for the package to be copied over correctly.
+    // So, it would be worth improving that flow.
+    name: 'eslint-plugin-react-hooks',
+    bundleTypes: [NODE_DEV, NODE_PROD, CJS_DTS],
     moduleType: ISOMORPHIC,
-    entry: 'eslint-plugin-react-hooks',
+    entry: 'eslint-plugin-react-hooks/src/index.ts',
     global: 'ESLintPluginReactHooks',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: [],
+    tsconfig: './packages/eslint-plugin-react-hooks/tsconfig.json',
   },
 
   /******* React Fresh *******/
