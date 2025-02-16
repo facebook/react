@@ -42,6 +42,8 @@
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-replace": "^5.0.2",
     "@rollup/plugin-typescript": "^12.1.2",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "abortcontroller-polyfill": "^1.7.5",
     "art": "0.10.1",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",

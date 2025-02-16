@@ -28,7 +28,7 @@ type DeclaredDependency = {
 
 type Dependency = {
   isStable: boolean;
-  references: Scope.Reference[];
+  references: Array<Scope.Reference>;
 };
 
 type DependencyTreeNode = {
@@ -566,8 +566,8 @@ const rule = {
           // Is React managing this ref or us?
           // Let's see if we can find a .current assignment.
           let foundCurrentAssignment = false;
-          for (const reference of references) {
-            const {identifier} = reference;
+          for (const ref of references) {
+            const {identifier} = ref;
             const {parent} = identifier;
             if (
               parent != null &&
@@ -704,7 +704,7 @@ const rule = {
         return;
       }
 
-      const declaredDependencies: DeclaredDependency[] = [];
+      const declaredDependencies: Array<DeclaredDependency> = [];
       const externalDependencies = new Set<string>();
       const isArrayExpression =
         declaredDependenciesNode.type === 'ArrayExpression';
@@ -1469,7 +1469,7 @@ function collectRecommendations({
   isEffect,
 }: {
   dependencies: Map<string, Dependency>;
-  declaredDependencies: DeclaredDependency[];
+  declaredDependencies: Array<DeclaredDependency>;
   stableDependencies: Set<string>;
   externalDependencies: Set<string>;
   isEffect: boolean;
@@ -1592,7 +1592,7 @@ function collectRecommendations({
   }
 
   // Collect suggestions in the order they were originally specified.
-  const suggestedDependencies: string[] = [];
+  const suggestedDependencies: Array<string> = [];
   const unnecessaryDependencies = new Set<string>();
   const duplicateDependencies = new Set<string>();
   declaredDependencies.forEach(({key}) => {
@@ -1699,7 +1699,7 @@ function scanForConstructions({
   componentScope,
   scope,
 }: {
-  declaredDependencies: DeclaredDependency[];
+  declaredDependencies: Array<DeclaredDependency>;
   declaredDependenciesNode: Node;
   componentScope: Scope.Scope;
   scope: Scope.Scope;
@@ -1747,7 +1747,7 @@ function scanForConstructions({
       }
       return null;
     })
-    .filter(Boolean) as [Scope.Variable, string][];
+    .filter(Boolean) as Array<[Scope.Variable, string]>;
 
   function isUsedOutsideOfHook(ref: Scope.Variable): boolean {
     let foundWriteExpr = false;
@@ -2007,7 +2007,7 @@ function fastFindReferenceWithParent(start: Node, target: Node): Node | null {
   return null;
 }
 
-function joinEnglish(arr: string[]): string {
+function joinEnglish(arr: Array<string>): string {
   let s = '';
   for (let i = 0; i < arr.length; i++) {
     s += arr[i];
