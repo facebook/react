@@ -29,7 +29,7 @@ export const {
   enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
-  enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
@@ -37,6 +37,8 @@ export const {
   transitionLaneExpirationMs,
   enableOwnerStacks,
   enableRemoveConsolePatches,
+  enableFastAddPropertiesInDiffing,
+  enableViewTransition,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -46,7 +48,6 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
-export const enableFabricCompleteRootInCommitPhase = false;
 
 export const enableSuspenseAvoidThisFallback = true;
 
@@ -59,7 +60,6 @@ export const enableLegacyFBSupport = true;
 export const enableYieldingBeforePassive = false;
 
 export const enableThrottledScheduling = false;
-export const enableViewTransition = false;
 
 export const enableHydrationLaneScheduling = true;
 
@@ -109,6 +109,10 @@ export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;
 
 export const enableShallowPropDiffing = false;
+
+export const enableLazyPublicInstanceInFabric = false;
+
+export const enableSwipeTransition = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

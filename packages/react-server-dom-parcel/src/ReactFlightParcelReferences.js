@@ -22,6 +22,7 @@ export type ClientReference<T> = {
   $$id: string,
   $$name: string,
   $$bundles: Array<string>,
+  $$importMap?: ?{[string]: string},
 };
 
 const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
@@ -39,12 +40,14 @@ export function createClientReference<T>(
   id: string,
   exportName: string,
   bundles: Array<string>,
+  importMap?: ?{[string]: string},
 ): ClientReference<T> {
   return {
     $$typeof: CLIENT_REFERENCE_TAG,
     $$id: id,
     $$name: exportName,
     $$bundles: bundles,
+    $$importMap: importMap,
   };
 }
 

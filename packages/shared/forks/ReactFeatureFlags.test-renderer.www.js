@@ -39,7 +39,6 @@ export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableMoveBefore = false;
 export const enableRenderableContext = false;
-export const enableFabricCompleteRootInCommitPhase = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = true;
 
 export const enableRetryLaneExpiration = false;
@@ -75,7 +74,7 @@ export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
 export const enableSiblingPrerendering = true;
 
-export const enableUseResourceEffectHook = false;
+export const enableUseEffectCRUDOverload = false;
 
 export const enableHydrationLaneScheduling = true;
 
@@ -83,7 +82,10 @@ export const enableYieldingBeforePassive = false;
 
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
+export const enableSwipeTransition = false;
 export const enableRemoveConsolePatches = false;
+export const enableFastAddPropertiesInDiffing = false;
+export const enableLazyPublicInstanceInFabric = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

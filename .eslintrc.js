@@ -500,6 +500,7 @@ module.exports = {
         'packages/react-devtools-shared/src/hook.js',
         'packages/react-devtools-shared/src/backend/console.js',
         'packages/react-devtools-shared/src/backend/shared/DevToolsComponentStackFrame.js',
+        'packages/react-devtools-shared/src/frontend/utils/withPermissionsCheck.js',
       ],
       globals: {
         __IS_CHROME__: 'readonly',
@@ -507,6 +508,7 @@ module.exports = {
         __IS_EDGE__: 'readonly',
         __IS_NATIVE__: 'readonly',
         __IS_INTERNAL_VERSION__: 'readonly',
+        chrome: 'readonly',
       },
     },
     {

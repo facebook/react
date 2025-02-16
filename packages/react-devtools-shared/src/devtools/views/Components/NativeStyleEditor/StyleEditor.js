@@ -20,6 +20,7 @@ import {serializeDataForCopy} from '../../utils';
 import AutoSizeInput from './AutoSizeInput';
 import styles from './StyleEditor.css';
 import {sanitizeForParse} from '../../../utils';
+import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
 import type {Style} from './types';
 
@@ -62,7 +63,10 @@ export default function StyleEditor({id, style}: Props): React.Node {
 
   const keys = useMemo(() => Array.from(Object.keys(style)), [style]);
 
-  const handleCopy = () => copy(serializeDataForCopy(style));
+  const handleCopy = withPermissionsCheck(
+    {permissions: ['clipboardWrite']},
+    () => copy(serializeDataForCopy(style)),
+  );
 
   return (
     <div className={styles.StyleEditor}>
@@ -77,7 +81,7 @@ export default function StyleEditor({id, style}: Props): React.Node {
       {keys.length > 0 &&
         keys.map(attribute => (
           <Row
-            key={attribute}
+            key={`${attribute}/${style[attribute]}`}
             attribute={attribute}
             changeAttribute={changeAttribute}
             changeValue={changeValue}

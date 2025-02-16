@@ -7,15 +7,20 @@
  * @flow strict
  */
 
-import type {PublicInstance} from './ReactNativePrivateInterface';
+import type {
+  PublicInstance,
+  PublicRootInstance,
+} from './ReactNativePrivateInterface';
 
 export default function createPublicInstance(
   tag: number,
   viewConfig: mixed,
   internalInstanceHandle: mixed,
+  rootPublicInstance: PublicRootInstance | null,
 ): PublicInstance {
   return {
     __nativeTag: tag,
     __internalInstanceHandle: internalInstanceHandle,
+    __rootPublicInstance: rootPublicInstance,
   };
 }

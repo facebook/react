@@ -21,6 +21,7 @@ import {
 } from 'react-devtools-timeline/src/utils/formatting';
 import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils';
 import {copy} from 'clipboard-js';
+import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
 import styles from './SidebarEventInfo.css';
 
@@ -53,7 +54,10 @@ function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
               <div className={styles.Row}>
                 <label className={styles.Label}>Rendered by</label>
                 <Button
-                  onClick={() => copy(componentStack)}
+                  onClick={withPermissionsCheck(
+                    {permissions: ['clipboardWrite']},
+                    () => copy(componentStack),
+                  )}
                   title="Copy component stack to clipboard">
                   <ButtonIcon type="copy" />
                 </Button>

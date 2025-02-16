@@ -14,6 +14,7 @@ import {toNormalUrl} from 'jsc-safe-url';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Skeleton from './Skeleton';
+import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
 import type {Source as InspectedElementSource} from 'react-devtools-shared/src/shared/types';
 import styles from './InspectedElementSourcePanel.css';
@@ -59,7 +60,10 @@ function CopySourceButton({source, symbolicatedSourcePromise}: Props) {
   const symbolicatedSource = React.use(symbolicatedSourcePromise);
   if (symbolicatedSource == null) {
     const {sourceURL, line, column} = source;
-    const handleCopy = () => copy(`${sourceURL}:${line}:${column}`);
+    const handleCopy = withPermissionsCheck(
+      {permissions: ['clipboardWrite']},
+      () => copy(`${sourceURL}:${line}:${column}`),
+    );
 
     return (
       <Button onClick={handleCopy} title="Copy to clipboard">
@@ -69,7 +73,10 @@ function CopySourceButton({source, symbolicatedSourcePromise}: Props) {
   }
 
   const {sourceURL, line, column} = symbolicatedSource;
-  const handleCopy = () => copy(`${sourceURL}:${line}:${column}`);
+  const handleCopy = withPermissionsCheck(
+    {permissions: ['clipboardWrite']},
+    () => copy(`${sourceURL}:${line}:${column}`),
+  );
 
   return (
     <Button onClick={handleCopy} title="Copy to clipboard">
