@@ -5,10 +5,12 @@
     "target": "ES5",
     "moduleResolution": "Bundler",
     "lib": ["ES2020"],
-    "rootDir": ".",
     "sourceMap": false,
     "types": ["estree-jsx", "node"],
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "paths": {
+      "babel-plugin-react-compiler": ["../../compiler/packages/babel-plugin-react-compiler/src/index.ts"]
+    }
   },
   "exclude": ["node_modules"],
   "include": ["src/**/*.ts"]
