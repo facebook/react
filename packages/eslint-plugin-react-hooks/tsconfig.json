@@ -12,6 +12,5 @@
       "babel-plugin-react-compiler": ["../../compiler/packages/babel-plugin-react-compiler/src/index.ts"]
     }
   },
-  "exclude": ["node_modules"],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "__tests__/**/*.ts"]
 }
