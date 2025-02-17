@@ -496,7 +496,7 @@ const rule$1 = {
                                 context.report({ node: hook, message });
                             }
                         }
-                        else if (codePathNode.parent &&
+                        else if (codePathNode.parent != null &&
                             (codePathNode.parent.type === 'MethodDefinition' ||
                                 // @ts-expect-error `ClassProperty` was removed from typescript-estree in https://github.com/typescript-eslint/typescript-eslint/pull/3806
                                 codePathNode.parent.type === 'ClassProperty' ||
@@ -788,7 +788,7 @@ const rule = {
             // Get the current scope.
             const scope = scopeManager.acquire(node);
             if (!scope) {
-                return;
+                throw new Error('Unable to acquire scope for the current node. This is a bug in eslint-plugin-react-hooks, please file an issue.');
             }
             // Find all our "pure scopes". On every re-render of a component these
             // pure scopes may have changes to the variables declared within. So all
@@ -855,7 +855,7 @@ const rule = {
                 // Detect primitive constants
                 // const foo = 42
                 let declaration = defNode.parent;
-                if (declaration == null && componentScope) {
+                if (declaration == null && componentScope != null) {
                     // This might happen if variable is declared after the callback.
                     // In that case ESLint won't set up .parent refs.
                     // So we'll set them up manually.
@@ -865,7 +865,7 @@ const rule = {
                         return false;
                     }
                 }
-                if (declaration &&
+                if (declaration != null &&
                     'kind' in declaration &&
                     declaration.kind === 'const' &&
                     init.type === 'Literal' &&
@@ -1025,7 +1025,7 @@ const rule = {
             function isInsideEffectCleanup(reference) {
                 let curScope = reference.from;
                 let isInReturnedFunction = false;
-                while (curScope && curScope.block !== node) {
+                while (curScope != null && curScope.block !== node) {
                     if (curScope.type === 'function') {
                         isInReturnedFunction =
                             curScope.block.parent != null &&
@@ -1086,7 +1086,7 @@ const rule = {
                         continue;
                     }
                     // Ignore references to the function itself as it's not defined yet.
-                    if (def.node && def.node.init === node.parent) {
+                    if (def.node != null && def.node.init === node.parent) {
                         continue;
                     }
                     // Ignore Flow type parameters
@@ -1120,8 +1120,8 @@ const rule = {
                 // Is React managing this ref or us?
                 // Let's see if we can find a .current assignment.
                 let foundCurrentAssignment = false;
-                for (const reference of references) {
-                    const { identifier } = reference;
+                for (const ref of references) {
+                    const { identifier } = ref;
                     const { parent } = identifier;
                     if (parent != null &&
                         // ref.current
@@ -1203,7 +1203,7 @@ const rule = {
                             return;
                         }
                         let fnScope = reference.from;
-                        while (fnScope && fnScope.type !== 'function') {
+                        while (fnScope != null && fnScope.type !== 'function') {
                             fnScope = fnScope.upper;
                         }
                         const isDirectlyInsideEffect = (fnScope === null || fnScope === void 0 ? void 0 : fnScope.block) === node;
