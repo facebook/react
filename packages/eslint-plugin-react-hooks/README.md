@@ -36,7 +36,7 @@ If you are still using ESLint below 9.0.0, please continue to use `recommended-l
 For [ESLint 9.0.0 and above](https://eslint.org/blog/2024/04/eslint-v9.0.0-released/) users, add the `recommended-latest` config.
 
 ```js
-import reactHooks from 'eslint-plugin-react-hooks';
+import * as reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
   // ...
@@ -67,7 +67,7 @@ If you want more fine-grained configuration, you can instead add a snippet like 
 #### Flat Config (eslint.config.js)
 
 ```js
-import reactHooks from 'eslint-plugin-react-hooks';
+import * as reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
   {
