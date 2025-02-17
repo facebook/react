@@ -6,15 +6,15 @@
  */
 
 import {RuleTester} from 'eslint';
-import ReactCompilerRule from '../src/rules/ReactCompilerRule';
+import ReactCompilerRule from '../src/rules/ReactCompiler';
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
  * @param {Array} strings array of code strings (only one expected)
  */
 function normalizeIndent(strings: TemplateStringsArray): string {
-  const codeLines = strings[0].split('\n');
-  const leftPadding = codeLines[1].match(/\s+/)[0];
+  const codeLines = strings[0]?.split('\n') ?? [];
+  const leftPadding = codeLines[1]?.match(/\s+/)![0] ?? '';
   return codeLines.map(line => line.slice(leftPadding.length)).join('\n');
 }
 

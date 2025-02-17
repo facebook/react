@@ -4,14 +4,17 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import RulesOfHooks from './rules/RulesOfHooks';
-import ExhaustiveDeps from './rules/ExhaustiveDeps';
 import type {ESLint, Linter, Rule} from 'eslint';
+
+import ExhaustiveDeps from './rules/ExhaustiveDeps';
+import ReactCompiler from './rules/ReactCompiler';
+import RulesOfHooks from './rules/RulesOfHooks';
 
 // All rules
 const rules = {
-  'rules-of-hooks': RulesOfHooks,
   'exhaustive-deps': ExhaustiveDeps,
+  'react-compiler': ReactCompiler,
+  'rules-of-hooks': RulesOfHooks,
 } satisfies Record<string, Rule.RuleModule>;
 
 // Config rules

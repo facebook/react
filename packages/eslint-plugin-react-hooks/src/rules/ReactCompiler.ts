@@ -17,6 +17,7 @@ import BabelPluginReactCompiler, {
   validateEnvironmentConfig,
   OPT_OUT_DIRECTIVES,
   type Logger,
+  type LoggerEvent,
   type PluginOptions,
 } from 'babel-plugin-react-compiler';
 import type {Rule} from 'eslint';
@@ -180,10 +181,10 @@ const rule: Rule.RuleModule = {
               endLoc = {
                 line: event.fnLoc.start.line,
                 // Babel loc line numbers are 1-indexed
-                column: sourceCode.text.split(
-                  /\r?\n|\r|\n/g,
-                  event.fnLoc.start.line,
-                )[event.fnLoc.start.line - 1].length,
+                column:
+                  sourceCode.text.split(/\r?\n|\r|\n/g)[
+                    event.fnLoc.start.line - 1
+                  ]?.length ?? 0,
               };
             }
             const firstLineLoc = {
@@ -226,8 +227,8 @@ const rule: Rule.RuleModule = {
       options.environment = validateEnvironmentConfig(
         options.environment ?? {},
       );
-    } catch (err) {
-      options.logger?.logEvent('', err);
+    } catch (err: unknown) {
+      options.logger?.logEvent('', err as LoggerEvent);
     }
 
     function hasFlowSuppression(
