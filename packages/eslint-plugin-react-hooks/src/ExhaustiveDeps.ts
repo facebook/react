@@ -28,7 +28,7 @@ type DeclaredDependency = {
 
 type Dependency = {
   isStable: boolean;
-  references: Scope.Reference[];
+  references: Array<Scope.Reference>;
 };
 
 type DependencyTreeNode = {
@@ -184,7 +184,9 @@ const rule = {
       // Get the current scope.
       const scope = scopeManager.acquire(node);
       if (!scope) {
-        return;
+        throw new Error(
+          'Unable to acquire scope for the current node. This is a bug in eslint-plugin-react-hooks, please file an issue.',
+        );
       }
 
       // Find all our "pure scopes". On every re-render of a component these
@@ -255,7 +257,7 @@ const rule = {
         // Detect primitive constants
         // const foo = 42
         let declaration = defNode.parent;
-        if (declaration == null && componentScope) {
+        if (declaration == null && componentScope != null) {
           // This might happen if variable is declared after the callback.
           // In that case ESLint won't set up .parent refs.
           // So we'll set them up manually.
@@ -266,7 +268,7 @@ const rule = {
           }
         }
         if (
-          declaration &&
+          declaration != null &&
           'kind' in declaration &&
           declaration.kind === 'const' &&
           init.type === 'Literal' &&
@@ -454,7 +456,7 @@ const rule = {
       function isInsideEffectCleanup(reference: Scope.Reference): boolean {
         let curScope: Scope.Scope | null = reference.from;
         let isInReturnedFunction = false;
-        while (curScope && curScope.block !== node) {
+        while (curScope != null && curScope.block !== node) {
           if (curScope.type === 'function') {
             isInReturnedFunction =
               curScope.block.parent != null &&
@@ -529,7 +531,7 @@ const rule = {
             continue;
           }
           // Ignore references to the function itself as it's not defined yet.
-          if (def.node && def.node.init === node.parent) {
+          if (def.node != null && def.node.init === node.parent) {
             continue;
           }
           // Ignore Flow type parameters
@@ -566,8 +568,8 @@ const rule = {
           // Is React managing this ref or us?
           // Let's see if we can find a .current assignment.
           let foundCurrentAssignment = false;
-          for (const reference of references) {
-            const {identifier} = reference;
+          for (const ref of references) {
+            const {identifier} = ref;
             const {parent} = identifier;
             if (
               parent != null &&
@@ -660,7 +662,7 @@ const rule = {
             }
 
             let fnScope: Scope.Scope | null = reference.from;
-            while (fnScope && fnScope.type !== 'function') {
+            while (fnScope != null && fnScope.type !== 'function') {
               fnScope = fnScope.upper;
             }
             const isDirectlyInsideEffect = fnScope?.block === node;
@@ -704,7 +706,7 @@ const rule = {
         return;
       }
 
-      const declaredDependencies: DeclaredDependency[] = [];
+      const declaredDependencies: Array<DeclaredDependency> = [];
       const externalDependencies = new Set<string>();
       const isArrayExpression =
         declaredDependenciesNode.type === 'ArrayExpression';
@@ -1469,7 +1471,7 @@ function collectRecommendations({
   isEffect,
 }: {
   dependencies: Map<string, Dependency>;
-  declaredDependencies: DeclaredDependency[];
+  declaredDependencies: Array<DeclaredDependency>;
   stableDependencies: Set<string>;
   externalDependencies: Set<string>;
   isEffect: boolean;
@@ -1592,7 +1594,7 @@ function collectRecommendations({
   }
 
   // Collect suggestions in the order they were originally specified.
-  const suggestedDependencies: string[] = [];
+  const suggestedDependencies: Array<string> = [];
   const unnecessaryDependencies = new Set<string>();
   const duplicateDependencies = new Set<string>();
   declaredDependencies.forEach(({key}) => {
@@ -1699,7 +1701,7 @@ function scanForConstructions({
   componentScope,
   scope,
 }: {
-  declaredDependencies: DeclaredDependency[];
+  declaredDependencies: Array<DeclaredDependency>;
   declaredDependenciesNode: Node;
   componentScope: Scope.Scope;
   scope: Scope.Scope;
@@ -1747,7 +1749,7 @@ function scanForConstructions({
       }
       return null;
     })
-    .filter(Boolean) as [Scope.Variable, string][];
+    .filter(Boolean) as Array<[Scope.Variable, string]>;
 
   function isUsedOutsideOfHook(ref: Scope.Variable): boolean {
     let foundWriteExpr = false;
@@ -2007,7 +2009,7 @@ function fastFindReferenceWithParent(start: Node, target: Node): Node | null {
   return null;
 }
 
-function joinEnglish(arr: string[]): string {
+function joinEnglish(arr: Array<string>): string {
   let s = '';
   for (let i = 0; i < arr.length; i++) {
     s += arr[i];

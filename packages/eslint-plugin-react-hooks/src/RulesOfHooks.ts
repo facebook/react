@@ -130,8 +130,10 @@ const rule = {
   },
   create(context: Rule.RuleContext) {
     let lastEffect: CallExpression | null = null;
-    const codePathReactHooksMapStack: Map<Rule.CodePathSegment, Node[]>[] = [];
-    const codePathSegmentStack: Rule.CodePathSegment[] = [];
+    const codePathReactHooksMapStack: Array<
+      Map<Rule.CodePathSegment, Array<Node>>
+    > = [];
+    const codePathSegmentStack: Array<Rule.CodePathSegment> = [];
     const useEffectEventFunctions = new WeakSet();
 
     // For a given scope, iterate through the references and add all useEffectEvent definitions. We can
@@ -190,7 +192,7 @@ const rule = {
       // Maintain code path stack as we traverse.
       onCodePathStart: () =>
         codePathReactHooksMapStack.push(
-          new Map<Rule.CodePathSegment, Node[]>(),
+          new Map<Rule.CodePathSegment, Array<Node>>(),
         ),
 
       // Process our code path.
@@ -561,7 +563,7 @@ const rule = {
                 context.report({node: hook, message});
               }
             } else if (
-              codePathNode.parent &&
+              codePathNode.parent != null &&
               (codePathNode.parent.type === 'MethodDefinition' ||
                 // @ts-expect-error `ClassProperty` was removed from typescript-estree in https://github.com/typescript-eslint/typescript-eslint/pull/3806
                 codePathNode.parent.type === 'ClassProperty' ||
@@ -758,7 +760,7 @@ function getFunctionName(node: Node) {
 /**
  * Convenience function for peeking the last item in a stack.
  */
-function last<T>(array: T[]): T {
+function last<T>(array: Array<T>): T {
   return array[array.length - 1] as T;
 }
 
