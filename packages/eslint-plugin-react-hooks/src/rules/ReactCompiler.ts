@@ -7,18 +7,18 @@
 
 import {transformFromAstSync} from '@babel/core';
 // @ts-expect-error: no types available
-import PluginProposalPrivateMethods from '@babel/plugin-proposal-private-methods';
+import PluginProposalPrivateMethods from '@babel/plugin-transform-private-methods';
 import type {SourceLocation as BabelSourceLocation} from '@babel/types';
 import BabelPluginReactCompiler, {
-  CompilerErrorDetailOptions,
+  type CompilerErrorDetailOptions,
   CompilerSuggestionOperation,
   ErrorSeverity,
   parsePluginOptions,
   validateEnvironmentConfig,
   OPT_OUT_DIRECTIVES,
+  type Logger,
   type PluginOptions,
-} from 'babel-plugin-react-compiler/src';
-import {Logger} from 'babel-plugin-react-compiler/src/Entrypoint';
+} from 'babel-plugin-react-compiler';
 import type {Rule} from 'eslint';
 import {Statement} from 'estree';
 import * as HermesParser from 'hermes-parser';
