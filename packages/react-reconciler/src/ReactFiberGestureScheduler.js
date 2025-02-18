@@ -19,6 +19,9 @@ export type ScheduledGesture = {
   provider: GestureTimeline,
   count: number, // The number of times this same provider has been started.
   direction: boolean, // false = previous, true = next
+  rangePrevious: number, // The end along the timeline where the previous state is reached.
+  rangeCurrent: number, // The starting offset along the timeline.
+  rangeNext: number, // The end along the timeline where the next state is reached.
   cancel: () => void, // Cancel the subscription to direction change.
   prev: null | ScheduledGesture, // The previous scheduled gesture in the queue for this root.
   next: null | ScheduledGesture, // The next scheduled gesture in the queue for this root.
@@ -28,6 +31,9 @@ export function scheduleGesture(
   root: FiberRoot,
   provider: GestureTimeline,
   initialDirection: boolean,
+  rangePrevious: number,
+  rangeCurrent: number,
+  rangeNext: number,
 ): ScheduledGesture {
   let prev = root.gestures;
   while (prev !== null) {
@@ -42,32 +48,43 @@ export function scheduleGesture(
     }
     prev = next;
   }
+  const isFlippedDirection = rangePrevious > rangeNext;
   // Add new instance to the end of the queue.
-  const cancel = subscribeToGestureDirection(provider, (direction: boolean) => {
-    if (gesture.direction !== direction) {
-      gesture.direction = direction;
-      if (gesture.prev === null && root.gestures !== gesture) {
-        // This gesture is not in the schedule, meaning it was already rendered.
-        // We need to rerender in the new direction. Insert it into the first slot
-        // in case other gestures are queued after the on-going one.
-        const existing = root.gestures;
-        gesture.next = existing;
-        if (existing !== null) {
-          existing.prev = gesture;
-        }
-        root.gestures = gesture;
-        // Schedule the lane on the root. The Fibers will already be marked as
-        // long as the gesture is active on that Hook.
-        root.pendingLanes |= GestureLane;
-        ensureRootIsScheduled(root);
+  const cancel = subscribeToGestureDirection(
+    provider,
+    rangeCurrent,
+    (direction: boolean) => {
+      if (isFlippedDirection) {
+        direction = !direction;
       }
-      // TODO: If we're currently rendering this gesture, we need to restart it.
-    }
-  });
+      if (gesture.direction !== direction) {
+        gesture.direction = direction;
+        if (gesture.prev === null && root.gestures !== gesture) {
+          // This gesture is not in the schedule, meaning it was already rendered.
+          // We need to rerender in the new direction. Insert it into the first slot
+          // in case other gestures are queued after the on-going one.
+          const existing = root.gestures;
+          gesture.next = existing;
+          if (existing !== null) {
+            existing.prev = gesture;
+          }
+          root.gestures = gesture;
+          // Schedule the lane on the root. The Fibers will already be marked as
+          // long as the gesture is active on that Hook.
+          root.pendingLanes |= GestureLane;
+          ensureRootIsScheduled(root);
+        }
+        // TODO: If we're currently rendering this gesture, we need to restart it.
+      }
+    },
+  );
   const gesture: ScheduledGesture = {
     provider: provider,
     count: 1,
     direction: initialDirection,
+    rangePrevious: rangePrevious,
+    rangeCurrent: rangeCurrent,
+    rangeNext: rangeNext,
     cancel: cancel,
     prev: prev,
     next: null,

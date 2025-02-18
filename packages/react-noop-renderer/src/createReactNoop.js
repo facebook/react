@@ -796,8 +796,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           return null;
         },
 
+        getCurrentGestureOffset(provider: GestureTimeline): number {
+          return 0;
+        },
+
         subscribeToGestureDirection(
           provider: GestureTimeline,
+          currentOffset: number,
           directionCallback: (direction: boolean) => void,
         ): () => void {
           return () => {};

@@ -607,8 +607,13 @@ export function createViewTransitionInstance(
 
 export type GestureTimeline = null;
 
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
+  throw new Error('useSwipeTransition is not yet supported in React Native.');
+}
+
 export function subscribeToGestureDirection(
   provider: GestureTimeline,
+  currentOffset: number,
   directionCallback: (direction: boolean) => void,
 ): () => void {
   throw new Error('useSwipeTransition is not yet supported in React Native.');
