@@ -20,6 +20,62 @@ if (process.env.NODE_ENV !== "production") {
   (function() {
 'use strict';
 
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise */
+
+
+function __values(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+}
+
+function __read(o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+}
+
+function __spreadArray(to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || from);
+}
+
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 /**
  * Catch all identifiers that begin with "use" followed by an uppercase Latin
@@ -39,8 +95,8 @@ function isHook(node) {
     else if (node.type === 'MemberExpression' &&
         !node.computed &&
         isHook(node.property)) {
-        const obj = node.object;
-        const isPascalCaseNameSpace = /^[A-Z].*/;
+        var obj = node.object;
+        var isPascalCaseNameSpace = /^[A-Z].*/;
         return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
     }
     else {
@@ -84,7 +140,7 @@ function isMemoCallback(node) {
 }
 function isInsideComponentOrHook(node) {
     while (node) {
-        const functionName = getFunctionName(node);
+        var functionName = getFunctionName(node);
         if (functionName) {
             if (isComponentName(functionName) || isHook(functionName)) {
                 return true;
@@ -114,7 +170,7 @@ function isUseEffectEventIdentifier$1(node) {
 function isUseIdentifier(node) {
     return isReactFunction(node, 'use');
 }
-const rule$1 = {
+var rule$1 = {
     meta: {
         type: 'problem',
         docs: {
@@ -123,65 +179,89 @@ const rule$1 = {
             url: 'https://reactjs.org/docs/hooks-rules.html',
         },
     },
-    create(context) {
-        let lastEffect = null;
-        const codePathReactHooksMapStack = [];
-        const codePathSegmentStack = [];
-        const useEffectEventFunctions = new WeakSet();
+    create: function (context) {
+        var lastEffect = null;
+        var codePathReactHooksMapStack = [];
+        var codePathSegmentStack = [];
+        var useEffectEventFunctions = new WeakSet();
         // For a given scope, iterate through the references and add all useEffectEvent definitions. We can
         // do this in non-Program nodes because we can rely on the assumption that useEffectEvent functions
         // can only be declared within a component or hook at its top level.
         function recordAllUseEffectEventFunctions(scope) {
-            for (const reference of scope.references) {
-                const parent = reference.identifier.parent;
-                if ((parent === null || parent === void 0 ? void 0 : parent.type) === 'VariableDeclarator' &&
-                    parent.init &&
-                    parent.init.type === 'CallExpression' &&
-                    parent.init.callee &&
-                    isUseEffectEventIdentifier$1(parent.init.callee)) {
-                    if (reference.resolved === null) {
-                        throw new Error('Unexpected null reference.resolved');
-                    }
-                    for (const ref of reference.resolved.references) {
-                        if (ref !== reference) {
-                            useEffectEventFunctions.add(ref.identifier);
+            var e_1, _a, e_2, _b;
+            try {
+                for (var _c = __values(scope.references), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var reference = _d.value;
+                    var parent = reference.identifier.parent;
+                    if ((parent === null || parent === void 0 ? void 0 : parent.type) === 'VariableDeclarator' &&
+                        parent.init &&
+                        parent.init.type === 'CallExpression' &&
+                        parent.init.callee &&
+                        isUseEffectEventIdentifier$1(parent.init.callee)) {
+                        if (reference.resolved === null) {
+                            throw new Error('Unexpected null reference.resolved');
+                        }
+                        try {
+                            for (var _e = (e_2 = void 0, __values(reference.resolved.references)), _f = _e.next(); !_f.done; _f = _e.next()) {
+                                var ref = _f.value;
+                                if (ref !== reference) {
+                                    useEffectEventFunctions.add(ref.identifier);
+                                }
+                            }
+                        }
+                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        finally {
+                            try {
+                                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                            }
+                            finally { if (e_2) throw e_2.error; }
                         }
                     }
                 }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                }
+                finally { if (e_1) throw e_1.error; }
             }
         }
         /**
          * SourceCode that also works down to ESLint 3.0.0
          */
-        const getSourceCode = typeof context.getSourceCode === 'function'
-            ? () => {
+        var getSourceCode = typeof context.getSourceCode === 'function'
+            ? function () {
                 return context.getSourceCode();
             }
-            : () => {
+            : function () {
                 return context.sourceCode;
             };
         /**
          * SourceCode#getScope that also works down to ESLint 3.0.0
          */
-        const getScope = typeof context.getScope === 'function'
-            ? () => {
+        var getScope = typeof context.getScope === 'function'
+            ? function () {
                 return context.getScope();
             }
-            : (node) => {
+            : function (node) {
                 return getSourceCode().getScope(node);
             };
         return {
             // Maintain code segment path stack as we traverse.
-            onCodePathSegmentStart: segment => codePathSegmentStack.push(segment),
-            onCodePathSegmentEnd: () => codePathSegmentStack.pop(),
+            onCodePathSegmentStart: function (segment) { return codePathSegmentStack.push(segment); },
+            onCodePathSegmentEnd: function () { return codePathSegmentStack.pop(); },
             // Maintain code path stack as we traverse.
-            onCodePathStart: () => codePathReactHooksMapStack.push(new Map()),
+            onCodePathStart: function () {
+                return codePathReactHooksMapStack.push(new Map());
+            },
             // Process our code path.
             //
             // Everything is ok if all React Hooks are both reachable from the initial
             // segment and reachable from every final segment.
-            onCodePathEnd(codePath, codePathNode) {
-                const reactHooksMap = codePathReactHooksMapStack.pop();
+            onCodePathEnd: function (codePath, codePathNode) {
+                var e_3, _a, e_4, _b, e_5, _c;
+                var reactHooksMap = codePathReactHooksMapStack.pop();
                 if ((reactHooksMap === null || reactHooksMap === void 0 ? void 0 : reactHooksMap.size) === 0) {
                     return;
                 }
@@ -189,7 +269,7 @@ const rule$1 = {
                     throw new Error('Unexpected undefined reactHooksMap');
                 }
                 // All of the segments which are cyclic are recorded in this set.
-                const cyclic = new Set();
+                var cyclic = new Set();
                 /**
                  * Count the number of code paths from the start of the function to this
                  * segment. For example:
@@ -212,16 +292,27 @@ const rule$1 = {
                  * Populates `cyclic` with cyclic segments.
                  */
                 function countPathsFromStart(segment, pathHistory) {
-                    const { cache } = countPathsFromStart;
-                    let paths = cache.get(segment.id);
-                    const pathList = new Set(pathHistory);
+                    var e_6, _a, e_7, _b;
+                    var cache = countPathsFromStart.cache;
+                    var paths = cache.get(segment.id);
+                    var pathList = new Set(pathHistory);
                     // If `pathList` includes the current segment then we've found a cycle!
                     // We need to fill `cyclic` with all segments inside cycle
                     if (pathList.has(segment.id)) {
-                        const pathArray = [...pathList];
-                        const cyclicSegments = pathArray.slice(pathArray.indexOf(segment.id) + 1);
-                        for (const cyclicSegment of cyclicSegments) {
-                            cyclic.add(cyclicSegment);
+                        var pathArray = __spreadArray([], __read(pathList), false);
+                        var cyclicSegments = pathArray.slice(pathArray.indexOf(segment.id) + 1);
+                        try {
+                            for (var cyclicSegments_1 = __values(cyclicSegments), cyclicSegments_1_1 = cyclicSegments_1.next(); !cyclicSegments_1_1.done; cyclicSegments_1_1 = cyclicSegments_1.next()) {
+                                var cyclicSegment = cyclicSegments_1_1.value;
+                                cyclic.add(cyclicSegment);
+                            }
+                        }
+                        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                        finally {
+                            try {
+                                if (cyclicSegments_1_1 && !cyclicSegments_1_1.done && (_a = cyclicSegments_1.return)) _a.call(cyclicSegments_1);
+                            }
+                            finally { if (e_6) throw e_6.error; }
                         }
                         return BigInt('0');
                     }
@@ -239,8 +330,18 @@ const rule$1 = {
                     }
                     else {
                         paths = BigInt('0');
-                        for (const prevSegment of segment.prevSegments) {
-                            paths += countPathsFromStart(prevSegment, pathList);
+                        try {
+                            for (var _c = __values(segment.prevSegments), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                var prevSegment = _d.value;
+                                paths += countPathsFromStart(prevSegment, pathList);
+                            }
+                        }
+                        catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                        finally {
+                            try {
+                                if (_d && !_d.done && (_b = _c.return)) _b.call(_c);
+                            }
+                            finally { if (e_7) throw e_7.error; }
                         }
                     }
                     // If our segment is reachable then there should be at least one path
@@ -275,16 +376,27 @@ const rule$1 = {
                  * Populates `cyclic` with cyclic segments.
                  */
                 function countPathsToEnd(segment, pathHistory) {
-                    const { cache } = countPathsToEnd;
-                    let paths = cache.get(segment.id);
-                    const pathList = new Set(pathHistory);
+                    var e_8, _a, e_9, _b;
+                    var cache = countPathsToEnd.cache;
+                    var paths = cache.get(segment.id);
+                    var pathList = new Set(pathHistory);
                     // If `pathList` includes the current segment then we've found a cycle!
                     // We need to fill `cyclic` with all segments inside cycle
                     if (pathList.has(segment.id)) {
-                        const pathArray = Array.from(pathList);
-                        const cyclicSegments = pathArray.slice(pathArray.indexOf(segment.id) + 1);
-                        for (const cyclicSegment of cyclicSegments) {
-                            cyclic.add(cyclicSegment);
+                        var pathArray = Array.from(pathList);
+                        var cyclicSegments = pathArray.slice(pathArray.indexOf(segment.id) + 1);
+                        try {
+                            for (var cyclicSegments_2 = __values(cyclicSegments), cyclicSegments_2_1 = cyclicSegments_2.next(); !cyclicSegments_2_1.done; cyclicSegments_2_1 = cyclicSegments_2.next()) {
+                                var cyclicSegment = cyclicSegments_2_1.value;
+                                cyclic.add(cyclicSegment);
+                            }
+                        }
+                        catch (e_8_1) { e_8 = { error: e_8_1 }; }
+                        finally {
+                            try {
+                                if (cyclicSegments_2_1 && !cyclicSegments_2_1.done && (_a = cyclicSegments_2.return)) _a.call(cyclicSegments_2);
+                            }
+                            finally { if (e_8) throw e_8.error; }
                         }
                         return BigInt('0');
                     }
@@ -302,8 +414,18 @@ const rule$1 = {
                     }
                     else {
                         paths = BigInt('0');
-                        for (const nextSegment of segment.nextSegments) {
-                            paths += countPathsToEnd(nextSegment, pathList);
+                        try {
+                            for (var _c = __values(segment.nextSegments), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                var nextSegment = _d.value;
+                                paths += countPathsToEnd(nextSegment, pathList);
+                            }
+                        }
+                        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                        finally {
+                            try {
+                                if (_d && !_d.done && (_b = _c.return)) _b.call(_c);
+                            }
+                            finally { if (e_9) throw e_9.error; }
                         }
                     }
                     cache.set(segment.id, paths);
@@ -331,8 +453,9 @@ const rule$1 = {
                  * so we would return that.
                  */
                 function shortestPathLengthToStart(segment) {
-                    const { cache } = shortestPathLengthToStart;
-                    let length = cache.get(segment.id);
+                    var e_10, _a;
+                    var cache = shortestPathLengthToStart.cache;
+                    var length = cache.get(segment.id);
                     // If `length` is null then we found a cycle! Return infinity since
                     // the shortest path is definitely not the one where we looped.
                     if (length === null) {
@@ -349,11 +472,21 @@ const rule$1 = {
                     }
                     else {
                         length = Infinity;
-                        for (const prevSegment of segment.prevSegments) {
-                            const prevLength = shortestPathLengthToStart(prevSegment);
-                            if (prevLength < length) {
-                                length = prevLength;
+                        try {
+                            for (var _b = __values(segment.prevSegments), _c = _b.next(); !_c.done; _c = _b.next()) {
+                                var prevSegment = _c.value;
+                                var prevLength = shortestPathLengthToStart(prevSegment);
+                                if (prevLength < length) {
+                                    length = prevLength;
+                                }
                             }
+                        }
+                        catch (e_10_1) { e_10 = { error: e_10_1 }; }
+                        finally {
+                            try {
+                                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                            }
+                            finally { if (e_10) throw e_10.error; }
                         }
                         length += 1;
                     }
@@ -365,194 +498,224 @@ const rule$1 = {
                 shortestPathLengthToStart.cache = new Map();
                 // Count all code paths to the end of our component/hook. Also primes
                 // the `countPathsToEnd` cache.
-                const allPathsFromStartToEnd = countPathsToEnd(codePath.initialSegment);
+                var allPathsFromStartToEnd = countPathsToEnd(codePath.initialSegment);
                 // Gets the function name for our code path. If the function name is
                 // `undefined` then we know either that we have an anonymous function
                 // expression or our code path is not in a function. In both cases we
                 // will want to error since neither are React function components or
                 // hook functions - unless it is an anonymous function argument to
                 // forwardRef or memo.
-                const codePathFunctionName = getFunctionName(codePathNode);
+                var codePathFunctionName = getFunctionName(codePathNode);
                 // This is a valid code path for React hooks if we are directly in a React
                 // function component or we are in a hook function.
-                const isSomewhereInsideComponentOrHook = isInsideComponentOrHook(codePathNode);
-                const isDirectlyInsideComponentOrHook = codePathFunctionName
+                var isSomewhereInsideComponentOrHook = isInsideComponentOrHook(codePathNode);
+                var isDirectlyInsideComponentOrHook = codePathFunctionName
                     ? isComponentName(codePathFunctionName) ||
                         isHook(codePathFunctionName)
                     : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode);
                 // Compute the earliest finalizer level using information from the
                 // cache. We expect all reachable final segments to have a cache entry
                 // after calling `visitSegment()`.
-                let shortestFinalPathLength = Infinity;
-                for (const finalSegment of codePath.finalSegments) {
-                    if (!finalSegment.reachable) {
-                        continue;
-                    }
-                    const length = shortestPathLengthToStart(finalSegment);
-                    if (length < shortestFinalPathLength) {
-                        shortestFinalPathLength = length;
+                var shortestFinalPathLength = Infinity;
+                try {
+                    for (var _d = __values(codePath.finalSegments), _e = _d.next(); !_e.done; _e = _d.next()) {
+                        var finalSegment = _e.value;
+                        if (!finalSegment.reachable) {
+                            continue;
+                        }
+                        var length = shortestPathLengthToStart(finalSegment);
+                        if (length < shortestFinalPathLength) {
+                            shortestFinalPathLength = length;
+                        }
                     }
                 }
-                // Make sure all React Hooks pass our lint invariants. Log warnings
-                // if not.
-                for (const [segment, reactHooks] of reactHooksMap) {
-                    // NOTE: We could report here that the hook is not reachable, but
-                    // that would be redundant with more general "no unreachable"
-                    // lint rules.
-                    if (!segment.reachable) {
-                        continue;
+                catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                finally {
+                    try {
+                        if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
                     }
-                    // If there are any final segments with a shorter path to start then
-                    // we possibly have an early return.
-                    //
-                    // If our segment is a final segment itself then siblings could
-                    // possibly be early returns.
-                    const possiblyHasEarlyReturn = segment.nextSegments.length === 0
-                        ? shortestFinalPathLength <= shortestPathLengthToStart(segment)
-                        : shortestFinalPathLength < shortestPathLengthToStart(segment);
-                    // Count all the paths from the start of our code path to the end of
-                    // our code path that go _through_ this segment. The critical piece
-                    // of this is _through_. If we just call `countPathsToEnd(segment)`
-                    // then we neglect that we may have gone through multiple paths to get
-                    // to this point! Consider:
-                    //
-                    // ```js
-                    // function MyComponent() {
-                    //   if (a) {
-                    //     // Segment 1
-                    //   } else {
-                    //     // Segment 2
-                    //   }
-                    //   // Segment 3
-                    //   if (b) {
-                    //     // Segment 4
-                    //   } else {
-                    //     // Segment 5
-                    //   }
-                    // }
-                    // ```
-                    //
-                    // In this component we have four code paths:
-                    //
-                    // 1. `a = true; b = true`
-                    // 2. `a = true; b = false`
-                    // 3. `a = false; b = true`
-                    // 4. `a = false; b = false`
-                    //
-                    // From segment 3 there are two code paths to the end through segment
-                    // 4 and segment 5. However, we took two paths to get here through
-                    // segment 1 and segment 2.
-                    //
-                    // If we multiply the paths from start (two) by the paths to end (two)
-                    // for segment 3 we get four. Which is our desired count.
-                    const pathsFromStartToEnd = countPathsFromStart(segment) * countPathsToEnd(segment);
-                    // Is this hook a part of a cyclic segment?
-                    const cycled = cyclic.has(segment.id);
-                    for (const hook of reactHooks) {
-                        // Report an error if a hook may be called more then once.
-                        // `use(...)` can be called in loops.
-                        if ((cycled || isInsideDoWhileLoop(hook)) &&
-                            !isUseIdentifier(hook)) {
-                            context.report({
-                                node: hook,
-                                message: `React Hook "${getSourceCode().getText(hook)}" may be executed ` +
-                                    'more than once. Possibly because it is called in a loop. ' +
-                                    'React Hooks must be called in the exact same order in ' +
-                                    'every component render.',
-                            });
+                    finally { if (e_3) throw e_3.error; }
+                }
+                try {
+                    // Make sure all React Hooks pass our lint invariants. Log warnings
+                    // if not.
+                    for (var reactHooksMap_1 = __values(reactHooksMap), reactHooksMap_1_1 = reactHooksMap_1.next(); !reactHooksMap_1_1.done; reactHooksMap_1_1 = reactHooksMap_1.next()) {
+                        var _f = __read(reactHooksMap_1_1.value, 2), segment = _f[0], reactHooks = _f[1];
+                        // NOTE: We could report here that the hook is not reachable, but
+                        // that would be redundant with more general "no unreachable"
+                        // lint rules.
+                        if (!segment.reachable) {
+                            continue;
                         }
-                        // If this is not a valid code path for React hooks then we need to
-                        // log a warning for every hook in this code path.
+                        // If there are any final segments with a shorter path to start then
+                        // we possibly have an early return.
                         //
-                        // Pick a special message depending on the scope this hook was
-                        // called in.
-                        if (isDirectlyInsideComponentOrHook) {
-                            // Report an error if the hook is called inside an async function.
-                            // @ts-expect-error the above check hasn't properly type-narrowed `codePathNode` (async doesn't exist on Node)
-                            const isAsyncFunction = codePathNode.async;
-                            if (isAsyncFunction) {
-                                context.report({
-                                    node: hook,
-                                    message: `React Hook "${getSourceCode().getText(hook)}" cannot be ` +
-                                        'called in an async function.',
-                                });
+                        // If our segment is a final segment itself then siblings could
+                        // possibly be early returns.
+                        var possiblyHasEarlyReturn = segment.nextSegments.length === 0
+                            ? shortestFinalPathLength <= shortestPathLengthToStart(segment)
+                            : shortestFinalPathLength < shortestPathLengthToStart(segment);
+                        // Count all the paths from the start of our code path to the end of
+                        // our code path that go _through_ this segment. The critical piece
+                        // of this is _through_. If we just call `countPathsToEnd(segment)`
+                        // then we neglect that we may have gone through multiple paths to get
+                        // to this point! Consider:
+                        //
+                        // ```js
+                        // function MyComponent() {
+                        //   if (a) {
+                        //     // Segment 1
+                        //   } else {
+                        //     // Segment 2
+                        //   }
+                        //   // Segment 3
+                        //   if (b) {
+                        //     // Segment 4
+                        //   } else {
+                        //     // Segment 5
+                        //   }
+                        // }
+                        // ```
+                        //
+                        // In this component we have four code paths:
+                        //
+                        // 1. `a = true; b = true`
+                        // 2. `a = true; b = false`
+                        // 3. `a = false; b = true`
+                        // 4. `a = false; b = false`
+                        //
+                        // From segment 3 there are two code paths to the end through segment
+                        // 4 and segment 5. However, we took two paths to get here through
+                        // segment 1 and segment 2.
+                        //
+                        // If we multiply the paths from start (two) by the paths to end (two)
+                        // for segment 3 we get four. Which is our desired count.
+                        var pathsFromStartToEnd = countPathsFromStart(segment) * countPathsToEnd(segment);
+                        // Is this hook a part of a cyclic segment?
+                        var cycled = cyclic.has(segment.id);
+                        try {
+                            for (var reactHooks_1 = (e_5 = void 0, __values(reactHooks)), reactHooks_1_1 = reactHooks_1.next(); !reactHooks_1_1.done; reactHooks_1_1 = reactHooks_1.next()) {
+                                var hook = reactHooks_1_1.value;
+                                // Report an error if a hook may be called more then once.
+                                // `use(...)` can be called in loops.
+                                if ((cycled || isInsideDoWhileLoop(hook)) &&
+                                    !isUseIdentifier(hook)) {
+                                    context.report({
+                                        node: hook,
+                                        message: "React Hook \"".concat(getSourceCode().getText(hook), "\" may be executed ") +
+                                            'more than once. Possibly because it is called in a loop. ' +
+                                            'React Hooks must be called in the exact same order in ' +
+                                            'every component render.',
+                                    });
+                                }
+                                // If this is not a valid code path for React hooks then we need to
+                                // log a warning for every hook in this code path.
+                                //
+                                // Pick a special message depending on the scope this hook was
+                                // called in.
+                                if (isDirectlyInsideComponentOrHook) {
+                                    // Report an error if the hook is called inside an async function.
+                                    // @ts-expect-error the above check hasn't properly type-narrowed `codePathNode` (async doesn't exist on Node)
+                                    var isAsyncFunction = codePathNode.async;
+                                    if (isAsyncFunction) {
+                                        context.report({
+                                            node: hook,
+                                            message: "React Hook \"".concat(getSourceCode().getText(hook), "\" cannot be ") +
+                                                'called in an async function.',
+                                        });
+                                    }
+                                    // Report an error if a hook does not reach all finalizing code
+                                    // path segments.
+                                    //
+                                    // Special case when we think there might be an early return.
+                                    if (!cycled &&
+                                        pathsFromStartToEnd !== allPathsFromStartToEnd &&
+                                        !isUseIdentifier(hook) && // `use(...)` can be called conditionally.
+                                        !isInsideDoWhileLoop(hook) // wrapping do/while loops are checked separately.
+                                    ) {
+                                        var message = "React Hook \"".concat(getSourceCode().getText(hook), "\" is called ") +
+                                            'conditionally. React Hooks must be called in the exact ' +
+                                            'same order in every component render.' +
+                                            (possiblyHasEarlyReturn
+                                                ? ' Did you accidentally call a React Hook after an' +
+                                                    ' early return?'
+                                                : '');
+                                        context.report({ node: hook, message: message });
+                                    }
+                                }
+                                else if (codePathNode.parent != null &&
+                                    (codePathNode.parent.type === 'MethodDefinition' ||
+                                        // @ts-expect-error `ClassProperty` was removed from typescript-estree in https://github.com/typescript-eslint/typescript-eslint/pull/3806
+                                        codePathNode.parent.type === 'ClassProperty' ||
+                                        codePathNode.parent.type === 'PropertyDefinition') &&
+                                    codePathNode.parent.value === codePathNode) {
+                                    // Custom message for hooks inside a class
+                                    var message = "React Hook \"".concat(getSourceCode().getText(hook), "\" cannot be called ") +
+                                        'in a class component. React Hooks must be called in a ' +
+                                        'React function component or a custom React Hook function.';
+                                    context.report({ node: hook, message: message });
+                                }
+                                else if (codePathFunctionName) {
+                                    // Custom message if we found an invalid function name.
+                                    var message = "React Hook \"".concat(getSourceCode().getText(hook), "\" is called in ") +
+                                        "function \"".concat(getSourceCode().getText(codePathFunctionName), "\" ") +
+                                        'that is neither a React function component nor a custom ' +
+                                        'React Hook function.' +
+                                        ' React component names must start with an uppercase letter.' +
+                                        ' React Hook names must start with the word "use".';
+                                    context.report({ node: hook, message: message });
+                                }
+                                else if (codePathNode.type === 'Program') {
+                                    // These are dangerous if you have inline requires enabled.
+                                    var message = "React Hook \"".concat(getSourceCode().getText(hook), "\" cannot be called ") +
+                                        'at the top level. React Hooks must be called in a ' +
+                                        'React function component or a custom React Hook function.';
+                                    context.report({ node: hook, message: message });
+                                }
+                                else {
+                                    // Assume in all other cases the user called a hook in some
+                                    // random function callback. This should usually be true for
+                                    // anonymous function expressions. Hopefully this is clarifying
+                                    // enough in the common case that the incorrect message in
+                                    // uncommon cases doesn't matter.
+                                    // `use(...)` can be called in callbacks.
+                                    if (isSomewhereInsideComponentOrHook && !isUseIdentifier(hook)) {
+                                        var message = "React Hook \"".concat(getSourceCode().getText(hook), "\" cannot be called ") +
+                                            'inside a callback. React Hooks must be called in a ' +
+                                            'React function component or a custom React Hook function.';
+                                        context.report({ node: hook, message: message });
+                                    }
+                                }
                             }
-                            // Report an error if a hook does not reach all finalizing code
-                            // path segments.
-                            //
-                            // Special case when we think there might be an early return.
-                            if (!cycled &&
-                                pathsFromStartToEnd !== allPathsFromStartToEnd &&
-                                !isUseIdentifier(hook) && // `use(...)` can be called conditionally.
-                                !isInsideDoWhileLoop(hook) // wrapping do/while loops are checked separately.
-                            ) {
-                                const message = `React Hook "${getSourceCode().getText(hook)}" is called ` +
-                                    'conditionally. React Hooks must be called in the exact ' +
-                                    'same order in every component render.' +
-                                    (possiblyHasEarlyReturn
-                                        ? ' Did you accidentally call a React Hook after an' +
-                                            ' early return?'
-                                        : '');
-                                context.report({ node: hook, message });
+                        }
+                        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                        finally {
+                            try {
+                                if (reactHooks_1_1 && !reactHooks_1_1.done && (_c = reactHooks_1.return)) _c.call(reactHooks_1);
                             }
-                        }
-                        else if (codePathNode.parent != null &&
-                            (codePathNode.parent.type === 'MethodDefinition' ||
-                                // @ts-expect-error `ClassProperty` was removed from typescript-estree in https://github.com/typescript-eslint/typescript-eslint/pull/3806
-                                codePathNode.parent.type === 'ClassProperty' ||
-                                codePathNode.parent.type === 'PropertyDefinition') &&
-                            codePathNode.parent.value === codePathNode) {
-                            // Custom message for hooks inside a class
-                            const message = `React Hook "${getSourceCode().getText(hook)}" cannot be called ` +
-                                'in a class component. React Hooks must be called in a ' +
-                                'React function component or a custom React Hook function.';
-                            context.report({ node: hook, message });
-                        }
-                        else if (codePathFunctionName) {
-                            // Custom message if we found an invalid function name.
-                            const message = `React Hook "${getSourceCode().getText(hook)}" is called in ` +
-                                `function "${getSourceCode().getText(codePathFunctionName)}" ` +
-                                'that is neither a React function component nor a custom ' +
-                                'React Hook function.' +
-                                ' React component names must start with an uppercase letter.' +
-                                ' React Hook names must start with the word "use".';
-                            context.report({ node: hook, message });
-                        }
-                        else if (codePathNode.type === 'Program') {
-                            // These are dangerous if you have inline requires enabled.
-                            const message = `React Hook "${getSourceCode().getText(hook)}" cannot be called ` +
-                                'at the top level. React Hooks must be called in a ' +
-                                'React function component or a custom React Hook function.';
-                            context.report({ node: hook, message });
-                        }
-                        else {
-                            // Assume in all other cases the user called a hook in some
-                            // random function callback. This should usually be true for
-                            // anonymous function expressions. Hopefully this is clarifying
-                            // enough in the common case that the incorrect message in
-                            // uncommon cases doesn't matter.
-                            // `use(...)` can be called in callbacks.
-                            if (isSomewhereInsideComponentOrHook && !isUseIdentifier(hook)) {
-                                const message = `React Hook "${getSourceCode().getText(hook)}" cannot be called ` +
-                                    'inside a callback. React Hooks must be called in a ' +
-                                    'React function component or a custom React Hook function.';
-                                context.report({ node: hook, message });
-                            }
+                            finally { if (e_5) throw e_5.error; }
                         }
                     }
+                }
+                catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                finally {
+                    try {
+                        if (reactHooksMap_1_1 && !reactHooksMap_1_1.done && (_b = reactHooksMap_1.return)) _b.call(reactHooksMap_1);
+                    }
+                    finally { if (e_4) throw e_4.error; }
                 }
             },
             // Missed opportunity...We could visit all `Identifier`s instead of all
             // `CallExpression`s and check that _every use_ of a hook name is valid.
             // But that gets complicated and enters type-system territory, so we're
             // only being strict about hook calls for now.
-            CallExpression(node) {
+            CallExpression: function (node) {
                 if (isHook(node.callee)) {
                     // Add the hook node to a map keyed by the code path segment. We will
                     // do full code path analysis at the end of our code path.
-                    const reactHooksMap = last(codePathReactHooksMapStack);
-                    const codePathSegment = last(codePathSegmentStack);
-                    let reactHooks = reactHooksMap.get(codePathSegment);
+                    var reactHooksMap = last(codePathReactHooksMapStack);
+                    var codePathSegment = last(codePathSegmentStack);
+                    var reactHooks = reactHooksMap.get(codePathSegment);
                     if (!reactHooks) {
                         reactHooks = [];
                         reactHooksMap.set(codePathSegment, reactHooks);
@@ -570,31 +733,31 @@ const rule$1 = {
                     lastEffect = node;
                 }
             },
-            Identifier(node) {
+            Identifier: function (node) {
                 // This identifier resolves to a useEffectEvent function, but isn't being referenced in an
                 // effect or another event function. It isn't being called either.
                 if (lastEffect == null &&
                     useEffectEventFunctions.has(node) &&
                     node.parent.type !== 'CallExpression') {
                     context.report({
-                        node,
-                        message: `\`${getSourceCode().getText(node)}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+                        node: node,
+                        message: "`".concat(getSourceCode().getText(node), "` is a function created with React Hook \"useEffectEvent\", and can only be called from ") +
                             'the same component. They cannot be assigned to variables or passed down.',
                     });
                 }
             },
-            'CallExpression:exit'(node) {
+            'CallExpression:exit': function (node) {
                 if (node === lastEffect) {
                     lastEffect = null;
                 }
             },
-            FunctionDeclaration(node) {
+            FunctionDeclaration: function (node) {
                 // function MyComponent() { const onClick = useEffectEvent(...) }
                 if (isInsideComponentOrHook(node)) {
                     recordAllUseEffectEventFunctions(getScope(node));
                 }
             },
-            ArrowFunctionExpression(node) {
+            ArrowFunctionExpression: function (node) {
                 // const MyComponent = () => { const onClick = useEffectEvent(...) }
                 if (isInsideComponentOrHook(node)) {
                     recordAllUseEffectEventFunctions(getScope(node));
@@ -673,7 +836,7 @@ function last(array) {
     return array[array.length - 1];
 }
 
-const rule = {
+var rule = {
     meta: {
         type: 'suggestion',
         docs: {
@@ -699,20 +862,20 @@ const rule = {
             },
         ],
     },
-    create(context) {
+    create: function (context) {
         // Parse the `additionalHooks` regex.
-        const additionalHooks = context.options &&
+        var additionalHooks = context.options &&
             context.options[0] &&
             context.options[0].additionalHooks
             ? new RegExp(context.options[0].additionalHooks)
             : undefined;
-        const enableDangerousAutofixThisMayCauseInfiniteLoops = (context.options &&
+        var enableDangerousAutofixThisMayCauseInfiniteLoops = (context.options &&
             context.options[0] &&
             context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
             false;
-        const options = {
-            additionalHooks,
-            enableDangerousAutofixThisMayCauseInfiniteLoops,
+        var options = {
+            additionalHooks: additionalHooks,
+            enableDangerousAutofixThisMayCauseInfiniteLoops: enableDangerousAutofixThisMayCauseInfiniteLoops,
         };
         function reportProblem(problem) {
             if (enableDangerousAutofixThisMayCauseInfiniteLoops) {
@@ -729,30 +892,30 @@ const rule = {
         /**
          * SourceCode that also works down to ESLint 3.0.0
          */
-        const getSourceCode = typeof context.getSourceCode === 'function'
-            ? () => {
+        var getSourceCode = typeof context.getSourceCode === 'function'
+            ? function () {
                 return context.getSourceCode();
             }
-            : () => {
+            : function () {
                 return context.sourceCode;
             };
         /**
          * SourceCode#getScope that also works down to ESLint 3.0.0
          */
-        const getScope = typeof context.getScope === 'function'
-            ? () => {
+        var getScope = typeof context.getScope === 'function'
+            ? function () {
                 return context.getScope();
             }
-            : (node) => {
+            : function (node) {
                 return context.sourceCode.getScope(node);
             };
-        const scopeManager = getSourceCode().scopeManager;
+        var scopeManager = getSourceCode().scopeManager;
         // Should be shared between visitors.
-        const setStateCallSites = new WeakMap();
-        const stateVariables = new WeakSet();
-        const stableKnownValueCache = new WeakMap();
-        const functionWithoutCapturedValueCache = new WeakMap();
-        const useEffectEventVariables = new WeakSet();
+        var setStateCallSites = new WeakMap();
+        var stateVariables = new WeakSet();
+        var stableKnownValueCache = new WeakMap();
+        var functionWithoutCapturedValueCache = new WeakMap();
+        var useEffectEventVariables = new WeakSet();
         function memoizeWithWeakMap(fn, map) {
             return function (arg) {
                 if (map.has(arg)) {
@@ -760,7 +923,7 @@ const rule = {
                     // console.log(arg.name)
                     return map.get(arg);
                 }
-                const result = fn(arg);
+                var result = fn(arg);
                 map.set(arg, result);
                 return result;
             };
@@ -769,11 +932,12 @@ const rule = {
          * Visitor for both function expressions and arrow function expressions.
          */
         function visitFunctionWithDependencies(node, declaredDependenciesNode, reactiveHook, reactiveHookName, isEffect) {
+            var e_1, _a, e_2, _b, e_3, _c;
             if (isEffect && node.async) {
                 reportProblem({
                     node: node,
-                    message: `Effect callbacks are synchronous to prevent race conditions. ` +
-                        `Put the async function inside:\n\n` +
+                    message: "Effect callbacks are synchronous to prevent race conditions. " +
+                        "Put the async function inside:\n\n" +
                         'useEffect(() => {\n' +
                         '  async function fetchData() {\n' +
                         '    // You can await here\n' +
@@ -781,12 +945,12 @@ const rule = {
                         '    // ...\n' +
                         '  }\n' +
                         '  fetchData();\n' +
-                        `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
+                        "}, [someId]); // Or [] if effect doesn't need props or state\n\n" +
                         'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching',
                 });
             }
             // Get the current scope.
-            const scope = scopeManager.acquire(node);
+            var scope = scopeManager.acquire(node);
             if (!scope) {
                 throw new Error('Unable to acquire scope for the current node. This is a bug in eslint-plugin-react-hooks, please file an issue.');
             }
@@ -798,10 +962,10 @@ const rule = {
             // According to the rules of React you can't read a mutable value in pure
             // scope. We can't enforce this in a lint so we trust that all variables
             // declared outside of pure scope are indeed frozen.
-            const pureScopes = new Set();
-            let componentScope = null;
+            var pureScopes = new Set();
+            var componentScope = null;
             {
-                let currentScope = scope.upper;
+                var currentScope = scope.upper;
                 while (currentScope) {
                     pureScopes.add(currentScope);
                     if (currentScope.type === 'function') {
@@ -817,7 +981,7 @@ const rule = {
                 }
                 componentScope = currentScope;
             }
-            const isArray = Array.isArray;
+            var isArray = Array.isArray;
             // Next we'll define a few helpers that helps us
             // tell if some values don't have to be declared as deps.
             // Some are known to be stable based on Hook calls.
@@ -833,19 +997,20 @@ const rule = {
             //       ^^^ true for this reference
             // False for everything else.
             function isStableKnownHookValue(resolved) {
+                var e_4, _a, e_5, _b, e_6, _c;
                 if (!isArray(resolved.defs)) {
                     return false;
                 }
-                const def = resolved.defs[0];
+                var def = resolved.defs[0];
                 if (def == null) {
                     return false;
                 }
                 // Look for `let stuff = ...`
-                const defNode = def.node;
+                var defNode = def.node;
                 if (defNode.type !== 'VariableDeclarator') {
                     return false;
                 }
-                let init = defNode.init;
+                var init = defNode.init;
                 if (init == null) {
                     return false;
                 }
@@ -854,7 +1019,7 @@ const rule = {
                 }
                 // Detect primitive constants
                 // const foo = 42
-                let declaration = defNode.parent;
+                var declaration = defNode.parent;
                 if (declaration == null && componentScope != null) {
                     // This might happen if variable is declared after the callback.
                     // In that case ESLint won't set up .parent refs.
@@ -880,7 +1045,7 @@ const rule = {
                 if (init.type !== 'CallExpression') {
                     return false;
                 }
-                let callee = init.callee;
+                var callee = init.callee;
                 // Step into `= React.something` initializer.
                 if (callee.type === 'MemberExpression' &&
                     'name' in callee.object &&
@@ -892,20 +1057,30 @@ const rule = {
                 if (callee.type !== 'Identifier') {
                     return false;
                 }
-                const definitionNode = def.node;
-                const id = definitionNode.id;
-                const { name } = callee;
+                var definitionNode = def.node;
+                var id = definitionNode.id;
+                var name = callee.name;
                 if (name === 'useRef' && id.type === 'Identifier') {
                     // useRef() return value is stable.
                     return true;
                 }
                 else if (isUseEffectEventIdentifier(callee) &&
                     id.type === 'Identifier') {
-                    for (const ref of resolved.references) {
-                        // @ts-expect-error These types are not compatible (Reference and Identifier)
-                        if (ref !== id) {
-                            useEffectEventVariables.add(ref.identifier);
+                    try {
+                        for (var _d = __values(resolved.references), _e = _d.next(); !_e.done; _e = _d.next()) {
+                            var ref = _e.value;
+                            // @ts-expect-error These types are not compatible (Reference and Identifier)
+                            if (ref !== id) {
+                                useEffectEventVariables.add(ref.identifier);
+                            }
                         }
+                    }
+                    catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                    finally {
+                        try {
+                            if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
+                        }
+                        finally { if (e_4) throw e_4.error; }
                     }
                     // useEffectEvent() return value is always unstable.
                     return true;
@@ -920,16 +1095,26 @@ const rule = {
                         // Is second tuple value the same reference we're checking?
                         if (id.elements[1] === resolved.identifiers[0]) {
                             if (name === 'useState') {
-                                const references = resolved.references;
-                                let writeCount = 0;
-                                for (const reference of references) {
-                                    if (reference.isWrite()) {
-                                        writeCount++;
+                                var references = resolved.references;
+                                var writeCount = 0;
+                                try {
+                                    for (var references_2 = __values(references), references_2_1 = references_2.next(); !references_2_1.done; references_2_1 = references_2.next()) {
+                                        var reference = references_2_1.value;
+                                        if (reference.isWrite()) {
+                                            writeCount++;
+                                        }
+                                        if (writeCount > 1) {
+                                            return false;
+                                        }
+                                        setStateCallSites.set(reference.identifier, id.elements[0]);
                                     }
-                                    if (writeCount > 1) {
-                                        return false;
+                                }
+                                catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                                finally {
+                                    try {
+                                        if (references_2_1 && !references_2_1.done && (_b = references_2.return)) _b.call(references_2);
                                     }
-                                    setStateCallSites.set(reference.identifier, id.elements[0]);
+                                    finally { if (e_5) throw e_5.error; }
                                 }
                             }
                             // Setter is stable.
@@ -937,9 +1122,19 @@ const rule = {
                         }
                         else if (id.elements[0] === resolved.identifiers[0]) {
                             if (name === 'useState') {
-                                const references = resolved.references;
-                                for (const reference of references) {
-                                    stateVariables.add(reference.identifier);
+                                var references = resolved.references;
+                                try {
+                                    for (var references_3 = __values(references), references_3_1 = references_3.next(); !references_3_1.done; references_3_1 = references_3.next()) {
+                                        var reference = references_3_1.value;
+                                        stateVariables.add(reference.identifier);
+                                    }
+                                }
+                                catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                                finally {
+                                    try {
+                                        if (references_3_1 && !references_3_1.done && (_c = references_3.return)) _c.call(references_3);
+                                    }
+                                    finally { if (e_6) throw e_6.error; }
                                 }
                             }
                             // State variable itself is dynamic.
@@ -964,10 +1159,11 @@ const rule = {
             }
             // Some are just functions that don't reference anything dynamic.
             function isFunctionWithoutCapturedValues(resolved) {
+                var e_7, _a, e_8, _b;
                 if (!isArray(resolved.defs)) {
                     return false;
                 }
-                const def = resolved.defs[0];
+                var def = resolved.defs[0];
                 if (def == null) {
                     return false;
                 }
@@ -976,55 +1172,75 @@ const rule = {
                 }
                 // Search the direct component subscopes for
                 // top-level function definitions matching this reference.
-                const fnNode = def.node;
-                const childScopes = (componentScope === null || componentScope === void 0 ? void 0 : componentScope.childScopes) || [];
-                let fnScope = null;
-                for (const childScope of childScopes) {
-                    const childScopeBlock = childScope.block;
-                    if (
-                    // function handleChange() {}
-                    (fnNode.type === 'FunctionDeclaration' &&
-                        childScopeBlock === fnNode) ||
-                        // const handleChange = () => {}
-                        // const handleChange = function() {}
-                        (fnNode.type === 'VariableDeclarator' &&
-                            childScopeBlock.parent === fnNode)) {
-                        // Found it!
-                        fnScope = childScope;
-                        break;
+                var fnNode = def.node;
+                var childScopes = (componentScope === null || componentScope === void 0 ? void 0 : componentScope.childScopes) || [];
+                var fnScope = null;
+                try {
+                    for (var childScopes_1 = __values(childScopes), childScopes_1_1 = childScopes_1.next(); !childScopes_1_1.done; childScopes_1_1 = childScopes_1.next()) {
+                        var childScope = childScopes_1_1.value;
+                        var childScopeBlock = childScope.block;
+                        if (
+                        // function handleChange() {}
+                        (fnNode.type === 'FunctionDeclaration' &&
+                            childScopeBlock === fnNode) ||
+                            // const handleChange = () => {}
+                            // const handleChange = function() {}
+                            (fnNode.type === 'VariableDeclarator' &&
+                                childScopeBlock.parent === fnNode)) {
+                            // Found it!
+                            fnScope = childScope;
+                            break;
+                        }
                     }
+                }
+                catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                finally {
+                    try {
+                        if (childScopes_1_1 && !childScopes_1_1.done && (_a = childScopes_1.return)) _a.call(childScopes_1);
+                    }
+                    finally { if (e_7) throw e_7.error; }
                 }
                 if (fnScope == null) {
                     return false;
                 }
-                // Does this function capture any values
-                // that are in pure scopes (aka render)?
-                for (const ref of fnScope.through) {
-                    if (ref.resolved == null) {
-                        continue;
+                try {
+                    // Does this function capture any values
+                    // that are in pure scopes (aka render)?
+                    for (var _c = __values(fnScope.through), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var ref = _d.value;
+                        if (ref.resolved == null) {
+                            continue;
+                        }
+                        if (pureScopes.has(ref.resolved.scope) &&
+                            // Stable values are fine though,
+                            // although we won't check functions deeper.
+                            !memoizedIsStableKnownHookValue(ref.resolved)) {
+                            return false;
+                        }
                     }
-                    if (pureScopes.has(ref.resolved.scope) &&
-                        // Stable values are fine though,
-                        // although we won't check functions deeper.
-                        !memoizedIsStableKnownHookValue(ref.resolved)) {
-                        return false;
+                }
+                catch (e_8_1) { e_8 = { error: e_8_1 }; }
+                finally {
+                    try {
+                        if (_d && !_d.done && (_b = _c.return)) _b.call(_c);
                     }
+                    finally { if (e_8) throw e_8.error; }
                 }
                 // If we got here, this function doesn't capture anything
                 // from render--or everything it captures is known stable.
                 return true;
             }
             // Remember such values. Avoid re-running extra checks on them.
-            const memoizedIsStableKnownHookValue = memoizeWithWeakMap(isStableKnownHookValue, stableKnownValueCache);
-            const memoizedIsFunctionWithoutCapturedValues = memoizeWithWeakMap(isFunctionWithoutCapturedValues, functionWithoutCapturedValueCache);
+            var memoizedIsStableKnownHookValue = memoizeWithWeakMap(isStableKnownHookValue, stableKnownValueCache);
+            var memoizedIsFunctionWithoutCapturedValues = memoizeWithWeakMap(isFunctionWithoutCapturedValues, functionWithoutCapturedValueCache);
             // These are usually mistaken. Collect them.
-            const currentRefsInEffectCleanup = new Map();
+            var currentRefsInEffectCleanup = new Map();
             // Is this reference inside a cleanup function for this effect node?
             // We can check by traversing scopes upwards from the reference, and checking
             // if the last "return () => " we encounter is located directly inside the effect.
             function isInsideEffectCleanup(reference) {
-                let curScope = reference.from;
-                let isInReturnedFunction = false;
+                var curScope = reference.from;
+                var isInReturnedFunction = false;
                 while (curScope != null && curScope.block !== node) {
                     if (curScope.type === 'function') {
                         isInReturnedFunction =
@@ -1037,105 +1253,138 @@ const rule = {
             }
             // Get dependencies from all our resolved references in pure scopes.
             // Key is dependency string, value is whether it's stable.
-            const dependencies = new Map();
-            const optionalChains = new Map();
+            var dependencies = new Map();
+            var optionalChains = new Map();
             gatherDependenciesRecursively(scope);
             function gatherDependenciesRecursively(currentScope) {
-                var _a, _b, _c, _d, _e;
-                for (const reference of currentScope.references) {
-                    // If this reference is not resolved or it is not declared in a pure
-                    // scope then we don't care about this reference.
-                    if (!reference.resolved) {
-                        continue;
-                    }
-                    if (!pureScopes.has(reference.resolved.scope)) {
-                        continue;
-                    }
-                    // Narrow the scope of a dependency if it is, say, a member expression.
-                    // Then normalize the narrowed dependency.
-                    const referenceNode = fastFindReferenceWithParent(node, reference.identifier);
-                    if (referenceNode == null) {
-                        continue;
-                    }
-                    const dependencyNode = getDependency(referenceNode);
-                    const dependency = analyzePropertyChain(dependencyNode, optionalChains);
-                    // Accessing ref.current inside effect cleanup is bad.
-                    if (
-                    // We're in an effect...
-                    isEffect &&
-                        // ... and this look like accessing .current...
-                        dependencyNode.type === 'Identifier' &&
-                        (((_a = dependencyNode.parent) === null || _a === void 0 ? void 0 : _a.type) === 'MemberExpression' ||
-                            ((_b = dependencyNode.parent) === null || _b === void 0 ? void 0 : _b.type) === 'OptionalMemberExpression') &&
-                        !dependencyNode.parent.computed &&
-                        dependencyNode.parent.property.type === 'Identifier' &&
-                        dependencyNode.parent.property.name === 'current' &&
-                        // ...in a cleanup function or below...
-                        isInsideEffectCleanup(reference)) {
-                        currentRefsInEffectCleanup.set(dependency, {
-                            reference,
-                            dependencyNode,
-                        });
-                    }
-                    if (((_c = dependencyNode.parent) === null || _c === void 0 ? void 0 : _c.type) === 'TSTypeQuery' ||
-                        ((_d = dependencyNode.parent) === null || _d === void 0 ? void 0 : _d.type) === 'TSTypeReference') {
-                        continue;
-                    }
-                    const def = reference.resolved.defs[0];
-                    if (def == null) {
-                        continue;
-                    }
-                    // Ignore references to the function itself as it's not defined yet.
-                    if (def.node != null && def.node.init === node.parent) {
-                        continue;
-                    }
-                    // Ignore Flow type parameters
-                    // @ts-expect-error We don't have flow types
-                    if (def.type === 'TypeParameter') {
-                        continue;
-                    }
-                    // Add the dependency to a map so we can make sure it is referenced
-                    // again in our dependencies array. Remember whether it's stable.
-                    if (!dependencies.has(dependency)) {
-                        const resolved = reference.resolved;
-                        const isStable = memoizedIsStableKnownHookValue(resolved) ||
-                            memoizedIsFunctionWithoutCapturedValues(resolved);
-                        dependencies.set(dependency, {
-                            isStable,
-                            references: [reference],
-                        });
-                    }
-                    else {
-                        (_e = dependencies.get(dependency)) === null || _e === void 0 ? void 0 : _e.references.push(reference);
+                var e_9, _a, e_10, _b;
+                var _c, _d, _e, _f, _g;
+                try {
+                    for (var _h = __values(currentScope.references), _j = _h.next(); !_j.done; _j = _h.next()) {
+                        var reference = _j.value;
+                        // If this reference is not resolved or it is not declared in a pure
+                        // scope then we don't care about this reference.
+                        if (!reference.resolved) {
+                            continue;
+                        }
+                        if (!pureScopes.has(reference.resolved.scope)) {
+                            continue;
+                        }
+                        // Narrow the scope of a dependency if it is, say, a member expression.
+                        // Then normalize the narrowed dependency.
+                        var referenceNode = fastFindReferenceWithParent(node, reference.identifier);
+                        if (referenceNode == null) {
+                            continue;
+                        }
+                        var dependencyNode = getDependency(referenceNode);
+                        var dependency = analyzePropertyChain(dependencyNode, optionalChains);
+                        // Accessing ref.current inside effect cleanup is bad.
+                        if (
+                        // We're in an effect...
+                        isEffect &&
+                            // ... and this look like accessing .current...
+                            dependencyNode.type === 'Identifier' &&
+                            (((_c = dependencyNode.parent) === null || _c === void 0 ? void 0 : _c.type) === 'MemberExpression' ||
+                                ((_d = dependencyNode.parent) === null || _d === void 0 ? void 0 : _d.type) === 'OptionalMemberExpression') &&
+                            !dependencyNode.parent.computed &&
+                            dependencyNode.parent.property.type === 'Identifier' &&
+                            dependencyNode.parent.property.name === 'current' &&
+                            // ...in a cleanup function or below...
+                            isInsideEffectCleanup(reference)) {
+                            currentRefsInEffectCleanup.set(dependency, {
+                                reference: reference,
+                                dependencyNode: dependencyNode,
+                            });
+                        }
+                        if (((_e = dependencyNode.parent) === null || _e === void 0 ? void 0 : _e.type) === 'TSTypeQuery' ||
+                            ((_f = dependencyNode.parent) === null || _f === void 0 ? void 0 : _f.type) === 'TSTypeReference') {
+                            continue;
+                        }
+                        var def = reference.resolved.defs[0];
+                        if (def == null) {
+                            continue;
+                        }
+                        // Ignore references to the function itself as it's not defined yet.
+                        if (def.node != null && def.node.init === node.parent) {
+                            continue;
+                        }
+                        // Ignore Flow type parameters
+                        // @ts-expect-error We don't have flow types
+                        if (def.type === 'TypeParameter') {
+                            continue;
+                        }
+                        // Add the dependency to a map so we can make sure it is referenced
+                        // again in our dependencies array. Remember whether it's stable.
+                        if (!dependencies.has(dependency)) {
+                            var resolved = reference.resolved;
+                            var isStable = memoizedIsStableKnownHookValue(resolved) ||
+                                memoizedIsFunctionWithoutCapturedValues(resolved);
+                            dependencies.set(dependency, {
+                                isStable: isStable,
+                                references: [reference],
+                            });
+                        }
+                        else {
+                            (_g = dependencies.get(dependency)) === null || _g === void 0 ? void 0 : _g.references.push(reference);
+                        }
                     }
                 }
-                for (const childScope of currentScope.childScopes) {
-                    gatherDependenciesRecursively(childScope);
+                catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                finally {
+                    try {
+                        if (_j && !_j.done && (_a = _h.return)) _a.call(_h);
+                    }
+                    finally { if (e_9) throw e_9.error; }
+                }
+                try {
+                    for (var _k = __values(currentScope.childScopes), _l = _k.next(); !_l.done; _l = _k.next()) {
+                        var childScope = _l.value;
+                        gatherDependenciesRecursively(childScope);
+                    }
+                }
+                catch (e_10_1) { e_10 = { error: e_10_1 }; }
+                finally {
+                    try {
+                        if (_l && !_l.done && (_b = _k.return)) _b.call(_k);
+                    }
+                    finally { if (e_10) throw e_10.error; }
                 }
             }
             // Warn about accessing .current in cleanup effects.
-            currentRefsInEffectCleanup.forEach(({ reference, dependencyNode }, dependency) => {
-                var _a, _b;
-                const references = ((_a = reference.resolved) === null || _a === void 0 ? void 0 : _a.references) || [];
+            currentRefsInEffectCleanup.forEach(function (_a, dependency) {
+                var e_11, _b;
+                var _c, _d;
+                var reference = _a.reference, dependencyNode = _a.dependencyNode;
+                var references = ((_c = reference.resolved) === null || _c === void 0 ? void 0 : _c.references) || [];
                 // Is React managing this ref or us?
                 // Let's see if we can find a .current assignment.
-                let foundCurrentAssignment = false;
-                for (const ref of references) {
-                    const { identifier } = ref;
-                    const { parent } = identifier;
-                    if (parent != null &&
-                        // ref.current
-                        // Note: no need to handle OptionalMemberExpression because it can't be LHS.
-                        parent.type === 'MemberExpression' &&
-                        !parent.computed &&
-                        parent.property.type === 'Identifier' &&
-                        parent.property.name === 'current' &&
-                        // ref.current = <something>
-                        ((_b = parent.parent) === null || _b === void 0 ? void 0 : _b.type) === 'AssignmentExpression' &&
-                        parent.parent.left === parent) {
-                        foundCurrentAssignment = true;
-                        break;
+                var foundCurrentAssignment = false;
+                try {
+                    for (var references_4 = __values(references), references_4_1 = references_4.next(); !references_4_1.done; references_4_1 = references_4.next()) {
+                        var ref = references_4_1.value;
+                        var identifier = ref.identifier;
+                        var parent = identifier.parent;
+                        if (parent != null &&
+                            // ref.current
+                            // Note: no need to handle OptionalMemberExpression because it can't be LHS.
+                            parent.type === 'MemberExpression' &&
+                            !parent.computed &&
+                            parent.property.type === 'Identifier' &&
+                            parent.property.name === 'current' &&
+                            // ref.current = <something>
+                            ((_d = parent.parent) === null || _d === void 0 ? void 0 : _d.type) === 'AssignmentExpression' &&
+                            parent.parent.left === parent) {
+                            foundCurrentAssignment = true;
+                            break;
+                        }
                     }
+                }
+                catch (e_11_1) { e_11 = { error: e_11_1 }; }
+                finally {
+                    try {
+                        if (references_4_1 && !references_4_1.done && (_b = references_4.return)) _b.call(references_4);
+                    }
+                    finally { if (e_11) throw e_11.error; }
                 }
                 // We only want to warn about React-managed refs.
                 if (foundCurrentAssignment) {
@@ -1144,16 +1393,16 @@ const rule = {
                 reportProblem({
                     // @ts-expect-error We can do better here (dependencyNode.parent has not been type narrowed)
                     node: dependencyNode.parent.property,
-                    message: `The ref value '${dependency}.current' will likely have ` +
-                        `changed by the time this effect cleanup function runs. If ` +
-                        `this ref points to a node rendered by React, copy ` +
-                        `'${dependency}.current' to a variable inside the effect, and ` +
-                        `use that variable in the cleanup function.`,
+                    message: "The ref value '".concat(dependency, ".current' will likely have ") +
+                        "changed by the time this effect cleanup function runs. If " +
+                        "this ref points to a node rendered by React, copy " +
+                        "'".concat(dependency, ".current' to a variable inside the effect, and ") +
+                        "use that variable in the cleanup function.",
                 });
             });
             // Warn about assigning to variables in the outer scope.
             // Those are usually bugs.
-            const staleAssignments = new Set();
+            var staleAssignments = new Set();
             function reportStaleAssignment(writeExpr, key) {
                 if (staleAssignments.has(key)) {
                     return;
@@ -1161,21 +1410,22 @@ const rule = {
                 staleAssignments.add(key);
                 reportProblem({
                     node: writeExpr,
-                    message: `Assignments to the '${key}' variable from inside React Hook ` +
-                        `${getSourceCode().getText(reactiveHook)} will be lost after each ` +
-                        `render. To preserve the value over time, store it in a useRef ` +
-                        `Hook and keep the mutable value in the '.current' property. ` +
-                        `Otherwise, you can move this variable directly inside ` +
-                        `${getSourceCode().getText(reactiveHook)}.`,
+                    message: "Assignments to the '".concat(key, "' variable from inside React Hook ") +
+                        "".concat(getSourceCode().getText(reactiveHook), " will be lost after each ") +
+                        "render. To preserve the value over time, store it in a useRef " +
+                        "Hook and keep the mutable value in the '.current' property. " +
+                        "Otherwise, you can move this variable directly inside " +
+                        "".concat(getSourceCode().getText(reactiveHook), "."),
                 });
             }
             // Remember which deps are stable and report bad usage first.
-            const stableDependencies = new Set();
-            dependencies.forEach(({ isStable, references }, key) => {
+            var stableDependencies = new Set();
+            dependencies.forEach(function (_a, key) {
+                var isStable = _a.isStable, references = _a.references;
                 if (isStable) {
                     stableDependencies.add(key);
                 }
-                references.forEach(reference => {
+                references.forEach(function (reference) {
                     if (reference.writeExpr) {
                         reportStaleAssignment(reference.writeExpr, key);
                     }
@@ -1188,51 +1438,52 @@ const rule = {
             if (!declaredDependenciesNode) {
                 // Check if there are any top-level setState() calls.
                 // Those tend to lead to infinite loops.
-                let setStateInsideEffectWithoutDeps = null;
-                dependencies.forEach(({ references }, key) => {
-                    if (setStateInsideEffectWithoutDeps) {
+                var setStateInsideEffectWithoutDeps_1 = null;
+                dependencies.forEach(function (_a, key) {
+                    var references = _a.references;
+                    if (setStateInsideEffectWithoutDeps_1) {
                         return;
                     }
-                    references.forEach(reference => {
-                        if (setStateInsideEffectWithoutDeps) {
+                    references.forEach(function (reference) {
+                        if (setStateInsideEffectWithoutDeps_1) {
                             return;
                         }
-                        const id = reference.identifier;
-                        const isSetState = setStateCallSites.has(id);
+                        var id = reference.identifier;
+                        var isSetState = setStateCallSites.has(id);
                         if (!isSetState) {
                             return;
                         }
-                        let fnScope = reference.from;
+                        var fnScope = reference.from;
                         while (fnScope != null && fnScope.type !== 'function') {
                             fnScope = fnScope.upper;
                         }
-                        const isDirectlyInsideEffect = (fnScope === null || fnScope === void 0 ? void 0 : fnScope.block) === node;
+                        var isDirectlyInsideEffect = (fnScope === null || fnScope === void 0 ? void 0 : fnScope.block) === node;
                         if (isDirectlyInsideEffect) {
                             // TODO: we could potentially ignore early returns.
-                            setStateInsideEffectWithoutDeps = key;
+                            setStateInsideEffectWithoutDeps_1 = key;
                         }
                     });
                 });
-                if (setStateInsideEffectWithoutDeps) {
-                    const { suggestedDependencies } = collectRecommendations({
-                        dependencies,
+                if (setStateInsideEffectWithoutDeps_1) {
+                    var suggestedDependencies_1 = collectRecommendations({
+                        dependencies: dependencies,
                         declaredDependencies: [],
-                        stableDependencies,
+                        stableDependencies: stableDependencies,
                         externalDependencies: new Set(),
                         isEffect: true,
-                    });
+                    }).suggestedDependencies;
                     reportProblem({
                         node: reactiveHook,
-                        message: `React Hook ${reactiveHookName} contains a call to '${setStateInsideEffectWithoutDeps}'. ` +
-                            `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
-                            `To fix this, pass [` +
-                            suggestedDependencies.join(', ') +
-                            `] as a second argument to the ${reactiveHookName} Hook.`,
+                        message: "React Hook ".concat(reactiveHookName, " contains a call to '").concat(setStateInsideEffectWithoutDeps_1, "'. ") +
+                            "Without a list of dependencies, this can lead to an infinite chain of updates. " +
+                            "To fix this, pass [" +
+                            suggestedDependencies_1.join(', ') +
+                            "] as a second argument to the ".concat(reactiveHookName, " Hook."),
                         suggest: [
                             {
-                                desc: `Add dependencies array: [${suggestedDependencies.join(', ')}]`,
-                                fix(fixer) {
-                                    return fixer.insertTextAfter(node, `, [${suggestedDependencies.join(', ')}]`);
+                                desc: "Add dependencies array: [".concat(suggestedDependencies_1.join(', '), "]"),
+                                fix: function (fixer) {
+                                    return fixer.insertTextAfter(node, ", [".concat(suggestedDependencies_1.join(', '), "]"));
                                 },
                             },
                         ],
@@ -1240,10 +1491,10 @@ const rule = {
                 }
                 return;
             }
-            const declaredDependencies = [];
-            const externalDependencies = new Set();
-            const isArrayExpression = declaredDependenciesNode.type === 'ArrayExpression';
-            const isTSAsArrayExpression = declaredDependenciesNode.type === 'TSAsExpression' &&
+            var declaredDependencies = [];
+            var externalDependencies = new Set();
+            var isArrayExpression = declaredDependenciesNode.type === 'ArrayExpression';
+            var isTSAsArrayExpression = declaredDependenciesNode.type === 'TSAsExpression' &&
                 declaredDependenciesNode.expression.type === 'ArrayExpression';
             if (!isArrayExpression && !isTSAsArrayExpression) {
                 // If the declared dependencies are not an array expression then we
@@ -1251,17 +1502,17 @@ const rule = {
                 // the user this in an error.
                 reportProblem({
                     node: declaredDependenciesNode,
-                    message: `React Hook ${getSourceCode().getText(reactiveHook)} was passed a ` +
+                    message: "React Hook ".concat(getSourceCode().getText(reactiveHook), " was passed a ") +
                         'dependency list that is not an array literal. This means we ' +
                         "can't statically verify whether you've passed the correct " +
                         'dependencies.',
                 });
             }
             else {
-                const arrayExpression = isTSAsArrayExpression
+                var arrayExpression = isTSAsArrayExpression
                     ? declaredDependenciesNode.expression
                     : declaredDependenciesNode;
-                arrayExpression.elements.forEach(declaredDependencyNode => {
+                arrayExpression.elements.forEach(function (declaredDependencyNode) {
                     // Skip elided elements.
                     if (declaredDependencyNode === null) {
                         return;
@@ -1270,7 +1521,7 @@ const rule = {
                     if (declaredDependencyNode.type === 'SpreadElement') {
                         reportProblem({
                             node: declaredDependencyNode,
-                            message: `React Hook ${getSourceCode().getText(reactiveHook)} has a spread ` +
+                            message: "React Hook ".concat(getSourceCode().getText(reactiveHook), " has a spread ") +
                                 "element in its dependency array. This means we can't " +
                                 "statically verify whether you've passed the " +
                                 'correct dependencies.',
@@ -1281,11 +1532,11 @@ const rule = {
                         reportProblem({
                             node: declaredDependencyNode,
                             message: 'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
-                                `Remove \`${getSourceCode().getText(declaredDependencyNode)}\` from the list.`,
+                                "Remove `".concat(getSourceCode().getText(declaredDependencyNode), "` from the list."),
                             suggest: [
                                 {
-                                    desc: `Remove the dependency \`${getSourceCode().getText(declaredDependencyNode)}\``,
-                                    fix(fixer) {
+                                    desc: "Remove the dependency `".concat(getSourceCode().getText(declaredDependencyNode), "`"),
+                                    fix: function (fixer) {
                                         return fixer.removeRange(declaredDependencyNode.range);
                                     },
                                 },
@@ -1294,7 +1545,7 @@ const rule = {
                     }
                     // Try to normalize the declared dependency. If we can't then an error
                     // will be thrown. We will catch that error and report an error.
-                    let declaredDependency;
+                    var declaredDependency;
                     try {
                         declaredDependency = analyzePropertyChain(declaredDependencyNode, null);
                     }
@@ -1306,15 +1557,15 @@ const rule = {
                                     dependencies.has(declaredDependencyNode.value)) {
                                     reportProblem({
                                         node: declaredDependencyNode,
-                                        message: `The ${declaredDependencyNode.raw} literal is not a valid dependency ` +
-                                            `because it never changes. ` +
-                                            `Did you mean to include ${declaredDependencyNode.value} in the array instead?`,
+                                        message: "The ".concat(declaredDependencyNode.raw, " literal is not a valid dependency ") +
+                                            "because it never changes. " +
+                                            "Did you mean to include ".concat(declaredDependencyNode.value, " in the array instead?"),
                                     });
                                 }
                                 else {
                                     reportProblem({
                                         node: declaredDependencyNode,
-                                        message: `The ${declaredDependencyNode.raw} literal is not a valid dependency ` +
+                                        message: "The ".concat(declaredDependencyNode.raw, " literal is not a valid dependency ") +
                                             'because it never changes. You can safely remove it.',
                                     });
                                 }
@@ -1322,8 +1573,8 @@ const rule = {
                             else {
                                 reportProblem({
                                     node: declaredDependencyNode,
-                                    message: `React Hook ${getSourceCode().getText(reactiveHook)} has a ` +
-                                        `complex expression in the dependency array. ` +
+                                    message: "React Hook ".concat(getSourceCode().getText(reactiveHook), " has a ") +
+                                        "complex expression in the dependency array. " +
                                         'Extract it to a separate variable so it can be statically checked.',
                                 });
                             }
@@ -1333,14 +1584,14 @@ const rule = {
                             throw error;
                         }
                     }
-                    let maybeID = declaredDependencyNode;
+                    var maybeID = declaredDependencyNode;
                     while (maybeID.type === 'MemberExpression' ||
                         maybeID.type === 'OptionalMemberExpression' ||
                         maybeID.type === 'ChainExpression') {
                         // @ts-expect-error This can be done better
                         maybeID = maybeID.object || maybeID.expression.object;
                     }
-                    const isDeclaredInComponent = !componentScope.through.some(ref => ref.identifier === maybeID);
+                    var isDeclaredInComponent = !componentScope.through.some(function (ref) { return ref.identifier === maybeID; });
                     // Add the dependency to our declared dependency map.
                     declaredDependencies.push({
                         key: declaredDependency,
@@ -1351,41 +1602,42 @@ const rule = {
                     }
                 });
             }
-            const { suggestedDependencies, unnecessaryDependencies, missingDependencies, duplicateDependencies, } = collectRecommendations({
-                dependencies,
-                declaredDependencies,
-                stableDependencies,
-                externalDependencies,
-                isEffect,
-            });
-            let suggestedDeps = suggestedDependencies;
-            const problemCount = duplicateDependencies.size +
+            var _d = collectRecommendations({
+                dependencies: dependencies,
+                declaredDependencies: declaredDependencies,
+                stableDependencies: stableDependencies,
+                externalDependencies: externalDependencies,
+                isEffect: isEffect,
+            }), suggestedDependencies = _d.suggestedDependencies, unnecessaryDependencies = _d.unnecessaryDependencies, missingDependencies = _d.missingDependencies, duplicateDependencies = _d.duplicateDependencies;
+            var suggestedDeps = suggestedDependencies;
+            var problemCount = duplicateDependencies.size +
                 missingDependencies.size +
                 unnecessaryDependencies.size;
             if (problemCount === 0) {
                 // If nothing else to report, check if some dependencies would
                 // invalidate on every render.
-                const constructions = scanForConstructions({
-                    declaredDependencies,
-                    declaredDependenciesNode,
-                    componentScope,
-                    scope,
+                var constructions = scanForConstructions({
+                    declaredDependencies: declaredDependencies,
+                    declaredDependenciesNode: declaredDependenciesNode,
+                    componentScope: componentScope,
+                    scope: scope,
                 });
-                constructions.forEach(({ construction, isUsedOutsideOfHook, depType }) => {
-                    var _a;
-                    const wrapperHook = depType === 'function' ? 'useCallback' : 'useMemo';
-                    const constructionType = depType === 'function' ? 'definition' : 'initialization';
-                    const defaultAdvice = `wrap the ${constructionType} of '${construction.name.name}' in its own ${wrapperHook}() Hook.`;
-                    const advice = isUsedOutsideOfHook
-                        ? `To fix this, ${defaultAdvice}`
-                        : `Move it inside the ${reactiveHookName} callback. Alternatively, ${defaultAdvice}`;
-                    const causation = depType === 'conditional' || depType === 'logical expression'
+                constructions.forEach(function (_a) {
+                    var _b;
+                    var construction = _a.construction, isUsedOutsideOfHook = _a.isUsedOutsideOfHook, depType = _a.depType;
+                    var wrapperHook = depType === 'function' ? 'useCallback' : 'useMemo';
+                    var constructionType = depType === 'function' ? 'definition' : 'initialization';
+                    var defaultAdvice = "wrap the ".concat(constructionType, " of '").concat(construction.name.name, "' in its own ").concat(wrapperHook, "() Hook.");
+                    var advice = isUsedOutsideOfHook
+                        ? "To fix this, ".concat(defaultAdvice)
+                        : "Move it inside the ".concat(reactiveHookName, " callback. Alternatively, ").concat(defaultAdvice);
+                    var causation = depType === 'conditional' || depType === 'logical expression'
                         ? 'could make'
                         : 'makes';
-                    const message = `The '${construction.name.name}' ${depType} ${causation} the dependencies of ` +
-                        `${reactiveHookName} Hook (at line ${(_a = declaredDependenciesNode.loc) === null || _a === void 0 ? void 0 : _a.start.line}) ` +
-                        `change on every render. ${advice}`;
-                    let suggest;
+                    var message = "The '".concat(construction.name.name, "' ").concat(depType, " ").concat(causation, " the dependencies of ") +
+                        "".concat(reactiveHookName, " Hook (at line ").concat((_b = declaredDependenciesNode.loc) === null || _b === void 0 ? void 0 : _b.start.line, ") ") +
+                        "change on every render. ".concat(advice);
+                    var suggest;
                     // Only handle the simple case of variable assignments.
                     // Wrapping function declarations can mess up hoisting.
                     if (isUsedOutsideOfHook &&
@@ -1396,11 +1648,11 @@ const rule = {
                         depType === 'function') {
                         suggest = [
                             {
-                                desc: `Wrap the ${constructionType} of '${construction.name.name}' in its own ${wrapperHook}() Hook.`,
-                                fix(fixer) {
-                                    const [before, after] = wrapperHook === 'useMemo'
-                                        ? [`useMemo(() => { return `, '; })']
-                                        : ['useCallback(', ')'];
+                                desc: "Wrap the ".concat(constructionType, " of '").concat(construction.name.name, "' in its own ").concat(wrapperHook, "() Hook."),
+                                fix: function (fixer) {
+                                    var _a = __read(wrapperHook === 'useMemo'
+                                        ? ["useMemo(() => { return ", '; })']
+                                        : ['useCallback(', ')'], 2), before = _a[0], after = _a[1];
                                     return [
                                         // TODO: also add an import?
                                         fixer.insertTextBefore(construction.node.init, before),
@@ -1419,8 +1671,8 @@ const rule = {
                     reportProblem({
                         // TODO: Why not report this at the dependency site?
                         node: construction.node,
-                        message,
-                        suggest,
+                        message: message,
+                        suggest: suggest,
                     });
                 });
                 return;
@@ -1433,11 +1685,11 @@ const rule = {
             // use cases for over-specifying deps.
             if (!isEffect && missingDependencies.size > 0) {
                 suggestedDeps = collectRecommendations({
-                    dependencies,
+                    dependencies: dependencies,
                     declaredDependencies: [], // Pretend we don't know
-                    stableDependencies,
-                    externalDependencies,
-                    isEffect,
+                    stableDependencies: stableDependencies,
+                    externalDependencies: externalDependencies,
+                    isEffect: isEffect,
                 }).suggestedDependencies;
             }
             // Alphabetize the suggestions, but only if deps were already alphabetized.
@@ -1445,8 +1697,8 @@ const rule = {
                 if (declaredDependencies.length === 0) {
                     return true;
                 }
-                const declaredDepKeys = declaredDependencies.map(dep => dep.key);
-                const sortedDeclaredDepKeys = declaredDepKeys.slice().sort();
+                var declaredDepKeys = declaredDependencies.map(function (dep) { return dep.key; });
+                var sortedDeclaredDepKeys = declaredDepKeys.slice().sort();
                 return declaredDepKeys.join(',') === sortedDeclaredDepKeys.join(',');
             }
             if (areDeclaredDepsAlphabetized()) {
@@ -1457,12 +1709,12 @@ const rule = {
             // check whether any members in our path are always used as optional-only. In that case,
             // we will use ?. instead of . to concatenate those parts of the path.
             function formatDependency(path) {
-                const members = path.split('.');
-                let finalPath = '';
-                for (let i = 0; i < members.length; i++) {
+                var members = path.split('.');
+                var finalPath = '';
+                for (var i = 0; i < members.length; i++) {
                     if (i !== 0) {
-                        const pathSoFar = members.slice(0, i + 1).join('.');
-                        const isOptional = optionalChains.get(pathSoFar) === true;
+                        var pathSoFar = members.slice(0, i + 1).join('.');
+                        var isOptional = optionalChains.get(pathSoFar) === true;
                         finalPath += isOptional ? '?.' : '.';
                     }
                     finalPath += members[i];
@@ -1480,33 +1732,33 @@ const rule = {
                     ': ' +
                     joinEnglish(Array.from(deps)
                         .sort()
-                        .map(name => "'" + formatDependency(name) + "'")) +
-                    `. Either ${fixVerb} ${deps.size > 1 ? 'them' : 'it'} or remove the dependency array.`);
+                        .map(function (name) { return "'" + formatDependency(name) + "'"; })) +
+                    ". Either ".concat(fixVerb, " ").concat(deps.size > 1 ? 'them' : 'it', " or remove the dependency array."));
             }
-            let extraWarning = '';
+            var extraWarning = '';
             if (unnecessaryDependencies.size > 0) {
-                let badRef = null;
-                Array.from(unnecessaryDependencies.keys()).forEach(key => {
-                    if (badRef !== null) {
+                var badRef_1 = null;
+                Array.from(unnecessaryDependencies.keys()).forEach(function (key) {
+                    if (badRef_1 !== null) {
                         return;
                     }
                     if (key.endsWith('.current')) {
-                        badRef = key;
+                        badRef_1 = key;
                     }
                 });
-                if (badRef !== null) {
+                if (badRef_1 !== null) {
                     extraWarning =
-                        ` Mutable values like '${badRef}' aren't valid dependencies ` +
+                        " Mutable values like '".concat(badRef_1, "' aren't valid dependencies ") +
                             "because mutating them doesn't re-render the component.";
                 }
                 else if (externalDependencies.size > 0) {
-                    const dep = Array.from(externalDependencies)[0];
+                    var dep = Array.from(externalDependencies)[0];
                     // Don't show this warning for things that likely just got moved *inside* the callback
                     // because in that case they're clearly not referring to globals.
                     if (!scope.set.has(dep)) {
                         extraWarning =
-                            ` Outer scope values like '${dep}' aren't valid dependencies ` +
-                                `because mutating them doesn't re-render the component.`;
+                            " Outer scope values like '".concat(dep, "' aren't valid dependencies ") +
+                                "because mutating them doesn't re-render the component.";
                     }
                 }
             }
@@ -1514,74 +1766,95 @@ const rule = {
             // a `this` value. This warning can be confusing.
             // So if we're going to show it, append a clarification.
             if (!extraWarning && missingDependencies.has('props')) {
-                const propDep = dependencies.get('props');
+                var propDep = dependencies.get('props');
                 if (propDep == null) {
                     return;
                 }
-                const refs = propDep.references;
+                var refs = propDep.references;
                 if (!Array.isArray(refs)) {
                     return;
                 }
-                let isPropsOnlyUsedInMembers = true;
-                for (const ref of refs) {
-                    const id = fastFindReferenceWithParent(componentScope.block, ref.identifier);
-                    if (!id) {
-                        isPropsOnlyUsedInMembers = false;
-                        break;
+                var isPropsOnlyUsedInMembers = true;
+                try {
+                    for (var refs_1 = __values(refs), refs_1_1 = refs_1.next(); !refs_1_1.done; refs_1_1 = refs_1.next()) {
+                        var ref = refs_1_1.value;
+                        var id = fastFindReferenceWithParent(componentScope.block, ref.identifier);
+                        if (!id) {
+                            isPropsOnlyUsedInMembers = false;
+                            break;
+                        }
+                        var parent = id.parent;
+                        if (parent == null) {
+                            isPropsOnlyUsedInMembers = false;
+                            break;
+                        }
+                        if (parent.type !== 'MemberExpression' &&
+                            parent.type !== 'OptionalMemberExpression') {
+                            isPropsOnlyUsedInMembers = false;
+                            break;
+                        }
                     }
-                    const parent = id.parent;
-                    if (parent == null) {
-                        isPropsOnlyUsedInMembers = false;
-                        break;
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (refs_1_1 && !refs_1_1.done && (_a = refs_1.return)) _a.call(refs_1);
                     }
-                    if (parent.type !== 'MemberExpression' &&
-                        parent.type !== 'OptionalMemberExpression') {
-                        isPropsOnlyUsedInMembers = false;
-                        break;
-                    }
+                    finally { if (e_1) throw e_1.error; }
                 }
                 if (isPropsOnlyUsedInMembers) {
                     extraWarning =
-                        ` However, 'props' will change when *any* prop changes, so the ` +
-                            `preferred fix is to destructure the 'props' object outside of ` +
-                            `the ${reactiveHookName} call and refer to those specific props ` +
-                            `inside ${getSourceCode().getText(reactiveHook)}.`;
+                        " However, 'props' will change when *any* prop changes, so the " +
+                            "preferred fix is to destructure the 'props' object outside of " +
+                            "the ".concat(reactiveHookName, " call and refer to those specific props ") +
+                            "inside ".concat(getSourceCode().getText(reactiveHook), ".");
                 }
             }
             if (!extraWarning && missingDependencies.size > 0) {
                 // See if the user is trying to avoid specifying a callable prop.
                 // This usually means they're unaware of useCallback.
-                let missingCallbackDep = null;
-                missingDependencies.forEach(missingDep => {
-                    var _a;
-                    if (missingCallbackDep) {
+                var missingCallbackDep_1 = null;
+                missingDependencies.forEach(function (missingDep) {
+                    var e_12, _a;
+                    var _b;
+                    if (missingCallbackDep_1) {
                         return;
                     }
                     // Is this a variable from top scope?
-                    const topScopeRef = componentScope.set.get(missingDep);
-                    const usedDep = dependencies.get(missingDep);
+                    var topScopeRef = componentScope.set.get(missingDep);
+                    var usedDep = dependencies.get(missingDep);
                     if (!(usedDep === null || usedDep === void 0 ? void 0 : usedDep.references) ||
-                        ((_a = usedDep === null || usedDep === void 0 ? void 0 : usedDep.references[0]) === null || _a === void 0 ? void 0 : _a.resolved) !== topScopeRef) {
+                        ((_b = usedDep === null || usedDep === void 0 ? void 0 : usedDep.references[0]) === null || _b === void 0 ? void 0 : _b.resolved) !== topScopeRef) {
                         return;
                     }
                     // Is this a destructured prop?
-                    const def = topScopeRef === null || topScopeRef === void 0 ? void 0 : topScopeRef.defs[0];
+                    var def = topScopeRef === null || topScopeRef === void 0 ? void 0 : topScopeRef.defs[0];
                     if (def == null || def.name == null || def.type !== 'Parameter') {
                         return;
                     }
                     // Was it called in at least one case? Then it's a function.
-                    let isFunctionCall = false;
-                    let id;
-                    for (const reference of usedDep.references) {
-                        id = reference.identifier;
-                        if (id != null &&
-                            id.parent != null &&
-                            (id.parent.type === 'CallExpression' ||
-                                id.parent.type === 'OptionalCallExpression') &&
-                            id.parent.callee === id) {
-                            isFunctionCall = true;
-                            break;
+                    var isFunctionCall = false;
+                    var id;
+                    try {
+                        for (var _c = __values(usedDep.references), _d = _c.next(); !_d.done; _d = _c.next()) {
+                            var reference = _d.value;
+                            id = reference.identifier;
+                            if (id != null &&
+                                id.parent != null &&
+                                (id.parent.type === 'CallExpression' ||
+                                    id.parent.type === 'OptionalCallExpression') &&
+                                id.parent.callee === id) {
+                                isFunctionCall = true;
+                                break;
+                            }
                         }
+                    }
+                    catch (e_12_1) { e_12 = { error: e_12_1 }; }
+                    finally {
+                        try {
+                            if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                        }
+                        finally { if (e_12) throw e_12.error; }
                     }
                     if (!isFunctionCall) {
                         return;
@@ -1589,96 +1862,116 @@ const rule = {
                     // If it's missing (i.e. in component scope) *and* it's a parameter
                     // then it is definitely coming from props destructuring.
                     // (It could also be props itself but we wouldn't be calling it then.)
-                    missingCallbackDep = missingDep;
+                    missingCallbackDep_1 = missingDep;
                 });
-                if (missingCallbackDep !== null) {
+                if (missingCallbackDep_1 !== null) {
                     extraWarning =
-                        ` If '${missingCallbackDep}' changes too often, ` +
-                            `find the parent component that defines it ` +
-                            `and wrap that definition in useCallback.`;
+                        " If '".concat(missingCallbackDep_1, "' changes too often, ") +
+                            "find the parent component that defines it " +
+                            "and wrap that definition in useCallback.";
                 }
             }
             if (!extraWarning && missingDependencies.size > 0) {
-                let setStateRecommendation = null;
-                for (const missingDep of missingDependencies) {
-                    if (setStateRecommendation !== null) {
-                        break;
-                    }
-                    const usedDep = dependencies.get(missingDep);
-                    const references = usedDep.references;
-                    let id;
-                    let maybeCall;
-                    for (const reference of references) {
-                        id = reference.identifier;
-                        maybeCall = id.parent;
-                        // Try to see if we have setState(someExpr(missingDep)).
-                        while (maybeCall != null && maybeCall !== componentScope.block) {
-                            if (maybeCall.type === 'CallExpression') {
-                                const correspondingStateVariable = setStateCallSites.get(maybeCall.callee);
-                                if (correspondingStateVariable != null) {
-                                    if ('name' in correspondingStateVariable &&
-                                        correspondingStateVariable.name === missingDep) {
-                                        // setCount(count + 1)
-                                        setStateRecommendation = {
-                                            missingDep,
-                                            setter: 'name' in maybeCall.callee ? maybeCall.callee.name : '',
-                                            form: 'updater',
-                                        };
-                                    }
-                                    else if (stateVariables.has(id)) {
-                                        // setCount(count + increment)
-                                        setStateRecommendation = {
-                                            missingDep,
-                                            setter: 'name' in maybeCall.callee ? maybeCall.callee.name : '',
-                                            form: 'reducer',
-                                        };
-                                    }
-                                    else {
-                                        const resolved = reference.resolved;
-                                        if (resolved != null) {
-                                            // If it's a parameter *and* a missing dep,
-                                            // it must be a prop or something inside a prop.
-                                            // Therefore, recommend an inline reducer.
-                                            const def = resolved.defs[0];
-                                            if (def != null && def.type === 'Parameter') {
-                                                setStateRecommendation = {
-                                                    missingDep,
-                                                    setter: 'name' in maybeCall.callee
-                                                        ? maybeCall.callee.name
-                                                        : '',
-                                                    form: 'inlineReducer',
-                                                };
-                                            }
-                                        }
-                                    }
-                                    break;
-                                }
-                            }
-                            maybeCall = maybeCall.parent;
-                        }
+                var setStateRecommendation = null;
+                try {
+                    for (var missingDependencies_1 = __values(missingDependencies), missingDependencies_1_1 = missingDependencies_1.next(); !missingDependencies_1_1.done; missingDependencies_1_1 = missingDependencies_1.next()) {
+                        var missingDep = missingDependencies_1_1.value;
                         if (setStateRecommendation !== null) {
                             break;
                         }
+                        var usedDep = dependencies.get(missingDep);
+                        var references = usedDep.references;
+                        var id = void 0;
+                        var maybeCall = void 0;
+                        try {
+                            for (var references_1 = (e_3 = void 0, __values(references)), references_1_1 = references_1.next(); !references_1_1.done; references_1_1 = references_1.next()) {
+                                var reference = references_1_1.value;
+                                id = reference.identifier;
+                                maybeCall = id.parent;
+                                // Try to see if we have setState(someExpr(missingDep)).
+                                while (maybeCall != null && maybeCall !== componentScope.block) {
+                                    if (maybeCall.type === 'CallExpression') {
+                                        var correspondingStateVariable = setStateCallSites.get(maybeCall.callee);
+                                        if (correspondingStateVariable != null) {
+                                            if ('name' in correspondingStateVariable &&
+                                                correspondingStateVariable.name === missingDep) {
+                                                // setCount(count + 1)
+                                                setStateRecommendation = {
+                                                    missingDep: missingDep,
+                                                    setter: 'name' in maybeCall.callee ? maybeCall.callee.name : '',
+                                                    form: 'updater',
+                                                };
+                                            }
+                                            else if (stateVariables.has(id)) {
+                                                // setCount(count + increment)
+                                                setStateRecommendation = {
+                                                    missingDep: missingDep,
+                                                    setter: 'name' in maybeCall.callee ? maybeCall.callee.name : '',
+                                                    form: 'reducer',
+                                                };
+                                            }
+                                            else {
+                                                var resolved = reference.resolved;
+                                                if (resolved != null) {
+                                                    // If it's a parameter *and* a missing dep,
+                                                    // it must be a prop or something inside a prop.
+                                                    // Therefore, recommend an inline reducer.
+                                                    var def = resolved.defs[0];
+                                                    if (def != null && def.type === 'Parameter') {
+                                                        setStateRecommendation = {
+                                                            missingDep: missingDep,
+                                                            setter: 'name' in maybeCall.callee
+                                                                ? maybeCall.callee.name
+                                                                : '',
+                                                            form: 'inlineReducer',
+                                                        };
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    maybeCall = maybeCall.parent;
+                                }
+                                if (setStateRecommendation !== null) {
+                                    break;
+                                }
+                            }
+                        }
+                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                        finally {
+                            try {
+                                if (references_1_1 && !references_1_1.done && (_c = references_1.return)) _c.call(references_1);
+                            }
+                            finally { if (e_3) throw e_3.error; }
+                        }
                     }
+                }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                finally {
+                    try {
+                        if (missingDependencies_1_1 && !missingDependencies_1_1.done && (_b = missingDependencies_1.return)) _b.call(missingDependencies_1);
+                    }
+                    finally { if (e_2) throw e_2.error; }
                 }
                 if (setStateRecommendation !== null) {
                     switch (setStateRecommendation.form) {
                         case 'reducer':
                             extraWarning =
-                                ` You can also replace multiple useState variables with useReducer ` +
-                                    `if '${setStateRecommendation.setter}' needs the ` +
-                                    `current value of '${setStateRecommendation.missingDep}'.`;
+                                " You can also replace multiple useState variables with useReducer " +
+                                    "if '".concat(setStateRecommendation.setter, "' needs the ") +
+                                    "current value of '".concat(setStateRecommendation.missingDep, "'.");
                             break;
                         case 'inlineReducer':
                             extraWarning =
-                                ` If '${setStateRecommendation.setter}' needs the ` +
-                                    `current value of '${setStateRecommendation.missingDep}', ` +
-                                    `you can also switch to useReducer instead of useState and ` +
-                                    `read '${setStateRecommendation.missingDep}' in the reducer.`;
+                                " If '".concat(setStateRecommendation.setter, "' needs the ") +
+                                    "current value of '".concat(setStateRecommendation.missingDep, "', ") +
+                                    "you can also switch to useReducer instead of useState and " +
+                                    "read '".concat(setStateRecommendation.missingDep, "' in the reducer.");
                             break;
                         case 'updater':
                             extraWarning =
-                                ` You can also do a functional update '${setStateRecommendation.setter}(${setStateRecommendation.missingDep.slice(0, 1)} => ...)' if you only need '${setStateRecommendation.missingDep}'` + ` in the '${setStateRecommendation.setter}' call.`;
+                                " You can also do a functional update '".concat(setStateRecommendation.setter, "(").concat(setStateRecommendation.missingDep.slice(0, 1), " => ...)' if you only need '").concat(setStateRecommendation.missingDep, "'") + " in the '".concat(setStateRecommendation.setter, "' call.");
                             break;
                         default:
                             throw new Error('Unknown case.');
@@ -1687,7 +1980,7 @@ const rule = {
             }
             reportProblem({
                 node: declaredDependenciesNode,
-                message: `React Hook ${getSourceCode().getText(reactiveHook)} has ` +
+                message: "React Hook ".concat(getSourceCode().getText(reactiveHook), " has ") +
                     // To avoid a long message, show the next actionable item.
                     (getWarningMessage(missingDependencies, 'a', 'missing', 'include') ||
                         getWarningMessage(unnecessaryDependencies, 'an', 'unnecessary', 'exclude') ||
@@ -1695,41 +1988,41 @@ const rule = {
                     extraWarning,
                 suggest: [
                     {
-                        desc: `Update the dependencies array to be: [${suggestedDeps
+                        desc: "Update the dependencies array to be: [".concat(suggestedDeps
                             .map(formatDependency)
-                            .join(', ')}]`,
-                        fix(fixer) {
+                            .join(', '), "]"),
+                        fix: function (fixer) {
                             // TODO: consider preserving the comments or formatting?
-                            return fixer.replaceText(declaredDependenciesNode, `[${suggestedDeps.map(formatDependency).join(', ')}]`);
+                            return fixer.replaceText(declaredDependenciesNode, "[".concat(suggestedDeps.map(formatDependency).join(', '), "]"));
                         },
                     },
                 ],
             });
         }
         function visitCallExpression(node) {
-            const callbackIndex = getReactiveHookCallbackIndex(node.callee, options);
+            var callbackIndex = getReactiveHookCallbackIndex(node.callee, options);
             if (callbackIndex === -1) {
                 // Not a React Hook call that needs deps.
                 return;
             }
-            let callback = node.arguments[callbackIndex];
-            const reactiveHook = node.callee;
-            const nodeWithoutNamespace = getNodeWithoutReactNamespace(reactiveHook);
-            const reactiveHookName = 'name' in nodeWithoutNamespace ? nodeWithoutNamespace.name : '';
-            const maybeNode = node.arguments[callbackIndex + 1];
-            const declaredDependenciesNode = maybeNode &&
+            var callback = node.arguments[callbackIndex];
+            var reactiveHook = node.callee;
+            var nodeWithoutNamespace = getNodeWithoutReactNamespace(reactiveHook);
+            var reactiveHookName = 'name' in nodeWithoutNamespace ? nodeWithoutNamespace.name : '';
+            var maybeNode = node.arguments[callbackIndex + 1];
+            var declaredDependenciesNode = maybeNode &&
                 !(maybeNode.type === 'Identifier' && maybeNode.name === 'undefined')
                 ? maybeNode
                 : undefined;
-            const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
+            var isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
             // Check whether a callback is supplied. If there is no callback supplied
             // then the hook will not work and React will throw a TypeError.
             // So no need to check for dependency inclusion.
             if (!callback) {
                 reportProblem({
                     node: reactiveHook,
-                    message: `React Hook ${reactiveHookName} requires an effect callback. ` +
-                        `Did you forget to pass a callback to the hook?`,
+                    message: "React Hook ".concat(reactiveHookName, " requires an effect callback. ") +
+                        "Did you forget to pass a callback to the hook?",
                 });
                 return;
             }
@@ -1743,9 +2036,9 @@ const rule = {
                     // TODO: Can this have a suggestion?
                     reportProblem({
                         node: reactiveHook,
-                        message: `React Hook ${reactiveHookName} does nothing when called with ` +
-                            `only one argument. Did you forget to pass an array of ` +
-                            `dependencies?`,
+                        message: "React Hook ".concat(reactiveHookName, " does nothing when called with ") +
+                            "only one argument. Did you forget to pass an array of " +
+                            "dependencies?",
                     });
                 }
                 return;
@@ -1768,13 +2061,13 @@ const rule = {
                     // But perhaps it's in the dependencies array?
                     if ('elements' in declaredDependenciesNode &&
                         declaredDependenciesNode.elements &&
-                        declaredDependenciesNode.elements.some(el => el && el.type === 'Identifier' && el.name === callback.name)) {
+                        declaredDependenciesNode.elements.some(function (el) { return el && el.type === 'Identifier' && el.name === callback.name; })) {
                         // If it's already in the list of deps, we don't care because
                         // this is valid regardless.
                         return; // Handled
                     }
                     // We'll do our best effort to find it, complain otherwise.
-                    const variable = getScope(callback).set.get(callback.name);
+                    var variable = getScope(callback).set.get(callback.name);
                     if (variable == null || variable.defs == null) {
                         // If it's not in scope, we don't care.
                         return; // Handled
@@ -1782,7 +2075,7 @@ const rule = {
                     // The function passed as a callback is not written inline.
                     // But it's defined somewhere in the render scope.
                     // We'll do our best effort to find and check it, complain otherwise.
-                    const def = variable.defs[0];
+                    var def = variable.defs[0];
                     if (!def || !def.node) {
                         break; // Unhandled
                     }
@@ -1803,7 +2096,7 @@ const rule = {
                             visitFunctionWithDependencies(def.node, declaredDependenciesNode, reactiveHook, reactiveHookName, isEffect);
                             return; // Handled
                         case 'VariableDeclarator':
-                            const init = def.node.init;
+                            var init = def.node.init;
                             if (!init) {
                                 break; // Unhandled
                             }
@@ -1830,13 +2123,13 @@ const rule = {
             // Something unusual. Fall back to suggesting to add the body itself as a dep.
             reportProblem({
                 node: reactiveHook,
-                message: `React Hook ${reactiveHookName} has a missing dependency: '${callback.name}'. ` +
-                    `Either include it or remove the dependency array.`,
+                message: "React Hook ".concat(reactiveHookName, " has a missing dependency: '").concat(callback.name, "'. ") +
+                    "Either include it or remove the dependency array.",
                 suggest: [
                     {
-                        desc: `Update the dependencies array to be: [${callback.name}]`,
-                        fix(fixer) {
-                            return fixer.replaceText(declaredDependenciesNode, `[${callback.name}]`);
+                        desc: "Update the dependencies array to be: [".concat(callback.name, "]"),
+                        fix: function (fixer) {
+                            return fixer.replaceText(declaredDependenciesNode, "[".concat(callback.name, "]"));
                         },
                     },
                 ],
@@ -1848,7 +2141,8 @@ const rule = {
     },
 };
 // The meat of the logic.
-function collectRecommendations({ dependencies, declaredDependencies, stableDependencies, externalDependencies, isEffect, }) {
+function collectRecommendations(_a) {
+    var dependencies = _a.dependencies, declaredDependencies = _a.declaredDependencies, stableDependencies = _a.stableDependencies, externalDependencies = _a.externalDependencies, isEffect = _a.isEffect;
     // Our primary data structure.
     // It is a logical representation of property chains:
     // `props` -> `props.foo` -> `props.foo.bar` -> `props.foo.bar.baz`
@@ -1858,7 +2152,7 @@ function collectRecommendations({ dependencies, declaredDependencies, stableDepe
     // We'll use it to mark nodes that are *used* by the programmer,
     // and the nodes that were *declared* as deps. Then we will
     // traverse it to learn which deps are missing or unnecessary.
-    const depTree = createDepTree();
+    var depTree = createDepTree();
     function createDepTree() {
         return {
             isUsed: false, // True if used in code
@@ -1869,56 +2163,79 @@ function collectRecommendations({ dependencies, declaredDependencies, stableDepe
     }
     // Mark all required nodes first.
     // Imagine exclamation marks next to each used deep property.
-    dependencies.forEach((_, key) => {
-        const node = getOrCreateNodeByPath(depTree, key);
+    dependencies.forEach(function (_, key) {
+        var node = getOrCreateNodeByPath(depTree, key);
         node.isUsed = true;
-        markAllParentsByPath(depTree, key, parent => {
+        markAllParentsByPath(depTree, key, function (parent) {
             parent.isSubtreeUsed = true;
         });
     });
     // Mark all satisfied nodes.
     // Imagine checkmarks next to each declared dependency.
-    declaredDependencies.forEach(({ key }) => {
-        const node = getOrCreateNodeByPath(depTree, key);
+    declaredDependencies.forEach(function (_a) {
+        var key = _a.key;
+        var node = getOrCreateNodeByPath(depTree, key);
         node.isSatisfiedRecursively = true;
     });
-    stableDependencies.forEach(key => {
-        const node = getOrCreateNodeByPath(depTree, key);
+    stableDependencies.forEach(function (key) {
+        var node = getOrCreateNodeByPath(depTree, key);
         node.isSatisfiedRecursively = true;
     });
     // Tree manipulation helpers.
     function getOrCreateNodeByPath(rootNode, path) {
-        const keys = path.split('.');
-        let node = rootNode;
-        for (const key of keys) {
-            let child = node.children.get(key);
-            if (!child) {
-                child = createDepTree();
-                node.children.set(key, child);
+        var e_13, _a;
+        var keys = path.split('.');
+        var node = rootNode;
+        try {
+            for (var keys_1 = __values(keys), keys_1_1 = keys_1.next(); !keys_1_1.done; keys_1_1 = keys_1.next()) {
+                var key = keys_1_1.value;
+                var child = node.children.get(key);
+                if (!child) {
+                    child = createDepTree();
+                    node.children.set(key, child);
+                }
+                node = child;
             }
-            node = child;
+        }
+        catch (e_13_1) { e_13 = { error: e_13_1 }; }
+        finally {
+            try {
+                if (keys_1_1 && !keys_1_1.done && (_a = keys_1.return)) _a.call(keys_1);
+            }
+            finally { if (e_13) throw e_13.error; }
         }
         return node;
     }
     function markAllParentsByPath(rootNode, path, fn) {
-        const keys = path.split('.');
-        let node = rootNode;
-        for (const key of keys) {
-            const child = node.children.get(key);
-            if (!child) {
-                return;
+        var e_14, _a;
+        var keys = path.split('.');
+        var node = rootNode;
+        try {
+            for (var keys_2 = __values(keys), keys_2_1 = keys_2.next(); !keys_2_1.done; keys_2_1 = keys_2.next()) {
+                var key = keys_2_1.value;
+                var child = node.children.get(key);
+                if (!child) {
+                    return;
+                }
+                fn(child);
+                node = child;
             }
-            fn(child);
-            node = child;
+        }
+        catch (e_14_1) { e_14 = { error: e_14_1 }; }
+        finally {
+            try {
+                if (keys_2_1 && !keys_2_1.done && (_a = keys_2.return)) _a.call(keys_2);
+            }
+            finally { if (e_14) throw e_14.error; }
         }
     }
     // Now we can learn which dependencies are missing or necessary.
-    const missingDependencies = new Set();
-    const satisfyingDependencies = new Set();
-    scanTreeRecursively(depTree, missingDependencies, satisfyingDependencies, key => key);
+    var missingDependencies = new Set();
+    var satisfyingDependencies = new Set();
+    scanTreeRecursively(depTree, missingDependencies, satisfyingDependencies, function (key) { return key; });
     function scanTreeRecursively(node, missingPaths, satisfyingPaths, keyToPath) {
-        node.children.forEach((child, key) => {
-            const path = keyToPath(key);
+        node.children.forEach(function (child, key) {
+            var path = keyToPath(key);
             if (child.isSatisfiedRecursively) {
                 if (child.isSubtreeUsed) {
                     // Remember this dep actually satisfied something.
@@ -1936,14 +2253,15 @@ function collectRecommendations({ dependencies, declaredDependencies, stableDepe
                 // No need to search further.
                 return;
             }
-            scanTreeRecursively(child, missingPaths, satisfyingPaths, childKey => path + '.' + childKey);
+            scanTreeRecursively(child, missingPaths, satisfyingPaths, function (childKey) { return path + '.' + childKey; });
         });
     }
     // Collect suggestions in the order they were originally specified.
-    const suggestedDependencies = [];
-    const unnecessaryDependencies = new Set();
-    const duplicateDependencies = new Set();
-    declaredDependencies.forEach(({ key }) => {
+    var suggestedDependencies = [];
+    var unnecessaryDependencies = new Set();
+    var duplicateDependencies = new Set();
+    declaredDependencies.forEach(function (_a) {
+        var key = _a.key;
         // Does this declared dep satisfy a real need?
         if (satisfyingDependencies.has(key)) {
             if (suggestedDependencies.indexOf(key) === -1) {
@@ -1974,14 +2292,14 @@ function collectRecommendations({ dependencies, declaredDependencies, stableDepe
         }
     });
     // Then add the missing ones at the end.
-    missingDependencies.forEach(key => {
+    missingDependencies.forEach(function (key) {
         suggestedDependencies.push(key);
     });
     return {
-        suggestedDependencies,
-        unnecessaryDependencies,
-        duplicateDependencies,
-        missingDependencies,
+        suggestedDependencies: suggestedDependencies,
+        unnecessaryDependencies: unnecessaryDependencies,
+        duplicateDependencies: duplicateDependencies,
+        missingDependencies: missingDependencies,
     };
 }
 // If the node will result in constructing a referentially unique value, return
@@ -2034,14 +2352,16 @@ function getConstructionExpressionType(node) {
 }
 // Finds variables declared as dependencies
 // that would invalidate on every render.
-function scanForConstructions({ declaredDependencies, declaredDependenciesNode, componentScope, scope, }) {
-    const constructions = declaredDependencies
-        .map(({ key }) => {
-        const ref = componentScope.variables.find(v => v.name === key);
+function scanForConstructions(_a) {
+    var declaredDependencies = _a.declaredDependencies, declaredDependenciesNode = _a.declaredDependenciesNode, componentScope = _a.componentScope, scope = _a.scope;
+    var constructions = declaredDependencies
+        .map(function (_a) {
+        var key = _a.key;
+        var ref = componentScope.variables.find(function (v) { return v.name === key; });
         if (ref == null) {
             return null;
         }
-        const node = ref.defs[0];
+        var node = ref.defs[0];
         if (node == null) {
             return null;
         }
@@ -2054,7 +2374,7 @@ function scanForConstructions({ declaredDependencies, declaredDependenciesNode, 
             node.node.type === 'VariableDeclarator' &&
             node.node.id.type === 'Identifier' && // Ensure this is not destructed assignment
             node.node.init != null) {
-            const constantExpressionType = getConstructionExpressionType(node.node.init);
+            var constantExpressionType = getConstructionExpressionType(node.node.init);
             if (constantExpressionType) {
                 return [ref, constantExpressionType];
             }
@@ -2072,38 +2392,52 @@ function scanForConstructions({ declaredDependencies, declaredDependenciesNode, 
     })
         .filter(Boolean);
     function isUsedOutsideOfHook(ref) {
-        let foundWriteExpr = false;
-        for (const reference of ref.references) {
-            if (reference.writeExpr) {
-                if (foundWriteExpr) {
-                    // Two writes to the same function.
-                    return true;
+        var e_15, _a;
+        var foundWriteExpr = false;
+        try {
+            for (var _b = __values(ref.references), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var reference = _c.value;
+                if (reference.writeExpr) {
+                    if (foundWriteExpr) {
+                        // Two writes to the same function.
+                        return true;
+                    }
+                    else {
+                        // Ignore first write as it's not usage.
+                        foundWriteExpr = true;
+                        continue;
+                    }
                 }
-                else {
-                    // Ignore first write as it's not usage.
-                    foundWriteExpr = true;
-                    continue;
+                var currentScope = reference.from;
+                while (currentScope !== scope && currentScope != null) {
+                    currentScope = currentScope.upper;
                 }
-            }
-            let currentScope = reference.from;
-            while (currentScope !== scope && currentScope != null) {
-                currentScope = currentScope.upper;
-            }
-            if (currentScope !== scope) {
-                // This reference is outside the Hook callback.
-                // It can only be legit if it's the deps array.
-                if (!isAncestorNodeOf(declaredDependenciesNode, reference.identifier)) {
-                    return true;
+                if (currentScope !== scope) {
+                    // This reference is outside the Hook callback.
+                    // It can only be legit if it's the deps array.
+                    if (!isAncestorNodeOf(declaredDependenciesNode, reference.identifier)) {
+                        return true;
+                    }
                 }
             }
         }
+        catch (e_15_1) { e_15 = { error: e_15_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_15) throw e_15.error; }
+        }
         return false;
     }
-    return constructions.map(([ref, depType]) => ({
-        construction: ref.defs[0],
-        depType,
-        isUsedOutsideOfHook: isUsedOutsideOfHook(ref),
-    }));
+    return constructions.map(function (_a) {
+        var _b = __read(_a, 2), ref = _b[0], depType = _b[1];
+        return ({
+            construction: ref.defs[0],
+            depType: depType,
+            isUsedOutsideOfHook: isUsedOutsideOfHook(ref),
+        });
+    });
 }
 /**
  * Assuming () means the passed/returned node:
@@ -2168,7 +2502,7 @@ function markNode(node, optionalChains, result) {
  */
 function analyzePropertyChain(node, optionalChains) {
     if (node.type === 'Identifier' || node.type === 'JSXIdentifier') {
-        const result = node.name;
+        var result = node.name;
         if (optionalChains) {
             // Mark as required.
             optionalChains.set(result, false);
@@ -2176,33 +2510,33 @@ function analyzePropertyChain(node, optionalChains) {
         return result;
     }
     else if (node.type === 'MemberExpression' && !node.computed) {
-        const object = analyzePropertyChain(node.object, optionalChains);
-        const property = analyzePropertyChain(node.property, null);
-        const result = `${object}.${property}`;
+        var object = analyzePropertyChain(node.object, optionalChains);
+        var property = analyzePropertyChain(node.property, null);
+        var result = "".concat(object, ".").concat(property);
         markNode(node, optionalChains, result);
         return result;
     }
     else if (node.type === 'OptionalMemberExpression' && !node.computed) {
-        const object = analyzePropertyChain(node.object, optionalChains);
-        const property = analyzePropertyChain(node.property, null);
-        const result = `${object}.${property}`;
+        var object = analyzePropertyChain(node.object, optionalChains);
+        var property = analyzePropertyChain(node.property, null);
+        var result = "".concat(object, ".").concat(property);
         markNode(node, optionalChains, result);
         return result;
     }
     else if (node.type === 'ChainExpression' &&
         (!('computed' in node) || !node.computed)) {
-        const expression = node.expression;
+        var expression = node.expression;
         if (expression.type === 'CallExpression') {
-            throw new Error(`Unsupported node type: ${expression.type}`);
+            throw new Error("Unsupported node type: ".concat(expression.type));
         }
-        const object = analyzePropertyChain(expression.object, optionalChains);
-        const property = analyzePropertyChain(expression.property, null);
-        const result = `${object}.${property}`;
+        var object = analyzePropertyChain(expression.object, optionalChains);
+        var property = analyzePropertyChain(expression.property, null);
+        var result = "".concat(object, ".").concat(property);
         markNode(expression, optionalChains, result);
         return result;
     }
     else {
-        throw new Error(`Unsupported node type: ${node.type}`);
+        throw new Error("Unsupported node type: ".concat(node.type));
     }
 }
 function getNodeWithoutReactNamespace(node) {
@@ -2221,7 +2555,7 @@ function getNodeWithoutReactNamespace(node) {
 // 1 for useImperativeHandle(ref, fn).
 // For additionally configured Hooks, assume that they're like useEffect (0).
 function getReactiveHookCallbackIndex(calleeNode, options) {
-    const node = getNodeWithoutReactNamespace(calleeNode);
+    var node = getNodeWithoutReactNamespace(calleeNode);
     if (node.type !== 'Identifier') {
         return -1;
     }
@@ -2239,7 +2573,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
             if (node === calleeNode && options && options.additionalHooks) {
                 // Allow the user to provide a regular expression which enables the lint to
                 // target custom reactive hooks.
-                let name;
+                var name = void 0;
                 try {
                     name = analyzePropertyChain(node, null);
                 }
@@ -2270,8 +2604,9 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
  * - agnostic to AST node types, it looks for `{ type: string, ... }`
  */
 function fastFindReferenceWithParent(start, target) {
-    const queue = [start];
-    let item;
+    var e_16, _a;
+    var queue = [start];
+    var item;
     while (queue.length) {
         item = queue.shift();
         if (isSameIdentifier(item, target)) {
@@ -2280,29 +2615,39 @@ function fastFindReferenceWithParent(start, target) {
         if (!isAncestorNodeOf(item, target)) {
             continue;
         }
-        for (const [key, value] of Object.entries(item)) {
-            if (key === 'parent') {
-                continue;
+        try {
+            for (var _b = (e_16 = void 0, __values(Object.entries(item))), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var _d = __read(_c.value, 2), key = _d[0], value = _d[1];
+                if (key === 'parent') {
+                    continue;
+                }
+                if (isNodeLike(value)) {
+                    value.parent = item;
+                    queue.push(value);
+                }
+                else if (Array.isArray(value)) {
+                    value.forEach(function (val) {
+                        if (isNodeLike(val)) {
+                            val.parent = item;
+                            queue.push(val);
+                        }
+                    });
+                }
             }
-            if (isNodeLike(value)) {
-                value.parent = item;
-                queue.push(value);
+        }
+        catch (e_16_1) { e_16 = { error: e_16_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            else if (Array.isArray(value)) {
-                value.forEach(val => {
-                    if (isNodeLike(val)) {
-                        val.parent = item;
-                        queue.push(val);
-                    }
-                });
-            }
+            finally { if (e_16) throw e_16.error; }
         }
     }
     return null;
 }
 function joinEnglish(arr) {
-    let s = '';
-    for (let i = 0; i < arr.length; i++) {
+    var s = '';
+    for (var i = 0; i < arr.length; i++) {
         s += arr[i];
         if (i === 0 && arr.length === 2) {
             s += ' and ';
@@ -2344,31 +2689,31 @@ function isUseEffectEventIdentifier(node) {
     }
 }
 function getUnknownDependenciesMessage(reactiveHookName) {
-    return (`React Hook ${reactiveHookName} received a function whose dependencies ` +
-        `are unknown. Pass an inline function instead.`);
+    return ("React Hook ".concat(reactiveHookName, " received a function whose dependencies ") +
+        "are unknown. Pass an inline function instead.");
 }
 
 // All rules
-const rules = {
+var rules = {
     'rules-of-hooks': rule$1,
     'exhaustive-deps': rule,
 };
 // Config rules
-const configRules = {
+var configRules = {
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
 };
 // Legacy config
-const legacyRecommendedConfig = {
+var legacyRecommendedConfig = {
     plugins: ['react-hooks'],
     rules: configRules,
 };
 // Plugin object
-const plugin = {
+var plugin = {
     // TODO: Make this more dynamic to populate version from package.json.
     // This can be done by injecting at build time, since importing the package.json isn't an option in Meta
     meta: { name: 'eslint-plugin-react-hooks' },
-    rules,
+    rules: rules,
     configs: {
         /** Legacy recommended config, to be used with rc-based configurations */
         'recommended-legacy': legacyRecommendedConfig,
@@ -2389,8 +2734,8 @@ const plugin = {
         },
     },
 };
-const configs = plugin.configs;
-const meta = plugin.meta;
+var configs = plugin.configs;
+var meta = plugin.meta;
 // TODO: If the plugin is ever updated to be pure ESM and drops support for rc-based configs, then it should be exporting the plugin as default
 // instead of individual named exports.
 // export default plugin;
