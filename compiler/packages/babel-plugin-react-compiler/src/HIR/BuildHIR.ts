@@ -7,7 +7,6 @@
 
 import {NodePath, Scope} from '@babel/traverse';
 import * as t from '@babel/types';
-import {Expression} from '@babel/types';
 import invariant from 'invariant';
 import {
   CompilerError,
@@ -75,7 +74,7 @@ export function lower(
   parent: NodePath<t.Function> | null = null,
 ): Result<HIRFunction, CompilerError> {
   const builder = new HIRBuilder(env, parent ?? func, bindings, capturedRefs);
-  const context: Array<Place> = [];
+  const context: HIRFunction['context'] = [];
 
   for (const ref of capturedRefs ?? []) {
     context.push({
@@ -3378,7 +3377,7 @@ function lowerFunction(
   >,
 ): LoweredFunction | null {
   const componentScope: Scope = builder.parentFunction.scope;
-  const captured = gatherCapturedDeps(builder, expr, componentScope);
+  const capturedContext = gatherCapturedContext(expr, componentScope);
 
   /*
    * TODO(gsn): In the future, we could only pass in the context identifiers
@@ -3392,7 +3391,7 @@ function lowerFunction(
     expr,
     builder.environment,
     builder.bindings,
-    [...builder.context, ...captured.identifiers],
+    [...builder.context, ...capturedContext],
     builder.parentFunction,
   );
   let loweredFunc: HIRFunction;
@@ -3405,7 +3404,6 @@ function lowerFunction(
   loweredFunc = lowering.unwrap();
   return {
     func: loweredFunc,
-    dependencies: captured.refs,
   };
 }
 
@@ -4079,14 +4077,6 @@ function lowerAssignment(
   }
 }
 
-function isValidDependency(path: NodePath<t.MemberExpression>): boolean {
-  const parent: NodePath<t.Node> = path.parentPath;
-  return (
-    !path.node.computed &&
-    !(parent.isCallExpression() && parent.get('callee') === path)
-  );
-}
-
 function captureScopes({from, to}: {from: Scope; to: Scope}): Set<Scope> {
   let scopes: Set<Scope> = new Set();
   while (from) {
@@ -4101,8 +4091,7 @@ function captureScopes({from, to}: {from: Scope; to: Scope}): Set<Scope> {
   return scopes;
 }
 
-function gatherCapturedDeps(
-  builder: HIRBuilder,
+function gatherCapturedContext(
   fn: NodePath<
     | t.FunctionExpression
     | t.ArrowFunctionExpression
@@ -4110,10 +4099,8 @@ function gatherCapturedDeps(
     | t.ObjectMethod
   >,
   componentScope: Scope,
-): {identifiers: Array<t.Identifier>; refs: Array<Place>} {
-  const capturedIds: Map<t.Identifier, number> = new Map();
-  const capturedRefs: Set<Place> = new Set();
-  const seenPaths: Set<string> = new Set();
+): Array<t.Identifier> {
+  const capturedIds = new Set<t.Identifier>();
 
   /*
    * Capture all the scopes from the parent of this function up to and including
@@ -4124,33 +4111,11 @@ function gatherCapturedDeps(
     to: componentScope,
   });
 
-  function addCapturedId(bindingIdentifier: t.Identifier): number {
-    if (!capturedIds.has(bindingIdentifier)) {
-      const index = capturedIds.size;
-      capturedIds.set(bindingIdentifier, index);
-      return index;
-    } else {
-      return capturedIds.get(bindingIdentifier)!;
-    }
-  }
-
   function handleMaybeDependency(
-    path:
-      | NodePath<t.MemberExpression>
-      | NodePath<t.Identifier>
-      | NodePath<t.JSXOpeningElement>,
+    path: NodePath<t.Identifier> | NodePath<t.JSXOpeningElement>,
   ): void {
     // Base context variable to depend on
     let baseIdentifier: NodePath<t.Identifier> | NodePath<t.JSXIdentifier>;
-    /*
-     * Base expression to depend on, which (for now) may contain non side-effectful
-     * member expressions
-     */
-    let dependency:
-      | NodePath<t.MemberExpression>
-      | NodePath<t.JSXMemberExpression>
-      | NodePath<t.Identifier>
-      | NodePath<t.JSXIdentifier>;
     if (path.isJSXOpeningElement()) {
       const name = path.get('name');
       if (!(name.isJSXMemberExpression() || name.isJSXIdentifier())) {
@@ -4166,115 +4131,20 @@ function gatherCapturedDeps(
         'Invalid logic in gatherCapturedDeps',
       );
       baseIdentifier = current;
-
-      /*
-       * Get the expression to depend on, which may involve PropertyLoads
-       * for member expressions
-       */
-      let currentDep:
-        | NodePath<t.JSXMemberExpression>
-        | NodePath<t.Identifier>
-        | NodePath<t.JSXIdentifier> = baseIdentifier;
-
-      while (true) {
-        const nextDep: null | NodePath<t.Node> = currentDep.parentPath;
-        if (nextDep && nextDep.isJSXMemberExpression()) {
-          currentDep = nextDep;
-        } else {
-          break;
-        }
-      }
-      dependency = currentDep;
-    } else if (path.isMemberExpression()) {
-      // Calculate baseIdentifier
-      let currentId: NodePath<Expression> = path;
-      while (currentId.isMemberExpression()) {
-        currentId = currentId.get('object');
-      }
-      if (!currentId.isIdentifier()) {
-        return;
-      }
-      baseIdentifier = currentId;
-
-      /*
-       * Get the expression to depend on, which may involve PropertyLoads
-       * for member expressions
-       */
-      let currentDep:
-        | NodePath<t.MemberExpression>
-        | NodePath<t.Identifier>
-        | NodePath<t.JSXIdentifier> = baseIdentifier;
-
-      while (true) {
-        const nextDep: null | NodePath<t.Node> = currentDep.parentPath;
-        if (
-          nextDep &&
-          nextDep.isMemberExpression() &&
-          isValidDependency(nextDep)
-        ) {
-          currentDep = nextDep;
-        } else {
-          break;
-        }
-      }
-
-      dependency = currentDep;
     } else {
       baseIdentifier = path;
-      dependency = path;
     }
 
     /*
      * Skip dependency path, as we already tried to recursively add it (+ all subexpressions)
      * as a dependency.
      */
-    dependency.skip();
+    path.skip();
 
     // Add the base identifier binding as a dependency.
     const binding = baseIdentifier.scope.getBinding(baseIdentifier.node.name);
-    if (binding === undefined || !pureScopes.has(binding.scope)) {
-      return;
-    }
-    const idKey = String(addCapturedId(binding.identifier));
-
-    // Add the expression (potentially a memberexpr path) as a dependency.
-    let exprKey = idKey;
-    if (dependency.isMemberExpression()) {
-      let pathTokens = [];
-      let current: NodePath<Expression> = dependency;
-      while (current.isMemberExpression()) {
-        const property = current.get('property') as NodePath<t.Identifier>;
-        pathTokens.push(property.node.name);
-        current = current.get('object');
-      }
-
-      exprKey += '.' + pathTokens.reverse().join('.');
-    } else if (dependency.isJSXMemberExpression()) {
-      let pathTokens = [];
-      let current: NodePath<t.JSXMemberExpression | t.JSXIdentifier> =
-        dependency;
-      while (current.isJSXMemberExpression()) {
-        const property = current.get('property');
-        pathTokens.push(property.node.name);
-        current = current.get('object');
-      }
-    }
-
-    if (!seenPaths.has(exprKey)) {
-      let loweredDep: Place;
-      if (dependency.isJSXIdentifier()) {
-        loweredDep = lowerValueToTemporary(builder, {
-          kind: 'LoadLocal',
-          place: lowerIdentifier(builder, dependency),
-          loc: path.node.loc ?? GeneratedSource,
-        });
-      } else if (dependency.isJSXMemberExpression()) {
-        loweredDep = lowerJsxMemberExpression(builder, dependency);
-      } else {
-        loweredDep = lowerExpressionToTemporary(builder, dependency);
-      }
-      capturedRefs.add(loweredDep);
-      seenPaths.add(exprKey);
+    if (binding !== undefined && pureScopes.has(binding.scope)) {
+      capturedIds.add(binding.identifier);
     }
   }
 
@@ -4305,13 +4175,13 @@ function gatherCapturedDeps(
         return;
       } else if (path.isJSXElement()) {
         handleMaybeDependency(path.get('openingElement'));
-      } else if (path.isMemberExpression() || path.isIdentifier()) {
+      } else if (path.isIdentifier()) {
         handleMaybeDependency(path);
       }
     },
   });
 
-  return {identifiers: [...capturedIds.keys()], refs: [...capturedRefs]};
+  return [...capturedIds.keys()];
 }
 
 function notNull<T>(value: T | null): value is T {
