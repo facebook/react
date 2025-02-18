@@ -2,7 +2,8 @@
 ## Input
 
 ```javascript
-function component(a) {
+import {mutate} from 'shared-runtime';
+function Component({a}) {
   let x = {a};
   let y = 1;
   (function () {
@@ -12,14 +13,22 @@ function component(a) {
   return y;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{a: 2}],
+  sequentialRenders: [{a: 2}, {a: 2}, {a: 3}],
+};
+
 ```
 
 ## Code
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-function component(a) {
+import { mutate } from "shared-runtime";
+function Component(t0) {
   const $ = _c(2);
+  const { a } = t0;
   let y;
   if ($[0] !== a) {
     const x = { a };
@@ -36,5 +45,15 @@ function component(a) {
   return y;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ a: 2 }],
+  sequentialRenders: [{ a: 2 }, { a: 2 }, { a: 3 }],
+};
+
 ```
       
+### Eval output
+(kind: ok) {"a":2,"wat0":"joe"}
+{"a":2,"wat0":"joe"}
+{"a":3,"wat0":"joe"}
