@@ -1453,15 +1453,20 @@ function codegenDependency(
   if (dependency.path.length !== 0) {
     const hasOptional = dependency.path.some(path => path.optional);
     for (const path of dependency.path) {
+      const property =
+        typeof path.property === 'string'
+          ? t.identifier(path.property)
+          : t.numericLiteral(path.property);
+      const isComputed = typeof path.property !== 'string';
       if (hasOptional) {
         object = t.optionalMemberExpression(
           object,
-          t.identifier(path.property),
-          false,
+          property,
+          isComputed,
           path.optional,
         );
       } else {
-        object = t.memberExpression(object, t.identifier(path.property));
+        object = t.memberExpression(object, property, isComputed);
       }
     }
   }
@@ -1962,38 +1967,37 @@ function codegenInstructionValue(
       value = node;
       break;
     }
-    case 'PropertyStore': {
-      value = t.assignmentExpression(
-        '=',
-        t.memberExpression(
-          codegenPlaceToExpression(cx, instrValue.object),
-          t.identifier(instrValue.property),
-        ),
-        codegenPlaceToExpression(cx, instrValue.value),
-      );
-      break;
-    }
-    case 'PropertyLoad': {
-      const object = codegenPlaceToExpression(cx, instrValue.object);
+    case 'PropertyStore':
+    case 'PropertyLoad':
+    case 'PropertyDelete': {
+      let memberExpr;
       /*
        * We currently only lower single chains of optional memberexpr.
        * (See BuildHIR.ts for more detail.)
        */
-      value = t.memberExpression(
-        object,
-        t.identifier(instrValue.property),
-        undefined,
-      );
-      break;
-    }
-    case 'PropertyDelete': {
-      value = t.unaryExpression(
-        'delete',
-        t.memberExpression(
+      if (typeof instrValue.property === 'string') {
+        memberExpr = t.memberExpression(
           codegenPlaceToExpression(cx, instrValue.object),
           t.identifier(instrValue.property),
-        ),
-      );
+        );
+      } else {
+        memberExpr = t.memberExpression(
+          codegenPlaceToExpression(cx, instrValue.object),
+          t.numericLiteral(instrValue.property),
+          true,
+        );
+      }
+      if (instrValue.kind === 'PropertyStore') {
+        value = t.assignmentExpression(
+          '=',
+          memberExpr,
+          codegenPlaceToExpression(cx, instrValue.value),
+        );
+      } else if (instrValue.kind === 'PropertyLoad') {
+        value = memberExpr;
+      } else {
+        value = t.unaryExpression('delete', memberExpr);
+      }
       break;
     }
     case 'ComputedStore': {
