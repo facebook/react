@@ -36,12 +36,14 @@ import {
   ObjectProperty,
   ObjectPropertyKey,
   Place,
+  PropertyLiteral,
   ReturnTerminal,
   SourceLocation,
   SpreadPattern,
   ThrowTerminal,
   Type,
   makeInstructionId,
+  makePropertyLiteral,
   makeType,
   promoteTemporary,
 } from './HIR';
@@ -2017,11 +2019,11 @@ function lowerExpression(
           });
 
           // Save the result back to the property
-          if (typeof property === 'string') {
+          if (typeof property === 'string' || typeof property === 'number') {
             return {
               kind: 'PropertyStore',
               object: {...object},
-              property,
+              property: makePropertyLiteral(property),
               value: {...newValuePlace},
               loc: leftExpr.node.loc ?? GeneratedSource,
             };
@@ -2316,11 +2318,11 @@ function lowerExpression(
         const argument = expr.get('argument');
         if (argument.isMemberExpression()) {
           const {object, property} = lowerMemberExpression(builder, argument);
-          if (typeof property === 'string') {
+          if (typeof property === 'string' || typeof property === 'number') {
             return {
               kind: 'PropertyDelete',
               object,
-              property,
+              property: makePropertyLiteral(property),
               loc: exprLoc,
             };
           } else {
@@ -2427,11 +2429,11 @@ function lowerExpression(
 
         // Save the result back to the property
         let newValuePlace;
-        if (typeof property === 'string') {
+        if (typeof property === 'string' || typeof property === 'number') {
           newValuePlace = lowerValueToTemporary(builder, {
             kind: 'PropertyStore',
             object: {...object},
-            property,
+            property: makePropertyLiteral(property),
             value: {...updatedValue},
             loc: leftExpr.node.loc ?? GeneratedSource,
           });
@@ -3057,7 +3059,7 @@ function lowerArguments(
 
 type LoweredMemberExpression = {
   object: Place;
-  property: Place | string;
+  property: Place | string | number;
   value: InstructionValue;
 };
 function lowerMemberExpression(
@@ -3072,8 +3074,13 @@ function lowerMemberExpression(
   const object =
     loweredObject ?? lowerExpressionToTemporary(builder, objectNode);
 
-  if (!expr.node.computed) {
-    if (!propertyNode.isIdentifier()) {
+  if (!expr.node.computed || expr.node.property.type === 'NumericLiteral') {
+    let property: PropertyLiteral;
+    if (propertyNode.isIdentifier()) {
+      property = makePropertyLiteral(propertyNode.node.name);
+    } else if (propertyNode.isNumericLiteral()) {
+      property = makePropertyLiteral(propertyNode.node.value);
+    } else {
       builder.errors.push({
         reason: `(BuildHIR::lowerMemberExpression) Handle ${propertyNode.type} property`,
         severity: ErrorSeverity.Todo,
@@ -3089,10 +3096,10 @@ function lowerMemberExpression(
     const value: InstructionValue = {
       kind: 'PropertyLoad',
       object: {...object},
-      property: propertyNode.node.name,
+      property,
       loc: exprLoc,
     };
-    return {object, property: propertyNode.node.name, value};
+    return {object, property, value};
   } else {
     if (!propertyNode.isExpression()) {
       builder.errors.push({
@@ -3210,7 +3217,7 @@ function lowerJsxMemberExpression(
   return lowerValueToTemporary(builder, {
     kind: 'PropertyLoad',
     object: objectPlace,
-    property,
+    property: makePropertyLiteral(property),
     loc,
   });
 }
@@ -3626,8 +3633,25 @@ function lowerAssignment(
       const lvalue = lvaluePath as NodePath<t.MemberExpression>;
       const property = lvalue.get('property');
       const object = lowerExpressionToTemporary(builder, lvalue.get('object'));
-      if (!lvalue.node.computed) {
-        if (!property.isIdentifier()) {
+      if (!lvalue.node.computed || lvalue.get('property').isNumericLiteral()) {
+        let temporary;
+        if (property.isIdentifier()) {
+          temporary = lowerValueToTemporary(builder, {
+            kind: 'PropertyStore',
+            object,
+            property: makePropertyLiteral(property.node.name),
+            value,
+            loc,
+          });
+        } else if (property.isNumericLiteral()) {
+          temporary = lowerValueToTemporary(builder, {
+            kind: 'PropertyStore',
+            object,
+            property: makePropertyLiteral(property.node.value),
+            value,
+            loc,
+          });
+        } else {
           builder.errors.push({
             reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in MemberExpression`,
             severity: ErrorSeverity.Todo,
@@ -3636,13 +3660,6 @@ function lowerAssignment(
           });
           return {kind: 'UnsupportedNode', node: lvalueNode, loc};
         }
-        const temporary = lowerValueToTemporary(builder, {
-          kind: 'PropertyStore',
-          object,
-          property: property.node.name,
-          value,
-          loc,
-        });
         return {kind: 'LoadLocal', place: temporary, loc: temporary.loc};
       } else {
         if (!property.isExpression()) {
