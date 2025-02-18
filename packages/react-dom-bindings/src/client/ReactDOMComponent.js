@@ -339,6 +339,7 @@ function setProp(
   value: mixed,
   props: any,
   prevValue: mixed,
+  customElement: boolean = false,
 ): void {
   switch (key) {
     case 'children': {
@@ -883,112 +884,17 @@ function setProp(
         ) {
           warnForInvalidEventListener(key, value);
         }
-        // Updating events doesn't affect the visuals.
-        return;
+        if (customElement) {
+          setValueForPropertyOnCustomComponent(domElement, key, value);
+        } else {
+          // Updating events doesn't affect the visuals.
+          return;
+        }
+      } else if (customElement) {
+        setValueForPropertyOnCustomComponent(domElement, key, value);
       } else {
         const attributeName = getAttributeAlias(key);
         setValueForAttribute(domElement, attributeName, value);
-      }
-    }
-  }
-  // To avoid marking things as host mutations we do early returns above.
-  trackHostMutation();
-}
-
-function setPropOnCustomElement(
-  domElement: Element,
-  tag: string,
-  key: string,
-  value: mixed,
-  props: any,
-  prevValue: mixed,
-): void {
-  switch (key) {
-    case 'style': {
-      setValueForStyles(domElement, value, prevValue);
-      return;
-    }
-    case 'dangerouslySetInnerHTML': {
-      if (value != null) {
-        if (typeof value !== 'object' || !('__html' in value)) {
-          throw new Error(
-            '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-              'Please visit https://react.dev/link/dangerously-set-inner-html ' +
-              'for more information.',
-          );
-        }
-        const nextHtml: any = value.__html;
-        if (nextHtml != null) {
-          if (props.children != null) {
-            throw new Error(
-              'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
-            );
-          }
-          domElement.innerHTML = nextHtml;
-        }
-      }
-      break;
-    }
-    case 'children': {
-      if (typeof value === 'string') {
-        setTextContent(domElement, value);
-      } else if (typeof value === 'number' || typeof value === 'bigint') {
-        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
-        setTextContent(domElement, '' + value);
-      } else {
-        return;
-      }
-      break;
-    }
-    case 'onScroll': {
-      if (value != null) {
-        if (__DEV__ && typeof value !== 'function') {
-          warnForInvalidEventListener(key, value);
-        }
-        listenToNonDelegatedEvent('scroll', domElement);
-      }
-      return;
-    }
-    case 'onScrollEnd': {
-      if (value != null) {
-        if (__DEV__ && typeof value !== 'function') {
-          warnForInvalidEventListener(key, value);
-        }
-        listenToNonDelegatedEvent('scrollend', domElement);
-      }
-      return;
-    }
-    case 'onClick': {
-      // TODO: This cast may not be sound for SVG, MathML or custom elements.
-      if (value != null) {
-        if (__DEV__ && typeof value !== 'function') {
-          warnForInvalidEventListener(key, value);
-        }
-        trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
-      }
-      return;
-    }
-    case 'suppressContentEditableWarning':
-    case 'suppressHydrationWarning':
-    case 'innerHTML':
-    case 'ref': {
-      // Noop
-      return;
-    }
-    case 'innerText': // Properties
-    case 'textContent':
-      return;
-    // Fall through
-    default: {
-      if (registrationNameDependencies.hasOwnProperty(key)) {
-        if (__DEV__ && value != null && typeof value !== 'function') {
-          warnForInvalidEventListener(key, value);
-        }
-        return;
-      } else {
-        setValueForPropertyOnCustomComponent(domElement, key, value);
-        // We track mutations inside this call.
-        return;
       }
     }
   }
@@ -1004,6 +910,9 @@ export function setInitialProperties(
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, props);
   }
+
+  const customElement = isCustomElement(tag, props);
+  const nullValue = customElement ? undefined : null;
 
   // TODO: Make sure that we check isMounted before firing any of these events.
 
@@ -1054,15 +963,15 @@ export function setInitialProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, props, null);
+            setProp(domElement, tag, propKey, propValue, props, nullValue, customElement);
           }
         }
       }
       if (hasSrcSet) {
-        setProp(domElement, tag, 'srcSet', props.srcSet, props, null);
+        setProp(domElement, tag, 'srcSet', props.srcSet, props, nullValue, customElement);
       }
       if (hasSrc) {
-        setProp(domElement, tag, 'src', props.src, props, null);
+        setProp(domElement, tag, 'src', props.src, props, nullValue, customElement);
       }
       return;
     }
@@ -1124,7 +1033,7 @@ export function setInitialProperties(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, props, null);
+            setProp(domElement, tag, propKey, propValue, props, nullValue, customElement);
           }
         }
       }
@@ -1180,7 +1089,7 @@ export function setInitialProperties(
           }
           // Fallthrough
           default: {
-            setProp(domElement, tag, propKey, propValue, props, null);
+            setProp(domElement, tag, propKey, propValue, props, nullValue, customElement);
           }
         }
       }
@@ -1231,7 +1140,7 @@ export function setInitialProperties(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, props, null);
+            setProp(domElement, tag, propKey, propValue, props, nullValue, customElement);
           }
         }
       }
@@ -1262,7 +1171,7 @@ export function setInitialProperties(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, props, null);
+            setProp(domElement, tag, propKey, propValue, props, nullValue, customElement);
           }
         }
       }
@@ -1341,33 +1250,11 @@ export function setInitialProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, props, null);
+            setProp(domElement, tag, propKey, propValue, props, nullValue, customElement);
           }
         }
       }
       return;
-    }
-    default: {
-      if (isCustomElement(tag, props)) {
-        for (const propKey in props) {
-          if (!props.hasOwnProperty(propKey)) {
-            continue;
-          }
-          const propValue = props[propKey];
-          if (propValue === undefined) {
-            continue;
-          }
-          setPropOnCustomElement(
-            domElement,
-            tag,
-            propKey,
-            propValue,
-            props,
-            undefined,
-          );
-        }
-        return;
-      }
     }
   }
 
@@ -1379,7 +1266,7 @@ export function setInitialProperties(
     if (propValue == null) {
       continue;
     }
-    setProp(domElement, tag, propKey, propValue, props, null);
+    setProp(domElement, tag, propKey, propValue, props, nullValue, customElement);
   }
 }
 
@@ -1392,6 +1279,9 @@ export function updateProperties(
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, nextProps);
   }
+
+  const customElement = isCustomElement(tag, lastProps);
+  const nullValue = customElement ? undefined : null;
 
   switch (tag) {
     case 'div':
@@ -1431,7 +1321,7 @@ export function updateProperties(
             // Fallthrough
             default: {
               if (!nextProps.hasOwnProperty(propKey))
-                setProp(domElement, tag, propKey, null, nextProps, lastProp);
+                setProp(domElement, tag, propKey, nullValue, nextProps, lastProp, customElement);
             }
           }
         }
@@ -1505,6 +1395,7 @@ export function updateProperties(
                   nextProp,
                   nextProps,
                   lastProp,
+                  customElement
                 );
             }
           }
@@ -1587,7 +1478,7 @@ export function updateProperties(
             // Fallthrough
             default: {
               if (!nextProps.hasOwnProperty(propKey)) {
-                setProp(domElement, tag, propKey, null, nextProps, lastProp);
+                setProp(domElement, tag, propKey, nullValue, nextProps, lastProp, customElement);
               }
             }
           }
@@ -1633,6 +1524,7 @@ export function updateProperties(
                   nextProp,
                   nextProps,
                   lastProp,
+                  customElement,
                 );
             }
           }
@@ -1664,7 +1556,7 @@ export function updateProperties(
             }
             // defaultValue is ignored by setProp
             default: {
-              setProp(domElement, tag, propKey, null, nextProps, lastProp);
+              setProp(domElement, tag, propKey, nullValue, nextProps, lastProp, customElement);
             }
           }
         }
@@ -1714,6 +1606,7 @@ export function updateProperties(
                   nextProp,
                   nextProps,
                   lastProp,
+                  customElement,
                 );
             }
           }
@@ -1737,7 +1630,7 @@ export function updateProperties(
               break;
             }
             default: {
-              setProp(domElement, tag, propKey, null, nextProps, lastProp);
+              setProp(domElement, tag, propKey, nullValue, nextProps, lastProp, customElement);
             }
           }
         }
@@ -1763,7 +1656,7 @@ export function updateProperties(
               break;
             }
             default: {
-              setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
+              setProp(domElement, tag, propKey, nextProp, nextProps, lastProp, customElement);
             }
           }
         }
@@ -1793,7 +1686,7 @@ export function updateProperties(
           lastProp != null &&
           !nextProps.hasOwnProperty(propKey)
         ) {
-          setProp(domElement, tag, propKey, null, nextProps, lastProp);
+          setProp(domElement, tag, propKey, nullValue, nextProps, lastProp, customElement);
         }
       }
       for (const propKey in nextProps) {
@@ -1818,52 +1711,12 @@ export function updateProperties(
             }
             // defaultChecked and defaultValue are ignored by setProp
             default: {
-              setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
+              setProp(domElement, tag, propKey, nextProp, nextProps, lastProp, customElement);
             }
           }
         }
       }
       return;
-    }
-    default: {
-      if (isCustomElement(tag, nextProps)) {
-        for (const propKey in lastProps) {
-          const lastProp = lastProps[propKey];
-          if (
-            lastProps.hasOwnProperty(propKey) &&
-            lastProp !== undefined &&
-            !nextProps.hasOwnProperty(propKey)
-          ) {
-            setPropOnCustomElement(
-              domElement,
-              tag,
-              propKey,
-              undefined,
-              nextProps,
-              lastProp,
-            );
-          }
-        }
-        for (const propKey in nextProps) {
-          const nextProp = nextProps[propKey];
-          const lastProp = lastProps[propKey];
-          if (
-            nextProps.hasOwnProperty(propKey) &&
-            nextProp !== lastProp &&
-            (nextProp !== undefined || lastProp !== undefined)
-          ) {
-            setPropOnCustomElement(
-              domElement,
-              tag,
-              propKey,
-              nextProp,
-              nextProps,
-              lastProp,
-            );
-          }
-        }
-        return;
-      }
     }
   }
 
@@ -1874,7 +1727,7 @@ export function updateProperties(
       lastProp != null &&
       !nextProps.hasOwnProperty(propKey)
     ) {
-      setProp(domElement, tag, propKey, null, nextProps, lastProp);
+      setProp(domElement, tag, propKey, nullValue, nextProps, lastProp, customElement);
     }
   }
   for (const propKey in nextProps) {
@@ -1885,7 +1738,7 @@ export function updateProperties(
       nextProp !== lastProp &&
       (nextProp != null || lastProp != null)
     ) {
-      setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
+      setProp(domElement, tag, propKey, nextProp, nextProps, lastProp, customElement);
     }
   }
 }
