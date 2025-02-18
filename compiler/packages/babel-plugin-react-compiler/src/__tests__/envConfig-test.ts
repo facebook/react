@@ -7,6 +7,7 @@
 
 import {Effect, validateEnvironmentConfig} from '..';
 import {ValueKind} from '../HIR';
+import {inferEffectDependencies} from '../Inference';
 
 describe('parseConfigPragma()', () => {
   it('passing null throws', () => {
@@ -21,6 +22,24 @@ describe('parseConfigPragma()', () => {
       } as any);
     }).toThrowErrorMatchingInlineSnapshot(
       `"InvalidConfig: Could not validate environment config. Update React Compiler config to fix the error. Validation error: Expected boolean, received number at "validateHooksUsage""`,
+    );
+  });
+
+  it('effect autodeps config must have at least 1 required argument', () => {
+    expect(() => {
+      validateEnvironmentConfig({
+        inferEffectDependencies: [
+          {
+            function: {
+              source: 'react',
+              importSpecifierName: 'useEffect',
+            },
+            numRequiredArgs: 0,
+          },
+        ],
+      } as any);
+    }).toThrowErrorMatchingInlineSnapshot(
+      `"InvalidConfig: Could not validate environment config. Update React Compiler config to fix the error. Validation error: numRequiredArgs must be > 0 at "inferEffectDependencies[0].numRequiredArgs""`,
     );
   });
 
