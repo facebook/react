@@ -2728,7 +2728,7 @@ function commitMutationEffectsOnFiber(
 
         if (flags & Update) {
           const instance: Instance = finishedWork.stateNode;
-          if (instance != null) {
+          if (instance !== null) {
             // Commit the work prepared earlier.
             // For hydration we reuse the update path but we treat the oldProps
             // as the newProps. The updatePayload will contain the real change in
