@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<faeb3e752ea9a2f2db521472098d27d2>>
+ * @generated SignedSource<<0325351c6f968c781623634c1617ff40>>
  */
 
 "use strict";
@@ -510,61 +510,6 @@ __DEV__ &&
         ? describeBuiltInComponentFrame(fn)
         : "";
     }
-    function getOwnerStackByFiberInDev(workInProgress) {
-      if (!enableOwnerStacks) return "";
-      try {
-        var info = "";
-        6 === workInProgress.tag && (workInProgress = workInProgress.return);
-        switch (workInProgress.tag) {
-          case 26:
-          case 27:
-          case 5:
-            info += describeBuiltInComponentFrame(workInProgress.type);
-            break;
-          case 13:
-            info += describeBuiltInComponentFrame("Suspense");
-            break;
-          case 19:
-            info += describeBuiltInComponentFrame("SuspenseList");
-            break;
-          case 30:
-          case 0:
-          case 15:
-          case 1:
-            workInProgress._debugOwner ||
-              "" !== info ||
-              (info += describeFunctionComponentFrameWithoutLineNumber(
-                workInProgress.type
-              ));
-            break;
-          case 11:
-            workInProgress._debugOwner ||
-              "" !== info ||
-              (info += describeFunctionComponentFrameWithoutLineNumber(
-                workInProgress.type.render
-              ));
-        }
-        for (; workInProgress; )
-          if ("number" === typeof workInProgress.tag) {
-            var fiber = workInProgress;
-            workInProgress = fiber._debugOwner;
-            var debugStack = fiber._debugStack;
-            workInProgress &&
-              debugStack &&
-              ("string" !== typeof debugStack &&
-                (fiber._debugStack = debugStack = formatOwnerStack(debugStack)),
-              "" !== debugStack && (info += "\n" + debugStack));
-          } else if (null != workInProgress.debugStack) {
-            var ownerStack = workInProgress.debugStack;
-            (workInProgress = workInProgress.owner) &&
-              ownerStack &&
-              (info += "\n" + formatOwnerStack(ownerStack));
-          } else break;
-        return info;
-      } catch (x) {
-        return "\nError generating stack: " + x.message + "\n" + x.stack;
-      }
-    }
     function getComponentNameFromType(type) {
       if (null == type) return null;
       if ("function" === typeof type)
@@ -689,17 +634,68 @@ __DEV__ &&
       return null;
     }
     function getCurrentFiberStackInDev() {
-      return null === current
-        ? ""
-        : enableOwnerStacks
-          ? getOwnerStackByFiberInDev(current)
-          : getStackByFiberInDevAndProd(current);
+      if (null === current) return "";
+      var workInProgress = current;
+      try {
+        var info = "";
+        6 === workInProgress.tag && (workInProgress = workInProgress.return);
+        switch (workInProgress.tag) {
+          case 26:
+          case 27:
+          case 5:
+            info += describeBuiltInComponentFrame(workInProgress.type);
+            break;
+          case 13:
+            info += describeBuiltInComponentFrame("Suspense");
+            break;
+          case 19:
+            info += describeBuiltInComponentFrame("SuspenseList");
+            break;
+          case 30:
+          case 0:
+          case 15:
+          case 1:
+            workInProgress._debugOwner ||
+              "" !== info ||
+              (info += describeFunctionComponentFrameWithoutLineNumber(
+                workInProgress.type
+              ));
+            break;
+          case 11:
+            workInProgress._debugOwner ||
+              "" !== info ||
+              (info += describeFunctionComponentFrameWithoutLineNumber(
+                workInProgress.type.render
+              ));
+        }
+        for (; workInProgress; )
+          if ("number" === typeof workInProgress.tag) {
+            var fiber = workInProgress;
+            workInProgress = fiber._debugOwner;
+            var debugStack = fiber._debugStack;
+            workInProgress &&
+              debugStack &&
+              ("string" !== typeof debugStack &&
+                (fiber._debugStack = debugStack = formatOwnerStack(debugStack)),
+              "" !== debugStack && (info += "\n" + debugStack));
+          } else if (null != workInProgress.debugStack) {
+            var ownerStack = workInProgress.debugStack;
+            (workInProgress = workInProgress.owner) &&
+              ownerStack &&
+              (info += "\n" + formatOwnerStack(ownerStack));
+          } else break;
+        var JSCompiler_inline_result = info;
+      } catch (x) {
+        JSCompiler_inline_result =
+          "\nError generating stack: " + x.message + "\n" + x.stack;
+      }
+      return JSCompiler_inline_result;
     }
     function runWithFiberInDEV(fiber, callback, arg0, arg1, arg2, arg3, arg4) {
       var previousFiber = current;
       setCurrentFiber(fiber);
       try {
-        return enableOwnerStacks && null !== fiber && fiber._debugTask
+        return null !== fiber && fiber._debugTask
           ? fiber._debugTask.run(
               callback.bind(null, arg0, arg1, arg2, arg3, arg4)
             )
@@ -1240,7 +1236,7 @@ __DEV__ &&
           ) {
             var listener = dispatchListeners[i],
               instance = dispatchInstances[i];
-            enableOwnerStacks && null !== instance
+            null !== instance
               ? runWithFiberInDEV(
                   instance,
                   executeDispatch,
@@ -1252,7 +1248,7 @@ __DEV__ &&
           }
         else
           dispatchListeners &&
-            (enableOwnerStacks && null !== dispatchInstances
+            (null !== dispatchInstances
               ? runWithFiberInDEV(
                   dispatchInstances,
                   executeDispatch,
@@ -2211,24 +2207,6 @@ __DEV__ &&
     }
     function unhideTextInstance() {
       throw Error("Not yet implemented.");
-    }
-    function bindToConsole(methodName, args, badgeName) {
-      var offset = 0;
-      switch (methodName) {
-        case "dir":
-        case "dirxml":
-        case "groupEnd":
-        case "table":
-          return bind.apply(console[methodName], [console].concat(args));
-        case "assert":
-          offset = 1;
-      }
-      args = args.slice(0);
-      "string" === typeof args[offset]
-        ? args.splice(offset, 1, "[%s] " + args[offset], " " + badgeName + " ")
-        : args.splice(offset, 0, "[%s] ", " " + badgeName + " ");
-      args.unshift(console);
-      return bind.apply(console[methodName], args);
     }
     function createCursor(defaultValue) {
       return { current: defaultValue };
@@ -5772,7 +5750,7 @@ __DEV__ &&
             )),
             (current.return = returnFiber),
             (current._debugOwner = returnFiber),
-            enableOwnerStacks && (current._debugTask = returnFiber._debugTask),
+            (current._debugTask = returnFiber._debugTask),
             (current._debugInfo = currentDebugInfo),
             current
           );
@@ -5847,7 +5825,7 @@ __DEV__ &&
             )),
             (current.return = returnFiber),
             (current._debugOwner = returnFiber),
-            enableOwnerStacks && (current._debugTask = returnFiber._debugTask),
+            (current._debugTask = returnFiber._debugTask),
             (current._debugInfo = currentDebugInfo),
             current
           );
@@ -5870,7 +5848,7 @@ __DEV__ &&
             )),
             (newChild.return = returnFiber),
             (newChild._debugOwner = returnFiber),
-            enableOwnerStacks && (newChild._debugTask = returnFiber._debugTask),
+            (newChild._debugTask = returnFiber._debugTask),
             (newChild._debugInfo = currentDebugInfo),
             newChild
           );
@@ -5918,7 +5896,7 @@ __DEV__ &&
               )),
               (lanes.return = returnFiber),
               (lanes._debugOwner = returnFiber),
-              enableOwnerStacks && (lanes._debugTask = returnFiber._debugTask),
+              (lanes._debugTask = returnFiber._debugTask),
               (returnFiber = pushDebugInfo(newChild._debugInfo)),
               (lanes._debugInfo = currentDebugInfo),
               (currentDebugInfo = returnFiber),
@@ -6448,8 +6426,7 @@ __DEV__ &&
                     )),
                     (lanes.return = returnFiber),
                     (lanes._debugOwner = returnFiber),
-                    enableOwnerStacks &&
-                      (lanes._debugTask = returnFiber._debugTask),
+                    (lanes._debugTask = returnFiber._debugTask),
                     (lanes._debugInfo = currentDebugInfo),
                     validateFragmentProps(newChild, lanes, returnFiber),
                     (returnFiber = lanes))
@@ -6616,8 +6593,7 @@ __DEV__ &&
                 )),
                 (lanes.return = returnFiber),
                 (lanes._debugOwner = returnFiber),
-                enableOwnerStacks &&
-                  (lanes._debugTask = returnFiber._debugTask),
+                (lanes._debugTask = returnFiber._debugTask),
                 (lanes._debugInfo = currentDebugInfo),
                 (returnFiber = lanes)),
             placeSingleChild(returnFiber)
@@ -6655,13 +6631,12 @@ __DEV__ &&
           fiber.return = returnFiber;
           var debugInfo = (fiber._debugInfo = currentDebugInfo);
           fiber._debugOwner = returnFiber._debugOwner;
-          enableOwnerStacks && (fiber._debugTask = returnFiber._debugTask);
+          fiber._debugTask = returnFiber._debugTask;
           if (null != debugInfo)
             for (var i = debugInfo.length - 1; 0 <= i; i--)
               if ("string" === typeof debugInfo[i].stack) {
                 fiber._debugOwner = debugInfo[i];
-                enableOwnerStacks &&
-                  (fiber._debugTask = debugInfo[i].debugTask);
+                fiber._debugTask = debugInfo[i].debugTask;
                 break;
               }
           return fiber;
@@ -7176,70 +7151,6 @@ __DEV__ &&
             (newProps[_propName] = Component[_propName]);
       }
       return newProps;
-    }
-    function defaultOnUncaughtError(error, errorInfo) {
-      reportGlobalError(error);
-      error = componentName
-        ? "An error occurred in the <" + componentName + "> component."
-        : "An error occurred in one of your React components.";
-      var prevGetCurrentStack = ReactSharedInternals.getCurrentStack;
-      if (!enableOwnerStacks) {
-        var componentStack =
-          null != errorInfo.componentStack ? errorInfo.componentStack : "";
-        ReactSharedInternals.getCurrentStack = function () {
-          return componentStack;
-        };
-      }
-      try {
-        warn(
-          "%s\n\n%s\n",
-          error,
-          "Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
-        );
-      } finally {
-        enableOwnerStacks ||
-          (ReactSharedInternals.getCurrentStack = prevGetCurrentStack);
-      }
-    }
-    function defaultOnCaughtError(error$1, errorInfo) {
-      var componentNameMessage = componentName
-          ? "The above error occurred in the <" + componentName + "> component."
-          : "The above error occurred in one of your React components.",
-        recreateMessage =
-          "React will try to recreate this component tree from scratch using the error boundary you provided, " +
-          ((errorBoundaryName || "Anonymous") + "."),
-        prevGetCurrentStack = ReactSharedInternals.getCurrentStack;
-      if (!enableOwnerStacks) {
-        var componentStack =
-          null != errorInfo.componentStack ? errorInfo.componentStack : "";
-        ReactSharedInternals.getCurrentStack = function () {
-          return componentStack;
-        };
-      }
-      try {
-        "object" === typeof error$1 &&
-        null !== error$1 &&
-        "string" === typeof error$1.environmentName
-          ? bindToConsole(
-              "error",
-              [
-                "%o\n\n%s\n\n%s\n",
-                error$1,
-                componentNameMessage,
-                recreateMessage
-              ],
-              error$1.environmentName
-            )()
-          : error$jscomp$0(
-              "%o\n\n%s\n\n%s\n",
-              error$1,
-              componentNameMessage,
-              recreateMessage
-            );
-      } finally {
-        enableOwnerStacks ||
-          (ReactSharedInternals.getCurrentStack = prevGetCurrentStack);
-      }
     }
     function defaultOnRecoverableError(error) {
       reportGlobalError(error);
@@ -8978,9 +8889,8 @@ __DEV__ &&
           workInProgress.mode,
           workInProgress.lanes
         );
-        enableOwnerStacks &&
-          ((renderLanes._debugStack = workInProgress._debugStack),
-          (renderLanes._debugTask = workInProgress._debugTask));
+        renderLanes._debugStack = workInProgress._debugStack;
+        renderLanes._debugTask = workInProgress._debugTask;
         var returnFiber = workInProgress.return;
         if (null === returnFiber) throw Error("Cannot swap the root fiber.");
         current.alternate = null;
@@ -14122,8 +14032,11 @@ __DEV__ &&
       this.actualDuration = -0;
       this.actualStartTime = -1.1;
       this.treeBaseDuration = this.selfBaseDuration = -0;
-      this._debugOwner = this._debugInfo = null;
-      enableOwnerStacks && (this._debugTask = this._debugStack = null);
+      this._debugTask =
+        this._debugStack =
+        this._debugOwner =
+        this._debugInfo =
+          null;
       this._debugNeedsRemount = !1;
       this._debugHookTypes = null;
       hasBadMapPolyfill ||
@@ -14163,11 +14076,12 @@ __DEV__ &&
         selfBaseDuration: -0,
         treeBaseDuration: -0,
         _debugInfo: null,
-        _debugOwner: null
+        _debugOwner: null,
+        _debugStack: null,
+        _debugTask: null,
+        _debugNeedsRemount: !1,
+        _debugHookTypes: null
       };
-      enableOwnerStacks && ((tag._debugStack = null), (tag._debugTask = null));
-      tag._debugNeedsRemount = !1;
-      tag._debugHookTypes = null;
       hasBadMapPolyfill ||
         "function" !== typeof Object.preventExtensions ||
         Object.preventExtensions(tag);
@@ -14190,9 +14104,8 @@ __DEV__ &&
           (workInProgress.type = current.type),
           (workInProgress.stateNode = current.stateNode),
           (workInProgress._debugOwner = current._debugOwner),
-          enableOwnerStacks &&
-            ((workInProgress._debugStack = current._debugStack),
-            (workInProgress._debugTask = current._debugTask)),
+          (workInProgress._debugStack = current._debugStack),
+          (workInProgress._debugTask = current._debugTask),
           (workInProgress._debugHookTypes = current._debugHookTypes),
           (workInProgress.alternate = current),
           (current.alternate = workInProgress))
@@ -14413,9 +14326,8 @@ __DEV__ &&
         lanes
       );
       mode._debugOwner = element._owner;
-      enableOwnerStacks &&
-        ((mode._debugStack = element._debugStack),
-        (mode._debugTask = element._debugTask));
+      mode._debugStack = element._debugStack;
+      mode._debugTask = element._debugTask;
       return mode;
     }
     function createFiberFromFragment(elements, mode, lanes, key) {
@@ -14723,16 +14635,57 @@ __DEV__ &&
           error: error,
           componentStack:
             null != errorInfo.componentStack ? errorInfo.componentStack : ""
-        }) && defaultOnUncaughtError(error, errorInfo);
+        }) &&
+        (reportGlobalError(error),
+        warn(
+          "%s\n\n%s\n",
+          componentName
+            ? "An error occurred in the <" + componentName + "> component."
+            : "An error occurred in one of your React components.",
+          "Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+        ));
     }
     function nativeOnCaughtError(error, errorInfo) {
-      !1 !==
+      if (
+        !1 !==
         ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog({
           errorBoundary: errorInfo.errorBoundary,
           error: error,
           componentStack:
             null != errorInfo.componentStack ? errorInfo.componentStack : ""
-        }) && defaultOnCaughtError(error, errorInfo);
+        })
+      ) {
+        var componentNameMessage = componentName
+            ? "The above error occurred in the <" +
+              componentName +
+              "> component."
+            : "The above error occurred in one of your React components.",
+          recreateMessage =
+            "React will try to recreate this component tree from scratch using the error boundary you provided, " +
+            ((errorBoundaryName || "Anonymous") + ".");
+        "object" === typeof error &&
+        null !== error &&
+        "string" === typeof error.environmentName
+          ? ((errorInfo = error.environmentName),
+            (error = [
+              "%o\n\n%s\n\n%s\n",
+              error,
+              componentNameMessage,
+              recreateMessage
+            ].slice(0)),
+            "string" === typeof error[0]
+              ? error.splice(0, 1, "[%s] " + error[0], " " + errorInfo + " ")
+              : error.splice(0, 0, "[%s] ", " " + errorInfo + " "),
+            error.unshift(console),
+            (error = bind.apply(console.error, error)),
+            error())
+          : error$jscomp$0(
+              "%o\n\n%s\n\n%s\n",
+              error,
+              componentNameMessage,
+              recreateMessage
+            );
+      }
     }
     function unmountComponentAtNode(containerTag) {
       var root = roots.get(containerTag);
@@ -14765,7 +14718,6 @@ __DEV__ &&
       enableUseEffectCRUDOverload =
         dynamicFlagsUntyped.enableUseEffectCRUDOverload,
       enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
-      enableOwnerStacks = dynamicFlagsUntyped.enableOwnerStacks,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -17686,11 +17638,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.1.0-native-fb-e670e72f-20250214" !== isomorphicReactPackageVersion)
+    if ("19.1.0-native-fb-8a7b487e-20250218" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.1.0-native-fb-e670e72f-20250214\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.1.0-native-fb-8a7b487e-20250218\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17716,10 +17668,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-e670e72f-20250214",
+        version: "19.1.0-native-fb-8a7b487e-20250218",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-e670e72f-20250214"
+        reconcilerVersion: "19.1.0-native-fb-8a7b487e-20250218"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
