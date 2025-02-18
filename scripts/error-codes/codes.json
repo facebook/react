@@ -533,5 +533,8 @@
   "545": "The %s tag may only be rendered once.",
   "546": "useEffect CRUD overload is not enabled in this build of React.",
   "547": "startGesture cannot be called during server rendering.",
-  "548": "Finished rendering the gesture lane but there were no pending gestures. React should not have started a render in this case. This is a bug in React."
+  "548": "Finished rendering the gesture lane but there were no pending gestures. React should not have started a render in this case. This is a bug in React.",
+  "549": "Cannot start a gesture with a disconnected AnimationTimeline.",
+  "550": "useSwipeTransition is not yet supported in react-art.",
+  "551": "useSwipeTransition is not yet supported in React Native."
 }

@@ -391,6 +391,15 @@ export function getInstanceFromNode(mockNode: Object): Object | null {
   return null;
 }
 
+export type GestureTimeline = null;
+
+export function subscribeToGestureDirection(
+  provider: GestureTimeline,
+  directionCallback: (direction: boolean) => void,
+): () => void {
+  return () => {};
+}
+
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
   // noop
 }

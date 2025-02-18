@@ -27,7 +27,7 @@ import type {
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Flags} from './ReactFiberFlags';
-import type {TransitionStatus} from './ReactFiberConfig';
+import type {TransitionStatus, GestureTimeline} from './ReactFiberConfig';
 import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 import {
@@ -3981,6 +3981,7 @@ type SwipeTransitionGestureUpdate = {
 type SwipeTransitionUpdateQueue = {
   pending: null | SwipeTransitionGestureUpdate,
   dispatch: StartGesture,
+  initialDirection: boolean,
 };
 
 function startGesture(
@@ -3996,9 +3997,14 @@ function startGesture(
       // Noop.
     };
   }
-  const scheduledGesture = scheduleGesture(root, gestureProvider);
+  const gestureTimeline: GestureTimeline = gestureProvider;
+  const scheduledGesture = scheduleGesture(
+    root,
+    gestureTimeline,
+    queue.initialDirection,
+  );
   // Add this particular instance to the queue.
-  // We add multiple of the same provider even if they get batched so
+  // We add multiple of the same timeline even if they get batched so
   // that if we cancel one but not the other we can keep track of this.
   // Order doesn't matter but we insert in the beginning to avoid two fields.
   const update: SwipeTransitionGestureUpdate = {
@@ -4041,6 +4047,7 @@ function mountSwipeTransition<T>(
   const queue: SwipeTransitionUpdateQueue = {
     pending: null,
     dispatch: (null: any),
+    initialDirection: previous === current,
   };
   const startGestureOnHook: StartGesture = (queue.dispatch = (startGesture.bind(
     null,
@@ -4062,31 +4069,34 @@ function updateSwipeTransition<T>(
   const startGestureOnHook: StartGesture = queue.dispatch;
   const rootRenderLanes = getWorkInProgressRootRenderLanes();
   let value = current;
-  if (isGestureRender(rootRenderLanes)) {
-    // We're inside a gesture render. We'll traverse the queue to see if
-    // this specific Hook is part of this gesture and, if so, which
-    // direction to render.
-    const root: FiberRoot | null = getWorkInProgressRoot();
-    if (root === null) {
-      throw new Error(
-        'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-      );
-    }
-    // We assume that the currently rendering gesture is the one first in the queue.
-    const rootRenderGesture = root.gestures;
-    let update = queue.pending;
-    while (update !== null) {
-      if (rootRenderGesture === update.gesture) {
-        // We had a match, meaning we're currently rendering a direction of this
-        // hook for this gesture.
-        // TODO: Determine which direction this gesture is currently rendering.
-        value = previous;
-        break;
-      }
-      update = update.next;
-    }
-  }
   if (queue.pending !== null) {
+    if (isGestureRender(rootRenderLanes)) {
+      // We're inside a gesture render. We'll traverse the queue to see if
+      // this specific Hook is part of this gesture and, if so, which
+      // direction to render.
+      const root: FiberRoot | null = getWorkInProgressRoot();
+      if (root === null) {
+        throw new Error(
+          'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+        );
+      }
+      // We assume that the currently rendering gesture is the one first in the queue.
+      const rootRenderGesture = root.gestures;
+      if (rootRenderGesture !== null) {
+        let update = queue.pending;
+        while (update !== null) {
+          if (rootRenderGesture === update.gesture) {
+            // We had a match, meaning we're currently rendering a direction of this
+            // hook for this gesture.
+            value = rootRenderGesture.direction ? next : previous;
+            break;
+          }
+          update = update.next;
+        }
+      }
+      // This lane cannot be cleared as long as we have active gestures.
+      markWorkInProgressReceivedUpdate();
+    }
     // As long as there are any active gestures we need to leave the lane on
     // in case we need to render it later. Since a gesture render doesn't commit
     // the only time it really fully gets cleared is if something else rerenders
@@ -4096,6 +4106,11 @@ function updateSwipeTransition<T>(
       GestureLane,
     );
   }
+  // By default, we don't know which direction we should start until a movement
+  // has happened. However, if one direction has the same value as current we
+  // know that it's probably not that direction since it won't do anything anyway.
+  // TODO: Add an explicit option to provide this.
+  queue.initialDirection = previous === current;
   return [value, startGestureOnHook];
 }
 

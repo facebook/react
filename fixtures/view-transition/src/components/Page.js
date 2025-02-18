@@ -68,10 +68,12 @@ export default function Page({url, navigate}) {
       activeGesture.current = null;
       cancelGesture();
     }
+    // Reset scroll
+    swipeRecognizer.current.scrollLeft = !show ? 0 : 10000;
   }
 
   useLayoutEffect(() => {
-    swipeRecognizer.current.scrollLeft = show ? 0 : 10000;
+    swipeRecognizer.current.scrollLeft = !show ? 0 : 10000;
   }, [show]);
 
   const exclamation = (

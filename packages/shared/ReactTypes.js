@@ -170,7 +170,7 @@ export type ReactFormState<S, ReferenceId> = [
 
 // Intrinsic GestureProvider. This type varies by Environment whether a particular
 // renderer supports it.
-export type GestureProvider = AnimationTimeline; // TODO: More provider types.
+export type GestureProvider = any;
 
 export type StartGesture = (gestureProvider: GestureProvider) => () => void;
 
