@@ -145,6 +145,7 @@ export const wasInstanceInViewport = $$$config.wasInstanceInViewport;
 export const hasInstanceChanged = $$$config.hasInstanceChanged;
 export const hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent;
 export const startViewTransition = $$$config.startViewTransition;
+export const getCurrentGestureOffset = $$$config.getCurrentGestureOffset;
 export const subscribeToGestureDirection =
   $$$config.subscribeToGestureDirection;
 export const createViewTransitionInstance =

@@ -172,7 +172,15 @@ export type ReactFormState<S, ReferenceId> = [
 // renderer supports it.
 export type GestureProvider = any;
 
-export type StartGesture = (gestureProvider: GestureProvider) => () => void;
+export type StartGesture = (
+  gestureProvider: GestureProvider,
+  gestureOptions: GestureOptions,
+) => () => void;
+
+export type GestureOptions = {
+  direction?: 'previous' | 'next',
+  range?: [/*previous*/ number, /*current*/ number, /*next*/ number],
+};
 
 export type Awaited<T> = T extends null | void
   ? T // special case for `null | undefined` when not in `--strictNullChecks` mode
