@@ -1,0 +1,85 @@
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, Image, TouchableOpacity, ScrollView } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as Sharing from 'expo-sharing';
+
+export default function App() {
+  const [licensePlate, setLicensePlate] = useState('');
+  const [images, setImages] = useState({
+    right: null,
+    left: null,
+    front: null,
+    rear: null,
+    dashboard: null,
+    interior: null,
+  });
+
+  const pickImage = async (side) => {
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImages({ ...images, [side]: result.uri });
+    }
+  };
+
+  const shareImages = async () => {
+    const uris = Object.values(images).filter(uri => uri);
+    if (uris.length > 0) {
+      await Sharing.shareAsync(uris[0]); // לדוגמה משתף רק תמונה אחת - אפשר להרחיב
+    }
+  };
+
+  const uploadImages = async () => {
+    const formData = new FormData();
+    formData.append('licensePlate', licensePlate);
+
+    Object.keys(images).forEach((side) => {
+      if (images[side]) {
+        formData.append(side, {
+          uri: images[side],
+          type: 'image/jpeg',
+          name: `${side}.jpg`,
+        });
+      }
+    });
+
+    fetch('https://yourserver.com/upload', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error(error));
+  };
+
+  return (
+    <ScrollView style={{ padding: 20 }}>
+      <Text>מספר רישוי:</Text>
+      <TextInput
+        value={licensePlate}
+        onChangeText={setLicensePlate}
+        placeholder="הזן מספר רישוי"
+        style={{ borderBottomWidth: 1, marginBottom: 20 }}
+      />
+
+      {['right', 'left', 'front', 'rear', 'dashboard', 'interior'].map((side) => (
+        <View key={side} style={{ marginBottom: 20 }}>
+          <Text>{side}</Text>
+          <TouchableOpacity onPress={() => pickImage(side)}>
+            <View style={{ height: 100, backgroundColor: '#ccc', justifyContent: 'center', alignItems: 'center' }}>
+              {images[side] ? <Image source={{ uri: images[side] }} style={{ width: '100%', height: '100%' }} /> : <Text>צלם תמונה</Text>}
+            </View>
+          </TouchableOpacity>
+        </View>
+      ))}
+
+      <Button title="שיתוף" onPress={shareImages} />
+      <Button title="העלאה לשרת" onPress={uploadImages} />
+    </ScrollView>
+  );
+}
