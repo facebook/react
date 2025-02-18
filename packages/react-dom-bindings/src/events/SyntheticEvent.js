@@ -451,6 +451,7 @@ const KeyboardEventInterface = {
   altKey: 0,
   metaKey: 0,
   repeat: 0,
+  isComposing: 0,
   locale: 0,
   getModifierState: getEventModifierState,
   // Legacy Interface
