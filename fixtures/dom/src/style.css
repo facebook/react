@@ -322,3 +322,39 @@ tbody tr:nth-child(even) {
   margin: 10px;
   padding: 10px;
 }
+
+.observable-card {
+  height: 200px;
+  border: 1px solid black;
+  background: #e0e0e0;
+  padding: 20px;
+  font-size: 18px;
+  overflow: auto;
+  margin-bottom: 50px;
+  position: relative;
+}
+
+.observable-card::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  border-top: 1px dotted red;
+}
+
+.fixed-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 200px;
+  z-index: 1000;
+  background-color: gray;
+  display: flex;
+  flex-direction: column;
+}
+
+.onscreen {
+  background-color: green;
+}
