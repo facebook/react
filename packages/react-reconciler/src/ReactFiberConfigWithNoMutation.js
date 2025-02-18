@@ -48,3 +48,6 @@ export const hasInstanceAffectedParent = shim;
 export const startViewTransition = shim;
 export type ViewTransitionInstance = null | {name: string, ...};
 export const createViewTransitionInstance = shim;
+export type GestureTimeline = any;
+export const getCurrentGestureOffset = shim;
+export const subscribeToGestureDirection = shim;

@@ -605,6 +605,20 @@ export function createViewTransitionInstance(
   return null;
 }
 
+export type GestureTimeline = null;
+
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
+  throw new Error('useSwipeTransition is not yet supported in React Native.');
+}
+
+export function subscribeToGestureDirection(
+  provider: GestureTimeline,
+  currentOffset: number,
+  directionCallback: (direction: boolean) => void,
+): () => void {
+  throw new Error('useSwipeTransition is not yet supported in React Native.');
+}
+
 export function clearContainer(container: Container): void {
   // TODO Implement this for React Native
   // UIManager does not expose a "remove all" type method.

@@ -614,6 +614,7 @@ module.exports = {
     KeyframeAnimationOptions: 'readonly',
     GetAnimationsOptions: 'readonly',
     Animatable: 'readonly',
+    ScrollTimeline: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',
