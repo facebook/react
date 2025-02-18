@@ -6,14 +6,14 @@
  */
 
 // v0.17.1
-declare module "hermes-parser" {
+declare module 'hermes-parser' {
   type HermesParserOptions = {
     allowReturnOutsideFunction?: boolean;
     babel?: boolean;
-    flow?: "all" | "detect";
+    flow?: 'all' | 'detect';
     enableExperimentalComponentSyntax?: boolean;
     sourceFilename?: string;
-    sourceType?: "module" | "script" | "unambiguous";
+    sourceType?: 'module' | 'script' | 'unambiguous';
     tokens?: boolean;
   };
   export function parse(code: string, options: Partial<HermesParserOptions>);

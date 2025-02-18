@@ -126,7 +126,7 @@ function handleIdentifier(
 function handleAssignment(
   currentFn: BabelFunction | null,
   identifiers: Map<t.Identifier, IdentifierInfo>,
-  lvalPath: NodePath<t.LVal>,
+  lvalPath: NodePath<t.LVal | t.OptionalMemberExpression>,
 ): void {
   /*
    * Find all reassignments to identifiers declared outside of currentFn

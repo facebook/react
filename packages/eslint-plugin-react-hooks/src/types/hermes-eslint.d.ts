@@ -6,7 +6,7 @@
  */
 
 // v0.17.1
-declare module "hermes-eslint" {
+declare module 'hermes-eslint' {
   // https://fburl.com/2vikhmaa
   type ParseForESLintOptions = {
     /**
@@ -37,7 +37,7 @@ declare module "hermes-eslint" {
     /**
      * The source type of the script.
      */
-    sourceType: "script" | "module";
+    sourceType: 'script' | 'module';
 
     /**
      * Ignore <fbt /> JSX elements when adding references to the module-level `React` variable.
