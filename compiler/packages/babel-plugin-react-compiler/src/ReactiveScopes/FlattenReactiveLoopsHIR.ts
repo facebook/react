@@ -31,14 +31,16 @@ export function flattenReactiveLoopsHIR(fn: HIRFunction): void {
       }
       case 'scope': {
         if (activeLoops.length !== 0) {
-          block.terminal = {
+          const newTerminal: PrunedScopeTerminal = {
             kind: 'pruned-scope',
             block: terminal.block,
+            dependencies: terminal.dependencies,
             fallthrough: terminal.fallthrough,
             id: terminal.id,
             loc: terminal.loc,
             scope: terminal.scope,
-          } as PrunedScopeTerminal;
+          };
+          block.terminal = newTerminal;
         }
         break;
       }

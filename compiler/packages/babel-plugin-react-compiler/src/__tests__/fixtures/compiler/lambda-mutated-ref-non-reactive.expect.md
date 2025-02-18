@@ -27,7 +27,6 @@ function f(a) {
   const $ = _c(2);
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x;
     x = {};
     $[0] = x;
   } else {

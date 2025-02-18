@@ -106,7 +106,7 @@ export type OptionalChainSidemap = {
   hoistableObjects: ReadonlyMap<BlockId, ReactiveScopeDependency>;
 };
 
-type OptionalTraversalContext = {
+export type OptionalTraversalContext = {
   currFn: HIRFunction;
   blocks: ReadonlyMap<BlockId, BasicBlock>;
 
@@ -227,7 +227,7 @@ function matchOptionalTestBlock(
  * property loads. If any part of the optional chain is not hoistable, returns
  * null.
  */
-function traverseOptionalBlock(
+export function traverseOptionalBlock(
   optional: TBasicBlock<OptionalTerminal>,
   context: OptionalTraversalContext,
   outerAlternate: BlockId | null,
@@ -282,6 +282,7 @@ function traverseOptionalBlock(
     );
     baseObject = {
       identifier: maybeTest.instructions[0].value.place.identifier,
+      reactive: maybeTest.instructions[0].value.place.reactive,
       path,
     };
     test = maybeTest.terminal;
@@ -383,6 +384,7 @@ function traverseOptionalBlock(
   );
   const load = {
     identifier: baseObject.identifier,
+    reactive: baseObject.reactive,
     path: [
       ...baseObject.path,
       {
