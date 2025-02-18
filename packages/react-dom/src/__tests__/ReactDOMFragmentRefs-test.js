@@ -140,7 +140,7 @@ describe('FragmentRefs', () => {
       );
     });
 
-    expect(fragmentRef).not.toBe(null);
+    expect(fragmentRef._children.size).toBe(1);
   });
 
   // @gate enableFragmentRefs
