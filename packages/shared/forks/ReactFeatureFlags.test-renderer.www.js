@@ -70,7 +70,7 @@ export const disableDefaultPropsExceptForClasses = true;
 export const renameElementSymbol = false;
 
 export const enableObjectFiber = false;
-export const enableOwnerStacks = false;
+export const enableOwnerStacks = true;
 export const enableShallowPropDiffing = false;
 export const enableSiblingPrerendering = true;
 
@@ -82,8 +82,8 @@ export const enableYieldingBeforePassive = false;
 
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
+export const enableRemoveConsolePatches = true;
 export const enableSwipeTransition = false;
-export const enableRemoveConsolePatches = false;
 export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
 
