@@ -169,7 +169,7 @@ export function logUncaughtError(
       errorBoundaryName = null;
     }
     const error = (errorInfo.value: any);
-    if (__DEV__ && ReactSharedInternals.actQueue !== null) {
+    if (__DEV__ && ReactSharedInternals.actQueue) {
       // For uncaught errors inside act, we track them on the act and then
       // rethrow them into the test.
       ReactSharedInternals.thrownErrors.push(error);
