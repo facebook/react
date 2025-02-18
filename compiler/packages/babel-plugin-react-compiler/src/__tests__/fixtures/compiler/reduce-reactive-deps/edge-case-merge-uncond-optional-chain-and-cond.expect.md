@@ -86,3 +86,6 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) {}
+[[ (exception in render) TypeError: Cannot read properties of null (reading 'title_text') ]]
