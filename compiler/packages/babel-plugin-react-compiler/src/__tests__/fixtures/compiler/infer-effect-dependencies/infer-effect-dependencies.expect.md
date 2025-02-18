@@ -101,7 +101,6 @@ function Component(t0) {
   useEffect(t3, [
     foo,
     bar,
-    ref,
     localNonPrimitiveReactive,
     localNonPrimitiveNonreactive,
   ]);
