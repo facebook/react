@@ -104,6 +104,18 @@ const tests: CompilerTestCases = {
         }
       `,
     },
+    {
+      name: '[ValidInput] Ref access during render for initialization',
+      code: normalizeIndent`
+        function Component(props) {
+          const ref = useRef(null);
+          if (ref.current === null) {
+            ref.current = new VideoPlayer();
+          }
+          return ref.current;
+        }
+      `,
+    },
   ],
   invalid: [
     {
