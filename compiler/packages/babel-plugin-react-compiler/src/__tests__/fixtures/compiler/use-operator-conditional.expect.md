@@ -86,7 +86,6 @@ function Inner(props) {
   }
 
   input;
-  input;
   let t0;
   let t1;
   if ($[0] !== input) {

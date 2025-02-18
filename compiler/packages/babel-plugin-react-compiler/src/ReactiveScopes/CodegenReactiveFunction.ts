@@ -2231,7 +2231,6 @@ function codegenInstructionValue(
       );
       break;
     }
-    case 'ReactiveFunctionValue':
     case 'StartMemoize':
     case 'FinishMemoize':
     case 'Debugger':
