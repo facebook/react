@@ -1,3 +1,5 @@
+import {Expression, Identifier, Node} from 'estree-jsx';
+
 /**
  * This file augments the `estree` types to include types that are not built-in to `estree` or `estree-jsx`.
  * This is necessary because the `estree` types are used by ESLint, and ESLint does not natively support
