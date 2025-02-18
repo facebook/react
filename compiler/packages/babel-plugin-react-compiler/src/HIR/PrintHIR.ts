@@ -6,7 +6,6 @@
  */
 
 import generate from '@babel/generator';
-import {printReactiveFunction} from '..';
 import {CompilerError} from '../CompilerError';
 import {printReactiveScopeSummary} from '../ReactiveScopes/PrintReactiveFunction';
 import DisjointSet from '../Utils/DisjointSet';
@@ -699,10 +698,6 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case 'FinishMemoize': {
       value = `FinishMemoize decl=${printPlace(instrValue.decl)}`;
-      break;
-    }
-    case 'ReactiveFunctionValue': {
-      value = `FunctionValue ${printReactiveFunction(instrValue.fn)}`;
       break;
     }
     default: {
