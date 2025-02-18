@@ -286,13 +286,13 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     case 'scope': {
       value = `[${terminal.id}] Scope ${printReactiveScopeSummary(
         terminal.scope,
-      )} block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
+      )} dependencies=bb${terminal.dependencies} block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case 'pruned-scope': {
       value = `[${terminal.id}] <pruned> Scope ${printReactiveScopeSummary(
         terminal.scope,
-      )} block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
+      )} dependencies=bb${terminal.dependencies} block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case 'try': {
