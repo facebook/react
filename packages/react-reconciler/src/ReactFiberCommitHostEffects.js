@@ -265,6 +265,11 @@ export function appendHostChildrenToFragmentInstance(
   if (child === null) {
     return;
   }
+
+  if (instance === null) {
+    return;
+  }
+
   if (child.sibling !== null) {
     appendHostChildrenToFragmentInstance(child.sibling, instance);
   }

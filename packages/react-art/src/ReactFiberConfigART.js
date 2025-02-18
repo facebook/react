@@ -310,7 +310,11 @@ export function createTextInstance(
   return text;
 }
 
-export type FragmentInstance = null | {...};
+export type FragmentInstance = null | {
+  appendChild: (child: any) => void,
+  parentInstance: any,
+  ...
+};
 
 export function createFragmentInstance(parentInstance): null {
   return null;

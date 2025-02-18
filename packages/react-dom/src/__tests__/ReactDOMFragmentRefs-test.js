@@ -121,7 +121,7 @@ describe('FragmentRefs', () => {
     const root = ReactDOMClient.createRoot(container);
 
     await act(() => {
-      root.render(<React.Fragment ref={fragmentRef}></React.Fragment>);
+      root.render(<React.Fragment ref={fragmentRef} />);
     });
 
     expect(fragmentRef.current._children.size).toBe(0);
