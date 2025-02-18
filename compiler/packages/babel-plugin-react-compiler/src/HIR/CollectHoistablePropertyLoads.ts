@@ -18,6 +18,7 @@ import {
   IdentifierId,
   InstructionId,
   InstructionValue,
+  PropertyLiteral,
   ReactiveScopeDependency,
   ScopeId,
 } from './HIR';
@@ -172,8 +173,8 @@ export type BlockInfo = {
  * and make computing sets intersections simpler.
  */
 type RootNode = {
-  properties: Map<string, PropertyPathNode>;
-  optionalProperties: Map<string, PropertyPathNode>;
+  properties: Map<PropertyLiteral, PropertyPathNode>;
+  optionalProperties: Map<PropertyLiteral, PropertyPathNode>;
   parent: null;
   // Recorded to make later computations simpler
   fullPath: ReactiveScopeDependency;
@@ -183,8 +184,8 @@ type RootNode = {
 
 type PropertyPathNode =
   | {
-      properties: Map<string, PropertyPathNode>;
-      optionalProperties: Map<string, PropertyPathNode>;
+      properties: Map<PropertyLiteral, PropertyPathNode>;
+      optionalProperties: Map<PropertyLiteral, PropertyPathNode>;
       parent: PropertyPathNode;
       fullPath: ReactiveScopeDependency;
       hasOptional: boolean;

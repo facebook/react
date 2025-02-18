@@ -10,6 +10,7 @@ import {
   DependencyPathEntry,
   GeneratedSource,
   Identifier,
+  PropertyLiteral,
   ReactiveScopeDependency,
 } from '../HIR';
 import {printIdentifier} from '../HIR/PrintHIR';
@@ -286,7 +287,7 @@ function merge(
 }
 
 type TreeNode<T extends string> = {
-  properties: Map<string, TreeNode<T>>;
+  properties: Map<PropertyLiteral, TreeNode<T>>;
   accessType: T;
 };
 type HoistableNode = TreeNode<'Optional' | 'NonNull'>;
@@ -343,7 +344,7 @@ function printSubtree(
 
 function makeOrMergeProperty(
   node: DependencyNode,
-  property: string,
+  property: PropertyLiteral,
   accessType: PropertyAccessType,
 ): DependencyNode {
   let child = node.properties.get(property);
