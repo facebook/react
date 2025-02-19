@@ -1598,18 +1598,14 @@ function inferBlock(
         break;
       }
       case 'LoadLocal': {
+        /**
+         * Due to backedges in the CFG, we may revisit LoadLocal lvalues
+         * multiple times. Unlike StoreLocal which may reassign to existing
+         * identifiers, LoadLocal always evaluates to store a new temporary.
+         * This means that we should always model LoadLocal as a Capture effect
+         * on the rvalue.
+         */
         const lvalue = instr.lvalue;
-        CompilerError.invariant(
-          !(
-            state.isDefined(lvalue) &&
-            state.kind(lvalue).kind === ValueKind.Context
-          ),
-          {
-            reason:
-              '[InferReferenceEffects] Unexpected LoadLocal with context kind',
-            loc: lvalue.loc,
-          },
-        );
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.place,
