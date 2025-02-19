@@ -16,6 +16,7 @@ import {
   EnvironmentConfig,
   ExternalFunction,
   ReactFunctionType,
+  MINIMAL_RETRY_CONFIG,
   tryParseExternalFunction,
 } from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
@@ -382,66 +383,92 @@ export function compileProgram(
       );
     }
 
-    let compiledFn: CodegenFunction;
-    try {
-      /**
-       * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
-       * Program node itself. We need to figure out whether an eslint suppression range
-       * applies to this function first.
-       */
-      const suppressionsInFunction = filterSuppressionsThatAffectFunction(
-        suppressions,
-        fn,
-      );
-      if (suppressionsInFunction.length > 0) {
-        const lintError = suppressionsToCompilerError(suppressionsInFunction);
-        if (optOutDirectives.length > 0) {
-          logError(lintError, pass, fn.node.loc ?? null);
-        } else {
-          handleError(lintError, pass, fn.node.loc ?? null);
-        }
-        return null;
+    /**
+     * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
+     * Program node itself. We need to figure out whether an eslint suppression range
+     * applies to this function first.
+     */
+    const suppressionsInFunction = filterSuppressionsThatAffectFunction(
+      suppressions,
+      fn,
+    );
+    let compileResult:
+      | {kind: 'compile'; compiledFn: CodegenFunction}
+      | {kind: 'error'; error: unknown};
+    if (suppressionsInFunction.length > 0) {
+      compileResult = {
+        kind: 'error',
+        error: suppressionsToCompilerError(suppressionsInFunction),
+      };
+    } else {
+      try {
+        compileResult = {
+          kind: 'compile',
+          compiledFn: compileFn(
+            fn,
+            environment,
+            fnType,
+            useMemoCacheIdentifier.name,
+            pass.opts.logger,
+            pass.filename,
+            pass.code,
+          ),
+        };
+      } catch (err) {
+        compileResult = {kind: 'error', error: err};
       }
-
-      compiledFn = compileFn(
-        fn,
-        environment,
-        fnType,
-        useMemoCacheIdentifier.name,
-        pass.opts.logger,
-        pass.filename,
-        pass.code,
-      );
-      pass.opts.logger?.logEvent(pass.filename, {
-        kind: 'CompileSuccess',
-        fnLoc: fn.node.loc ?? null,
-        fnName: compiledFn.id?.name ?? null,
-        memoSlots: compiledFn.memoSlotsUsed,
-        memoBlocks: compiledFn.memoBlocks,
-        memoValues: compiledFn.memoValues,
-        prunedMemoBlocks: compiledFn.prunedMemoBlocks,
-        prunedMemoValues: compiledFn.prunedMemoValues,
-      });
-    } catch (err) {
+    }
+    // If non-memoization features are enabled, retry regardless of error kind
+    if (compileResult.kind === 'error' && environment.enableFire) {
+      try {
+        compileResult = {
+          kind: 'compile',
+          compiledFn: compileFn(
+            fn,
+            {
+              ...environment,
+              ...MINIMAL_RETRY_CONFIG,
+            },
+            fnType,
+            useMemoCacheIdentifier.name,
+            pass.opts.logger,
+            pass.filename,
+            pass.code,
+          ),
+        };
+      } catch (err) {
+        compileResult = {kind: 'error', error: err};
+      }
+    }
+    if (compileResult.kind === 'error') {
       /**
        * If an opt out directive is present, log only instead of throwing and don't mark as
        * containing a critical error.
        */
-      if (fn.node.body.type === 'BlockStatement') {
-        if (optOutDirectives.length > 0) {
-          logError(err, pass, fn.node.loc ?? null);
-          return null;
-        }
+      if (optOutDirectives.length > 0) {
+        logError(compileResult.error, pass, fn.node.loc ?? null);
+      } else {
+        handleError(compileResult.error, pass, fn.node.loc ?? null);
       }
-      handleError(err, pass, fn.node.loc ?? null);
       return null;
     }
+
+    pass.opts.logger?.logEvent(pass.filename, {
+      kind: 'CompileSuccess',
+      fnLoc: fn.node.loc ?? null,
+      fnName: compileResult.compiledFn.id?.name ?? null,
+      memoSlots: compileResult.compiledFn.memoSlotsUsed,
+      memoBlocks: compileResult.compiledFn.memoBlocks,
+      memoValues: compileResult.compiledFn.memoValues,
+      prunedMemoBlocks: compileResult.compiledFn.prunedMemoBlocks,
+      prunedMemoValues: compileResult.compiledFn.prunedMemoValues,
+    });
 
     /**
      * Always compile functions with opt in directives.
      */
     if (optInDirectives.length > 0) {
-      return compiledFn;
+      return compileResult.compiledFn;
     } else if (pass.opts.compilationMode === 'annotation') {
       /**
        * No opt-in directive in annotation mode, so don't insert the compiled function.
@@ -467,7 +494,7 @@ export function compileProgram(
     }
 
     if (!pass.opts.noEmit) {
-      return compiledFn;
+      return compileResult.compiledFn;
     }
     return null;
   };

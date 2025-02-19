@@ -14,7 +14,10 @@ import {
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import isArray from 'shared/isArray';
 
-import {enableShallowPropDiffing} from 'shared/ReactFeatureFlags';
+import {
+  enableShallowPropDiffing,
+  enableFastAddPropertiesInDiffing,
+} from 'shared/ReactFeatureFlags';
 
 import type {AttributeConfiguration} from './ReactNativeTypes';
 
@@ -218,7 +221,11 @@ function addNestedProperty(
 
   if (!isArray(nextProp)) {
     // Add each property of the leaf.
-    return addProperties(updatePayload, nextProp, validAttributes);
+    if (enableFastAddPropertiesInDiffing) {
+      return fastAddProperties(updatePayload, nextProp, validAttributes);
+    } else {
+      return addProperties(updatePayload, nextProp, validAttributes);
+    }
   }
 
   for (let i = 0; i < nextProp.length; i++) {

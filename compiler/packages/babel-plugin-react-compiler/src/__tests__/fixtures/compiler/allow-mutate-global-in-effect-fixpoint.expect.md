@@ -19,9 +19,14 @@ function Component() {
 
   // capture into a separate variable that is not a context variable.
   const y = x;
+  /**
+   * Note that this fixture currently produces a stale effect closure if `y = x
+   * = someGlobal` changes between renders. Under current compiler assumptions,
+   * that would be a rule of react violation.
+   */
   useEffect(() => {
     y.value = 'hello';
-  }, []);
+  });
 
   useEffect(() => {
     setState(someGlobal.value);
@@ -46,57 +51,50 @@ import { useEffect, useState } from "react";
 let someGlobal = { value: null };
 
 function Component() {
-  const $ = _c(7);
+  const $ = _c(5);
   const [state, setState] = useState(someGlobal);
-  let t0;
-  let t1;
-  let t2;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    let x = someGlobal;
-    while (x == null) {
-      x = someGlobal;
-    }
 
-    const y = x;
-    t0 = useEffect;
-    t1 = () => {
+  let x = someGlobal;
+  while (x == null) {
+    x = someGlobal;
+  }
+
+  const y = x;
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = () => {
       y.value = "hello";
     };
-    t2 = [];
     $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  useEffect(t0);
+  let t1;
+  let t2;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = () => {
+      setState(someGlobal.value);
+    };
+    t2 = [someGlobal];
     $[1] = t1;
     $[2] = t2;
   } else {
-    t0 = $[0];
     t1 = $[1];
     t2 = $[2];
   }
-  t0(t1, t2);
-  let t3;
+  useEffect(t1, t2);
+
+  const t3 = String(state);
   let t4;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = () => {
-      setState(someGlobal.value);
-    };
-    t4 = [someGlobal];
+  if ($[3] !== t3) {
+    t4 = <div>{t3}</div>;
     $[3] = t3;
     $[4] = t4;
   } else {
-    t3 = $[3];
     t4 = $[4];
   }
-  useEffect(t3, t4);
-
-  const t5 = String(state);
-  let t6;
-  if ($[5] !== t5) {
-    t6 = <div>{t5}</div>;
-    $[5] = t5;
-    $[6] = t6;
-  } else {
-    t6 = $[6];
-  }
-  return t6;
+  return t4;
 }
 
 export const FIXTURE_ENTRYPOINT = {

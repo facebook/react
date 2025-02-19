@@ -14,6 +14,7 @@ import type {
   Usable,
   Thenable,
   ReactDebugInfo,
+  StartGesture,
 } from 'shared/ReactTypes';
 import type {
   ContextDependency,
@@ -128,11 +129,11 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 
       Dispatcher.useId();
 
-      if (typeof Dispatcher.useResourceEffect === 'function') {
-        Dispatcher.useResourceEffect(() => ({}), []);
-      }
       if (typeof Dispatcher.useEffectEvent === 'function') {
         Dispatcher.useEffectEvent((args: empty) => {});
+      }
+      if (typeof Dispatcher.useSwipeTransition === 'function') {
+        Dispatcher.useSwipeTransition(null, null, null);
       }
     } finally {
       readHookLog = hookLog;
@@ -373,8 +374,11 @@ function useInsertionEffect(
 }
 
 function useEffect(
-  create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
+  create: (() => (() => void) | void) | (() => {...} | void | null),
+  createDeps: Array<mixed> | void | null,
+  update?: ((resource: {...} | void | null) => void) | void,
+  updateDeps?: Array<mixed> | void | null,
+  destroy?: ((resource: {...} | void | null) => void) | void,
 ): void {
   nextHook();
   hookLog.push({
@@ -738,24 +742,6 @@ function useHostTransitionStatus(): TransitionStatus {
   return status;
 }
 
-function useResourceEffect(
-  create: () => mixed,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
-) {
-  nextHook();
-  hookLog.push({
-    displayName: null,
-    primitive: 'ResourceEffect',
-    stackError: new Error(),
-    value: create,
-    debugInfo: null,
-    dispatcherHookName: 'ResourceEffect',
-  });
-}
-
 function useEffectEvent<Args, F: (...Array<Args>) => mixed>(callback: F): F {
   nextHook();
   hookLog.push({
@@ -770,32 +756,50 @@ function useEffectEvent<Args, F: (...Array<Args>) => mixed>(callback: F): F {
   return callback;
 }
 
+function useSwipeTransition<T>(
+  previous: T,
+  current: T,
+  next: T,
+): [T, StartGesture] {
+  nextHook();
+  hookLog.push({
+    displayName: null,
+    primitive: 'SwipeTransition',
+    stackError: new Error(),
+    value: current,
+    debugInfo: null,
+    dispatcherHookName: 'SwipeTransition',
+  });
+  return [current, () => () => {}];
+}
+
 const Dispatcher: DispatcherType = {
-  use,
   readContext,
-  useCacheRefresh,
+
+  use,
   useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
-  useDebugValue,
   useLayoutEffect,
   useInsertionEffect,
   useMemo,
-  useMemoCache,
-  useOptimistic,
   useReducer,
   useRef,
   useState,
+  useDebugValue,
+  useDeferredValue,
   useTransition,
   useSyncExternalStore,
-  useDeferredValue,
   useId,
+  useHostTransitionStatus,
   useFormState,
   useActionState,
-  useHostTransitionStatus,
+  useOptimistic,
+  useMemoCache,
+  useCacheRefresh,
   useEffectEvent,
-  useResourceEffect,
+  useSwipeTransition,
 };
 
 // create a proxy to throw a custom error

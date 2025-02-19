@@ -97,6 +97,8 @@ import {
   Passive,
   DidDefer,
   ViewTransitionNamedStatic,
+  ViewTransitionNamedMount,
+  LayoutStatic,
 } from './ReactFiberFlags';
 import {
   disableLegacyContext,
@@ -265,7 +267,6 @@ import {
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
   peekDeferredLane,
-  trackAppearingViewTransition,
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent';
@@ -1703,21 +1704,13 @@ function updateHostSingleton(
   }
 
   const nextChildren = workInProgress.pendingProps.children;
-
-  if (current === null && !getIsHydrating()) {
-    // Similar to Portals we append Singleton children in the commit phase. So we
-    // Track insertions even on mount.
-    // TODO: Consider unifying this with how the root works.
-    workInProgress.child = reconcileChildFibers(
-      workInProgress,
-      null,
-      nextChildren,
-      renderLanes,
-    );
-  } else {
-    reconcileChildren(current, workInProgress, nextChildren, renderLanes);
-  }
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   markRef(current, workInProgress);
+  if (current === null) {
+    // We mark Singletons with a static flag to more efficiently manage their
+    // ownership of the singleton host instance when in offscreen trees including Suspense
+    workInProgress.flags |= LayoutStatic;
+  }
   return workInProgress.child;
 }
 
@@ -3250,12 +3243,10 @@ function updateViewTransition(
   if (pendingProps.name != null && pendingProps.name !== 'auto') {
     // Explicitly named boundary. We track it so that we can pair it up with another explicit
     // boundary if we get deleted.
-    workInProgress.flags |= ViewTransitionNamedStatic;
-    if (current === null) {
-      // This is a new mount. We track it in case we end up having a deletion with the same name.
-      // TODO: A problem with this strategy is that this subtree might not actually end up mounted.
-      trackAppearingViewTransition(instance, pendingProps.name);
-    }
+    workInProgress.flags |=
+      current === null
+        ? ViewTransitionNamedMount | ViewTransitionNamedStatic
+        : ViewTransitionNamedStatic;
   } else {
     // Assign an auto generated name using the useId algorthim if an explicit one is not provided.
     // We don't need the name yet but we do it here to allow hydration state to be used.

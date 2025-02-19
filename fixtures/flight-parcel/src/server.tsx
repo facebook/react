@@ -72,7 +72,9 @@ async function render(
       return ReactClient.use(data);
     }
 
-    let htmlStream = await renderHTMLToReadableStream(<Content />);
+    let htmlStream = await renderHTMLToReadableStream(<Content />, {
+      bootstrapScriptContent: (Todos as any).bootstrapScript,
+    });
     let response = htmlStream.pipeThrough(injectRSCPayload(s2));
     Readable.fromWeb(response as NodeReadableStream).pipe(res);
   } else {
