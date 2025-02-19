@@ -2,12 +2,13 @@
   "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
     "module": "ES2015",
-    "target": "ES2015",
+    "target": "ES5",
     "moduleResolution": "Bundler",
     "lib": ["ES2020"],
     "rootDir": ".",
     "sourceMap": false,
-    "types": ["estree-jsx", "node"]
+    "types": ["estree-jsx", "node"],
+    "downlevelIteration": true
   },
   "exclude": ["node_modules"],
   "include": ["src/**/*.ts"]

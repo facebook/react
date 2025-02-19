@@ -6,11 +6,10 @@
  */
 
 import type {Dispatch, ReactNode} from 'react';
-import {useReducer} from 'react';
+import {useEffect, useReducer} from 'react';
 import createContext from '../lib/createContext';
 import {emptyStore} from '../lib/defaultStore';
-import type {Store} from '../lib/stores';
-import {saveStore} from '../lib/stores';
+import {saveStore, type Store} from '../lib/stores';
 
 const StoreContext = createContext<Store>();
 
@@ -31,6 +30,11 @@ export const useStoreDispatch = StoreDispatchContext.useContext;
  */
 export function StoreProvider({children}: {children: ReactNode}): JSX.Element {
   const [store, dispatch] = useReducer(storeReducer, emptyStore);
+  useEffect(() => {
+    if (store !== emptyStore) {
+      saveStore(store);
+    }
+  }, [store]);
 
   return (
     <StoreContext.Provider value={store}>
@@ -59,19 +63,14 @@ function storeReducer(store: Store, action: ReducerAction): Store {
   switch (action.type) {
     case 'setStore': {
       const newStore = action.payload.store;
-
-      saveStore(newStore);
       return newStore;
     }
     case 'updateFile': {
       const {source} = action.payload;
-
       const newStore = {
         ...store,
         source,
       };
-
-      saveStore(newStore);
       return newStore;
     }
   }
