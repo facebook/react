@@ -2381,17 +2381,6 @@ describe('ReactErrorBoundaries', () => {
         'class/function (for composite components) but got: null.',
     );
 
-    if (!gate('enableOwnerStacks')) {
-      assertConsoleErrorDev(
-        [
-          'React.jsx: type is invalid -- expected a string ' +
-            '(for built-in components) or a class/function ' +
-            '(for composite components) but got: null.',
-        ],
-        {withoutStack: true},
-      );
-    }
-
     await expect(async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
@@ -2403,18 +2392,6 @@ describe('ReactErrorBoundaries', () => {
         'expected a string (for built-in components) or a ' +
         'class/function (for composite components) but got: undefined.',
     );
-    if (!gate('enableOwnerStacks')) {
-      assertConsoleErrorDev(
-        [
-          'React.jsx: type is invalid -- expected a string ' +
-            '(for built-in components) or a class/function ' +
-            '(for composite components) but got: undefined. ' +
-            "You likely forgot to export your component from the file it's defined in, " +
-            'or you might have mixed up default and named imports.',
-        ],
-        {withoutStack: true},
-      );
-    }
   });
 
   it('renders empty output if error boundary does not handle the error', async () => {

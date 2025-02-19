@@ -333,16 +333,6 @@ describe('ReactChildren', () => {
     }
 
     const instance = <div>{threeDivIterable}</div>;
-    assertConsoleErrorDev(
-      // With the flag on this doesn't warn eagerly but only when rendered
-      gate(flag => flag.enableOwnerStacks)
-        ? []
-        : [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the top-level render call using <div>. See https://react.dev/link/warning-keys for more information.\n' +
-              '    in div (at **)',
-          ],
-    );
 
     React.Children.forEach(instance.props.children, callback, context);
 
@@ -369,8 +359,7 @@ describe('ReactChildren', () => {
       'Each child in a list should have a unique "key" prop.\n\n' +
         'Check the top-level render call using <div>. It was passed a child from div.' +
         ' See https://react.dev/link/warning-keys for more information.\n' +
-        '    in div (at **)' +
-        (gate(flag => flag.enableOwnerStacks) ? '' : '\n    in div (at **)'),
+        '    in div (at **)',
     ]);
   });
 
@@ -894,22 +883,13 @@ describe('ReactChildren', () => {
         </ComponentRenderingMappedChildren>,
       );
     });
-    assertConsoleErrorDev(
-      gate(flags => flags.enableOwnerStacks)
-        ? [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the render method of `ComponentRenderingMappedChildren`.' +
-              ' See https://react.dev/link/warning-keys for more information.\n' +
-              '    in div (at **)\n' +
-              '    in **/ReactChildren-test.js:**:** (at **)',
-          ]
-        : [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the top-level render call using <ComponentRenderingMappedChildren>.' +
-              ' See https://react.dev/link/warning-keys for more information.\n' +
-              '    in div (at **)',
-          ],
-    );
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the render method of `ComponentRenderingMappedChildren`.' +
+        ' See https://react.dev/link/warning-keys for more information.\n' +
+        '    in div (at **)\n' +
+        '    in **/ReactChildren-test.js:**:** (at **)',
+    ]);
   });
 
   it('does not warn for mapped static children without keys', async () => {
@@ -953,21 +933,12 @@ describe('ReactChildren', () => {
         </ComponentRenderingClonedChildren>,
       );
     });
-    assertConsoleErrorDev(
-      gate(flags => flags.enableOwnerStacks)
-        ? [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the render method of `ComponentRenderingClonedChildren`.' +
-              ' See https://react.dev/link/warning-keys for more information.\n' +
-              '    in div (at **)',
-          ]
-        : [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the top-level render call using <ComponentRenderingClonedChildren>.' +
-              ' See https://react.dev/link/warning-keys for more information.\n' +
-              '    in div (at **)',
-          ],
-    );
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the render method of `ComponentRenderingClonedChildren`.' +
+        ' See https://react.dev/link/warning-keys for more information.\n' +
+        '    in div (at **)',
+    ]);
   });
 
   it('does not warn for cloned static children without keys', async () => {
@@ -1005,21 +976,12 @@ describe('ReactChildren', () => {
         </ComponentRenderingFlattenedChildren>,
       );
     });
-    assertConsoleErrorDev(
-      gate(flags => flags.enableOwnerStacks)
-        ? [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the render method of `ComponentRenderingFlattenedChildren`.' +
-              ' See https://react.dev/link/warning-keys for more information.\n' +
-              '    in div (at **)',
-          ]
-        : [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the top-level render call using <ComponentRenderingFlattenedChildren>.' +
-              ' See https://react.dev/link/warning-keys for more information.\n' +
-              '    in div (at **)',
-          ],
-    );
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the render method of `ComponentRenderingFlattenedChildren`.' +
+        ' See https://react.dev/link/warning-keys for more information.\n' +
+        '    in div (at **)',
+    ]);
   });
 
   it('does not warn for flattened static children without keys', async () => {

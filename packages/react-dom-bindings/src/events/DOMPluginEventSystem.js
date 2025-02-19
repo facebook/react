@@ -52,7 +52,6 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableOwnerStacks,
   disableCommentsAsDOMContainers,
   enableScrollEndPolyfill,
 } from 'shared/ReactFeatureFlags';
@@ -275,7 +274,7 @@ function processDispatchQueueItemsInOrder(
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }
-      if (__DEV__ && enableOwnerStacks && instance !== null) {
+      if (__DEV__ && instance !== null) {
         runWithFiberInDEV(
           instance,
           executeDispatch,
@@ -294,7 +293,7 @@ function processDispatchQueueItemsInOrder(
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }
-      if (__DEV__ && enableOwnerStacks && instance !== null) {
+      if (__DEV__ && instance !== null) {
         runWithFiberInDEV(
           instance,
           executeDispatch,

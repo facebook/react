@@ -91,7 +91,6 @@ export const enableReactTestRendererWarning = true;
 export const disableDefaultPropsExceptForClasses = true;
 
 export const enableObjectFiber = false;
-export const enableOwnerStacks = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

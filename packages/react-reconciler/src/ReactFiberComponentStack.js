@@ -7,10 +7,7 @@
  * @flow
  */
 
-import {
-  enableOwnerStacks,
-  enableViewTransition,
-} from 'shared/ReactFeatureFlags';
+import {enableViewTransition} from 'shared/ReactFeatureFlags';
 import type {Fiber} from './ReactInternalTypes';
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
@@ -101,7 +98,7 @@ function describeFunctionComponentFrameWithoutLineNumber(fn: Function): string {
 }
 
 export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
-  if (!enableOwnerStacks || !__DEV__) {
+  if (!__DEV__) {
     return '';
   }
   try {

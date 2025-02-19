@@ -356,6 +356,7 @@ export type OnErrorOrWarning = (
 ) => void;
 export type GetComponentStack = (
   topFrame: Error,
+  // TODO: is this needed now that owner stacks have landed? e.g. for backwards compat of devtools?
 ) => null | {enableOwnerStacks: boolean, componentStack: string};
 
 export type RendererInterface = {

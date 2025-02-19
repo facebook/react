@@ -203,11 +203,7 @@ describe('ReactCache', () => {
           "boolean, but instead received: [ 'Hi', 100 ]\n\n" +
           'To use non-primitive values as keys, you must pass a hash ' +
           'function as the second argument to createResource().\n' +
-          '    in App (at **)' +
-          (gate(flags => flags.enableOwnerStacks)
-            ? ''
-            : '\n    in Suspense (at **)'),
-
+          '    in App (at **)',
         ...(gate('enableSiblingPrerendering')
           ? [
               'Invalid key type. Expected a string, number, symbol, or ' +
