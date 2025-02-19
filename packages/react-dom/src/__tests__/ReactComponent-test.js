@@ -407,17 +407,6 @@ describe('ReactComponent', () => {
 
     const X = undefined;
     const XElement = <X />;
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-            'or a class/function (for composite components) but got: undefined. ' +
-            "You likely forgot to export your component from the file it's defined in, " +
-            'or you might have mixed up default and named imports.',
-        ],
-        {withoutStack: true},
-      );
-    }
     await expect(async () => {
       await act(() => {
         root.render(XElement);
@@ -433,15 +422,6 @@ describe('ReactComponent', () => {
 
     const Y = null;
     const YElement = <Y />;
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-            'or a class/function (for composite components) but got: null.',
-        ],
-        {withoutStack: true},
-      );
-    }
     await expect(async () => {
       await act(() => {
         root.render(YElement);
@@ -453,15 +433,6 @@ describe('ReactComponent', () => {
 
     const Z = true;
     const ZElement = <Z />;
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-            'or a class/function (for composite components) but got: boolean.',
-        ],
-        {withoutStack: true},
-      );
-    }
     await expect(async () => {
       await act(() => {
         root.render(ZElement);
@@ -506,26 +477,6 @@ describe('ReactComponent', () => {
             '\n\nCheck the render method of `Bar`.'
           : ''),
     );
-    if (!gate('enableOwnerStacks')) {
-      assertConsoleErrorDev([
-        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-          'or a class/function (for composite components) but got: undefined.' +
-          (__DEV__
-            ? " You likely forgot to export your component from the file it's defined in, " +
-              'or you might have mixed up default and named imports.\n' +
-              '    in Bar (at **)\n' +
-              '    in Foo (at **)'
-            : ''),
-        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-          'or a class/function (for composite components) but got: undefined.' +
-          (__DEV__
-            ? " You likely forgot to export your component from the file it's defined in, " +
-              'or you might have mixed up default and named imports.\n' +
-              '    in Bar (at **)\n' +
-              '    in Foo (at **)'
-            : ''),
-      ]);
-    }
   });
 
   it('throws if a plain object is used as a child', async () => {
@@ -693,9 +644,6 @@ describe('ReactComponent', () => {
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <span>{Foo}</span>\n' +
           '    in span (at **)\n' +
-          (gate(flags => flags.enableOwnerStacks)
-            ? ''
-            : '    in div (at **)\n') +
           '    in Foo (at **)',
       ]);
     });
@@ -753,9 +701,6 @@ describe('ReactComponent', () => {
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <span>{Foo}</span>\n' +
           '    in span (at **)\n' +
-          (gate(flags => flags.enableOwnerStacks)
-            ? ''
-            : '    in div (at **)\n') +
           '    in Foo (at **)',
       ]);
       await act(() => {

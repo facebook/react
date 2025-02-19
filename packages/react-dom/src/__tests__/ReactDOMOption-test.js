@@ -59,10 +59,7 @@ describe('ReactDOMOption', () => {
         '>   <div>\n' +
         '    ...\n' +
         '\n' +
-        '    in div (at **)' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? ''
-          : '\n    in option (at **)'),
+        '    in div (at **)',
     ]);
     expect(container.firstChild.innerHTML).toBe('1 <div></div> 2');
     await renderIntoDocument(el);
@@ -279,10 +276,7 @@ describe('ReactDOMOption', () => {
         '>     <div ref={{current:null}}>\n' +
         '      ...\n' +
         '\n' +
-        '    in div (at **)' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? ''
-          : '\n    in option (at **)' + '\n    in select (at **)'),
+        '    in div (at **)',
     ]);
     option = container.firstChild.firstChild;
 

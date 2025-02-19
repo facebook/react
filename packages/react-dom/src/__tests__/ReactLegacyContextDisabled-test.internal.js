@@ -104,16 +104,10 @@ describe('ReactLegacyContextDisabled', () => {
         '    in LegacyProvider (at **)',
       'LegacyClsConsumer uses the legacy contextTypes API which was removed in React 19. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-        '    in LegacyClsConsumer (at **)' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '\n' + '    in span (at **)\n' + '    in LegacyProvider (at **)'),
+        '    in LegacyClsConsumer (at **)',
       'LegacyFnConsumer uses the legacy contextTypes API which was removed in React 19. ' +
         'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
-        '    in LegacyFnConsumer (at **)' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '\n' + '    in span (at **)\n' + '    in LegacyProvider (at **)'),
+        '    in LegacyFnConsumer (at **)',
     ]);
     expect(container.textContent).toBe('{}undefinedundefined');
     expect(lifecycleContextLog).toEqual([]);
@@ -151,16 +145,10 @@ describe('ReactLegacyContextDisabled', () => {
         '    in LegacyProvider (at **)',
       'LegacyClsConsumer uses the legacy contextTypes API which was removed in React 19. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-        '    in LegacyClsConsumer (at **)' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '\n' + '    in span (at **)\n' + '    in LegacyProvider (at **)'),
+        '    in LegacyClsConsumer (at **)',
       'LegacyFnConsumer uses the legacy contextTypes API which was removed in React 19. ' +
         'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
-        '    in LegacyFnConsumer (at **)' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '\n' + '    in span (at **)\n' + '    in LegacyProvider (at **)'),
+        '    in LegacyFnConsumer (at **)',
     ]);
     expect(text).toBe('<span>{}<!-- -->undefined<!-- -->undefined</span>');
     expect(lifecycleContextLog).toEqual([{}, {}, {}]);

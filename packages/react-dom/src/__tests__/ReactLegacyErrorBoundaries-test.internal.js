@@ -2112,16 +2112,6 @@ describe('ReactLegacyErrorBoundaries', () => {
         ReactDOM.render(<X />, container);
       });
     }).rejects.toThrow('got: null');
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'React.jsx: type is invalid -- expected a string ' +
-            '(for built-in components) or a class/function ' +
-            '(for composite components) but got: null.',
-        ],
-        {withoutStack: true},
-      );
-    }
 
     await expect(async () => {
       const container = document.createElement('div');
@@ -2129,16 +2119,6 @@ describe('ReactLegacyErrorBoundaries', () => {
         ReactDOM.render(<Y />, container);
       });
     }).rejects.toThrow('got: undefined');
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'React.jsx: type is invalid -- expected a string ' +
-            '(for built-in components) or a class/function ' +
-            '(for composite components) but got: undefined.',
-        ],
-        {withoutStack: true},
-      );
-    }
   });
 
   // @gate !disableLegacyMode

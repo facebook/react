@@ -240,9 +240,6 @@ describe('ReactLazy', () => {
         '  }\n\n' +
         'Your code should look like: \n  ' +
         "const MyComponent = lazy(() => import('./MyComponent'))\n" +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Lazy (at **)\n' + '    in Suspense (at **)\n') +
         '    in App (at **)',
       'lazy: Expected the result of a dynamic import() call. ' +
         'Instead received: function Text(props) {\n' +
@@ -251,9 +248,6 @@ describe('ReactLazy', () => {
         '  }\n\n' +
         'Your code should look like: \n  ' +
         "const MyComponent = lazy(() => import('./MyComponent'))\n" +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Lazy (at **)\n' + '    in Suspense (at **)\n') +
         '    in App (at **)',
     ]);
     expect(root).not.toMatchRenderedOutput('Hi');
@@ -1074,11 +1068,7 @@ describe('ReactLazy', () => {
         '\n' +
         'Check the render method of `Foo`. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? '    in Foo (at **)'
-          : '    in Text (at **)\n' +
-            '    in Foo (at **)\n' +
-            '    in Suspense (at **)'),
+        '    in Foo (at **)',
     ]);
     expect(root).toMatchRenderedOutput(<div>AB</div>);
   });

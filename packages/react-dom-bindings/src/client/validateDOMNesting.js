@@ -10,8 +10,6 @@
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {HydrationDiffNode} from 'react-reconciler/src/ReactFiberHydrationDiffs';
 
-import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
-
 import {
   current,
   runWithFiberInDEV,
@@ -615,7 +613,7 @@ function validateDOMNesting(
         ancestorDescription,
       );
     }
-    if (enableOwnerStacks && child) {
+    if (child) {
       // For debugging purposes find the nearest ancestor that caused the issue.
       // The stack trace of this ancestor can be useful to find the cause.
       // If the parent is a direct parent in the same owner, we don't bother.

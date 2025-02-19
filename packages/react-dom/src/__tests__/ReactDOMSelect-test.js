@@ -794,7 +794,6 @@ describe('ReactDOMSelect', () => {
       'Use the `defaultValue` or `value` props on <select> instead of ' +
         'setting `selected` on <option>.\n' +
         '    in option (at **)\n' +
-        (gate('enableOwnerStacks') ? '' : '    in select (at **)\n') +
         '    in App (at **)',
     ]);
 
@@ -1072,8 +1071,7 @@ describe('ReactDOMSelect', () => {
         'Invalid value for prop `value` on <option> tag. ' +
           'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
           'For details, see https://react.dev/link/attribute-behavior \n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
 
       const node = container.firstChild;
@@ -1096,8 +1094,7 @@ describe('ReactDOMSelect', () => {
         'Invalid value for prop `value` on <option> tag. ' +
           'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
           'For details, see https://react.dev/link/attribute-behavior \n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
 
       let node = container.firstChild;
@@ -1134,8 +1131,7 @@ describe('ReactDOMSelect', () => {
         'Invalid value for prop `value` on <option> tag. ' +
           'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
           'For details, see https://react.dev/link/attribute-behavior \n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
 
       const node = container.firstChild;
@@ -1158,8 +1154,7 @@ describe('ReactDOMSelect', () => {
         'Invalid value for prop `value` on <option> tag. ' +
           'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
           'For details, see https://react.dev/link/attribute-behavior \n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
 
       let node = container.firstChild;
@@ -1199,8 +1194,7 @@ describe('ReactDOMSelect', () => {
         'Invalid value for prop `value` on <option> tag. ' +
           'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
           'For details, see https://react.dev/link/attribute-behavior \n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
 
       const node = container.firstChild;
@@ -1223,8 +1217,7 @@ describe('ReactDOMSelect', () => {
         'Invalid value for prop `value` on <option> tag. ' +
           'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
           'For details, see https://react.dev/link/attribute-behavior \n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
 
       const node = container.firstChild;
@@ -1247,8 +1240,7 @@ describe('ReactDOMSelect', () => {
         'Invalid value for prop `value` on <option> tag. ' +
           'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
           'For details, see https://react.dev/link/attribute-behavior \n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
 
       let node = container.firstChild;
@@ -1284,8 +1276,7 @@ describe('ReactDOMSelect', () => {
         'Invalid value for prop `value` on <option> tag. ' +
           'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
           'For details, see https://react.dev/link/attribute-behavior \n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
 
       let node = container.firstChild;
@@ -1366,12 +1357,10 @@ describe('ReactDOMSelect', () => {
       assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
     });
 
@@ -1395,12 +1384,10 @@ describe('ReactDOMSelect', () => {
       assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
     });
 
@@ -1467,8 +1454,7 @@ describe('ReactDOMSelect', () => {
       assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
     });
 
@@ -1508,8 +1494,7 @@ describe('ReactDOMSelect', () => {
       assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
           'This value must be coerced to a string before using it here.\n' +
@@ -1563,12 +1548,10 @@ describe('ReactDOMSelect', () => {
       assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
     });
 
@@ -1591,12 +1574,10 @@ describe('ReactDOMSelect', () => {
       assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
     });
 
@@ -1670,12 +1651,10 @@ describe('ReactDOMSelect', () => {
       assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
-          '    in option (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+          '    in option (at **)',
       ]);
     });
 

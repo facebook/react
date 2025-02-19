@@ -1020,7 +1020,7 @@ describe('ReactFlightDOMEdge', () => {
     }
   });
 
-  // @gate __DEV__ && enableOwnerStacks
+  // @gate __DEV__
   it('can get the component owner stacks asynchronously', async () => {
     let stack;
 

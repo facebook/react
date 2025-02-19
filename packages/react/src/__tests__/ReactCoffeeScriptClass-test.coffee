@@ -266,26 +266,14 @@ describe 'ReactCoffeeScriptClass', ->
 
       test React.createElement(Outer), 'SPAN', 'foo'
       
-      if featureFlags.enableOwnerStacks
-        assertConsoleErrorDev([
-          'Outer uses the legacy childContextTypes API which will soon be removed.
-           Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
-            '    in Outer (at **)',
-          'Foo uses the legacy contextTypes API which will soon be removed.
-           Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-            '    in Outer (at **)',
-        ]);
-      else
-        assertConsoleErrorDev([
-          'Outer uses the legacy childContextTypes API which will soon be removed.
-           Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
-            '    in Outer (at **)',
-          'Foo uses the legacy contextTypes API which will soon be removed.
-           Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-            '    in Foo (at **)\n' +
-            '    in Outer (at **)',
-        ]);
-      
+      assertConsoleErrorDev([
+        'Outer uses the legacy childContextTypes API which will soon be removed.
+         Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+          '    in Outer (at **)',
+        'Foo uses the legacy contextTypes API which will soon be removed.
+         Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+          '    in Outer (at **)',
+      ]);
 
   it 'renders only once when setting state in componentWillMount', ->
     renderCount = 0
@@ -578,24 +566,13 @@ describe 'ReactCoffeeScriptClass', ->
           React.createElement Bar
 
       test React.createElement(Foo), 'DIV', 'bar-through-context'
-      if featureFlags.enableOwnerStacks
-        assertConsoleErrorDev [
-          'Foo uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.
-           (https://react.dev/link/legacy-context)\n' +
-            '    in Foo (at **)',
-          'Bar uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.
-           (https://react.dev/link/legacy-context)\n' +
-            '    in Foo (at **)'
-        ]
-      else
-        assertConsoleErrorDev [
-          'Foo uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.
-           (https://react.dev/link/legacy-context)\n' +
-            '    in Foo (at **)',
-          'Bar uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.
-           (https://react.dev/link/legacy-context)\n' +
-            '    in Bar (at **)\n' +
-            '    in Foo (at **)'
-        ]
+      assertConsoleErrorDev [
+        'Foo uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.
+         (https://react.dev/link/legacy-context)\n' +
+          '    in Foo (at **)',
+        'Bar uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.
+         (https://react.dev/link/legacy-context)\n' +
+          '    in Foo (at **)'
+      ]
 
   undefined

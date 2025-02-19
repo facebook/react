@@ -168,9 +168,7 @@ describe('ReactFragment', () => {
         'Foo',
         'CatchingBoundary',
       ]),
-      gate(flags => flags.enableOwnerStacks) && __DEV__
-        ? componentStack(['Bar', 'Foo'])
-        : null,
+      __DEV__ ? componentStack(['Bar', 'Foo']) : null,
     ]);
   });
 });

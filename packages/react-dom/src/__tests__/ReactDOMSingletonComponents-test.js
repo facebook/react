@@ -171,8 +171,7 @@ describe('ReactDOM HostSingleton', () => {
         'children of these components will likely fail in unpredictable ways. ' +
         'Please only render a single instance of <head> and if you need to mount a new one, ' +
         'ensure any previous ones have unmounted first.\n' +
-        '    in head (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in html (at **)'),
+        '    in head (at **)',
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>

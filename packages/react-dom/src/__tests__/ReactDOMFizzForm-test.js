@@ -386,7 +386,6 @@ describe('ReactDOMFizzForm', () => {
       'Cannot specify a formTarget for a button that specifies a function as a formAction. ' +
         'The function will always be executed in the same window.\n' +
         '    in input (at **)\n' +
-        (gate('enableOwnerStacks') ? '' : '    in form (at **)\n') +
         '    in App (at **)',
     ]);
     let root;

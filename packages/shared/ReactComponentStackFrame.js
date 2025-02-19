@@ -307,6 +307,7 @@ function shouldConstruct(Component: Function) {
 }
 
 // TODO: Delete this once the key warning no longer uses it. I.e. when enableOwnerStacks ship.
+// TODO:
 export function describeUnknownElementTypeFrameInDEV(type: any): string {
   if (!__DEV__) {
     return '';

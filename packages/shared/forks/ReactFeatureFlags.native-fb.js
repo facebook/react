@@ -31,9 +31,6 @@ export const {
   enableLazyPublicInstanceInFabric,
 } = dynamicFlags;
 
-// These two can be removed
-export const enableOwnerStacks = true;
-
 // The rest of the flags are static for better dead code elimination.
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;

@@ -917,7 +917,7 @@ export function createProfilingHooks({
         // Creating a cache of component stacks won't help, generating a single stack is already expensive enough.
         // We should find a way to lazily generate component stacks on demand, when user inspects a specific event.
         // If we succeed with moving React DevTools Timeline Profiler to Performance panel, then Timeline Profiler would probably be removed.
-        // If not, then once enableOwnerStacks is adopted, revisit this again and cache component stacks per Fiber,
+        // Now that owner stacks are adopted, revisit this again and cache component stacks per Fiber,
         // but only return them when needed, sending hundreds of component stacks is beyond the Bridge's bandwidth.
 
         // Postprocess Profile data

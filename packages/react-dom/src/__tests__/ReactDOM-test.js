@@ -545,7 +545,6 @@ describe('ReactDOM', () => {
       // ReactDOM(App > div > span)
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in span (at **)\n' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '    in div (at **)\n') +
         '    in App (at **)',
       // ReactDOM(App > div > ServerEntry) >>> ReactDOMServer(Child) >>> ReactDOMServer(App2) >>> ReactDOMServer(blink)
       'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
@@ -562,7 +561,6 @@ describe('ReactDOM', () => {
       // ReactDOM(App > div > font)
       'Invalid ARIA attribute `ariaTypo5`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in font (at **)\n' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '    in div (at **)\n') +
         '    in App (at **)',
     ]);
   });

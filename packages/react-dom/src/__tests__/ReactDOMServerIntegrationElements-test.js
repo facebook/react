@@ -995,18 +995,6 @@ describe('ReactDOMServerIntegration', () => {
         async render => {
           let EmptyComponent = {};
           EmptyComponent = <EmptyComponent />;
-          assertConsoleErrorDev(
-            gate(flags => flags.enableOwnerStacks)
-              ? []
-              : [
-                  'React.jsx: type is invalid -- expected a string ' +
-                    '(for built-in components) or a class/function (for composite ' +
-                    'components) but got: object. You likely forgot to export your ' +
-                    "component from the file it's defined in, or you might have mixed up " +
-                    'default and named imports.',
-                ],
-            {withoutStack: true},
-          );
           await render(EmptyComponent);
         },
         'Element type is invalid: expected a string (for built-in components) or a class/function ' +
@@ -1022,16 +1010,6 @@ describe('ReactDOMServerIntegration', () => {
         async render => {
           let NullComponent = null;
           NullComponent = <NullComponent />;
-          assertConsoleErrorDev(
-            gate(flags => flags.enableOwnerStacks)
-              ? []
-              : [
-                  'React.jsx: type is invalid -- expected a string ' +
-                    '(for built-in components) or a class/function (for composite ' +
-                    'components) but got: null.',
-                ],
-            {withoutStack: true},
-          );
           await render(NullComponent);
         },
         'Element type is invalid: expected a string (for built-in components) or a class/function ' +
@@ -1043,19 +1021,6 @@ describe('ReactDOMServerIntegration', () => {
         async render => {
           let UndefinedComponent = undefined;
           UndefinedComponent = <UndefinedComponent />;
-          assertConsoleErrorDev(
-            gate(flags => flags.enableOwnerStacks)
-              ? []
-              : [
-                  'React.jsx: type is invalid -- expected a string ' +
-                    '(for built-in components) or a class/function (for composite ' +
-                    'components) but got: undefined. You likely forgot to export your ' +
-                    "component from the file it's defined in, or you might have mixed up " +
-                    'default and named imports.',
-                ],
-            {withoutStack: true},
-          );
-
           await render(UndefinedComponent);
         },
         'Element type is invalid: expected a string (for built-in components) or a class/function ' +

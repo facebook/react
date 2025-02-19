@@ -129,8 +129,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableOwnerStacks = true;
-
 export const enableShallowPropDiffing = false;
 
 export const enableSiblingPrerendering = true;

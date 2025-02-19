@@ -114,7 +114,6 @@ import {
   enableRenderableContext,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
-  enableOwnerStacks,
   enableHydrationLaneScheduling,
   enableViewTransition,
 } from 'shared/ReactFeatureFlags';
@@ -3782,10 +3781,8 @@ function beginWork(
         workInProgress.mode,
         workInProgress.lanes,
       );
-      if (enableOwnerStacks) {
-        copiedFiber._debugStack = workInProgress._debugStack;
-        copiedFiber._debugTask = workInProgress._debugTask;
-      }
+      copiedFiber._debugStack = workInProgress._debugStack;
+      copiedFiber._debugTask = workInProgress._debugTask;
       return remountFiber(current, workInProgress, copiedFiber);
     }
   }
