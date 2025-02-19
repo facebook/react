@@ -54,6 +54,7 @@ import {
   enableScopeAPI,
   enableOwnerStacks,
   disableCommentsAsDOMContainers,
+  enableScrollEndPolyfill,
 } from 'shared/ReactFeatureFlags';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {
@@ -69,6 +70,7 @@ import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
 import * as FormActionEventPlugin from './plugins/FormActionEventPlugin';
+import * as ScrollEndEventPlugin from './plugins/ScrollEndEventPlugin';
 
 import reportGlobalError from 'shared/reportGlobalError';
 
@@ -93,6 +95,9 @@ EnterLeaveEventPlugin.registerEvents();
 ChangeEventPlugin.registerEvents();
 SelectEventPlugin.registerEvents();
 BeforeInputEventPlugin.registerEvents();
+if (enableScrollEndPolyfill) {
+  ScrollEndEventPlugin.registerEvents();
+}
 
 function extractEvents(
   dispatchQueue: DispatchQueue,
@@ -175,6 +180,17 @@ function extractEvents(
       targetContainer,
     );
     FormActionEventPlugin.extractEvents(
+      dispatchQueue,
+      domEventName,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+      eventSystemFlags,
+      targetContainer,
+    );
+  }
+  if (enableScrollEndPolyfill) {
+    ScrollEndEventPlugin.extractEvents(
       dispatchQueue,
       domEventName,
       targetInst,
