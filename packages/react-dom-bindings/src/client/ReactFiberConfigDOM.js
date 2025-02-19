@@ -1504,11 +1504,10 @@ export function subscribeToGestureDirection(
     const scrollCallback = () => {
       const newTime = provider.currentTime;
       if (newTime !== null) {
-        directionCallback(
-          typeof newTime === 'number'
-            ? newTime > currentOffset
-            : newTime.value > currentOffset,
-        );
+        const newValue = typeof newTime === 'number' ? newTime : newTime.value;
+        if (newValue !== currentOffset) {
+          directionCallback(newValue > currentOffset);
+        }
       }
     };
     element.addEventListener('scroll', scrollCallback, false);
@@ -1521,11 +1520,10 @@ export function subscribeToGestureDirection(
     const rafCallback = () => {
       const newTime = provider.currentTime;
       if (newTime !== null) {
-        directionCallback(
-          typeof newTime === 'number'
-            ? newTime > currentOffset
-            : newTime.value > currentOffset,
-        );
+        const newValue = typeof newTime === 'number' ? newTime : newTime.value;
+        if (newValue !== currentOffset) {
+          directionCallback(newValue > currentOffset);
+        }
       }
       callbackID = requestAnimationFrame(rafCallback);
     };
