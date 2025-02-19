@@ -65,7 +65,10 @@ import sanitizeURL from '../shared/sanitizeURL';
 
 import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
 
-import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
+import {
+  enableScrollEndPolyfill,
+  enableTrustedTypesIntegration,
+} from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
@@ -545,6 +548,10 @@ function setProp(
           warnForInvalidEventListener(key, value);
         }
         listenToNonDelegatedEvent('scrollend', domElement);
+        if (enableScrollEndPolyfill) {
+          // For use by the polyfill.
+          listenToNonDelegatedEvent('scroll', domElement);
+        }
       }
       return;
     }
@@ -955,6 +962,10 @@ function setPropOnCustomElement(
           warnForInvalidEventListener(key, value);
         }
         listenToNonDelegatedEvent('scrollend', domElement);
+        if (enableScrollEndPolyfill) {
+          // For use by the polyfill.
+          listenToNonDelegatedEvent('scroll', domElement);
+        }
       }
       return;
     }
@@ -3058,6 +3069,10 @@ export function hydrateProperties(
 
   if (props.onScrollEnd != null) {
     listenToNonDelegatedEvent('scrollend', domElement);
+    if (enableScrollEndPolyfill) {
+      // For use by the polyfill.
+      listenToNonDelegatedEvent('scroll', domElement);
+    }
   }
 
   if (props.onClick != null) {
