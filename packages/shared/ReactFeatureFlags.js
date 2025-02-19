@@ -94,6 +94,8 @@ export const enableViewTransition = __EXPERIMENTAL__;
 
 export const enableSwipeTransition = __EXPERIMENTAL__;
 
+export const enableScrollEndPolyfill = __EXPERIMENTAL__;
+
 /**
  * Switches Fiber creation to a simple object instead of a constructor.
  */
