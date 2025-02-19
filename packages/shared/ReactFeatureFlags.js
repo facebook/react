@@ -262,5 +262,3 @@ export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-
-export const enableRemoveConsolePatches = true;
