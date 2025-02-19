@@ -827,6 +827,7 @@ export function accumulateSinglePhaseListeners(
 // - BeforeInputEventPlugin
 // - ChangeEventPlugin
 // - SelectEventPlugin
+// - ScrollEndEventPlugin
 // This is because we only process these plugins
 // in the bubble phase, so we need to accumulate two
 // phase event listeners (via emulation).
@@ -862,9 +863,14 @@ export function accumulateTwoPhaseListeners(
         );
       }
     }
+    if (instance.tag === HostRoot) {
+      return listeners;
+    }
     instance = instance.return;
   }
-  return listeners;
+  // If we didn't reach the root it means we're unmounted and shouldn't
+  // dispatch any events on the target.
+  return [];
 }
 
 function getParent(inst: Fiber | null): Fiber | null {
