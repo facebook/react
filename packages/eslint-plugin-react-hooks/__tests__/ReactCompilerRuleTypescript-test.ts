@@ -8,6 +8,9 @@
 import {RuleTester} from 'eslint';
 import ReactCompilerRule from '../src/rules/ReactCompiler';
 
+const ESLintTesterV8 = require('eslint-v8').RuleTester;
+const ESLintTesterV9 = require('eslint-v9').RuleTester;
+
 /**
  * A string template tag that removes padding from the left side of multi-line strings
  * @param {Array} strings array of code strings (only one expected)
@@ -70,7 +73,7 @@ const tests: CompilerTestCases = {
   ],
 };
 
-const eslintTester = new RuleTester({
-  parser: require.resolve('@typescript-eslint/parser'),
+const eslintTester = new ESLintTesterV8({
+  parser: require.resolve('@typescript-eslint/parser-v5'),
 });
-eslintTester.run('react-compiler', ReactCompilerRule, tests);
+eslintTester.run('react-compiler - eslint: v8', ReactCompilerRule, tests);
