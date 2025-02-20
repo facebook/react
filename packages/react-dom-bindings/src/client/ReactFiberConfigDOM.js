@@ -2096,8 +2096,6 @@ export type FragmentInstance = {
   _children: Set<Element>,
   _eventListeners: Array<StoredEventListener>,
   parentInstance: Instance | Container,
-  appendChild(child: Element): void,
-  removeChild(child: Element): void,
   addEventListener(
     type: string,
     listener: EventListener,
@@ -2126,28 +2124,6 @@ function FragmentInstancePseudoElement(
   this._children = new Set();
   this._eventListeners = [];
 }
-// $FlowFixMe[prop-missing]
-FragmentInstancePseudoElement.prototype.appendChild = function (
-  this: FragmentInstance,
-  child: Element,
-): void {
-  this._children.add(child);
-  for (let i = 0; i < this._eventListeners.length; i++) {
-    const {type, listener, optionsOrUseCapture} = this._eventListeners[i];
-    child.addEventListener(type, listener, optionsOrUseCapture);
-  }
-};
-// $FlowFixMe[prop-missing]
-FragmentInstancePseudoElement.prototype.removeChild = function (
-  this: FragmentInstance,
-  child: Element,
-): void {
-  this._children.delete(child);
-  for (let i = 0; i < this._eventListeners.length; i++) {
-    const {type, listener, optionsOrUseCapture} = this._eventListeners[i];
-    child.removeEventListener(type, listener, optionsOrUseCapture);
-  }
-};
 // $FlowFixMe[prop-missing]
 FragmentInstancePseudoElement.prototype.addEventListener = function (
   this: FragmentInstance,
@@ -2231,14 +2207,24 @@ export function appendChildToFragmentInstance(
   childElement: Element,
   fragmentInstance: FragmentInstance,
 ): void {
-  fragmentInstance.appendChild(childElement);
+  fragmentInstance._children.add(childElement);
+  for (let i = 0; i < fragmentInstance._eventListeners.length; i++) {
+    const {type, listener, optionsOrUseCapture} =
+      fragmentInstance._eventListeners[i];
+    childElement.addEventListener(type, listener, optionsOrUseCapture);
+  }
 }
 
 export function removeChildFromFragmentInstance(
   childElement: Element,
   fragmentInstance: FragmentInstance,
 ): void {
-  fragmentInstance.removeChild(childElement);
+  fragmentInstance._children.delete(childElement);
+  for (let i = 0; i < fragmentInstance._eventListeners.length; i++) {
+    const {type, listener, optionsOrUseCapture} =
+      fragmentInstance._eventListeners[i];
+    childElement.removeEventListener(type, listener, optionsOrUseCapture);
+  }
 }
 
 export function clearContainer(container: Container): void {
