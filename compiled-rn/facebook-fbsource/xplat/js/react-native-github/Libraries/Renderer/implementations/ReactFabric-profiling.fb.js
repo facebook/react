@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b1db33ba050472de740c418cfaa5b0e5>>
+ * @generated SignedSource<<2c576e56000dfe1e595b472e244ad188>>
  */
 
 "use strict";
@@ -22,6 +22,8 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   React = require("react"),
   isArrayImpl = Array.isArray,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
+  enableFabricCompleteRootInCommitPhase =
+    dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
   enableHiddenSubtreeInsertionEffectCleanup =
     dynamicFlagsUntyped.enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
@@ -7525,12 +7527,15 @@ function appendAllChildrenToContainer(
 function updateHostContainer(current, workInProgress) {
   if (doesRequireClone(current, workInProgress)) {
     current = workInProgress.stateNode;
-    var newChildSet = passChildrenWhenCloningPersistedNodes
-      ? []
-      : createChildNodeSet();
+    var container = current.containerInfo,
+      newChildSet = passChildrenWhenCloningPersistedNodes
+        ? []
+        : createChildNodeSet();
     appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1);
     current.pendingChildren = newChildSet;
     workInProgress.flags |= 4;
+    enableFabricCompleteRootInCommitPhase ||
+      completeRoot(container.containerTag, newChildSet);
   }
 }
 function scheduleRetryEffect(workInProgress, retryQueue) {
@@ -8507,7 +8512,8 @@ function commitHostPortalContainerChildren(
 ) {
   portal = portal.containerInfo;
   try {
-    completeRoot(portal.containerTag, pendingChildren);
+    enableFabricCompleteRootInCommitPhase &&
+      completeRoot(portal.containerTag, pendingChildren);
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -8990,7 +8996,8 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         flags = root.containerInfo;
         var pendingChildren = root.pendingChildren;
         try {
-          completeRoot(flags.containerTag, pendingChildren);
+          enableFabricCompleteRootInCommitPhase &&
+            completeRoot(flags.containerTag, pendingChildren);
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -11682,16 +11689,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1311 = {
+  internals$jscomp$inline_1314 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-8a7b487e-20250218",
+    version: "19.1.0-native-fb-885532c1-20250220",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-8a7b487e-20250218"
+    reconcilerVersion: "19.1.0-native-fb-885532c1-20250220"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1311.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1311.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1314.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1314.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$156 = 0;
     31 > index$156;
@@ -11703,20 +11710,20 @@ internals$jscomp$inline_1311.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1311.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1314.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1589 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1592 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1589.isDisabled &&
-    hook$jscomp$inline_1589.supportsFiber
+    !hook$jscomp$inline_1592.isDisabled &&
+    hook$jscomp$inline_1592.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1589.inject(
-        internals$jscomp$inline_1311
+      (rendererID = hook$jscomp$inline_1592.inject(
+        internals$jscomp$inline_1314
       )),
-        (injectedHook = hook$jscomp$inline_1589);
+        (injectedHook = hook$jscomp$inline_1592);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

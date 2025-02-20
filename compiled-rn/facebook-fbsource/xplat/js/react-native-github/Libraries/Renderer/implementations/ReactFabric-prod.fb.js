@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f662a3e53a1d768897fff27b680da70d>>
+ * @generated SignedSource<<104dd5838c87bb8ea4f5bd004d9d1c41>>
  */
 
 "use strict";
@@ -18,6 +18,8 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   Scheduler = require("scheduler"),
   isArrayImpl = Array.isArray,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
+  enableFabricCompleteRootInCommitPhase =
+    dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
   enableHiddenSubtreeInsertionEffectCleanup =
     dynamicFlagsUntyped.enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
@@ -7338,12 +7340,15 @@ function appendAllChildrenToContainer(
 function updateHostContainer(current, workInProgress) {
   if (doesRequireClone(current, workInProgress)) {
     current = workInProgress.stateNode;
-    var newChildSet = passChildrenWhenCloningPersistedNodes
-      ? []
-      : createChildNodeSet();
+    var container = current.containerInfo,
+      newChildSet = passChildrenWhenCloningPersistedNodes
+        ? []
+        : createChildNodeSet();
     appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1);
     current.pendingChildren = newChildSet;
     workInProgress.flags |= 4;
+    enableFabricCompleteRootInCommitPhase ||
+      completeRoot(container.containerTag, newChildSet);
   }
 }
 function scheduleRetryEffect(workInProgress, retryQueue) {
@@ -8098,7 +8103,8 @@ function commitHostPortalContainerChildren(
 ) {
   portal = portal.containerInfo;
   try {
-    completeRoot(portal.containerTag, pendingChildren);
+    enableFabricCompleteRootInCommitPhase &&
+      completeRoot(portal.containerTag, pendingChildren);
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -8526,7 +8532,8 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         flags = root.containerInfo;
         current = root.pendingChildren;
         try {
-          completeRoot(flags.containerTag, current);
+          enableFabricCompleteRootInCommitPhase &&
+            completeRoot(flags.containerTag, current);
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -11029,26 +11036,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1218 = {
+  internals$jscomp$inline_1221 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-8a7b487e-20250218",
+    version: "19.1.0-native-fb-885532c1-20250220",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-8a7b487e-20250218"
+    reconcilerVersion: "19.1.0-native-fb-885532c1-20250220"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1218.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1221.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1530 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1533 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1530.isDisabled &&
-    hook$jscomp$inline_1530.supportsFiber
+    !hook$jscomp$inline_1533.isDisabled &&
+    hook$jscomp$inline_1533.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1530.inject(
-        internals$jscomp$inline_1218
+      (rendererID = hook$jscomp$inline_1533.inject(
+        internals$jscomp$inline_1221
       )),
-        (injectedHook = hook$jscomp$inline_1530);
+        (injectedHook = hook$jscomp$inline_1533);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
