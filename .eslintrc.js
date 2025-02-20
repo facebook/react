@@ -446,10 +446,7 @@ module.exports = {
       },
     },
     {
-      files: [
-        'scripts/eslint-rules/*.js',
-        'packages/eslint-plugin-react-hooks/src/*.js',
-      ],
+      files: ['scripts/eslint-rules/*.js'],
       plugins: ['eslint-plugin'],
       rules: {
         'eslint-plugin/prefer-object-rule': ERROR,
@@ -515,6 +512,26 @@ module.exports = {
       files: ['packages/react-devtools-shared/**/*.js'],
       globals: {
         __IS_INTERNAL_VERSION__: 'readonly',
+      },
+    },
+    {
+      files: ['packages/eslint-plugin-react-hooks/src/**/*'],
+      extends: ['plugin:@typescript-eslint/recommended'],
+      parser: '@typescript-eslint/parser',
+      plugins: ['@typescript-eslint', 'eslint-plugin'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': OFF,
+        '@typescript-eslint/no-non-null-assertion': OFF,
+        '@typescript-eslint/array-type': [ERROR, {default: 'generic'}],
+
+        'es/no-optional-chaining': OFF,
+
+        'eslint-plugin/prefer-object-rule': ERROR,
+        'eslint-plugin/require-meta-fixable': [
+          ERROR,
+          {catchNoFixerButFixableProperty: true},
+        ],
+        'eslint-plugin/require-meta-has-suggestions': ERROR,
       },
     },
   ],

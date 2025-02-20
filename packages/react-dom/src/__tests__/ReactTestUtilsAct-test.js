@@ -779,13 +779,5 @@ function runActTests(render, unmount, rerender) {
         });
       }
     });
-    describe('throw in prod mode', () => {
-      // @gate !__DEV__
-      it('warns if you try to use act() in prod mode', () => {
-        expect(() => act(() => {})).toThrow(
-          'act(...) is not supported in production builds of React',
-        );
-      });
-    });
   });
 }

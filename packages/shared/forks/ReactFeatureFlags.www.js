@@ -29,20 +29,22 @@ export const {
   enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
-  enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
-  enableOwnerStacks,
-  enableRemoveConsolePatches,
   enableFastAddPropertiesInDiffing,
   enableViewTransition,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
 // It's not used anywhere in production yet.
+
+// Can remove these two
+export const enableOwnerStacks = true;
+export const enableRemoveConsolePatches = true;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
@@ -109,6 +111,10 @@ export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;
 
 export const enableShallowPropDiffing = false;
+
+export const enableLazyPublicInstanceInFabric = false;
+
+export const enableSwipeTransition = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

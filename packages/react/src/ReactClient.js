@@ -41,7 +41,6 @@ import {
   useContext,
   useEffect,
   useEffectEvent,
-  useResourceEffect,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
@@ -58,6 +57,7 @@ import {
   use,
   useOptimistic,
   useActionState,
+  useSwipeTransition,
 } from './ReactHooks';
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
@@ -65,7 +65,6 @@ import {addTransitionType} from './ReactTransitionType';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
 import * as ReactCompilerRuntime from './ReactCompilerRuntime';
-import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
 
 const Children = {
   map,
@@ -128,10 +127,10 @@ export {
   // enableViewTransition
   REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
   addTransitionType as unstable_addTransitionType,
+  // enableSwipeTransition
+  useSwipeTransition as unstable_useSwipeTransition,
+  // DEV-only
   useId,
-  act, // DEV-only
-  captureOwnerStack, // DEV-only
+  act,
+  captureOwnerStack,
 };
-
-export const experimental_useResourceEffect: typeof useResourceEffect | void =
-  enableUseResourceEffectHook ? useResourceEffect : undefined;

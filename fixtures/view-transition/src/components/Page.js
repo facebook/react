@@ -1,6 +1,9 @@
 import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
+  unstable_useSwipeTransition as useSwipeTransition,
+  useRef,
+  useLayoutEffect,
 } from 'react';
 
 import './Page.css';
@@ -35,7 +38,8 @@ function Component() {
 }
 
 export default function Page({url, navigate}) {
-  const show = url === '/?b';
+  const [renderedUrl, startGesture] = useSwipeTransition('/?a', url, '/?b');
+  const show = renderedUrl === '/?b';
   function onTransition(viewTransition, types) {
     const keyframes = [
       {rotate: '0deg', transformOrigin: '30px 8px'},
@@ -44,6 +48,32 @@ export default function Page({url, navigate}) {
     viewTransition.old.animate(keyframes, 250);
     viewTransition.new.animate(keyframes, 250);
   }
+
+  const swipeRecognizer = useRef(null);
+  const activeGesture = useRef(null);
+  function onScroll() {
+    if (activeGesture.current !== null) {
+      return;
+    }
+    // eslint-disable-next-line no-undef
+    const scrollTimeline = new ScrollTimeline({
+      source: swipeRecognizer.current,
+      axis: 'x',
+    });
+    activeGesture.current = startGesture(scrollTimeline);
+  }
+  function onScrollEnd() {
+    if (activeGesture.current !== null) {
+      const cancelGesture = activeGesture.current;
+      activeGesture.current = null;
+      cancelGesture();
+    }
+  }
+
+  useLayoutEffect(() => {
+    swipeRecognizer.current.scrollLeft = show ? 0 : 10000;
+  }, [show]);
+
   const exclamation = (
     <ViewTransition name="exclamation" onShare={onTransition}>
       <span>!</span>
@@ -90,6 +120,13 @@ export default function Page({url, navigate}) {
           <p></p>
           <p></p>
           <p></p>
+          <div
+            className="swipe-recognizer"
+            onScroll={onScroll}
+            onScrollEnd={onScrollEnd}
+            ref={swipeRecognizer}>
+            <div className="swipe-overscroll">Swipe me</div>
+          </div>
           <p></p>
           <p></p>
           {show ? null : (

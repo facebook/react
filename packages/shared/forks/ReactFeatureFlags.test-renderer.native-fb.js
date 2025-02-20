@@ -35,7 +35,7 @@ export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
 export const enableNoCloningMemoCache = false;
 export const enableObjectFiber = false;
-export const enableOwnerStacks = false;
+export const enableOwnerStacks = true;
 export const enablePersistedModeClonedFlag = false;
 export const enablePostpone = false;
 export const enableProfilerCommitHooks = __PROFILE__;
@@ -62,13 +62,15 @@ export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const enableSiblingPrerendering = true;
-export const enableUseResourceEffectHook = true;
+export const enableUseEffectCRUDOverload = true;
 export const enableHydrationLaneScheduling = true;
 export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
-export const enableRemoveConsolePatches = false;
+export const enableRemoveConsolePatches = true;
+export const enableSwipeTransition = false;
 export const enableFastAddPropertiesInDiffing = false;
+export const enableLazyPublicInstanceInFabric = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

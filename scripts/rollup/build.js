@@ -4,8 +4,10 @@ const rollup = require('rollup');
 const babel = require('@rollup/plugin-babel').babel;
 const closure = require('./plugins/closure-plugin');
 const flowRemoveTypes = require('flow-remove-types');
+const {dts} = require('rollup-plugin-dts');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('@rollup/plugin-replace');
+const typescript = require('@rollup/plugin-typescript');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
 const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
@@ -61,6 +63,8 @@ const {
   RN_FB_PROD,
   RN_FB_PROFILING,
   BROWSER_SCRIPT,
+  CJS_DTS,
+  ESM_DTS,
 } = Bundles.bundleTypes;
 
 const {getFilename} = Bundles;
@@ -250,9 +254,11 @@ function getFormat(bundleType) {
     case RN_FB_DEV:
     case RN_FB_PROD:
     case RN_FB_PROFILING:
+    case CJS_DTS:
       return `cjs`;
     case ESM_DEV:
     case ESM_PROD:
+    case ESM_DTS:
       return `es`;
     case BROWSER_SCRIPT:
       return `iife`;
@@ -281,6 +287,8 @@ function isProductionBundleType(bundleType) {
     case RN_FB_PROD:
     case RN_FB_PROFILING:
     case BROWSER_SCRIPT:
+    case CJS_DTS:
+    case ESM_DTS:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
@@ -303,6 +311,8 @@ function isProfilingBundleType(bundleType) {
     case ESM_DEV:
     case ESM_PROD:
     case BROWSER_SCRIPT:
+    case CJS_DTS:
+    case ESM_DTS:
       return false;
     case FB_WWW_PROFILING:
     case NODE_PROFILING:
@@ -368,27 +378,36 @@ function getPlugins(
   pureExternalModules,
   bundle
 ) {
+  // Short-circuit if we're only building a .d.ts bundle
+  if (bundleType === CJS_DTS || bundleType === ESM_DTS) {
+    return [dts({tsconfig: bundle.tsconfig})];
+  }
   try {
     const forks = Modules.getForks(bundleType, entry, moduleType, bundle);
     const isProduction = isProductionBundleType(bundleType);
     const isProfiling = isProfilingBundleType(bundleType);
 
     const needsMinifiedByClosure =
-      bundleType !== ESM_PROD && bundleType !== ESM_DEV;
+      bundleType !== ESM_PROD &&
+      bundleType !== ESM_DEV &&
+      // TODO(@poteto) figure out ICE in closure compiler for eslint-plugin-react-hooks (ts)
+      bundle.tsconfig == null;
 
     return [
       // Keep dynamic imports as externals
       dynamicImports(),
-      {
-        name: 'rollup-plugin-flow-remove-types',
-        transform(code) {
-          const transformed = flowRemoveTypes(code);
-          return {
-            code: transformed.toString(),
-            map: null,
-          };
-        },
-      },
+      bundle.tsconfig != null
+        ? typescript({tsconfig: bundle.tsconfig})
+        : {
+            name: 'rollup-plugin-flow-remove-types',
+            transform(code) {
+              const transformed = flowRemoveTypes(code);
+              return {
+                code: transformed.toString(),
+                map: null,
+              };
+            },
+          },
       // Shim any modules that need forking in this environment.
       useForks(forks),
       // Ensure we don't try to bundle any fbjs modules.
@@ -571,7 +590,7 @@ function shouldSkipBundle(bundle, bundleType) {
   return false;
 }
 
-function resolveEntryFork(resolvedEntry, isFBBundle) {
+function resolveEntryFork(resolvedEntry, isFBBundle, isDev) {
   // Pick which entry point fork to use:
   // .modern.fb.js
   // .classic.fb.js
@@ -586,23 +605,20 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
       '.js',
       __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
     );
-    const developmentFBEntry = resolvedFBEntry.replace(
-      '.js',
-      '.development.js'
-    );
-    if (fs.existsSync(developmentFBEntry)) {
-      return developmentFBEntry;
+    const devFBEntry = resolvedFBEntry.replace('.js', '.development.js');
+    if (isDev && fs.existsSync(devFBEntry)) {
+      return devFBEntry;
     }
     if (fs.existsSync(resolvedFBEntry)) {
       return resolvedFBEntry;
     }
     const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
-    const developmentGenericFBEntry = resolvedGenericFBEntry.replace(
+    const devGenericFBEntry = resolvedGenericFBEntry.replace(
       '.js',
       '.development.js'
     );
-    if (fs.existsSync(developmentGenericFBEntry)) {
-      return developmentGenericFBEntry;
+    if (isDev && fs.existsSync(devGenericFBEntry)) {
+      return devGenericFBEntry;
     }
     if (fs.existsSync(resolvedGenericFBEntry)) {
       return resolvedGenericFBEntry;
@@ -614,7 +630,7 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
     __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
   );
   const devForkedEntry = resolvedForkedEntry.replace('.js', '.development.js');
-  if (fs.existsSync(devForkedEntry)) {
+  if (isDev && fs.existsSync(devForkedEntry)) {
     return devForkedEntry;
   }
   if (fs.existsSync(resolvedForkedEntry)) {
@@ -633,7 +649,7 @@ async function createBundle(bundle, bundleType) {
 
   const {isFBWWWBundle, isFBRNBundle} = getBundleTypeFlags(bundleType);
 
-  let resolvedEntry = resolveEntryFork(
+  const resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle,
     !isProductionBundleType(bundleType)
@@ -842,7 +858,9 @@ async function buildEverything() {
       [bundle, RN_FB_DEV],
       [bundle, RN_FB_PROD],
       [bundle, RN_FB_PROFILING],
-      [bundle, BROWSER_SCRIPT]
+      [bundle, BROWSER_SCRIPT],
+      [bundle, CJS_DTS],
+      [bundle, ESM_DTS]
     );
   }
 
