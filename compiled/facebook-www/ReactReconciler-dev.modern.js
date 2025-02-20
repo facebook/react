@@ -17184,8 +17184,9 @@ __DEV__ &&
       wasInstanceInViewport = $$$config.wasInstanceInViewport,
       hasInstanceChanged = $$$config.hasInstanceChanged,
       hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent,
-      startViewTransition = $$$config.startViewTransition,
-      createViewTransitionInstance = $$$config.createViewTransitionInstance,
+      startViewTransition = $$$config.startViewTransition;
+    $$$config.subscribeToGestureDirection;
+    var createViewTransitionInstance = $$$config.createViewTransitionInstance,
       clearContainer = $$$config.clearContainer,
       cloneInstance = $$$config.cloneInstance,
       createContainerChildSet = $$$config.createContainerChildSet,
@@ -19771,7 +19772,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-a84862db-20250218"
+        reconcilerVersion: "19.1.0-www-modern-88479c6f-20250220"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
