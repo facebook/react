@@ -6,10 +6,6 @@ module.exports = {
     '<rootDir>/scripts/rollup/shims/',
     '<rootDir>/scripts/bench/',
   ],
-  moduleNameMapper: {
-    '^babel-plugin-react-compiler$':
-      '<rootDir>/compiler/packages/babel-plugin-react-compiler/src/index.ts',
-  },
   transform: {
     '^.+\\.ts$': [
       'babel-jest',
