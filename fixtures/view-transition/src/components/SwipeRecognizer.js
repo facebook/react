@@ -57,17 +57,14 @@ export default function SwipeRecognizer({
     }
     // Reset scroll
     if (changed) {
-      resetScroll(!direction);
       // Trigger side-effects
       startTransition(action);
-    } else {
-      resetScroll(direction);
     }
   }
 
-  function resetScroll(dir) {
+  useEffect(() => {
     const scrollElement = scrollRef.current;
-    switch (dir) {
+    switch (direction) {
       case 'left':
         scrollElement.scrollLeft =
           scrollElement.scrollWidth - scrollElement.clientWidth;
@@ -85,10 +82,6 @@ export default function SwipeRecognizer({
       default:
         break;
     }
-  }
-
-  useEffect(() => {
-    resetScroll(direction);
   }, [direction]);
 
   const scrollStyle = {
