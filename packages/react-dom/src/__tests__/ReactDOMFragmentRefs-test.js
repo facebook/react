@@ -116,6 +116,40 @@ describe('FragmentRefs', () => {
   });
 
   // @gate enableFragmentRefs
+  it('can share tracked children with nested fragment instances', async () => {
+    const fragmentRefA = React.createRef();
+    const fragmentRefB = React.createRef();
+    const root = ReactDOMClient.createRoot(container);
+
+    function Test({showB}) {
+      return (
+        <React.Fragment ref={fragmentRefA}>
+          <div id="child-a" />
+          <React.Fragment ref={fragmentRefB}>
+            <div id="child-b" />
+            {showB && <div id="child-c" />}
+          </React.Fragment>
+        </React.Fragment>
+      );
+    }
+
+    await act(() => root.render(<Test showB={false} />));
+
+    expect(fragmentRefA.current._children.size).toBe(2);
+    expect(fragmentRefB.current._children.size).toBe(1);
+
+    await act(() => root.render(<Test showB={true} />));
+
+    expect(fragmentRefA.current._children.size).toBe(3);
+    expect(fragmentRefB.current._children.size).toBe(2);
+
+    await act(() => root.render(<Test showB={false} />));
+
+    expect(fragmentRefA.current._children.size).toBe(2);
+    expect(fragmentRefB.current._children.size).toBe(1);
+  });
+
+  // @gate enableFragmentRefs
   it('handles empty children', async () => {
     const fragmentRef = React.createRef();
     const root = ReactDOMClient.createRoot(container);
