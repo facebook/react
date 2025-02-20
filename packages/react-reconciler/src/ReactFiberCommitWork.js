@@ -252,7 +252,7 @@ import {
   commitHostRemoveChild,
   commitHostSingletonAcquisition,
   commitHostSingletonRelease,
-  getFragmentInstanceParent,
+  getFragmentInstanceParents,
 } from './ReactFiberCommitHostEffects';
 import {
   viewTransitionMutationContext,
@@ -2128,12 +2128,16 @@ function commitDeletionEffectsOnFiber(
       }
 
       if (enableFragmentRefs) {
-        const parentFragmentInstance = getFragmentInstanceParent(deletedFiber);
-        if (parentFragmentInstance !== null) {
-          removeChildFromFragmentInstance(
-            getPublicInstance(deletedFiber.stateNode),
-            parentFragmentInstance,
-          );
+        const parentFragmentInstances =
+          getFragmentInstanceParents(deletedFiber);
+        if (parentFragmentInstances !== null) {
+          const element = getPublicInstance(deletedFiber.stateNode);
+          for (let i = 0; i < parentFragmentInstances.length; i++) {
+            removeChildFromFragmentInstance(
+              element,
+              parentFragmentInstances[i],
+            );
+          }
         }
       }
       // Intentional fallthrough to next branch

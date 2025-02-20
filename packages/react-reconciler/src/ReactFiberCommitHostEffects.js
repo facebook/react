@@ -218,23 +218,27 @@ export function getHostParentFiber(fiber: Fiber): Fiber {
   );
 }
 
-export function getFragmentInstanceParent(
+export function getFragmentInstanceParents(
   fiber: Fiber,
-): null | FragmentInstance {
+): null | Array<FragmentInstance> {
   let parent = fiber.return;
+  let fragmentParents: null | Array<FragmentInstance> = null;
   while (parent !== null) {
     if (isFragmentInstanceParent(parent)) {
-      return parent.stateNode.ref;
+      if (fragmentParents === null) {
+        fragmentParents = [];
+      }
+      const fragmentInstance: FragmentInstance = parent.stateNode.ref;
+      fragmentParents.push(fragmentInstance);
     }
 
     if (isHostParent(parent)) {
-      return null;
+      return fragmentParents;
     }
 
     parent = parent.return;
   }
-
-  return null;
+  return fragmentParents;
 }
 
 function isHostParent(fiber: Fiber): boolean {
@@ -356,9 +360,12 @@ function insertOrAppendPlacementNodeIntoContainer(
     }
     trackHostMutation();
     if (enableFragmentRefs && tag === HostComponent) {
-      const parentFragmentInstance = getFragmentInstanceParent(node);
-      if (parentFragmentInstance !== null) {
-        appendChildToFragmentInstance(node.stateNode, parentFragmentInstance);
+      const parentFragmentInstances = getFragmentInstanceParents(node);
+      if (parentFragmentInstances !== null) {
+        for (let i = 0; i < parentFragmentInstances.length; i++) {
+          const instance = parentFragmentInstances[i];
+          appendChildToFragmentInstance(node.stateNode, instance);
+        }
       }
     }
     return;
@@ -406,9 +413,12 @@ function insertOrAppendPlacementNode(
     }
     trackHostMutation();
     if (enableFragmentRefs && tag === HostComponent) {
-      const parentFragmentInstance = getFragmentInstanceParent(node);
-      if (parentFragmentInstance !== null) {
-        appendChildToFragmentInstance(node.stateNode, parentFragmentInstance);
+      const parentFragmentInstances = getFragmentInstanceParents(node);
+      if (parentFragmentInstances !== null) {
+        for (let i = 0; i < parentFragmentInstances.length; i++) {
+          const instance = parentFragmentInstances[i];
+          appendChildToFragmentInstance(node.stateNode, instance);
+        }
       }
     }
     return;
