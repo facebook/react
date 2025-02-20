@@ -62,6 +62,7 @@ import {
   disableLegacyMode,
   enableComponentPerformanceTrack,
   enableViewTransition,
+  enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -86,6 +87,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   ViewTransitionComponent,
+  Fragment,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -172,7 +174,9 @@ import {
   hasInstanceChanged,
   hasInstanceAffectedParent,
   wasInstanceInViewport,
+  getPublicInstance,
   isSingletonScope,
+  removeChildFromFragmentInstance,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -248,6 +252,7 @@ import {
   commitHostRemoveChild,
   commitHostSingletonAcquisition,
   commitHostSingletonRelease,
+  getFragmentInstanceParent,
 } from './ReactFiberCommitHostEffects';
 import {
   viewTransitionMutationContext,
@@ -1530,6 +1535,13 @@ function commitLayoutEffectOnFiber(
       }
       // Fallthrough
     }
+    case Fragment:
+      if (enableFragmentRefs) {
+        if (flags & Ref) {
+          safelyAttachRef(finishedWork, finishedWork.return);
+        }
+      }
+    // Fallthrough
     default: {
       recursivelyTraverseLayoutEffects(
         finishedRoot,
@@ -2113,6 +2125,16 @@ function commitDeletionEffectsOnFiber(
     case HostComponent: {
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      }
+
+      if (enableFragmentRefs) {
+        const parentFragmentInstance = getFragmentInstanceParent(deletedFiber);
+        if (parentFragmentInstance !== null) {
+          removeChildFromFragmentInstance(
+            getPublicInstance(deletedFiber.stateNode),
+            parentFragmentInstance,
+          );
+        }
       }
       // Intentional fallthrough to next branch
     }
@@ -3031,7 +3053,7 @@ function commitMutationEffectsOnFiber(
       }
       break;
     }
-    case ViewTransitionComponent:
+    case ViewTransitionComponent: {
       if (enableViewTransition) {
         if (flags & Ref) {
           if (!offscreenSubtreeWasHidden && current !== null) {
@@ -3059,7 +3081,8 @@ function commitMutationEffectsOnFiber(
         popMutationContext(prevMutationContext);
         break;
       }
-    // Fallthrough
+      break;
+    }
     case ScopeComponent: {
       if (enableScopeAPI) {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -3082,6 +3105,13 @@ function commitMutationEffectsOnFiber(
       }
       break;
     }
+    case Fragment:
+      if (enableFragmentRefs) {
+        if (flags & Ref) {
+          safelyAttachRef(finishedWork, finishedWork.return);
+        }
+      }
+    // Fallthrough
     default: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork, lanes);
