@@ -7,10 +7,16 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<d020970c0862ae39beaffe31c0a54f08>>
+ * @generated SignedSource<<de5df78e34b3d51e1cc9efbc4e79c1d8>>
  */
 
-import type {ElementRef, ElementType, MixedElement} from 'react';
+import type {
+  Component as ReactComponent,
+  ElementRef,
+  ElementType,
+  MixedElement,
+  RefSetter,
+} from 'react';
 // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
 import {type PublicRootInstance} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
@@ -136,7 +142,7 @@ declare const ensureNativeMethodsAreSynced: NativeMethods;
 
 export type HostInstance = NativeMethods;
 export type HostComponent<Config: {...}> = component(
-  ref: React$RefSetter<HostInstance>,
+  ref: RefSetter<HostInstance>,
   ...Config
 );
 
@@ -189,7 +195,8 @@ export type RenderRootOptions = {
     errorInfo: {
       +componentStack?: ?string,
       // $FlowFixMe[unclear-type] unknown props and state.
-      +errorBoundary?: ?React$Component<any, any>,
+      // $FlowFixMe[value-as-type] Component in react repo is any-typed, but it will be well typed externally.
+      +errorBoundary?: ?ReactComponent<any, any>,
     },
   ) => void,
   onRecoverableError?: (
