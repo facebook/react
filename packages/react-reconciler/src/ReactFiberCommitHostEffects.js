@@ -275,7 +275,7 @@ export function appendHostChildrenToFragmentInstance(
   }
 
   if (child.tag === HostComponent) {
-    instance.appendChild(child.stateNode);
+    appendChildToFragmentInstance(child.stateNode, instance);
     return;
   }
 
