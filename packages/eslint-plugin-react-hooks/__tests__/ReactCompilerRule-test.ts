@@ -9,6 +9,9 @@ import {ErrorSeverity} from 'babel-plugin-react-compiler';
 import {RuleTester as ESLintTester} from 'eslint';
 import ReactCompilerRule from '../src/rules/ReactCompiler';
 
+const ESLintTesterV8 = require('eslint-v8').RuleTester;
+const ESLintTesterV9 = require('eslint-v9').RuleTester;
+
 /**
  * A string template tag that removes padding from the left side of multi-line strings
  * @param {Array} strings array of code strings (only one expected)
@@ -277,7 +280,7 @@ const tests: CompilerTestCases = {
   ],
 };
 
-const eslintTester = new ESLintTester({
+const eslintTester = new ESLintTesterV8({
   parser: require.resolve('hermes-eslint'),
   parserOptions: {
     ecmaVersion: 2015,
@@ -285,4 +288,4 @@ const eslintTester = new ESLintTester({
     enableExperimentalComponentSyntax: true,
   },
 });
-eslintTester.run('react-compiler', ReactCompilerRule, tests);
+eslintTester.run('react-compiler - eslint: v8', ReactCompilerRule, tests);
