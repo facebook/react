@@ -17,6 +17,7 @@ export type Key = React$Key;
 export type Node = React$Node;
 export type Context<T> = React$Context<T>;
 export type Portal = React$Portal;
+export type RefSetter<-I> = React$RefSetter<I>;
 export type ElementProps<C> = React$ElementProps<C>;
 export type ElementConfig<C> = React$ElementConfig<C>;
 export type ElementRef<C> = React$ElementRef<C>;
