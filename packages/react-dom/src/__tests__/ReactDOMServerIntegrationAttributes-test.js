@@ -712,8 +712,8 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('htmlFor property on is elements', async render => {
       const e = await render(<div is="custom-element" htmlFor="test" />);
-      expect(e.getAttribute('htmlFor')).toBe(null);
-      expect(e.getAttribute('for')).toBe('test');
+      expect(e.getAttribute('htmlFor')).toBe('test');
+      expect(e.getAttribute('for')).toBe(null);
     });
 
     itRenders('htmlFor attribute on custom elements', async render => {
