@@ -592,26 +592,23 @@ export function waitForCommitToBeReady(): null {
 }
 
 export type FragmentInstance = null | {
-  appendChild: (child: Instance) => void,
-  parentInstance: Instance,
+  _fragmentFiber: Fiber,
   ...
 };
 
-export function createFragmentInstance(
-  parentInstance: Instance,
-): FragmentInstance {
+export function createFragmentInstance(fragmentFiber: Fiber): FragmentInstance {
   return null;
 }
 
-export function appendChildToFragmentInstance(
-  child: Instance,
+export function commitNewChildToFragmentInstance(
+  child: PublicInstance,
   fragmentInstance: FragmentInstance,
 ): void {
   // Noop
 }
 
-export function removeChildFromFragmentInstance(
-  child: Instance,
+export function deleteChildFromFragmentInstance(
+  child: PublicInstance,
   fragmentInstance: FragmentInstance,
 ): void {
   // Noop

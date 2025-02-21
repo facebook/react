@@ -21,6 +21,11 @@ describe('FragmentRefs', () => {
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
     container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
   });
 
   // @gate enableFragmentRefs
@@ -45,123 +50,6 @@ describe('FragmentRefs', () => {
   });
 
   // @gate enableFragmentRefs
-  it('tracks added and removed children', async () => {
-    let addChild;
-    let removeChild;
-    const fragmentRef = React.createRef();
-
-    function Test() {
-      const [extraChildCount, setExtraChildCount] = React.useState(0);
-      addChild = () => {
-        setExtraChildCount(prev => prev + 1);
-      };
-      removeChild = () => {
-        setExtraChildCount(prev => prev - 1);
-      };
-
-      return (
-        <div id="root">
-          <React.Fragment ref={fragmentRef}>
-            {Array.from({length: extraChildCount}).map((_, index) => (
-              <div id={'extra-child-' + index} key={index}>
-                Extra Child {index}
-              </div>
-            ))}
-          </React.Fragment>
-        </div>
-      );
-    }
-
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => root.render(<Test />));
-    expect(fragmentRef.current._children.size).toBe(0);
-    await act(() => addChild());
-    expect(fragmentRef.current._children.size).toBe(1);
-    await act(() => removeChild());
-    expect(fragmentRef.current._children.size).toBe(0);
-  });
-
-  // @gate enableFragmentRefs
-  it('tracks nested host children', async () => {
-    const fragmentRef = React.createRef();
-    const root = ReactDOMClient.createRoot(container);
-
-    function Wrapper({children}) {
-      return children;
-    }
-
-    await act(() => {
-      root.render(
-        <React.Fragment ref={fragmentRef}>
-          <Wrapper>
-            <div id="child-a" />
-          </Wrapper>
-          <Wrapper>
-            <div id="child-b" />
-            <Wrapper>
-              <div id="child-c">
-                <div id="child-nested" />
-              </div>
-            </Wrapper>
-          </Wrapper>
-          <Wrapper>
-            <div id="child-d" />
-          </Wrapper>
-          <div id="child-e" />
-        </React.Fragment>,
-      );
-    });
-
-    expect(fragmentRef.current._children.size).toBe(5);
-  });
-
-  // @gate enableFragmentRefs
-  it('can share tracked children with nested fragment instances', async () => {
-    const fragmentRefA = React.createRef();
-    const fragmentRefB = React.createRef();
-    const root = ReactDOMClient.createRoot(container);
-
-    function Test({showB}) {
-      return (
-        <React.Fragment ref={fragmentRefA}>
-          <div id="child-a" />
-          <React.Fragment ref={fragmentRefB}>
-            <div id="child-b" />
-            {showB && <div id="child-c" />}
-          </React.Fragment>
-        </React.Fragment>
-      );
-    }
-
-    await act(() => root.render(<Test showB={false} />));
-
-    expect(fragmentRefA.current._children.size).toBe(2);
-    expect(fragmentRefB.current._children.size).toBe(1);
-
-    await act(() => root.render(<Test showB={true} />));
-
-    expect(fragmentRefA.current._children.size).toBe(3);
-    expect(fragmentRefB.current._children.size).toBe(2);
-
-    await act(() => root.render(<Test showB={false} />));
-
-    expect(fragmentRefA.current._children.size).toBe(2);
-    expect(fragmentRefB.current._children.size).toBe(1);
-  });
-
-  // @gate enableFragmentRefs
-  it('handles empty children', async () => {
-    const fragmentRef = React.createRef();
-    const root = ReactDOMClient.createRoot(container);
-
-    await act(() => {
-      root.render(<React.Fragment ref={fragmentRef} />);
-    });
-
-    expect(fragmentRef.current._children.size).toBe(0);
-  });
-
-  // @gate enableFragmentRefs
   it('accepts a ref callback', async () => {
     let fragmentRef;
     const root = ReactDOMClient.createRoot(container);
@@ -174,7 +62,7 @@ describe('FragmentRefs', () => {
       );
     });
 
-    expect(fragmentRef._children.size).toBe(1);
+    expect(fragmentRef.current).not.toEqual(null);
   });
 
   // @gate enableFragmentRefs
@@ -200,7 +88,49 @@ describe('FragmentRefs', () => {
 
   describe('focus()', () => {
     // @gate enableFragmentRefs
-    it.skip('preserves document order', async () => {
+    it('focuses the first focusable child', async () => {
+      const parentRef = React.createRef();
+      const fragmentRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+      let focusedElement = null;
+
+      function Test() {
+        return (
+          <div ref={parentRef}>
+            <React.Fragment ref={fragmentRef}>
+              <div id="child-a" />
+              <a id="child-b" href="/">
+                A
+              </a>
+              <div tabIndex={0} id="child-c" />
+            </React.Fragment>
+          </div>
+        );
+      }
+
+      await act(() => {
+        root.render(<Test />);
+      });
+
+      const focusableChildren = parentRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      const focusMock = jest.spyOn(HTMLElement.prototype, 'focus');
+      focusMock.mockImplementation(function () {
+        if (Array.from(focusableChildren).includes(this)) {
+          focusedElement = this.id;
+        } else {
+          return false;
+        }
+      });
+      await act(() => {
+        fragmentRef.current.focus();
+      });
+      expect(focusedElement).toEqual('child-b');
+    });
+
+    // @gate enableFragmentRefs
+    it('preserves document order when adding and removing children', async () => {
       const fragmentRef = React.createRef();
       const root = ReactDOMClient.createRoot(container);
       let focusedElement = null;
@@ -271,9 +201,6 @@ describe('FragmentRefs', () => {
           );
 
           return () => {
-            // TODO: This is a noop here because the tracked child nodes were deleted and they
-            // remove their own event listeners. Decide if we want to change the timing of this.
-            // instance._children is currently empty at this point.
             fragmentRef.current.removeEventListener(
               'click',
               handleFragmentRefClicks,
@@ -332,8 +259,10 @@ describe('FragmentRefs', () => {
     it('adds and removes event listeners from children with multiple fragments', async () => {
       const fragmentRef = React.createRef();
       const nestedFragmentRef = React.createRef();
+      const nestedFragmentRef2 = React.createRef();
       const childARef = React.createRef();
       const childBRef = React.createRef();
+      const childCRef = React.createRef();
       const root = ReactDOMClient.createRoot(container);
 
       await act(() => {
@@ -346,6 +275,9 @@ describe('FragmentRefs', () => {
                   <div ref={childBRef}>B</div>
                 </React.Fragment>
               </div>
+              <React.Fragment ref={nestedFragmentRef2}>
+                <div ref={childCRef}>C</div>
+              </React.Fragment>
             </React.Fragment>
           </div>,
         );
@@ -361,10 +293,18 @@ describe('FragmentRefs', () => {
         logs.push('nestedFragmentRef');
       }
 
+      function handleNestedFragmentRef2Clicks() {
+        logs.push('nestedFragmentRef2');
+      }
+
       fragmentRef.current.addEventListener('click', handleFragmentRefClicks);
       nestedFragmentRef.current.addEventListener(
         'click',
         handleNestedFragmentRefClicks,
+      );
+      nestedFragmentRef2.current.addEventListener(
+        'click',
+        handleNestedFragmentRef2Clicks,
       );
 
       childBRef.current.click();
@@ -377,14 +317,18 @@ describe('FragmentRefs', () => {
       expect(logs).toEqual(['fragmentRef']);
 
       logs = [];
+      childCRef.current.click();
+      expect(logs).toEqual(['fragmentRef', 'nestedFragmentRef2']);
+
+      logs = [];
 
       fragmentRef.current.removeEventListener('click', handleFragmentRefClicks);
       nestedFragmentRef.current.removeEventListener(
         'click',
         handleNestedFragmentRefClicks,
       );
-      childBRef.current.click();
-      expect(logs).toEqual([]);
+      childCRef.current.click();
+      expect(logs).toEqual(['nestedFragmentRef2']);
     });
 
     // @gate enableFragmentRefs

@@ -384,8 +384,7 @@ export function createViewTransitionInstance(
 }
 
 export type FragmentInstance = null | {
-  appendChild: (child: Instance) => void,
-  parentInstance: Instance,
+  _fragmentFiber: any,
   ...
 };
 
@@ -395,14 +394,14 @@ export function createFragmentInstance(
   return null;
 }
 
-export function appendChildToFragmentInstance(
+export function commitNewChildToFragmentInstance(
   child: Instance,
   fragmentInstance: FragmentInstance,
 ): void {
   // noop
 }
 
-export function removeChildFromFragmentInstance(
+export function deleteChildFromFragmentInstance(
   child: Instance,
   fragmentInstance: FragmentInstance,
 ): void {
