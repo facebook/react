@@ -139,11 +139,21 @@ export default {
     }
   },
 
-  report(): void {
+  report(verbose = false): void {
     const totalComponents =
       SucessfulCompilation.length +
       countUniqueLocInEvents(OtherFailures) +
       countUniqueLocInEvents(ActionableFailures);
+    if (verbose) {
+      console.log(
+        chalk.red(
+          `Actionable Failures: ${JSON.stringify(ActionableFailures, null, 2)}`,
+        ),
+      );
+      console.log(
+        chalk.red(`Other Failures: ${JSON.stringify(OtherFailures, null, 2)}`),
+      );
+    }
     console.log(
       chalk.green(
         `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`,
