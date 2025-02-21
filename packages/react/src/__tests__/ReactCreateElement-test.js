@@ -77,13 +77,7 @@ describe('ReactCreateElement', () => {
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
         'prop. (https://react.dev/link/special-props)\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? ['    in Parent (at **)']
-          : [
-              '    in Child (at **)\n' +
-                '    in div (at **)\n' +
-                '    in Parent (at **)',
-            ]),
+        '    in Parent (at **)',
     ]);
   });
 

@@ -15,7 +15,6 @@ import {
   getOwnerStackByFiberInDev,
 } from './ReactFiberComponentStack';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
-import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 
 export let current: Fiber | null = null;
 export let isRendering: boolean = false;
@@ -42,10 +41,7 @@ function getCurrentFiberStackInDev(): string {
     // and it is guaranteed to be the work-in-progress version.
     // TODO: The above comment is not actually true. We might be
     // in a commit phase or preemptive set state callback.
-    if (enableOwnerStacks) {
-      return getOwnerStackByFiberInDev(current);
-    }
-    return getStackByFiberInDevAndProd(current);
+    return getOwnerStackByFiberInDev(current);
   }
   return '';
 }
@@ -63,12 +59,10 @@ export function runWithFiberInDEV<A0, A1, A2, A3, A4, T>(
     const previousFiber = current;
     setCurrentFiber(fiber);
     try {
-      if (enableOwnerStacks) {
-        if (fiber !== null && fiber._debugTask) {
-          return fiber._debugTask.run(
-            callback.bind(null, arg0, arg1, arg2, arg3, arg4),
-          );
-        }
+      if (fiber !== null && fiber._debugTask) {
+        return fiber._debugTask.run(
+          callback.bind(null, arg0, arg1, arg2, arg3, arg4),
+        );
       }
       return callback(arg0, arg1, arg2, arg3, arg4);
     } finally {

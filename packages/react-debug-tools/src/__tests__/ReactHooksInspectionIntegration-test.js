@@ -2347,10 +2347,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
     await act(async () => await LazyFoo);
     assertConsoleErrorDev([
-      'Foo: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? ''
-          : '\n    in Foo (at **)\n' + '   in Suspense (at **)'),
+      'Foo: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
     ]);
 
     const childFiber = renderer.root._currentFiber();

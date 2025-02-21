@@ -121,34 +121,20 @@ describe('validateDOMNesting', () => {
     );
     expectWarnings(
       ['div', 'ul', 'li', 'div', 'li'],
-      gate(flags => flags.enableOwnerStacks)
-        ? [
-            'In HTML, <li> cannot be a descendant of <li>.\n' +
-              'This will cause a hydration error.\n' +
-              '\n' +
-              '  <ul>\n' +
-              '>   <li>\n' +
-              '      <div>\n' +
-              '>       <li>\n' +
-              '\n' +
-              '    in li (at **)',
-            '<li> cannot contain a nested <li>.\nSee this log for the ancestor stack trace.\n' +
-              '    in li (at **)',
-          ]
-        : [
-            'In HTML, <li> cannot be a descendant of <li>.\n' +
-              'This will cause a hydration error.\n' +
-              '\n' +
-              '  <ul>\n' +
-              '>   <li>\n' +
-              '      <div>\n' +
-              '>       <li>\n' +
-              '\n' +
-              '    in li (at **)\n' +
-              '    in div (at **)\n' +
-              '    in li (at **)\n' +
-              '    in ul (at **)',
-          ],
+
+      [
+        'In HTML, <li> cannot be a descendant of <li>.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <ul>\n' +
+          '>   <li>\n' +
+          '      <div>\n' +
+          '>       <li>\n' +
+          '\n' +
+          '    in li (at **)',
+        '<li> cannot contain a nested <li>.\nSee this log for the ancestor stack trace.\n' +
+          '    in li (at **)',
+      ],
     );
     expectWarnings(
       ['div', 'html'],
@@ -208,28 +194,16 @@ describe('validateDOMNesting', () => {
     );
     expectWarnings(
       ['svg', 'foreignObject', 'body', 'p'],
-      gate(flags => flags.enableOwnerStacks)
-        ? [
-            // TODO, this should say "In SVG",
-            'In HTML, <body> cannot be a child of <foreignObject>.\n' +
-              'This will cause a hydration error.\n' +
-              '\n' +
-              '> <foreignObject>\n' +
-              '>   <body>\n' +
-              '\n' +
-              '    in body (at **)',
-          ]
-        : [
-            // TODO, this should say "In SVG",
-            'In HTML, <body> cannot be a child of <foreignObject>.\n' +
-              'This will cause a hydration error.\n' +
-              '\n' +
-              '> <foreignObject>\n' +
-              '>   <body>\n' +
-              '\n' +
-              '    in body (at **)\n' +
-              '    in foreignObject (at **)',
-          ],
+      [
+        // TODO, this should say "In SVG",
+        'In HTML, <body> cannot be a child of <foreignObject>.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '> <foreignObject>\n' +
+          '>   <body>\n' +
+          '\n' +
+          '    in body (at **)',
+      ],
     );
   });
 

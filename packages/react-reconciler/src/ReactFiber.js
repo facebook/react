@@ -40,7 +40,6 @@ import {
   enableRenderableContext,
   disableLegacyMode,
   enableObjectFiber,
-  enableOwnerStacks,
   enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
@@ -202,10 +201,8 @@ function FiberNode(
     // This isn't directly used but is handy for debugging internals:
     this._debugInfo = null;
     this._debugOwner = null;
-    if (enableOwnerStacks) {
-      this._debugStack = null;
-      this._debugTask = null;
-    }
+    this._debugStack = null;
+    this._debugTask = null;
     this._debugNeedsRemount = false;
     this._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
@@ -293,10 +290,8 @@ function createFiberImplObject(
     // This isn't directly used but is handy for debugging internals:
     fiber._debugInfo = null;
     fiber._debugOwner = null;
-    if (enableOwnerStacks) {
-      fiber._debugStack = null;
-      fiber._debugTask = null;
-    }
+    fiber._debugStack = null;
+    fiber._debugTask = null;
     fiber._debugNeedsRemount = false;
     fiber._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
@@ -352,10 +347,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       // DEV-only fields
 
       workInProgress._debugOwner = current._debugOwner;
-      if (enableOwnerStacks) {
-        workInProgress._debugStack = current._debugStack;
-        workInProgress._debugTask = current._debugTask;
-      }
+      workInProgress._debugStack = current._debugStack;
+      workInProgress._debugTask = current._debugTask;
       workInProgress._debugHookTypes = current._debugHookTypes;
     }
 
@@ -766,10 +759,8 @@ export function createFiberFromElement(
   );
   if (__DEV__) {
     fiber._debugOwner = element._owner;
-    if (enableOwnerStacks) {
-      fiber._debugStack = element._debugStack;
-      fiber._debugTask = element._debugTask;
-    }
+    fiber._debugStack = element._debugStack;
+    fiber._debugTask = element._debugTask;
   }
   return fiber;
 }

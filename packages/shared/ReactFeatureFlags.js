@@ -134,8 +134,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableOwnerStacks = true;
-
 export const enableShallowPropDiffing = false;
 
 export const enableSiblingPrerendering = true;
@@ -267,5 +265,3 @@ export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-
-export const enableRemoveConsolePatches = true;

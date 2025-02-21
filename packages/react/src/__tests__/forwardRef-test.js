@@ -213,9 +213,7 @@ describe('forwardRef', () => {
         '\n\nCheck the top-level render call using <ForwardRef>. It was passed a child from ForwardRef. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? '    in **/forwardRef-test.js:**:** (at **)'
-          : '    in p (at **)'),
+        '    in **/forwardRef-test.js:**:** (at **)',
     ]);
   });
 
@@ -235,8 +233,7 @@ describe('forwardRef', () => {
         '\n\nCheck the top-level render call using <ForwardRef(Inner)>. It was passed a child from ForwardRef(Inner). ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Inner (at **)' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
+        '    in Inner (at **)',
     ]);
   });
 
@@ -257,8 +254,7 @@ describe('forwardRef', () => {
         '\n\nCheck the top-level render call using <ForwardRef(Inner)>. It was passed a child from ForwardRef(Inner). ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Inner (at **)' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
+        '    in Inner (at **)',
     ]);
   });
 
@@ -278,8 +274,7 @@ describe('forwardRef', () => {
         '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Outer (at **)' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
+        '    in Outer (at **)',
     ]);
   });
 
@@ -301,8 +296,7 @@ describe('forwardRef', () => {
         '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Inner (at **)' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
+        '    in Inner (at **)',
     ]);
   });
 

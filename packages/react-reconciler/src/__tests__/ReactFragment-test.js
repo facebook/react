@@ -744,19 +744,12 @@ describe('ReactFragment', () => {
     ReactNoop.render(<Foo condition={false} />);
     await waitForAll([]);
     assertConsoleErrorDev([
-      gate('enableOwnerStacks')
-        ? 'Each child in a list should have a unique "key" prop.\n' +
-          '\n' +
-          'Check the render method of `div`. ' +
-          'It was passed a child from Foo. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in Foo (at **)'
-        : 'Each child in a list should have a unique "key" prop.\n' +
-          '\n' +
-          'Check the render method of `Foo`. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in Stateful (at **)\n' +
-          '    in Foo (at **)',
+      'Each child in a list should have a unique "key" prop.\n' +
+        '\n' +
+        'Check the render method of `div`. ' +
+        'It was passed a child from Foo. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Foo (at **)',
     ]);
 
     expect(ops).toEqual([]);

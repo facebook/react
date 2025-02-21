@@ -39,24 +39,17 @@ const patchConsoleMethod = (methodName, logged) => {
     ) {
       const React = require('react');
       if (React.captureOwnerStack) {
-        // enableOwnerStacks enabled. When it's always on, we can assume this case.
+        // Owner Stacks are enabled.
+        // TODO: remove this
         const stack = React.captureOwnerStack();
         if (stack) {
           format += '%s';
           args.push(stack);
         }
       } else {
-        // Otherwise we have to use internals to emulate parent stacks.
-        const ReactSharedInternals =
-          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
-          React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-        if (ReactSharedInternals && ReactSharedInternals.getCurrentStack) {
-          const stack = ReactSharedInternals.getCurrentStack();
-          if (stack !== '') {
-            format += '%s';
-            args.push(stack);
-          }
-        }
+        throw new Error(
+          'captureOwnerStack is not defined. This is a bug in React.',
+        );
       }
     }
 

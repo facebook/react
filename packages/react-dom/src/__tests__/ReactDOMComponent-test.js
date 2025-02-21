@@ -1845,8 +1845,7 @@ describe('ReactDOMComponent', () => {
       assertConsoleErrorDev([
         'The tag <menuitem> is unrecognized in this browser. ' +
           'If you meant to render a React component, start its name with an uppercase letter.\n' +
-          '    in menuitem (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in menu (at **)'),
+          '    in menuitem (at **)',
       ]);
     });
 
@@ -2242,10 +2241,7 @@ describe('ReactDOMComponent', () => {
           '> <div>\n' +
           '>   <tr>\n' +
           '    ...\n' +
-          '\n    in tr (at **)' +
-          (gate(flags => flags.enableOwnerStacks)
-            ? ''
-            : '\n    in div (at **)'),
+          '\n    in tr (at **)',
       ]);
     });
 
@@ -2264,10 +2260,7 @@ describe('ReactDOMComponent', () => {
         'In HTML, <p> cannot be a descendant of <p>.\n' +
           'This will cause a hydration error.' +
           // There is no outer `p` here because root container is not part of the stack.
-          '\n    in p (at **)' +
-          (gate(flags => flags.enableOwnerStacks)
-            ? ''
-            : '\n    in span (at **)'),
+          '\n    in p (at **)',
       ]);
     });
 
@@ -2294,92 +2287,48 @@ describe('ReactDOMComponent', () => {
       await act(() => {
         root.render(<Foo />);
       });
-      assertConsoleErrorDev(
-        gate(flags => flags.enableOwnerStacks)
-          ? [
-              'In HTML, <tr> cannot be a child of ' +
-                '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
-                'by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <Foo>\n' +
-                '>   <table>\n' +
-                '      <Row>\n' +
-                '>       <tr>\n' +
-                '      ...\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in Foo (at **)',
-              '<table> cannot contain a nested <tr>.\nSee this log for the ancestor stack trace.' +
-                '\n    in table (at **)' +
-                '\n    in Foo (at **)',
-              'In HTML, text nodes cannot be a ' +
-                'child of <tr>.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <Foo>\n' +
-                '    <table>\n' +
-                '      <Row>\n' +
-                '        <tr>\n' +
-                '>         x\n' +
-                '      ...\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in Foo (at **)',
-              'In HTML, whitespace text nodes cannot ' +
-                "be a child of <table>. Make sure you don't have any extra " +
-                'whitespace between tags on each line of your source code.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <Foo>\n' +
-                '>   <table>\n' +
-                '      <Row>\n' +
-                '>     {" "}\n' +
-                '\n    in table (at **)' +
-                '\n    in Foo (at **)',
-            ]
-          : [
-              'In HTML, <tr> cannot be a child of ' +
-                '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
-                'by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <Foo>\n' +
-                '>   <table>\n' +
-                '      <Row>\n' +
-                '>       <tr>\n' +
-                '      ...\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in table (at **)' +
-                '\n    in Foo (at **)',
-              'In HTML, text nodes cannot be a ' +
-                'child of <tr>.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <Foo>\n' +
-                '    <table>\n' +
-                '      <Row>\n' +
-                '        <tr>\n' +
-                '>         x\n' +
-                '      ...\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in table (at **)' +
-                '\n    in Foo (at **)',
-              'In HTML, whitespace text nodes cannot ' +
-                "be a child of <table>. Make sure you don't have any extra " +
-                'whitespace between tags on each line of your source code.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <Foo>\n' +
-                '>   <table>\n' +
-                '      <Row>\n' +
-                '>     {" "}\n' +
-                '\n    in table (at **)' +
-                '\n    in Foo (at **)',
-            ],
-      );
+      assertConsoleErrorDev([
+        'In HTML, <tr> cannot be a child of ' +
+          '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
+          'by the browser.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <Foo>\n' +
+          '>   <table>\n' +
+          '      <Row>\n' +
+          '>       <tr>\n' +
+          '      ...\n' +
+          '\n    in tr (at **)' +
+          '\n    in Row (at **)' +
+          '\n    in Foo (at **)',
+        '<table> cannot contain a nested <tr>.\nSee this log for the ancestor stack trace.' +
+          '\n    in table (at **)' +
+          '\n    in Foo (at **)',
+        'In HTML, text nodes cannot be a ' +
+          'child of <tr>.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <Foo>\n' +
+          '    <table>\n' +
+          '      <Row>\n' +
+          '        <tr>\n' +
+          '>         x\n' +
+          '      ...\n' +
+          '\n    in tr (at **)' +
+          '\n    in Row (at **)' +
+          '\n    in Foo (at **)',
+        'In HTML, whitespace text nodes cannot ' +
+          "be a child of <table>. Make sure you don't have any extra " +
+          'whitespace between tags on each line of your source code.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <Foo>\n' +
+          '>   <table>\n' +
+          '      <Row>\n' +
+          '>     {" "}\n' +
+          '\n    in table (at **)' +
+          '\n    in Foo (at **)',
+      ]);
     });
 
     it('warns nicely for updating table rows to use text', async () => {
@@ -2445,12 +2394,7 @@ describe('ReactDOMComponent', () => {
           '          <tr>\n' +
           '>           text\n' +
           '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          (gate(flags => flags.enableOwnerStacks)
-            ? ''
-            : '\n    in tbody (at **)' +
-              '\n    in table (at **)' +
-              '\n    in Foo (at **)'),
+          '\n    in Row (at **)',
       ]);
     });
 
@@ -2477,49 +2421,28 @@ describe('ReactDOMComponent', () => {
       await act(() => {
         root.render(<App1 />);
       });
-      assertConsoleErrorDev(
-        gate(flags => flags.enableOwnerStacks)
-          ? [
-              'In HTML, <tr> cannot be a child of <table>. ' +
-                'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <App1>\n' +
-                '    <Viz1>\n' +
-                '>     <table>\n' +
-                '        <FancyRow>\n' +
-                '          <Row>\n' +
-                '>           <tr>\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in FancyRow (at **)' +
-                '\n    in Viz1 (at **)' +
-                '\n    in App1 (at **)',
-              '<table> cannot contain a nested <tr>.\n' +
-                'See this log for the ancestor stack trace.\n' +
-                '    in table (at **)\n' +
-                '    in Viz1 (at **)\n' +
-                '    in App1 (at **)',
-            ]
-          : [
-              'In HTML, <tr> cannot be a child of <table>. ' +
-                'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <App1>\n' +
-                '    <Viz1>\n' +
-                '>     <table>\n' +
-                '        <FancyRow>\n' +
-                '          <Row>\n' +
-                '>           <tr>\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in FancyRow (at **)' +
-                '\n    in table (at **)' +
-                '\n    in Viz1 (at **)' +
-                '\n    in App1 (at **)',
-            ],
-      );
+      assertConsoleErrorDev([
+        'In HTML, <tr> cannot be a child of <table>. ' +
+          'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <App1>\n' +
+          '    <Viz1>\n' +
+          '>     <table>\n' +
+          '        <FancyRow>\n' +
+          '          <Row>\n' +
+          '>           <tr>\n' +
+          '\n    in tr (at **)' +
+          '\n    in Row (at **)' +
+          '\n    in FancyRow (at **)' +
+          '\n    in Viz1 (at **)' +
+          '\n    in App1 (at **)',
+        '<table> cannot contain a nested <tr>.\n' +
+          'See this log for the ancestor stack trace.\n' +
+          '    in table (at **)\n' +
+          '    in Viz1 (at **)\n' +
+          '    in App1 (at **)',
+      ]);
     });
 
     it('gives useful context in warnings 2', async () => {
@@ -2558,57 +2481,32 @@ describe('ReactDOMComponent', () => {
       await act(() => {
         root.render(<App2 />);
       });
-      assertConsoleErrorDev(
-        gate(flags => flags.enableOwnerStacks)
-          ? [
-              'In HTML, <tr> cannot be a child of <table>. ' +
-                'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <App2>\n' +
-                '    <Viz2>\n' +
-                '      <FancyTable>\n' +
-                '        <Table>\n' +
-                '>         <table>\n' +
-                '            <FancyRow>\n' +
-                '              <Row>\n' +
-                '>               <tr>\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in FancyRow (at **)' +
-                '\n    in Viz2 (at **)' +
-                '\n    in App2 (at **)',
-              '<table> cannot contain a nested <tr>.\n' +
-                'See this log for the ancestor stack trace.\n' +
-                '    in table (at **)\n' +
-                '    in Table (at **)\n' +
-                '    in FancyTable (at **)\n' +
-                '    in Viz2 (at **)\n' +
-                '    in App2 (at **)',
-            ]
-          : [
-              'In HTML, <tr> cannot be a child of <table>. ' +
-                'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <App2>\n' +
-                '    <Viz2>\n' +
-                '      <FancyTable>\n' +
-                '        <Table>\n' +
-                '>         <table>\n' +
-                '            <FancyRow>\n' +
-                '              <Row>\n' +
-                '>               <tr>\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in FancyRow (at **)' +
-                '\n    in table (at **)' +
-                '\n    in Table (at **)' +
-                '\n    in FancyTable (at **)' +
-                '\n    in Viz2 (at **)' +
-                '\n    in App2 (at **)',
-            ],
-      );
+      assertConsoleErrorDev([
+        'In HTML, <tr> cannot be a child of <table>. ' +
+          'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <App2>\n' +
+          '    <Viz2>\n' +
+          '      <FancyTable>\n' +
+          '        <Table>\n' +
+          '>         <table>\n' +
+          '            <FancyRow>\n' +
+          '              <Row>\n' +
+          '>               <tr>\n' +
+          '\n    in tr (at **)' +
+          '\n    in Row (at **)' +
+          '\n    in FancyRow (at **)' +
+          '\n    in Viz2 (at **)' +
+          '\n    in App2 (at **)',
+        '<table> cannot contain a nested <tr>.\n' +
+          'See this log for the ancestor stack trace.\n' +
+          '    in table (at **)\n' +
+          '    in Table (at **)\n' +
+          '    in FancyTable (at **)\n' +
+          '    in Viz2 (at **)\n' +
+          '    in App2 (at **)',
+      ]);
     });
 
     it('gives useful context in warnings 3', async () => {
@@ -2640,47 +2538,26 @@ describe('ReactDOMComponent', () => {
           </FancyTable>,
         );
       });
-      assertConsoleErrorDev(
-        gate(flags => flags.enableOwnerStacks)
-          ? [
-              'In HTML, <tr> cannot be a child of <table>. ' +
-                'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <FancyTable>\n' +
-                '    <Table>\n' +
-                '>     <table>\n' +
-                '        <FancyRow>\n' +
-                '          <Row>\n' +
-                '>           <tr>\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in FancyRow (at **)',
-              '<table> cannot contain a nested <tr>.\n' +
-                'See this log for the ancestor stack trace.' +
-                '\n    in table (at **)' +
-                '\n    in Table (at **)' +
-                '\n    in FancyTable (at **)',
-            ]
-          : [
-              'In HTML, <tr> cannot be a child of <table>. ' +
-                'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <FancyTable>\n' +
-                '    <Table>\n' +
-                '>     <table>\n' +
-                '        <FancyRow>\n' +
-                '          <Row>\n' +
-                '>           <tr>\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in FancyRow (at **)' +
-                '\n    in table (at **)' +
-                '\n    in Table (at **)' +
-                '\n    in FancyTable (at **)',
-            ],
-      );
+      assertConsoleErrorDev([
+        'In HTML, <tr> cannot be a child of <table>. ' +
+          'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <FancyTable>\n' +
+          '    <Table>\n' +
+          '>     <table>\n' +
+          '        <FancyRow>\n' +
+          '          <Row>\n' +
+          '>           <tr>\n' +
+          '\n    in tr (at **)' +
+          '\n    in Row (at **)' +
+          '\n    in FancyRow (at **)',
+        '<table> cannot contain a nested <tr>.\n' +
+          'See this log for the ancestor stack trace.' +
+          '\n    in table (at **)' +
+          '\n    in Table (at **)' +
+          '\n    in FancyTable (at **)',
+      ]);
     });
 
     it('gives useful context in warnings 4', async () => {
@@ -2701,39 +2578,22 @@ describe('ReactDOMComponent', () => {
           </table>,
         );
       });
-      assertConsoleErrorDev(
-        gate(flags => flags.enableOwnerStacks)
-          ? [
-              'In HTML, <tr> cannot be a child of <table>. ' +
-                'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '> <table>\n' +
-                '    <FancyRow>\n' +
-                '      <Row>\n' +
-                '>       <tr>\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in FancyRow (at **)',
-              '<table> cannot contain a nested <tr>.\n' +
-                'See this log for the ancestor stack trace.' +
-                '\n    in table (at **)',
-            ]
-          : [
-              'In HTML, <tr> cannot be a child of <table>. ' +
-                'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '> <table>\n' +
-                '    <FancyRow>\n' +
-                '      <Row>\n' +
-                '>       <tr>\n' +
-                '\n    in tr (at **)' +
-                '\n    in Row (at **)' +
-                '\n    in FancyRow (at **)' +
-                '\n    in table (at **)',
-            ],
-      );
+      assertConsoleErrorDev([
+        'In HTML, <tr> cannot be a child of <table>. ' +
+          'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '> <table>\n' +
+          '    <FancyRow>\n' +
+          '      <Row>\n' +
+          '>       <tr>\n' +
+          '\n    in tr (at **)' +
+          '\n    in Row (at **)' +
+          '\n    in FancyRow (at **)',
+        '<table> cannot contain a nested <tr>.\n' +
+          'See this log for the ancestor stack trace.' +
+          '\n    in table (at **)',
+      ]);
     });
 
     it('gives useful context in warnings 5', async () => {
@@ -2758,39 +2618,22 @@ describe('ReactDOMComponent', () => {
           </FancyTable>,
         );
       });
-      assertConsoleErrorDev(
-        gate(flags => flags.enableOwnerStacks)
-          ? [
-              'In HTML, <tr> cannot be a child of <table>. ' +
-                'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <FancyTable>\n' +
-                '    <Table>\n' +
-                '>     <table>\n' +
-                '>       <tr>\n' +
-                '\n    in tr (at **)',
-              '<table> cannot contain a nested <tr>.\n' +
-                'See this log for the ancestor stack trace.' +
-                '\n    in table (at **)' +
-                '\n    in Table (at **)' +
-                '\n    in FancyTable (at **)',
-            ]
-          : [
-              'In HTML, <tr> cannot be a child of <table>. ' +
-                'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <FancyTable>\n' +
-                '    <Table>\n' +
-                '>     <table>\n' +
-                '>       <tr>\n' +
-                '\n    in tr (at **)' +
-                '\n    in table (at **)' +
-                '\n    in Table (at **)' +
-                '\n    in FancyTable (at **)',
-            ],
-      );
+      assertConsoleErrorDev([
+        'In HTML, <tr> cannot be a child of <table>. ' +
+          'Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <FancyTable>\n' +
+          '    <Table>\n' +
+          '>     <table>\n' +
+          '>       <tr>\n' +
+          '\n    in tr (at **)',
+        '<table> cannot contain a nested <tr>.\n' +
+          'See this log for the ancestor stack trace.' +
+          '\n    in table (at **)' +
+          '\n    in Table (at **)' +
+          '\n    in FancyTable (at **)',
+      ]);
 
       class Link extends React.Component {
         render() {
@@ -2807,40 +2650,22 @@ describe('ReactDOMComponent', () => {
           </Link>,
         );
       });
-      assertConsoleErrorDev(
-        gate(flags => flags.enableOwnerStacks)
-          ? [
-              'In HTML, <a> cannot be a descendant of <a>.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <Link>\n' +
-                '>   <a>\n' +
-                '      <div>\n' +
-                '        <Link>\n' +
-                '>         <a>\n' +
-                '\n    in a (at **)' +
-                '\n    in Link (at **)',
-              '<a> cannot contain a nested <a>.\n' +
-                'See this log for the ancestor stack trace.' +
-                '\n    in a (at **)' +
-                '\n    in Link (at **)',
-            ]
-          : [
-              'In HTML, <a> cannot be a descendant of <a>.\n' +
-                'This will cause a hydration error.\n' +
-                '\n' +
-                '  <Link>\n' +
-                '>   <a>\n' +
-                '      <div>\n' +
-                '        <Link>\n' +
-                '>         <a>\n' +
-                '\n    in a (at **)' +
-                '\n    in Link (at **)' +
-                '\n    in div (at **)' +
-                '\n    in a (at **)' +
-                '\n    in Link (at **)',
-            ],
-      );
+      assertConsoleErrorDev([
+        'In HTML, <a> cannot be a descendant of <a>.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <Link>\n' +
+          '>   <a>\n' +
+          '      <div>\n' +
+          '        <Link>\n' +
+          '>         <a>\n' +
+          '\n    in a (at **)' +
+          '\n    in Link (at **)',
+        '<a> cannot contain a nested <a>.\n' +
+          'See this log for the ancestor stack trace.' +
+          '\n    in a (at **)' +
+          '\n    in Link (at **)',
+      ]);
     });
 
     it('should warn about incorrect casing on properties (ssr)', () => {
@@ -3099,11 +2924,9 @@ describe('ReactDOMComponent', () => {
       });
       assertConsoleErrorDev([
         'Invalid DOM property `class`. Did you mean `className`?\n' +
-          '    in span (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in div (at **)'),
+          '    in span (at **)',
         'Invalid event handler property `onclick`. Did you mean `onClick`?\n' +
-          '    in strong (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in div (at **)'),
+          '    in strong (at **)',
       ]);
     });
 
@@ -3119,12 +2942,10 @@ describe('ReactDOMComponent', () => {
       );
       assertConsoleErrorDev([
         'Invalid DOM property `class`. Did you mean `className`?\n' +
-          '    in span (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in div (at **)'),
+          '    in span (at **)',
         'Invalid event handler property `onclick`. ' +
           'React events use the camelCase naming convention, for example `onClick`.\n' +
-          '    in strong (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in div (at **)'),
+          '    in strong (at **)',
       ]);
     });
 
@@ -3175,12 +2996,10 @@ describe('ReactDOMComponent', () => {
         'Invalid DOM property `class`. Did you mean `className`?\n' +
           '    in span (at **)\n' +
           '    in Child1 (at **)\n' +
-          (gate('enableOwnerStacks') ? '' : '    in div (at **)\n') +
           '    in Parent (at **)',
         'Invalid event handler property `onclick`. Did you mean `onClick`?\n' +
           '    in strong (at **)\n' +
           '    in Child3 (at **)\n' +
-          (gate('enableOwnerStacks') ? '' : '    in div (at **)\n') +
           '    in Parent (at **)',
       ]);
     });
@@ -3230,13 +3049,11 @@ describe('ReactDOMComponent', () => {
         'Invalid DOM property `class`. Did you mean `className`?\n' +
           '    in span (at **)\n' +
           '    in Child1 (at **)\n' +
-          (gate('enableOwnerStacks') ? '' : '    in div (at **)\n') +
           '    in Parent (at **)',
         'Invalid event handler property `onclick`. ' +
           'React events use the camelCase naming convention, for example `onClick`.\n' +
           '    in strong (at **)\n' +
           '    in Child3 (at **)\n' +
-          (gate('enableOwnerStacks') ? '' : '    in div (at **)\n') +
           '    in Parent (at **)',
       ]);
     });
@@ -3362,8 +3179,7 @@ describe('ReactDOMComponent', () => {
       });
       assertConsoleErrorDev([
         'Invalid DOM property `arabic-form`. Did you mean `arabicForm`?\n' +
-          '    in text (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in svg (at **)'),
+          '    in text (at **)',
       ]);
       const text = el.querySelector('text');
 
@@ -3844,8 +3660,7 @@ describe('ReactDOMComponent', () => {
       });
       assertConsoleErrorDev([
         'Invalid DOM property `x-height`. Did you mean `xHeight`?\n' +
-          '    in font-face (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in svg (at **)'),
+          '    in font-face (at **)',
       ]);
 
       expect(el.querySelector('font-face').hasAttribute('x-height')).toBe(
@@ -3871,8 +3686,7 @@ describe('ReactDOMComponent', () => {
           'whatever="false" or whatever={value.toString()}.\n\n' +
           'If you used to conditionally omit it with whatever={condition && value}, ' +
           'pass whatever={condition ? value : undefined} instead.\n' +
-          '    in font-face (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in svg (at **)'),
+          '    in font-face (at **)',
       ]);
 
       expect(el.querySelector('font-face').hasAttribute('whatever')).toBe(

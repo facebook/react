@@ -52,7 +52,6 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableOwnerStacks,
   disableCommentsAsDOMContainers,
 } from 'shared/ReactFeatureFlags';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
@@ -259,7 +258,7 @@ function processDispatchQueueItemsInOrder(
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }
-      if (__DEV__ && enableOwnerStacks && instance !== null) {
+      if (__DEV__ && instance !== null) {
         runWithFiberInDEV(
           instance,
           executeDispatch,
@@ -278,7 +277,7 @@ function processDispatchQueueItemsInOrder(
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }
-      if (__DEV__ && enableOwnerStacks && instance !== null) {
+      if (__DEV__ && instance !== null) {
         runWithFiberInDEV(
           instance,
           executeDispatch,

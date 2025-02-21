@@ -528,9 +528,7 @@ describe('ReactTypeScriptClass', function () {
           '    in ProvideChildContextTypes (at **)',
         'StateBasedOnContext uses the legacy contextTypes API which will soon be removed. ' +
           'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-          (ReactFeatureFlags.enableOwnerStacks
-            ? '    in ProvideChildContextTypes.createElement (at **)'
-            : '    in StateBasedOnContext (at **)\n') +
+          '    in ProvideChildContextTypes.createElement (at **)\n' +
           '    in ProvideChildContextTypes (at **)',
       ]);
     });
@@ -724,9 +722,7 @@ describe('ReactTypeScriptClass', function () {
           '    in ProvideContext (at **)',
         'ReadContext uses the legacy contextTypes API which will soon be removed. ' +
           'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-          (ReactFeatureFlags.enableOwnerStacks
-            ? '    in ProvideContext.createElement (at **)'
-            : '    in ReadContext (at **)\n') +
+          '    in ProvideContext.createElement (at **)\n' +
           '    in ProvideContext (at **)',
       ]);
     });

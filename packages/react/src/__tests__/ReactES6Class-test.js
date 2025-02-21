@@ -305,9 +305,6 @@ describe('ReactES6Class', () => {
           '    in Outer (at **)',
         'Foo uses the legacy contextTypes API which will soon be removed. ' +
           'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-          (gate(flags => flags.enableOwnerStacks)
-            ? ''
-            : '    in Foo (at **)\n') +
           '    in Outer (at **)',
       ]);
     });
@@ -638,9 +635,6 @@ describe('ReactES6Class', () => {
           '    in Foo (at **)',
         'Bar uses the legacy contextTypes API which will soon be removed. ' +
           'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-          (gate(flags => flags.enableOwnerStacks)
-            ? ''
-            : '    in Bar (at **)\n') +
           '    in Foo (at **)',
       ]);
     });

@@ -286,7 +286,6 @@ describe('ReactDOMServerLifecycles', () => {
         'usually means you called setState() outside componentWillMount() on ' +
         'the server. This is a no-op.\n\n' +
         'Please check the code for the Outer component.\n' +
-        (gate('enableOwnerStacks') ? '' : '    in Inner (at **)\n') +
         '    in Outer (at **)',
     ]);
   });

@@ -94,11 +94,7 @@ describe('ReactIncrementalErrorLogging', () => {
         // The component stack is not added without the polyfill/devtools.
         // expect.stringMatching(
         //  new RegExp(
-        //    gate(flags => flags.enableOwnerStacks)
-        //      ? '\\s+(in|at) ErrorThrowingComponent'
-        //      : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-        //        '\\s+(in|at) span(.*)\n' +
-        //        '\\s+(in|at) div(.*)',
+        //    '\\s+(in|at) ErrorThrowingComponent'
         //  ),
         // ),
       );
@@ -143,11 +139,7 @@ describe('ReactIncrementalErrorLogging', () => {
         // The component stack is not added without the polyfill/devtools.
         // expect.stringMatching(
         //   new RegExp(
-        //     gate(flags => flags.enableOwnerStacks)
-        //       ? '\\s+(in|at) ErrorThrowingComponent'
-        //       : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-        //         '\\s+(in|at) span(.*)\n' +
-        //         '\\s+(in|at) div(.*)',
+        //     '\\s+(in|at) ErrorThrowingComponent'
         //   ),
         // ),
       );
@@ -204,12 +196,7 @@ describe('ReactIncrementalErrorLogging', () => {
         // The component stack is not added without the polyfill/devtools.
         // expect.stringMatching(
         //   new RegExp(
-        //     gate(flags => flags.enableOwnerStacks)
-        //       ? '\\s+(in|at) ErrorThrowingComponent'
-        //       : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-        //         '\\s+(in|at) span(.*)\n' +
-        //         '\\s+(in|at) ErrorBoundary(.*)\n' +
-        //         '\\s+(in|at) div(.*)',
+        //     '\\s+(in|at) ErrorThrowingComponent'
         //   ),
         // ),
       );
@@ -287,11 +274,7 @@ describe('ReactIncrementalErrorLogging', () => {
         ),
         // The component stack is not added without the polyfill/devtools.
         // expect.stringMatching(
-        //   gate(flag => flag.enableOwnerStacks)
-        //     ? new RegExp('\\s+(in|at) Foo')
-        //     : new RegExp(
-        //         '\\s+(in|at) Foo (.*)\n' + '\\s+(in|at) ErrorBoundary(.*)',
-        //       ),
+        //   new RegExp('\\s+(in|at) Foo')
         // ),
       );
     } else {

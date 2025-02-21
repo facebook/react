@@ -68,9 +68,6 @@ describe('ErrorBoundaryReconciliation', () => {
         </ErrorBoundary>,
       );
     });
-    if (gate(flags => !flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(['invalid', 'invalid']);
-    }
 
     const Fallback = fallbackTagName;
     expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);
