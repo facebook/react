@@ -209,18 +209,6 @@ const forks = Object.freeze({
     }
   },
 
-  './packages/shared/consoleWithStackDev.js': (bundleType, entry) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-        return './packages/shared/forks/consoleWithStackDev.www.js';
-      case RN_OSS_DEV:
-      case RN_FB_DEV:
-        return './packages/shared/forks/consoleWithStackDev.rn.js';
-      default:
-        return null;
-    }
-  },
-
   './packages/shared/DefaultPrepareStackTrace.js': (
     bundleType,
     entry,
