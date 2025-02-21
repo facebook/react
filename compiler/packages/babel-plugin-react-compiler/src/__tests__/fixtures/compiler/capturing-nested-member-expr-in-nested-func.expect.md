@@ -36,13 +36,13 @@ function component(a) {
   }
   const z = t0;
   let t1;
-  if ($[2] !== z.a.a) {
+  if ($[2] !== z) {
     t1 = function () {
       (function () {
         console.log(z.a.a);
       })();
     };
-    $[2] = z.a.a;
+    $[2] = z;
     $[3] = t1;
   } else {
     t1 = $[3];
