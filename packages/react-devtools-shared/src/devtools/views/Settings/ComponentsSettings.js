@@ -20,6 +20,8 @@ import {
 import {
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE_WITH,
 } from '../../../constants';
 import {useLocalStorage, useSubscription} from '../hooks';
 import {StoreContext} from '../context';
@@ -102,6 +104,20 @@ export default function ComponentsSettings({
   const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
     getDefaultOpenInEditorURL(),
+  );
+
+  const [openInEditorURLProtocolReplace, setOpenInEditorURLProtocolReplace] =
+    useLocalStorage<string>(
+      LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE,
+      '',
+    );
+
+  const [
+    openInEditorURLProtocolReplaceWith,
+    setOpenInEditorURLProtocolReplaceWith,
+  ] = useLocalStorage<string>(
+    LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE_WITH,
+    '',
   );
 
   const [componentFilters, setComponentFilters] = useState<
@@ -375,15 +391,38 @@ export default function ComponentsSettings({
           <option value="custom">Custom</option>
         </select>
         {openInEditorURLPreset === 'custom' && (
-          <input
-            className={styles.Input}
-            type="text"
-            placeholder={process.env.EDITOR_URL ? process.env.EDITOR_URL : ''}
-            value={openInEditorURL}
-            onChange={event => {
-              setOpenInEditorURL(event.target.value);
-            }}
-          />
+          <>
+            <input
+              className={styles.Input}
+              type="text"
+              placeholder={process.env.EDITOR_URL ? process.env.EDITOR_URL : ''}
+              value={openInEditorURL}
+              onChange={event => {
+                setOpenInEditorURL(event.target.value);
+              }}
+            />
+            <br />
+            Replace:
+            <input
+              className={styles.Input}
+              type="text"
+              placeholder={'Optional eg:webpack://'}
+              value={openInEditorURLProtocolReplace}
+              onChange={event => {
+                setOpenInEditorURLProtocolReplace(event.target.value);
+              }}
+            />{' '}
+            with:
+            <input
+              className={styles.Input}
+              type="text"
+              placeholder={'What to replace with'}
+              value={openInEditorURLProtocolReplaceWith}
+              onChange={event => {
+                setOpenInEditorURLProtocolReplaceWith(event.target.value);
+              }}
+            />
+          </>
         )}
       </label>
 
