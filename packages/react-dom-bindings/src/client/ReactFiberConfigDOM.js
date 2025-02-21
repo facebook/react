@@ -1480,17 +1480,21 @@ export function createViewTransitionInstance(
 
 export type GestureTimeline = AnimationTimeline; // TODO: More provider types.
 
-export function subscribeToGestureDirection(
-  provider: GestureTimeline,
-  directionCallback: (direction: boolean) => void,
-): () => void {
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
   const time = provider.currentTime;
   if (time === null) {
     throw new Error(
       'Cannot start a gesture with a disconnected AnimationTimeline.',
     );
   }
-  const startTime = typeof time === 'number' ? time : time.value;
+  return typeof time === 'number' ? time : time.value;
+}
+
+export function subscribeToGestureDirection(
+  provider: GestureTimeline,
+  currentOffset: number,
+  directionCallback: (direction: boolean) => void,
+): () => void {
   if (
     typeof ScrollTimeline === 'function' &&
     provider instanceof ScrollTimeline
@@ -1500,11 +1504,10 @@ export function subscribeToGestureDirection(
     const scrollCallback = () => {
       const newTime = provider.currentTime;
       if (newTime !== null) {
-        directionCallback(
-          typeof newTime === 'number'
-            ? newTime > startTime
-            : newTime.value > startTime,
-        );
+        const newValue = typeof newTime === 'number' ? newTime : newTime.value;
+        if (newValue !== currentOffset) {
+          directionCallback(newValue > currentOffset);
+        }
       }
     };
     element.addEventListener('scroll', scrollCallback, false);
@@ -1517,11 +1520,10 @@ export function subscribeToGestureDirection(
     const rafCallback = () => {
       const newTime = provider.currentTime;
       if (newTime !== null) {
-        directionCallback(
-          typeof newTime === 'number'
-            ? newTime > startTime
-            : newTime.value > startTime,
-        );
+        const newValue = typeof newTime === 'number' ? newTime : newTime.value;
+        if (newValue !== currentOffset) {
+          directionCallback(newValue > currentOffset);
+        }
       }
       callbackID = requestAnimationFrame(rafCallback);
     };

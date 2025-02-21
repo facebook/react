@@ -16,6 +16,7 @@ import type {
   Awaited,
   StartGesture,
   GestureProvider,
+  GestureOptions,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -35,6 +36,7 @@ import {
   NotPendingTransition as NoPendingHostTransition,
   setCurrentUpdatePriority,
   getCurrentUpdatePriority,
+  getCurrentGestureOffset,
 } from './ReactFiberConfig';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -3988,6 +3990,7 @@ function startGesture(
   fiber: Fiber,
   queue: SwipeTransitionUpdateQueue,
   gestureProvider: GestureProvider,
+  gestureOptions?: GestureOptions,
 ): () => void {
   const root = enqueueGestureRender(fiber);
   if (root === null) {
@@ -3998,10 +4001,44 @@ function startGesture(
     };
   }
   const gestureTimeline: GestureTimeline = gestureProvider;
+  const currentOffset = getCurrentGestureOffset(gestureTimeline);
+  const range = gestureOptions && gestureOptions.range;
+  const rangePrevious: number = range ? range[0] : 0; // If no range is provider we assume it's the starting point of the range.
+  const rangeCurrent: number = range ? range[1] : currentOffset;
+  const rangeNext: number = range ? range[2] : 100; // If no range is provider we assume it's the starting point of the range.
+  if (__DEV__) {
+    if (
+      (rangePrevious > rangeCurrent && rangeNext > rangeCurrent) ||
+      (rangePrevious < rangeCurrent && rangeNext < rangeCurrent)
+    ) {
+      console.error(
+        'The range of a gesture needs "previous" and "next" to be on either side of ' +
+          'the "current" offset. Both cannot be above current and both cannot be below current.',
+      );
+    }
+  }
+  const isFlippedDirection = rangePrevious > rangeNext;
+  const initialDirection =
+    // If a range is specified we can imply initial direction if it's not the current
+    // value such as if the gesture starts after it has already moved.
+    currentOffset < rangeCurrent
+      ? isFlippedDirection
+      : currentOffset > rangeCurrent
+        ? !isFlippedDirection
+        : // Otherwise, look for an explicit option.
+          gestureOptions && gestureOptions.direction === 'next'
+          ? true
+          : gestureOptions && gestureOptions.direction === 'previous'
+            ? false
+            : // If no option is specified, imply from the values specified.
+              queue.initialDirection;
   const scheduledGesture = scheduleGesture(
     root,
     gestureTimeline,
-    queue.initialDirection,
+    initialDirection,
+    rangePrevious,
+    rangeCurrent,
+    rangeNext,
   );
   // Add this particular instance to the queue.
   // We add multiple of the same timeline even if they get batched so
