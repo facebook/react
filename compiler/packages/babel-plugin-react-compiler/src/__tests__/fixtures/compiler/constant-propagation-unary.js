@@ -21,6 +21,10 @@ function foo() {
         s0: !'',
         s1: !'a',
         s2: !'ab',
+        bi0: !0n,
+        bi1: !1n,
+        bi2: !2n,
+        bi3: !-1n,
         u: !undefined,
         n: !null,
       }}

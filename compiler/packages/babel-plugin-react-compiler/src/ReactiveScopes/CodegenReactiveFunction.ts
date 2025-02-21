@@ -28,6 +28,7 @@ import {
   ObjectPropertyKey,
   Pattern,
   Place,
+  Primitive,
   PrunedReactiveScopeBlock,
   ReactiveBlock,
   ReactiveFunction,
@@ -2516,7 +2517,7 @@ function codegenLValue(
 function codegenValue(
   cx: Context,
   loc: SourceLocation,
-  value: boolean | number | string | null | undefined,
+  value: Primitive['value'],
 ): t.Expression {
   if (typeof value === 'number') {
     return t.numericLiteral(value);
@@ -2524,6 +2525,8 @@ function codegenValue(
     return t.booleanLiteral(value);
   } else if (typeof value === 'string') {
     return createStringLiteral(loc, value);
+  } else if (typeof value === 'bigint') {
+    return t.bigIntLiteral(value + '');
   } else if (value === null) {
     return t.nullLiteral();
   } else if (value === undefined) {
