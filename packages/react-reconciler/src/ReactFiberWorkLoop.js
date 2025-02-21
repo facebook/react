@@ -4393,16 +4393,20 @@ function flushRenderPhaseStrictModeWarningsInDEV() {
 function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
   root: FiberRoot,
   parentFiber: Fiber,
+  treeFlags: Flags,
   isInStrictMode: boolean,
 ) {
-  if ((parentFiber.subtreeFlags & (PlacementDEV | Visibility)) === NoFlags) {
+  if (
+    ((treeFlags | parentFiber.subtreeFlags) & (PlacementDEV | Visibility)) ===
+    NoFlags
+  ) {
     // Parent's descendants have already had effects double invoked.
     // Early exit to avoid unnecessary tree traversal.
     return;
   }
   let child = parentFiber.child;
   while (child !== null) {
-    doubleInvokeEffectsInDEVIfNecessary(root, child, isInStrictMode);
+    doubleInvokeEffectsInDEVIfNecessary(root, child, treeFlags, isInStrictMode);
     child = child.sibling;
   }
 }
@@ -4431,6 +4435,7 @@ function doubleInvokeEffectsOnFiber(
 function doubleInvokeEffectsInDEVIfNecessary(
   root: FiberRoot,
   fiber: Fiber,
+  treeFlags: Flags,
   parentIsInStrictMode: boolean,
 ) {
   const isStrictModeFiber = fiber.type === REACT_STRICT_MODE_TYPE;
@@ -4439,7 +4444,7 @@ function doubleInvokeEffectsInDEVIfNecessary(
   // First case: the fiber **is not** of type OffscreenComponent. No
   // special rules apply to double invoking effects.
   if (fiber.tag !== OffscreenComponent) {
-    if (fiber.flags & PlacementDEV) {
+    if ((treeFlags | fiber.flags) & PlacementDEV) {
       if (isInStrictMode) {
         runWithFiberInDEV(
           fiber,
@@ -4448,14 +4453,15 @@ function doubleInvokeEffectsInDEVIfNecessary(
           fiber,
           (fiber.mode & NoStrictPassiveEffectsMode) === NoMode,
         );
+        return;
       }
-    } else {
-      recursivelyTraverseAndDoubleInvokeEffectsInDEV(
-        root,
-        fiber,
-        isInStrictMode,
-      );
     }
+    recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+      root,
+      fiber,
+      treeFlags | fiber.flags,
+      isInStrictMode,
+    );
     return;
   }
 
@@ -4476,6 +4482,7 @@ function doubleInvokeEffectsInDEVIfNecessary(
         recursivelyTraverseAndDoubleInvokeEffectsInDEV,
         root,
         fiber,
+        treeFlags | fiber.flags,
         isInStrictMode,
       );
     }
@@ -4499,6 +4506,7 @@ function commitDoubleInvokeEffectsInDEV(
       recursivelyTraverseAndDoubleInvokeEffectsInDEV(
         root,
         root.current,
+        root.current.flags,
         doubleInvokeEffects,
       );
     } else {
