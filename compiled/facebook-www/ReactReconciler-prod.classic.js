@@ -12709,6 +12709,7 @@ module.exports = function ($$$config) {
     hasInstanceChanged = $$$config.hasInstanceChanged,
     hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent,
     startViewTransition = $$$config.startViewTransition;
+  $$$config.getCurrentGestureOffset;
   $$$config.subscribeToGestureDirection;
   var createViewTransitionInstance = $$$config.createViewTransitionInstance,
     clearContainer = $$$config.clearContainer,
@@ -13748,7 +13749,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-88479c6f-20250220"
+      reconcilerVersion: "19.1.0-www-classic-662957cc-20250221"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
