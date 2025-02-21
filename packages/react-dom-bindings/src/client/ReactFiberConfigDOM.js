@@ -1564,6 +1564,7 @@ export type FragmentInstance = {
     listener: EventListener,
     optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
   ): void,
+  focus(): void,
 };
 
 function FragmentInstancePseudoElement(
@@ -1621,6 +1622,16 @@ FragmentInstancePseudoElement.prototype.removeEventListener = function (
     optionsOrUseCapture,
   });
   this._eventListeners.splice(index, 1);
+};
+// $FlowFixMe[prop-missing]
+FragmentInstancePseudoElement.prototype.focus = function (
+  this: FragmentInstance,
+) {
+  this._children.forEach(child => {
+    if (setFocusIfFocusable(child)) {
+      return;
+    }
+  });
 };
 
 function normalizeListenerOptions(

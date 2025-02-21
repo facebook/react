@@ -198,6 +198,56 @@ describe('FragmentRefs', () => {
     await act(() => root.render(<Test />));
   });
 
+  describe('focus()', () => {
+    // @gate enableFragmentRefs
+    it.skip('preserves document order', async () => {
+      const fragmentRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+      let focusedElement = null;
+
+      function Test({showA, showB}) {
+        return (
+          <React.Fragment ref={fragmentRef}>
+            {showA && <a id="child-a" />}
+            {showB && <a id="child-b" />}
+          </React.Fragment>
+        );
+      }
+
+      const focusMock = jest.spyOn(HTMLElement.prototype, 'focus');
+      focusMock.mockImplementation(function () {
+        focusedElement = this.id;
+      });
+
+      // Render with A as the first focusable child
+      await act(() => {
+        root.render(<Test showA={true} showB={false} />);
+      });
+      await act(() => {
+        fragmentRef.current.focus();
+      });
+      expect(focusedElement).toEqual('child-a');
+
+      // A is still the first focusable child, but B is also tracked
+      await act(() => {
+        root.render(<Test showA={true} showB={true} />);
+      });
+      await act(() => {
+        fragmentRef.current.focus();
+      });
+      expect(focusedElement).toEqual('child-a');
+
+      // B is now the first focusable child
+      await act(() => {
+        root.render(<Test showA={false} showB={true} />);
+      });
+      await act(() => {
+        fragmentRef.current.focus();
+      });
+      expect(focusedElement).toEqual('child-b');
+    });
+  });
+
   describe('event listeners', () => {
     // @gate enableFragmentRefs
     it('adds and removes event listeners from children', async () => {
