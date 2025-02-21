@@ -7,10 +7,6 @@
  * @flow strict-local
  */
 
-export opaque type PublicInstance = mixed;
-export opaque type PublicTextInstance = mixed;
-export opaque type PublicRootInstance = mixed;
-
 module.exports = {
   get BatchedBridge() {
     return require('./BatchedBridge.js');
