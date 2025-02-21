@@ -516,11 +516,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return null;
     },
 
-    appendChildToFragmentInstance(child, fragmentInstance) {
+    commitNewChildToFragmentInstance(child, fragmentInstance) {
       // Noop
     },
 
-    removeChildFromFragmentInstance(child, fragmentInstance) {
+    deleteChildFromFragmentInstance(child, fragmentInstance) {
       // Noop
     },
 

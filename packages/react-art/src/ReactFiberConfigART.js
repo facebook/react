@@ -319,8 +319,7 @@ export function cloneMutableTextInstance(textInstance) {
 }
 
 export type FragmentInstance = null | {
-  appendChild: (child: any) => void,
-  parentInstance: any,
+  _fragmentFiber: any,
   ...
 };
 
@@ -328,11 +327,14 @@ export function createFragmentInstance(parentInstance): null {
   return null;
 }
 
-export function appendChildToFragmentInstance(child, fragmentInstance): void {
+export function commitNewChildToFragmentInstance(
+  child,
+  fragmentInstance,
+): void {
   // Noop
 }
 
-export function removeChildFromFragmentInstance(child, fragmentInstance): void {
+export function deleteChildFromFragmentInstance(child, fragmentInstance): void {
   // Noop
 }
 

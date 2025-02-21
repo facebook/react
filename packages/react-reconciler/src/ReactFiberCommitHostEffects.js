@@ -51,13 +51,11 @@ import {
   acquireSingletonInstance,
   releaseSingletonInstance,
   isSingletonScope,
-  appendChildToFragmentInstance,
 } from './ReactFiberConfig';
 import {captureCommitPhaseError} from './ReactFiberWorkLoop';
 import {trackHostMutation} from './ReactFiberMutationTracking';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
-import {enableFragmentRefs} from 'shared/ReactFeatureFlags';
 import type {FragmentInstance} from './ReactFiberFragmentComponent';
 
 export function commitHostMount(finishedWork: Fiber) {
@@ -262,30 +260,6 @@ function isFragmentInstanceParent(fiber: Fiber): boolean {
   );
 }
 
-export function appendHostChildrenToFragmentInstance(
-  child: Fiber | null,
-  instance: FragmentInstance,
-): void {
-  if (child === null) {
-    return;
-  }
-
-  if (instance === null) {
-    return;
-  }
-
-  if (child.sibling !== null) {
-    appendHostChildrenToFragmentInstance(child.sibling, instance);
-  }
-
-  if (child.tag === HostComponent) {
-    appendChildToFragmentInstance(child.stateNode, instance);
-    return;
-  }
-
-  appendHostChildrenToFragmentInstance(child.child, instance);
-}
-
 function getHostSibling(fiber: Fiber): ?Instance {
   // We're going to search forward into the tree until we find a sibling host
   // node. Unfortunately, if multiple insertions are done in a row we have to
@@ -359,15 +333,6 @@ function insertOrAppendPlacementNodeIntoContainer(
       appendChildToContainer(parent, stateNode);
     }
     trackHostMutation();
-    if (enableFragmentRefs && tag === HostComponent) {
-      const parentFragmentInstances = getFragmentInstanceParents(node);
-      if (parentFragmentInstances !== null) {
-        for (let i = 0; i < parentFragmentInstances.length; i++) {
-          const instance = parentFragmentInstances[i];
-          appendChildToFragmentInstance(node.stateNode, instance);
-        }
-      }
-    }
     return;
   } else if (tag === HostPortal) {
     // If the insertion itself is a portal, then we don't want to traverse
@@ -412,15 +377,6 @@ function insertOrAppendPlacementNode(
       appendChild(parent, stateNode);
     }
     trackHostMutation();
-    if (enableFragmentRefs && tag === HostComponent) {
-      const parentFragmentInstances = getFragmentInstanceParents(node);
-      if (parentFragmentInstances !== null) {
-        for (let i = 0; i < parentFragmentInstances.length; i++) {
-          const instance = parentFragmentInstances[i];
-          appendChildToFragmentInstance(node.stateNode, instance);
-        }
-      }
-    }
     return;
   } else if (tag === HostPortal) {
     // If the insertion itself is a portal, then we don't want to traverse

@@ -167,7 +167,8 @@ import {
   restoreRootViewTransitionName,
   getPublicInstance,
   isSingletonScope,
-  removeChildFromFragmentInstance,
+  commitNewChildToFragmentInstance,
+  deleteChildFromFragmentInstance,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -1371,11 +1372,13 @@ function commitDeletionEffectsOnFiber(
           getFragmentInstanceParents(deletedFiber);
         if (parentFragmentInstances !== null) {
           const element = getPublicInstance(deletedFiber.stateNode);
-          for (let i = 0; i < parentFragmentInstances.length; i++) {
-            removeChildFromFragmentInstance(
-              element,
-              parentFragmentInstances[i],
-            );
+          if (element !== null) {
+            for (let i = 0; i < parentFragmentInstances.length; i++) {
+              deleteChildFromFragmentInstance(
+                element,
+                parentFragmentInstances[i],
+              );
+            }
           }
         }
       }
@@ -1973,6 +1976,7 @@ function commitMutationEffectsOnFiber(
     }
     case HostComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+
       commitReconciliationEffects(finishedWork, lanes);
 
       if (flags & Ref) {
@@ -2395,6 +2399,16 @@ function commitReconciliationEffects(
   const flags = finishedWork.flags;
   if (flags & Placement) {
     commitHostPlacement(finishedWork);
+    // After placement
+    if (enableFragmentRefs && finishedWork.tag === HostComponent) {
+      const parentFragmentInstances = getFragmentInstanceParents(finishedWork);
+      if (parentFragmentInstances !== null) {
+        for (let i = 0; i < parentFragmentInstances.length; i++) {
+          const instance = parentFragmentInstances[i];
+          commitNewChildToFragmentInstance(finishedWork.stateNode, instance);
+        }
+      }
+    }
     // Clear the "placement" from effect tag so that we know that this is
     // inserted, before any life-cycles like componentDidMount gets called.
     // TODO: findDOMNode doesn't rely on this any more but isMounted does
