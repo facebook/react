@@ -319,51 +319,6 @@ function visitFunctionExpressionAndPropagateFireDependencies(
     replaceFireFunctions(fnExpr.loweredFunc.func, context),
   );
 
-  /*
-   * Make a mapping from each dependency to the corresponding LoadLocal for it so that
-   * we can replace the loaded place with the generated fire function binding
-   */
-  const loadLocalsToDepLoads = new Map<IdentifierId, LoadLocal>();
-  for (const dep of fnExpr.loweredFunc.dependencies) {
-    const loadLocal = context.getLoadLocalInstr(dep.identifier.id);
-    if (loadLocal != null) {
-      loadLocalsToDepLoads.set(loadLocal.place.identifier.id, loadLocal);
-    }
-  }
-
-  const replacedCallees = new Map<IdentifierId, Place>();
-  for (const [
-    calleeIdentifierId,
-    loadedFireFunctionBindingPlace,
-  ] of calleesCapturedByFnExpression.entries()) {
-    /*
-     * Given the ids of captured fire callees, look at the deps for loads of those identifiers
-     * and replace them with the new fire function binding
-     */
-    const loadLocal = loadLocalsToDepLoads.get(calleeIdentifierId);
-    if (loadLocal == null) {
-      context.pushError({
-        loc: fnExpr.loc,
-        description: null,
-        severity: ErrorSeverity.Invariant,
-        reason:
-          '[InsertFire] No loadLocal found for fire call argument for lambda',
-        suggestions: null,
-      });
-      continue;
-    }
-
-    const oldPlaceId = loadLocal.place.identifier.id;
-    loadLocal.place = {
-      ...loadedFireFunctionBindingPlace.fireFunctionBinding,
-    };
-
-    replacedCallees.set(
-      oldPlaceId,
-      loadedFireFunctionBindingPlace.fireFunctionBinding,
-    );
-  }
-
   // For each replaced callee, update the context of the function expression to track it
   for (
     let contextIdx = 0;
@@ -371,9 +326,13 @@ function visitFunctionExpressionAndPropagateFireDependencies(
     contextIdx++
   ) {
     const contextItem = fnExpr.loweredFunc.func.context[contextIdx];
-    const replacedCallee = replacedCallees.get(contextItem.identifier.id);
+    const replacedCallee = calleesCapturedByFnExpression.get(
+      contextItem.identifier.id,
+    );
     if (replacedCallee != null) {
-      fnExpr.loweredFunc.func.context[contextIdx] = replacedCallee;
+      fnExpr.loweredFunc.func.context[contextIdx] = {
+        ...replacedCallee.fireFunctionBinding,
+      };
     }
   }
 

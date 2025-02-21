@@ -530,5 +530,11 @@
   "542": "Suspense Exception: This is not a real error! It's an implementation detail of `useActionState` to interrupt the current render. You must either rethrow it immediately, or move the `useActionState` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary.",
   "543": "Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React.",
   "544": "Found a pair with an auto name. This is a bug in React.",
-  "545": "The %s tag may only be rendered once."
+  "545": "The %s tag may only be rendered once.",
+  "546": "useEffect CRUD overload is not enabled in this build of React.",
+  "547": "startGesture cannot be called during server rendering.",
+  "548": "Finished rendering the gesture lane but there were no pending gestures. React should not have started a render in this case. This is a bug in React.",
+  "549": "Cannot start a gesture with a disconnected AnimationTimeline.",
+  "550": "useSwipeTransition is not yet supported in react-art.",
+  "551": "useSwipeTransition is not yet supported in React Native."
 }

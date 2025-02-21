@@ -9,7 +9,15 @@
  * @flow strict
  */
 
-import type {ElementRef, ElementType, MixedElement} from 'react';
+import type {
+  Component as ReactComponent,
+  ElementRef,
+  ElementType,
+  MixedElement,
+  RefSetter,
+} from 'react';
+// $FlowFixMe[nonstrict-import] TODO(@rubennorte)
+import {type PublicRootInstance} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -133,7 +141,7 @@ declare const ensureNativeMethodsAreSynced: NativeMethods;
 
 export type HostInstance = NativeMethods;
 export type HostComponent<Config: {...}> = component(
-  ref: React$RefSetter<HostInstance>,
+  ref: RefSetter<HostInstance>,
   ...Config
 );
 
@@ -162,18 +170,19 @@ export type InspectorData = $ReadOnly<{
   componentStack: string,
 }>;
 
-export type TouchedViewDataAtPoint = $ReadOnly<{
-  pointerY: number,
-  touchedViewTag?: number,
-  frame: $ReadOnly<{
-    top: number,
-    left: number,
-    width: number,
-    height: number,
-  }>,
-  closestPublicInstance?: PublicInstance,
-  ...InspectorData,
-}>;
+export type TouchedViewDataAtPoint = $ReadOnly<
+  {
+    pointerY: number,
+    touchedViewTag?: number,
+    frame: $ReadOnly<{
+      top: number,
+      left: number,
+      width: number,
+      height: number,
+    }>,
+    closestPublicInstance?: PublicInstance,
+  } & InspectorData,
+>;
 
 export type RenderRootOptions = {
   onUncaughtError?: (
@@ -185,7 +194,8 @@ export type RenderRootOptions = {
     errorInfo: {
       +componentStack?: ?string,
       // $FlowFixMe[unclear-type] unknown props and state.
-      +errorBoundary?: ?React$Component<any, any>,
+      // $FlowFixMe[value-as-type] Component in react repo is any-typed, but it will be well typed externally.
+      +errorBoundary?: ?ReactComponent<any, any>,
     },
   ) => void,
   onRecoverableError?: (
@@ -231,7 +241,6 @@ export opaque type Node = mixed;
 export opaque type InternalInstanceHandle = mixed;
 type PublicInstance = mixed;
 type PublicTextInstance = mixed;
-export opaque type PublicRootInstance = mixed;
 
 export type ReactFabricType = {
   findHostInstance_DEPRECATED<TElementType: ElementType>(
@@ -261,6 +270,7 @@ export type ReactFabricType = {
   getPublicInstanceFromInternalInstanceHandle(
     internalInstanceHandle: InternalInstanceHandle,
   ): PublicInstance | PublicTextInstance | null,
+  getPublicInstanceFromRootTag(rootTag: number): PublicRootInstance | null,
   ...
 };
 

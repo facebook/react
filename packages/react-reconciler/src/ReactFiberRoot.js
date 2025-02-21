@@ -33,6 +33,7 @@ import {
   enableUpdaterTracking,
   enableTransitionTracing,
   disableLegacyMode,
+  enableSwipeTransition,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
@@ -96,6 +97,10 @@ function FiberRootNode(
   }
 
   this.formState = formState;
+
+  if (enableSwipeTransition) {
+    this.gestures = null;
+  }
 
   this.incompleteTransitions = new Map();
   if (enableTransitionTracing) {

@@ -212,8 +212,8 @@ test.describe('Components', () => {
   });
 
   test('should allow searching for component by name', async () => {
-    async function getComponentSearchResultsCount() {
-      return await page.evaluate(() => {
+    async function waitForComponentSearchResultsCount(text) {
+      return await page.waitForFunction(expectedElementText => {
         const {createTestNameSelector, findAllNodes} =
           window.REACT_DOM_DEVTOOLS;
         const container = document.getElementById('devtools');
@@ -221,8 +221,10 @@ test.describe('Components', () => {
         const element = findAllNodes(container, [
           createTestNameSelector('ComponentSearchInput-ResultsCount'),
         ])[0];
-        return element.innerText;
-      });
+        return element !== undefined
+          ? element.innerText === expectedElementText
+          : false;
+      }, text);
     }
 
     async function focusComponentSearch() {
@@ -238,35 +240,27 @@ test.describe('Components', () => {
 
     await focusComponentSearch();
     await page.keyboard.insertText('List');
-    let count = await getComponentSearchResultsCount();
-    expect(count).toBe('1 | 4');
+    await waitForComponentSearchResultsCount('1 | 4');
 
     await page.keyboard.insertText('Item');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('1 | 3');
+    await waitForComponentSearchResultsCount('1 | 3');
 
     await page.keyboard.press('Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('2 | 3');
+    await waitForComponentSearchResultsCount('2 | 3');
 
     await page.keyboard.press('Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('3 | 3');
+    await waitForComponentSearchResultsCount('3 | 3');
 
     await page.keyboard.press('Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('1 | 3');
+    await waitForComponentSearchResultsCount('1 | 3');
 
     await page.keyboard.press('Shift+Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('3 | 3');
+    await waitForComponentSearchResultsCount('3 | 3');
 
     await page.keyboard.press('Shift+Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('2 | 3');
+    await waitForComponentSearchResultsCount('2 | 3');
 
     await page.keyboard.press('Shift+Enter');
-    count = await getComponentSearchResultsCount();
-    expect(count).toBe('1 | 3');
+    await waitForComponentSearchResultsCount('1 | 3');
   });
 });

@@ -206,6 +206,10 @@ export type LoggerEvent =
       kind: 'PipelineError';
       fnLoc: t.SourceLocation | null;
       data: string;
+    }
+  | {
+      kind: 'Timing';
+      measurement: PerformanceMeasure;
     };
 
 export type Logger = {

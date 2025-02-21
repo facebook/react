@@ -33,6 +33,18 @@ declare interface ConsoleTask {
   run<T>(f: () => T): T;
 }
 
+type ScrollTimelineOptions = {
+  source: Element,
+  axis?: 'block' | 'inline' | 'x' | 'y',
+  ...
+};
+
+declare class ScrollTimeline extends AnimationTimeline {
+  constructor(options?: ScrollTimelineOptions): void;
+  axis: 'block' | 'inline' | 'x' | 'y';
+  source: Element;
+}
+
 // Flow hides the props of React$Element, this overrides it to unhide
 // them for React internals.
 // prettier-ignore
@@ -109,6 +121,7 @@ declare var parcelRequire: {
   extendImportMap: (importMap: {[string]: string}) => void,
   meta: {
     publicUrl: string,
+    devServer: string | null,
   },
 };
 
