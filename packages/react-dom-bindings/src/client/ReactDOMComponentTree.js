@@ -45,6 +45,7 @@ const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
 const internalRootNodeResourcesKey = '__reactResources$' + randomKey;
 const internalHoistableMarker = '__reactMarker$' + randomKey;
+const internalScrollTimer = '__reactScroll$' + randomKey;
 
 export function detachDeletedInstance(node: Instance): void {
   // TODO: This function is only called on host components. I don't think all of
@@ -291,6 +292,18 @@ export function isMarkedHoistable(node: Node): boolean {
 
 export function markNodeAsHoistable(node: Node) {
   (node: any)[internalHoistableMarker] = true;
+}
+
+export function getScrollEndTimer(node: EventTarget): ?TimeoutID {
+  return (node: any)[internalScrollTimer];
+}
+
+export function setScrollEndTimer(node: EventTarget, timer: TimeoutID): void {
+  (node: any)[internalScrollTimer] = timer;
+}
+
+export function clearScrollEndTimer(node: EventTarget): void {
+  (node: any)[internalScrollTimer] = undefined;
 }
 
 export function isOwnedInstance(node: Node): boolean {
