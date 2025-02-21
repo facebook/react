@@ -100,6 +100,7 @@ import {
   resolveUpdatePriority,
   trackSchedulerEvent,
   startViewTransition,
+  startGestureTransition,
   createViewTransitionInstance,
 } from './ReactFiberConfig';
 
@@ -3874,27 +3875,20 @@ function commitGestureOnRoot(
   // TODO: Collect transition types.
   pendingTransitionTypes = null;
   pendingEffectsStatus = PENDING_GESTURE_MUTATION_PHASE;
-  const startedViewTransition =
-    enableViewTransition &&
-    shouldStartViewTransition &&
-    startViewTransition(
+
+  if (shouldStartViewTransition) {
+    startGestureTransition(
       root.containerInfo,
       pendingTransitionTypes,
       flushGestureMutations,
-      noop,
-      noop,
       flushGestureAnimations,
-      noop, // TODO: Release Transition lock
     );
-  if (!startedViewTransition) {
-    // Flush synchronously.
+  } else {
+    // Flush synchronously just to get through the state.
     flushGestureMutations();
     flushGestureAnimations();
   }
-  // TODO: Acquire Transition lock
 }
-
-function noop() {}
 
 function flushGestureMutations(): void {
   if (pendingEffectsStatus !== PENDING_GESTURE_MUTATION_PHASE) {

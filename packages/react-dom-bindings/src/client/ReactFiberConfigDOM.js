@@ -1394,7 +1394,10 @@ export function startViewTransition(
     transition.ready.then(spawnedWorkCallback, spawnedWorkCallback);
     transition.finished.then(() => {
       // $FlowFixMe[prop-missing]
-      ownerDocument.__reactViewTransition = null;
+      if (ownerDocument.__reactViewTransition === transition) {
+        // $FlowFixMe[prop-missing]
+        ownerDocument.__reactViewTransition = null;
+      }
       passiveCallback();
     });
     return true;
@@ -1407,6 +1410,70 @@ export function startViewTransition(
     // we're not animating with the wrong animation mapped.
     return false;
   }
+}
+
+export type RunningGestureTransition = {
+  skipTransition(): void,
+  ...
+};
+
+export function startGestureTransition(
+  rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  animateCallback: () => void,
+): null | RunningGestureTransition {
+  const ownerDocument: Document =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? (rootContainer: any)
+      : rootContainer.ownerDocument;
+  try {
+    // $FlowFixMe[prop-missing]
+    const transition = ownerDocument.startViewTransition({
+      update: mutationCallback,
+      types: transitionTypes,
+    });
+    // $FlowFixMe[prop-missing]
+    ownerDocument.__reactViewTransition = transition;
+    const readyCallback = () => {
+      // View Transitions with ScrollTimeline has a quirk where they end if the
+      // ScrollTimeline ever reaches 100% but that doesn't mean we're done because
+      // you can swipe back again. We can prevent this by adding a paused Animation
+      // that never stops. This seems to keep all running Animations alive until
+      // we explicitly abort (or something forces the View Transition to cancel).
+      const documentElement: Element = (ownerDocument.documentElement: any);
+      const blockingAnim = documentElement.animate([{}, {}], {
+        pseudoElement: '::view-transition',
+        duration: 1,
+      });
+      blockingAnim.pause();
+      animateCallback();
+    };
+    transition.ready.then(readyCallback, readyCallback);
+    transition.finished.then(() => {
+      // $FlowFixMe[prop-missing]
+      if (ownerDocument.__reactViewTransition === transition) {
+        // $FlowFixMe[prop-missing]
+        ownerDocument.__reactViewTransition = null;
+      }
+    });
+    return transition;
+  } catch (x) {
+    // We use the error as feature detection.
+    // The only thing that should throw is if startViewTransition is missing
+    // or if it doesn't accept the object form. Other errors are async.
+    // I.e. it's before the View Transitions v2 spec. We only support View
+    // Transitions v2 otherwise we fallback to not animating to ensure that
+    // we're not animating with the wrong animation mapped.
+    // Run through the sequence to put state back into a consistent state.
+    mutationCallback();
+    animateCallback();
+    return null;
+  }
+}
+
+export function stopGestureTransition(transition: RunningGestureTransition) {
+  transition.skipTransition();
 }
 
 interface ViewTransitionPseudoElementType extends Animatable {
