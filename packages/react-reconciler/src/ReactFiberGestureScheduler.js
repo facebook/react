@@ -35,7 +35,7 @@ export function scheduleGesture(
   rangeCurrent: number,
   rangeNext: number,
 ): ScheduledGesture {
-  let prev = root.gestures;
+  let prev = root.pendingGestures;
   while (prev !== null) {
     if (prev.provider === provider) {
       // Existing instance found.
@@ -59,16 +59,16 @@ export function scheduleGesture(
       }
       if (gesture.direction !== direction) {
         gesture.direction = direction;
-        if (gesture.prev === null && root.gestures !== gesture) {
+        if (gesture.prev === null && root.pendingGestures !== gesture) {
           // This gesture is not in the schedule, meaning it was already rendered.
           // We need to rerender in the new direction. Insert it into the first slot
           // in case other gestures are queued after the on-going one.
-          const existing = root.gestures;
+          const existing = root.pendingGestures;
           gesture.next = existing;
           if (existing !== null) {
             existing.prev = gesture;
           }
-          root.gestures = gesture;
+          root.pendingGestures = gesture;
           // Schedule the lane on the root. The Fibers will already be marked as
           // long as the gesture is active on that Hook.
           root.pendingLanes |= GestureLane;
@@ -90,7 +90,7 @@ export function scheduleGesture(
     next: null,
   };
   if (prev === null) {
-    root.gestures = gesture;
+    root.pendingGestures = gesture;
   } else {
     prev.next = gesture;
   }
@@ -118,9 +118,9 @@ export function deleteScheduledGesture(
   gesture: ScheduledGesture,
 ): void {
   if (gesture.prev === null) {
-    if (root.gestures === gesture) {
-      root.gestures = gesture.next;
-      if (root.gestures === null) {
+    if (root.pendingGestures === gesture) {
+      root.pendingGestures = gesture.next;
+      if (root.pendingGestures === null) {
         // Gestures don't clear their lanes while the gesture is still active but it
         // might not be scheduled to do any more renders and so we shouldn't schedule
         // any more gesture lane work until a new gesture is scheduled.

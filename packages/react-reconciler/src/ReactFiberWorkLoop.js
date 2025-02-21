@@ -3302,7 +3302,7 @@ function commitRoot(
   const concurrentlyUpdatedLanes = getConcurrentlyUpdatedLanes();
   remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
 
-  if (enableSwipeTransition && root.gestures === null) {
+  if (enableSwipeTransition && root.pendingGestures === null) {
     // Gestures don't clear their lanes while the gesture is still active but it
     // might not be scheduled to do any more renders and so we shouldn't schedule
     // any more gesture lane work until a new gesture is scheduled.
@@ -3847,7 +3847,7 @@ function commitGestureOnRoot(
   renderEndTime: number, // Profiling-only
 ): void {
   // We assume that the gesture we just rendered was the first one in the queue.
-  const finishedGesture = root.gestures;
+  const finishedGesture = root.pendingGestures;
   if (finishedGesture === null) {
     throw new Error(
       'Finished rendering the gesture lane but there were no pending gestures. ' +
