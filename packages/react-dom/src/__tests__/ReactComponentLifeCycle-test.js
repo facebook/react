@@ -1571,4 +1571,27 @@ Please update the following components: MyComponent`,
       });
     });
   });
+
+  it('should not throw error "Should not already be working" in Firefox after a breakpoint/alert', async () => {
+    class TestComponent extends React.Component {
+      state = { hasLaunched: false };
+
+      componentDidMount() {
+        this.setState({ hasLaunched: true });
+      }
+
+      render() {
+        return <div>{this.state.hasLaunched ? 'Launched' : 'Not Launched'}</div>;
+      }
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<TestComponent />);
+    });
+
+    expect(container.textContent).toBe('Launched');
+  });
 });
