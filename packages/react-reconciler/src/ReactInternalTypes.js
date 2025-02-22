@@ -285,6 +285,7 @@ type BaseFiberRootProperties = {
 
   // enableSwipeTransition only
   pendingGestures: null | ScheduledGesture,
+  stoppingGestures: null | ScheduledGesture,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.
