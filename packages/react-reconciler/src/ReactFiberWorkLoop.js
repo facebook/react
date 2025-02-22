@@ -349,7 +349,10 @@ import {
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
 import {peekEntangledActionLane} from './ReactFiberAsyncAction';
 import {logUncaughtError} from './ReactFiberErrorLogger';
-import {deleteScheduledGesture} from './ReactFiberGestureScheduler';
+import {
+  deleteScheduledGesture,
+  stopCompletedGestures,
+} from './ReactFiberGestureScheduler';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -1451,7 +1454,11 @@ function commitRootWhenReady(
     // components for the purposes of forming pairs.
     accumulateSuspenseyCommit(finishedWork);
     if (isViewTransitionEligible || isGestureTransition) {
-      suspendOnActiveViewTransition(root.containerInfo);
+      // If we're stopping gestures we don't have to wait for any pending
+      // view transition. We'll stop it when we commit.
+      if (!enableSwipeTransition || root.stoppingGestures === null) {
+        suspendOnActiveViewTransition(root.containerInfo);
+      }
     }
     // At the end, ask the renderer if it's ready to commit, or if we should
     // suspend. If it's not ready, it will return a callback to subscribe to
@@ -3274,6 +3281,12 @@ function commitRoot(
     if (enableSchedulingProfiler) {
       markCommitStopped();
     }
+    if (enableSwipeTransition) {
+      // Stop any gestures that were completed and is now being reverted.
+      if (root.stoppingGestures !== null) {
+        stopCompletedGestures(root);
+      }
+    }
     return;
   } else {
     if (__DEV__) {
@@ -3472,10 +3485,23 @@ function commitRoot(
       ReactSharedInternals.T = prevTransition;
     }
   }
+
+  let willStartViewTransition = shouldStartViewTransition;
+  if (enableSwipeTransition) {
+    // Stop any gestures that were completed and is now being committed.
+    if (root.stoppingGestures !== null) {
+      stopCompletedGestures(root);
+      // If we are in the process of stopping some gesture we shouldn't start
+      // a View Transition because that would start from the previous state to
+      // the next state.
+      willStartViewTransition = false;
+    }
+  }
+
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
   const startedViewTransition =
     enableViewTransition &&
-    shouldStartViewTransition &&
+    willStartViewTransition &&
     startViewTransition(
       root.containerInfo,
       pendingTransitionTypes,
@@ -3876,18 +3902,12 @@ function commitGestureOnRoot(
   pendingTransitionTypes = null;
   pendingEffectsStatus = PENDING_GESTURE_MUTATION_PHASE;
 
-  if (shouldStartViewTransition) {
-    startGestureTransition(
-      root.containerInfo,
-      pendingTransitionTypes,
-      flushGestureMutations,
-      flushGestureAnimations,
-    );
-  } else {
-    // Flush synchronously just to get through the state.
-    flushGestureMutations();
-    flushGestureAnimations();
-  }
+  finishedGesture.running = startGestureTransition(
+    root.containerInfo,
+    pendingTransitionTypes,
+    flushGestureMutations,
+    flushGestureAnimations,
+  );
 }
 
 function flushGestureMutations(): void {
