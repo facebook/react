@@ -1435,6 +1435,7 @@ export function startGestureTransition(
     });
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
+    let blockingAnim = null;
     const readyCallback = () => {
       // View Transitions with ScrollTimeline has a quirk where they end if the
       // ScrollTimeline ever reaches 100% but that doesn't mean we're done because
@@ -1442,7 +1443,7 @@ export function startGestureTransition(
       // that never stops. This seems to keep all running Animations alive until
       // we explicitly abort (or something forces the View Transition to cancel).
       const documentElement: Element = (ownerDocument.documentElement: any);
-      const blockingAnim = documentElement.animate([{}, {}], {
+      blockingAnim = documentElement.animate([{}, {}], {
         pseudoElement: '::view-transition',
         duration: 1,
       });
@@ -1451,6 +1452,10 @@ export function startGestureTransition(
     };
     transition.ready.then(readyCallback, readyCallback);
     transition.finished.then(() => {
+      if (blockingAnim !== null) {
+        // In Safari, we need to manually clear this or it'll block future transitions.
+        blockingAnim.cancel();
+      }
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
         // $FlowFixMe[prop-missing]
