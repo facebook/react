@@ -3937,6 +3937,9 @@ function flushGestureMutations(): void {
 }
 
 function flushGestureAnimations(): void {
+  // If we get canceled before we start we might not have applied
+  // mutations yet. We need to apply them first.
+  flushGestureMutations();
   if (pendingEffectsStatus !== PENDING_GESTURE_ANIMATION_PHASE) {
     return;
   }
