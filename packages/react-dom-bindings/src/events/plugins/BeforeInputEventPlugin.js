@@ -61,6 +61,7 @@ function registerEvents() {
     'keypress',
     'textInput',
     'paste',
+    'input',
   ]);
   registerTwoPhaseEvent('onCompositionEnd', [
     'compositionend',
@@ -295,6 +296,12 @@ function getNativeBeforeInputChars(
 
       return chars;
 
+    case 'input':
+      // Handle text replacement scenarios
+      if (nativeEvent.inputType === 'insertReplacementText') {
+        return nativeEvent.data;
+      }
+
     default:
       // For other native event types, do nothing.
       return null;
@@ -367,6 +374,11 @@ function getFallbackBeforeInputChars(
       return useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)
         ? null
         : nativeEvent.data;
+    case 'input':
+      // Handle text replacement scenarios
+      if (nativeEvent.inputType === 'insertReplacementText') {
+        return nativeEvent.data;
+      }
     default:
       return null;
   }
