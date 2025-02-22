@@ -1,3 +1,4 @@
+import type {Linter} from 'eslint';
 import * as reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
@@ -18,4 +19,4 @@ export default [
       'react-hooks/exhaustive-deps': 'error',
     },
   },
-];
+] satisfies Linter.Config[];

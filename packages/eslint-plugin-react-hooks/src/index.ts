@@ -29,7 +29,7 @@ const recommendedConfig = {
     },
   },
   rules: configRules,
-} satisfies Linter.FlatConfig;
+};
 
 // Plugin object
 const plugin = {
