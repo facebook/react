@@ -9,6 +9,11 @@
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 
+import {
+  cancelRootViewTransitionName,
+  restoreRootViewTransitionName,
+} from './ReactFiberConfig';
+
 // Apply mutations to enter the destination state of a gesture render.
 // These will be reverted in later phases.
 export function applyDestinationMutations(
@@ -42,6 +47,7 @@ export function applyDepartureTransitions(
   finishedWork: Fiber,
 ): void {
   // TODO
+  cancelRootViewTransitionName(root.containerInfo);
 }
 
 // Revert transition names and start/adjust animations on the started View Transition.
@@ -50,4 +56,5 @@ export function startGestureAnimations(
   finishedWork: Fiber,
 ): void {
   // TODO
+  restoreRootViewTransitionName(root.containerInfo);
 }
