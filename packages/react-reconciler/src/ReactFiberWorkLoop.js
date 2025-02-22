@@ -3875,10 +3875,10 @@ function commitGestureOnRoot(
   // We assume that the gesture we just rendered was the first one in the queue.
   const finishedGesture = root.pendingGestures;
   if (finishedGesture === null) {
-    throw new Error(
-      'Finished rendering the gesture lane but there were no pending gestures. ' +
-        'React should not have started a render in this case. This is a bug in React.',
-    );
+    // We must have already cancelled this gesture before we had a chance to
+    // render it. Let's schedule work on the next set of lanes.
+    ensureRootIsScheduled(root);
+    return;
   }
   deleteScheduledGesture(root, finishedGesture);
 
@@ -3961,6 +3961,9 @@ function flushGestureAnimations(): void {
     setCurrentUpdatePriority(previousPriority);
     ReactSharedInternals.T = prevTransition;
   }
+
+  // Now that we've rendered this lane. Start working on the next lane.
+  ensureRootIsScheduled(root);
 }
 
 function makeErrorInfo(componentStack: ?string) {
