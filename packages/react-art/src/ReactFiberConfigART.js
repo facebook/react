@@ -500,6 +500,12 @@ export function startViewTransition() {
   return false;
 }
 
+export type RunningGestureTransition = null;
+
+export function startGestureTransition() {}
+
+export function stopGestureTransition(transition: RunningGestureTransition) {}
+
 export type ViewTransitionInstance = null | {name: string, ...};
 
 export function createViewTransitionInstance(

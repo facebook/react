@@ -93,6 +93,8 @@ export type TransitionStatus = mixed;
 
 export type FormInstance = Instance;
 
+export type RunningGestureTransition = null;
+
 export type ViewTransitionInstance = null | {name: string, ...};
 
 export type GestureTimeline = null;
@@ -791,6 +793,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         ): boolean {
           return false;
         },
+
+        startGestureTransition(
+          rootContainer: Container,
+          transitionTypes: null | TransitionTypes,
+          mutationCallback: () => void,
+          animateCallback: () => void,
+        ): RunningGestureTransition {
+          mutationCallback();
+          animateCallback();
+          return null;
+        },
+
+        stopGestureTransition(transition: RunningGestureTransition) {},
 
         createViewTransitionInstance(name: string): ViewTransitionInstance {
           return null;

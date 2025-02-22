@@ -74,6 +74,7 @@ export const enableViewTransition = false;
 export const enableSwipeTransition = false;
 export const enableFastAddPropertiesInDiffing = true;
 export const enableLazyPublicInstanceInFabric = false;
+export const enableScrollEndPolyfill = true;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the

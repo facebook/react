@@ -597,6 +597,21 @@ export function startViewTransition(
   return false;
 }
 
+export type RunningGestureTransition = null;
+
+export function startGestureTransition(
+  rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  animateCallback: () => void,
+): RunningGestureTransition {
+  mutationCallback();
+  animateCallback();
+  return null;
+}
+
+export function stopGestureTransition(transition: RunningGestureTransition) {}
+
 export type ViewTransitionInstance = null | {name: string, ...};
 
 export function createViewTransitionInstance(
