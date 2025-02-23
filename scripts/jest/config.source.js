@@ -3,10 +3,6 @@
 const baseConfig = require('./config.base');
 
 module.exports = Object.assign({}, baseConfig, {
-  moduleNameMapper: {
-    '^babel-plugin-react-compiler$':
-      '<rootDir>/compiler/packages/babel-plugin-react-compiler/src/index.ts',
-  },
   modulePathIgnorePatterns: [
     ...baseConfig.modulePathIgnorePatterns,
     'packages/react-devtools-extensions',
