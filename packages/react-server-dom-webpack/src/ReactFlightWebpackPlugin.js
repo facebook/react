@@ -42,7 +42,8 @@ class ClientReferenceDependency extends ModuleDependency {
 // without the client runtime so it's the first time in the loading sequence
 // you might want them.
 const clientImportName = 'react-server-dom-webpack/client';
-const clientFileName = require.resolve('../client.browser.js');
+const clientFileNameOnClient = require.resolve('../client.browser.js');
+const clientFileNameOnServer = require.resolve('../client.node.js');
 
 type ClientReferenceSearchPath = {
   directory: string,
@@ -68,15 +69,13 @@ export default class ReactFlightWebpackPlugin {
   chunkName: string;
   clientManifestFilename: string;
   serverConsumerManifestFilename: string;
+  isServer: boolean;
 
   constructor(options: Options) {
     if (!options || typeof options.isServer !== 'boolean') {
       throw new Error(
         PLUGIN_NAME + ': You must specify the isServer option as a boolean.',
       );
-    }
-    if (options.isServer) {
-      throw new Error('TODO: Implement the server compiler.');
     }
     if (!options.clientReferences) {
       this.clientReferences = [
@@ -103,8 +102,12 @@ export default class ReactFlightWebpackPlugin {
     } else {
       this.chunkName = 'client[index]';
     }
+    this.isServer = options.isServer;
+    const defaultClientManifestFilename = options.isServer
+      ? 'react-server-client-manifest.json'
+      : 'react-client-manifest.json';
     this.clientManifestFilename =
-      options.clientManifestFilename || 'react-client-manifest.json';
+      options.clientManifestFilename || defaultClientManifestFilename;
     this.serverConsumerManifestFilename =
       options.serverConsumerManifestFilename || 'react-ssr-manifest.json';
   }
@@ -162,6 +165,9 @@ export default class ReactFlightWebpackPlugin {
           parser.hooks.program.tap(PLUGIN_NAME, () => {
             const module = parser.state.module;
 
+            const clientFileName = _this.isServer
+              ? clientFileNameOnServer
+              : clientFileNameOnClient;
             if (module.resource !== clientFileName) {
               return;
             }
@@ -236,27 +242,23 @@ export default class ReactFlightWebpackPlugin {
             (resolvedClientReferences || []).map(ref => ref.request),
           );
 
-          const clientManifest: {
+          type FilePathToModuleMetadata = {
             [string]: ImportManifestEntry,
-          } = {};
-          type ServerConsumerModuleMap = {
-            [string]: {
-              [string]: {specifier: string, name: string},
-            },
           };
-          const moduleMap: ServerConsumerModuleMap = {};
-          const ssrBundleConfig: {
+          type BundleManifest = {
             moduleLoading: {
               prefix: string,
               crossOrigin: string | null,
             },
-            moduleMap: ServerConsumerModuleMap,
-          } = {
+            filePathToModuleMetadata: FilePathToModuleMetadata,
+          };
+          const filePathToModuleMetadata: FilePathToModuleMetadata = {};
+          const bundleManifest: BundleManifest = {
             moduleLoading: {
               prefix: compilation.outputOptions.publicPath || '',
               crossOrigin: crossOriginMode,
             },
-            moduleMap,
+            filePathToModuleMetadata,
           };
 
           // We figure out which files are always loaded by any initial chunk (entrypoint).
@@ -296,56 +298,11 @@ export default class ReactFlightWebpackPlugin {
               const href = pathToFileURL(module.resource).href;
 
               if (href !== undefined) {
-                const ssrExports: {
-                  [string]: {specifier: string, name: string},
-                } = {};
-
-                clientManifest[href] = {
+                filePathToModuleMetadata[href] = {
                   id,
                   chunks,
                   name: '*',
                 };
-                ssrExports['*'] = {
-                  specifier: href,
-                  name: '*',
-                };
-
-                // TODO: If this module ends up split into multiple modules, then
-                // we should encode each the chunks needed for the specific export.
-                // When the module isn't split, it doesn't matter and we can just
-                // encode the id of the whole module. This code doesn't currently
-                // deal with module splitting so is likely broken from ESM anyway.
-                /*
-                clientManifest[href + '#'] = {
-                  id,
-                  chunks,
-                  name: '',
-                };
-                ssrExports[''] = {
-                  specifier: href,
-                  name: '',
-                };
-
-                const moduleProvidedExports = compilation.moduleGraph
-                  .getExportsInfo(module)
-                  .getProvidedExports();
-
-                if (Array.isArray(moduleProvidedExports)) {
-                  moduleProvidedExports.forEach(function (name) {
-                    clientManifest[href + '#' + name] = {
-                      id,
-                      chunks,
-                      name: name,
-                    };
-                    ssrExports[name] = {
-                      specifier: href,
-                      name: name,
-                    };
-                  });
-                }
-                */
-
-                moduleMap[id] = ssrExports;
               }
             }
 
@@ -367,15 +324,10 @@ export default class ReactFlightWebpackPlugin {
             });
           });
 
-          const clientOutput = JSON.stringify(clientManifest, null, 2);
+          const bundleOutput = JSON.stringify(bundleManifest, null, 2);
           compilation.emitAsset(
             _this.clientManifestFilename,
-            new sources.RawSource(clientOutput, false),
-          );
-          const ssrOutput = JSON.stringify(ssrBundleConfig, null, 2);
-          compilation.emitAsset(
-            _this.serverConsumerManifestFilename,
-            new sources.RawSource(ssrOutput, false),
+            new sources.RawSource(bundleOutput, false),
           );
         },
       );
