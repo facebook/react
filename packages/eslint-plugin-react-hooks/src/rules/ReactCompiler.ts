@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+/* eslint-disable no-for-of-loops/no-for-of-loops */
 
 import {transformFromAstSync} from '@babel/core';
 // @ts-expect-error: no types available
@@ -51,7 +52,7 @@ function isReportableDiagnostic(
 function makeSuggestions(
   detail: CompilerErrorDetailOptions,
 ): Array<Rule.SuggestionReportDescriptor> {
-  let suggest: Array<Rule.SuggestionReportDescriptor> = [];
+  const suggest: Array<Rule.SuggestionReportDescriptor> = [];
   if (Array.isArray(detail.suggestions)) {
     for (const suggestion of detail.suggestions) {
       switch (suggestion.op) {
@@ -126,10 +127,10 @@ const rule: Rule.RuleModule = {
     const filename = context.filename ?? context.getFilename();
     const userOpts = context.options[0] ?? {};
     if (
-      userOpts['reportableLevels'] != null &&
-      userOpts['reportableLevels'] instanceof Set
+      userOpts.reportableLevels != null &&
+      userOpts.reportableLevels instanceof Set
     ) {
-      reportableLevels = userOpts['reportableLevels'];
+      reportableLevels = userOpts.reportableLevels;
     } else {
       reportableLevels = DEFAULT_REPORTABLE_LEVELS;
     }
@@ -142,11 +143,11 @@ const rule: Rule.RuleModule = {
      */
     let __unstable_donotuse_reportAllBailouts: boolean = false;
     if (
-      userOpts['__unstable_donotuse_reportAllBailouts'] != null &&
-      typeof userOpts['__unstable_donotuse_reportAllBailouts'] === 'boolean'
+      userOpts.__unstable_donotuse_reportAllBailouts != null &&
+      typeof userOpts.__unstable_donotuse_reportAllBailouts === 'boolean'
     ) {
       __unstable_donotuse_reportAllBailouts =
-        userOpts['__unstable_donotuse_reportAllBailouts'];
+        userOpts.__unstable_donotuse_reportAllBailouts;
     }
 
     let shouldReportUnusedOptOutDirective = true;
@@ -156,8 +157,8 @@ const rule: Rule.RuleModule = {
     };
     const userLogger: Logger | null = options.logger;
     options.logger = {
-      logEvent: (filename, event): void => {
-        userLogger?.logEvent(filename, event);
+      logEvent: (eventFilename, event): void => {
+        userLogger?.logEvent(eventFilename, event);
         if (event.kind === 'CompileError') {
           shouldReportUnusedOptOutDirective = false;
           const detail = event.detail;
@@ -209,7 +210,7 @@ const rule: Rule.RuleModule = {
             return;
           }
           const loc =
-            detail.loc == null || typeof detail.loc == 'symbol'
+            detail.loc == null || typeof detail.loc === 'symbol'
               ? event.fnLoc
               : detail.loc;
           if (loc != null) {
