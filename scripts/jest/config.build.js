@@ -32,7 +32,7 @@ const packages = readdirSync(packagesRoot).filter(dir => {
 });
 
 // Create a module map to point React packages to the build output
-const moduleNameMapper = {...baseConfig.moduleNameMapper};
+const moduleNameMapper = {};
 
 // Allow bundle tests to read (but not write!) default feature flags.
 // This lets us determine whether we're running in different modes
@@ -53,8 +53,6 @@ moduleNameMapper['use-sync-external-store/shim/with-selector'] =
   `<rootDir>/build/${NODE_MODULES_DIR}/use-sync-external-store/shim/with-selector`;
 moduleNameMapper['use-sync-external-store/shim/index.native'] =
   `<rootDir>/build/${NODE_MODULES_DIR}/use-sync-external-store/shim/index.native`;
-moduleNameMapper['^babel-plugin-react-compiler$'] =
-  '<rootDir>/compiler/packages/babel-plugin-react-compiler/src/index.ts';
 
 module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles

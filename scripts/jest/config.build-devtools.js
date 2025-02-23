@@ -56,7 +56,6 @@ moduleNameMapper['^react-reconciler/([^/]+)$'] =
 module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles
   moduleNameMapper: {
-    ...baseConfig.moduleNameMapper,
     ...devtoolsRegressionConfig.moduleNameMapper,
     ...moduleNameMapper,
   },
