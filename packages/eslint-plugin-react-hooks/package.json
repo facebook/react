@@ -21,7 +21,6 @@
     "react"
   ],
   "scripts": {
-    "dependencies": "cd ../../compiler/packages/babel-plugin-react-compiler && yarn && yarn tsc -b",
     "test": "jest",
     "typecheck": "tsc --noEmit"
   },
