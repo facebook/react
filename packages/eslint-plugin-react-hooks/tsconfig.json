@@ -12,5 +12,10 @@
       "babel-plugin-react-compiler": ["../../compiler/packages/babel-plugin-react-compiler/src/index.ts"]
     }
   },
-  "include": ["src/**/*.ts", "__tests__/**/*.ts"]
+  "include": ["src/**/*.ts", "__tests__/**/*.ts"],
+  "references": [
+    {
+      "path": "../../compiler/packages/babel-plugin-react-compiler/tsconfig.json"
+    }
+  ]
 }

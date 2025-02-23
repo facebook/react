@@ -10,7 +10,6 @@ import {RuleTester as ESLintTester} from 'eslint';
 import ReactCompilerRule from '../src/rules/ReactCompiler';
 
 const ESLintTesterV8 = require('eslint-v8').RuleTester;
-const ESLintTesterV9 = require('eslint-v9').RuleTester;
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
