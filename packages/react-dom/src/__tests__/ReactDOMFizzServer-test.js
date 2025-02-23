@@ -10331,4 +10331,49 @@ describe('ReactDOMFizzServer', () => {
       </html>,
     );
   });
+
+  it('can render styles with nonce', async () => {
+    CSPnonce = 'R4nd0m';
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce={CSPnonce}>{`.foo { color: hotpink; }`}</style>
+          <style
+            href="bar"
+            precedence="default"
+            nonce={CSPnonce}>{`.bar { background-color: blue; }`}</style>
+        </>,
+      );
+      pipe(writable);
+    });
+    expect(document.querySelector('style').nonce).toBe(
+      CSPnonce,
+    );
+  });
+
+  // @gate __DEV__
+  it('warns when it encounters a mismatched nonce on a style', async () => {
+    CSPnonce = 'R4nd0m';
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <style
+            href="foo"
+            precedence="default"
+            nonce={CSPnonce}>{`.foo { color: hotpink; }`}</style>
+          <style
+            href="bar"
+            precedence="default"
+            nonce={`${CSPnonce}${CSPnonce}`}>{`.bar { background-color: blue; }`}</style>
+        </>,
+      );
+      pipe(writable);
+    });
+    assertConsoleErrorDev([
+      'React encountered a hoistable style tag with "R4nd0mR4nd0m" nonce. It doesn\'t match the previously encountered nonce "R4nd0m". They have to be the same',
+    ]);
+  });
 });
