@@ -448,12 +448,12 @@ export function createViewTransitionInstance(
 }
 
 export type FragmentInstance = null | {
-  _fragmentFiber: any,
+  _fragmentFiber: Object,
   ...
 };
 
 export function createFragmentInstance(
-  parentInstance: Instance | Container,
+  fragmentFiber: Object,
 ): FragmentInstance {
   return null;
 }

@@ -45,7 +45,7 @@ export type ViewTransitionInstance = null | {name: string, ...};
 export opaque type InstanceMeasurement = mixed;
 export type EventResponder = any;
 export type GestureTimeline = any;
-export type FragmentInstance = null | {_fragmentFiber: any, ...};
+export type FragmentInstance = null | {_fragmentFiber: Object, ...};
 
 export const rendererVersion = $$$config.rendererVersion;
 export const rendererPackageName = $$$config.rendererPackageName;

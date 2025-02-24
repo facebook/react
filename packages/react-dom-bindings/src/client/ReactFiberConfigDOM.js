@@ -2124,22 +2124,25 @@ FragmentInstancePseudoElement.prototype.addEventListener = function (
   if (!this._eventListeners) {
     this._eventListeners = [];
   }
+
+  const listeners = this._eventListeners;
   // Element.addEventListener will only apply uniquely new event listeners by default. Since we
   // need to collect the listeners to apply to appended children, we track them ourselves and use
   // custom equality check for the options.
   const isNewEventListener =
-    indexOfEventListener(this._eventListeners, {
+    indexOfEventListener(listeners, {
       type,
       listener,
       optionsOrUseCapture,
     }) === -1;
-  if (isNewEventListener && this._eventListeners !== undefined) {
-    this._eventListeners.push({type, listener, optionsOrUseCapture});
+  if (isNewEventListener) {
+    listeners.push({type, listener, optionsOrUseCapture});
     const children = getFragmentInstanceChildren(this);
     children.forEach(child => {
       child.addEventListener(type, listener, optionsOrUseCapture);
     });
   }
+  this._eventListeners = listeners;
 };
 // $FlowFixMe[prop-missing]
 FragmentInstancePseudoElement.prototype.removeEventListener = function (
@@ -2148,18 +2151,21 @@ FragmentInstancePseudoElement.prototype.removeEventListener = function (
   listener: EventListener,
   optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
 ): void {
-  if (Array.isArray(this._eventListeners) && this._eventListeners.length > 0) {
-    const children = getFragmentInstanceChildren(this);
-    children.forEach(child => {
-      child.removeEventListener(type, listener, optionsOrUseCapture);
-    });
-    const index = indexOfEventListener(this._eventListeners || [], {
-      type,
-      listener,
-      optionsOrUseCapture,
-    });
-    this._eventListeners = (this._eventListeners || []).splice(index, 1);
+  const listeners = this._eventListeners;
+  if (listeners === undefined || listeners.length === 0) {
+    return;
   }
+
+  const children = getFragmentInstanceChildren(this);
+  children.forEach(child => {
+    child.removeEventListener(type, listener, optionsOrUseCapture);
+  });
+  const index = indexOfEventListener(listeners, {
+    type,
+    listener,
+    optionsOrUseCapture,
+  });
+  this._eventListeners = listeners.splice(index, 1);
 };
 // $FlowFixMe[prop-missing]
 FragmentInstancePseudoElement.prototype.focus = function (

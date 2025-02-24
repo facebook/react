@@ -319,7 +319,7 @@ export function cloneMutableTextInstance(textInstance) {
 }
 
 export type FragmentInstance = null | {
-  _fragmentFiber: any,
+  _fragmentFiber: Object,
   ...
 };
 
