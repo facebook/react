@@ -13,11 +13,13 @@ let React;
 let ReactDOMClient;
 let act;
 let container;
+let Activity;
 
 describe('FragmentRefs', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    Activity = React.unstable_Activity;
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
     container = document.createElement('div');
@@ -416,6 +418,133 @@ describe('FragmentRefs', () => {
       expect(logs).toEqual(['Host A']);
       nestedChildRef.current.click();
       expect(logs).toEqual(['Host A', 'Host B']);
+    });
+
+    describe('with activity', () => {
+      // @gate enableFragmentRefs && enableActivity
+      it('does not apply event listeners to hidden trees', async () => {
+        const parentRef = React.createRef();
+        const fragmentRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+
+        function Test() {
+          return (
+            <div ref={parentRef}>
+              <React.Fragment ref={fragmentRef}>
+                <div>Child 1</div>
+                <Activity mode="hidden">
+                  <div>Child 2</div>
+                </Activity>
+                <div>Child 3</div>
+              </React.Fragment>
+            </div>
+          );
+        }
+
+        await act(() => {
+          root.render(<Test />);
+        });
+
+        const logs = [];
+        fragmentRef.current.addEventListener('click', e => {
+          logs.push(e.target.textContent);
+        });
+
+        const [child1, child2, child3] = parentRef.current.children;
+        child1.click();
+        child2.click();
+        child3.click();
+        expect(logs).toEqual(['Child 1', 'Child 3']);
+      });
+
+      // @gate enableFragmentRefs && enableActivity
+      it('applies event listeners to visible trees', async () => {
+        const parentRef = React.createRef();
+        const fragmentRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+
+        function Test() {
+          return (
+            <div ref={parentRef}>
+              <React.Fragment ref={fragmentRef}>
+                <div>Child 1</div>
+                <Activity mode="visible">
+                  <div>Child 2</div>
+                </Activity>
+                <div>Child 3</div>
+              </React.Fragment>
+            </div>
+          );
+        }
+
+        await act(() => {
+          root.render(<Test />);
+        });
+
+        const logs = [];
+        fragmentRef.current.addEventListener('click', e => {
+          logs.push(e.target.textContent);
+        });
+
+        const [child1, child2, child3] = parentRef.current.children;
+        child1.click();
+        child2.click();
+        child3.click();
+        expect(logs).toEqual(['Child 1', 'Child 2', 'Child 3']);
+      });
+
+      // @gate enableFragmentRefs && enableActivity
+      it('handles Activity modes switching', async () => {
+        const fragmentRef = React.createRef();
+        const fragmentRef2 = React.createRef();
+        const parentRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+
+        function Test({mode}) {
+          return (
+            <div id="parent" ref={parentRef}>
+              <React.Fragment ref={fragmentRef}>
+                <Activity mode={mode}>
+                  <div id="child1">Child</div>
+                  <React.Fragment ref={fragmentRef2}>
+                    <div id="child2">Child 2</div>
+                  </React.Fragment>
+                </Activity>
+              </React.Fragment>
+            </div>
+          );
+        }
+
+        await act(() => {
+          root.render(<Test mode="visible" />);
+        });
+
+        let logs = [];
+        fragmentRef.current.addEventListener('click', () => {
+          logs.push('clicked 1');
+        });
+        fragmentRef2.current.addEventListener('click', () => {
+          logs.push('clicked 2');
+        });
+        parentRef.current.lastChild.click();
+        expect(logs).toEqual(['clicked 1', 'clicked 2']);
+
+        logs = [];
+        await act(() => {
+          root.render(<Test mode="hidden" />);
+        });
+        parentRef.current.firstChild.click();
+        parentRef.current.lastChild.click();
+        expect(logs).toEqual([]);
+
+        logs = [];
+        await act(() => {
+          root.render(<Test mode="visible" />);
+        });
+        parentRef.current.lastChild.click();
+        // Event order is flipped here because the nested child re-registers first
+        expect(logs).toEqual(['clicked 2', 'clicked 1']);
+      });
     });
   });
 });

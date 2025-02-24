@@ -2127,22 +2127,7 @@ function commitDeletionEffectsOnFiber(
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
       }
-
-      if (enableFragmentRefs) {
-        const parentFragmentInstances =
-          getFragmentInstanceParents(deletedFiber);
-        if (parentFragmentInstances !== null) {
-          const element = getPublicInstance(deletedFiber.stateNode);
-          if (element !== null) {
-            for (let i = 0; i < parentFragmentInstances.length; i++) {
-              deleteChildFromFragmentInstance(
-                element,
-                parentFragmentInstances[i],
-              );
-            }
-          }
-        }
-      }
+      commitFragmentInstanceDeletionEffects(deletedFiber);
       // Intentional fallthrough to next branch
     }
     case HostText: {
@@ -3160,16 +3145,7 @@ function commitReconciliationEffects(
   const flags = finishedWork.flags;
   if (flags & Placement) {
     commitHostPlacement(finishedWork);
-    // After placement
-    if (enableFragmentRefs && finishedWork.tag === HostComponent) {
-      const parentFragmentInstances = getFragmentInstanceParents(finishedWork);
-      if (parentFragmentInstances !== null) {
-        for (let i = 0; i < parentFragmentInstances.length; i++) {
-          const instance = parentFragmentInstances[i];
-          commitNewChildToFragmentInstance(finishedWork.stateNode, instance);
-        }
-      }
-    }
+    commitFragmentInstanceInsertionEffects(finishedWork);
     // Clear the "placement" from effect tag so that we know that this is
     // inserted, before any life-cycles like componentDidMount gets called.
     // TODO: findDOMNode doesn't rely on this any more but isMounted does
@@ -3447,6 +3423,8 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
 
+      commitFragmentInstanceDeletionEffects(finishedWork);
+
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
       break;
     }
@@ -3574,6 +3552,7 @@ export function reappearLayoutEffects(
     }
     case HostHoistable:
     case HostComponent: {
+      commitFragmentInstanceInsertionEffects(finishedWork);
       recursivelyTraverseReappearLayoutEffects(
         finishedRoot,
         finishedWork,
@@ -3818,6 +3797,32 @@ function commitOffscreenPassiveMountEffects(
     if (!isHidden) {
       instance._transitions = null;
       instance._pendingMarkers = null;
+    }
+  }
+}
+
+function commitFragmentInstanceInsertionEffects(finishedWork: Fiber): void {
+  if (enableFragmentRefs && finishedWork.tag === HostComponent) {
+    const parentFragmentInstances = getFragmentInstanceParents(finishedWork);
+    if (parentFragmentInstances !== null) {
+      for (let i = 0; i < parentFragmentInstances.length; i++) {
+        const instance = parentFragmentInstances[i];
+        commitNewChildToFragmentInstance(finishedWork.stateNode, instance);
+      }
+    }
+  }
+}
+
+function commitFragmentInstanceDeletionEffects(finishedWork: Fiber): void {
+  if (enableFragmentRefs && finishedWork.tag === HostComponent) {
+    const parentFragmentInstances = getFragmentInstanceParents(finishedWork);
+    if (parentFragmentInstances !== null) {
+      const element = getPublicInstance(finishedWork.stateNode);
+      if (element !== null) {
+        for (let i = 0; i < parentFragmentInstances.length; i++) {
+          deleteChildFromFragmentInstance(element, parentFragmentInstances[i]);
+        }
+      }
     }
   }
 }
