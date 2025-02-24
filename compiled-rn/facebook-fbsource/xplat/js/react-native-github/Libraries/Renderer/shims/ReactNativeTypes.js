@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<de5df78e34b3d51e1cc9efbc4e79c1d8>>
+ * @generated SignedSource<<5c76b092e0c981f96ca894e381ee593b>>
  */
 
 import type {
@@ -15,33 +15,17 @@ import type {
   ElementRef,
   ElementType,
   MixedElement,
-  RefSetter,
 } from 'react';
-// $FlowFixMe[nonstrict-import] TODO(@rubennorte)
-import {type PublicRootInstance} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
-
-export type MeasureOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  pageX: number,
-  pageY: number,
-) => void;
-
-export type MeasureInWindowOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) => void;
-
-export type MeasureLayoutOnSuccessCallback = (
-  left: number,
-  top: number,
-  width: number,
-  height: number,
-) => void;
+import type {
+  // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
+  MeasureOnSuccessCallback,
+  // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
+  PublicInstance,
+  // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
+  PublicRootInstance,
+  // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
+  PublicTextInstance,
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 export type AttributeType<T, V> =
   | true
@@ -106,45 +90,6 @@ export type PartialViewConfig = $ReadOnly<{
   uiViewClassName: string,
   validAttributes?: PartialAttributeConfiguration,
 }>;
-
-/**
- * Current usages should migrate to this definition
- */
-export interface INativeMethods {
-  blur(): void;
-  focus(): void;
-  measure(callback: MeasureOnSuccessCallback): void;
-  measureInWindow(callback: MeasureInWindowOnSuccessCallback): void;
-  measureLayout(
-    relativeToNativeNode: number | HostInstance,
-    onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail?: () => void,
-  ): void;
-  setNativeProps(nativeProps: {...}): void;
-}
-
-export type NativeMethods = $ReadOnly<{
-  blur(): void,
-  focus(): void,
-  measure(callback: MeasureOnSuccessCallback): void,
-  measureInWindow(callback: MeasureInWindowOnSuccessCallback): void,
-  measureLayout(
-    relativeToNativeNode: number | HostInstance,
-    onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail?: () => void,
-  ): void,
-  setNativeProps(nativeProps: {...}): void,
-}>;
-
-// This validates that INativeMethods and NativeMethods stay in sync using Flow!
-declare const ensureNativeMethodsAreSynced: NativeMethods;
-(ensureNativeMethodsAreSynced: INativeMethods);
-
-export type HostInstance = NativeMethods;
-export type HostComponent<Config: {...}> = component(
-  ref: RefSetter<HostInstance>,
-  ...Config
-);
 
 type InspectorDataProps = $ReadOnly<{
   [propName: string]: string,
@@ -212,20 +157,17 @@ export type RenderRootOptions = {
 export type ReactNativeType = {
   findHostInstance_DEPRECATED<TElementType: ElementType>(
     componentOrHandle: ?(ElementRef<TElementType> | number),
-  ): ?HostInstance,
+  ): ?PublicInstance,
   findNodeHandle<TElementType: ElementType>(
     componentOrHandle: ?(ElementRef<TElementType> | number),
   ): ?number,
-  isChildPublicInstance(
-    parent: PublicInstance | HostComponent<empty>,
-    child: PublicInstance | HostComponent<empty>,
-  ): boolean,
+  isChildPublicInstance(parent: PublicInstance, child: PublicInstance): boolean,
   dispatchCommand(
-    handle: HostInstance,
+    handle: PublicInstance,
     command: string,
     args: Array<mixed>,
   ): void,
-  sendAccessibilityEvent(handle: HostInstance, eventType: string): void,
+  sendAccessibilityEvent(handle: PublicInstance, eventType: string): void,
   render(
     element: MixedElement,
     containerTag: number,
@@ -240,23 +182,21 @@ export type ReactNativeType = {
 
 export opaque type Node = mixed;
 export opaque type InternalInstanceHandle = mixed;
-type PublicInstance = mixed;
-type PublicTextInstance = mixed;
 
 export type ReactFabricType = {
   findHostInstance_DEPRECATED<TElementType: ElementType>(
     componentOrHandle: ?(ElementRef<TElementType> | number),
-  ): ?HostInstance,
+  ): ?PublicInstance,
   findNodeHandle<TElementType: ElementType>(
     componentOrHandle: ?(ElementRef<TElementType> | number),
   ): ?number,
   dispatchCommand(
-    handle: HostInstance,
+    handle: PublicInstance,
     command: string,
     args: Array<mixed>,
   ): void,
   isChildPublicInstance(parent: PublicInstance, child: PublicInstance): boolean,
-  sendAccessibilityEvent(handle: HostInstance, eventType: string): void,
+  sendAccessibilityEvent(handle: PublicInstance, eventType: string): void,
   render(
     element: MixedElement,
     containerTag: number,
