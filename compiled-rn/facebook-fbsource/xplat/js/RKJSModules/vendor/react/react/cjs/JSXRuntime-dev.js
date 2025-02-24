@@ -7,33 +7,12 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<45a53c3de242ab8809be163fe351b6fc>>
+ * @generated SignedSource<<f7d0577532e40fce31ecf0da324326f8>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function error(format) {
-      for (
-        var _len2 = arguments.length,
-          args = Array(1 < _len2 ? _len2 - 1 : 0),
-          _key2 = 1;
-        _key2 < _len2;
-        _key2++
-      )
-        args[_key2 - 1] = arguments[_key2];
-      if (enableRemoveConsolePatches) {
-        var _console2;
-        (_console2 = console).error.apply(_console2, [format].concat(args));
-      } else
-        (_len2 = format),
-          enableRemoveConsolePatches ||
-            (ReactSharedInternals.getCurrentStack &&
-              ((_key2 = ReactSharedInternals.getCurrentStack()),
-              "" !== _key2 && ((_len2 += "%s"), (args = args.concat([_key2])))),
-            args.unshift(_len2),
-            Function.prototype.apply.call(console.error, console, args));
-    }
     function getComponentNameFromType(type) {
       if (null == type) return null;
       if ("function" === typeof type)
@@ -58,7 +37,7 @@ __DEV__ &&
       if ("object" === typeof type)
         switch (
           ("number" === typeof type.tag &&
-            error(
+            console.error(
               "Received an unexpected object in getComponentNameFromType(). This is likely a bug in React. Please file an issue."
             ),
           type.$$typeof)
@@ -100,20 +79,22 @@ __DEV__ &&
       } catch (e) {
         JSCompiler_inline_result = !0;
       }
-      if (JSCompiler_inline_result)
-        return (
-          (JSCompiler_inline_result =
-            ("function" === typeof Symbol &&
-              Symbol.toStringTag &&
-              value[Symbol.toStringTag]) ||
-            value.constructor.name ||
-            "Object"),
-          error(
-            "The provided key is an unsupported type %s. This value must be coerced to a string before using it here.",
-            JSCompiler_inline_result
-          ),
-          testStringCoercion(value)
+      if (JSCompiler_inline_result) {
+        JSCompiler_inline_result = console;
+        var JSCompiler_temp_const = JSCompiler_inline_result.error;
+        var JSCompiler_inline_result$jscomp$0 =
+          ("function" === typeof Symbol &&
+            Symbol.toStringTag &&
+            value[Symbol.toStringTag]) ||
+          value.constructor.name ||
+          "Object";
+        JSCompiler_temp_const.call(
+          JSCompiler_inline_result,
+          "The provided key is an unsupported type %s. This value must be coerced to a string before using it here.",
+          JSCompiler_inline_result$jscomp$0
         );
+        return testStringCoercion(value);
+      }
     }
     function getTaskName(type) {
       if (type === REACT_FRAGMENT_TYPE) return "<>";
@@ -145,7 +126,7 @@ __DEV__ &&
       function warnAboutAccessingKey() {
         specialPropKeyWarningShown ||
           ((specialPropKeyWarningShown = !0),
-          error(
+          console.error(
             "%s: `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://react.dev/link/special-props)",
             displayName
           ));
@@ -160,7 +141,7 @@ __DEV__ &&
       var componentName = getComponentNameFromType(this.type);
       didWarnAboutElementRef[componentName] ||
         ((didWarnAboutElementRef[componentName] = !0),
-        error(
+        console.error(
           "Accessing element.ref was removed in React 19. ref is now a regular prop. It will be removed from the JSX Element type in a future release."
         ));
       componentName = this.props.ref;
@@ -240,7 +221,7 @@ __DEV__ &&
               validateChildKeys(children[isStaticChildren]);
             Object.freeze && Object.freeze(children);
           } else
-            error(
+            console.error(
               "React.jsx: Static children should always be an array. You are likely explicitly calling React.jsxs or React.jsxDEV. Use the Babel transform instead."
             );
         else validateChildKeys(children);
@@ -256,7 +237,7 @@ __DEV__ &&
         didWarnAboutKeySpread[children + isStaticChildren] ||
           ((keys =
             0 < keys.length ? "{" + keys.join(": ..., ") + ": ...}" : "{}"),
-          error(
+          console.error(
             'A props object containing a "key" prop is being spread into JSX:\n  let props = %s;\n  <%s {...props} />\nReact keys must be passed directly to JSX without using spread:\n  let props = %s;\n  <%s key={someKey} {...props} />',
             isStaticChildren,
             children,
@@ -301,7 +282,6 @@ __DEV__ &&
         (node._store.validated = 1);
     }
     var React = require("react"),
-      dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
       REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -315,11 +295,9 @@ __DEV__ &&
       REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy"),
+      REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-      enableRemoveConsolePatches =
-        dynamicFlagsUntyped && dynamicFlagsUntyped.enableRemoveConsolePatches,
-      REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       hasOwnProperty = Object.prototype.hasOwnProperty,
       isArrayImpl = Array.isArray;
     new ("function" === typeof WeakMap ? WeakMap : Map)();

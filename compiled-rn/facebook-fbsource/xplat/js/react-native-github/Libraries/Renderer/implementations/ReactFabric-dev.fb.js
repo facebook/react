@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2e1648fcde08d68942b0069fc9f0a671>>
+ * @generated SignedSource<<f88364cd1f408a906f63ed5ed2883d91>>
  */
 
 "use strict";
@@ -88,11 +88,11 @@ __DEV__ &&
     }
     function copyWithRename(obj, oldPath, newPath) {
       if (oldPath.length !== newPath.length)
-        warn("copyWithRename() expects paths of the same length");
+        console.warn("copyWithRename() expects paths of the same length");
       else {
         for (var i = 0; i < newPath.length - 1; i++)
           if (oldPath[i] !== newPath[i]) {
-            warn(
+            console.warn(
               "copyWithRename() expects paths to be the same except for the deepest key"
             );
             return;
@@ -157,12 +157,12 @@ __DEV__ &&
     }
     function warnForMissingKey() {}
     function warnInvalidHookAccess() {
-      error$jscomp$0(
+      console.error(
         "Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. You can only call Hooks at the top level of your React function. For more information, see https://react.dev/link/rules-of-hooks"
       );
     }
     function warnInvalidContextAccess() {
-      error$jscomp$0(
+      console.error(
         "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
       );
     }
@@ -175,44 +175,6 @@ __DEV__ &&
     }
     function batchedUpdatesImpl(fn, bookkeeping) {
       return fn(bookkeeping);
-    }
-    function warn(format) {
-      for (
-        var _len = arguments.length,
-          args = Array(1 < _len ? _len - 1 : 0),
-          _key = 1;
-        _key < _len;
-        _key++
-      )
-        args[_key - 1] = arguments[_key];
-      if (enableRemoveConsolePatches) {
-        var _console;
-        (_console = console).warn.apply(_console, [format].concat(args));
-      } else suppressWarning || printWarning("warn", format, args);
-    }
-    function error$jscomp$0(format) {
-      for (
-        var _len2 = arguments.length,
-          args = Array(1 < _len2 ? _len2 - 1 : 0),
-          _key2 = 1;
-        _key2 < _len2;
-        _key2++
-      )
-        args[_key2 - 1] = arguments[_key2];
-      if (enableRemoveConsolePatches) {
-        var _console2;
-        (_console2 = console).error.apply(_console2, [format].concat(args));
-      } else suppressWarning || printWarning("error", format, args);
-    }
-    function printWarning(level, format, args) {
-      if (!enableRemoveConsolePatches) {
-        if (ReactSharedInternals.getCurrentStack) {
-          var stack = ReactSharedInternals.getCurrentStack();
-          "" !== stack && ((format += "%s"), (args = args.concat([stack])));
-        }
-        args.unshift(format);
-        Function.prototype.apply.call(console[level], console, args);
-      }
     }
     function getIteratorFn(maybeIterable) {
       if (null === maybeIterable || "object" !== typeof maybeIterable)
@@ -265,7 +227,7 @@ __DEV__ &&
         });
       }
       0 > disabledDepth &&
-        error$jscomp$0(
+        console.error(
           "disabledDepth fell below zero. This is a bug in React. Please file an issue."
         );
     }
@@ -539,7 +501,7 @@ __DEV__ &&
       if ("object" === typeof type)
         switch (
           ("number" === typeof type.tag &&
-            error$jscomp$0(
+            console.error(
               "Received an unexpected object in getComponentNameFromType(). This is likely a bug in React. Please file an issue."
             ),
           type.$$typeof)
@@ -733,14 +695,14 @@ __DEV__ &&
           ? 1
           : 0;
       (instancesIsArr === event && dispatchInstances === dispatchListeners) ||
-        error$jscomp$0("EventPluginUtils: Invalid `event`.");
+        console.error("EventPluginUtils: Invalid `event`.");
     }
     function executeDispatch(event, listener, inst) {
       event.currentTarget = getNodeFromInstance$1(inst);
       try {
         listener(event);
-      } catch (error$3) {
-        hasError || ((hasError = !0), (caughtError = error$3));
+      } catch (error) {
+        hasError || ((hasError = !0), (caughtError = error));
       }
       event.currentTarget = null;
     }
@@ -800,7 +762,7 @@ __DEV__ &&
     }
     function getPooledWarningPropertyDefinition(propName, getVal) {
       function warn(action, result) {
-        error$jscomp$0(
+        console.error(
           "This synthetic event is reused for performance reasons. If you're seeing this, you're %s `%s` on a released/nullified synthetic event. %s. If you must keep the original synthetic event around, use event.persist(). See https://react.dev/link/event-pooling for more information.",
           action,
           propName,
@@ -871,7 +833,7 @@ __DEV__ &&
       _ref = _ref.identifier;
       if (null == _ref) throw Error("Touch object is missing identifier.");
       20 < _ref &&
-        error$jscomp$0(
+        console.error(
           "Touch identifier %s is greater than maximum supported %s which causes performance issues backfilling array locations for all of the indices.",
           _ref,
           20
@@ -918,7 +880,7 @@ __DEV__ &&
           (touchRecord.currentPageY = touch.pageY),
           (touchRecord.currentTimeStamp = timestampForTouch(touch)),
           (touchHistory.mostRecentTimeStamp = timestampForTouch(touch)))
-        : warn(
+        : console.warn(
             "Cannot record touch move without a touch start.\nTouch Move: %s\nTouch Bank: %s",
             printTouch(touch),
             printTouchBank()
@@ -935,7 +897,7 @@ __DEV__ &&
           (touchRecord.currentPageY = touch.pageY),
           (touchRecord.currentTimeStamp = timestampForTouch(touch)),
           (touchHistory.mostRecentTimeStamp = timestampForTouch(touch)))
-        : warn(
+        : console.warn(
             "Cannot record touch end without a touch start.\nTouch End: %s\nTouch Bank: %s",
             printTouch(touch),
             printTouchBank()
@@ -1017,7 +979,7 @@ __DEV__ &&
       return inst;
     }
     function accumulateDirectionalDispatches$1(inst, phase, event) {
-      inst || error$jscomp$0("Dispatching inst must not be null");
+      inst || console.error("Dispatching inst must not be null");
       if (
         (phase = getListener$1(
           inst,
@@ -1157,7 +1119,7 @@ __DEV__ &&
       return inst;
     }
     function accumulateDirectionalDispatches(inst, phase, event) {
-      inst || error$jscomp$0("Dispatching inst must not be null");
+      inst || console.error("Dispatching inst must not be null");
       if (
         (phase = getListener(
           inst,
@@ -1581,7 +1543,7 @@ __DEV__ &&
       if (hook.isDisabled) return !0;
       if (!hook.supportsFiber)
         return (
-          error$jscomp$0(
+          console.error(
             "The installed version of React DevTools is too old and will not work with the current version of React. Please update React DevTools. https://react.dev/link/react-devtools"
           ),
           !0
@@ -1589,21 +1551,20 @@ __DEV__ &&
       try {
         (rendererID = hook.inject(internals)), (injectedHook = hook);
       } catch (err) {
-        error$jscomp$0("React instrumentation encountered an error: %s.", err);
+        console.error("React instrumentation encountered an error: %s.", err);
       }
       return hook.checkDCE ? !0 : !1;
     }
     function setIsStrictModeForDevtools(newIsStrictMode) {
       "function" === typeof log$1 &&
-        (unstable_setDisableYieldValue(newIsStrictMode),
-        enableRemoveConsolePatches || (suppressWarning = newIsStrictMode));
+        unstable_setDisableYieldValue(newIsStrictMode);
       if (injectedHook && "function" === typeof injectedHook.setStrictMode)
         try {
           injectedHook.setStrictMode(rendererID, newIsStrictMode);
         } catch (err) {
           hasLoggedError ||
             ((hasLoggedError = !0),
-            error$jscomp$0(
+            console.error(
               "React instrumentation encountered an error: %s",
               err
             ));
@@ -1716,7 +1677,7 @@ __DEV__ &&
           return 0;
         default:
           return (
-            error$jscomp$0(
+            console.error(
               "Should have found matching lanes. This is a bug in React."
             ),
             lanes
@@ -1813,7 +1774,7 @@ __DEV__ &&
           return -1;
         default:
           return (
-            error$jscomp$0(
+            console.error(
               "Should have found matching lanes. This is a bug in React."
             ),
             -1
@@ -2076,9 +2037,9 @@ __DEV__ &&
     }
     function pop(cursor, fiber) {
       0 > index$jscomp$0
-        ? error$jscomp$0("Unexpected pop.")
+        ? console.error("Unexpected pop.")
         : (fiber !== fiberStack[index$jscomp$0] &&
-            error$jscomp$0("Unexpected Fiber popped."),
+            console.error("Unexpected Fiber popped."),
           (cursor.current = valueStack[index$jscomp$0]),
           (valueStack[index$jscomp$0] = null),
           (fiberStack[index$jscomp$0] = null),
@@ -2137,7 +2098,7 @@ __DEV__ &&
           (fiber = getComponentNameFromFiber(fiber) || "Unknown"),
           warnedAboutMissingGetChildContext[fiber] ||
             ((warnedAboutMissingGetChildContext[fiber] = !0),
-            error$jscomp$0(
+            console.error(
               "%s.childContextTypes is specified but there is no getChildContext() method on the instance. You can either define getChildContext() on %s or remove childContextTypes from it.",
               fiber,
               fiber
@@ -2204,7 +2165,7 @@ __DEV__ &&
     }
     function requiredContext(c) {
       null === c &&
-        error$jscomp$0(
+        console.error(
           "Expected host context to exist. This error is likely caused by a bug in React. Please file an issue."
         );
       return c;
@@ -2651,7 +2612,7 @@ __DEV__ &&
               )),
               indent++)
             : "string" === typeof node.serverProps
-              ? error$jscomp$0(
+              ? console.error(
                   "Should not have matched a non HostText fiber to a Text node. This is a bug in React."
                 )
               : ((debugInfo = describeElementDiff(
@@ -2721,7 +2682,7 @@ __DEV__ &&
       void 0 !== context._currentRenderer2 &&
         null !== context._currentRenderer2 &&
         context._currentRenderer2 !== rendererSigil &&
-        error$jscomp$0(
+        console.error(
           "Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported."
         );
       context._currentRenderer2 = rendererSigil;
@@ -2750,7 +2711,7 @@ __DEV__ &&
         parent = parent.return;
       }
       parent !== propagationRoot &&
-        error$jscomp$0(
+        console.error(
           "Expected to find the propagation root when scheduling context work. This error is likely caused by a bug in React. Please file an issue."
         );
     }
@@ -2892,7 +2853,7 @@ __DEV__ &&
     }
     function readContext(context) {
       isDisallowedContextReadInDEV &&
-        error$jscomp$0(
+        console.error(
           "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
         );
       return readContextForConsumer(currentlyRenderingFiber$1, context);
@@ -2928,7 +2889,7 @@ __DEV__ &&
     }
     function retainCache(cache) {
       cache.controller.signal.aborted &&
-        warn(
+        console.warn(
           "A cache instance was retained after it was already freed. This likely indicates a bug in React."
         );
       cache.refCount++;
@@ -2936,7 +2897,7 @@ __DEV__ &&
     function releaseCache(cache) {
       cache.refCount--;
       0 > cache.refCount &&
-        warn(
+        console.warn(
           "A cache instance was released after it was already freed. This likely indicates a bug in React."
         );
       0 === cache.refCount &&
@@ -3337,7 +3298,7 @@ __DEV__ &&
         : index !== thenable &&
           (thenableState.didWarnAboutUncachedPromise ||
             ((thenableState.didWarnAboutUncachedPromise = !0),
-            error$jscomp$0(
+            console.error(
               "A component was suspended by an uncached promise. Creating promises inside a Client Component or hook is not yet supported, except via a Suspense-compatible library or framework."
             )),
           thenable.then(noop, noop),
@@ -3499,7 +3460,7 @@ __DEV__ &&
       nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT &&
         ((nestedPassiveUpdateCount = 0),
         (rootWithPassiveNestedUpdates = null),
-        error$jscomp$0(
+        console.error(
           "Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
         ));
       null === sourceFiber.alternate &&
@@ -3551,7 +3512,7 @@ __DEV__ &&
         !didWarnUpdateInsideUpdate
       ) {
         var componentName = getComponentNameFromFiber(fiber);
-        error$jscomp$0(
+        console.error(
           "An update (setState, replaceState, or forceUpdate) was scheduled from inside an update function. Update functions should be pure, with zero side-effects. Consider using componentDidUpdate or a callback.\n\nPlease update the following component: %s",
           componentName
         );
@@ -3868,7 +3829,7 @@ __DEV__ &&
             oldHookName += newHookName + "\n";
             table += oldHookName;
           }
-          error$jscomp$0(
+          console.error(
             "React has detected a change in the order of Hooks called by %s. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n   Previous render            Next render\n   ------------------------------------------------------\n%s   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
             componentName,
             table
@@ -3880,7 +3841,7 @@ __DEV__ &&
       void 0 === deps ||
         null === deps ||
         isArrayImpl(deps) ||
-        error$jscomp$0(
+        console.error(
           "%s received a final argument that is not an array (instead, received `%s`). When specified, the final argument must be an array.",
           currentHookNameInDev,
           typeof deps
@@ -3890,7 +3851,7 @@ __DEV__ &&
       var componentName = getComponentNameFromFiber(currentlyRenderingFiber);
       didWarnAboutUseFormState.has(componentName) ||
         (didWarnAboutUseFormState.add(componentName),
-        error$jscomp$0(
+        console.error(
           "ReactDOM.useFormState has been renamed to React.useActionState. Please update %s to use React.useActionState.",
           componentName
         ));
@@ -3904,14 +3865,14 @@ __DEV__ &&
       if (ignorePreviousDependencies) return !1;
       if (null === prevDeps)
         return (
-          error$jscomp$0(
+          console.error(
             "%s received a final argument during this render, but not during the previous render. Even though the final argument is optional, its type cannot change between renders.",
             currentHookNameInDev
           ),
           !1
         );
       nextDeps.length !== prevDeps.length &&
-        error$jscomp$0(
+        console.error(
           "The final argument passed to %s changed size between renders. The order and size of this array must remain constant.\n\nPrevious: %s\nIncoming: %s",
           currentHookNameInDev,
           "[" + prevDeps.join(", ") + "]",
@@ -3944,7 +3905,7 @@ __DEV__ &&
         (nextRenderLanes = getComponentNameFromFiber(currentlyRenderingFiber)),
           didWarnAboutAsyncClientComponent.has(nextRenderLanes) ||
             (didWarnAboutAsyncClientComponent.add(nextRenderLanes),
-            error$jscomp$0(
+            console.error(
               "async/await is not yet supported in Client Components, only Server Components. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
             ));
       workInProgress.memoizedState = null;
@@ -4007,7 +3968,7 @@ __DEV__ &&
       null !== current &&
         (current.flags & 65011712) !== (workInProgress.flags & 65011712) &&
         0 !== (current.mode & 1) &&
-        error$jscomp$0(
+        console.error(
           "Internal React error: Expected static flag was missing. Please notify the React team."
         );
       didScheduleRenderPhaseUpdate = !1;
@@ -4032,7 +3993,7 @@ __DEV__ &&
         didWarnAboutUseWrappedInTryCatch.has(workInProgress) ||
           didWarnAboutAsyncClientComponent.has(workInProgress) ||
           (didWarnAboutUseWrappedInTryCatch.add(workInProgress),
-          error$jscomp$0(
+          console.error(
             "`use` was called from inside a try/catch block. This is not allowed and can lead to unexpected behavior. To handle errors triggered by `use`, wrap your component in a error boundary."
           )));
     }
@@ -4218,7 +4179,7 @@ __DEV__ &&
           updateQueue[current] = REACT_MEMO_CACHE_SENTINEL;
       else
         updateQueue.length !== size &&
-          error$jscomp$0(
+          console.error(
             "Expected a constant size argument for each invocation of useMemoCache. The previous cache was allocated with size %s but size %s was requested.",
             updateQueue.length,
             size
@@ -4278,7 +4239,7 @@ __DEV__ &&
           pendingQueue.next = baseFirst;
         }
         current.baseQueue !== baseQueue &&
-          error$jscomp$0(
+          console.error(
             "Internal error: Expected work-in-progress queue to be a clone. This is a bug in React."
           );
         current.baseQueue = baseQueue = pendingQueue;
@@ -4405,7 +4366,7 @@ __DEV__ &&
       if (!didWarnUncachedGetSnapshot) {
         var cachedSnapshot = getSnapshot();
         objectIs(nextSnapshot, cachedSnapshot) ||
-          (error$jscomp$0(
+          (console.error(
             "The result of getSnapshot should be cached to avoid an infinite loop"
           ),
           (didWarnUncachedGetSnapshot = !0));
@@ -4445,7 +4406,7 @@ __DEV__ &&
       if (!didWarnUncachedGetSnapshot) {
         var cachedSnapshot = getSnapshot();
         objectIs(nextSnapshot, cachedSnapshot) ||
-          (error$jscomp$0(
+          (console.error(
             "The result of getSnapshot should be cached to avoid an infinite loop"
           ),
           (didWarnUncachedGetSnapshot = !0));
@@ -4518,7 +4479,7 @@ __DEV__ &&
       try {
         var nextValue = latestGetSnapshot();
         return !objectIs(inst, nextValue);
-      } catch (error$4) {
+      } catch (error) {
         return !0;
       }
     }
@@ -4647,8 +4608,8 @@ __DEV__ &&
           null !== onStartTransitionFinish &&
             onStartTransitionFinish(currentTransition, returnValue);
           handleActionReturnValue(actionQueue, node, returnValue);
-        } catch (error$5) {
-          onActionError(actionQueue, node, error$5);
+        } catch (error) {
+          onActionError(actionQueue, node, error);
         } finally {
           (ReactSharedInternals.T = prevTransition),
             null === prevTransition &&
@@ -4656,7 +4617,7 @@ __DEV__ &&
               ((actionQueue = currentTransition._updatedFibers.size),
               currentTransition._updatedFibers.clear(),
               10 < actionQueue &&
-                warn(
+                console.warn(
                   "Detected a large number of updates inside startTransition. If this is due to a subscription please re-write it to use React provided hooks. Otherwise concurrent mode guarantees are off the table."
                 ));
         }
@@ -4664,8 +4625,8 @@ __DEV__ &&
         try {
           (currentTransition = action(prevState, payload)),
             handleActionReturnValue(actionQueue, node, currentTransition);
-        } catch (error$6) {
-          onActionError(actionQueue, node, error$6);
+        } catch (error$3) {
+          onActionError(actionQueue, node, error$3);
         }
     }
     function handleActionReturnValue(actionQueue, node, returnValue) {
@@ -4681,7 +4642,7 @@ __DEV__ &&
             }
           ),
           node.isTransition ||
-            error$jscomp$0(
+            console.error(
               "An async function with useActionState was called outside of a transition. This is likely not what you intended (for example, isPending will not update correctly). Either call the returned function inside startTransition, or pass it to an `action` or `formAction` prop."
             ))
         : onActionSuccess(actionQueue, node, returnValue);
@@ -5057,7 +5018,7 @@ __DEV__ &&
       if (null !== ref && void 0 !== ref)
         return (
           ref.hasOwnProperty("current") ||
-            error$jscomp$0(
+            console.error(
               "Expected useImperativeHandle() first argument to either be a ref callback or React.createRef() object. Instead received: %s.",
               "an object with keys {" + Object.keys(ref).join(", ") + "}"
             ),
@@ -5070,7 +5031,7 @@ __DEV__ &&
     }
     function mountImperativeHandle(ref, create, deps) {
       "function" !== typeof create &&
-        error$jscomp$0(
+        console.error(
           "Expected useImperativeHandle() second argument to be a function that creates a handle. Instead received: %s.",
           null !== create ? typeof create : "null"
         );
@@ -5086,7 +5047,7 @@ __DEV__ &&
     }
     function updateImperativeHandle(ref, create, deps) {
       "function" !== typeof create &&
-        error$jscomp$0(
+        console.error(
           "Expected useImperativeHandle() second argument to be a function that creates a handle. Instead received: %s.",
           null !== create ? typeof create : "null"
         );
@@ -5239,11 +5200,11 @@ __DEV__ &&
             finishedState,
             requestUpdateLane(fiber)
           );
-      } catch (error$7) {
+      } catch (error) {
         dispatchSetStateInternal(
           fiber,
           queue,
-          { then: function () {}, status: "rejected", reason: error$7 },
+          { then: function () {}, status: "rejected", reason: error },
           requestUpdateLane(fiber)
         );
       } finally {
@@ -5254,7 +5215,7 @@ __DEV__ &&
             ((fiber = currentTransition._updatedFibers.size),
             currentTransition._updatedFibers.clear(),
             10 < fiber &&
-              warn(
+              console.warn(
                 "Detected a large number of updates inside startTransition. If this is due to a subscription please re-write it to use React provided hooks. Otherwise concurrent mode guarantees are off the table."
               ));
       }
@@ -5323,7 +5284,7 @@ __DEV__ &&
             null !== seedKey &&
               void 0 !== seedKey &&
               null !== root &&
-              error$jscomp$0(
+              console.error(
                 "The seed argument is not enabled outside experimental channels."
               );
             fiber.payload = { cache: provider };
@@ -5335,7 +5296,7 @@ __DEV__ &&
     function dispatchReducerAction(fiber, queue, action) {
       var args = arguments;
       "function" === typeof args[3] &&
-        error$jscomp$0(
+        console.error(
           "State updates from the useState() and useReducer() Hooks don't support the second callback argument. To execute a side effect after rendering, declare it in the component body with useEffect()."
         );
       args = requestUpdateLane(fiber);
@@ -5358,7 +5319,7 @@ __DEV__ &&
     function dispatchSetState(fiber, queue, action) {
       var args = arguments;
       "function" === typeof args[3] &&
-        error$jscomp$0(
+        console.error(
           "State updates from the useState() and useReducer() Hooks don't support the second callback argument. To execute a side effect after rendering, declare it in the component body with useEffect()."
         );
       args = requestUpdateLane(fiber);
@@ -5396,7 +5357,7 @@ __DEV__ &&
                   finishQueueingConcurrentUpdates(),
                 !1
               );
-          } catch (error$8) {
+          } catch (error) {
           } finally {
             ReactSharedInternals.H = prevDispatcher;
           }
@@ -5419,7 +5380,7 @@ __DEV__ &&
     ) {
       null === ReactSharedInternals.T &&
         0 === currentEntangledLane &&
-        error$jscomp$0(
+        console.error(
           "An optimistic state update occurred outside a transition or action. To fix, move the update to an action, or wrap with startTransition."
         );
       action = {
@@ -5433,7 +5394,7 @@ __DEV__ &&
       if (isRenderPhaseUpdate(fiber)) {
         if (throwIfDuringRender)
           throw Error("Cannot update optimistic state while rendering.");
-        error$jscomp$0("Cannot call startTransition while rendering.");
+        console.error("Cannot call startTransition while rendering.");
       } else
         (throwIfDuringRender = enqueueConcurrentHookUpdate(
           fiber,
@@ -5490,7 +5451,7 @@ __DEV__ &&
           runWithFiberInDEV(
             fiber,
             function (erroredKey) {
-              error$jscomp$0(
+              console.error(
                 "Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.",
                 erroredKey
               );
@@ -5532,13 +5493,13 @@ __DEV__ &&
         (invalidChild =
           invalidChild.displayName || invalidChild.name || "Component"),
         3 === returnFiber.tag
-          ? error$jscomp$0(
+          ? console.error(
               "Functions are not valid as a React child. This may happen if you return %s instead of <%s /> from render. Or maybe you meant to call this function rather than return it.\n  root.render(%s)",
               invalidChild,
               invalidChild,
               invalidChild
             )
-          : error$jscomp$0(
+          : console.error(
               "Functions are not valid as a React child. This may happen if you return %s instead of <%s /> from render. Or maybe you meant to call this function rather than return it.\n  <%s>{%s}</%s>",
               invalidChild,
               invalidChild,
@@ -5553,11 +5514,11 @@ __DEV__ &&
         ((ownerHasSymbolTypeWarning[parentName] = !0),
         (invalidChild = String(invalidChild)),
         3 === returnFiber.tag
-          ? error$jscomp$0(
+          ? console.error(
               "Symbols are not valid as a React child.\n  root.render(%s)",
               invalidChild
             )
-          : error$jscomp$0(
+          : console.error(
               "Symbols are not valid as a React child.\n  <%s>%s</%s>",
               parentName,
               invalidChild,
@@ -5998,7 +5959,7 @@ __DEV__ &&
               break;
             }
             runWithFiberInDEV(workInProgress, function () {
-              error$jscomp$0(
+              console.error(
                 "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted \u2014 the behavior is unsupported and could change in a future version.",
                 key
               );
@@ -6405,14 +6366,14 @@ __DEV__ &&
                   Object.prototype.toString.call(newChildren)
               )
                 didWarnAboutGenerators ||
-                  error$jscomp$0(
+                  console.error(
                     "Using Iterators as children is unsupported and will likely yield unexpected results because enumerating a generator mutates it. You may convert it to an array with `Array.from()` or the `[...spread]` operator before rendering. You can also use an Iterable that can iterate multiple times over the same items."
                   ),
                   (didWarnAboutGenerators = !0);
             } else
               newChild.entries !== key ||
                 didWarnAboutMaps ||
-                (error$jscomp$0(
+                (console.error(
                   "Using Maps as children is not supported. Use an array of keyed ReactElements instead."
                 ),
                 (didWarnAboutMaps = !0));
@@ -6597,7 +6558,7 @@ __DEV__ &&
         var key = String(callback);
         didWarnOnInvalidCallback.has(key) ||
           (didWarnOnInvalidCallback.add(key),
-          error$jscomp$0(
+          console.error(
             "Expected the last optional `callback` argument to be a function. Instead received: %s.",
             callback
           ));
@@ -6623,7 +6584,7 @@ __DEV__ &&
         ((ctor = getComponentNameFromType(ctor) || "Component"),
         didWarnAboutUndefinedDerivedState.has(ctor) ||
           (didWarnAboutUndefinedDerivedState.add(ctor),
-          error$jscomp$0(
+          console.error(
             "%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. You have returned undefined.",
             ctor
           )));
@@ -6664,7 +6625,7 @@ __DEV__ &&
           }
         }
         void 0 === oldProps &&
-          error$jscomp$0(
+          console.error(
             "%s.shouldComponentUpdate(): Returned undefined instead of a boolean value. Make sure to return true or false.",
             getComponentNameFromType(ctor) || "Component"
           );
@@ -6695,7 +6656,7 @@ __DEV__ &&
                 : " However, it is set to an object with keys {" +
                   Object.keys(context).join(", ") +
                   "}.";
-        error$jscomp$0(
+        console.error(
           "%s defines an invalid contextType. contextType should point to the Context object returned by React.createContext().%s",
           getComponentNameFromType(ctor) || "Component",
           addendum
@@ -6734,7 +6695,7 @@ __DEV__ &&
         ((props = getComponentNameFromType(ctor) || "Component"),
         didWarnAboutUninitializedState.has(props) ||
           (didWarnAboutUninitializedState.add(props),
-          error$jscomp$0(
+          console.error(
             "`%s` uses `getDerivedStateFromProps` but its initial state is %s. This is not recommended. Instead, define the initial state by assigning an object to `this.state` in the constructor of `%s`. This ensures that `getDerivedStateFromProps` arguments have a consistent shape.",
             props,
             null === addendum.state ? "null" : "undefined",
@@ -6773,7 +6734,7 @@ __DEV__ &&
               : "getSnapshotBeforeUpdate()";
           didWarnAboutLegacyLifecyclesAndDerivedState.has(_componentName) ||
             (didWarnAboutLegacyLifecyclesAndDerivedState.add(_componentName),
-            error$jscomp$0(
+            console.error(
               "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\nThe above lifecycles should be removed. Learn more about this warning here:\nhttps://react.dev/link/unsafe-component-lifecycles",
               _componentName,
               ctor,
@@ -6808,7 +6769,7 @@ __DEV__ &&
           getComponentNameFromFiber(workInProgress) || "Component"),
         didWarnAboutStateAssignmentForComponent.has(workInProgress) ||
           (didWarnAboutStateAssignmentForComponent.add(workInProgress),
-          error$jscomp$0(
+          console.error(
             "%s.componentWillReceiveProps(): Assigning directly to this.state is deprecated (except inside a component's constructor). Use setState instead.",
             workInProgress
           )),
@@ -6823,34 +6784,34 @@ __DEV__ &&
         name = getComponentNameFromType(ctor) || "Component";
       instance.render ||
         (ctor.prototype && "function" === typeof ctor.prototype.render
-          ? error$jscomp$0(
+          ? console.error(
               "No `render` method found on the %s instance: did you accidentally return an object from the constructor?",
               name
             )
-          : error$jscomp$0(
+          : console.error(
               "No `render` method found on the %s instance: you may have forgotten to define `render`.",
               name
             ));
       !instance.getInitialState ||
         instance.getInitialState.isReactClassApproved ||
         instance.state ||
-        error$jscomp$0(
+        console.error(
           "getInitialState was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Did you mean to define a state property instead?",
           name
         );
       instance.getDefaultProps &&
         !instance.getDefaultProps.isReactClassApproved &&
-        error$jscomp$0(
+        console.error(
           "getDefaultProps was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Use a static property to define defaultProps instead.",
           name
         );
       instance.contextType &&
-        error$jscomp$0(
+        console.error(
           "contextType was defined as an instance property on %s. Use a static property to define contextType instead.",
           name
         );
       instance.contextTypes &&
-        error$jscomp$0(
+        console.error(
           "contextTypes was defined as an instance property on %s. Use a static property to define contextTypes instead.",
           name
         );
@@ -6858,65 +6819,65 @@ __DEV__ &&
         ctor.contextTypes &&
         !didWarnAboutContextTypeAndContextTypes.has(ctor) &&
         (didWarnAboutContextTypeAndContextTypes.add(ctor),
-        error$jscomp$0(
+        console.error(
           "%s declares both contextTypes and contextType static properties. The legacy contextTypes property will be ignored.",
           name
         ));
       ctor.childContextTypes &&
         !didWarnAboutChildContextTypes.has(ctor) &&
         (didWarnAboutChildContextTypes.add(ctor),
-        error$jscomp$0(
+        console.error(
           "%s uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead. (https://react.dev/link/legacy-context)",
           name
         ));
       ctor.contextTypes &&
         !didWarnAboutContextTypes$1.has(ctor) &&
         (didWarnAboutContextTypes$1.add(ctor),
-        error$jscomp$0(
+        console.error(
           "%s uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)",
           name
         ));
       "function" === typeof instance.componentShouldUpdate &&
-        error$jscomp$0(
+        console.error(
           "%s has a method called componentShouldUpdate(). Did you mean shouldComponentUpdate()? The name is phrased as a question because the function is expected to return a value.",
           name
         );
       ctor.prototype &&
         ctor.prototype.isPureReactComponent &&
         "undefined" !== typeof instance.shouldComponentUpdate &&
-        error$jscomp$0(
+        console.error(
           "%s has a method called shouldComponentUpdate(). shouldComponentUpdate should not be used when extending React.PureComponent. Please extend React.Component if shouldComponentUpdate is used.",
           getComponentNameFromType(ctor) || "A pure component"
         );
       "function" === typeof instance.componentDidUnmount &&
-        error$jscomp$0(
+        console.error(
           "%s has a method called componentDidUnmount(). But there is no such lifecycle method. Did you mean componentWillUnmount()?",
           name
         );
       "function" === typeof instance.componentDidReceiveProps &&
-        error$jscomp$0(
+        console.error(
           "%s has a method called componentDidReceiveProps(). But there is no such lifecycle method. If you meant to update the state in response to changing props, use componentWillReceiveProps(). If you meant to fetch data or run side-effects or mutations after React has updated the UI, use componentDidUpdate().",
           name
         );
       "function" === typeof instance.componentWillRecieveProps &&
-        error$jscomp$0(
+        console.error(
           "%s has a method called componentWillRecieveProps(). Did you mean componentWillReceiveProps()?",
           name
         );
       "function" === typeof instance.UNSAFE_componentWillRecieveProps &&
-        error$jscomp$0(
+        console.error(
           "%s has a method called UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?",
           name
         );
       var hasMutatedProps = instance.props !== newProps;
       void 0 !== instance.props &&
         hasMutatedProps &&
-        error$jscomp$0(
+        console.error(
           "When calling super() in `%s`, make sure to pass up the same props that your component's constructor was passed.",
           name
         );
       instance.defaultProps &&
-        error$jscomp$0(
+        console.error(
           "Setting defaultProps as an instance property on %s is not supported and will be ignored. Instead, define defaultProps as a static property on %s.",
           name,
           name
@@ -6925,31 +6886,31 @@ __DEV__ &&
         "function" === typeof instance.componentDidUpdate ||
         didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(ctor) ||
         (didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(ctor),
-        error$jscomp$0(
+        console.error(
           "%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). This component defines getSnapshotBeforeUpdate() only.",
           getComponentNameFromType(ctor)
         ));
       "function" === typeof instance.getDerivedStateFromProps &&
-        error$jscomp$0(
+        console.error(
           "%s: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.",
           name
         );
       "function" === typeof instance.getDerivedStateFromError &&
-        error$jscomp$0(
+        console.error(
           "%s: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.",
           name
         );
       "function" === typeof ctor.getSnapshotBeforeUpdate &&
-        error$jscomp$0(
+        console.error(
           "%s: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.",
           name
         );
       (hasMutatedProps = instance.state) &&
         ("object" !== typeof hasMutatedProps || isArrayImpl(hasMutatedProps)) &&
-        error$jscomp$0("%s.state: must be set to an object or null", name);
+        console.error("%s.state: must be set to an object or null", name);
       "function" === typeof instance.getChildContext &&
         "object" !== typeof ctor.childContextTypes &&
-        error$jscomp$0(
+        console.error(
           "%s.getChildContext(): childContextTypes must be defined in order to use getChildContext().",
           name
         );
@@ -6969,7 +6930,7 @@ __DEV__ &&
         ((name = getComponentNameFromType(ctor) || "Component"),
         didWarnAboutDirectlyAssigningPropsToState.has(name) ||
           (didWarnAboutDirectlyAssigningPropsToState.add(name),
-          error$jscomp$0(
+          console.error(
             "%s: It is not recommended to assign props directly to state because updates to props won't be reflected in state. In most cases, it is better to use props directly.",
             name
           )));
@@ -6997,7 +6958,7 @@ __DEV__ &&
         "function" === typeof instance.UNSAFE_componentWillMount &&
           instance.UNSAFE_componentWillMount(),
         ctor !== instance.state &&
-          (error$jscomp$0(
+          (console.error(
             "%s.componentWillMount(): Assigning directly to this.state is deprecated (except inside a component's constructor). Use setState instead.",
             getComponentNameFromFiber(workInProgress) || "Component"
           ),
@@ -7084,9 +7045,9 @@ __DEV__ &&
     function initializeClassErrorUpdate(update, root, fiber, errorInfo) {
       var getDerivedStateFromError = fiber.type.getDerivedStateFromError;
       if ("function" === typeof getDerivedStateFromError) {
-        var error$1 = errorInfo.value;
+        var error = errorInfo.value;
         update.payload = function () {
-          return getDerivedStateFromError(error$1);
+          return getDerivedStateFromError(error);
         };
         update.callback = function () {
           markFailedErrorBoundaryForHotReloading(fiber);
@@ -7118,7 +7079,7 @@ __DEV__ &&
           callComponentDidCatchInDEV(this, errorInfo);
           "function" === typeof getDerivedStateFromError ||
             (0 === (fiber.lanes & 2) &&
-              error$jscomp$0(
+              console.error(
                 "%s: Error boundaries should implement getDerivedStateFromError(). In that method, return a state update to display an error message or fallback UI.",
                 getComponentNameFromFiber(fiber) || "Unknown"
               ));
@@ -7563,7 +7524,7 @@ __DEV__ &&
       ) {
         var componentName = getComponentNameFromType(Component) || "Unknown";
         didWarnAboutBadClass[componentName] ||
-          (error$jscomp$0(
+          (console.error(
             "The <%s /> component appears to have a render method, but doesn't extend React.Component. This is likely to cause errors. Change %s to extend React.Component instead.",
             componentName,
             componentName
@@ -7581,7 +7542,7 @@ __DEV__ &&
           ((componentName = getComponentNameFromType(Component) || "Unknown"),
           didWarnAboutContextTypes[componentName] ||
             ((didWarnAboutContextTypes[componentName] = !0),
-            error$jscomp$0(
+            console.error(
               "%s uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)",
               componentName
             ))));
@@ -7882,7 +7843,7 @@ __DEV__ &&
       state &&
         Component.props !== nextProps &&
         (didWarnAboutReassigningProps ||
-          error$jscomp$0(
+          console.error(
             "It looks like %s is reassigning its own `this.props` while rendering. This is not supported and can lead to confusing bugs.",
             getComponentNameFromFiber(workInProgress) || "a component"
           ),
@@ -7961,14 +7922,14 @@ __DEV__ &&
     function validateFunctionComponentInDev(workInProgress, Component) {
       Component &&
         Component.childContextTypes &&
-        error$jscomp$0(
+        console.error(
           "childContextTypes cannot be defined on a function component.\n  %s.childContextTypes = ...",
           Component.displayName || Component.name || "Component"
         );
       "function" === typeof Component.getDerivedStateFromProps &&
         ((workInProgress = getComponentNameFromType(Component) || "Unknown"),
         didWarnAboutGetDerivedStateOnFunctionComponent[workInProgress] ||
-          (error$jscomp$0(
+          (console.error(
             "%s: Function components do not support getDerivedStateFromProps.",
             workInProgress
           ),
@@ -7978,7 +7939,7 @@ __DEV__ &&
         null !== Component.contextType &&
         ((Component = getComponentNameFromType(Component) || "Unknown"),
         didWarnAboutContextTypeOnFunctionComponent[Component] ||
-          (error$jscomp$0(
+          (console.error(
             "%s: Function components do not support contextType.",
             Component
           ),
@@ -8388,7 +8349,7 @@ __DEV__ &&
       childSlot = !isAnArray && "function" === typeof getIteratorFn(childSlot);
       return isAnArray || childSlot
         ? ((isAnArray = isAnArray ? "array" : "iterable"),
-          error$jscomp$0(
+          console.error(
             "A nested %s was passed to row #%s in <SuspenseList />. Wrap it in an additional SuspenseList to configure its revealOrder: <SuspenseList revealOrder=...> ... <SuspenseList revealOrder=...>{%s}</SuspenseList> ... </SuspenseList>",
             isAnArray,
             index,
@@ -8441,7 +8402,7 @@ __DEV__ &&
             case "together":
             case "forwards":
             case "backwards":
-              error$jscomp$0(
+              console.error(
                 '"%s" is not a valid value for revealOrder on <SuspenseList />. Use lowercase "%s" instead.',
                 revealOrder,
                 revealOrder.toLowerCase()
@@ -8449,20 +8410,20 @@ __DEV__ &&
               break;
             case "forward":
             case "backward":
-              error$jscomp$0(
+              console.error(
                 '"%s" is not a valid value for revealOrder on <SuspenseList />. React uses the -s suffix in the spelling. Use "%ss" instead.',
                 revealOrder,
                 revealOrder.toLowerCase()
               );
               break;
             default:
-              error$jscomp$0(
+              console.error(
                 '"%s" is not a supported revealOrder on <SuspenseList />. Did you mean "together", "forwards" or "backwards"?',
                 revealOrder
               );
           }
         else
-          error$jscomp$0(
+          console.error(
             '%s is not a supported value for revealOrder on <SuspenseList />. Did you mean "together", "forwards" or "backwards"?',
             revealOrder
           );
@@ -8470,14 +8431,14 @@ __DEV__ &&
         didWarnAboutTailOptions[tailMode] ||
         ("collapsed" !== tailMode && "hidden" !== tailMode
           ? ((didWarnAboutTailOptions[tailMode] = !0),
-            error$jscomp$0(
+            console.error(
               '"%s" is not a supported value for tail on <SuspenseList />. Did you mean "collapsed" or "hidden"?',
               tailMode
             ))
           : "forwards" !== revealOrder &&
             "backwards" !== revealOrder &&
             ((didWarnAboutTailOptions[tailMode] = !0),
-            error$jscomp$0(
+            console.error(
               '<SuspenseList tail="%s" /> is only valid if revealOrder is "forwards" or "backwards". Did you mean to specify revealOrder="forwards"?',
               tailMode
             )));
@@ -8498,7 +8459,7 @@ __DEV__ &&
               _i++;
             }
         } else
-          error$jscomp$0(
+          console.error(
             'A single row was passed to a <SuspenseList revealOrder="%s" />. This is not useful since it needs multiple rows. Did you mean to pass multiple children or an array?',
             revealOrder
           );
@@ -9057,7 +9018,7 @@ __DEV__ &&
             "value" in prevSibling ||
               hasWarnedAboutUsingNoValuePropOnContextProvider ||
               ((hasWarnedAboutUsingNoValuePropOnContextProvider = !0),
-              error$jscomp$0(
+              console.error(
                 "The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?"
               )),
             pushProvider(workInProgress, returnFiber, nextProps),
@@ -9074,7 +9035,7 @@ __DEV__ &&
             (prevSibling = workInProgress.type._context),
             (returnFiber = workInProgress.pendingProps.children),
             "function" !== typeof returnFiber &&
-              error$jscomp$0(
+              console.error(
                 "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it."
               ),
             prepareToReadContext(workInProgress),
@@ -9677,7 +9638,7 @@ __DEV__ &&
                 } catch (x) {
                   _type2 = "";
                 }
-                error$jscomp$0(
+                console.error(
                   "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s",
                   "https://react.dev/link/hydration-mismatch",
                   _type2
@@ -10089,7 +10050,7 @@ __DEV__ &&
                     updateQueue
                   )),
                   null == updateQueue.inst.resource &&
-                    error$jscomp$0(
+                    console.error(
                       "useEffect must provide a callback which returns a resource. If a managed resource is not needed here, do not provide an updater or destroy callback. Received %s",
                       updateQueue.inst.resource
                     ),
@@ -10152,7 +10113,7 @@ __DEV__ &&
               runWithFiberInDEV(
                 finishedWork,
                 function (n, a) {
-                  error$jscomp$0(
+                  console.error(
                     "%s must not return anything besides a function, which is used for clean-up.%s",
                     n,
                     a
@@ -10165,8 +10126,8 @@ __DEV__ &&
             updateQueue = updateQueue.next;
           } while (updateQueue !== firstEffect);
         }
-      } catch (error$13) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$13);
+      } catch (error) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
     }
     function commitHookEffectListUnmount(
@@ -10215,7 +10176,7 @@ __DEV__ &&
                       ),
                       updateQueue.next.resourceKind === ResourceEffectUpdateKind
                         ? (updateQueue.next.update = void 0)
-                        : error$jscomp$0(
+                        : console.error(
                             "Expected a ResourceEffectUpdateKind to follow ResourceEffectIdentityKind, got %s. This is a bug in React.",
                             updateQueue.next.resourceKind
                           ),
@@ -10247,8 +10208,8 @@ __DEV__ &&
             updateQueue = updateQueue.next;
           } while (updateQueue !== firstEffect);
         }
-      } catch (error$14) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$14);
+      } catch (error) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
     }
     function commitHookPassiveMountEffects(finishedWork, hookFlags) {
@@ -10295,12 +10256,12 @@ __DEV__ &&
           "ref" in finishedWork.memoizedProps ||
           didWarnAboutReassigningProps ||
           (instance.props !== finishedWork.memoizedProps &&
-            error$jscomp$0(
+            console.error(
               "Expected %s props to match memoized props before processing the update queue. This might either be because of a bug in React, or because a component reassigns its own `this.props`. Please file an issue.",
               getComponentNameFromFiber(finishedWork) || "instance"
             ),
           instance.state !== finishedWork.memoizedState &&
-            error$jscomp$0(
+            console.error(
               "Expected %s state to match memoized state before processing the update queue. This might either be because of a bug in React, or because a component reassigns its own `this.state`. Please file an issue.",
               getComponentNameFromFiber(finishedWork) || "instance"
             ));
@@ -10311,8 +10272,8 @@ __DEV__ &&
             updateQueue,
             instance
           );
-        } catch (error$15) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error$15);
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
       }
     }
@@ -10327,12 +10288,12 @@ __DEV__ &&
         "ref" in finishedWork.memoizedProps ||
         didWarnAboutReassigningProps ||
         (current.props !== finishedWork.memoizedProps &&
-          error$jscomp$0(
+          console.error(
             "Expected %s props to match memoized props before getSnapshotBeforeUpdate. This might either be because of a bug in React, or because a component reassigns its own `this.props`. Please file an issue.",
             getComponentNameFromFiber(finishedWork) || "instance"
           ),
         current.state !== finishedWork.memoizedState &&
-          error$jscomp$0(
+          console.error(
             "Expected %s state to match memoized state before getSnapshotBeforeUpdate. This might either be because of a bug in React, or because a component reassigns its own `this.state`. Please file an issue.",
             getComponentNameFromFiber(finishedWork) || "instance"
           ));
@@ -10354,14 +10315,14 @@ __DEV__ &&
           prevProps.has(finishedWork.type) ||
           (prevProps.add(finishedWork.type),
           runWithFiberInDEV(finishedWork, function () {
-            error$jscomp$0(
+            console.error(
               "%s.getSnapshotBeforeUpdate(): A snapshot value (or null) must be returned. You have returned undefined.",
               getComponentNameFromFiber(finishedWork)
             );
           }));
         current.__reactInternalSnapshotBeforeUpdate = snapshot;
-      } catch (error$18) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$18);
+      } catch (error) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
     }
     function safelyCallComponentWillUnmount(
@@ -10415,9 +10376,9 @@ __DEV__ &&
           else finishedWork.refCleanup = ref(instanceToUse);
         else
           "string" === typeof ref
-            ? error$jscomp$0("String refs are no longer supported.")
+            ? console.error("String refs are no longer supported.")
             : ref.hasOwnProperty("current") ||
-              error$jscomp$0(
+              console.error(
                 "Unexpected ref object provided for %s. Use either a ref-setter function or React.createRef().",
                 getComponentNameFromFiber(finishedWork)
               ),
@@ -10427,8 +10388,8 @@ __DEV__ &&
     function safelyAttachRef(current, nearestMountedAncestor) {
       try {
         runWithFiberInDEV(current, commitAttachRef, current);
-      } catch (error$19) {
-        captureCommitPhaseError(current, nearestMountedAncestor, error$19);
+      } catch (error) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error);
       }
     }
     function safelyDetachRef(current, nearestMountedAncestor) {
@@ -10444,8 +10405,8 @@ __DEV__ &&
                 recordEffectDuration(current);
               }
             else runWithFiberInDEV(current, refCleanup);
-          } catch (error$20) {
-            captureCommitPhaseError(current, nearestMountedAncestor, error$20);
+          } catch (error) {
+            captureCommitPhaseError(current, nearestMountedAncestor, error);
           } finally {
             (current.refCleanup = null),
               (current = current.alternate),
@@ -10460,8 +10421,8 @@ __DEV__ &&
                 recordEffectDuration(current);
               }
             else runWithFiberInDEV(current, ref, null);
-          } catch (error$21) {
-            captureCommitPhaseError(current, nearestMountedAncestor, error$21);
+          } catch (error$4) {
+            captureCommitPhaseError(current, nearestMountedAncestor, error$4);
           }
         else ref.current = null;
     }
@@ -10541,8 +10502,8 @@ __DEV__ &&
           props,
           finishedWork
         );
-      } catch (error$24) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$24);
+      } catch (error) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
     }
     function commitPlacement() {}
@@ -10559,8 +10520,8 @@ __DEV__ &&
           portal,
           pendingChildren
         );
-      } catch (error$27) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$27);
+      } catch (error) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
     }
     function commitBeforeMutationEffects(root, firstChild) {
@@ -10629,12 +10590,12 @@ __DEV__ &&
                 "ref" in finishedWork.memoizedProps ||
                 didWarnAboutReassigningProps ||
                 (finishedRoot.props !== finishedWork.memoizedProps &&
-                  error$jscomp$0(
+                  console.error(
                     "Expected %s props to match memoized props before componentDidMount. This might either be because of a bug in React, or because a component reassigns its own `this.props`. Please file an issue.",
                     getComponentNameFromFiber(finishedWork) || "instance"
                   ),
                 finishedRoot.state !== finishedWork.memoizedState &&
-                  error$jscomp$0(
+                  console.error(
                     "Expected %s state to match memoized state before componentDidMount. This might either be because of a bug in React, or because a component reassigns its own `this.state`. Please file an issue.",
                     getComponentNameFromFiber(finishedWork) || "instance"
                   )),
@@ -10663,12 +10624,12 @@ __DEV__ &&
                 "ref" in finishedWork.memoizedProps ||
                 didWarnAboutReassigningProps ||
                 (finishedRoot.props !== finishedWork.memoizedProps &&
-                  error$jscomp$0(
+                  console.error(
                     "Expected %s props to match memoized props before componentDidUpdate. This might either be because of a bug in React, or because a component reassigns its own `this.props`. Please file an issue.",
                     getComponentNameFromFiber(finishedWork) || "instance"
                   ),
                 finishedRoot.state !== finishedWork.memoizedState &&
-                  error$jscomp$0(
+                  console.error(
                     "Expected %s state to match memoized state before componentDidUpdate. This might either be because of a bug in React, or because a component reassigns its own `this.state`. Please file an issue.",
                     getComponentNameFromFiber(finishedWork) || "instance"
                   ));
@@ -10721,12 +10682,8 @@ __DEV__ &&
                 flags,
                 prevProps
               );
-            } catch (error$17) {
-              captureCommitPhaseError(
-                finishedWork,
-                finishedWork.return,
-                error$17
-              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
           finishedRoot.effectDuration += popNestedEffectDurations(current);
@@ -10753,12 +10710,8 @@ __DEV__ &&
                 commitStartTime,
                 finishedRoot.effectDuration
               );
-            } catch (error$22) {
-              captureCommitPhaseError(
-                finishedWork,
-                finishedWork.return,
-                error$22
-              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           } else recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
           break;
@@ -10850,7 +10803,7 @@ __DEV__ &&
         } catch (err) {
           hasLoggedError ||
             ((hasLoggedError = !0),
-            error$jscomp$0(
+            console.error(
               "React instrumentation encountered an error: %s",
               err
             ));
@@ -10874,11 +10827,11 @@ __DEV__ &&
             try {
               var onDeleted = finishedRoot.onDeleted;
               onDeleted && onDeleted(deletedFiber.stateNode);
-            } catch (error$28) {
+            } catch (error) {
               captureCommitPhaseError(
                 deletedFiber,
                 nearestMountedAncestor,
-                error$28
+                error
               );
             }
           break;
@@ -11094,12 +11047,8 @@ __DEV__ &&
                 flags,
                 pendingChildren
               );
-            } catch (error$26) {
-              captureCommitPhaseError(
-                finishedWork,
-                finishedWork.return,
-                error$26
-              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
           root.effectDuration += popNestedEffectDurations(current);
@@ -11142,13 +11091,9 @@ __DEV__ &&
                   null !== retryQueue && pendingChildren(new Set(retryQueue));
                 } else
                   void 0 !== pendingChildren &&
-                    error$jscomp$0("Unexpected type for suspenseCallback.");
-            } catch (error$29) {
-              captureCommitPhaseError(
-                finishedWork,
-                finishedWork.return,
-                error$29
-              );
+                    console.error("Unexpected type for suspenseCallback.");
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
             root = finishedWork.updateQueue;
             null !== root &&
@@ -11220,8 +11165,8 @@ __DEV__ &&
       if (flags & 2) {
         try {
           runWithFiberInDEV(finishedWork, commitPlacement, finishedWork);
-        } catch (error$25) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error$25);
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
         finishedWork.flags &= -3;
       }
@@ -11312,12 +11257,8 @@ __DEV__ &&
                 current,
                 finishedRoot
               );
-            } catch (error$16) {
-              captureCommitPhaseError(
-                finishedWork,
-                finishedWork.return,
-                error$16
-              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
           includeWorkInProgressEffects &&
@@ -11359,12 +11300,8 @@ __DEV__ &&
                 commitStartTime,
                 includeWorkInProgressEffects.effectDuration
               );
-            } catch (error$22) {
-              captureCommitPhaseError(
-                finishedWork,
-                finishedWork.return,
-                error$22
-              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           } else
             recursivelyTraverseReappearLayoutEffects(
@@ -11519,12 +11456,8 @@ __DEV__ &&
                 commitStartTime,
                 finishedRoot.passiveEffectDuration
               );
-            } catch (error$23) {
-              captureCommitPhaseError(
-                finishedWork,
-                finishedWork.return,
-                error$23
-              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           } else
             recursivelyTraversePassiveMountEffects(
@@ -11991,7 +11924,7 @@ __DEV__ &&
           : void 0;
       isReactActEnvironmentGlobal ||
         null === ReactSharedInternals.actQueue ||
-        error$jscomp$0(
+        console.error(
           "The current testing environment is not configured to support act(...)"
         );
       return isReactActEnvironmentGlobal;
@@ -12023,7 +11956,7 @@ __DEV__ &&
     }
     function scheduleUpdateOnFiber(root, fiber, lane) {
       isRunningInsertionEffect &&
-        error$jscomp$0("useInsertionEffect must not schedule updates.");
+        console.error("useInsertionEffect must not schedule updates.");
       isFlushingPassiveEffects && (didScheduleUpdateDuringPassiveEffects = !0);
       if (
         (root === workInProgressRoot &&
@@ -12054,7 +11987,7 @@ __DEV__ &&
               didWarnAboutUpdateInRenderForAnotherComponent.has(root) ||
                 (didWarnAboutUpdateInRenderForAnotherComponent.add(root),
                 (fiber = getComponentNameFromFiber(fiber) || "Unknown"),
-                error$jscomp$0(
+                console.error(
                   "Cannot update a component (`%s`) while rendering a different component (`%s`). To locate the bad setState() call inside `%s`, follow the stack trace as described in https://react.dev/link/setstate-in-render",
                   fiber,
                   root,
@@ -12063,7 +11996,7 @@ __DEV__ &&
               break;
             case 1:
               didWarnAboutUpdateInRender ||
-                (error$jscomp$0(
+                (console.error(
                   "Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state."
                 ),
                 (didWarnAboutUpdateInRender = !0));
@@ -12317,7 +12250,7 @@ __DEV__ &&
             check = check.value;
             try {
               if (!objectIs(getSnapshot(), check)) return !1;
-            } catch (error$30) {
+            } catch (error) {
               return !1;
             }
           }
@@ -12602,8 +12535,8 @@ __DEV__ &&
           workLoopSync();
           memoizedUpdaters = workInProgressRootExitStatus;
           break;
-        } catch (thrownValue$31) {
-          handleThrow(root, thrownValue$31);
+        } catch (thrownValue$5) {
+          handleThrow(root, thrownValue$5);
         }
       while (1);
       lanes && root.shellSuspendCounter++;
@@ -12730,7 +12663,7 @@ __DEV__ &&
                     }
                     break;
                   default:
-                    error$jscomp$0(
+                    console.error(
                       "Unexpected type of fiber triggered a suspensey commit. This is a bug in React."
                     );
                 }
@@ -12766,8 +12699,8 @@ __DEV__ &&
             ? workLoopSync()
             : workLoopConcurrentByScheduler();
           break;
-        } catch (thrownValue$32) {
-          handleThrow(root, thrownValue$32);
+        } catch (thrownValue$6) {
+          handleThrow(root, thrownValue$6);
         }
       while (1);
       resetContextDependencies();
@@ -12893,9 +12826,8 @@ __DEV__ &&
           workInProgress = null;
           return;
         }
-      } catch (error$33) {
-        if (null !== returnFiber)
-          throw ((workInProgress = returnFiber), error$33);
+      } catch (error) {
+        if (null !== returnFiber) throw ((workInProgress = returnFiber), error);
         workInProgressRootExitStatus = RootFatalErrored;
         logUncaughtError(
           root,
@@ -13021,7 +12953,7 @@ __DEV__ &&
       if (null === finishedWork) markCommitStopped();
       else {
         0 === lanes &&
-          error$jscomp$0(
+          console.error(
             "finishedLanes should not be empty during a commit. This is a bug in React."
           );
         if (finishedWork === root.current)
@@ -13209,7 +13141,7 @@ __DEV__ &&
           } catch (err) {
             hasLoggedError ||
               ((hasLoggedError = !0),
-              error$jscomp$0(
+              console.error(
                 "React instrumentation encountered an error: %s",
                 err
               ));
@@ -13260,7 +13192,7 @@ __DEV__ &&
       componentStack = { componentStack: componentStack };
       Object.defineProperty(componentStack, "digest", {
         get: function () {
-          error$jscomp$0(
+          console.error(
             'You are accessing "digest" from the errorInfo object passed to onRecoverableError. This property is no longer provided as part of errorInfo but can be accessed as a property of the Error instance itself.'
           );
         }
@@ -13341,7 +13273,7 @@ __DEV__ &&
           } catch (err) {
             hasLoggedError ||
               ((hasLoggedError = !0),
-              error$jscomp$0(
+              console.error(
                 "React instrumentation encountered an error: %s",
                 err
               ));
@@ -13366,18 +13298,18 @@ __DEV__ &&
     function captureCommitPhaseError(
       sourceFiber,
       nearestMountedAncestor,
-      error$1
+      error
     ) {
       isRunningInsertionEffect = !1;
       if (3 === sourceFiber.tag)
-        captureCommitPhaseErrorOnRoot(sourceFiber, sourceFiber, error$1);
+        captureCommitPhaseErrorOnRoot(sourceFiber, sourceFiber, error);
       else {
         for (; null !== nearestMountedAncestor; ) {
           if (3 === nearestMountedAncestor.tag) {
             captureCommitPhaseErrorOnRoot(
               nearestMountedAncestor,
               sourceFiber,
-              error$1
+              error
             );
             return;
           }
@@ -13390,12 +13322,12 @@ __DEV__ &&
                 (null === legacyErrorBoundariesThatAlreadyFailed ||
                   !legacyErrorBoundariesThatAlreadyFailed.has(instance)))
             ) {
-              sourceFiber = createCapturedValueAtFiber(error$1, sourceFiber);
-              error$1 = createClassErrorUpdate(2);
-              instance = enqueueUpdate(nearestMountedAncestor, error$1, 2);
+              sourceFiber = createCapturedValueAtFiber(error, sourceFiber);
+              error = createClassErrorUpdate(2);
+              instance = enqueueUpdate(nearestMountedAncestor, error, 2);
               null !== instance &&
                 (initializeClassErrorUpdate(
-                  error$1,
+                  error,
                   instance,
                   nearestMountedAncestor,
                   sourceFiber
@@ -13407,9 +13339,9 @@ __DEV__ &&
           }
           nearestMountedAncestor = nearestMountedAncestor.return;
         }
-        error$jscomp$0(
+        console.error(
           "Internal React error: Attempted to capture a commit phase error inside a detached tree. This indicates a bug in React. Potential causes include deleting the same fiber more than once, committing an already-finished tree, or an inconsistent return pointer.\n\nError message:\n\n%s",
-          error$1
+          error
         );
       }
     }
@@ -13438,7 +13370,7 @@ __DEV__ &&
       0 !== root.tag &&
         isConcurrentActEnvironment() &&
         null === ReactSharedInternals.actQueue &&
-        error$jscomp$0(
+        console.error(
           "A suspended resource finished loading inside a test, but the event was not wrapped in act(...).\n\nWhen testing, code that resolves suspended data should be wrapped into act(...):\n\nact(() => {\n  /* finish loading suspended data */\n});\n/* assert on the output */\n\nThis ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act"
         );
       workInProgressRoot === root &&
@@ -13606,7 +13538,7 @@ __DEV__ &&
             didWarnStateUpdateForNotYetMountedComponent.add(tag);
           } else didWarnStateUpdateForNotYetMountedComponent = new Set([tag]);
           runWithFiberInDEV(fiber, function () {
-            error$jscomp$0(
+            console.error(
               "Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously later calls tries to update the component. Move this work to useEffect instead."
             );
           });
@@ -13642,7 +13574,7 @@ __DEV__ &&
       }
       null === ReactSharedInternals.actQueue &&
         runWithFiberInDEV(fiber, function () {
-          error$jscomp$0(
+          console.error(
             "An update to %s inside a test was not wrapped in act(...).\n\nWhen testing, code that causes React state updates should be wrapped into act(...):\n\nact(() => {\n  /* fire events that update state */\n});\n/* assert on the output */\n\nThis ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act",
             getComponentNameFromFiber(fiber)
           );
@@ -13986,7 +13918,7 @@ __DEV__ &&
               (type = pendingProps),
               (owner = mode),
               "string" !== typeof type.id &&
-                error$jscomp$0(
+                console.error(
                   'Profiler must specify an "id" of type `string` as a prop. Received the type `%s` instead.',
                   typeof type.id
                 ),
@@ -14225,11 +14157,11 @@ __DEV__ &&
       try {
         testStringCoercion(key);
         var JSCompiler_inline_result = !1;
-      } catch (e$34) {
+      } catch (e$7) {
         JSCompiler_inline_result = !0;
       }
       JSCompiler_inline_result &&
-        (error$jscomp$0(
+        (console.error(
           "The provided key is an unsupported type %s. This value must be coerced to a string before using it here.",
           ("function" === typeof Symbol &&
             Symbol.toStringTag &&
@@ -14264,13 +14196,13 @@ __DEV__ &&
           ((didWarnAboutFindNodeInStrictMode[componentName] = !0),
           runWithFiberInDEV(component, function () {
             fiber.mode & 8
-              ? error$jscomp$0(
+              ? console.error(
                   "%s is deprecated in StrictMode. %s was passed an instance of %s which is inside StrictMode. Instead, add a ref directly to the element you want to reference. Learn more about using refs safely here: https://react.dev/link/strict-mode-find-node",
                   methodName,
                   methodName,
                   componentName
                 )
-              : error$jscomp$0(
+              : console.error(
                   "%s is deprecated in StrictMode. %s was passed an instance of %s which renders StrictMode children. Instead, add a ref directly to the element you want to reference. Learn more about using refs safely here: https://react.dev/link/strict-mode-find-node",
                   methodName,
                   methodName,
@@ -14310,7 +14242,7 @@ __DEV__ &&
         } catch (err) {
           hasLoggedError ||
             ((hasLoggedError = !0),
-            error$jscomp$0(
+            console.error(
               "React instrumentation encountered an error: %s",
               err
             ));
@@ -14361,7 +14293,7 @@ __DEV__ &&
         null !== current &&
         !didWarnAboutNestedUpdates &&
         ((didWarnAboutNestedUpdates = !0),
-        error$jscomp$0(
+        console.error(
           "Render methods should be a pure function of props and state; triggering nested component updates from render is not allowed. If necessary, trigger nested updates in componentDidUpdate.\n\nCheck the render method of %s.",
           getComponentNameFromFiber(current) || "Unknown"
         ));
@@ -14370,7 +14302,7 @@ __DEV__ &&
       callback = void 0 === callback ? null : callback;
       null !== callback &&
         ("function" !== typeof callback &&
-          error$jscomp$0(
+          console.error(
             "Expected the last optional `callback` argument to be a function. Instead received: %s.",
             callback
           ),
@@ -14397,7 +14329,7 @@ __DEV__ &&
         isRendering &&
         null !== owner.stateNode &&
         (owner.stateNode._warnedAboutRefsInRender ||
-          error$jscomp$0(
+          console.error(
             "%s is accessing findNodeHandle inside its render(). render() should be a pure function of props and state. It should never access something that requires stale data from the previous render, such as refs. Move this logic to componentDidMount and componentDidUpdate instead.",
             getComponentNameFromType(owner.type) || "A component"
           ),
@@ -14453,7 +14385,7 @@ __DEV__ &&
       internalInstanceHandle
     ) {
       hostContext.isInAParentText ||
-        error$jscomp$0(
+        console.error(
           "Text strings must be rendered within a <Text> component."
         );
       hostContext = nextReactTag;
@@ -14525,7 +14457,7 @@ __DEV__ &&
             null != errorInfo.componentStack ? errorInfo.componentStack : ""
         }) &&
         (reportGlobalError(error),
-        warn(
+        console.warn(
           "%s\n\n%s\n",
           componentName
             ? "An error occurred in the <" + componentName + "> component."
@@ -14567,7 +14499,7 @@ __DEV__ &&
             error.unshift(console),
             (error = bind.apply(console.error, error)),
             error())
-          : error$jscomp$0(
+          : console.error(
               "%o\n\n%s\n\n%s\n",
               error,
               componentNameMessage,
@@ -14584,11 +14516,6 @@ __DEV__ &&
       dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
       ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/ReactNativePrivateInterface"),
       Scheduler = require("scheduler"),
-      ReactSharedInternals =
-        React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-      enableRemoveConsolePatches =
-        dynamicFlagsUntyped && dynamicFlagsUntyped.enableRemoveConsolePatches,
-      suppressWarning = !1,
       isArrayImpl = Array.isArray,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
       enableFabricCompleteRootInCommitPhase =
@@ -14608,6 +14535,8 @@ __DEV__ &&
         dynamicFlagsUntyped.enableFastAddPropertiesInDiffing,
       enableLazyPublicInstanceInFabric =
         dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
+      ReactSharedInternals =
+        React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -14809,7 +14738,7 @@ __DEV__ &&
                 }
               topLevelType = touchBank[touchHistory.indexOfSingleActiveTouch];
               (null != topLevelType && topLevelType.touchActive) ||
-                error$jscomp$0("Cannot find single active touch.");
+                console.error("Cannot find single active touch.");
             }
         },
         touchHistory: touchHistory
@@ -14897,7 +14826,7 @@ __DEV__ &&
             if (0 <= trackedTouchCount) --trackedTouchCount;
             else
               return (
-                warn(
+                console.warn(
                   "Ended a touch event which was not counted in `trackedTouchCount`."
                 ),
                 null
@@ -15494,7 +15423,7 @@ __DEV__ &&
         var sortedNames = setToSortedString(
           UNSAFE_componentWillMountUniqueNames
         );
-        error$jscomp$0(
+        console.error(
           "Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move code with side effects to componentDidMount, and set initial state in the constructor.\n\nPlease update the following components: %s",
           sortedNames
         );
@@ -15503,7 +15432,7 @@ __DEV__ &&
         ((sortedNames = setToSortedString(
           UNSAFE_componentWillReceivePropsUniqueNames
         )),
-        error$jscomp$0(
+        console.error(
           "Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move data fetching code or side effects to componentDidUpdate.\n* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state\n\nPlease update the following components: %s",
           sortedNames
         ));
@@ -15511,13 +15440,13 @@ __DEV__ &&
         ((sortedNames = setToSortedString(
           UNSAFE_componentWillUpdateUniqueNames
         )),
-        error$jscomp$0(
+        console.error(
           "Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move data fetching code or side effects to componentDidUpdate.\n\nPlease update the following components: %s",
           sortedNames
         ));
       0 < componentWillMountUniqueNames.size &&
         ((sortedNames = setToSortedString(componentWillMountUniqueNames)),
-        warn(
+        console.warn(
           "componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move code with side effects to componentDidMount, and set initial state in the constructor.\n* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\nPlease update the following components: %s",
           sortedNames
         ));
@@ -15525,13 +15454,13 @@ __DEV__ &&
         ((sortedNames = setToSortedString(
           componentWillReceivePropsUniqueNames
         )),
-        warn(
+        console.warn(
           "componentWillReceiveProps has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move data fetching code or side effects to componentDidUpdate.\n* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state\n* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\nPlease update the following components: %s",
           sortedNames
         ));
       0 < componentWillUpdateUniqueNames.size &&
         ((sortedNames = setToSortedString(componentWillUpdateUniqueNames)),
-        warn(
+        console.warn(
           "componentWillUpdate has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move data fetching code or side effects to componentDidUpdate.\n* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\nPlease update the following components: %s",
           sortedNames
         ));
@@ -15546,7 +15475,7 @@ __DEV__ &&
       for (var node = fiber; null !== node; )
         node.mode & 8 && (strictRoot = node), (node = node.return);
       null === strictRoot
-        ? error$jscomp$0(
+        ? console.error(
             "Expected to find a StrictMode component in a strict mode tree. This error is likely caused by a bug in React. Please file an issue."
           )
         : !didWarnAboutLegacyContext.has(fiber.type) &&
@@ -15570,7 +15499,7 @@ __DEV__ &&
           });
           var sortedNames = setToSortedString(uniqueNames);
           runWithFiberInDEV(firstFiber, function () {
-            error$jscomp$0(
+            console.error(
               "Legacy context API has been detected within a strict-mode tree.\n\nThe old API will be supported in all 16.x releases, but applications using it should migrate to the new version.\n\nPlease update the following components: %s\n\nLearn more about this warning here: https://react.dev/link/legacy-context",
               sortedNames
             );
@@ -15598,7 +15527,7 @@ __DEV__ &&
       ),
       noopSuspenseyCommitThenable = {
         then: function () {
-          error$jscomp$0(
+          console.error(
             'Internal React error: A listener was unexpectedly attached to a "noop" thenable. This is a bug in React. Please file an issue.'
           );
         }
@@ -15707,7 +15636,7 @@ __DEV__ &&
           null !== updateDeps &&
           isArrayImpl(updateDeps) &&
           0 === updateDeps.length &&
-          error$jscomp$0(
+          console.error(
             "%s received a dependency array with no dependencies. When specified, the dependency array must have at least one dependency.",
             currentHookNameInDev
           );
@@ -16721,8 +16650,8 @@ __DEV__ &&
         "react-stack-bottom-frame": function (finishedWork, instance) {
           try {
             instance.componentDidMount();
-          } catch (error$9) {
-            captureCommitPhaseError(finishedWork, finishedWork.return, error$9);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
         }
       },
@@ -16739,12 +16668,8 @@ __DEV__ &&
         ) {
           try {
             instance.componentDidUpdate(prevProps, prevState, snapshot);
-          } catch (error$10) {
-            captureCommitPhaseError(
-              finishedWork,
-              finishedWork.return,
-              error$10
-            );
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
         }
       },
@@ -16770,8 +16695,8 @@ __DEV__ &&
         ) {
           try {
             instance.componentWillUnmount();
-          } catch (error$11) {
-            captureCommitPhaseError(current, nearestMountedAncestor, error$11);
+          } catch (error) {
+            captureCommitPhaseError(current, nearestMountedAncestor, error);
           }
         }
       },
@@ -16795,7 +16720,7 @@ __DEV__ &&
                   effect.update(effect.inst.resource);
                 break;
               default:
-                error$jscomp$0(
+                console.error(
                   "Unhandled Effect kind %s. This is a bug in React.",
                   effect.kind
                 );
@@ -16803,7 +16728,7 @@ __DEV__ &&
           } else
             return (
               null != effect.resourceKind &&
-                error$jscomp$0(
+                console.error(
                   "Expected only SimpleEffects when enableUseEffectCRUDOverload is disabled, got %s",
                   effect.resourceKind
                 ),
@@ -16823,8 +16748,8 @@ __DEV__ &&
         ) {
           try {
             destroy();
-          } catch (error$12) {
-            captureCommitPhaseError(current, nearestMountedAncestor, error$12);
+          } catch (error) {
+            captureCommitPhaseError(current, nearestMountedAncestor, error);
           }
         }
       },
@@ -16888,7 +16813,7 @@ __DEV__ &&
               (childOwnerAppendix =
                 " It was passed a child from " + componentName + "."));
           runWithFiberInDEV(workInProgress, function () {
-            error$jscomp$0(
+            console.error(
               'Each child in a list should have a unique "key" prop.%s%s See https://react.dev/link/warning-keys for more information.',
               currentComponentErrorInfo,
               childOwnerAppendix
@@ -17361,7 +17286,7 @@ __DEV__ &&
                     );
                   }
                 )
-              : error$jscomp$0(
+              : console.error(
                   "getInspectorDataForViewAtPoint expects to receive a host component"
                 );
         }
@@ -17398,7 +17323,7 @@ __DEV__ &&
       getInstanceFromNode$1 = getInstanceFromNodeImpl;
       ((getNodeFromInstance$1 = getNodeFromInstanceImpl) &&
         getInstanceFromNode$1) ||
-        error$jscomp$0(
+        console.error(
           "Injected module is missing getNodeFromInstance or getInstanceFromNode."
         );
     })(
@@ -17460,10 +17385,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-9dd378ff-20250224",
+        version: "19.1.0-native-fb-25677265-20250224",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-9dd378ff-20250224"
+        reconcilerVersion: "19.1.0-native-fb-25677265-20250224"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -17498,7 +17423,7 @@ __DEV__ &&
           ? handle._nativeTag
           : ReactNativePrivateInterface.getNativeTagFromPublicInstance(handle);
       null == nativeTag
-        ? error$jscomp$0(
+        ? console.error(
             "dispatchCommand was called with a ref that isn't a native component. Use React.forwardRef to get access to the underlying native component"
           )
         : ((handle =
@@ -17517,7 +17442,7 @@ __DEV__ &&
         isRendering &&
         null !== owner.stateNode &&
         (owner.stateNode._warnedAboutRefsInRender ||
-          error$jscomp$0(
+          console.error(
             "%s is accessing findNodeHandle inside its render(). render() should be a pure function of props and state. It should never access something that requires stale data from the previous render, such as refs. Move this logic to componentDidMount and componentDidUpdate instead.",
             getComponentNameFromType(owner.type) || "A component"
           ),
@@ -17652,7 +17577,7 @@ __DEV__ &&
           ? handle._nativeTag
           : ReactNativePrivateInterface.getNativeTagFromPublicInstance(handle);
       null == nativeTag
-        ? error$jscomp$0(
+        ? console.error(
             "sendAccessibilityEvent was called with a ref that isn't a native component. Use React.forwardRef to get access to the underlying native component"
           )
         : ((handle =
