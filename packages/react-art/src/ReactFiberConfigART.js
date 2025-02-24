@@ -311,7 +311,7 @@ export function createTextInstance(
 }
 
 export type FragmentInstance = null | {
-  _fragmentFiber: any,
+  _fragmentFiber: Object,
   ...
 };
 

@@ -13,12 +13,14 @@ let React;
 let ReactDOMClient;
 let act;
 let container;
+let Fragment;
 let Activity;
 
 describe('FragmentRefs', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    Fragment = React.Fragment;
     Activity = React.unstable_Activity;
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
@@ -38,9 +40,9 @@ describe('FragmentRefs', () => {
     await act(() =>
       root.render(
         <div id="parent">
-          <React.Fragment ref={fragmentRef}>
+          <Fragment ref={fragmentRef}>
             <div id="child">Hi</div>
-          </React.Fragment>
+          </Fragment>
         </div>,
       ),
     );
@@ -58,9 +60,9 @@ describe('FragmentRefs', () => {
 
     await act(() => {
       root.render(
-        <React.Fragment ref={ref => (fragmentRef = ref)}>
+        <Fragment ref={ref => (fragmentRef = ref)}>
           <div id="child">Hi</div>
-        </React.Fragment>,
+        </Fragment>,
       );
     });
 
@@ -78,9 +80,9 @@ describe('FragmentRefs', () => {
         expect(fragmentRef.current).not.toBe(null);
       });
       return (
-        <React.Fragment ref={fragmentRef}>
+        <Fragment ref={fragmentRef}>
           <div />
-        </React.Fragment>
+        </Fragment>
       );
     }
 
@@ -99,13 +101,15 @@ describe('FragmentRefs', () => {
       function Test() {
         return (
           <div ref={parentRef}>
-            <React.Fragment ref={fragmentRef}>
+            <Fragment ref={fragmentRef}>
               <div id="child-a" />
               <a id="child-b" href="/">
-                A
+                B
               </a>
-              <div tabIndex={0} id="child-c" />
-            </React.Fragment>
+              <a id="child-c" href="/">
+                C
+              </a>
+            </Fragment>
           </div>
         );
       }
@@ -114,6 +118,9 @@ describe('FragmentRefs', () => {
         root.render(<Test />);
       });
 
+      // The test environment doesn't implement focus.
+      // Mock it here, along with a naive focusable query so we can assert
+      // that the first _focusable_ element is found.
       const focusableChildren = parentRef.current.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
@@ -139,10 +146,10 @@ describe('FragmentRefs', () => {
 
       function Test({showA, showB}) {
         return (
-          <React.Fragment ref={fragmentRef}>
+          <Fragment ref={fragmentRef}>
             {showA && <a id="child-a" />}
             {showB && <a id="child-b" />}
-          </React.Fragment>
+          </Fragment>
         );
       }
 
@@ -211,10 +218,10 @@ describe('FragmentRefs', () => {
         }, []);
         return (
           <div ref={parentRef}>
-            <React.Fragment ref={fragmentRef}>
+            <Fragment ref={fragmentRef}>
               <div ref={childARef}>A</div>
               <div ref={childBRef}>B</div>
-            </React.Fragment>
+            </Fragment>
           </div>
         );
       }
@@ -270,17 +277,17 @@ describe('FragmentRefs', () => {
       await act(() => {
         root.render(
           <div>
-            <React.Fragment ref={fragmentRef}>
+            <Fragment ref={fragmentRef}>
               <div ref={childARef}>A</div>
               <div>
-                <React.Fragment ref={nestedFragmentRef}>
+                <Fragment ref={nestedFragmentRef}>
                   <div ref={childBRef}>B</div>
-                </React.Fragment>
+                </Fragment>
               </div>
-              <React.Fragment ref={nestedFragmentRef2}>
+              <Fragment ref={nestedFragmentRef2}>
                 <div ref={childCRef}>C</div>
-              </React.Fragment>
-            </React.Fragment>
+              </Fragment>
+            </Fragment>
           </div>,
         );
       });
@@ -348,14 +355,14 @@ describe('FragmentRefs', () => {
 
         return (
           <div>
-            <React.Fragment ref={fragmentRef}>
+            <Fragment ref={fragmentRef}>
               <div id="a">A</div>
               {shouldShowChild && (
                 <div ref={childRef} id="b">
                   B
                 </div>
               )}
-            </React.Fragment>
+            </Fragment>
           </div>
         );
       }
@@ -395,7 +402,7 @@ describe('FragmentRefs', () => {
       await act(() => {
         root.render(
           <div>
-            <React.Fragment ref={fragmentRef}>
+            <Fragment ref={fragmentRef}>
               <div ref={childRef}>Host A</div>
               <Wrapper>
                 <Wrapper>
@@ -404,7 +411,7 @@ describe('FragmentRefs', () => {
                   </Wrapper>
                 </Wrapper>
               </Wrapper>
-            </React.Fragment>
+            </Fragment>
           </div>,
         );
       });
@@ -430,13 +437,13 @@ describe('FragmentRefs', () => {
         function Test() {
           return (
             <div ref={parentRef}>
-              <React.Fragment ref={fragmentRef}>
+              <Fragment ref={fragmentRef}>
                 <div>Child 1</div>
                 <Activity mode="hidden">
                   <div>Child 2</div>
                 </Activity>
                 <div>Child 3</div>
-              </React.Fragment>
+              </Fragment>
             </div>
           );
         }
@@ -466,13 +473,13 @@ describe('FragmentRefs', () => {
         function Test() {
           return (
             <div ref={parentRef}>
-              <React.Fragment ref={fragmentRef}>
+              <Fragment ref={fragmentRef}>
                 <div>Child 1</div>
                 <Activity mode="visible">
                   <div>Child 2</div>
                 </Activity>
                 <div>Child 3</div>
-              </React.Fragment>
+              </Fragment>
             </div>
           );
         }
@@ -503,14 +510,14 @@ describe('FragmentRefs', () => {
         function Test({mode}) {
           return (
             <div id="parent" ref={parentRef}>
-              <React.Fragment ref={fragmentRef}>
+              <Fragment ref={fragmentRef}>
                 <Activity mode={mode}>
                   <div id="child1">Child</div>
-                  <React.Fragment ref={fragmentRef2}>
+                  <Fragment ref={fragmentRef2}>
                     <div id="child2">Child 2</div>
-                  </React.Fragment>
+                  </Fragment>
                 </Activity>
-              </React.Fragment>
+              </Fragment>
             </div>
           );
         }
