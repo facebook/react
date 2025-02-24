@@ -13,8 +13,6 @@
 "use strict";
 __DEV__ &&
   (require("ReactFeatureFlags"),
-  require("warning"),
-  require("ReactFeatureFlags"),
   (exports.ConcurrentRoot = 1),
   (exports.ContinuousEventPriority = 8),
   (exports.DefaultEventPriority = 32),

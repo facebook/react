@@ -13,31 +13,6 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function error$jscomp$0(format) {
-      for (
-        var _len2 = arguments.length,
-          args = Array(1 < _len2 ? _len2 - 1 : 0),
-          _key2 = 1;
-        _key2 < _len2;
-        _key2++
-      )
-        args[_key2 - 1] = arguments[_key2];
-      if (enableRemoveConsolePatches) {
-        var _console2;
-        (_console2 = console).error.apply(_console2, [format].concat(args));
-      } else
-        (_len2 = format),
-          enableRemoveConsolePatches ||
-            ((_key2 =
-              require("react").__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE),
-            null != _key2 &&
-              _key2.getCurrentStack &&
-              ((_key2 = _key2.getCurrentStack()),
-              "" !== _key2 && ((_len2 += "%s"), args.push(_key2))),
-            args.unshift(_len2),
-            args.unshift(!1),
-            warningWWW.apply(null, args));
-    }
     function readContext(Context) {
       var dispatcher = SharedInternals.H;
       if (null === dispatcher)
@@ -52,7 +27,7 @@ __DEV__ &&
         "boolean" !== typeof input &&
         void 0 !== input &&
         null !== input &&
-        error$jscomp$0(
+        console.error(
           "Invalid key type. Expected a string, number, symbol, or boolean, but instead received: %s\n\nTo use non-primitive values as keys, you must pass a hash function as the second argument to createResource().",
           input
         );
@@ -97,9 +72,6 @@ __DEV__ &&
     }
     var React = require("react"),
       Scheduler = require("scheduler"),
-      enableRemoveConsolePatches =
-        require("ReactFeatureFlags").enableRemoveConsolePatches,
-      warningWWW = require("warning"),
       scheduleCallback = Scheduler.unstable_scheduleCallback,
       IdlePriority = Scheduler.unstable_IdlePriority,
       SharedInternals =

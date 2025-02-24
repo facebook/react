@@ -43,46 +43,6 @@ __DEV__ &&
     function scriptReplacer(match, prefix, s, suffix) {
       return "" + prefix + ("s" === s ? "\\u0073" : "\\u0053") + suffix;
     }
-    function warn(format) {
-      for (
-        var _len = arguments.length,
-          args = Array(1 < _len ? _len - 1 : 0),
-          _key = 1;
-        _key < _len;
-        _key++
-      )
-        args[_key - 1] = arguments[_key];
-      if (enableRemoveConsolePatches) {
-        var _console;
-        (_console = console).warn.apply(_console, [format].concat(args));
-      } else printWarning("warn", format, args);
-    }
-    function error$jscomp$2(format) {
-      for (
-        var _len2 = arguments.length,
-          args = Array(1 < _len2 ? _len2 - 1 : 0),
-          _key2 = 1;
-        _key2 < _len2;
-        _key2++
-      )
-        args[_key2 - 1] = arguments[_key2];
-      if (enableRemoveConsolePatches) {
-        var _console2;
-        (_console2 = console).error.apply(_console2, [format].concat(args));
-      } else printWarning("error", format, args);
-    }
-    function printWarning(level, format, args) {
-      enableRemoveConsolePatches ||
-        ((level =
-          require("react").__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE),
-        null != level &&
-          level.getCurrentStack &&
-          ((level = level.getCurrentStack()),
-          "" !== level && ((format += "%s"), args.push(level))),
-        args.unshift(format),
-        args.unshift(!1),
-        warningWWW.apply(null, args));
-    }
     function objectName(object) {
       return Object.prototype.toString
         .call(object)
@@ -326,7 +286,7 @@ __DEV__ &&
     function checkAttributeStringCoercion(value, attributeName) {
       if (willCoercionThrow(value))
         return (
-          error$jscomp$2(
+          console.error(
             "The provided `%s` attribute is an unsupported type %s. This value must be coerced to a string before using it here.",
             attributeName,
             typeName(value)
@@ -337,7 +297,7 @@ __DEV__ &&
     function checkCSSPropertyStringCoercion(value, propName) {
       if (willCoercionThrow(value))
         return (
-          error$jscomp$2(
+          console.error(
             "The provided `%s` CSS property is an unsupported type %s. This value must be coerced to a string before using it here.",
             propName,
             typeName(value)
@@ -348,7 +308,7 @@ __DEV__ &&
     function checkHtmlStringCoercion(value) {
       if (willCoercionThrow(value))
         return (
-          error$jscomp$2(
+          console.error(
             "The provided HTML markup uses a value of unsupported type %s. This value must be coerced to a string before using it here.",
             typeName(value)
           ),
@@ -363,7 +323,7 @@ __DEV__ &&
       if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName))
         return (validatedAttributeNameCache[attributeName] = !0);
       illegalAttributeNameCache[attributeName] = !0;
-      error$jscomp$2("Invalid attribute name: `%s`", attributeName);
+      console.error("Invalid attribute name: `%s`", attributeName);
       return !1;
     }
     function checkControlledValueProps(tagName, props) {
@@ -374,17 +334,17 @@ __DEV__ &&
         props.disabled ||
         null == props.value ||
         ("select" === tagName
-          ? error$jscomp$2(
+          ? console.error(
               "You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set `onChange`."
             )
-          : error$jscomp$2(
+          : console.error(
               "You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`."
             ));
       props.onChange ||
         props.readOnly ||
         props.disabled ||
         null == props.checked ||
-        error$jscomp$2(
+        console.error(
           "You provided a `checked` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultChecked`. Otherwise, set either `onChange` or `readOnly`."
         );
     }
@@ -399,7 +359,7 @@ __DEV__ &&
         tagName = ariaProperties.hasOwnProperty(tagName) ? tagName : null;
         if (null == tagName)
           return (
-            error$jscomp$2(
+            console.error(
               "Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.",
               name
             ),
@@ -407,7 +367,7 @@ __DEV__ &&
           );
         if (name !== tagName)
           return (
-            error$jscomp$2(
+            console.error(
               "Invalid ARIA attribute `%s`. Did you mean `%s`?",
               name,
               tagName
@@ -420,7 +380,7 @@ __DEV__ &&
         tagName = ariaProperties.hasOwnProperty(tagName) ? tagName : null;
         if (null == tagName) return (warnedProperties$1[name] = !0), !1;
         name !== tagName &&
-          (error$jscomp$2(
+          (console.error(
             "Unknown ARIA attribute `%s`. Did you mean `%s`?",
             name,
             tagName
@@ -440,13 +400,13 @@ __DEV__ &&
         })
         .join(", ");
       1 === invalidProps.length
-        ? error$jscomp$2(
+        ? console.error(
             "Invalid aria prop %s on <%s> tag. For details, see https://react.dev/link/invalid-aria-props",
             props,
             type
           )
         : 1 < invalidProps.length &&
-          error$jscomp$2(
+          console.error(
             "Invalid aria props %s on <%s> tag. For details, see https://react.dev/link/invalid-aria-props",
             props,
             type
@@ -458,7 +418,7 @@ __DEV__ &&
       var lowerCasedName = name.toLowerCase();
       if ("onfocusin" === lowerCasedName || "onfocusout" === lowerCasedName)
         return (
-          error$jscomp$2(
+          console.error(
             "React uses onFocus and onBlur instead of onFocusIn and onFocusOut. All React events are normalized to bubble, so onFocusIn and onFocusOut are not needed/supported by React."
           ),
           (warnedProperties[name] = !0)
@@ -479,7 +439,7 @@ __DEV__ &&
           : null;
         if (null != eventRegistry)
           return (
-            error$jscomp$2(
+            console.error(
               "Invalid event handler property `%s`. Did you mean `%s`?",
               name,
               eventRegistry
@@ -488,7 +448,7 @@ __DEV__ &&
           );
         if (EVENT_NAME_REGEX.test(name))
           return (
-            error$jscomp$2(
+            console.error(
               "Unknown event handler property `%s`. It will be ignored.",
               name
             ),
@@ -497,7 +457,7 @@ __DEV__ &&
       } else if (EVENT_NAME_REGEX.test(name))
         return (
           INVALID_EVENT_NAME_REGEX.test(name) &&
-            error$jscomp$2(
+            console.error(
               "Invalid event handler property `%s`. React events use the camelCase naming convention, for example `onClick`.",
               name
             ),
@@ -506,14 +466,14 @@ __DEV__ &&
       if (rARIA.test(name) || rARIACamel.test(name)) return !0;
       if ("innerhtml" === lowerCasedName)
         return (
-          error$jscomp$2(
+          console.error(
             "Directly setting property `innerHTML` is not permitted. For more information, lookup documentation on `dangerouslySetInnerHTML`."
           ),
           (warnedProperties[name] = !0)
         );
       if ("aria" === lowerCasedName)
         return (
-          error$jscomp$2(
+          console.error(
             "The `aria` attribute is reserved for future use in React. Pass individual `aria-` attributes instead."
           ),
           (warnedProperties[name] = !0)
@@ -525,7 +485,7 @@ __DEV__ &&
         "string" !== typeof value
       )
         return (
-          error$jscomp$2(
+          console.error(
             "Received a `%s` for a string attribute `is`. If this is expected, cast the value to a string.",
             typeof value
           ),
@@ -533,7 +493,7 @@ __DEV__ &&
         );
       if ("number" === typeof value && isNaN(value))
         return (
-          error$jscomp$2(
+          console.error(
             "Received NaN for the `%s` attribute. If this is expected, cast the value to a string.",
             name
           ),
@@ -545,7 +505,7 @@ __DEV__ &&
           lowerCasedName !== name)
         )
           return (
-            error$jscomp$2(
+            console.error(
               "Invalid DOM property `%s`. Did you mean `%s`?",
               name,
               lowerCasedName
@@ -554,7 +514,7 @@ __DEV__ &&
           );
       } else if (name !== lowerCasedName)
         return (
-          error$jscomp$2(
+          console.error(
             "React does not recognize the `%s` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `%s` instead. If you accidentally passed it from a parent component, remove it from the DOM element.",
             name,
             lowerCasedName
@@ -623,7 +583,7 @@ __DEV__ &&
               if ("data-" === lowerCasedName || "aria-" === lowerCasedName)
                 return !0;
               value
-                ? error$jscomp$2(
+                ? console.error(
                     'Received `%s` for a non-boolean attribute `%s`.\n\nIf you want to write it to the DOM, pass a string instead: %s="%s" or %s={value.toString()}.',
                     value,
                     name,
@@ -631,7 +591,7 @@ __DEV__ &&
                     value,
                     name
                   )
-                : error$jscomp$2(
+                : console.error(
                     'Received `%s` for a non-boolean attribute `%s`.\n\nIf you want to write it to the DOM, pass a string instead: %s="%s" or %s={value.toString()}.\n\nIf you used to conditionally omit it with %s={condition && value}, pass %s={condition ? value : undefined} instead.',
                     value,
                     name,
@@ -680,7 +640,7 @@ __DEV__ &&
               default:
                 return !0;
             }
-            error$jscomp$2(
+            console.error(
               "Received the string `%s` for the boolean attribute `%s`. %s Did you mean %s={%s}?",
               value,
               name,
@@ -707,13 +667,13 @@ __DEV__ &&
         })
         .join(", ");
       1 === unknownProps.length
-        ? error$jscomp$2(
+        ? console.error(
             "Invalid value for prop %s on <%s> tag. Either remove it from the element, or pass a string or number value to keep it in the DOM. For details, see https://react.dev/link/attribute-behavior ",
             props,
             type
           )
         : 1 < unknownProps.length &&
-          error$jscomp$2(
+          console.error(
             "Invalid values for props %s on <%s> tag. Either remove them from the element, or pass a string or number value to keep them in the DOM. For details, see https://react.dev/link/attribute-behavior ",
             props,
             type
@@ -919,7 +879,7 @@ __DEV__ &&
                 (warnedStyleNames.hasOwnProperty(name) &&
                   warnedStyleNames[name]) ||
                   ((warnedStyleNames[name] = !0),
-                  error$jscomp$2(
+                  console.error(
                     "Unsupported style property %s. Did you mean %s?",
                     name,
                     camelize(name.replace(msPattern$1, "ms-"))
@@ -929,7 +889,7 @@ __DEV__ &&
                   (warnedStyleNames.hasOwnProperty(name) &&
                     warnedStyleNames[name]) ||
                     ((warnedStyleNames[name] = !0),
-                    error$jscomp$2(
+                    console.error(
                       "Unsupported vendor-prefixed style property %s. Did you mean %s?",
                       name,
                       name.charAt(0).toUpperCase() + name.slice(1)
@@ -940,7 +900,7 @@ __DEV__ &&
                 (warnedStyleValues.hasOwnProperty(value$jscomp$0) &&
                   warnedStyleValues[value$jscomp$0]) ||
                   ((warnedStyleValues[value$jscomp$0] = !0),
-                  error$jscomp$2(
+                  console.error(
                     'Style property values shouldn\'t contain a semicolon. Try "%s: %s" instead.',
                     name,
                     value$jscomp$0.replace(
@@ -953,14 +913,14 @@ __DEV__ &&
                 (isNaN(value)
                   ? warnedForNaNValue ||
                     ((warnedForNaNValue = !0),
-                    error$jscomp$2(
+                    console.error(
                       "`NaN` is an invalid value for the `%s` css style property.",
                       nameChunk
                     ))
                   : isFinite(value) ||
                     warnedForInfinityValue ||
                     ((warnedForInfinityValue = !0),
-                    error$jscomp$2(
+                    console.error(
                       "`Infinity` is an invalid value for the `%s` css style property.",
                       nameChunk
                     )));
@@ -1048,7 +1008,7 @@ __DEV__ &&
             "function" === typeof x.then
           )
             throw x;
-          error$jscomp$2(
+          console.error(
             "Failed to serialize an action for progressive enhancement:\n%s",
             x
           );
@@ -1071,19 +1031,19 @@ __DEV__ &&
         null === name ||
           didWarnFormActionName ||
           ((didWarnFormActionName = !0),
-          error$jscomp$2(
+          console.error(
             'Cannot specify a "name" prop for a button that specifies a function as a formAction. React needs it to encode which action should be invoked. It will get overridden.'
           ));
         (null === formEncType && null === formMethod) ||
           didWarnFormActionMethod ||
           ((didWarnFormActionMethod = !0),
-          error$jscomp$2(
+          console.error(
             "Cannot specify a formEncType or formMethod for a button that specifies a function as a formAction. React provides those automatically. They will get overridden."
           ));
         null === formTarget ||
           didWarnFormActionTarget ||
           ((didWarnFormActionTarget = !0),
-          error$jscomp$2(
+          console.error(
             "Cannot specify a formTarget for a button that specifies a function as a formAction. The function will always be executed in the same window."
           ));
         var customFields = getCustomFormFields(resumableState, formAction);
@@ -1133,12 +1093,12 @@ __DEV__ &&
         case "href":
           if ("" === value) {
             "src" === name
-              ? error$jscomp$2(
+              ? console.error(
                   'An empty string ("") was passed to the %s attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
                   name,
                   name
                 )
-              : error$jscomp$2(
+              : console.error(
                   'An empty string ("") was passed to the %s attribute. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
                   name,
                   name
@@ -1215,7 +1175,7 @@ __DEV__ &&
           "" !== value ||
             didWarnForNewBooleanPropsWithEmptyValue[name] ||
             ((didWarnForNewBooleanPropsWithEmptyValue[name] = !0),
-            error$jscomp$2(
+            console.error(
               "Received an empty string for a boolean attribute `%s`. This will treat the attribute as if it were false. Either pass `false` to silence this warning, or pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
               name
             ));
@@ -1365,13 +1325,13 @@ __DEV__ &&
       null != value &&
         ((value = isArrayImpl(value)),
         props.multiple && !value
-          ? error$jscomp$2(
+          ? console.error(
               "The `%s` prop supplied to <select> must be an array if `multiple` is true.",
               propName
             )
           : !props.multiple &&
             value &&
-            error$jscomp$2(
+            console.error(
               "The `%s` prop supplied to <select> must be a scalar value if `multiple` is false.",
               propName
             ));
@@ -1386,7 +1346,7 @@ __DEV__ &&
             "number" === typeof child ||
             "bigint" === typeof child ||
             ((didWarnInvalidOptionChildren = !0),
-            error$jscomp$2(
+            console.error(
               "Cannot infer the option value of complex children. Pass a `value` prop or use a plain string as children to <option>."
             )));
       });
@@ -1509,7 +1469,7 @@ __DEV__ &&
             : Array.isArray(children)
               ? "an array for children"
               : "something unexpected for children"),
-        error$jscomp$2(
+        console.error(
           "A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.",
           props
         ));
@@ -1595,11 +1555,11 @@ __DEV__ &&
         didWarnValueNull ||
         ((didWarnValueNull = !0),
         "select" === type && props.multiple
-          ? error$jscomp$2(
+          ? console.error(
               "`value` prop on `%s` should not be null. Consider using an empty array when `multiple` is set to `true` to clear the component or `undefined` for uncontrolled components.",
               type
             )
-          : error$jscomp$2(
+          : console.error(
               "`value` prop on `%s` should not be null. Consider using an empty string to clear the component or `undefined` for uncontrolled components.",
               type
             ));
@@ -1625,14 +1585,14 @@ __DEV__ &&
       !props.suppressContentEditableWarning &&
         props.contentEditable &&
         null != props.children &&
-        error$jscomp$2(
+        console.error(
           "A component is `contentEditable` and contains `children` managed by React. It is now your responsibility to guarantee that none of those nodes are unexpectedly modified or duplicated. This is probably not intentional."
         );
       formatContext.insertionMode !== SVG_MODE &&
         formatContext.insertionMode !== MATHML_MODE &&
         -1 === type.indexOf("-") &&
         type.toLowerCase() !== type &&
-        error$jscomp$2(
+        console.error(
           "<%s /> is using incorrect casing. Use PascalCase for React components, or lowercase for HTML elements.",
           type
         );
@@ -1685,7 +1645,7 @@ __DEV__ &&
           void 0 === props.value ||
             void 0 === props.defaultValue ||
             didWarnDefaultSelectValue ||
-            (error$jscomp$2(
+            (console.error(
               "Select elements must be either controlled or uncontrolled (specify either the value prop, or the defaultValue prop, but not both). Decide between using a controlled or uncontrolled select element and remove one of these props. More info: https://react.dev/link/controlled-components"
             ),
             (didWarnDefaultSelectValue = !0));
@@ -1737,7 +1697,7 @@ __DEV__ &&
                   case "selected":
                     selected = propValue$jscomp$1;
                     didWarnSelectedSetOnOption ||
-                      (error$jscomp$2(
+                      (console.error(
                         "Use the `defaultValue` or `value` props on <select> instead of setting `selected` on <option>."
                       ),
                       (didWarnSelectedSetOnOption = !0));
@@ -1763,7 +1723,7 @@ __DEV__ &&
               null === innerHTML$jscomp$1 ||
                 didWarnInvalidOptionInnerHTML ||
                 ((didWarnInvalidOptionInnerHTML = !0),
-                error$jscomp$2(
+                console.error(
                   "Pass a `value` prop if you set dangerouslyInnerHTML so React knows which value should be selected."
                 )),
                 (stringValue = flattenOptionChildren(children$jscomp$1));
@@ -1790,7 +1750,7 @@ __DEV__ &&
           void 0 === props.value ||
             void 0 === props.defaultValue ||
             didWarnDefaultTextareaValue ||
-            (error$jscomp$2(
+            (console.error(
               "Textarea elements must be either controlled or uncontrolled (specify either the value prop, or the defaultValue prop, but not both). Decide between using a controlled or uncontrolled textarea and remove one of these props. More info: https://react.dev/link/controlled-components"
             ),
             (didWarnDefaultTextareaValue = !0));
@@ -1830,7 +1790,7 @@ __DEV__ &&
             (value$jscomp$0 = defaultValue);
           target$jscomp$0.push(endOfStartTag);
           if (null != children$jscomp$2) {
-            error$jscomp$2(
+            console.error(
               "Use the `defaultValue` or `value` props instead of setting children on <textarea>."
             );
             if (null != value$jscomp$0)
@@ -1916,7 +1876,7 @@ __DEV__ &&
             "submit" === props.type ||
             didWarnFormActionType ||
             ((didWarnFormActionType = !0),
-            error$jscomp$2(
+            console.error(
               'An input can only specify a formAction along with type="submit" or type="image".'
             ));
           var formData = pushFormActionAttribute(
@@ -1932,7 +1892,7 @@ __DEV__ &&
           null === checked ||
             null === defaultChecked ||
             didWarnDefaultChecked ||
-            (error$jscomp$2(
+            (console.error(
               "%s contains an input of type %s with both checked and defaultChecked props. Input elements must be either controlled or uncontrolled (specify either the checked prop, or the defaultChecked prop, but not both). Decide between using a controlled or uncontrolled input element and remove one of these props. More info: https://react.dev/link/controlled-components",
               "A component",
               props.type
@@ -1941,7 +1901,7 @@ __DEV__ &&
           null === value$jscomp$1 ||
             null === defaultValue$jscomp$0 ||
             didWarnDefaultInputValue ||
-            (error$jscomp$2(
+            (console.error(
               "%s contains an input of type %s with both value and defaultValue props. Input elements must be either controlled or uncontrolled (specify either the value prop, or the defaultValue prop, but not both). Decide between using a controlled or uncontrolled input element and remove one of these props. More info: https://react.dev/link/controlled-components",
               "A component",
               props.type
@@ -2008,7 +1968,7 @@ __DEV__ &&
             "submit" === props.type ||
             didWarnFormActionType ||
             ((didWarnFormActionType = !0),
-            error$jscomp$2(
+            console.error(
               'A button can only specify a formAction along with type="submit" or no type.'
             ));
           var formData$jscomp$0 = pushFormActionAttribute(
@@ -2076,13 +2036,13 @@ __DEV__ &&
             (null === formEncType$jscomp$1 && null === formMethod$jscomp$1) ||
               didWarnFormActionMethod ||
               ((didWarnFormActionMethod = !0),
-              error$jscomp$2(
+              console.error(
                 "Cannot specify a encType or method for a form that specifies a function as the action. React provides those automatically. They will get overridden."
               ));
             null === formTarget$jscomp$1 ||
               didWarnFormActionTarget ||
               ((didWarnFormActionTarget = !0),
-              error$jscomp$2(
+              console.error(
                 "Cannot specify a target for a form that specifies a function as the action. The function will always be executed in the same window."
               ));
             var customFields = getCustomFormFields(
@@ -2176,7 +2136,7 @@ __DEV__ &&
                     checkAttributeStringCoercion(propValue$jscomp$7, "data");
                     var sanitizedValue = sanitizeURL("" + propValue$jscomp$7);
                     if ("" === sanitizedValue) {
-                      error$jscomp$2(
+                      console.error(
                         'An empty string ("") was passed to the %s attribute. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
                         propKey$jscomp$7,
                         propKey$jscomp$7
@@ -2217,22 +2177,22 @@ __DEV__ &&
                   : null
                 : children$jscomp$6;
             Array.isArray(children$jscomp$6) && 1 < children$jscomp$6.length
-              ? error$jscomp$2(
+              ? console.error(
                   "React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an Array with length %s instead. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value which is why Arrays of length greater than 1 are not supported. When using JSX it can be common to combine text nodes and value nodes. For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.",
                   children$jscomp$6.length
                 )
               : "function" === typeof child || "symbol" === typeof child
-                ? error$jscomp$2(
+                ? console.error(
                     "React expect children of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found %s instead. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value.",
                     "function" === typeof child ? "a Function" : "a Sybmol"
                   )
                 : child &&
                   child.toString === {}.toString &&
                   (null != child.$$typeof
-                    ? error$jscomp$2(
+                    ? console.error(
                         "React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an object that appears to be a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML."
                       )
-                    : error$jscomp$2(
+                    : console.error(
                         "React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an object that does not implement a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title> is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>."
                       ));
           }
@@ -2266,7 +2226,7 @@ __DEV__ &&
             "stylesheet" === rel &&
               "string" === typeof props.precedence &&
               (("string" === typeof href && href) ||
-                error$jscomp$2(
+                console.error(
                   'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and expected the `href` prop to be a non-empty string but ecountered %s instead. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop ensure there is a non-empty string `href` prop as well, otherwise remove the `precedence` prop.',
                   null === href
                     ? "`null`"
@@ -2287,7 +2247,7 @@ __DEV__ &&
             ) {
               if ("string" === typeof precedence)
                 if (null != props.disabled)
-                  error$jscomp$2(
+                  console.error(
                     'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and a `disabled` prop. The presence of the `disabled` prop indicates an intent to manage the stylesheet active state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `disabled` prop, otherwise remove the `precedence` prop.'
                   );
                 else if (props.onLoad || props.onError) {
@@ -2297,7 +2257,7 @@ __DEV__ &&
                       : props.onLoad
                         ? "`onLoad` prop"
                         : "`onError` prop";
-                  error$jscomp$2(
+                  console.error(
                     'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and %s. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the %s, otherwise remove the `precedence` prop.',
                     propDescription,
                     propDescription
@@ -2423,7 +2383,7 @@ __DEV__ &&
             ("function" === typeof child$jscomp$0 ||
               "symbol" === typeof child$jscomp$0 ||
               Array.isArray(child$jscomp$0)) &&
-              error$jscomp$2(
+              console.error(
                 "React expect children of <style> tags to be a string, number, or object with a `toString` method but found %s instead. In browsers style Elements can only have `Text` Nodes as children.",
                 "function" === typeof child$jscomp$0
                   ? "a Function"
@@ -2485,7 +2445,7 @@ __DEV__ &&
             var JSCompiler_inline_result$jscomp$7 = null;
           } else {
             href$jscomp$0.includes(" ") &&
-              error$jscomp$2(
+              console.error(
                 'React expected the `href` prop for a <style> tag opting into hoisting semantics using the `precedence` prop to not have any spaces but ecountered spaces instead. using spaces in this prop will cause hydration of this style to fail on the client. The href for the <style> where this ocurred is "%s".',
                 href$jscomp$0
               );
@@ -2498,7 +2458,7 @@ __DEV__ &&
             if (resourceState$jscomp$1 !== EXISTS) {
               resumableState.styleResources[href$jscomp$0] = EXISTS;
               resourceState$jscomp$1 &&
-                error$jscomp$2(
+                console.error(
                   'React encountered a hoistable style tag for the same href as a preload: "%s". When using a style tag to inline styles you should not also preload it as a stylsheet.',
                   href$jscomp$0
                 );
@@ -3033,7 +2993,7 @@ __DEV__ &&
         hrefs = styleQueue.hrefs;
       0 < rules.length &&
         0 === hrefs.length &&
-        error$jscomp$2(
+        console.error(
           "React expected to have at least one href for an a hoistable style but found none. This is a bug in React."
         );
       var i = 0;
@@ -3352,7 +3312,7 @@ __DEV__ &&
     ) {
       (resumableState.scriptResources.hasOwnProperty(href) ||
         resumableState.moduleScriptResources.hasOwnProperty(href)) &&
-        error$jscomp$2(
+        console.error(
           'Internal React Error: React expected bootstrap script or module with src "%s" to not have been preloaded already. please file an issue',
           href
         );
@@ -3410,7 +3370,7 @@ __DEV__ &&
     }
     function escapeStringForLinkHeaderQuotedParamValueContext(value, name) {
       willCoercionThrow(value) &&
-        (error$jscomp$2(
+        (console.error(
           "The provided `%s` option is an unsupported type %s. This value must be coerced to a string before using it here.",
           name,
           typeName(value)
@@ -3663,7 +3623,7 @@ __DEV__ &&
       if ("object" === typeof type)
         switch (
           ("number" === typeof type.tag &&
-            error$jscomp$2(
+            console.error(
               "Received an unexpected object in getComponentNameFromType(). This is likely a bug in React. Please file an issue."
             ),
           type.$$typeof)
@@ -3781,7 +3741,7 @@ __DEV__ &&
         var key = String(callback);
         didWarnOnInvalidCallback.has(key) ||
           (didWarnOnInvalidCallback.add(key),
-          error$jscomp$2(
+          console.error(
             "Expected the last optional `callback` argument to be a function. Instead received: %s.",
             callback
           ));
@@ -3794,7 +3754,7 @@ __DEV__ &&
         "ReactClass";
       var warningKey = publicInstance + "." + callerName;
       didWarnAboutNoopUpdateForComponent[warningKey] ||
-        (error$jscomp$2(
+        (console.error(
           "Can only update a mounting component. This usually means you called %s() outside componentWillMount() on the server. This is a no-op.\n\nPlease check the code for the %s component.",
           callerName,
           publicInstance
@@ -3894,7 +3854,7 @@ __DEV__ &&
           "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
         );
       isInHookUserCodeInDev &&
-        error$jscomp$2(
+        console.error(
           "Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. You can only call Hooks at the top level of your React function. For more information, see https://react.dev/link/rules-of-hooks"
         );
       return currentlyRenderingComponent;
@@ -3935,7 +3895,7 @@ __DEV__ &&
     }
     function readContext(context) {
       isInHookUserCodeInDev &&
-        error$jscomp$2(
+        console.error(
           "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
         );
       return context._currentValue2;
@@ -3997,14 +3957,14 @@ __DEV__ &&
           a: {
             var JSCompiler_inline_result = prevState[1];
             if (null === JSCompiler_inline_result)
-              error$jscomp$2(
+              console.error(
                 "%s received a final argument during this render, but not during the previous render. Even though the final argument is optional, its type cannot change between renders.",
                 currentHookNameInDev
               ),
                 (JSCompiler_inline_result = !1);
             else {
               deps.length !== JSCompiler_inline_result.length &&
-                error$jscomp$2(
+                console.error(
                   "The final argument passed to %s changed size between renders. The order and size of this array must remain constant.\n\nPrevious: %s\nIncoming: %s",
                   currentHookNameInDev,
                   "[" + deps.join(", ") + "]",
@@ -4182,7 +4142,7 @@ __DEV__ &&
         });
       }
       0 > disabledDepth &&
-        error$jscomp$2(
+        console.error(
           "disabledDepth fell below zero. This is a bug in React. Please file an issue."
         );
     }
@@ -4826,17 +4786,17 @@ __DEV__ &&
       boundary.errorStack = null !== error ? wasAborted + error : null;
       boundary.errorComponentStack = thrownInfo.componentStack;
     }
-    function logRecoverableError(request, error$1, errorInfo, debugTask) {
+    function logRecoverableError(request, error, errorInfo, debugTask) {
       request = request.onError;
-      error$1 = debugTask
-        ? debugTask.run(request.bind(null, error$1, errorInfo))
-        : request(error$1, errorInfo);
-      if (null != error$1 && "string" !== typeof error$1)
-        error$jscomp$2(
+      error = debugTask
+        ? debugTask.run(request.bind(null, error, errorInfo))
+        : request(error, errorInfo);
+      if (null != error && "string" !== typeof error)
+        console.error(
           'onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "%s" instead',
-          typeof error$1
+          typeof error
         );
-      else return error$1;
+      else return error;
     }
     function fatalError(request, error, errorInfo, debugTask) {
       errorInfo = request.onShellError;
@@ -4931,7 +4891,7 @@ __DEV__ &&
     function renderContextConsumer(request, task, keyPath, context, props) {
       props = props.children;
       "function" !== typeof props &&
-        error$jscomp$2(
+        console.error(
           "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it."
         );
       context = props(context._currentValue2);
@@ -4950,7 +4910,7 @@ __DEV__ &&
       void 0 !== context._currentRenderer2 &&
         null !== context._currentRenderer2 &&
         context._currentRenderer2 !== rendererSigil &&
-        error$jscomp$2(
+        console.error(
           "Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported."
         );
       context._currentRenderer2 = rendererSigil;
@@ -4971,14 +4931,14 @@ __DEV__ &&
           "Tried to pop a Context at the root of the app. This is a bug in React."
         );
       request.context !== context &&
-        error$jscomp$2(
+        console.error(
           "The parent context is not the expected context. This is probably a bug in React."
         );
       request.context._currentValue2 = request.parentValue;
       void 0 !== context._currentRenderer2 &&
         null !== context._currentRenderer2 &&
         context._currentRenderer2 !== rendererSigil &&
-        error$jscomp$2(
+        console.error(
           "Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported."
         );
       context._currentRenderer2 = rendererSigil;
@@ -4986,7 +4946,7 @@ __DEV__ &&
       task.context = context;
       task.keyPath = prevKeyPath;
       props !== task.context &&
-        error$jscomp$2(
+        console.error(
           "Popping the context provider did not return back to the original snapshot. This is a bug in React."
         );
     }
@@ -5027,7 +4987,7 @@ __DEV__ &&
                     : " However, it is set to an object with keys {" +
                       Object.keys(contextType).join(", ") +
                       "}.";
-            error$jscomp$2(
+            console.error(
               "%s defines an invalid contextType. contextType should point to the Context object returned by React.createContext().%s",
               getComponentNameFromType(type) || "Component",
               addendum
@@ -5046,7 +5006,7 @@ __DEV__ &&
             var componentName = getComponentNameFromType(type) || "Component";
             didWarnAboutUninitializedState.has(componentName) ||
               (didWarnAboutUninitializedState.add(componentName),
-              error$jscomp$2(
+              console.error(
                 "`%s` uses `getDerivedStateFromProps` but its initial state is %s. This is not recommended. Instead, define the initial state by assigning an object to `this.state` in the constructor of `%s`. This ensures that `getDerivedStateFromProps` arguments have a consistent shape.",
                 componentName,
                 null === instance.state ? "null" : "undefined",
@@ -5093,7 +5053,7 @@ __DEV__ &&
                 (didWarnAboutLegacyLifecyclesAndDerivedState.add(
                   _componentName
                 ),
-                error$jscomp$2(
+                console.error(
                   "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\nThe above lifecycles should be removed. Learn more about this warning here:\nhttps://react.dev/link/unsafe-component-lifecycles",
                   _componentName,
                   newApiName,
@@ -5112,34 +5072,34 @@ __DEV__ &&
           var name = getComponentNameFromType(type) || "Component";
           instance.render ||
             (type.prototype && "function" === typeof type.prototype.render
-              ? error$jscomp$2(
+              ? console.error(
                   "No `render` method found on the %s instance: did you accidentally return an object from the constructor?",
                   name
                 )
-              : error$jscomp$2(
+              : console.error(
                   "No `render` method found on the %s instance: you may have forgotten to define `render`.",
                   name
                 ));
           !instance.getInitialState ||
             instance.getInitialState.isReactClassApproved ||
             instance.state ||
-            error$jscomp$2(
+            console.error(
               "getInitialState was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Did you mean to define a state property instead?",
               name
             );
           instance.getDefaultProps &&
             !instance.getDefaultProps.isReactClassApproved &&
-            error$jscomp$2(
+            console.error(
               "getDefaultProps was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Use a static property to define defaultProps instead.",
               name
             );
           instance.contextType &&
-            error$jscomp$2(
+            console.error(
               "contextType was defined as an instance property on %s. Use a static property to define contextType instead.",
               name
             );
           instance.contextTypes &&
-            error$jscomp$2(
+            console.error(
               "contextTypes was defined as an instance property on %s. Use a static property to define contextTypes instead. (https://react.dev/link/legacy-context)",
               name
             );
@@ -5147,65 +5107,65 @@ __DEV__ &&
             type.contextTypes &&
             !didWarnAboutContextTypeAndContextTypes.has(type) &&
             (didWarnAboutContextTypeAndContextTypes.add(type),
-            error$jscomp$2(
+            console.error(
               "%s declares both contextTypes and contextType static properties. The legacy contextTypes property will be ignored.",
               name
             ));
           type.childContextTypes &&
             !didWarnAboutChildContextTypes.has(type) &&
             (didWarnAboutChildContextTypes.add(type),
-            error$jscomp$2(
+            console.error(
               "%s uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead. (https://react.dev/link/legacy-context)",
               name
             ));
           type.contextTypes &&
             !didWarnAboutContextTypes$1.has(type) &&
             (didWarnAboutContextTypes$1.add(type),
-            error$jscomp$2(
+            console.error(
               "%s uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)",
               name
             ));
           "function" === typeof instance.componentShouldUpdate &&
-            error$jscomp$2(
+            console.error(
               "%s has a method called componentShouldUpdate(). Did you mean shouldComponentUpdate()? The name is phrased as a question because the function is expected to return a value.",
               name
             );
           type.prototype &&
             type.prototype.isPureReactComponent &&
             "undefined" !== typeof instance.shouldComponentUpdate &&
-            error$jscomp$2(
+            console.error(
               "%s has a method called shouldComponentUpdate(). shouldComponentUpdate should not be used when extending React.PureComponent. Please extend React.Component if shouldComponentUpdate is used.",
               getComponentNameFromType(type) || "A pure component"
             );
           "function" === typeof instance.componentDidUnmount &&
-            error$jscomp$2(
+            console.error(
               "%s has a method called componentDidUnmount(). But there is no such lifecycle method. Did you mean componentWillUnmount()?",
               name
             );
           "function" === typeof instance.componentDidReceiveProps &&
-            error$jscomp$2(
+            console.error(
               "%s has a method called componentDidReceiveProps(). But there is no such lifecycle method. If you meant to update the state in response to changing props, use componentWillReceiveProps(). If you meant to fetch data or run side-effects or mutations after React has updated the UI, use componentDidUpdate().",
               name
             );
           "function" === typeof instance.componentWillRecieveProps &&
-            error$jscomp$2(
+            console.error(
               "%s has a method called componentWillRecieveProps(). Did you mean componentWillReceiveProps()?",
               name
             );
           "function" === typeof instance.UNSAFE_componentWillRecieveProps &&
-            error$jscomp$2(
+            console.error(
               "%s has a method called UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?",
               name
             );
           var hasMutatedProps = instance.props !== resolvedProps;
           void 0 !== instance.props &&
             hasMutatedProps &&
-            error$jscomp$2(
+            console.error(
               "When calling super() in `%s`, make sure to pass up the same props that your component's constructor was passed.",
               name
             );
           instance.defaultProps &&
-            error$jscomp$2(
+            console.error(
               "Setting defaultProps as an instance property on %s is not supported and will be ignored. Instead, define defaultProps as a static property on %s.",
               name,
               name
@@ -5214,32 +5174,32 @@ __DEV__ &&
             "function" === typeof instance.componentDidUpdate ||
             didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(type) ||
             (didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(type),
-            error$jscomp$2(
+            console.error(
               "%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). This component defines getSnapshotBeforeUpdate() only.",
               getComponentNameFromType(type)
             ));
           "function" === typeof instance.getDerivedStateFromProps &&
-            error$jscomp$2(
+            console.error(
               "%s: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.",
               name
             );
           "function" === typeof instance.getDerivedStateFromError &&
-            error$jscomp$2(
+            console.error(
               "%s: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.",
               name
             );
           "function" === typeof type.getSnapshotBeforeUpdate &&
-            error$jscomp$2(
+            console.error(
               "%s: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.",
               name
             );
           var state = instance.state;
           state &&
             ("object" !== typeof state || isArrayImpl(state)) &&
-            error$jscomp$2("%s.state: must be set to an object or null", name);
+            console.error("%s.state: must be set to an object or null", name);
           "function" === typeof instance.getChildContext &&
             "object" !== typeof type.childContextTypes &&
-            error$jscomp$2(
+            console.error(
               "%s.getChildContext(): childContextTypes must be defined in order to use getChildContext().",
               name
             );
@@ -5264,7 +5224,7 @@ __DEV__ &&
               (didWarnAboutDirectlyAssigningPropsToState.add(
                 componentName$jscomp$0
               ),
-              error$jscomp$2(
+              console.error(
                 "%s: It is not recommended to assign props directly to state because updates to props won't be reflected in state. In most cases, it is better to use props directly.",
                 componentName$jscomp$0
               ));
@@ -5280,7 +5240,7 @@ __DEV__ &&
                 getComponentNameFromType(type) || "Component";
               didWarnAboutUndefinedDerivedState.has(componentName$jscomp$1) ||
                 (didWarnAboutUndefinedDerivedState.add(componentName$jscomp$1),
-                error$jscomp$2(
+                console.error(
                   "%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. You have returned undefined.",
                   componentName$jscomp$1
                 ));
@@ -5305,7 +5265,7 @@ __DEV__ &&
                 var componentName$jscomp$2 =
                   getComponentNameFromType(type) || "Unknown";
                 didWarnAboutDeprecatedWillMount[componentName$jscomp$2] ||
-                  (warn(
+                  (console.warn(
                     "componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move code from componentWillMount to componentDidMount (preferred in most cases) or the constructor.\n\nPlease update the following components: %s",
                     componentName$jscomp$2
                   ),
@@ -5317,7 +5277,7 @@ __DEV__ &&
             "function" === typeof instance.UNSAFE_componentWillMount &&
               instance.UNSAFE_componentWillMount();
             oldState !== instance.state &&
-              (error$jscomp$2(
+              (console.error(
                 "%s.componentWillMount(): Assigning directly to this.state is deprecated (except inside a component's constructor). Use setState instead.",
                 getComponentNameFromType(type) || "Component"
               ),
@@ -5372,7 +5332,7 @@ __DEV__ &&
           if (12 === request.status) throw null;
           instance.props !== resolvedProps &&
             (didWarnAboutReassigningProps ||
-              error$jscomp$2(
+              console.error(
                 "It looks like %s is reassigning its own `this.props` while rendering. This is not supported and can lead to confusing bugs.",
                 getComponentNameFromType(type) || "a component"
               ),
@@ -5386,7 +5346,7 @@ __DEV__ &&
               warnedAboutMissingGetChildContext[componentName$jscomp$3] ||
                 ((warnedAboutMissingGetChildContext[componentName$jscomp$3] =
                   !0),
-                error$jscomp$2(
+                console.error(
                   "%s.childContextTypes is specified but there is no getChildContext() method on the instance. You can either define getChildContext() on %s or remove childContextTypes from it.",
                   componentName$jscomp$3,
                   componentName$jscomp$3
@@ -5422,7 +5382,7 @@ __DEV__ &&
             var componentName$jscomp$4 =
               getComponentNameFromType(type) || "Unknown";
             didWarnAboutBadClass[componentName$jscomp$4] ||
-              (error$jscomp$2(
+              (console.error(
                 "The <%s /> component appears to have a render method, but doesn't extend React.Component. This is likely to cause errors. Change %s to extend React.Component instead.",
                 componentName$jscomp$4,
                 componentName$jscomp$4
@@ -5446,14 +5406,14 @@ __DEV__ &&
               getComponentNameFromType(type) || "Unknown";
             didWarnAboutContextTypes[_componentName$jscomp$0] ||
               ((didWarnAboutContextTypes[_componentName$jscomp$0] = !0),
-              error$jscomp$2(
+              console.error(
                 "%s uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)",
                 _componentName$jscomp$0
               ));
           }
           type &&
             type.childContextTypes &&
-            error$jscomp$2(
+            console.error(
               "childContextTypes cannot be defined on a function component.\n  %s.childContextTypes = ...",
               type.displayName || type.name || "Component"
             );
@@ -5466,7 +5426,7 @@ __DEV__ &&
             didWarnAboutDefaultPropsOnFunctionComponent[
               componentName$jscomp$5
             ] ||
-              (error$jscomp$2(
+              (console.error(
                 "%s: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.",
                 componentName$jscomp$5
               ),
@@ -5477,7 +5437,7 @@ __DEV__ &&
           if ("function" === typeof type.getDerivedStateFromProps) {
             var _componentName2 = getComponentNameFromType(type) || "Unknown";
             didWarnAboutGetDerivedStateOnFunctionComponent[_componentName2] ||
-              (error$jscomp$2(
+              (console.error(
                 "%s: Function components do not support getDerivedStateFromProps.",
                 _componentName2
               ),
@@ -5490,7 +5450,7 @@ __DEV__ &&
           ) {
             var _componentName3 = getComponentNameFromType(type) || "Unknown";
             didWarnAboutContextTypeOnFunctionComponent[_componentName3] ||
-              (error$jscomp$2(
+              (console.error(
                 "%s: Function components do not support contextType.",
                 _componentName3
               ),
@@ -6103,22 +6063,16 @@ __DEV__ &&
                   request.completedBoundaries.push(props);
                   break a;
                 }
-              } catch (error$3) {
+              } catch (error) {
                 (props.status = CLIENT_RENDERED),
                   (childNodes = getThrownInfo(task.componentStack)),
                   (replay = logRecoverableError(
                     request,
-                    error$3,
+                    error,
                     childNodes,
                     task.debugTask
                   )),
-                  encodeErrorForBoundary(
-                    props,
-                    replay,
-                    error$3,
-                    childNodes,
-                    !1
-                  ),
+                  encodeErrorForBoundary(props, replay, error, childNodes, !1),
                   task.replay.pendingTasks--,
                   request.clientRenderedBoundaries.push(props);
               } finally {
@@ -6256,14 +6210,14 @@ __DEV__ &&
                 "[object Generator]" !== Object.prototype.toString.call(type)
               )
                 didWarnAboutGenerators ||
-                  error$jscomp$2(
+                  console.error(
                     "Using Iterators as children is unsupported and will likely yield unexpected results because enumerating a generator mutates it. You may convert it to an array with `Array.from()` or the `[...spread]` operator before rendering. You can also use an Iterable that can iterate multiple times over the same items."
                   ),
                   (didWarnAboutGenerators = !0);
             } else
               node.entries !== key ||
                 didWarnAboutMaps ||
-                (error$jscomp$2(
+                (console.error(
                   "Using Maps as children is not supported. Use an array of keyed ReactElements instead."
                 ),
                 (didWarnAboutMaps = !0));
@@ -6322,13 +6276,13 @@ __DEV__ &&
                 )))
             : ("function" === typeof node &&
                 ((request = node.displayName || node.name || "Component"),
-                error$jscomp$2(
+                console.error(
                   "Functions are not valid as a React child. This may happen if you return %s instead of <%s /> from render. Or maybe you meant to call this function rather than return it.",
                   request,
                   request
                 )),
               "symbol" === typeof node &&
-                error$jscomp$2(
+                console.error(
                   "Symbols are not valid as a React child.\n  %s",
                   String(node)
                 ));
@@ -6486,7 +6440,7 @@ __DEV__ &&
               owner: error._owner,
               stack: error._debugStack
             };
-            error$jscomp$2(
+            console.error(
               'Each child in a list should have a unique "key" prop.%s%s See https://react.dev/link/warning-keys for more information.',
               resumeSlots,
               componentName
@@ -6623,15 +6577,15 @@ __DEV__ &&
           chunkLength = segment.chunks.length;
         try {
           return renderNodeDestructive(request, task, node, childIndex);
-        } catch (thrownValue$4) {
+        } catch (thrownValue$3) {
           if (
             (resetHooksState(),
             (segment.children.length = childrenLength),
             (segment.chunks.length = chunkLength),
             (node =
-              thrownValue$4 === SuspenseException
+              thrownValue$3 === SuspenseException
                 ? getSuspendedThenable()
-                : thrownValue$4),
+                : thrownValue$3),
             "object" === typeof node && null !== node)
           ) {
             if ("function" === typeof node.then) {
@@ -6864,8 +6818,8 @@ __DEV__ &&
             linkHeader ? onHeaders({ Link: linkHeader }) : onHeaders({});
           }
         }
-      } catch (error$5) {
-        logRecoverableError(request, error$5, {}, null);
+      } catch (error) {
+        logRecoverableError(request, error, {}, null);
       }
     }
     function completeShell(request) {
@@ -7015,7 +6969,7 @@ __DEV__ &&
                       errorDigest = void 0,
                       request$jscomp$1 = request$jscomp$0,
                       boundary = request.blockedBoundary,
-                      error =
+                      error$jscomp$0 =
                         12 === request$jscomp$0.status
                           ? request$jscomp$0.fatalError
                           : x,
@@ -7024,7 +6978,7 @@ __DEV__ &&
                       resumeSlots = request.replay.slots;
                     errorDigest = logRecoverableError(
                       request$jscomp$1,
-                      error,
+                      error$jscomp$0,
                       errorInfo$jscomp$0,
                       request.debugTask
                     );
@@ -7033,7 +6987,7 @@ __DEV__ &&
                       boundary,
                       replayNodes,
                       resumeSlots,
-                      error,
+                      error$jscomp$0,
                       errorDigest,
                       errorInfo$jscomp$0,
                       !1
@@ -7149,10 +7103,10 @@ __DEV__ &&
               request$jscomp$2,
               request$jscomp$2.destination
             );
-        } catch (error$6) {
+        } catch (error) {
           (pingedTasks = {}),
-            logRecoverableError(request$jscomp$2, error$6, pingedTasks, null),
-            fatalError(request$jscomp$2, error$6, pingedTasks, null);
+            logRecoverableError(request$jscomp$2, error, pingedTasks, null),
+            fatalError(request$jscomp$2, error, pingedTasks, null);
         } finally {
           (currentResumableState = prevResumableState),
             (ReactSharedInternals.H = prevDispatcher),
@@ -7861,7 +7815,7 @@ __DEV__ &&
             destination.push(partialBoundaries)),
           i.hasHtml && ((i = endChunkForTag("html")), destination.push(i)),
           0 !== request.abortableTasks.size &&
-            error$jscomp$2(
+            console.error(
               "There was still abortable task at the root when we closed. This is a bug in React."
             ),
           (request.status = CLOSED),
@@ -7896,10 +7850,10 @@ __DEV__ &&
         request.destination = destination;
         try {
           flushCompletedQueues(request, destination);
-        } catch (error$7) {
+        } catch (error) {
           (destination = {}),
-            logRecoverableError(request, error$7, destination, null),
-            fatalError(request, error$7, destination, null);
+            logRecoverableError(request, error, destination, null),
+            fatalError(request, error, destination, null);
         }
       }
     }
@@ -7924,10 +7878,10 @@ __DEV__ &&
         }
         null !== request.destination &&
           flushCompletedQueues(request, request.destination);
-      } catch (error$8) {
+      } catch (error$4) {
         (reason = {}),
-          logRecoverableError(request, error$8, reason, null),
-          fatalError(request, error$8, reason, null);
+          logRecoverableError(request, error$4, reason, null),
+          fatalError(request, error$4, reason, null);
       }
     }
     function onError() {}
@@ -7981,9 +7935,6 @@ __DEV__ &&
     }
     var React = require("react"),
       ReactDOM = require("react-dom"),
-      enableRemoveConsolePatches =
-        require("ReactFeatureFlags").enableRemoveConsolePatches,
-      warningWWW = require("warning"),
       dynamicFeatureFlags = require("ReactFeatureFlags"),
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
@@ -9461,5 +9412,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.1.0-www-classic-9b042f9d-20250221";
+    exports.version = "19.1.0-www-classic-25677265-20250224";
   })();
