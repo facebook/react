@@ -226,8 +226,8 @@ import {
   invokeLayoutEffectUnmountInDEV,
   invokePassiveEffectUnmountInDEV,
   accumulateSuspenseyCommit,
-  shouldStartViewTransition,
 } from './ReactFiberCommitWork';
+import {shouldStartViewTransition} from './ReactFiberCommitViewTransitions';
 import {enqueueUpdate} from './ReactFiberClassUpdateQueue';
 import {resetContextDependencies} from './ReactFiberNewContext';
 import {
