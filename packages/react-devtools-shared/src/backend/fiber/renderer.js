@@ -3419,18 +3419,6 @@ export function attach(
             // I.e. we just restore them by undoing what we did above.
             fiberInstance.firstChild = remainingReconcilingChildren;
             remainingReconcilingChildren = null;
-
-            if (traceUpdatesEnabled) {
-              // If we're tracing updates and we've bailed out before reaching a host node,
-              // we should fall back to recursively marking the nearest host descendants for highlight.
-              if (traceNearestHostComponentUpdate) {
-                const hostInstances =
-                  findAllCurrentHostInstances(fiberInstance);
-                hostInstances.forEach(hostInstance => {
-                  traceUpdatesForNodes.add(hostInstance);
-                });
-              }
-            }
           } else {
             // If this fiber is filtered there might be changes to this set elsewhere so we have
             // to visit each child to place it back in the set. We let the child bail out instead.
