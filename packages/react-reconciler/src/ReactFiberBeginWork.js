@@ -2360,7 +2360,6 @@ function mountSuspenseFallbackChildren(
       mode,
       renderLanes,
       null,
-      false,
     );
   } else {
     primaryChildFragment = mountWorkInProgressOffscreenFiber(
@@ -2373,7 +2372,6 @@ function mountSuspenseFallbackChildren(
       mode,
       renderLanes,
       null,
-      false,
     );
   }
 
@@ -2516,7 +2514,6 @@ function updateSuspenseFallbackChildren(
       mode,
       renderLanes,
       null,
-      false,
     );
     // Needs a placement effect because the parent (the Suspense boundary) already
     // mounted but this is a new fiber.
@@ -2581,7 +2578,6 @@ function mountSuspenseFallbackAfterRetryWithoutHydrating(
     fiberMode,
     renderLanes,
     null,
-    false,
   );
   // Needs a placement effect because the parent (the Suspense
   // boundary) already mounted but this is a new fiber.

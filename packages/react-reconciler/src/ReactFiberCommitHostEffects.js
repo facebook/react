@@ -13,6 +13,7 @@ import type {
   SuspenseInstance,
   Container,
   ChildSet,
+  FragmentInstance,
 } from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 
@@ -56,7 +57,6 @@ import {captureCommitPhaseError} from './ReactFiberWorkLoop';
 import {trackHostMutation} from './ReactFiberMutationTracking';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
-import type {FragmentInstance} from './ReactFiberFragmentComponent';
 
 export function commitHostMount(finishedWork: Fiber) {
   const type = finishedWork.type;
@@ -226,7 +226,7 @@ export function getFragmentInstanceParents(
       if (fragmentParents === null) {
         fragmentParents = [];
       }
-      const fragmentInstance: FragmentInstance = parent.stateNode.ref;
+      const fragmentInstance: FragmentInstance = parent.stateNode;
       fragmentParents.push(fragmentInstance);
     }
 
@@ -252,12 +252,7 @@ function isHostParent(fiber: Fiber): boolean {
 }
 
 function isFragmentInstanceParent(fiber: Fiber): boolean {
-  return (
-    fiber &&
-    fiber.tag === Fragment &&
-    fiber.stateNode !== null &&
-    fiber.stateNode.ref !== null
-  );
+  return fiber && fiber.tag === Fragment && fiber.stateNode !== null;
 }
 
 function getHostSibling(fiber: Fiber): ?Instance {

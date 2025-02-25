@@ -11,6 +11,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {HookFlags} from './ReactHookEffectTags';
+import type {FragmentInstance} from './ReactFiberConfig';
 import {
   getViewTransitionName,
   type ViewTransitionState,
@@ -87,7 +88,6 @@ import {
   ResourceEffectIdentityKind,
   ResourceEffectUpdateKind,
 } from './ReactFiberHooks';
-import type {FragmentState} from './ReactFiberFragmentComponent';
 
 function shouldProfile(current: Fiber): boolean {
   return (
@@ -897,14 +897,11 @@ function commitAttachRef(finishedWork: Fiber) {
       }
       case Fragment:
         if (enableFragmentRefs) {
-          const instance: FragmentState = finishedWork.stateNode;
-          if (
-            instance.ref === null ||
-            instance.ref._fragmentFiber !== finishedWork
-          ) {
-            instance.ref = createFragmentInstance(finishedWork);
+          const instance: null | FragmentInstance = finishedWork.stateNode;
+          if (instance === null || instance._fragmentFiber !== finishedWork) {
+            finishedWork.stateNode = createFragmentInstance(finishedWork);
           }
-          instanceToUse = instance.ref;
+          instanceToUse = finishedWork.stateNode;
           break;
         }
       // Fallthrough
