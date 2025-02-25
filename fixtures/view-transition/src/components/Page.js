@@ -1,7 +1,10 @@
 import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
+  unstable_useSwipeTransition as useSwipeTransition,
 } from 'react';
+
+import SwipeRecognizer from './SwipeRecognizer';
 
 import './Page.css';
 
@@ -35,7 +38,8 @@ function Component() {
 }
 
 export default function Page({url, navigate}) {
-  const show = url === '/?b';
+  const [renderedUrl, startGesture] = useSwipeTransition('/?a', url, '/?b');
+  const show = renderedUrl === '/?b';
   function onTransition(viewTransition, types) {
     const keyframes = [
       {rotate: '0deg', transformOrigin: '30px 8px'},
@@ -44,6 +48,11 @@ export default function Page({url, navigate}) {
     viewTransition.old.animate(keyframes, 250);
     viewTransition.new.animate(keyframes, 250);
   }
+
+  function swipeAction() {
+    navigate(show ? '/?a' : '/?b');
+  }
+
   const exclamation = (
     <ViewTransition name="exclamation" onShare={onTransition}>
       <span>!</span>
@@ -90,6 +99,14 @@ export default function Page({url, navigate}) {
           <p></p>
           <p></p>
           <p></p>
+          <div className="swipe-recognizer">
+            <SwipeRecognizer
+              action={swipeAction}
+              gesture={startGesture}
+              direction={show ? 'left' : 'right'}>
+              Swipe me
+            </SwipeRecognizer>
+          </div>
           <p></p>
           <p></p>
           {show ? null : (

@@ -92,6 +92,13 @@ export const enableHalt = __EXPERIMENTAL__;
 
 export const enableViewTransition = __EXPERIMENTAL__;
 
+export const enableSwipeTransition = __EXPERIMENTAL__;
+
+/**
+ * Switches the Fabric API from doing layout in commit work instead of complete work.
+ */
+export const enableFabricCompleteRootInCommitPhase = false;
+
 /**
  * Switches Fiber creation to a simple object instead of a constructor.
  */
@@ -127,7 +134,7 @@ export const passChildrenWhenCloningPersistedNodes = false;
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableOwnerStacks = __EXPERIMENTAL__;
+export const enableOwnerStacks = true;
 
 export const enableShallowPropDiffing = false;
 
@@ -150,9 +157,11 @@ export const enableInfiniteRenderLoopDetection = false;
 /**
  * Experimental new hook for better managing resources in effects.
  */
-export const enableUseResourceEffectHook = false;
+export const enableUseEffectCRUDOverload = false;
 
 export const enableFastAddPropertiesInDiffing = true;
+
+export const enableLazyPublicInstanceInFabric = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -258,5 +267,3 @@ export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-
-export const enableRemoveConsolePatches = true;

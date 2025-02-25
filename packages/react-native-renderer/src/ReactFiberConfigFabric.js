@@ -57,7 +57,11 @@ import {
   getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
 
-import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
+import {
+  enableFabricCompleteRootInCommitPhase,
+  passChildrenWhenCloningPersistedNodes,
+  enableLazyPublicInstanceInFabric,
+} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {ReactContext} from 'shared/ReactTypes';
 
@@ -93,8 +97,11 @@ export type Instance = {
     currentProps: Props,
     // Reference to the React handle (the fiber)
     internalInstanceHandle: InternalInstanceHandle,
-    // Exposed through refs.
-    publicInstance: PublicInstance,
+    // Exposed through refs. Potentially lazily created.
+    publicInstance: PublicInstance | null,
+    // This is only necessary to lazily create `publicInstance`.
+    // Will be set to `null` after that is created.
+    publicRootInstance?: PublicRootInstance | null,
   },
 };
 export type TextInstance = {
@@ -186,23 +193,37 @@ export function createInstance(
     internalInstanceHandle, // internalInstanceHandle
   );
 
-  const component = createPublicInstance(
-    tag,
-    viewConfig,
-    internalInstanceHandle,
-    rootContainerInstance.publicInstance,
-  );
-
-  return {
-    node: node,
-    canonical: {
-      nativeTag: tag,
+  if (enableLazyPublicInstanceInFabric) {
+    return {
+      node: node,
+      canonical: {
+        nativeTag: tag,
+        viewConfig,
+        currentProps: props,
+        internalInstanceHandle,
+        publicInstance: null,
+        publicRootInstance: rootContainerInstance.publicInstance,
+      },
+    };
+  } else {
+    const component = createPublicInstance(
+      tag,
       viewConfig,
-      currentProps: props,
       internalInstanceHandle,
-      publicInstance: component,
-    },
-  };
+      rootContainerInstance.publicInstance,
+    );
+
+    return {
+      node: node,
+      canonical: {
+        nativeTag: tag,
+        viewConfig,
+        currentProps: props,
+        internalInstanceHandle,
+        publicInstance: component,
+      },
+    };
+  }
 }
 
 export function createTextInstance(
@@ -277,7 +298,18 @@ export function getChildHostContext(
 }
 
 export function getPublicInstance(instance: Instance): null | PublicInstance {
-  if (instance.canonical != null && instance.canonical.publicInstance != null) {
+  if (instance.canonical != null) {
+    if (instance.canonical.publicInstance == null) {
+      instance.canonical.publicInstance = createPublicInstance(
+        instance.canonical.nativeTag,
+        instance.canonical.viewConfig,
+        instance.canonical.internalInstanceHandle,
+        instance.canonical.publicRootInstance ?? null,
+      );
+      // This was only necessary to create the public instance.
+      instance.canonical.publicRootInstance = null;
+    }
+
     return instance.canonical.publicInstance;
   }
 
@@ -502,14 +534,19 @@ export function finalizeContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  // Noop - children will be finalized in replaceContainerChildren
+  if (!enableFabricCompleteRootInCommitPhase) {
+    completeRoot(container.containerTag, newChildren);
+  }
 }
 
 export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  completeRoot(container.containerTag, newChildren);
+  // Noop - children will be replaced in finalizeContainerChildren
+  if (enableFabricCompleteRootInCommitPhase) {
+    completeRoot(container.containerTag, newChildren);
+  }
 }
 
 export {getClosestInstanceFromNode as getInstanceFromNode};

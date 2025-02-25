@@ -14,6 +14,9 @@ import type {
   Thenable,
   RejectedThenable,
   Awaited,
+  StartGesture,
+  GestureProvider,
+  GestureOptions,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -25,23 +28,26 @@ import type {
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Flags} from './ReactFiberFlags';
-import type {TransitionStatus} from './ReactFiberConfig';
+import type {TransitionStatus, GestureTimeline} from './ReactFiberConfig';
+import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 import {
   HostTransitionContext,
   NotPendingTransition as NoPendingHostTransition,
   setCurrentUpdatePriority,
   getCurrentUpdatePriority,
+  getCurrentGestureOffset,
 } from './ReactFiberConfig';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableUseEffectEventHook,
-  enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload,
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
+  enableSwipeTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -70,6 +76,8 @@ import {
   isTransitionLane,
   markRootEntangled,
   includesSomeLane,
+  isGestureRender,
+  GestureLane,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -130,6 +138,7 @@ import {
   enqueueConcurrentHookUpdate,
   enqueueConcurrentHookUpdateAndEagerlyBailout,
   enqueueConcurrentRenderForLane,
+  enqueueGestureRender,
 } from './ReactFiberConcurrentUpdates';
 import {getTreeId} from './ReactFiberTreeContext';
 import {now} from './Scheduler';
@@ -152,6 +161,11 @@ import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
 import {requestCurrentTransition} from './ReactFiberTransition';
 
 import {callComponentInDEV} from './ReactFiberCallUserSpace';
+
+import {
+  scheduleGesture,
+  cancelScheduledGesture,
+} from './ReactFiberGestureScheduler';
 
 export type Update<S, A> = {
   lane: Lane,
@@ -205,8 +219,8 @@ export type Hook = {
 // the additional memory and we can follow up with performance
 // optimizations later.
 type EffectInstance = {
-  resource: mixed,
-  destroy: void | (() => void) | ((resource: mixed) => void),
+  resource: {...} | void | null,
+  destroy: void | (() => void) | ((resource: {...} | void | null) => void),
 };
 
 export const ResourceEffectIdentityKind: 0 = 0;
@@ -229,7 +243,7 @@ export type ResourceEffectIdentity = {
   resourceKind: typeof ResourceEffectIdentityKind,
   tag: HookFlags,
   inst: EffectInstance,
-  create: () => mixed,
+  create: () => {...} | void | null,
   deps: Array<mixed> | void | null,
   next: Effect,
 };
@@ -237,7 +251,7 @@ export type ResourceEffectUpdate = {
   resourceKind: typeof ResourceEffectUpdateKind,
   tag: HookFlags,
   inst: EffectInstance,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   deps: Array<mixed> | void | null,
   next: Effect,
   identity: ResourceEffectIdentity,
@@ -461,10 +475,13 @@ function warnIfAsyncClientComponent(Component: Function) {
       if (!didWarnAboutAsyncClientComponent.has(componentName)) {
         didWarnAboutAsyncClientComponent.add(componentName);
         console.error(
-          'async/await is not yet supported in Client Components, only ' +
-            'Server Components. This error is often caused by accidentally ' +
+          '%s is an async Client Component. ' +
+            'Only Server Components can be async at the moment. This error is often caused by accidentally ' +
             "adding `'use client'` to a module that was originally written " +
             'for the server.',
+          componentName === null
+            ? 'An unknown Component'
+            : `<${componentName}>`,
         );
       }
     }
@@ -2523,12 +2540,15 @@ function pushSimpleEffect(
   tag: HookFlags,
   inst: EffectInstance,
   create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
+  createDeps: Array<mixed> | void | null,
+  update?: ((resource: {...} | void | null) => void) | void,
+  updateDeps?: Array<mixed> | void | null,
+  destroy?: ((resource: {...} | void | null) => void) | void,
 ): Effect {
   const effect: Effect = {
     tag,
     create,
-    deps,
+    deps: createDeps,
     inst,
     // Circular
     next: (null: any),
@@ -2540,9 +2560,9 @@ function pushResourceEffect(
   identityTag: HookFlags,
   updateTag: HookFlags,
   inst: EffectInstance,
-  create: () => mixed,
+  create: () => {...} | void | null,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   updateDeps: Array<mixed> | void | null,
 ): Effect {
   const effectIdentity: ResourceEffectIdentity = {
@@ -2608,10 +2628,13 @@ function mountEffectImpl(
   fiberFlags: Flags,
   hookFlags: HookFlags,
   create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
+  createDeps: Array<mixed> | void | null,
+  update?: ((resource: {...} | void | null) => void) | void,
+  updateDeps?: Array<mixed> | void | null,
+  destroy?: ((resource: {...} | void | null) => void) | void,
 ): void {
   const hook = mountWorkInProgressHook();
-  const nextDeps = deps === undefined ? null : deps;
+  const nextDeps = createDeps === undefined ? null : createDeps;
   currentlyRenderingFiber.flags |= fiberFlags;
   hook.memoizedState = pushSimpleEffect(
     HookHasEffect | hookFlags,
@@ -2662,51 +2685,78 @@ function updateEffectImpl(
 }
 
 function mountEffect(
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
+  create: (() => (() => void) | void) | (() => {...} | void | null),
+  createDeps: Array<mixed> | void | null,
+  update?: ((resource: {...} | void | null) => void) | void,
+  updateDeps?: Array<mixed> | void | null,
+  destroy?: ((resource: {...} | void | null) => void) | void,
 ): void {
   if (
     __DEV__ &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode &&
     (currentlyRenderingFiber.mode & NoStrictPassiveEffectsMode) === NoMode
   ) {
-    mountEffectImpl(
-      MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
-      HookPassive,
-      create,
-      deps,
-    );
+    if (
+      enableUseEffectCRUDOverload &&
+      (typeof update === 'function' || typeof destroy === 'function')
+    ) {
+      mountResourceEffectImpl(
+        MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
+        HookPassive,
+        create,
+        createDeps,
+        update,
+        updateDeps,
+        destroy,
+      );
+    } else {
+      mountEffectImpl(
+        MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
+        HookPassive,
+        // $FlowFixMe[incompatible-call] @poteto it's not possible to narrow `create` without calling it.
+        create,
+        createDeps,
+      );
+    }
   } else {
-    mountEffectImpl(
-      PassiveEffect | PassiveStaticEffect,
-      HookPassive,
-      create,
-      deps,
-    );
+    if (
+      enableUseEffectCRUDOverload &&
+      (typeof update === 'function' || typeof destroy === 'function')
+    ) {
+      mountResourceEffectImpl(
+        PassiveEffect | PassiveStaticEffect,
+        HookPassive,
+        create,
+        createDeps,
+        update,
+        updateDeps,
+        destroy,
+      );
+    } else {
+      mountEffectImpl(
+        PassiveEffect | PassiveStaticEffect,
+        HookPassive,
+        // $FlowFixMe[incompatible-call] @poteto it's not possible to narrow `create` without calling it.
+        create,
+        createDeps,
+      );
+    }
   }
 }
 
 function updateEffect(
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
-): void {
-  updateEffectImpl(PassiveEffect, HookPassive, create, deps);
-}
-
-function mountResourceEffect(
-  create: () => mixed,
+  create: (() => (() => void) | void) | (() => {...} | void | null),
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
-) {
+  update?: ((resource: {...} | void | null) => void) | void,
+  updateDeps?: Array<mixed> | void | null,
+  destroy?: ((resource: {...} | void | null) => void) | void,
+): void {
   if (
-    __DEV__ &&
-    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode &&
-    (currentlyRenderingFiber.mode & NoStrictPassiveEffectsMode) === NoMode
+    enableUseEffectCRUDOverload &&
+    (typeof update === 'function' || typeof destroy === 'function')
   ) {
-    mountResourceEffectImpl(
-      MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
+    updateResourceEffectImpl(
+      PassiveEffect,
       HookPassive,
       create,
       createDeps,
@@ -2714,6 +2764,24 @@ function mountResourceEffect(
       updateDeps,
       destroy,
     );
+  } else {
+    // $FlowFixMe[incompatible-call] @poteto it's not possible to narrow `create` without calling it.
+    updateEffectImpl(PassiveEffect, HookPassive, create, createDeps);
+  }
+}
+
+function mountResourceEffect(
+  create: () => {...} | void | null,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: {...} | void | null) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: {...} | void | null) => void) | void,
+) {
+  if (
+    __DEV__ &&
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode &&
+    (currentlyRenderingFiber.mode & NoStrictPassiveEffectsMode) === NoMode
+  ) {
   } else {
     mountResourceEffectImpl(
       PassiveEffect | PassiveStaticEffect,
@@ -2730,11 +2798,11 @@ function mountResourceEffect(
 function mountResourceEffectImpl(
   fiberFlags: Flags,
   hookFlags: HookFlags,
-  create: () => mixed,
+  create: () => {...} | void | null,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
+  destroy: ((resource: {...} | void | null) => void) | void,
 ) {
   const hook = mountWorkInProgressHook();
   currentlyRenderingFiber.flags |= fiberFlags;
@@ -2752,11 +2820,11 @@ function mountResourceEffectImpl(
 }
 
 function updateResourceEffect(
-  create: () => mixed,
+  create: () => {...} | void | null,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
+  destroy: ((resource: {...} | void | null) => void) | void,
 ) {
   updateResourceEffectImpl(
     PassiveEffect,
@@ -2772,11 +2840,11 @@ function updateResourceEffect(
 function updateResourceEffectImpl(
   fiberFlags: Flags,
   hookFlags: HookFlags,
-  create: () => mixed,
+  create: () => {...} | void | null,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
+  update: ((resource: {...} | void | null) => void) | void,
   updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
+  destroy: ((resource: {...} | void | null) => void) | void,
 ) {
   const hook = updateWorkInProgressHook();
   const effect: Effect = hook.memoizedState;
@@ -3909,6 +3977,183 @@ function markUpdateInDevTools<A>(fiber: Fiber, lane: Lane, action: A): void {
   }
 }
 
+type SwipeTransitionGestureUpdate = {
+  gesture: ScheduledGesture,
+  prev: SwipeTransitionGestureUpdate | null,
+  next: SwipeTransitionGestureUpdate | null,
+};
+
+type SwipeTransitionUpdateQueue = {
+  pending: null | SwipeTransitionGestureUpdate,
+  dispatch: StartGesture,
+  initialDirection: boolean,
+};
+
+function startGesture(
+  fiber: Fiber,
+  queue: SwipeTransitionUpdateQueue,
+  gestureProvider: GestureProvider,
+  gestureOptions?: GestureOptions,
+): () => void {
+  const root = enqueueGestureRender(fiber);
+  if (root === null) {
+    // Already unmounted.
+    // TODO: Should we warn here about starting on an unmounted Fiber?
+    return function cancelGesture() {
+      // Noop.
+    };
+  }
+  const gestureTimeline: GestureTimeline = gestureProvider;
+  const currentOffset = getCurrentGestureOffset(gestureTimeline);
+  const range = gestureOptions && gestureOptions.range;
+  const rangePrevious: number = range ? range[0] : 0; // If no range is provider we assume it's the starting point of the range.
+  const rangeCurrent: number = range ? range[1] : currentOffset;
+  const rangeNext: number = range ? range[2] : 100; // If no range is provider we assume it's the starting point of the range.
+  if (__DEV__) {
+    if (
+      (rangePrevious > rangeCurrent && rangeNext > rangeCurrent) ||
+      (rangePrevious < rangeCurrent && rangeNext < rangeCurrent)
+    ) {
+      console.error(
+        'The range of a gesture needs "previous" and "next" to be on either side of ' +
+          'the "current" offset. Both cannot be above current and both cannot be below current.',
+      );
+    }
+  }
+  const isFlippedDirection = rangePrevious > rangeNext;
+  const initialDirection =
+    // If a range is specified we can imply initial direction if it's not the current
+    // value such as if the gesture starts after it has already moved.
+    currentOffset < rangeCurrent
+      ? isFlippedDirection
+      : currentOffset > rangeCurrent
+        ? !isFlippedDirection
+        : // Otherwise, look for an explicit option.
+          gestureOptions && gestureOptions.direction === 'next'
+          ? true
+          : gestureOptions && gestureOptions.direction === 'previous'
+            ? false
+            : // If no option is specified, imply from the values specified.
+              queue.initialDirection;
+  const scheduledGesture = scheduleGesture(
+    root,
+    gestureTimeline,
+    initialDirection,
+    rangePrevious,
+    rangeCurrent,
+    rangeNext,
+  );
+  // Add this particular instance to the queue.
+  // We add multiple of the same timeline even if they get batched so
+  // that if we cancel one but not the other we can keep track of this.
+  // Order doesn't matter but we insert in the beginning to avoid two fields.
+  const update: SwipeTransitionGestureUpdate = {
+    gesture: scheduledGesture,
+    prev: null,
+    next: queue.pending,
+  };
+  if (queue.pending !== null) {
+    queue.pending.prev = update;
+  }
+  queue.pending = update;
+  return function cancelGesture(): void {
+    if (update.prev === null) {
+      if (queue.pending === update) {
+        queue.pending = update.next;
+      } else {
+        // This was already cancelled. Avoid double decrementing if someone calls this twice by accident.
+        // TODO: Should we warn here about double cancelling?
+        return;
+      }
+    } else {
+      update.prev.next = update.next;
+      if (update.next !== null) {
+        update.next.prev = update.prev;
+      }
+      update.prev = null;
+      update.next = null;
+    }
+    const cancelledGestured = update.gesture;
+    // Decrement ref count of the root schedule.
+    cancelScheduledGesture(root, cancelledGestured);
+  };
+}
+
+function mountSwipeTransition<T>(
+  previous: T,
+  current: T,
+  next: T,
+): [T, StartGesture] {
+  const queue: SwipeTransitionUpdateQueue = {
+    pending: null,
+    dispatch: (null: any),
+    initialDirection: previous === current,
+  };
+  const startGestureOnHook: StartGesture = (queue.dispatch = (startGesture.bind(
+    null,
+    currentlyRenderingFiber,
+    queue,
+  ): any));
+  const hook = mountWorkInProgressHook();
+  hook.queue = queue;
+  return [current, startGestureOnHook];
+}
+
+function updateSwipeTransition<T>(
+  previous: T,
+  current: T,
+  next: T,
+): [T, StartGesture] {
+  const hook = updateWorkInProgressHook();
+  const queue: SwipeTransitionUpdateQueue = hook.queue;
+  const startGestureOnHook: StartGesture = queue.dispatch;
+  const rootRenderLanes = getWorkInProgressRootRenderLanes();
+  let value = current;
+  if (queue.pending !== null) {
+    if (isGestureRender(rootRenderLanes)) {
+      // We're inside a gesture render. We'll traverse the queue to see if
+      // this specific Hook is part of this gesture and, if so, which
+      // direction to render.
+      const root: FiberRoot | null = getWorkInProgressRoot();
+      if (root === null) {
+        throw new Error(
+          'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+        );
+      }
+      // We assume that the currently rendering gesture is the one first in the queue.
+      const rootRenderGesture = root.gestures;
+      if (rootRenderGesture !== null) {
+        let update = queue.pending;
+        while (update !== null) {
+          if (rootRenderGesture === update.gesture) {
+            // We had a match, meaning we're currently rendering a direction of this
+            // hook for this gesture.
+            value = rootRenderGesture.direction ? next : previous;
+            break;
+          }
+          update = update.next;
+        }
+      }
+      // This lane cannot be cleared as long as we have active gestures.
+      markWorkInProgressReceivedUpdate();
+    }
+    // As long as there are any active gestures we need to leave the lane on
+    // in case we need to render it later. Since a gesture render doesn't commit
+    // the only time it really fully gets cleared is if something else rerenders
+    // this component after all the active gestures has cleared.
+    currentlyRenderingFiber.lanes = mergeLanes(
+      currentlyRenderingFiber.lanes,
+      GestureLane,
+    );
+  }
+  // By default, we don't know which direction we should start until a movement
+  // has happened. However, if one direction has the same value as current we
+  // know that it's probably not that direction since it won't do anything anyway.
+  // TODO: Add an explicit option to provide this.
+  queue.initialDirection = previous === current;
+  return [value, startGestureOnHook];
+}
+
 export const ContextOnlyDispatcher: Dispatcher = {
   readContext,
 
@@ -3938,8 +4183,9 @@ export const ContextOnlyDispatcher: Dispatcher = {
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
-if (enableUseResourceEffectHook) {
-  (ContextOnlyDispatcher: Dispatcher).useResourceEffect = throwInvalidHookError;
+if (enableSwipeTransition) {
+  (ContextOnlyDispatcher: Dispatcher).useSwipeTransition =
+    throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -3971,8 +4217,9 @@ const HooksDispatcherOnMount: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
 }
-if (enableUseResourceEffectHook) {
-  (HooksDispatcherOnMount: Dispatcher).useResourceEffect = mountResourceEffect;
+if (enableSwipeTransition) {
+  (HooksDispatcherOnMount: Dispatcher).useSwipeTransition =
+    mountSwipeTransition;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -4004,9 +4251,9 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
-if (enableUseResourceEffectHook) {
-  (HooksDispatcherOnUpdate: Dispatcher).useResourceEffect =
-    updateResourceEffect;
+if (enableSwipeTransition) {
+  (HooksDispatcherOnUpdate: Dispatcher).useSwipeTransition =
+    updateSwipeTransition;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -4038,9 +4285,9 @@ const HooksDispatcherOnRerender: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
 }
-if (enableUseResourceEffectHook) {
-  (HooksDispatcherOnRerender: Dispatcher).useResourceEffect =
-    updateResourceEffect;
+if (enableSwipeTransition) {
+  (HooksDispatcherOnRerender: Dispatcher).useSwipeTransition =
+    updateSwipeTransition;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -4087,13 +4334,30 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => (() => void) | void) | (() => {...} | void | null),
+      createDeps: Array<mixed> | void | null,
+      update?: ((resource: {...} | void | null) => void) | void,
+      updateDeps?: Array<mixed> | void | null,
+      destroy?: ((resource: {...} | void | null) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       mountHookTypesDev();
-      checkDepsAreArrayDev(deps);
-      return mountEffect(create, deps);
+      if (
+        enableUseEffectCRUDOverload &&
+        (typeof update === 'function' || typeof destroy === 'function')
+      ) {
+        checkDepsAreNonEmptyArrayDev(updateDeps);
+        return mountResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
+      } else {
+        checkDepsAreArrayDev(createDeps);
+        return mountEffect(create, createDeps);
+      }
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -4242,25 +4506,16 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ): void {
-        currentHookNameInDev = 'useResourceEffect';
+  if (enableSwipeTransition) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
         mountHookTypesDev();
-        checkDepsAreNonEmptyArrayDev(updateDeps);
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
+        return mountSwipeTransition(previous, current, next);
       };
   }
 
@@ -4280,12 +4535,28 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => (() => void) | void) | (() => {...} | void | null),
+      createDeps: Array<mixed> | void | null,
+      update?: ((resource: {...} | void | null) => void) | void,
+      updateDeps?: Array<mixed> | void | null,
+      destroy?: ((resource: {...} | void | null) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
-      return mountEffect(create, deps);
+      if (
+        enableUseEffectCRUDOverload &&
+        (typeof update === 'function' || typeof destroy === 'function')
+      ) {
+        return mountResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
+      } else {
+        return mountEffect(create, createDeps);
+      }
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -4430,24 +4701,16 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ): void {
-        currentHookNameInDev = 'useResourceEffect';
+  if (enableSwipeTransition) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
         updateHookTypesDev();
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
+        return updateSwipeTransition(previous, current, next);
       };
   }
 
@@ -4467,12 +4730,28 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => (() => void) | void) | (() => {...} | void | null),
+      createDeps: Array<mixed> | void | null,
+      update?: ((resource: {...} | void | null) => void) | void,
+      updateDeps?: Array<mixed> | void | null,
+      destroy?: ((resource: {...} | void | null) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
-      return updateEffect(create, deps);
+      if (
+        enableUseEffectCRUDOverload &&
+        (typeof update === 'function' || typeof destroy === 'function')
+      ) {
+        return updateResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
+      } else {
+        return updateEffect(create, createDeps);
+      }
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -4617,24 +4896,16 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
+  if (enableSwipeTransition) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
         updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
+        return updateSwipeTransition(previous, current, next);
       };
   }
 
@@ -4654,12 +4925,28 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => (() => void) | void) | (() => {...} | void | null),
+      createDeps: Array<mixed> | void | null,
+      update?: ((resource: {...} | void | null) => void) | void,
+      updateDeps?: Array<mixed> | void | null,
+      destroy?: ((resource: {...} | void | null) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
-      return updateEffect(create, deps);
+      if (
+        enableUseEffectCRUDOverload &&
+        (typeof update === 'function' || typeof destroy === 'function')
+      ) {
+        return updateResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
+      } else {
+        return updateEffect(create, createDeps);
+      }
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -4804,24 +5091,16 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
+  if (enableSwipeTransition) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
         updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
+        return updateSwipeTransition(previous, current, next);
       };
   }
 
@@ -4847,13 +5126,29 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => (() => void) | void) | (() => {...} | void | null),
+      createDeps: Array<mixed> | void | null,
+      update?: ((resource: {...} | void | null) => void) | void,
+      updateDeps?: Array<mixed> | void | null,
+      destroy?: ((resource: {...} | void | null) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountEffect(create, deps);
+      if (
+        enableUseEffectCRUDOverload &&
+        (typeof update === 'function' || typeof destroy === 'function')
+      ) {
+        return mountResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
+      } else {
+        return mountEffect(create, createDeps);
+      }
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -5016,25 +5311,17 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ): void {
-        currentHookNameInDev = 'useResourceEffect';
+  if (enableSwipeTransition) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
         warnInvalidHookAccess();
         mountHookTypesDev();
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
+        return mountSwipeTransition(previous, current, next);
       };
   }
 
@@ -5060,13 +5347,29 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => (() => void) | void) | (() => {...} | void | null),
+      createDeps: Array<mixed> | void | null,
+      update?: ((resource: {...} | void | null) => void) | void,
+      updateDeps?: Array<mixed> | void | null,
+      destroy?: ((resource: {...} | void | null) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateEffect(create, deps);
+      if (
+        enableUseEffectCRUDOverload &&
+        (typeof update === 'function' || typeof destroy === 'function')
+      ) {
+        return updateResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
+      } else {
+        return updateEffect(create, createDeps);
+      }
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -5229,25 +5532,17 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
+  if (enableSwipeTransition) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
+        return updateSwipeTransition(previous, current, next);
       };
   }
 
@@ -5273,13 +5568,29 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => (() => void) | void) | (() => {...} | void | null),
+      createDeps: Array<mixed> | void | null,
+      update?: ((resource: {...} | void | null) => void) | void,
+      updateDeps?: Array<mixed> | void | null,
+      destroy?: ((resource: {...} | void | null) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateEffect(create, deps);
+      if (
+        enableUseEffectCRUDOverload &&
+        (typeof update === 'function' || typeof destroy === 'function')
+      ) {
+        return updateResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
+      } else {
+        return updateEffect(create, createDeps);
+      }
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -5442,25 +5753,17 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
+  if (enableSwipeTransition) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useSwipeTransition =
+      function useSwipeTransition<T>(
+        previous: T,
+        current: T,
+        next: T,
+      ): [T, StartGesture] {
+        currentHookNameInDev = 'useSwipeTransition';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
+        return updateSwipeTransition(previous, current, next);
       };
   }
 }

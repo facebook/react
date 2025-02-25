@@ -95,6 +95,8 @@ export type FormInstance = Instance;
 
 export type ViewTransitionInstance = null | {name: string, ...};
 
+export type GestureTimeline = null;
+
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
 if (__DEV__) {
@@ -792,6 +794,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         createViewTransitionInstance(name: string): ViewTransitionInstance {
           return null;
+        },
+
+        getCurrentGestureOffset(provider: GestureTimeline): number {
+          return 0;
+        },
+
+        subscribeToGestureDirection(
+          provider: GestureTimeline,
+          currentOffset: number,
+          directionCallback: (direction: boolean) => void,
+        ): () => void {
+          return () => {};
         },
 
         resetTextContent(instance: Instance): void {

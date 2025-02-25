@@ -1478,6 +1478,62 @@ export function createViewTransitionInstance(
   };
 }
 
+export type GestureTimeline = AnimationTimeline; // TODO: More provider types.
+
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
+  const time = provider.currentTime;
+  if (time === null) {
+    throw new Error(
+      'Cannot start a gesture with a disconnected AnimationTimeline.',
+    );
+  }
+  return typeof time === 'number' ? time : time.value;
+}
+
+export function subscribeToGestureDirection(
+  provider: GestureTimeline,
+  currentOffset: number,
+  directionCallback: (direction: boolean) => void,
+): () => void {
+  if (
+    typeof ScrollTimeline === 'function' &&
+    provider instanceof ScrollTimeline
+  ) {
+    // For ScrollTimeline we optimize to only update the current time on scroll events.
+    const element = provider.source;
+    const scrollCallback = () => {
+      const newTime = provider.currentTime;
+      if (newTime !== null) {
+        const newValue = typeof newTime === 'number' ? newTime : newTime.value;
+        if (newValue !== currentOffset) {
+          directionCallback(newValue > currentOffset);
+        }
+      }
+    };
+    element.addEventListener('scroll', scrollCallback, false);
+    return () => {
+      element.removeEventListener('scroll', scrollCallback, false);
+    };
+  } else {
+    // For other AnimationTimelines, such as DocumentTimeline, we just update every rAF.
+    // TODO: Optimize ViewTimeline using an IntersectionObserver if it becomes common.
+    const rafCallback = () => {
+      const newTime = provider.currentTime;
+      if (newTime !== null) {
+        const newValue = typeof newTime === 'number' ? newTime : newTime.value;
+        if (newValue !== currentOffset) {
+          directionCallback(newValue > currentOffset);
+        }
+      }
+      callbackID = requestAnimationFrame(rafCallback);
+    };
+    let callbackID = requestAnimationFrame(rafCallback);
+    return () => {
+      cancelAnimationFrame(callbackID);
+    };
+  }
+}
+
 export function clearContainer(container: Container): void {
   const nodeType = container.nodeType;
   if (nodeType === DOCUMENT_NODE) {

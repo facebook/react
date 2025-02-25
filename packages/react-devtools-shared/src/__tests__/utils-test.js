@@ -470,5 +470,14 @@ function f() { }
         {},
       ]);
     });
+
+    it('formats nullish values', () => {
+      expect(formatConsoleArguments('This is the %s template', null)).toEqual([
+        'This is the null template',
+      ]);
+      expect(
+        formatConsoleArguments('This is the %s template', undefined),
+      ).toEqual(['This is the undefined template']);
+    });
   });
 });
