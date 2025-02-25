@@ -96,13 +96,13 @@ describe('FragmentRefs', () => {
       const parentRef = React.createRef();
       const fragmentRef = React.createRef();
       const root = ReactDOMClient.createRoot(container);
-      let focusedElement = null;
 
       function Test() {
         return (
           <div ref={parentRef}>
             <Fragment ref={fragmentRef}>
               <div id="child-a" />
+              <style>{`#child-c {}`}</style>
               <a id="child-b" href="/">
                 B
               </a>
@@ -118,24 +118,10 @@ describe('FragmentRefs', () => {
         root.render(<Test />);
       });
 
-      // The test environment doesn't implement focus.
-      // Mock it here, along with a naive focusable query so we can assert
-      // that the first _focusable_ element is found.
-      const focusableChildren = parentRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      const focusMock = jest.spyOn(HTMLElement.prototype, 'focus');
-      focusMock.mockImplementation(function () {
-        if (Array.from(focusableChildren).includes(this)) {
-          focusedElement = this.id;
-        } else {
-          return false;
-        }
-      });
       await act(() => {
         fragmentRef.current.focus();
       });
-      expect(focusedElement).toEqual('child-b');
+      expect(document.activeElement.id).toEqual('child-b');
     });
 
     // @gate enableFragmentRefs
