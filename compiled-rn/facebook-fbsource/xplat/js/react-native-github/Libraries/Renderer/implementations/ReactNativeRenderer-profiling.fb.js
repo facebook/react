@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ee1aee26fcb05e232a90b1fdb60364be>>
+ * @generated SignedSource<<6e91baad58e11d1cff3f440e50ca4e1e>>
  */
 
 "use strict";
@@ -3035,7 +3035,7 @@ function trackUsedThenable(thenableState, thenable, index) {
         thenableState = workInProgressRoot;
         if (null !== thenableState && 100 < thenableState.shellSuspendCounter)
           throw Error(
-            "async/await is not yet supported in Client Components, only Server Components. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
+            "An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
           );
         thenableState = thenable;
         thenableState.status = "pending";
@@ -11792,11 +11792,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-25677265-20250224" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-22e39ea7-20250225" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-25677265-20250224\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-22e39ea7-20250225\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11845,10 +11845,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1365 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-25677265-20250224",
+    version: "19.1.0-native-fb-22e39ea7-20250225",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-25677265-20250224"
+    reconcilerVersion: "19.1.0-native-fb-22e39ea7-20250225"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1365.rendererConfig = extraDevToolsConfig);

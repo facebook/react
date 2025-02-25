@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ced3d8683c6be454e2c97407bbc21427>>
+ * @generated SignedSource<<9dc97db56627eb4b5a0a0f9f9b145607>>
  */
 
 "use strict";
@@ -1579,7 +1579,7 @@ function trackUsedThenable(thenableState, thenable, index) {
         thenableState = workInProgressRoot;
         if (null !== thenableState && 100 < thenableState.shellSuspendCounter)
           throw Error(
-            "async/await is not yet supported in Client Components, only Server Components. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
+            "An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
           );
         thenableState = thenable;
         thenableState.status = "pending";
@@ -10355,10 +10355,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1207 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-25677265-20250224",
+  version: "19.1.0-native-fb-22e39ea7-20250225",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-25677265-20250224",
+  reconcilerVersion: "19.1.0-native-fb-22e39ea7-20250225",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$147 = 0;
@@ -10509,4 +10509,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-25677265-20250224";
+exports.version = "19.1.0-native-fb-22e39ea7-20250225";
