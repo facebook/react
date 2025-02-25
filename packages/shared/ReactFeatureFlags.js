@@ -95,6 +95,11 @@ export const enableViewTransition = __EXPERIMENTAL__;
 export const enableSwipeTransition = __EXPERIMENTAL__;
 
 /**
+ * Switches the Fabric API from doing layout in commit work instead of complete work.
+ */
+export const enableFabricCompleteRootInCommitPhase = false;
+
+/**
  * Switches Fiber creation to a simple object instead of a constructor.
  */
 export const enableObjectFiber = false;
@@ -262,5 +267,3 @@ export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-
-export const enableRemoveConsolePatches = true;

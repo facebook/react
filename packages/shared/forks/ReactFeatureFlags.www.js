@@ -44,12 +44,12 @@ export const {
 
 // Can remove these two
 export const enableOwnerStacks = true;
-export const enableRemoveConsolePatches = true;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
+export const enableFabricCompleteRootInCommitPhase = false;
 
 export const enableSuspenseAvoidThisFallback = true;
 

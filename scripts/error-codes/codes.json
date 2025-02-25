@@ -467,7 +467,7 @@
   "479": "Cannot update optimistic state while rendering.",
   "480": "File/Blob fields are not yet supported in progressive forms. Will fallback to client hydration.",
   "481": "Tried to encode a Server Action from a different instance than the encoder is from. This is a bug in React.",
-  "482": "async/await is not yet supported in Client Components, only Server Components. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.",
+  "482": "An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.",
   "483": "Hooks are not supported inside an async component. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.",
   "484": "A Server Component was postponed. The reason is omitted in production builds to avoid leaking sensitive details.",
   "485": "Cannot update form state while rendering.",
@@ -533,5 +533,8 @@
   "545": "The %s tag may only be rendered once.",
   "546": "useEffect CRUD overload is not enabled in this build of React.",
   "547": "startGesture cannot be called during server rendering.",
-  "548": "Finished rendering the gesture lane but there were no pending gestures. React should not have started a render in this case. This is a bug in React."
+  "548": "Finished rendering the gesture lane but there were no pending gestures. React should not have started a render in this case. This is a bug in React.",
+  "549": "Cannot start a gesture with a disconnected AnimationTimeline.",
+  "550": "useSwipeTransition is not yet supported in react-art.",
+  "551": "useSwipeTransition is not yet supported in React Native."
 }

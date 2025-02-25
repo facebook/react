@@ -20,6 +20,7 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
+  enableFabricCompleteRootInCommitPhase,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
   enablePersistedModeClonedFlag,
@@ -33,7 +34,6 @@ export const {
 
 // These two can be removed
 export const enableOwnerStacks = true;
-export const enableRemoveConsolePatches = true;
 
 // The rest of the flags are static for better dead code elimination.
 export const disableClientCache = true;
