@@ -205,8 +205,11 @@ describe('FragmentRefs', () => {
         return (
           <div ref={parentRef}>
             <Fragment ref={fragmentRef}>
+              <>Text</>
               <div ref={childARef}>A</div>
-              <div ref={childBRef}>B</div>
+              <>
+                <div ref={childBRef}>B</div>
+              </>
             </Fragment>
           </div>
         );
