@@ -12,7 +12,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const entryPoint = path.join(__dirname, '../server/src/index.ts');
-export const outfile = path.join(__dirname, '../dist/extension.js');
+export const outfile = path.join(__dirname, '../dist/server.js');
 export const config = {
   entryPoints: [entryPoint],
   outfile,
