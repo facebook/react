@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<66f2bb0f926f94469577ed3d9c6ba8ca>>
+ * @generated SignedSource<<f1c903240a905dabca8c1feb350f2469>>
  */
 
 "use strict";
@@ -5387,7 +5387,11 @@ __DEV__ &&
         identifierPrefix = workInProgressRoot.identifierPrefix,
         globalClientId = globalClientIdCounter++;
       identifierPrefix =
-        ":" + identifierPrefix + "r" + globalClientId.toString(32) + ":";
+        "\u00ab" +
+        identifierPrefix +
+        "r" +
+        globalClientId.toString(32) +
+        "\u00bb";
       return (hook.memoizedState = identifierPrefix);
     }
     function mountRefresh() {
@@ -17562,11 +17566,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.1.0-native-fb-22e39ea7-20250225" !== isomorphicReactPackageVersion)
+    if ("19.1.0-native-fb-2e4db334-20250225" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.1.0-native-fb-22e39ea7-20250225\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.1.0-native-fb-2e4db334-20250225\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17592,10 +17596,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-22e39ea7-20250225",
+        version: "19.1.0-native-fb-2e4db334-20250225",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-22e39ea7-20250225"
+        reconcilerVersion: "19.1.0-native-fb-2e4db334-20250225"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

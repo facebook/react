@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6e91baad58e11d1cff3f440e50ca4e1e>>
+ * @generated SignedSource<<8ff32d1b171dbda803578572b7dc91dc>>
  */
 
 "use strict";
@@ -4699,7 +4699,11 @@ var ContextOnlyDispatcher = {
         identifierPrefix = workInProgressRoot.identifierPrefix,
         globalClientId = globalClientIdCounter++;
       identifierPrefix =
-        ":" + identifierPrefix + "r" + globalClientId.toString(32) + ":";
+        "\u00ab" +
+        identifierPrefix +
+        "r" +
+        globalClientId.toString(32) +
+        "\u00bb";
       return (hook.memoizedState = identifierPrefix);
     },
     useHostTransitionStatus: useHostTransitionStatus,
@@ -11792,11 +11796,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-22e39ea7-20250225" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-2e4db334-20250225" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-22e39ea7-20250225\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-2e4db334-20250225\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11845,10 +11849,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1365 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-22e39ea7-20250225",
+    version: "19.1.0-native-fb-2e4db334-20250225",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-22e39ea7-20250225"
+    reconcilerVersion: "19.1.0-native-fb-2e4db334-20250225"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1365.rendererConfig = extraDevToolsConfig);

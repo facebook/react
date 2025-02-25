@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<04c44bc7e0ce05a4e7057d322b2ca6a1>>
+ * @generated SignedSource<<7c814ef809342d38a091e704ea24445a>>
  */
 
 "use strict";
@@ -5263,7 +5263,11 @@ __DEV__ &&
         identifierPrefix = workInProgressRoot.identifierPrefix,
         globalClientId = globalClientIdCounter++;
       identifierPrefix =
-        ":" + identifierPrefix + "r" + globalClientId.toString(32) + ":";
+        "\u00ab" +
+        identifierPrefix +
+        "r" +
+        globalClientId.toString(32) +
+        "\u00bb";
       return (hook.memoizedState = identifierPrefix);
     }
     function mountRefresh() {
@@ -17388,10 +17392,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-22e39ea7-20250225",
+        version: "19.1.0-native-fb-2e4db334-20250225",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-22e39ea7-20250225"
+        reconcilerVersion: "19.1.0-native-fb-2e4db334-20250225"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
