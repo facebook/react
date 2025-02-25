@@ -2,3 +2,4 @@
 client
 server
 scripts
+.vscode-test.mjs
