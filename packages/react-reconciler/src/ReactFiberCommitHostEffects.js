@@ -52,6 +52,8 @@ import {
   acquireSingletonInstance,
   releaseSingletonInstance,
   isSingletonScope,
+  commitNewChildToFragmentInstance,
+  deleteChildFromFragmentInstance,
 } from './ReactFiberConfig';
 import {captureCommitPhaseError} from './ReactFiberWorkLoop';
 import {trackHostMutation} from './ReactFiberMutationTracking';
@@ -216,27 +218,53 @@ export function getHostParentFiber(fiber: Fiber): Fiber {
   );
 }
 
-export function getFragmentInstanceParents(
-  fiber: Fiber,
-): null | Array<FragmentInstance> {
+export function commitFragmentInstanceInsertionEffects(fiber: Fiber): void {
   let parent = fiber.return;
-  let fragmentParents: null | Array<FragmentInstance> = null;
   while (parent !== null) {
     if (isFragmentInstanceParent(parent)) {
-      if (fragmentParents === null) {
-        fragmentParents = [];
-      }
       const fragmentInstance: FragmentInstance = parent.stateNode;
-      fragmentParents.push(fragmentInstance);
+      commitNewChildToFragmentInstance(fiber.stateNode, fragmentInstance);
     }
 
     if (isHostParent(parent)) {
-      return fragmentParents;
+      return;
     }
 
     parent = parent.return;
   }
-  return fragmentParents;
+}
+
+export function commitFragmentInstanceDeletionEffects(fiber: Fiber): void {
+  commitEffectsForFragmentInstanceParents(fiber);
+  let parent = fiber.return;
+  while (parent !== null) {
+    if (isFragmentInstanceParent(parent)) {
+      const fragmentInstance: FragmentInstance = parent.stateNode;
+      deleteChildFromFragmentInstance(fiber.stateNode, fragmentInstance);
+    }
+
+    if (isHostParent(parent)) {
+      return;
+    }
+
+    parent = parent.return;
+  }
+}
+
+function commitEffectsForFragmentInstanceParents(fiber: Fiber): void {
+  let parent = fiber.return;
+  while (parent !== null) {
+    if (isFragmentInstanceParent(parent)) {
+      const fragmentInstance: FragmentInstance = parent.stateNode;
+      deleteChildFromFragmentInstance(fiber.stateNode, fragmentInstance);
+    }
+
+    if (isHostParent(parent)) {
+      return;
+    }
+
+    parent = parent.return;
+  }
 }
 
 function isHostParent(fiber: Fiber): boolean {
