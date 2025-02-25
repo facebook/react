@@ -14,27 +14,9 @@ import {
   restoreRootViewTransitionName,
 } from './ReactFiberConfig';
 
-// Apply mutations to enter the destination state of a gesture render.
-// These will be reverted in later phases.
-export function applyDestinationMutations(
-  root: FiberRoot,
-  finishedWork: Fiber,
-): void {
-  // TODO
-}
-
-// Measure where boundaries should end up in the destination state.
-// This doesn't do any mutations itself and needs to run after all
-// other mutations have been applied.
-export function measureDestinationLayout(
-  root: FiberRoot,
-  finishedWork: Fiber,
-): void {
-  // TODO
-}
-
-// Revert mutations applied earlier but keep insertions outside the viewport.
-export function revertDestinationMutations(
+// Clone View Transition boundaries that have any mutations or might have had their
+// layout affected by child insertions.
+export function insertDestinationClones(
   root: FiberRoot,
   finishedWork: Fiber,
 ): void {

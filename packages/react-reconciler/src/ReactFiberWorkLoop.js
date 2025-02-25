@@ -230,9 +230,7 @@ import {
 } from './ReactFiberCommitWork';
 import {shouldStartViewTransition} from './ReactFiberCommitViewTransitions';
 import {
-  applyDestinationMutations,
-  measureDestinationLayout,
-  revertDestinationMutations,
+  insertDestinationClones,
   applyDepartureTransitions,
   startGestureAnimations,
 } from './ReactFiberApplyGesture';
@@ -3889,9 +3887,7 @@ function commitGestureOnRoot(
   const prevExecutionContext = executionContext;
   executionContext |= CommitContext;
   try {
-    applyDestinationMutations(root, finishedWork);
-    measureDestinationLayout(root, finishedWork);
-    revertDestinationMutations(root, finishedWork);
+    insertDestinationClones(root, finishedWork);
   } finally {
     // Reset the priority to the previous non-sync value.
     executionContext = prevExecutionContext;
