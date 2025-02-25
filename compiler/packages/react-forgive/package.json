@@ -1,0 +1,57 @@
+{
+  "name": "react-forgive",
+  "displayName": "React Analyzer",
+  "description": "React LSP",
+  "license": "MIT",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "compiler/packages/react-forgive"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "react",
+    "react analyzer",
+    "react compiler"
+  ],
+  "publisher": "Meta",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "activationEvents": [
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "react-forgive.toggleAll",
+        "title": "React Analyzer: Toggle on/off"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "yarn run esbuild-base -- --sourcemap",
+    "dev": "yarn run package && yarn run install-ext",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "install-ext": "code --install-extension vscode-react-compiler-0.0.1.vsix",
+    "lint": "echo 'no tests'",
+    "package": "vsce package",
+    "postinstall": "cd client && yarn install && cd ../server && yarn install && cd ..",
+    "pretest": "yarn run compile && yarn run lint",
+    "test": "echo 'no tests'",
+    "test-compile": "tsc -p ./",
+    "vscode:prepublish": "yarn run esbuild-base -- --minify",
+    "watch": "yarn run esbuild-base -- --sourcemap --watch"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/node": "^20",
+    "eslint": "^9.13.0",
+    "typescript-eslint": "^8.16.0"
+  }
+}
