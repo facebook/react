@@ -1659,16 +1659,17 @@ function recursivelyGetFragmentInstanceChildren(
     return;
   }
 
+  if (child.tag === HostComponent) {
+    childElements.add(child.stateNode);
+  }
+
   if (child.sibling !== null) {
     recursivelyGetFragmentInstanceChildren(child.sibling, childElements);
   }
 
-  if (child.tag === HostComponent) {
-    childElements.add(child.stateNode);
-    return;
+  if (child.tag !== HostComponent) {
+    recursivelyGetFragmentInstanceChildren(child.child, childElements);
   }
-
-  recursivelyGetFragmentInstanceChildren(child.child, childElements);
 }
 
 function normalizeListenerOptions(
