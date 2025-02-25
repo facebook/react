@@ -4505,14 +4505,14 @@ var HooksDispatcherOnMount = {
         identifierPrefix = workInProgressRoot.identifierPrefix;
       if (isHydrating) {
         var treeId = getTreeId();
-        identifierPrefix = ":" + identifierPrefix + "R" + treeId;
+        identifierPrefix = "\u00ab" + identifierPrefix + "R" + treeId;
         treeId = localIdCounter++;
         0 < treeId && (identifierPrefix += "H" + treeId.toString(32));
-        identifierPrefix += ":";
+        identifierPrefix += "\u00bb";
       } else
         (treeId = globalClientIdCounter++),
           (identifierPrefix =
-            ":" + identifierPrefix + "r" + treeId.toString(32) + ":");
+            "\u00ab" + identifierPrefix + "r" + treeId.toString(32) + "\u00bb");
       return (hook.memoizedState = identifierPrefix);
     },
     useHostTransitionStatus: useHostTransitionStatus,
@@ -19117,14 +19117,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1951 = React.version;
 if (
-  "19.1.0-www-classic-22e39ea7-20250225" !==
+  "19.1.0-www-classic-2e4db334-20250225" !==
   isomorphicReactPackageVersion$jscomp$inline_1951
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1951,
-      "19.1.0-www-classic-22e39ea7-20250225"
+      "19.1.0-www-classic-2e4db334-20250225"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19142,10 +19142,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1953 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-22e39ea7-20250225",
+  version: "19.1.0-www-classic-2e4db334-20250225",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-22e39ea7-20250225"
+  reconcilerVersion: "19.1.0-www-classic-2e4db334-20250225"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1953.getLaneLabelMap = getLaneLabelMap),
@@ -19512,7 +19512,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-22e39ea7-20250225";
+exports.version = "19.1.0-www-classic-2e4db334-20250225";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

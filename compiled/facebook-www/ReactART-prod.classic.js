@@ -3350,7 +3350,11 @@ var HooksDispatcherOnMount = {
         identifierPrefix = workInProgressRoot.identifierPrefix,
         globalClientId = globalClientIdCounter++;
       identifierPrefix =
-        ":" + identifierPrefix + "r" + globalClientId.toString(32) + ":";
+        "\u00ab" +
+        identifierPrefix +
+        "r" +
+        globalClientId.toString(32) +
+        "\u00bb";
       return (hook.memoizedState = identifierPrefix);
     },
     useHostTransitionStatus: useHostTransitionStatus,
@@ -11257,10 +11261,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1550 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-22e39ea7-20250225",
+  version: "19.1.0-www-classic-2e4db334-20250225",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-22e39ea7-20250225"
+  reconcilerVersion: "19.1.0-www-classic-2e4db334-20250225"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1551 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11286,4 +11290,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-22e39ea7-20250225";
+exports.version = "19.1.0-www-classic-2e4db334-20250225";
