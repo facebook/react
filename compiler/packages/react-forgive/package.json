@@ -19,7 +19,7 @@
   ],
   "publisher": "Meta",
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.96.0"
   },
   "activationEvents": [
     "onLanguage:javascriptreact",
@@ -49,8 +49,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^20",
+    "@types/vscode": "^1.96.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
     "eslint": "^9.13.0",
+    "mocha": "^11.0.1",
     "typescript-eslint": "^8.16.0",
     "yargs": "^17.7.2"
   }
