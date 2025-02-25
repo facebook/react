@@ -34,6 +34,7 @@ import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostCo
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import {OffscreenComponent} from 'react-reconciler/src/ReactWorkTags';
 
 export {
   setCurrentUpdatePriority,
@@ -2137,13 +2138,22 @@ FragmentInstancePseudoElement.prototype.addEventListener = function (
     }) === -1;
   if (isNewEventListener) {
     listeners.push({type, listener, optionsOrUseCapture});
-    const children = getFragmentInstanceChildren(this);
-    children.forEach(child => {
-      child.addEventListener(type, listener, optionsOrUseCapture);
-    });
+    traverseFragmentInstanceChildren(
+      this,
+      this._fragmentFiber.child,
+      addEventListenerToChild.bind(null, type, listener, optionsOrUseCapture),
+    );
   }
   this._eventListeners = listeners;
 };
+function addEventListenerToChild(
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+  child: Element,
+): void {
+  child.addEventListener(type, listener, optionsOrUseCapture);
+}
 // $FlowFixMe[prop-missing]
 FragmentInstancePseudoElement.prototype.removeEventListener = function (
   this: FragmentInstance,
@@ -2155,11 +2165,16 @@ FragmentInstancePseudoElement.prototype.removeEventListener = function (
   if (listeners === undefined || listeners.length === 0) {
     return;
   }
-
-  const children = getFragmentInstanceChildren(this);
-  children.forEach(child => {
-    child.removeEventListener(type, listener, optionsOrUseCapture);
-  });
+  traverseFragmentInstanceChildren(
+    this,
+    this._fragmentFiber.child,
+    removeEventListenerFromChild.bind(
+      null,
+      type,
+      listener,
+      optionsOrUseCapture,
+    ),
+  );
   const index = indexOfEventListener(listeners, {
     type,
     listener,
@@ -2167,50 +2182,44 @@ FragmentInstancePseudoElement.prototype.removeEventListener = function (
   });
   this._eventListeners = listeners.splice(index, 1);
 };
+function removeEventListenerFromChild(
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+  child: Element,
+): void {
+  child.removeEventListener(type, listener, optionsOrUseCapture);
+}
 // $FlowFixMe[prop-missing]
 FragmentInstancePseudoElement.prototype.focus = function (
   this: FragmentInstance,
 ) {
-  const children = getFragmentInstanceChildren(this);
-  const iterator = children.values();
-  let child = iterator.next();
-  while (!child.done) {
-    if (setFocusIfFocusable(child.value)) {
-      break;
-    }
-    child = iterator.next();
-  }
+  traverseFragmentInstanceChildren(
+    this,
+    this._fragmentFiber.child,
+    setFocusIfFocusable,
+  );
 };
 
-function getFragmentInstanceChildren(
+function traverseFragmentInstanceChildren(
   fragmentInstance: FragmentInstance,
-): Set<Element> {
-  const children = new Set<Element>();
-  recursivelyGetFragmentInstanceChildren(
-    fragmentInstance._fragmentFiber.child,
-    children,
-  );
-  return children;
-}
-
-function recursivelyGetFragmentInstanceChildren(
   child: Fiber | null,
-  childElements: Set<Element>,
+  fn: (child: Element) => boolean | void,
 ): void {
-  if (child === null) {
-    return;
-  }
-
-  if (child.tag === HostComponent) {
-    childElements.add(child.stateNode);
-  }
-
-  if (child.sibling !== null) {
-    recursivelyGetFragmentInstanceChildren(child.sibling, childElements);
-  }
-
-  if (child.tag !== HostComponent) {
-    recursivelyGetFragmentInstanceChildren(child.child, childElements);
+  while (child !== null) {
+    if (child.tag === HostComponent) {
+      if (fn(child.stateNode)) {
+        return;
+      }
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip hidden subtrees
+    } else {
+      traverseFragmentInstanceChildren(fragmentInstance, child.child, fn);
+    }
+    child = child.sibling;
   }
 }
 
