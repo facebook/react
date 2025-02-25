@@ -11,9 +11,11 @@ import BabelPluginReactCompiler, {
   type PluginOptions,
 } from 'babel-plugin-react-compiler/src';
 import * as babelParser from 'prettier/plugins/babel.js';
-import * as estreeParser from 'prettier/plugins/estree';
+import estreeParser from 'prettier/plugins/estree';
 import * as typescriptParser from 'prettier/plugins/typescript';
 import * as prettier from 'prettier/standalone';
+
+export let lastResult: BabelCore.BabelFileResult | null = null;
 
 type CompileOptions = {
   text: string;
@@ -24,7 +26,7 @@ export async function compile({
   text,
   file,
   options,
-}: CompileOptions): Promise<BabelCore.BabelFileResult> {
+}: CompileOptions): Promise<BabelCore.BabelFileResult | null> {
   const ast = await parseAsync(text, {
     sourceFileName: file,
     parserOpts: {
@@ -32,6 +34,9 @@ export async function compile({
     },
     sourceType: 'module',
   });
+  if (ast == null) {
+    return null;
+  }
   const plugins =
     options != null
       ? [[BabelPluginReactCompiler, options]]
@@ -54,5 +59,8 @@ export async function compile({
     parser: 'babel-ts',
     plugins: [babelParser, estreeParser, typescriptParser],
   });
+  if (result.code != null) {
+    lastResult = result;
+  }
   return result;
 }
