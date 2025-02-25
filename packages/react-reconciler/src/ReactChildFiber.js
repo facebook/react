@@ -617,9 +617,6 @@ function createChildReconciler(
         returnFiber.mode,
         lanes,
         key,
-        enableFragmentRefs &&
-          returnFiber.stateNode !== null &&
-          returnFiber.stateNode.ref !== undefined,
       );
       created.return = returnFiber;
       if (__DEV__) {
@@ -725,7 +722,6 @@ function createChildReconciler(
           returnFiber.mode,
           lanes,
           null,
-          false,
         );
         created.return = returnFiber;
         if (__DEV__) {
@@ -1692,7 +1688,6 @@ function createChildReconciler(
         returnFiber.mode,
         lanes,
         element.key,
-        enableFragmentRefs && element.props.ref !== undefined,
       );
       if (enableFragmentRefs) {
         coerceRef(created, element);
