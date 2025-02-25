@@ -1,13 +1,15 @@
 {
   "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "outDir": "dist",
+    "module": "ES2015",
+    "moduleResolution": "Bundler",
+    "rootDir": "../../..",
+    "noEmit": true,
     "jsx": "react-jsxdev",
-    "lib": ["ES2020"],
-    "target": "ES2020",
+    "target": "ES2015",
+    "sourceMap": false,
+    "removeComments": true,
   },
   "exclude": ["node_modules", ".vscode-test"],
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts"]
 }
