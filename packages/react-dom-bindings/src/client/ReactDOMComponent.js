@@ -1269,6 +1269,8 @@ export function setInitialProperties(
       return;
     }
     case 'dialog': {
+      listenToNonDelegatedEvent('beforetoggle', domElement);
+      listenToNonDelegatedEvent('toggle', domElement);
       listenToNonDelegatedEvent('cancel', domElement);
       listenToNonDelegatedEvent('close', domElement);
       break;
