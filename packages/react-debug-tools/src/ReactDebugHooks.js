@@ -76,6 +76,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
     try {
       // Use all hooks here to add them to the hook log.
       Dispatcher.useContext(({_currentValue: null}: any));
+      Dispatcher.useConst(() => null);
       Dispatcher.useState(null);
       Dispatcher.useReducer((s: mixed, a: mixed) => s, null);
       Dispatcher.useRef(null);
@@ -267,6 +268,20 @@ function useContext<T>(context: ReactContext<T>): T {
     value: value,
     debugInfo: null,
     dispatcherHookName: 'Context',
+  });
+  return value;
+}
+
+function useConst<T>(constFactory: () => T): T {
+  const hook = nextHook();
+  const value = hook !== null ? hook.memoizedState : constFactory();
+  hookLog.push({
+    displayName: null,
+    primitive: 'Const',
+    stackError: new Error(),
+    value,
+    debugInfo: null,
+    dispatcherHookName: 'Const',
   });
   return value;
 }
@@ -785,6 +800,7 @@ const Dispatcher: DispatcherType = {
   useInsertionEffect,
   useMemo,
   useReducer,
+  useConst,
   useRef,
   useState,
   useDebugValue,

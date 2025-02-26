@@ -68,6 +68,7 @@ export {
   useOptimistic,
   useSyncExternalStore,
   useReducer,
+  useConst,
   useRef,
   useState,
   useTransition,

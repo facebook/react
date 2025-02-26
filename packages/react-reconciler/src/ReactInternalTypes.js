@@ -46,6 +46,7 @@ export type HookType =
   | 'useState'
   | 'useReducer'
   | 'useContext'
+  | 'useConst'
   | 'useRef'
   | 'useEffect'
   | 'useEffectEvent'
@@ -387,6 +388,7 @@ type Dispatch<A> = A => void;
 export type Dispatcher = {
   use: <T>(Usable<T>) => T,
   readContext<T>(context: ReactContext<T>): T,
+  useConst<T>(constFactory: () => T): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, I, A>(
     reducer: (S, A) => S,

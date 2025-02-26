@@ -77,6 +77,7 @@ export const HooksDispatcher: Dispatcher = {
     return nextCreate();
   },
   useReducer: (unsupportedHook: any),
+  useConst: (unsupportedHook: any),
   useRef: (unsupportedHook: any),
   useState: (unsupportedHook: any),
   useDebugValue(): void {},

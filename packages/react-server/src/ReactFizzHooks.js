@@ -344,6 +344,26 @@ function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
   return typeof action === 'function' ? action(state) : action;
 }
 
+// Workaround for no-HooksDispatchers approach
+const memoizedStateInitializedNull = Symbol();
+
+export function useConst<T>(constFactory: () => T): T {
+  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+  workInProgressHook = createWorkInProgressHook();
+  const previousState = workInProgressHook.memoizedState;
+  if (previousState === null) {
+    const value = constFactory();
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
+    workInProgressHook.memoizedState =
+      value !== null ? value : memoizedStateInitializedNull;
+    return value;
+  } else {
+    return previousState !== memoizedStateInitializedNull
+      ? previousState // $FlowFixMe[incompatible-return]
+      : null;
+  }
+}
+
 export function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
@@ -828,6 +848,7 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useContext,
       useMemo,
       useReducer,
+      useConst,
       useRef,
       useState,
       useInsertionEffect: noop,
@@ -862,6 +883,7 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useLayoutEffect: clientHookNotSupported,
       useMemo,
       useReducer: clientHookNotSupported,
+      useConst: clientHookNotSupported,
       useRef: clientHookNotSupported,
       useState: clientHookNotSupported,
       useDebugValue: noop,

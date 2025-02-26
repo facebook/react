@@ -231,6 +231,8 @@ const rule = {
       //               ^^^ true for this reference
       // const ref = useRef()
       //       ^^^ true for this reference
+      // const ref = useConst()
+      //       ^^^ true for this reference
       // const onStuff = useEffectEvent(() => {})
       //       ^^^ true for this reference
       // False for everything else.
@@ -301,8 +303,12 @@ const rule = {
         const definitionNode: VariableDeclarator = def.node;
         const id = definitionNode.id;
         const {name} = callee;
-        if (name === 'useRef' && id.type === 'Identifier') {
+        if (
+          id.type === 'Identifier' &&
+          (name === 'useConst' || name === 'useRef')
+        ) {
           // useRef() return value is stable.
+          // useConst() return value is stable.
           return true;
         } else if (
           isUseEffectEventIdentifier(callee) &&
@@ -617,8 +623,9 @@ const rule = {
           message:
             `Assignments to the '${key}' variable from inside React Hook ` +
             `${getSourceCode().getText(reactiveHook)} will be lost after each ` +
-            `render. To preserve the value over time, store it in a useRef ` +
-            `Hook and keep the mutable value in the '.current' property. ` +
+            `render. To preserve the value over time, store it in a useConst ` +
+            `Hook or in a useRef Hook (and keep the mutable value in the ` +
+            `'.current' property). ` +
             `Otherwise, you can move this variable directly inside ` +
             `${getSourceCode().getText(reactiveHook)}.`,
         });

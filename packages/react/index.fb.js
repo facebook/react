@@ -54,6 +54,7 @@ export {
   useMemo,
   useOptimistic,
   useReducer,
+  useConst,
   useRef,
   useState,
   useSyncExternalStore,

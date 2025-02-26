@@ -69,6 +69,11 @@ export function useContext<T>(Context: ReactContext<T>): T {
   return dispatcher.useContext(Context);
 }
 
+export function useConst<T>(constFactory: () => T): T {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useConst(constFactory);
+}
+
 export function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {

@@ -1909,6 +1909,26 @@ function forceStoreRerender(fiber: Fiber) {
   }
 }
 
+function mountConst<T>(constFactory: () => T): T {
+  const hook = mountWorkInProgressHook();
+  const value = constFactory();
+  if (shouldDoubleInvokeUserFnsInHooksDEV) {
+    setIsStrictModeForDevtools(true);
+    try {
+      constFactory();
+    } finally {
+      setIsStrictModeForDevtools(false);
+    }
+  }
+  hook.memoizedState = value;
+  return value;
+}
+
+function updateConst<T>(constFactory: () => T): T {
+  const hook = updateWorkInProgressHook();
+  return hook.memoizedState;
+}
+
 function mountStateImpl<S>(initialState: (() => S) | S): Hook {
   const hook = mountWorkInProgressHook();
   if (typeof initialState === 'function') {
@@ -4171,6 +4191,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useInsertionEffect: throwInvalidHookError,
   useMemo: throwInvalidHookError,
   useReducer: throwInvalidHookError,
+  useConst: throwInvalidHookError,
   useRef: throwInvalidHookError,
   useState: throwInvalidHookError,
   useDebugValue: throwInvalidHookError,
@@ -4205,6 +4226,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useInsertionEffect: mountInsertionEffect,
   useMemo: mountMemo,
   useReducer: mountReducer,
+  useConst: mountConst,
   useRef: mountRef,
   useState: mountState,
   useDebugValue: mountDebugValue,
@@ -4239,6 +4261,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useLayoutEffect: updateLayoutEffect,
   useMemo: updateMemo,
   useReducer: updateReducer,
+  useConst: updateConst,
   useRef: updateRef,
   useState: updateState,
   useDebugValue: updateDebugValue,
@@ -4273,6 +4296,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useLayoutEffect: updateLayoutEffect,
   useMemo: updateMemo,
   useReducer: rerenderReducer,
+  useConst: updateConst,
   useRef: updateRef,
   useState: rerenderState,
   useDebugValue: updateDebugValue,
@@ -4423,6 +4447,17 @@ if (__DEV__) {
       currentHookNameInDev = 'useRef';
       mountHookTypesDev();
       return mountRef(initialValue);
+    },
+    useConst<T>(constFactory: () => T): T {
+      currentHookNameInDev = 'useConst';
+      mountHookTypesDev();
+      const prevDispatcher = ReactSharedInternals.H;
+      ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountConst(constFactory);
+      } finally {
+        ReactSharedInternals.H = prevDispatcher;
+      }
     },
     useState<S>(
       initialState: (() => S) | S,
@@ -4610,6 +4645,17 @@ if (__DEV__) {
       ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
         return mountReducer(reducer, initialArg, init);
+      } finally {
+        ReactSharedInternals.H = prevDispatcher;
+      }
+    },
+    useConst<T>(constFactory: () => T): T {
+      currentHookNameInDev = 'useConst';
+      updateHookTypesDev();
+      const prevDispatcher = ReactSharedInternals.H;
+      ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountConst(constFactory);
       } finally {
         ReactSharedInternals.H = prevDispatcher;
       }
@@ -4809,6 +4855,17 @@ if (__DEV__) {
         ReactSharedInternals.H = prevDispatcher;
       }
     },
+    useConst<T>(constFactory: () => T): T {
+      currentHookNameInDev = 'useConst';
+      updateHookTypesDev();
+      const prevDispatcher = ReactSharedInternals.H;
+      ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      try {
+        return updateConst(constFactory);
+      } finally {
+        ReactSharedInternals.H = prevDispatcher;
+      }
+    },
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
       updateHookTypesDev();
@@ -5000,6 +5057,17 @@ if (__DEV__) {
       ReactSharedInternals.H = InvalidNestedHooksDispatcherOnRerenderInDEV;
       try {
         return rerenderReducer(reducer, initialArg, init);
+      } finally {
+        ReactSharedInternals.H = prevDispatcher;
+      }
+    },
+    useConst<T>(constFactory: () => T): T {
+      currentHookNameInDev = 'useConst';
+      updateHookTypesDev();
+      const prevDispatcher = ReactSharedInternals.H;
+      ReactSharedInternals.H = InvalidNestedHooksDispatcherOnRerenderInDEV;
+      try {
+        return updateConst(constFactory);
       } finally {
         ReactSharedInternals.H = prevDispatcher;
       }
@@ -5207,6 +5275,18 @@ if (__DEV__) {
       ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
         return mountReducer(reducer, initialArg, init);
+      } finally {
+        ReactSharedInternals.H = prevDispatcher;
+      }
+    },
+    useConst<T>(constFactory: () => T): T {
+      currentHookNameInDev = 'useConst';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      const prevDispatcher = ReactSharedInternals.H;
+      ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountConst(constFactory);
       } finally {
         ReactSharedInternals.H = prevDispatcher;
       }
@@ -5432,6 +5512,18 @@ if (__DEV__) {
         ReactSharedInternals.H = prevDispatcher;
       }
     },
+    useConst<T>(constFactory: () => T): T {
+      currentHookNameInDev = 'useConst';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      const prevDispatcher = ReactSharedInternals.H;
+      ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      try {
+        return updateConst(constFactory);
+      } finally {
+        ReactSharedInternals.H = prevDispatcher;
+      }
+    },
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
       warnInvalidHookAccess();
@@ -5649,6 +5741,18 @@ if (__DEV__) {
       ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return rerenderReducer(reducer, initialArg, init);
+      } finally {
+        ReactSharedInternals.H = prevDispatcher;
+      }
+    },
+    useConst<T>(constFactory: () => T): T {
+      currentHookNameInDev = 'useConst';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      const prevDispatcher = ReactSharedInternals.H;
+      ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      try {
+        return updateConst(constFactory);
       } finally {
         ReactSharedInternals.H = prevDispatcher;
       }
