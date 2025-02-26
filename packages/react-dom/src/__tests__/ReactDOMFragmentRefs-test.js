@@ -93,13 +93,12 @@ describe('FragmentRefs', () => {
   describe('focus()', () => {
     // @gate enableFragmentRefs
     it('focuses the first focusable child', async () => {
-      const parentRef = React.createRef();
       const fragmentRef = React.createRef();
       const root = ReactDOMClient.createRoot(container);
 
       function Test() {
         return (
-          <div ref={parentRef}>
+          <div>
             <Fragment ref={fragmentRef}>
               <div id="child-a" />
               <style>{`#child-c {}`}</style>
@@ -122,27 +121,22 @@ describe('FragmentRefs', () => {
         fragmentRef.current.focus();
       });
       expect(document.activeElement.id).toEqual('child-b');
+      document.activeElement.blur();
     });
 
     // @gate enableFragmentRefs
     it('preserves document order when adding and removing children', async () => {
       const fragmentRef = React.createRef();
       const root = ReactDOMClient.createRoot(container);
-      let focusedElement = null;
 
       function Test({showA, showB}) {
         return (
           <Fragment ref={fragmentRef}>
-            {showA && <a id="child-a" />}
-            {showB && <a id="child-b" />}
+            {showA && <a href="/" id="child-a" />}
+            {showB && <a href="/" id="child-b" />}
           </Fragment>
         );
       }
-
-      const focusMock = jest.spyOn(HTMLElement.prototype, 'focus');
-      focusMock.mockImplementation(function () {
-        focusedElement = this.id;
-      });
 
       // Render with A as the first focusable child
       await act(() => {
@@ -151,8 +145,8 @@ describe('FragmentRefs', () => {
       await act(() => {
         fragmentRef.current.focus();
       });
-      expect(focusedElement).toEqual('child-a');
-
+      expect(document.activeElement.id).toEqual('child-a');
+      document.activeElement.blur();
       // A is still the first focusable child, but B is also tracked
       await act(() => {
         root.render(<Test showA={true} showB={true} />);
@@ -160,7 +154,8 @@ describe('FragmentRefs', () => {
       await act(() => {
         fragmentRef.current.focus();
       });
-      expect(focusedElement).toEqual('child-a');
+      expect(document.activeElement.id).toEqual('child-a');
+      document.activeElement.blur();
 
       // B is now the first focusable child
       await act(() => {
@@ -169,7 +164,8 @@ describe('FragmentRefs', () => {
       await act(() => {
         fragmentRef.current.focus();
       });
-      expect(focusedElement).toEqual('child-b');
+      expect(document.activeElement.id).toEqual('child-b');
+      document.activeElement.blur();
     });
   });
 
