@@ -7543,191 +7543,6 @@ module.exports = function ($$$config) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
   }
-  function commitBeforeMutationEffects(root, firstChild, committedLanes) {
-    focusedInstanceHandle = prepareForCommit(root.containerInfo);
-    shouldStartViewTransition = shouldFireAfterActiveInstanceBlur = !1;
-    root =
-      enableViewTransition && (committedLanes & 335544064) === committedLanes;
-    nextEffect = firstChild;
-    for (firstChild = root ? 9238 : 9236; null !== nextEffect; ) {
-      committedLanes = nextEffect;
-      var deletions = committedLanes.deletions;
-      if (null !== deletions)
-        for (var i = 0; i < deletions.length; i++) {
-          var deletion = deletions[i];
-          doesFiberContain(deletion, focusedInstanceHandle) &&
-            ((shouldFireAfterActiveInstanceBlur = !0),
-            beforeActiveInstanceBlur(deletion));
-          root && commitExitViewTransitions(deletion);
-        }
-      if (
-        enableViewTransition &&
-        null === committedLanes.alternate &&
-        0 !== (committedLanes.flags & 2)
-      )
-        commitBeforeMutationEffects_complete(root);
-      else {
-        if (enableViewTransition && 22 === committedLanes.tag)
-          if (
-            ((deletions = committedLanes.alternate),
-            null !== committedLanes.memoizedState)
-          ) {
-            null !== deletions &&
-              null === deletions.memoizedState &&
-              root &&
-              commitExitViewTransitions(deletions);
-            commitBeforeMutationEffects_complete(root);
-            continue;
-          } else if (null !== deletions && null !== deletions.memoizedState) {
-            commitBeforeMutationEffects_complete(root);
-            continue;
-          }
-        deletions = committedLanes.child;
-        0 !== (committedLanes.subtreeFlags & firstChild) && null !== deletions
-          ? ((deletions.return = committedLanes), (nextEffect = deletions))
-          : (root && commitNestedViewTransitions(committedLanes),
-            commitBeforeMutationEffects_complete(root));
-      }
-    }
-    appearingViewTransitions = focusedInstanceHandle = null;
-  }
-  function commitBeforeMutationEffects_complete(
-    isViewTransitionEligible$jscomp$0
-  ) {
-    for (; null !== nextEffect; ) {
-      var fiber = nextEffect,
-        isViewTransitionEligible = isViewTransitionEligible$jscomp$0,
-        current = fiber.alternate,
-        flags = fiber.flags,
-        JSCompiler_temp;
-      if (
-        (JSCompiler_temp =
-          !shouldFireAfterActiveInstanceBlur && null !== focusedInstanceHandle)
-      ) {
-        if ((JSCompiler_temp = 13 === fiber.tag))
-          a: {
-            if (
-              null !== current &&
-              ((JSCompiler_temp = current.memoizedState),
-              null === JSCompiler_temp || null !== JSCompiler_temp.dehydrated)
-            ) {
-              JSCompiler_temp = fiber.memoizedState;
-              JSCompiler_temp =
-                null !== JSCompiler_temp && null === JSCompiler_temp.dehydrated;
-              break a;
-            }
-            JSCompiler_temp = !1;
-          }
-        JSCompiler_temp =
-          JSCompiler_temp && doesFiberContain(fiber, focusedInstanceHandle);
-      }
-      JSCompiler_temp &&
-        ((shouldFireAfterActiveInstanceBlur = !0),
-        beforeActiveInstanceBlur(fiber));
-      switch (fiber.tag) {
-        case 0:
-          if (
-            0 !== (flags & 4) &&
-            ((current = fiber.updateQueue),
-            (current = null !== current ? current.events : null),
-            null !== current)
-          )
-            for (
-              isViewTransitionEligible = 0;
-              isViewTransitionEligible < current.length;
-              isViewTransitionEligible++
-            )
-              (flags = current[isViewTransitionEligible]),
-                (flags.ref.impl = flags.nextImpl);
-          break;
-        case 11:
-        case 15:
-          break;
-        case 1:
-          if (0 !== (flags & 1024) && null !== current) {
-            isViewTransitionEligible = void 0;
-            flags = current.memoizedProps;
-            current = current.memoizedState;
-            JSCompiler_temp = fiber.stateNode;
-            try {
-              var resolvedPrevProps = resolveClassComponentProps(
-                fiber.type,
-                flags,
-                fiber.elementType === fiber.type
-              );
-              isViewTransitionEligible =
-                JSCompiler_temp.getSnapshotBeforeUpdate(
-                  resolvedPrevProps,
-                  current
-                );
-              JSCompiler_temp.__reactInternalSnapshotBeforeUpdate =
-                isViewTransitionEligible;
-            } catch (error) {
-              captureCommitPhaseError(fiber, fiber.return, error);
-            }
-          }
-          break;
-        case 3:
-          0 !== (flags & 1024) &&
-            supportsMutation &&
-            clearContainer(fiber.stateNode.containerInfo);
-          break;
-        case 5:
-        case 26:
-        case 27:
-        case 6:
-        case 4:
-        case 17:
-          break;
-        case 30:
-          if (enableViewTransition) {
-            if (
-              isViewTransitionEligible &&
-              null !== current &&
-              0 !== (fiber.subtreeFlags & 8246)
-            )
-              a: {
-                isViewTransitionEligible = getViewTransitionName(
-                  current.memoizedProps,
-                  current.stateNode
-                );
-                flags = fiber.memoizedProps;
-                JSCompiler_temp = getViewTransitionClassName(
-                  flags.className,
-                  flags.update
-                );
-                if (
-                  "none" === JSCompiler_temp &&
-                  ((JSCompiler_temp = getViewTransitionClassName(
-                    flags.className,
-                    flags.layout
-                  )),
-                  "none" === JSCompiler_temp)
-                )
-                  break a;
-                viewTransitionHostInstanceIdx = 0;
-                applyViewTransitionToHostInstances(
-                  current.child,
-                  isViewTransitionEligible,
-                  JSCompiler_temp,
-                  (current.memoizedState = []),
-                  !0
-                );
-              }
-            break;
-          }
-        default:
-          if (0 !== (flags & 1024)) throw Error(formatProdErrorMessage(163));
-      }
-      current = fiber.sibling;
-      if (null !== current) {
-        current.return = fiber.return;
-        nextEffect = current;
-        break;
-      }
-      nextEffect = fiber.return;
-    }
-  }
   function applyViewTransitionToHostInstances(
     child,
     name,
@@ -8122,6 +7937,191 @@ module.exports = function ($$$config) {
         0 !== (changedParent.subtreeFlags & 33554432) &&
           measureNestedViewTransitions(changedParent);
       changedParent = changedParent.sibling;
+    }
+  }
+  function commitBeforeMutationEffects(root, firstChild, committedLanes) {
+    focusedInstanceHandle = prepareForCommit(root.containerInfo);
+    shouldStartViewTransition = shouldFireAfterActiveInstanceBlur = !1;
+    root =
+      enableViewTransition && (committedLanes & 335544064) === committedLanes;
+    nextEffect = firstChild;
+    for (firstChild = root ? 9238 : 9236; null !== nextEffect; ) {
+      committedLanes = nextEffect;
+      var deletions = committedLanes.deletions;
+      if (null !== deletions)
+        for (var i = 0; i < deletions.length; i++) {
+          var deletion = deletions[i];
+          doesFiberContain(deletion, focusedInstanceHandle) &&
+            ((shouldFireAfterActiveInstanceBlur = !0),
+            beforeActiveInstanceBlur(deletion));
+          root && commitExitViewTransitions(deletion);
+        }
+      if (
+        enableViewTransition &&
+        null === committedLanes.alternate &&
+        0 !== (committedLanes.flags & 2)
+      )
+        commitBeforeMutationEffects_complete(root);
+      else {
+        if (enableViewTransition && 22 === committedLanes.tag)
+          if (
+            ((deletions = committedLanes.alternate),
+            null !== committedLanes.memoizedState)
+          ) {
+            null !== deletions &&
+              null === deletions.memoizedState &&
+              root &&
+              commitExitViewTransitions(deletions);
+            commitBeforeMutationEffects_complete(root);
+            continue;
+          } else if (null !== deletions && null !== deletions.memoizedState) {
+            commitBeforeMutationEffects_complete(root);
+            continue;
+          }
+        deletions = committedLanes.child;
+        0 !== (committedLanes.subtreeFlags & firstChild) && null !== deletions
+          ? ((deletions.return = committedLanes), (nextEffect = deletions))
+          : (root && commitNestedViewTransitions(committedLanes),
+            commitBeforeMutationEffects_complete(root));
+      }
+    }
+    appearingViewTransitions = focusedInstanceHandle = null;
+  }
+  function commitBeforeMutationEffects_complete(
+    isViewTransitionEligible$jscomp$0
+  ) {
+    for (; null !== nextEffect; ) {
+      var fiber = nextEffect,
+        isViewTransitionEligible = isViewTransitionEligible$jscomp$0,
+        current = fiber.alternate,
+        flags = fiber.flags,
+        JSCompiler_temp;
+      if (
+        (JSCompiler_temp =
+          !shouldFireAfterActiveInstanceBlur && null !== focusedInstanceHandle)
+      ) {
+        if ((JSCompiler_temp = 13 === fiber.tag))
+          a: {
+            if (
+              null !== current &&
+              ((JSCompiler_temp = current.memoizedState),
+              null === JSCompiler_temp || null !== JSCompiler_temp.dehydrated)
+            ) {
+              JSCompiler_temp = fiber.memoizedState;
+              JSCompiler_temp =
+                null !== JSCompiler_temp && null === JSCompiler_temp.dehydrated;
+              break a;
+            }
+            JSCompiler_temp = !1;
+          }
+        JSCompiler_temp =
+          JSCompiler_temp && doesFiberContain(fiber, focusedInstanceHandle);
+      }
+      JSCompiler_temp &&
+        ((shouldFireAfterActiveInstanceBlur = !0),
+        beforeActiveInstanceBlur(fiber));
+      switch (fiber.tag) {
+        case 0:
+          if (
+            0 !== (flags & 4) &&
+            ((current = fiber.updateQueue),
+            (current = null !== current ? current.events : null),
+            null !== current)
+          )
+            for (
+              isViewTransitionEligible = 0;
+              isViewTransitionEligible < current.length;
+              isViewTransitionEligible++
+            )
+              (flags = current[isViewTransitionEligible]),
+                (flags.ref.impl = flags.nextImpl);
+          break;
+        case 11:
+        case 15:
+          break;
+        case 1:
+          if (0 !== (flags & 1024) && null !== current) {
+            isViewTransitionEligible = void 0;
+            flags = current.memoizedProps;
+            current = current.memoizedState;
+            JSCompiler_temp = fiber.stateNode;
+            try {
+              var resolvedPrevProps = resolveClassComponentProps(
+                fiber.type,
+                flags,
+                fiber.elementType === fiber.type
+              );
+              isViewTransitionEligible =
+                JSCompiler_temp.getSnapshotBeforeUpdate(
+                  resolvedPrevProps,
+                  current
+                );
+              JSCompiler_temp.__reactInternalSnapshotBeforeUpdate =
+                isViewTransitionEligible;
+            } catch (error) {
+              captureCommitPhaseError(fiber, fiber.return, error);
+            }
+          }
+          break;
+        case 3:
+          0 !== (flags & 1024) &&
+            supportsMutation &&
+            clearContainer(fiber.stateNode.containerInfo);
+          break;
+        case 5:
+        case 26:
+        case 27:
+        case 6:
+        case 4:
+        case 17:
+          break;
+        case 30:
+          if (enableViewTransition) {
+            if (
+              isViewTransitionEligible &&
+              null !== current &&
+              0 !== (fiber.subtreeFlags & 8246)
+            )
+              a: {
+                isViewTransitionEligible = getViewTransitionName(
+                  current.memoizedProps,
+                  current.stateNode
+                );
+                flags = fiber.memoizedProps;
+                JSCompiler_temp = getViewTransitionClassName(
+                  flags.className,
+                  flags.update
+                );
+                if (
+                  "none" === JSCompiler_temp &&
+                  ((JSCompiler_temp = getViewTransitionClassName(
+                    flags.className,
+                    flags.layout
+                  )),
+                  "none" === JSCompiler_temp)
+                )
+                  break a;
+                viewTransitionHostInstanceIdx = 0;
+                applyViewTransitionToHostInstances(
+                  current.child,
+                  isViewTransitionEligible,
+                  JSCompiler_temp,
+                  (current.memoizedState = []),
+                  !0
+                );
+              }
+            break;
+          }
+        default:
+          if (0 !== (flags & 1024)) throw Error(formatProdErrorMessage(163));
+      }
+      current = fiber.sibling;
+      if (null !== current) {
+        current.return = fiber.return;
+        nextEffect = current;
+        break;
+      }
+      nextEffect = fiber.return;
     }
   }
   function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
@@ -10042,11 +10042,11 @@ module.exports = function ($$$config) {
             ((previousHoistableRoot = fiber.memoizedProps.name),
             null != previousHoistableRoot && "auto" !== previousHoistableRoot)
           ) {
+            var state = fiber.stateNode;
+            state.paired = null;
             null === appearingViewTransitions &&
               (appearingViewTransitions = new Map());
-            var instance = fiber.stateNode;
-            instance.paired = null;
-            appearingViewTransitions.set(previousHoistableRoot, instance);
+            appearingViewTransitions.set(previousHoistableRoot, state);
           }
           recursivelyAccumulateSuspenseyCommit(fiber);
           break;
@@ -13041,6 +13041,10 @@ module.exports = function ($$$config) {
     },
     emptyObject = {},
     viewTransitionMutationContext = !1,
+    shouldStartViewTransition = !1,
+    appearingViewTransitions = null,
+    viewTransitionCancelableChildren = null,
+    viewTransitionHostInstanceIdx = 0,
     offscreenSubtreeIsHidden = !1,
     offscreenSubtreeWasHidden = !1,
     needsFormReset = !1,
@@ -13048,11 +13052,7 @@ module.exports = function ($$$config) {
     nextEffect = null,
     focusedInstanceHandle = null,
     shouldFireAfterActiveInstanceBlur = !1,
-    shouldStartViewTransition = !1,
-    appearingViewTransitions = null,
     viewTransitionContextChanged = !1,
-    viewTransitionCancelableChildren = null,
-    viewTransitionHostInstanceIdx = 0,
     hostParent = null,
     hostParentIsContainer = !1,
     currentHoistableRoot = null,
@@ -13472,7 +13472,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-2e4db334-20250225"
+      reconcilerVersion: "19.1.0-www-modern-92e65ca6-20250225"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

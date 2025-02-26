@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1122() {
+    function JSCompiler_object_inline_createNodeMock_1124() {
       return null;
     }
     function findHook(fiber, id) {
@@ -14995,10 +14995,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-2e4db334-20250225",
+        version: "19.1.0-www-classic-92e65ca6-20250225",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-2e4db334-20250225"
+        reconcilerVersion: "19.1.0-www-classic-92e65ca6-20250225"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15018,7 +15018,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1122,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1124,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15133,5 +15133,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-classic-2e4db334-20250225";
+    exports.version = "19.1.0-www-classic-92e65ca6-20250225";
   })();
