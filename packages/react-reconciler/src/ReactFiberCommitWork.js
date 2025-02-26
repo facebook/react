@@ -2339,6 +2339,9 @@ function commitMutationEffectsOnFiber(
     }
     case Fragment:
       if (enableFragmentRefs) {
+        if (current && current.stateNode !== null) {
+          current.stateNode._fragmentFiber = finishedWork;
+        }
         if (flags & Ref) {
           safelyAttachRef(finishedWork, finishedWork.return);
         }
