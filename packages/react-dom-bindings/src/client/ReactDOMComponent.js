@@ -82,6 +82,7 @@ let didWarnFormActionTarget = false;
 let didWarnFormActionMethod = false;
 let didWarnForNewBooleanPropsWithEmptyValue: {[string]: boolean};
 let didWarnPopoverTargetObject = false;
+let didWarnCommandForObject = false;
 if (__DEV__) {
   didWarnForNewBooleanPropsWithEmptyValue = {};
 }
@@ -871,6 +872,21 @@ function setProp(
           didWarnPopoverTargetObject = true;
           console.error(
             'The `popoverTarget` prop expects the ID of an Element as a string. Received %s instead.',
+            value,
+          );
+        }
+      }
+      break;
+    case 'commandFor':
+      if (__DEV__) {
+        if (
+          !didWarnCommandForObject &&
+          value != null &&
+          typeof value === 'object'
+        ) {
+          didWarnCommandForObject = true;
+          console.error(
+            'The `commandFor` prop expects the ID of an Element as a string. Received %s instead.',
             value,
           );
         }
@@ -3075,6 +3091,10 @@ export function hydrateProperties(
       // For use by the polyfill.
       listenToNonDelegatedEvent('scroll', domElement);
     }
+  }
+
+  if (props.onCommand != null) {
+    listenToNonDelegatedEvent('command', domElement);
   }
 
   if (props.onClick != null) {

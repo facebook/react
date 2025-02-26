@@ -1334,6 +1334,22 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
+    it('onCommand', async () => {
+      await testEmulatedBubblingEvent({
+        type: 'div',
+        reactEvent: 'onCommand',
+        reactEventType: 'command',
+        nativeEvent: 'command',
+        dispatch(node) {
+          const e = new Event('command', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
     it('onVolumeChange', async () => {
       await testEmulatedBubblingEvent({
         type: 'video',

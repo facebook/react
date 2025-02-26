@@ -28,6 +28,7 @@ import {
   SyntheticClipboardEvent,
   SyntheticPointerEvent,
   SyntheticToggleEvent,
+  SyntheticCommandEvent,
 } from '../../events/SyntheticEvent';
 
 import {
@@ -166,6 +167,9 @@ function extractEvents(
     case 'beforetoggle':
       // MDN claims <details> should not receive ToggleEvent contradicting the spec: https://html.spec.whatwg.org/multipage/indices.html#event-toggle
       SyntheticEventCtor = SyntheticToggleEvent;
+      break;
+    case 'command':
+      SyntheticEventCtor = SyntheticCommandEvent;
       break;
     default:
       // Unknown event. This is used by createEventHandle.

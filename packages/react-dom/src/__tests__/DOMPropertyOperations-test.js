@@ -1346,6 +1346,34 @@ describe('DOMPropertyOperations', () => {
         );
       });
     });
+
+    it('warns when using commandFor={HTMLElement}', async () => {
+      const popoverTarget = document.createElement('div');
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
+          <button key="one" commandFor={popoverTarget} command="toggle-popover">
+            Toggle popover
+          </button>,
+        );
+      });
+
+      assertConsoleErrorDev([
+        'The `commandFor` prop expects the ID of an Element as a string. Received HTMLDivElement {} instead.\n' +
+          '    in button (at **)',
+      ]);
+
+      // Dedupe warning
+      await act(() => {
+        root.render(
+          <button key="two" commandFor={popoverTarget} command="toggle-popover">
+            Toggle popover
+          </button>,
+        );
+      });
+    });
   });
 
   describe('deleteValueForProperty', () => {

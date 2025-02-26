@@ -294,6 +294,7 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'cancel':
     case 'click':
     case 'close':
+    case 'command':
     case 'contextmenu':
     case 'copy':
     case 'cut':
