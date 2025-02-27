@@ -1014,20 +1014,17 @@ function returnsNonNode(
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
 ): boolean {
-  let hasReturn = false;
   let returnsNonNode = false;
   if (
     // node.traverse#ArrowFunctionExpression isn't called for the root node
     node.type === 'ArrowFunctionExpression' &&
     node.node.body.type !== 'BlockStatement'
   ) {
-    hasReturn = true;
     returnsNonNode = isNonNode(node.node.body);
   }
 
   node.traverse({
     ReturnStatement(ret) {
-      hasReturn = true;
       returnsNonNode = isNonNode(ret.node.argument);
     },
     // Skip traversing all nested functions and their return statements
@@ -1037,7 +1034,7 @@ function returnsNonNode(
     ObjectMethod: node => node.skip(),
   });
 
-  return !hasReturn || returnsNonNode;
+  return returnsNonNode;
 }
 
 /*
