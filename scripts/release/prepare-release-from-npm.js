@@ -26,6 +26,13 @@ const run = async () => {
       params.version = await getLatestNextVersion();
     }
 
+    if (params.onlyPackages.length > 0 && params.skipPackages.length > 0) {
+      console.error(
+        '--onlyPackages and --skipPackages cannot be used together'
+      );
+      process.exit(1);
+    }
+
     params.packages = await getPublicPackages(isExperimental);
     params.packages = params.packages.filter(packageName => {
       if (params.onlyPackages.length > 0) {
