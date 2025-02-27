@@ -71,6 +71,7 @@ export type AncestorInfoDev = {
 
   // <head> or <body>
   containerTagInScope: ?Info,
+  implicitRootScope: boolean,
 };
 
 // This validation code was written based on the HTML5 parsing spec:
@@ -219,10 +220,11 @@ const emptyAncestorInfoDev: AncestorInfoDev = {
   dlItemTagAutoclosing: null,
 
   containerTagInScope: null,
+  implicitRootScope: false,
 };
 
 function updatedAncestorInfoDev(
-  oldInfo: ?AncestorInfoDev,
+  oldInfo: null | AncestorInfoDev,
   tag: string,
 ): AncestorInfoDev {
   if (__DEV__) {
@@ -238,14 +240,14 @@ function updatedAncestorInfoDev(
       ancestorInfo.pTagInButtonScope = null;
     }
 
-    // See rules for 'li', 'dd', 'dt' start tags in
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
     if (
       specialTags.indexOf(tag) !== -1 &&
       tag !== 'address' &&
       tag !== 'div' &&
       tag !== 'p'
     ) {
+      // See rules for 'li', 'dd', 'dt' start tags in
+      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
       ancestorInfo.listItemTagAutoclosing = null;
       ancestorInfo.dlItemTagAutoclosing = null;
     }
@@ -279,6 +281,17 @@ function updatedAncestorInfoDev(
       ancestorInfo.containerTagInScope = info;
     }
 
+    if (
+      oldInfo === null &&
+      (tag === '#document' || tag === 'html' || tag === 'body')
+    ) {
+      // While <head> is also a singleton we don't want to support semantics where
+      // you can escape the head by rendering a body singleton so we treat it like a normal scope
+      ancestorInfo.implicitRootScope = true;
+    } else if (ancestorInfo.implicitRootScope === true) {
+      ancestorInfo.implicitRootScope = false;
+    }
+
     return ancestorInfo;
   } else {
     return (null: any);
@@ -288,7 +301,11 @@ function updatedAncestorInfoDev(
 /**
  * Returns whether
  */
-function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
+function isTagValidWithParent(
+  tag: string,
+  parentTag: ?string,
+  implicitRootScope: boolean,
+): boolean {
   // First, let's check if we're in an unusual parsing mode...
   switch (parentTag) {
     // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
@@ -363,10 +380,22 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
       );
     // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
     case 'html':
+      if (implicitRootScope) {
+        // When our parent tag is html and we're in the root scope we will actually
+        // insert most tags into the body so we need to fall through to validating
+        // the specific tag with "in body" parsing mode below
+        break;
+      }
       return tag === 'head' || tag === 'body' || tag === 'frameset';
     case 'frameset':
       return tag === 'frame';
     case '#document':
+      if (implicitRootScope) {
+        // When our parent is the Document and we're in the root scope we will actually
+        // insert most tags into the body so we need to fall through to validating
+        // the specific tag with "in body" parsing mode below
+        break;
+      }
       return tag === 'html';
   }
 
@@ -393,14 +422,11 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
     case 'rt':
       return impliedEndTags.indexOf(parentTag) === -1;
 
-    case 'body':
     case 'caption':
     case 'col':
     case 'colgroup':
     case 'frameset':
     case 'frame':
-    case 'head':
-    case 'html':
     case 'tbody':
     case 'td':
     case 'tfoot':
@@ -412,6 +438,24 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
       // so we allow it only if we don't know what the parent is, as all other
       // cases are invalid.
       return parentTag == null;
+    case 'head':
+      // We support rendering <head> in the root when the container is
+      // #document, <html>, or <body>.
+      return implicitRootScope || parentTag === null;
+    case 'html':
+      // We support rendering <html> in the root when the container is
+      // #document
+      return (
+        (implicitRootScope && parentTag === '#document') || parentTag === null
+      );
+    case 'body':
+      // We support rendering <body> in the root when the container is
+      // #document or <html>
+      return (
+        (implicitRootScope &&
+          (parentTag === '#document' || parentTag === 'html')) ||
+        parentTag === null
+      );
   }
 
   return true;
@@ -513,7 +557,11 @@ function validateDOMNesting(
     const parentInfo = ancestorInfo.current;
     const parentTag = parentInfo && parentInfo.tag;
 
-    const invalidParent = isTagValidWithParent(childTag, parentTag)
+    const invalidParent = isTagValidWithParent(
+      childTag,
+      parentTag,
+      ancestorInfo.implicitRootScope,
+    )
       ? null
       : parentInfo;
     const invalidAncestor = invalidParent
@@ -594,9 +642,13 @@ function validateDOMNesting(
   return true;
 }
 
-function validateTextNesting(childText: string, parentTag: string): boolean {
+function validateTextNesting(
+  childText: string,
+  parentTag: string,
+  implicitRootScope: boolean,
+): boolean {
   if (__DEV__) {
-    if (isTagValidWithParent('#text', parentTag)) {
+    if (implicitRootScope || isTagValidWithParent('#text', parentTag, false)) {
       return true;
     }
 

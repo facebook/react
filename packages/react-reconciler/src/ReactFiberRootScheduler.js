@@ -20,6 +20,7 @@ import {
   enableComponentPerformanceTrack,
   enableSiblingPrerendering,
   enableYieldingBeforePassive,
+  enableSwipeTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   NoLane,
@@ -32,6 +33,7 @@ import {
   claimNextTransitionLane,
   getNextLanesToFlushSync,
   checkIfRootIsPrerendering,
+  isGestureRender,
 } from './ReactFiberLane';
 import {
   CommitContext,
@@ -211,7 +213,8 @@ function flushSyncWorkAcrossRoots_impl(
             rootHasPendingCommit,
           );
           if (
-            includesSyncLane(nextLanes) &&
+            (includesSyncLane(nextLanes) ||
+              (enableSwipeTransition && isGestureRender(nextLanes))) &&
             !checkIfRootIsPrerendering(root, nextLanes)
           ) {
             // This root has pending sync work. Flush it now.
@@ -296,7 +299,8 @@ function processRootScheduleInMicrotask() {
         syncTransitionLanes !== NoLanes ||
         // Common case: we're not treating any extra lanes as synchronous, so we
         // can just check if the next lanes are sync.
-        includesSyncLane(nextLanes)
+        includesSyncLane(nextLanes) ||
+        (enableSwipeTransition && isGestureRender(nextLanes))
       ) {
         mightHavePendingSyncWork = true;
       }

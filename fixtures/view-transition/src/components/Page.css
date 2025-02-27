@@ -6,3 +6,9 @@
   font-variation-settings:
     "wdth" 100;
 }
+
+.swipe-recognizer {
+  width: 200px;
+  border: 1px solid #333333;
+  border-radius: 10px;
+}

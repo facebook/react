@@ -1,4 +1,0 @@
-{
-  "extends": "@parcel/config-default",
-  "runtimes": ["...", "@parcel/runtime-rsc"]
-}

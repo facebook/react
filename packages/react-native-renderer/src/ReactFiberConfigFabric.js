@@ -31,6 +31,7 @@ import {
   createPublicTextInstance,
   type PublicInstance as ReactNativePublicInstance,
   type PublicTextInstance,
+  type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 const {
@@ -59,6 +60,7 @@ import {
 import {
   enableFabricCompleteRootInCommitPhase,
   passChildrenWhenCloningPersistedNodes,
+  enableLazyPublicInstanceInFabric,
 } from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {ReactContext} from 'shared/ReactTypes';
@@ -95,8 +97,11 @@ export type Instance = {
     currentProps: Props,
     // Reference to the React handle (the fiber)
     internalInstanceHandle: InternalInstanceHandle,
-    // Exposed through refs.
-    publicInstance: PublicInstance,
+    // Exposed through refs. Potentially lazily created.
+    publicInstance: PublicInstance | null,
+    // This is only necessary to lazily create `publicInstance`.
+    // Will be set to `null` after that is created.
+    publicRootInstance?: PublicRootInstance | null,
   },
 };
 export type TextInstance = {
@@ -108,7 +113,10 @@ export type TextInstance = {
 };
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
-export type Container = number;
+export type Container = {
+  containerTag: number,
+  publicInstance: PublicRootInstance | null,
+};
 export type ChildSet = Object | Array<Node>;
 export type HostContext = $ReadOnly<{
   isInAParentText: boolean,
@@ -180,27 +188,42 @@ export function createInstance(
   const node = createNode(
     tag, // reactTag
     viewConfig.uiViewClassName, // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     updatePayload, // props
     internalInstanceHandle, // internalInstanceHandle
   );
 
-  const component = createPublicInstance(
-    tag,
-    viewConfig,
-    internalInstanceHandle,
-  );
-
-  return {
-    node: node,
-    canonical: {
-      nativeTag: tag,
+  if (enableLazyPublicInstanceInFabric) {
+    return {
+      node: node,
+      canonical: {
+        nativeTag: tag,
+        viewConfig,
+        currentProps: props,
+        internalInstanceHandle,
+        publicInstance: null,
+        publicRootInstance: rootContainerInstance.publicInstance,
+      },
+    };
+  } else {
+    const component = createPublicInstance(
+      tag,
       viewConfig,
-      currentProps: props,
       internalInstanceHandle,
-      publicInstance: component,
-    },
-  };
+      rootContainerInstance.publicInstance,
+    );
+
+    return {
+      node: node,
+      canonical: {
+        nativeTag: tag,
+        viewConfig,
+        currentProps: props,
+        internalInstanceHandle,
+        publicInstance: component,
+      },
+    };
+  }
 }
 
 export function createTextInstance(
@@ -221,7 +244,7 @@ export function createTextInstance(
   const node = createNode(
     tag, // reactTag
     'RCTRawText', // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     {text: text}, // props
     internalInstanceHandle, // instance handle
   );
@@ -275,7 +298,18 @@ export function getChildHostContext(
 }
 
 export function getPublicInstance(instance: Instance): null | PublicInstance {
-  if (instance.canonical != null && instance.canonical.publicInstance != null) {
+  if (instance.canonical != null) {
+    if (instance.canonical.publicInstance == null) {
+      instance.canonical.publicInstance = createPublicInstance(
+        instance.canonical.nativeTag,
+        instance.canonical.viewConfig,
+        instance.canonical.internalInstanceHandle,
+        instance.canonical.publicRootInstance ?? null,
+      );
+      // This was only necessary to create the public instance.
+      instance.canonical.publicRootInstance = null;
+    }
+
     return instance.canonical.publicInstance;
   }
 
@@ -501,7 +535,7 @@ export function finalizeContainerChildren(
   newChildren: ChildSet,
 ): void {
   if (!enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container, newChildren);
+    completeRoot(container.containerTag, newChildren);
   }
 }
 
@@ -511,7 +545,7 @@ export function replaceContainerChildren(
 ): void {
   // Noop - children will be replaced in finalizeContainerChildren
   if (enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container, newChildren);
+    completeRoot(container.containerTag, newChildren);
   }
 }
 

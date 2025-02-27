@@ -11,16 +11,35 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {ViewTransitionInstance} from './ReactFiberConfig';
 
-import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
+import {
+  getWorkInProgressRoot,
+  getPendingTransitionTypes,
+} from './ReactFiberWorkLoop';
 
 import {getIsHydrating} from './ReactFiberHydrationContext';
 
 import {getTreeId} from './ReactFiberTreeContext';
 
+export type ViewTransitionClassPerType = {
+  [transitionType: 'default' | string]: 'none' | string,
+};
+
+export type ViewTransitionClass = 'none' | string | ViewTransitionClassPerType;
+
 export type ViewTransitionProps = {
   name?: string,
-  className?: string,
   children?: ReactNodeList,
+  className?: ViewTransitionClass,
+  enter?: ViewTransitionClass,
+  exit?: ViewTransitionClass,
+  layout?: ViewTransitionClass,
+  share?: ViewTransitionClass,
+  update?: ViewTransitionClass,
+  onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onLayout?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
 };
 
 export type ViewTransitionState = {
@@ -70,4 +89,52 @@ export function getViewTransitionName(
   }
   // We should have assigned a name by now.
   return (instance.autoName: any);
+}
+
+function getClassNameByType(classByType: ?ViewTransitionClass): ?string {
+  if (classByType == null || typeof classByType === 'string') {
+    return classByType;
+  }
+  let className: ?string = null;
+  const activeTypes = getPendingTransitionTypes();
+  if (activeTypes !== null) {
+    for (let i = 0; i < activeTypes.length; i++) {
+      const match = classByType[activeTypes[i]];
+      if (match != null) {
+        if (match === 'none') {
+          // If anything matches "none" that takes precedence over any other
+          // type that also matches.
+          return 'none';
+        }
+        if (className == null) {
+          className = match;
+        } else {
+          className += ' ' + match;
+        }
+      }
+    }
+  }
+  if (className == null) {
+    // We had no other matches. Match the default for this configuration.
+    return classByType.default;
+  }
+  return className;
+}
+
+export function getViewTransitionClassName(
+  defaultClass: ?ViewTransitionClass,
+  eventClass: ?ViewTransitionClass,
+): ?string {
+  const className: ?string = getClassNameByType(defaultClass);
+  const eventClassName: ?string = getClassNameByType(eventClass);
+  if (eventClassName == null) {
+    return className;
+  }
+  if (eventClassName === 'none') {
+    return eventClassName;
+  }
+  if (className != null && className !== 'none') {
+    return className + ' ' + eventClassName;
+  }
+  return eventClassName;
 }

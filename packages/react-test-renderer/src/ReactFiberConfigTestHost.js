@@ -8,6 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
@@ -364,6 +365,7 @@ export function hasInstanceAffectedParent(
 
 export function startViewTransition(
   rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   layoutCallback: () => void,
   afterMutationCallback: () => void,
@@ -387,6 +389,20 @@ export function getInstanceFromNode(mockNode: Object): Object | null {
     return instance.internalInstanceHandle;
   }
   return null;
+}
+
+export type GestureTimeline = null;
+
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
+  return 0;
+}
+
+export function subscribeToGestureDirection(
+  provider: GestureTimeline,
+  currentOffset: number,
+  directionCallback: (direction: boolean) => void,
+): () => void {
+  return () => {};
 }
 
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {

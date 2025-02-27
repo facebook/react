@@ -22,6 +22,7 @@ import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue'
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -93,6 +94,8 @@ export type TransitionStatus = mixed;
 export type FormInstance = Instance;
 
 export type ViewTransitionInstance = null | {name: string, ...};
+
+export type GestureTimeline = null;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -780,6 +783,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         startViewTransition(
           rootContainer: Container,
+          transitionTypes: null | TransitionTypes,
           mutationCallback: () => void,
           afterMutationCallback: () => void,
           layoutCallback: () => void,
@@ -790,6 +794,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         createViewTransitionInstance(name: string): ViewTransitionInstance {
           return null;
+        },
+
+        getCurrentGestureOffset(provider: GestureTimeline): number {
+          return 0;
+        },
+
+        subscribeToGestureDirection(
+          provider: GestureTimeline,
+          currentOffset: number,
+          directionCallback: (direction: boolean) => void,
+        ): () => void {
+          return () => {};
         },
 
         resetTextContent(instance: Instance): void {

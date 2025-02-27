@@ -31,6 +31,16 @@ describe('ReactOwnerStacks', () => {
     );
   }
 
+  it('behavior in production', () => {
+    if (!__DEV__) {
+      if (gate('fb')) {
+        expect(React).toHaveProperty('captureOwnerStack', undefined);
+      } else {
+        expect(React).not.toHaveProperty('captureOwnerStack');
+      }
+    }
+  });
+
   // @gate __DEV__ && enableOwnerStacks
   it('can get the component owner stacks during rendering in dev', async () => {
     let stack;
@@ -61,5 +71,18 @@ describe('ReactOwnerStacks', () => {
     expect(normalizeCodeLocInfo(stack)).toBe(
       '\n    in Bar (at **)' + '\n    in Foo (at **)',
     );
+  });
+
+  it('returns null outside of render', async () => {
+    // Awkward to gate since some builds will have `captureOwnerStack` return null in prod
+    if (__DEV__ && gate('enableOwnerStacks')) {
+      expect(React.captureOwnerStack()).toBe(null);
+
+      await act(() => {
+        ReactNoop.render(<div />);
+      });
+
+      expect(React.captureOwnerStack()).toBe(null);
+    }
   });
 });

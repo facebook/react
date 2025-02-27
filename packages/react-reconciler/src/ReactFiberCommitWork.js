@@ -14,7 +14,6 @@ import type {
   Container,
   HoistableRoot,
   FormInstance,
-  InstanceMeasurement,
   Props,
 } from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
@@ -112,9 +111,7 @@ import {
   PerformedWork,
   ForceClientRender,
   DidCapture,
-  ViewTransitionStatic,
   AffectedParentLayout,
-  ViewTransitionNamedStatic,
 } from './ReactFiberFlags';
 import {
   commitStartTime,
@@ -152,7 +149,6 @@ import {
   prepareForCommit,
   beforeActiveInstanceBlur,
   detachDeletedInstance,
-  releaseSingletonInstance,
   getHoistableRoot,
   acquireResource,
   releaseResource,
@@ -164,15 +160,10 @@ import {
   suspendResource,
   resetFormInstance,
   registerSuspenseInstanceRetry,
-  applyViewTransitionName,
-  restoreViewTransitionName,
   cancelViewTransitionName,
   cancelRootViewTransitionName,
   restoreRootViewTransitionName,
-  measureInstance,
-  hasInstanceChanged,
-  hasInstanceAffectedParent,
-  wasInstanceInViewport,
+  isSingletonScope,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -186,6 +177,7 @@ import {
   addMarkerIncompleteCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
   retryDehydratedSuspenseBoundary,
+  scheduleViewTransitionEvent,
 } from './ReactFiberWorkLoop';
 import {
   HasEffect as HookHasEffect,
@@ -202,7 +194,6 @@ import {
   OffscreenDetached,
   OffscreenPassiveEffectsConnected,
 } from './ReactFiberActivityComponent';
-import {getViewTransitionName} from './ReactFiberViewTransitionComponent';
 import {
   TransitionRoot,
   TransitionTracingMarker,
@@ -242,8 +233,26 @@ import {
   commitHostHydratedSuspense,
   commitHostRemoveChildFromContainer,
   commitHostRemoveChild,
-  commitHostSingleton,
+  commitHostSingletonAcquisition,
+  commitHostSingletonRelease,
 } from './ReactFiberCommitHostEffects';
+import {
+  commitEnterViewTransitions,
+  commitExitViewTransitions,
+  commitBeforeUpdateViewTransition,
+  commitNestedViewTransitions,
+  restoreEnterViewTransitions,
+  restoreExitViewTransitions,
+  restoreUpdateViewTransition,
+  restoreNestedViewTransitions,
+  measureUpdateViewTransition,
+  measureNestedViewTransitions,
+  resetShouldStartViewTransition,
+  resetAppearingViewTransitions,
+  trackAppearingViewTransition,
+  viewTransitionCancelableChildren,
+  setViewTransitionCancelableChildren,
+} from './ReactFiberCommitViewTransitions';
 import {
   viewTransitionMutationContext,
   pushMutationContext,
@@ -269,44 +278,34 @@ let inProgressRoot: FiberRoot | null = null;
 let focusedInstanceHandle: null | Fiber = null;
 export let shouldFireAfterActiveInstanceBlur: boolean = false;
 
-export let shouldStartViewTransition: boolean = false;
-
 // Used during the commit phase to track whether a parent ViewTransition component
 // might have been affected by any mutations / relayouts below.
 let viewTransitionContextChanged: boolean = false;
-// We can't cancel view transition children until we know that their parent also
-// don't need to transition.
-let viewTransitionCancelableChildren: null | Array<Instance | string | Props> =
-  null; // tupled array where each entry is [instance: Instance, oldName: string, props: Props]
 
 export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
   committedLanes: Lanes,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
 ): void {
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
   shouldFireAfterActiveInstanceBlur = false;
-  shouldStartViewTransition = false;
+
+  resetShouldStartViewTransition();
 
   const isViewTransitionEligible =
     enableViewTransition &&
     includesOnlyViewTransitionEligibleLanes(committedLanes);
 
   nextEffect = firstChild;
-  commitBeforeMutationEffects_begin(
-    isViewTransitionEligible,
-    appearingViewTransitions,
-  );
+  commitBeforeMutationEffects_begin(isViewTransitionEligible);
 
   // We no longer need to track the active instance fiber
   focusedInstanceHandle = null;
+  // We've found any matched pairs and can now reset.
+  resetAppearingViewTransitions();
 }
 
-function commitBeforeMutationEffects_begin(
-  isViewTransitionEligible: boolean,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
-) {
+function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
   // If this commit is eligible for a View Transition we look into all mutated subtrees.
   // TODO: We could optimize this by marking these with the Snapshot subtree flag in the render phase.
   const subtreeMask = isViewTransitionEligible
@@ -326,7 +325,6 @@ function commitBeforeMutationEffects_begin(
           commitBeforeMutationEffectsDeletion(
             deletion,
             isViewTransitionEligible,
-            appearingViewTransitions,
           );
         }
       }
@@ -359,7 +357,7 @@ function commitBeforeMutationEffects_begin(
             isViewTransitionEligible
           ) {
             // Was previously mounted as visible but is now hidden.
-            commitExitViewTransitions(current, appearingViewTransitions);
+            commitExitViewTransitions(current);
           }
           // Skip before mutation effects of the children because they're hidden.
           commitBeforeMutationEffects_complete(isViewTransitionEligible);
@@ -503,7 +501,7 @@ function commitBeforeMutationEffectsOnFiber(
             // We should just stash the parent ViewTransitionComponent and continue
             // walking the tree until we find HostComponent but to do that we need
             // to use a stack which requires refactoring this phase.
-            commitBeforeUpdateViewTransition(current);
+            commitBeforeUpdateViewTransition(current, finishedWork);
           }
         }
         break;
@@ -523,7 +521,6 @@ function commitBeforeMutationEffectsOnFiber(
 function commitBeforeMutationEffectsDeletion(
   deletion: Fiber,
   isViewTransitionEligible: boolean,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
 ) {
   if (enableCreateEventHandleAPI) {
     // TODO (effects) It would be nice to avoid calling doesFiberContain()
@@ -536,593 +533,7 @@ function commitBeforeMutationEffectsDeletion(
     }
   }
   if (isViewTransitionEligible) {
-    commitExitViewTransitions(deletion, appearingViewTransitions);
-  }
-}
-
-let viewTransitionHostInstanceIdx = 0;
-
-function applyViewTransitionToHostInstances(
-  child: null | Fiber,
-  name: string,
-  className: ?string,
-  collectMeasurements: null | Array<InstanceMeasurement>,
-  stopAtNestedViewTransitions: boolean,
-): boolean {
-  if (!supportsMutation) {
-    return false;
-  }
-  let inViewport = false;
-  while (child !== null) {
-    if (child.tag === HostComponent) {
-      shouldStartViewTransition = true;
-      const instance: Instance = child.stateNode;
-      if (collectMeasurements !== null) {
-        const measurement = measureInstance(instance);
-        collectMeasurements.push(measurement);
-        if (wasInstanceInViewport(measurement)) {
-          inViewport = true;
-        }
-      } else if (!inViewport) {
-        if (wasInstanceInViewport(measureInstance(instance))) {
-          inViewport = true;
-        }
-      }
-      applyViewTransitionName(
-        instance,
-        viewTransitionHostInstanceIdx === 0
-          ? name
-          : // If we have multiple Host Instances below, we add a suffix to the name to give
-            // each one a unique name.
-            name + '_' + viewTransitionHostInstanceIdx,
-        className,
-      );
-      viewTransitionHostInstanceIdx++;
-    } else if (
-      child.tag === OffscreenComponent &&
-      child.memoizedState !== null
-    ) {
-      // Skip any hidden subtrees. They were or are effectively not there.
-    } else if (
-      child.tag === ViewTransitionComponent &&
-      stopAtNestedViewTransitions
-    ) {
-      // Skip any nested view transitions for updates since in that case the
-      // inner most one is the one that handles the update.
-    } else {
-      if (
-        applyViewTransitionToHostInstances(
-          child.child,
-          name,
-          className,
-          collectMeasurements,
-          stopAtNestedViewTransitions,
-        )
-      ) {
-        inViewport = true;
-      }
-    }
-    child = child.sibling;
-  }
-  return inViewport;
-}
-
-function restoreViewTransitionOnHostInstances(
-  child: null | Fiber,
-  stopAtNestedViewTransitions: boolean,
-): void {
-  if (!supportsMutation) {
-    return;
-  }
-  while (child !== null) {
-    if (child.tag === HostComponent) {
-      const instance: Instance = child.stateNode;
-      restoreViewTransitionName(instance, child.memoizedProps);
-    } else if (
-      child.tag === OffscreenComponent &&
-      child.memoizedState !== null
-    ) {
-      // Skip any hidden subtrees. They were or are effectively not there.
-    } else if (
-      child.tag === ViewTransitionComponent &&
-      stopAtNestedViewTransitions
-    ) {
-      // Skip any nested view transitions for updates since in that case the
-      // inner most one is the one that handles the update.
-    } else {
-      restoreViewTransitionOnHostInstances(
-        child.child,
-        stopAtNestedViewTransitions,
-      );
-    }
-    child = child.sibling;
-  }
-}
-
-function commitAppearingPairViewTransitions(placement: Fiber): void {
-  if ((placement.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
-    // This has no named view transitions in its subtree.
-    return;
-  }
-  let child = placement.child;
-  while (child !== null) {
-    if (child.tag === OffscreenComponent && child.memoizedState === null) {
-      // This tree was already hidden so we skip it.
-    } else {
-      if (
-        child.tag === ViewTransitionComponent &&
-        (child.flags & ViewTransitionNamedStatic) !== NoFlags
-      ) {
-        const instance: ViewTransitionState = child.stateNode;
-        if (instance.paired) {
-          const props: ViewTransitionProps = child.memoizedProps;
-          if (props.name == null || props.name === 'auto') {
-            throw new Error(
-              'Found a pair with an auto name. This is a bug in React.',
-            );
-          }
-          // We found a new appearing view transition with the same name as this deletion.
-          // We'll transition between them.
-          viewTransitionHostInstanceIdx = 0;
-          const inViewport = applyViewTransitionToHostInstances(
-            child.child,
-            props.name,
-            props.className,
-            null,
-            false,
-          );
-          if (!inViewport) {
-            // This boundary is exiting within the viewport but is going to leave the viewport.
-            // Instead, we treat this as an exit of the previous entry by reverting the new name.
-            // Ideally we could undo the old transition but it's now too late. It's also on its
-            // on snapshot. We have know was for it to paint onto the original group.
-            // TODO: This will lead to things unexpectedly having exit animations that normally
-            // wouldn't happen. Consider if we should just let this fly off the screen instead.
-            restoreViewTransitionOnHostInstances(child.child, false);
-          }
-        }
-      }
-      commitAppearingPairViewTransitions(child);
-    }
-    child = child.sibling;
-  }
-}
-
-function commitEnterViewTransitions(placement: Fiber): void {
-  if (placement.tag === ViewTransitionComponent) {
-    const props: ViewTransitionProps = placement.memoizedProps;
-    const name = getViewTransitionName(props, placement.stateNode);
-    viewTransitionHostInstanceIdx = 0;
-    const inViewport = applyViewTransitionToHostInstances(
-      placement.child,
-      name,
-      props.className,
-      null,
-      false,
-    );
-    if (!inViewport) {
-      // Revert the transition names. This boundary is not in the viewport
-      // so we won't bother animating it.
-      restoreViewTransitionOnHostInstances(placement.child, false);
-      // TODO: Should we still visit the children in case a named one was in the viewport?
-    } else {
-      commitAppearingPairViewTransitions(placement);
-    }
-  } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-    let child = placement.child;
-    while (child !== null) {
-      commitEnterViewTransitions(child);
-      child = child.sibling;
-    }
-  } else {
-    commitAppearingPairViewTransitions(placement);
-  }
-}
-
-function commitDeletedPairViewTransitions(
-  deletion: Fiber,
-  appearingViewTransitions: Map<string, ViewTransitionState>,
-): void {
-  if (appearingViewTransitions.size === 0) {
-    // We've found all.
-    return;
-  }
-  if ((deletion.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
-    // This has no named view transitions in its subtree.
-    return;
-  }
-  let child = deletion.child;
-  while (child !== null) {
-    if (child.tag === OffscreenComponent && child.memoizedState === null) {
-      // This tree was already hidden so we skip it.
-    } else {
-      if (
-        child.tag === ViewTransitionComponent &&
-        (child.flags & ViewTransitionNamedStatic) !== NoFlags
-      ) {
-        const props: ViewTransitionProps = child.memoizedProps;
-        const name = props.name;
-        if (name != null && name !== 'auto') {
-          const pair = appearingViewTransitions.get(name);
-          if (pair !== undefined) {
-            // We found a new appearing view transition with the same name as this deletion.
-            viewTransitionHostInstanceIdx = 0;
-            const inViewport = applyViewTransitionToHostInstances(
-              child.child,
-              name,
-              props.className,
-              null,
-              false,
-            );
-            if (!inViewport) {
-              // This boundary is not in the viewport so we won't treat it as a matched pair.
-              // Revert the transition names. This avoids it flying onto the screen which can
-              // be disruptive and doesn't really preserve any continuity anyway.
-              restoreViewTransitionOnHostInstances(child.child, false);
-            } else {
-              // We'll transition between them.
-              const oldinstance: ViewTransitionState = child.stateNode;
-              const newInstance: ViewTransitionState = pair;
-              newInstance.paired = oldinstance;
-            }
-            // Delete the entry so that we know when we've found all of them
-            // and can stop searching (size reaches zero).
-            appearingViewTransitions.delete(name);
-            if (appearingViewTransitions.size === 0) {
-              break;
-            }
-          }
-        }
-      }
-      commitDeletedPairViewTransitions(child, appearingViewTransitions);
-    }
-    child = child.sibling;
-  }
-}
-
-function commitExitViewTransitions(
-  deletion: Fiber,
-  appearingViewTransitions: Map<string, ViewTransitionState> | null,
-): void {
-  if (deletion.tag === ViewTransitionComponent) {
-    const props: ViewTransitionProps = deletion.memoizedProps;
-    const name = getViewTransitionName(props, deletion.stateNode);
-    viewTransitionHostInstanceIdx = 0;
-    const inViewport = applyViewTransitionToHostInstances(
-      deletion.child,
-      name,
-      props.className,
-      null,
-      false,
-    );
-    if (!inViewport) {
-      // Revert the transition names. This boundary is not in the viewport
-      // so we won't bother animating it.
-      restoreViewTransitionOnHostInstances(deletion.child, false);
-      // TODO: Should we still visit the children in case a named one was in the viewport?
-    } else if (appearingViewTransitions !== null) {
-      const pair = appearingViewTransitions.get(name);
-      if (pair !== undefined) {
-        // We found a new appearing view transition with the same name as this deletion.
-        // We'll transition between them instead of running the normal exit.
-        const oldinstance: ViewTransitionState = deletion.stateNode;
-        const newInstance: ViewTransitionState = pair;
-        newInstance.paired = oldinstance;
-        // Delete the entry so that we know when we've found all of them
-        // and can stop searching (size reaches zero).
-        appearingViewTransitions.delete(name);
-      }
-      // Look for more pairs deeper in the tree.
-      commitDeletedPairViewTransitions(deletion, appearingViewTransitions);
-    }
-  } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-    let child = deletion.child;
-    while (child !== null) {
-      commitExitViewTransitions(child, appearingViewTransitions);
-      child = child.sibling;
-    }
-  } else {
-    if (appearingViewTransitions !== null) {
-      commitDeletedPairViewTransitions(deletion, appearingViewTransitions);
-    }
-  }
-}
-
-function commitBeforeUpdateViewTransition(current: Fiber): void {
-  // The way we deal with multiple HostInstances as children of a View Transition in an
-  // update can get tricky. The important bit is that if you swap out n HostInstances
-  // from n HostInstances then they match up in order. Similarly, if you don't swap
-  // any HostInstances each instance just transitions as is.
-  //
-  // We call this function twice. First we apply the view transition names on the
-  // "current" tree in the snapshot phase. Then in the mutation phase we apply view
-  // transition names to the "finishedWork" tree.
-  //
-  // This means that if there were insertions or deletions before an updated Instance
-  // that same Instance might get different names in the "old" and the "new" state.
-  // For example if you swap two HostInstances inside a ViewTransition they don't
-  // animate to swap position but rather cross-fade into the other instance. This might
-  // be unexpected but it is in line with the semantics that the ViewTransition is its
-  // own layer that cross-fades its content when it updates. If you want to reorder then
-  // each child needs its own ViewTransition.
-  const props: ViewTransitionProps = current.memoizedProps;
-  const name = getViewTransitionName(props, current.stateNode);
-  viewTransitionHostInstanceIdx = 0;
-  applyViewTransitionToHostInstances(
-    current.child,
-    name,
-    props.className,
-    (current.memoizedState = []),
-    true,
-  );
-}
-
-function commitNestedViewTransitions(changedParent: Fiber): void {
-  let child = changedParent.child;
-  while (child !== null) {
-    if (child.tag === ViewTransitionComponent) {
-      // In this case the outer ViewTransition component wins but if there
-      // was an update through this component then the inner one wins.
-      const props: ViewTransitionProps = child.memoizedProps;
-      const name = getViewTransitionName(props, child.stateNode);
-      viewTransitionHostInstanceIdx = 0;
-      applyViewTransitionToHostInstances(
-        child.child,
-        name,
-        props.className,
-        (child.memoizedState = []),
-        false,
-      );
-    } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-      commitNestedViewTransitions(child);
-    }
-    child = child.sibling;
-  }
-}
-
-function restorePairedViewTransitions(parent: Fiber): void {
-  if ((parent.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
-    // This has no named view transitions in its subtree.
-    return;
-  }
-  let child = parent.child;
-  while (child !== null) {
-    if (child.tag === OffscreenComponent && child.memoizedState === null) {
-      // This tree was already hidden so we skip it.
-    } else {
-      if (
-        child.tag === ViewTransitionComponent &&
-        (child.flags & ViewTransitionNamedStatic) !== NoFlags
-      ) {
-        const instance: ViewTransitionState = child.stateNode;
-        if (instance.paired !== null) {
-          instance.paired = null;
-          restoreViewTransitionOnHostInstances(child.child, false);
-        }
-      }
-      restorePairedViewTransitions(child);
-    }
-    child = child.sibling;
-  }
-}
-
-function restoreEnterViewTransitions(placement: Fiber): void {
-  if (placement.tag === ViewTransitionComponent) {
-    const instance: ViewTransitionState = placement.stateNode;
-    instance.paired = null;
-    restoreViewTransitionOnHostInstances(placement.child, false);
-    restorePairedViewTransitions(placement);
-  } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-    let child = placement.child;
-    while (child !== null) {
-      restoreEnterViewTransitions(child);
-      child = child.sibling;
-    }
-  } else {
-    restorePairedViewTransitions(placement);
-  }
-}
-
-function restoreExitViewTransitions(deletion: Fiber): void {
-  if (deletion.tag === ViewTransitionComponent) {
-    const instance: ViewTransitionState = deletion.stateNode;
-    instance.paired = null;
-    restoreViewTransitionOnHostInstances(deletion.child, false);
-    restorePairedViewTransitions(deletion);
-  } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-    let child = deletion.child;
-    while (child !== null) {
-      restoreExitViewTransitions(child);
-      child = child.sibling;
-    }
-  } else {
-    restorePairedViewTransitions(deletion);
-  }
-}
-
-function restoreUpdateViewTransition(
-  current: Fiber,
-  finishedWork: Fiber,
-): void {
-  finishedWork.memoizedState = null;
-  restoreViewTransitionOnHostInstances(current.child, true);
-  restoreViewTransitionOnHostInstances(finishedWork.child, true);
-}
-
-function restoreNestedViewTransitions(changedParent: Fiber): void {
-  let child = changedParent.child;
-  while (child !== null) {
-    if (child.tag === ViewTransitionComponent) {
-      child.memoizedState = null;
-      restoreViewTransitionOnHostInstances(child.child, false);
-    } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-      restoreNestedViewTransitions(child);
-    }
-    child = child.sibling;
-  }
-}
-
-function measureViewTransitionHostInstances(
-  currentViewTransition: Fiber,
-  parentViewTransition: Fiber,
-  child: null | Fiber,
-  previousMeasurements: null | Array<InstanceMeasurement>,
-  stopAtNestedViewTransitions: boolean,
-): boolean {
-  if (!supportsMutation) {
-    return true;
-  }
-  let inViewport = false;
-  while (child !== null) {
-    if (child.tag === HostComponent) {
-      const instance: Instance = child.stateNode;
-      if (
-        previousMeasurements !== null &&
-        viewTransitionHostInstanceIdx < previousMeasurements.length
-      ) {
-        // The previous measurement of the Instance in this location within the ViewTransition.
-        // Note that this might not be the same exact Instance if the Instances within the
-        // ViewTransition changed.
-        const previousMeasurement =
-          previousMeasurements[viewTransitionHostInstanceIdx];
-        const nextMeasurement = measureInstance(instance);
-        if (
-          wasInstanceInViewport(previousMeasurement) ||
-          wasInstanceInViewport(nextMeasurement)
-        ) {
-          // If either the old or new state was within the viewport we have to animate this.
-          // But if it turns out that none of them were we'll be able to skip it.
-          inViewport = true;
-        }
-        if (
-          (parentViewTransition.flags & Update) === NoFlags &&
-          hasInstanceChanged(previousMeasurement, nextMeasurement)
-        ) {
-          parentViewTransition.flags |= Update;
-        }
-        if (hasInstanceAffectedParent(previousMeasurement, nextMeasurement)) {
-          // If this instance size within its parent has changed it might have caused the
-          // parent to relayout which needs a cross fade.
-          parentViewTransition.flags |= AffectedParentLayout;
-        }
-      } else {
-        // If there was an insertion of extra nodes, we have to assume they affected the parent.
-        // It should have already been marked as an Update due to the mutation.
-        parentViewTransition.flags |= AffectedParentLayout;
-      }
-      if ((parentViewTransition.flags & Update) !== NoFlags) {
-        const props: ViewTransitionProps = parentViewTransition.memoizedProps;
-        // We might update this node so we need to apply its new name for the new state.
-        const newName = getViewTransitionName(
-          props,
-          parentViewTransition.stateNode,
-        );
-        applyViewTransitionName(
-          instance,
-          viewTransitionHostInstanceIdx === 0
-            ? newName
-            : // If we have multiple Host Instances below, we add a suffix to the name to give
-              // each one a unique name.
-              newName + '_' + viewTransitionHostInstanceIdx,
-          props.className,
-        );
-      }
-      if (!inViewport || (parentViewTransition.flags & Update) === NoFlags) {
-        // It turns out that we had no other deeper mutations, the child transitions didn't
-        // affect the parent layout and this instance hasn't changed size. So we can skip
-        // animating it. However, in the current model this only works if the parent also
-        // doesn't animate. So we have to queue these and wait until we complete the parent
-        // to cancel them.
-        const oldName = getViewTransitionName(
-          currentViewTransition.memoizedProps,
-          currentViewTransition.stateNode,
-        );
-        if (viewTransitionCancelableChildren === null) {
-          viewTransitionCancelableChildren = [];
-        }
-        viewTransitionCancelableChildren.push(
-          instance,
-          oldName,
-          child.memoizedProps,
-        );
-      }
-      viewTransitionHostInstanceIdx++;
-    } else if (
-      child.tag === OffscreenComponent &&
-      child.memoizedState !== null
-    ) {
-      // Skip any hidden subtrees. They were or are effectively not there.
-    } else if (
-      child.tag === ViewTransitionComponent &&
-      stopAtNestedViewTransitions
-    ) {
-      // Skip any nested view transitions for updates since in that case the
-      // inner most one is the one that handles the update.
-      // If this inner boundary resized we need to bubble that information up.
-      parentViewTransition.flags |= child.flags & AffectedParentLayout;
-    } else {
-      if (
-        measureViewTransitionHostInstances(
-          currentViewTransition,
-          parentViewTransition,
-          child.child,
-          previousMeasurements,
-          stopAtNestedViewTransitions,
-        )
-      ) {
-        inViewport = true;
-      }
-    }
-    child = child.sibling;
-  }
-  return inViewport;
-}
-
-function measureUpdateViewTransition(
-  current: Fiber,
-  finishedWork: Fiber,
-): boolean {
-  // If nothing changed due to a mutation, or children changing size
-  // and the measurements end up unchanged, we should restore it to not animate.
-  viewTransitionHostInstanceIdx = 0;
-  const previousMeasurements = current.memoizedState;
-  const inViewport = measureViewTransitionHostInstances(
-    current,
-    finishedWork,
-    finishedWork.child,
-    previousMeasurements,
-    true,
-  );
-  const previousCount =
-    previousMeasurements === null ? 0 : previousMeasurements.length;
-  if (viewTransitionHostInstanceIdx !== previousCount) {
-    // If we found a different number of child DOM nodes we need to assume that
-    // the parent layout may have changed as a result. This is not necessarily
-    // true if those nodes were absolutely positioned.
-    finishedWork.flags |= AffectedParentLayout;
-  }
-  return inViewport;
-}
-
-function measureNestedViewTransitions(changedParent: Fiber): void {
-  let child = changedParent.child;
-  while (child !== null) {
-    if (child.tag === ViewTransitionComponent) {
-      const current = child.alternate;
-      if (current !== null) {
-        viewTransitionHostInstanceIdx = 0;
-        measureViewTransitionHostInstances(
-          current,
-          child,
-          child.child,
-          child.memoizedState,
-          false,
-        );
-      }
-    } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-      measureNestedViewTransitions(child);
-    }
-    child = child.sibling;
+    commitExitViewTransitions(deletion);
   }
 }
 
@@ -1186,22 +597,24 @@ function commitLayoutEffectOnFiber(
       }
       break;
     }
-    case HostHoistable: {
-      if (supportsResources) {
-        recursivelyTraverseLayoutEffects(
-          finishedRoot,
-          finishedWork,
-          committedLanes,
-        );
-
-        if (flags & Ref) {
-          safelyAttachRef(finishedWork, finishedWork.return);
+    case HostSingleton: {
+      if (supportsSingletons) {
+        // We acquire the singleton instance first so it has appropriate
+        // styles before other layout effects run. This isn't perfect because
+        // an early sibling of the singleton may have an effect that can
+        // observe the singleton before it is acquired.
+        // @TODO move this to the mutation phase. The reason it isn't there yet
+        // is it seemingly requires an extra traversal because we need to move the
+        // disappear effect into a phase before the appear phase
+        if (current === null && flags & Update) {
+          // Unlike in the reappear path we only acquire on new mount
+          commitHostSingletonAcquisition(finishedWork);
         }
-        break;
+        // We fall through to the HostComponent case below.
       }
-      // Fall through
+      // Fallthrough
     }
-    case HostSingleton:
+    case HostHoistable:
     case HostComponent: {
       recursivelyTraverseLayoutEffects(
         finishedRoot,
@@ -1667,8 +1080,7 @@ function hideOrUnhideAllChildren(finishedWork: Fiber, isHidden: boolean) {
     while (true) {
       if (
         node.tag === HostComponent ||
-        (supportsResources ? node.tag === HostHoistable : false) ||
-        (supportsSingletons ? node.tag === HostSingleton : false)
+        (supportsResources ? node.tag === HostHoistable : false)
       ) {
         if (hostSubtreeRoot === null) {
           hostSubtreeRoot = node;
@@ -1821,17 +1233,23 @@ function commitDeletionEffects(
     let parent: null | Fiber = returnFiber;
     findParent: while (parent !== null) {
       switch (parent.tag) {
-        case HostSingleton:
+        case HostSingleton: {
+          if (supportsSingletons) {
+            if (isSingletonScope(parent.type)) {
+              hostParent = parent.stateNode;
+              hostParentIsContainer = false;
+              break findParent;
+            }
+            break;
+          }
+          // Expected fallthrough when supportsSingletons is false
+        }
         case HostComponent: {
           hostParent = parent.stateNode;
           hostParentIsContainer = false;
           break findParent;
         }
-        case HostRoot: {
-          hostParent = parent.stateNode.containerInfo;
-          hostParentIsContainer = true;
-          break findParent;
-        }
+        case HostRoot:
         case HostPortal: {
           hostParent = parent.stateNode.containerInfo;
           hostParentIsContainer = true;
@@ -1910,7 +1328,10 @@ function commitDeletionEffectsOnFiber(
 
         const prevHostParent = hostParent;
         const prevHostParentIsContainer = hostParentIsContainer;
-        hostParent = deletedFiber.stateNode;
+        if (isSingletonScope(deletedFiber.type)) {
+          hostParent = deletedFiber.stateNode;
+          hostParentIsContainer = false;
+        }
         recursivelyTraverseDeletionEffects(
           finishedRoot,
           nearestMountedAncestor,
@@ -1922,7 +1343,7 @@ function commitDeletionEffectsOnFiber(
         // a different fiber. To increase our chances of avoiding this, specifically
         // if you keyed a HostSingleton so there will be a delete followed by a Placement
         // we treat detach eagerly here
-        releaseSingletonInstance(deletedFiber.stateNode);
+        commitHostSingletonRelease(deletedFiber);
 
         hostParent = prevHostParent;
         hostParentIsContainer = prevHostParentIsContainer;
@@ -2511,12 +1932,19 @@ function commitMutationEffectsOnFiber(
     }
     case HostSingleton: {
       if (supportsSingletons) {
-        if (flags & Update) {
-          const previousWork = finishedWork.alternate;
-          if (previousWork === null) {
-            commitHostSingleton(finishedWork);
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes);
+        if (flags & Ref) {
+          if (!offscreenSubtreeWasHidden && current !== null) {
+            safelyDetachRef(current, current.return);
           }
         }
+        if (current !== null && flags & Update) {
+          const newProps = finishedWork.memoizedProps;
+          const oldProps = current.memoizedProps;
+          commitHostUpdate(finishedWork, newProps, oldProps);
+        }
+        break;
       }
       // Fall through
     }
@@ -2787,15 +2215,18 @@ function commitMutationEffectsOnFiber(
           offscreenInstance._visibility |= OffscreenVisible;
         }
 
+        const isUpdate = current !== null;
         if (isHidden) {
-          const isUpdate = current !== null;
-          const wasHiddenByAncestorOffscreen =
-            offscreenSubtreeIsHidden || offscreenSubtreeWasHidden;
-          // Only trigger disapper layout effects if:
+          // Only trigger disappear layout effects if:
           //   - This is an update, not first mount.
           //   - This Offscreen was not hidden before.
-          //   - Ancestor Offscreen was not hidden in previous commit.
-          if (isUpdate && !wasHidden && !wasHiddenByAncestorOffscreen) {
+          //   - Ancestor Offscreen was not hidden in previous commit or in this commit
+          if (
+            isUpdate &&
+            !wasHidden &&
+            !offscreenSubtreeIsHidden &&
+            !offscreenSubtreeWasHidden
+          ) {
             if (
               disableLegacyMode ||
               (finishedWork.mode & ConcurrentMode) !== NoMode
@@ -2991,11 +2422,6 @@ function recursivelyTraverseAfterMutationEffects(
     // its size and position. We need to measure this and if not, restore it to
     // not animate.
     measureNestedViewTransitions(parentFiber);
-    if ((parentFiber.flags & AffectedParentLayout) !== NoFlags) {
-      // This boundary changed size in a way that may have caused its parent to
-      // relayout. We need to bubble this information up to the parent.
-      viewTransitionContextChanged = true;
-    }
   }
 }
 
@@ -3020,14 +2446,14 @@ function commitAfterMutationEffectsOnFiber(
   switch (finishedWork.tag) {
     case HostRoot: {
       viewTransitionContextChanged = false;
-      viewTransitionCancelableChildren = null;
+      setViewTransitionCancelableChildren(null);
       recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
       if (!viewTransitionContextChanged) {
         // If we didn't leak any resizing out to the root, we don't have to transition
         // the root itself. This means that we can now safely cancel any cancellations
         // that bubbled all the way up.
         const cancelableChildren = viewTransitionCancelableChildren;
-        viewTransitionCancelableChildren = null;
+        setViewTransitionCancelableChildren(null);
         if (cancelableChildren !== null) {
           for (let i = 0; i < cancelableChildren.length; i += 3) {
             cancelViewTransitionName(
@@ -3075,10 +2501,12 @@ function commitAfterMutationEffectsOnFiber(
           (Placement | Update | ChildDeletion | ContentReset | Visibility)) !==
         NoFlags
       ) {
+        const wasMutated = (finishedWork.flags & Update) !== NoFlags;
+
         const prevContextChanged = viewTransitionContextChanged;
         const prevCancelableChildren = viewTransitionCancelableChildren;
         viewTransitionContextChanged = false;
-        viewTransitionCancelableChildren = null;
+        setViewTransitionCancelableChildren(null);
         recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
 
         if (viewTransitionContextChanged) {
@@ -3101,11 +2529,21 @@ function commitAfterMutationEffectsOnFiber(
               prevCancelableChildren,
               viewTransitionCancelableChildren,
             );
-            viewTransitionCancelableChildren = prevCancelableChildren;
+            setViewTransitionCancelableChildren(prevCancelableChildren);
           }
+          // TODO: If this doesn't end up canceled, because a parent animates,
+          // then we should probably issue an event since this instance is part of it.
         } else {
+          const props: ViewTransitionProps = finishedWork.memoizedProps;
+          scheduleViewTransitionEvent(
+            finishedWork,
+            wasMutated || viewTransitionContextChanged
+              ? props.onUpdate
+              : props.onLayout,
+          );
+
           // If this boundary did update, we cannot cancel its children so those are dropped.
-          viewTransitionCancelableChildren = prevCancelableChildren;
+          setViewTransitionCancelableChildren(prevCancelableChildren);
         }
 
         if ((finishedWork.flags & AffectedParentLayout) !== NoFlags) {
@@ -3191,8 +2629,14 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
       break;
     }
+    case HostSingleton: {
+      if (supportsSingletons) {
+        // TODO (Offscreen) Check: flags & RefStatic
+        commitHostSingletonRelease(finishedWork);
+      }
+      // Expected fallthrough to HostComponent
+    }
     case HostHoistable:
-    case HostSingleton:
     case HostComponent: {
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
@@ -3248,7 +2692,7 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
 }
 
 function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
-  // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
+  // TODO (Offscreen) Check: subtreeflags & (RefStatic | LayoutStatic)
   let child = parentFiber.child;
   while (child !== null) {
     disappearLayoutEffects(child);
@@ -3308,8 +2752,21 @@ export function reappearLayoutEffects(
     // case HostRoot: {
     //  ...
     // }
+    case HostSingleton: {
+      if (supportsSingletons) {
+        // We acquire the singleton instance first so it has appropriate
+        // styles before other layout effects run. This isn't perfect because
+        // an early sibling of the singleton may have an effect that can
+        // observe the singleton before it is acquired.
+        // @TODO move this to the mutation phase. The reason it isn't there yet
+        // is it seemingly requires an extra traversal because we need to move the
+        // disappear effect into a phase before the appear phase
+        commitHostSingletonAcquisition(finishedWork);
+        // We fall through to the HostComponent case below.
+      }
+      // Fallthrough
+    }
     case HostHoistable:
-    case HostSingleton:
     case HostComponent: {
       recursivelyTraverseReappearLayoutEffects(
         finishedRoot,
@@ -4589,8 +4046,13 @@ export function commitPassiveUnmountEffects(finishedWork: Fiber): void {
 // already in the "current" tree. Because their visibility has changed, the
 // browser may not have prerendered them yet. So we check the MaySuspendCommit
 // flag instead.
+//
+// Note that MaySuspendCommit and ShouldSuspendCommit also includes named
+// ViewTransitions so that we know to also visit those to collect appearing
+// pairs.
 let suspenseyCommitFlag = ShouldSuspendCommit;
 export function accumulateSuspenseyCommit(finishedWork: Fiber): void {
+  resetAppearingViewTransitions();
   accumulateSuspenseyCommitOnFiber(finishedWork);
 }
 
@@ -4668,6 +4130,26 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
         }
       }
       break;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        if ((fiber.flags & suspenseyCommitFlag) !== NoFlags) {
+          const props: ViewTransitionProps = fiber.memoizedProps;
+          const name: ?string | 'auto' = props.name;
+          if (name != null && name !== 'auto') {
+            // This is a named ViewTransition being mounted or reappearing. Let's add it to
+            // the map so we can match it with deletions later.
+            const state: ViewTransitionState = fiber.stateNode;
+            // Reset the pair in case we didn't end up restoring the instance in previous commits.
+            // This shouldn't really happen anymore but just in case. We could maybe add an invariant.
+            state.paired = null;
+            trackAppearingViewTransition(name, state);
+          }
+        }
+        recursivelyAccumulateSuspenseyCommit(fiber);
+        break;
+      }
+      // Fallthrough
     }
     default: {
       recursivelyAccumulateSuspenseyCommit(fiber);

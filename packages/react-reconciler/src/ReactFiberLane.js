@@ -54,23 +54,24 @@ export const DefaultLane: Lane = /*                     */ 0b0000000000000000000
 export const SyncUpdateLanes: Lane =
   SyncLane | InputContinuousLane | DefaultLane;
 
-const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000001000000;
-const TransitionLanes: Lanes = /*                       */ 0b0000000001111111111111110000000;
-const TransitionLane1: Lane = /*                        */ 0b0000000000000000000000010000000;
-const TransitionLane2: Lane = /*                        */ 0b0000000000000000000000100000000;
-const TransitionLane3: Lane = /*                        */ 0b0000000000000000000001000000000;
-const TransitionLane4: Lane = /*                        */ 0b0000000000000000000010000000000;
-const TransitionLane5: Lane = /*                        */ 0b0000000000000000000100000000000;
-const TransitionLane6: Lane = /*                        */ 0b0000000000000000001000000000000;
-const TransitionLane7: Lane = /*                        */ 0b0000000000000000010000000000000;
-const TransitionLane8: Lane = /*                        */ 0b0000000000000000100000000000000;
-const TransitionLane9: Lane = /*                        */ 0b0000000000000001000000000000000;
-const TransitionLane10: Lane = /*                       */ 0b0000000000000010000000000000000;
-const TransitionLane11: Lane = /*                       */ 0b0000000000000100000000000000000;
-const TransitionLane12: Lane = /*                       */ 0b0000000000001000000000000000000;
-const TransitionLane13: Lane = /*                       */ 0b0000000000010000000000000000000;
-const TransitionLane14: Lane = /*                       */ 0b0000000000100000000000000000000;
-const TransitionLane15: Lane = /*                       */ 0b0000000001000000000000000000000;
+export const GestureLane: Lane = /*                     */ 0b0000000000000000000000001000000;
+
+const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000010000000;
+const TransitionLanes: Lanes = /*                       */ 0b0000000001111111111111100000000;
+const TransitionLane1: Lane = /*                        */ 0b0000000000000000000000100000000;
+const TransitionLane2: Lane = /*                        */ 0b0000000000000000000001000000000;
+const TransitionLane3: Lane = /*                        */ 0b0000000000000000000010000000000;
+const TransitionLane4: Lane = /*                        */ 0b0000000000000000000100000000000;
+const TransitionLane5: Lane = /*                        */ 0b0000000000000000001000000000000;
+const TransitionLane6: Lane = /*                        */ 0b0000000000000000010000000000000;
+const TransitionLane7: Lane = /*                        */ 0b0000000000000000100000000000000;
+const TransitionLane8: Lane = /*                        */ 0b0000000000000001000000000000000;
+const TransitionLane9: Lane = /*                        */ 0b0000000000000010000000000000000;
+const TransitionLane10: Lane = /*                       */ 0b0000000000000100000000000000000;
+const TransitionLane11: Lane = /*                       */ 0b0000000000001000000000000000000;
+const TransitionLane12: Lane = /*                       */ 0b0000000000010000000000000000000;
+const TransitionLane13: Lane = /*                       */ 0b0000000000100000000000000000000;
+const TransitionLane14: Lane = /*                       */ 0b0000000001000000000000000000000;
 
 const RetryLanes: Lanes = /*                            */ 0b0000011110000000000000000000000;
 const RetryLane1: Lane = /*                             */ 0b0000000010000000000000000000000;
@@ -175,6 +176,8 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
       return DefaultHydrationLane;
     case DefaultLane:
       return DefaultLane;
+    case GestureLane:
+      return GestureLane;
     case TransitionHydrationLane:
       return TransitionHydrationLane;
     case TransitionLane1:
@@ -191,7 +194,6 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
     case TransitionLane12:
     case TransitionLane13:
     case TransitionLane14:
-    case TransitionLane15:
       return lanes & TransitionLanes;
     case RetryLane1:
     case RetryLane2:
@@ -459,6 +461,7 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
     case SyncLane:
     case InputContinuousHydrationLane:
     case InputContinuousLane:
+    case GestureLane:
       // User interactions should expire slightly more quickly.
       //
       // NOTE: This is set to the corresponding constant as in Scheduler.js.
@@ -486,7 +489,6 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
     case TransitionLane12:
     case TransitionLane13:
     case TransitionLane14:
-    case TransitionLane15:
       return currentTime + transitionLaneExpirationMs;
     case RetryLane1:
     case RetryLane2:
@@ -640,7 +642,8 @@ export function includesBlockingLane(lanes: Lanes): boolean {
     InputContinuousHydrationLane |
     InputContinuousLane |
     DefaultHydrationLane |
-    DefaultLane;
+    DefaultLane |
+    GestureLane;
   return (lanes & SyncDefaultLanes) !== NoLanes;
 }
 
@@ -661,6 +664,11 @@ export function isBlockingLane(lane: Lane): boolean {
 
 export function isTransitionLane(lane: Lane): boolean {
   return (lane & TransitionLanes) !== NoLanes;
+}
+
+export function isGestureRender(lanes: Lanes): boolean {
+  // This should render only the one lane.
+  return lanes === GestureLane;
 }
 
 export function claimNextTransitionLane(): Lane {
@@ -1053,7 +1061,6 @@ export function getBumpedLaneForHydrationByLane(lane: Lane): Lane {
     case TransitionLane12:
     case TransitionLane13:
     case TransitionLane14:
-    case TransitionLane15:
     case RetryLane1:
     case RetryLane2:
     case RetryLane3:
@@ -1197,7 +1204,8 @@ export function getGroupNameOfHighestPriorityLane(lanes: Lanes): string {
       InputContinuousHydrationLane |
       InputContinuousLane |
       DefaultHydrationLane |
-      DefaultLane)
+      DefaultLane |
+      GestureLane)
   ) {
     return 'Blocking';
   }

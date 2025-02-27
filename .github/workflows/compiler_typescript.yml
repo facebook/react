@@ -93,4 +93,7 @@ jobs:
           path: "**/node_modules"
           key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+      - run: xvfb-run -a yarn workspace ${{ matrix.workspace_name }} test
+        if: runner.os == 'Linux' && matrix.workspace_name == 'react-forgive'
       - run: yarn workspace ${{ matrix.workspace_name }} test
+        if: runner.os != 'Linux' && matrix.workspace_name != 'react-forgive'

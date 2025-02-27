@@ -3,6 +3,7 @@ import React, {
   useLayoutEffect,
   useEffect,
   useState,
+  unstable_addTransitionType as addTransitionType,
 } from 'react';
 
 import Chrome from './Chrome';
@@ -35,11 +36,23 @@ export default function App({assets, initialURL}) {
         if (!event.canIntercept) {
           return;
         }
+        const navigationType = event.navigationType;
+        const previousIndex = window.navigation.currentEntry.index;
         const newURL = new URL(event.destination.url);
         event.intercept({
           handler() {
             let promise;
             startTransition(() => {
+              addTransitionType('navigation-' + navigationType);
+              if (navigationType === 'traverse') {
+                // For traverse types it's useful to distinguish going back or forward.
+                const nextIndex = event.destination.index;
+                if (nextIndex > previousIndex) {
+                  addTransitionType('navigation-forward');
+                } else if (nextIndex < previousIndex) {
+                  addTransitionType('navigation-back');
+                }
+              }
               promise = new Promise(resolve => {
                 setRouterState({
                   url: newURL.pathname + newURL.search,

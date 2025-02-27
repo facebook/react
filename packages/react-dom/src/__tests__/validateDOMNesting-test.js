@@ -19,28 +19,54 @@ function expectWarnings(tags, warnings = [], withoutStack = 0) {
   tags = [...tags];
   warnings = [...warnings];
 
+  document.removeChild(document.documentElement);
+  document.appendChild(document.createElement('html'));
+  document.documentElement.innerHTML = '<head></head><body></body>';
+
   let element = null;
   const containerTag = tags.shift();
-  const container =
-    containerTag === 'svg'
-      ? document.createElementNS('http://www.w3.org/2000/svg', containerTag)
-      : document.createElement(containerTag);
+  let container;
+  switch (containerTag) {
+    case '#document':
+      container = document;
+      break;
+    case 'html':
+      container = document.documentElement;
+      break;
+    case 'body':
+      container = document.body;
+      break;
+    case 'head':
+      container = document.head;
+      break;
+    case 'svg':
+      container = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      break;
+    default:
+      container = document.createElement(containerTag);
+      break;
+  }
 
   while (tags.length) {
     const Tag = tags.pop();
-    element = <Tag>{element}</Tag>;
+    if (Tag === '#text') {
+      element = 'text';
+    } else {
+      element = <Tag>{element}</Tag>;
+    }
   }
 
   const root = ReactDOMClient.createRoot(container);
+  ReactDOM.flushSync(() => {
+    root.render(element);
+  });
   if (warnings.length) {
-    ReactDOM.flushSync(() => {
-      root.render(element);
-    });
     assertConsoleErrorDev(
       warnings,
       withoutStack > 0 ? {withoutStack} : undefined,
     );
   }
+  root.unmount();
 }
 
 describe('validateDOMNesting', () => {
@@ -141,6 +167,46 @@ describe('validateDOMNesting', () => {
       ],
     );
     expectWarnings(
+      ['head', 'body'],
+      [
+        'In HTML, <body> cannot be a child of <head>.\n' +
+          'This will cause a hydration error.\n' +
+          '    in body (at **)',
+      ],
+    );
+    expectWarnings(
+      ['head', 'head'],
+      [
+        'In HTML, <head> cannot be a child of <head>.\n' +
+          'This will cause a hydration error.\n' +
+          '    in head (at **)',
+      ],
+    );
+    expectWarnings(
+      ['html', 'html'],
+      [
+        'In HTML, <html> cannot be a child of <html>.\n' +
+          'This will cause a hydration error.\n' +
+          '    in html (at **)',
+      ],
+    );
+    expectWarnings(
+      ['body', 'html'],
+      [
+        'In HTML, <html> cannot be a child of <body>.\n' +
+          'This will cause a hydration error.\n' +
+          '    in html (at **)',
+      ],
+    );
+    expectWarnings(
+      ['head', 'html'],
+      [
+        'In HTML, <html> cannot be a child of <head>.\n' +
+          'This will cause a hydration error.\n' +
+          '    in html (at **)',
+      ],
+    );
+    expectWarnings(
       ['svg', 'foreignObject', 'body', 'p'],
       gate(flags => flags.enableOwnerStacks)
         ? [
@@ -151,8 +217,6 @@ describe('validateDOMNesting', () => {
               '> <foreignObject>\n' +
               '>   <body>\n' +
               '\n' +
-              '    in body (at **)',
-            'You are mounting a new body component when a previous one has not first unmounted. It is an error to render more than one body component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <body> and if you need to mount a new one, ensure any previous ones have unmounted first.\n' +
               '    in body (at **)',
           ]
         : [
@@ -165,10 +229,25 @@ describe('validateDOMNesting', () => {
               '\n' +
               '    in body (at **)\n' +
               '    in foreignObject (at **)',
-            'You are mounting a new body component when a previous one has not first unmounted. It is an error to render more than one body component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <body> and if you need to mount a new one, ensure any previous ones have unmounted first.\n' +
-              '    in body (at **)\n' +
-              '    in foreignObject (at **)',
           ],
     );
+  });
+
+  it('relaxes the nesting rules at the root when the container is a singleton', () => {
+    expectWarnings(['#document', 'html']);
+    expectWarnings(['#document', 'body']);
+    expectWarnings(['#document', 'head']);
+    expectWarnings(['#document', 'div']);
+    expectWarnings(['#document', 'meta']);
+    expectWarnings(['#document', '#text']);
+    expectWarnings(['html', 'body']);
+    expectWarnings(['html', 'head']);
+    expectWarnings(['html', 'div']);
+    expectWarnings(['html', 'meta']);
+    expectWarnings(['html', '#text']);
+    expectWarnings(['body', 'head']);
+    expectWarnings(['body', 'div']);
+    expectWarnings(['body', 'meta']);
+    expectWarnings(['body', '#text']);
   });
 });

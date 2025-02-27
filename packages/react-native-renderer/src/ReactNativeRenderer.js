@@ -11,6 +11,7 @@ import type {ReactPortal, ReactNodeList} from 'shared/ReactTypes';
 import type {ElementRef, ElementType, MixedElement} from 'react';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {RenderRootOptions} from './ReactNativeTypes';
+import type {Container} from 'react-reconciler/src/ReactFiberConfig';
 
 import './ReactNativeInjection';
 
@@ -143,10 +144,16 @@ function render(
       onRecoverableError = options.onRecoverableError;
     }
 
+    const rootInstance: Container = {
+      containerTag,
+      // $FlowExpectedError[incompatible-type] the legacy renderer does not use public root instances
+      publicInstance: null,
+    };
+
     // TODO (bvaughn): If we decide to keep the wrapper component,
     // We could create a wrapper for containerTag as well to reduce special casing.
     root = createContainer(
-      containerTag,
+      rootInstance,
       LegacyRoot,
       null,
       false,
