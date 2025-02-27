@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<be1b9183011a19e876e00bb45a5a10ca>>
+ * @generated SignedSource<<b793288c85f9d88444d5d9aa009a509a>>
  */
 
 "use strict";
@@ -8501,10 +8501,11 @@ function commitProfilerUpdate(
   }
 }
 function commitHostMount(finishedWork) {
+  var type = finishedWork.type,
+    props = finishedWork.memoizedProps,
+    instance = finishedWork.stateNode;
   try {
-    throw Error(
-      "The current renderer does not support mutation. This error is likely caused by a bug in React. Please file an issue."
-    );
+    shim$2(instance, type, props, finishedWork);
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -10827,7 +10828,7 @@ function flushSpawnedWork() {
     0 !== (finishedWork.flags & 10256)
       ? (pendingEffectsStatus = 5)
       : ((pendingEffectsStatus = 0),
-        (pendingEffectsRoot = null),
+        (pendingFinishedWork = pendingEffectsRoot = null),
         releaseRootPooledCache(root, root.pendingLanes));
     var remainingLanes = root.pendingLanes;
     0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
@@ -10895,6 +10896,25 @@ function flushSpawnedWork() {
     markCommitStopped();
   }
 }
+function flushGestureMutations() {
+  if (6 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
+    var prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    var previousPriority = currentUpdatePriority;
+    currentUpdatePriority = 2;
+    var prevExecutionContext = executionContext;
+    executionContext |= 4;
+    try {
+      shim$2();
+    } finally {
+      (executionContext = prevExecutionContext),
+        (currentUpdatePriority = previousPriority),
+        (ReactSharedInternals.T = prevTransition);
+    }
+    pendingEffectsStatus = 7;
+  }
+}
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
     ((remainingLanes = root.pooledCache),
@@ -10902,6 +10922,28 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
+  flushGestureMutations();
+  flushGestureMutations();
+  if (7 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
+    var root = pendingEffectsRoot;
+    pendingFinishedWork = pendingEffectsRoot = null;
+    pendingEffectsLanes = 0;
+    var prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    var previousPriority = currentUpdatePriority;
+    currentUpdatePriority = 2;
+    var prevExecutionContext = executionContext;
+    executionContext |= 4;
+    try {
+      shim$2();
+    } finally {
+      (executionContext = prevExecutionContext),
+        (currentUpdatePriority = previousPriority),
+        (ReactSharedInternals.T = prevTransition);
+    }
+    ensureRootIsScheduled(root);
+  }
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -10923,7 +10965,7 @@ function flushPassiveEffects() {
     var root$jscomp$0 = pendingEffectsRoot,
       lanes = pendingEffectsLanes;
     pendingEffectsStatus = 0;
-    pendingEffectsRoot = null;
+    pendingFinishedWork = pendingEffectsRoot = null;
     pendingEffectsLanes = 0;
     if (0 !== (executionContext & 6))
       throw Error("Cannot flush passive effects while already rendering.");
@@ -11505,6 +11547,11 @@ function updateContainer(element, container, parentComponent, callback) {
     entangleTransitions(element, current, lane));
   return lane;
 }
+function shim$2() {
+  throw Error(
+    "The current renderer does not support mutation. This error is likely caused by a bug in React. Please file an issue."
+  );
+}
 function shim$1() {
   throw Error(
     "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
@@ -11693,16 +11740,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1316 = {
+  internals$jscomp$inline_1336 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-92e65ca6-20250225",
+    version: "19.1.0-native-fb-3607f483-20250227",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-92e65ca6-20250225"
+    reconcilerVersion: "19.1.0-native-fb-3607f483-20250227"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1316.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1316.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1336.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1336.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$156 = 0;
     31 > index$156;
@@ -11714,20 +11761,20 @@ internals$jscomp$inline_1316.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1316.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1336.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1595 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1617 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1595.isDisabled &&
-    hook$jscomp$inline_1595.supportsFiber
+    !hook$jscomp$inline_1617.isDisabled &&
+    hook$jscomp$inline_1617.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1595.inject(
-        internals$jscomp$inline_1316
+      (rendererID = hook$jscomp$inline_1617.inject(
+        internals$jscomp$inline_1336
       )),
-        (injectedHook = hook$jscomp$inline_1595);
+        (injectedHook = hook$jscomp$inline_1617);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1b8c15cee2ea9746b5404a65a1180a87>>
+ * @generated SignedSource<<930f599dca7018c145432134226f20d6>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1118() {
+    function JSCompiler_object_inline_createNodeMock_1132() {
       return null;
     }
     function findHook(fiber, id) {
@@ -12176,7 +12176,7 @@ __DEV__ &&
         rootDidHavePassiveEffects
           ? (pendingEffectsStatus = PENDING_PASSIVE_PHASE)
           : ((pendingEffectsStatus = NO_PENDING_EFFECTS),
-            (pendingEffectsRoot = null),
+            (pendingFinishedWork = pendingEffectsRoot = null),
             releaseRootPooledCache(root, root.pendingLanes),
             (nestedPassiveUpdateCount = 0),
             (rootWithPassiveNestedUpdates = null));
@@ -12262,6 +12262,20 @@ __DEV__ &&
         markCommitStopped();
       }
     }
+    function flushGestureMutations() {
+      if (pendingEffectsStatus === PENDING_GESTURE_MUTATION_PHASE) {
+        pendingEffectsStatus = NO_PENDING_EFFECTS;
+        var prevTransition = ReactSharedInternals.T,
+          previousPriority = currentUpdatePriority;
+        currentUpdatePriority = DiscreteEventPriority;
+        var prevExecutionContext = executionContext;
+        executionContext |= CommitContext;
+        executionContext = prevExecutionContext;
+        currentUpdatePriority = previousPriority;
+        ReactSharedInternals.T = prevTransition;
+        pendingEffectsStatus = PENDING_GESTURE_ANIMATION_PHASE;
+      }
+    }
     function makeErrorInfo(componentStack) {
       componentStack = { componentStack: componentStack };
       Object.defineProperty(componentStack, "digest", {
@@ -12280,6 +12294,23 @@ __DEV__ &&
           ((root.pooledCache = null), releaseCache(remainingLanes)));
     }
     function flushPendingEffects(wasDelayedCommit) {
+      flushGestureMutations();
+      flushGestureMutations();
+      if (pendingEffectsStatus === PENDING_GESTURE_ANIMATION_PHASE) {
+        pendingEffectsStatus = NO_PENDING_EFFECTS;
+        var root = pendingEffectsRoot;
+        pendingFinishedWork = pendingEffectsRoot = null;
+        pendingEffectsLanes = 0;
+        var prevTransition = ReactSharedInternals.T,
+          previousPriority = currentUpdatePriority;
+        currentUpdatePriority = DiscreteEventPriority;
+        var prevExecutionContext = executionContext;
+        executionContext |= CommitContext;
+        executionContext = prevExecutionContext;
+        currentUpdatePriority = previousPriority;
+        ReactSharedInternals.T = prevTransition;
+        ensureRootIsScheduled(root);
+      }
       flushMutationEffects();
       flushLayoutEffects();
       flushSpawnedWork();
@@ -12305,7 +12336,7 @@ __DEV__ &&
         var root$jscomp$0 = pendingEffectsRoot,
           lanes = pendingEffectsLanes;
         pendingEffectsStatus = NO_PENDING_EFFECTS;
-        pendingEffectsRoot = null;
+        pendingFinishedWork = pendingEffectsRoot = null;
         pendingEffectsLanes = 0;
         if ((executionContext & (RenderContext | CommitContext)) !== NoContext)
           throw Error("Cannot flush passive effects while already rendering.");
@@ -15335,6 +15366,8 @@ __DEV__ &&
       PENDING_AFTER_MUTATION_PHASE = 3,
       PENDING_SPAWNED_WORK = 4,
       PENDING_PASSIVE_PHASE = 5,
+      PENDING_GESTURE_MUTATION_PHASE = 6,
+      PENDING_GESTURE_ANIMATION_PHASE = 7,
       pendingEffectsStatus = 0,
       pendingEffectsRoot = null,
       pendingFinishedWork = null,
@@ -15568,10 +15601,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-92e65ca6-20250225",
+        version: "19.1.0-native-fb-3607f483-20250227",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-92e65ca6-20250225"
+        reconcilerVersion: "19.1.0-native-fb-3607f483-20250227"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15593,7 +15626,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1118,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1132,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15716,5 +15749,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-92e65ca6-20250225";
+    exports.version = "19.1.0-native-fb-3607f483-20250227";
   })();

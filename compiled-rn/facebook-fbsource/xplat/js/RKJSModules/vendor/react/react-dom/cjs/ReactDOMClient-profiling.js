@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fac7e6b85f4727aba785c691344ba2fe>>
+ * @generated SignedSource<<cbc5a9bfe966a8bc16f0f18c737afeca>>
  */
 
 /*
@@ -12551,7 +12551,7 @@ function flushSpawnedWork() {
     0 !== (finishedWork.flags & 10256)
       ? (pendingEffectsStatus = 5)
       : ((pendingEffectsStatus = 0),
-        (pendingEffectsRoot = null),
+        (pendingFinishedWork = pendingEffectsRoot = null),
         releaseRootPooledCache(root, root.pendingLanes));
     var remainingLanes = root.pendingLanes;
     0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
@@ -12619,6 +12619,45 @@ function flushSpawnedWork() {
     markCommitStopped();
   }
 }
+function flushGestureMutations() {
+  if (6 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
+    var root = pendingEffectsRoot,
+      prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    var previousPriority = ReactDOMSharedInternals.p;
+    ReactDOMSharedInternals.p = 2;
+    var prevExecutionContext = executionContext;
+    executionContext |= 4;
+    try {
+      var rootContainer = root.containerInfo,
+        documentElement =
+          9 === rootContainer.nodeType
+            ? rootContainer.documentElement
+            : rootContainer.ownerDocument.documentElement;
+      null !== documentElement &&
+        "" === documentElement.style.viewTransitionName &&
+        ((documentElement.style.viewTransitionName = "none"),
+        documentElement.animate(
+          { opacity: [0, 0], pointerEvents: ["none", "none"] },
+          {
+            duration: 0,
+            fill: "forwards",
+            pseudoElement: "::view-transition-group(root)"
+          }
+        ),
+        documentElement.animate(
+          { width: [0, 0], height: [0, 0] },
+          { duration: 0, fill: "forwards", pseudoElement: "::view-transition" }
+        ));
+    } finally {
+      (executionContext = prevExecutionContext),
+        (ReactDOMSharedInternals.p = previousPriority),
+        (ReactSharedInternals.T = prevTransition);
+    }
+    pendingEffectsStatus = 7;
+  }
+}
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
     ((remainingLanes = root.pooledCache),
@@ -12626,6 +12665,35 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
+  flushGestureMutations();
+  flushGestureMutations();
+  if (7 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
+    var root = pendingEffectsRoot;
+    pendingFinishedWork = pendingEffectsRoot = null;
+    pendingEffectsLanes = 0;
+    var prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    var previousPriority = ReactDOMSharedInternals.p;
+    ReactDOMSharedInternals.p = 2;
+    var prevExecutionContext = executionContext;
+    executionContext |= 4;
+    try {
+      var rootContainer = root.containerInfo,
+        documentElement =
+          9 === rootContainer.nodeType
+            ? rootContainer.documentElement
+            : rootContainer.ownerDocument.documentElement;
+      null !== documentElement &&
+        "none" === documentElement.style.viewTransitionName &&
+        (documentElement.style.viewTransitionName = "");
+    } finally {
+      (executionContext = prevExecutionContext),
+        (ReactDOMSharedInternals.p = previousPriority),
+        (ReactSharedInternals.T = prevTransition);
+    }
+    ensureRootIsScheduled(root);
+  }
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -12647,7 +12715,7 @@ function flushPassiveEffects() {
     var root$jscomp$0 = pendingEffectsRoot,
       lanes = pendingEffectsLanes;
     pendingEffectsStatus = 0;
-    pendingEffectsRoot = null;
+    pendingFinishedWork = pendingEffectsRoot = null;
     pendingEffectsLanes = 0;
     if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(331));
     null !== injectedProfilingHooks &&
@@ -13107,20 +13175,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1632 = 0;
-  i$jscomp$inline_1632 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1632++
+  var i$jscomp$inline_1656 = 0;
+  i$jscomp$inline_1656 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1656++
 ) {
-  var eventName$jscomp$inline_1633 =
-      simpleEventPluginEvents[i$jscomp$inline_1632],
-    domEventName$jscomp$inline_1634 =
-      eventName$jscomp$inline_1633.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1635 =
-      eventName$jscomp$inline_1633[0].toUpperCase() +
-      eventName$jscomp$inline_1633.slice(1);
+  var eventName$jscomp$inline_1657 =
+      simpleEventPluginEvents[i$jscomp$inline_1656],
+    domEventName$jscomp$inline_1658 =
+      eventName$jscomp$inline_1657.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1659 =
+      eventName$jscomp$inline_1657[0].toUpperCase() +
+      eventName$jscomp$inline_1657.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1634,
-    "on" + capitalizedEvent$jscomp$inline_1635
+    domEventName$jscomp$inline_1658,
+    "on" + capitalizedEvent$jscomp$inline_1659
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16649,16 +16717,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1882 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1906 = React.version;
 if (
-  "19.1.0-native-fb-92e65ca6-20250225" !==
-  isomorphicReactPackageVersion$jscomp$inline_1882
+  "19.1.0-native-fb-3607f483-20250227" !==
+  isomorphicReactPackageVersion$jscomp$inline_1906
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1882,
-      "19.1.0-native-fb-92e65ca6-20250225"
+      isomorphicReactPackageVersion$jscomp$inline_1906,
+      "19.1.0-native-fb-3607f483-20250227"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16678,12 +16746,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1889 = {
+var internals$jscomp$inline_1913 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-92e65ca6-20250225",
+  version: "19.1.0-native-fb-3607f483-20250227",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-92e65ca6-20250225",
+  reconcilerVersion: "19.1.0-native-fb-3607f483-20250227",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$294 = 0;
@@ -16701,16 +16769,16 @@ var internals$jscomp$inline_1889 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2308 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2342 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2308.isDisabled &&
-    hook$jscomp$inline_2308.supportsFiber
+    !hook$jscomp$inline_2342.isDisabled &&
+    hook$jscomp$inline_2342.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2308.inject(
-        internals$jscomp$inline_1889
+      (rendererID = hook$jscomp$inline_2342.inject(
+        internals$jscomp$inline_1913
       )),
-        (injectedHook = hook$jscomp$inline_2308);
+        (injectedHook = hook$jscomp$inline_2342);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -16802,4 +16870,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-92e65ca6-20250225";
+exports.version = "19.1.0-native-fb-3607f483-20250227";

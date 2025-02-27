@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f5538cbd5e981b58335e37be9323ed3d>>
+ * @generated SignedSource<<357a3dd4bac8ed4e0efdacace61995d3>>
  */
 
 "use strict";
@@ -10524,7 +10524,7 @@ function flushSpawnedWork() {
     0 !== (finishedWork.flags & 10256)
       ? (pendingEffectsStatus = 5)
       : ((pendingEffectsStatus = 0),
-        (pendingEffectsRoot = null),
+        (pendingFinishedWork = pendingEffectsRoot = null),
         releaseRootPooledCache(root, root.pendingLanes));
     var remainingLanes = root.pendingLanes;
     0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
@@ -10571,6 +10571,20 @@ function flushSpawnedWork() {
     flushSyncWorkAcrossRoots_impl(0, !1);
   }
 }
+function flushGestureMutations() {
+  if (6 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
+    var prevTransition = ReactSharedInternals.T,
+      previousPriority = currentUpdatePriority;
+    currentUpdatePriority = 2;
+    var prevExecutionContext = executionContext;
+    executionContext |= 4;
+    executionContext = prevExecutionContext;
+    currentUpdatePriority = previousPriority;
+    ReactSharedInternals.T = prevTransition;
+    pendingEffectsStatus = 7;
+  }
+}
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
     ((remainingLanes = root.pooledCache),
@@ -10578,6 +10592,23 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
+  flushGestureMutations();
+  flushGestureMutations();
+  if (7 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
+    var root = pendingEffectsRoot;
+    pendingFinishedWork = pendingEffectsRoot = null;
+    pendingEffectsLanes = 0;
+    var prevTransition = ReactSharedInternals.T,
+      previousPriority = currentUpdatePriority;
+    currentUpdatePriority = 2;
+    var prevExecutionContext = executionContext;
+    executionContext |= 4;
+    executionContext = prevExecutionContext;
+    currentUpdatePriority = previousPriority;
+    ReactSharedInternals.T = prevTransition;
+    ensureRootIsScheduled(root);
+  }
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -10599,7 +10630,7 @@ function flushPassiveEffects() {
     var root$jscomp$0 = pendingEffectsRoot,
       lanes = pendingEffectsLanes;
     pendingEffectsStatus = 0;
-    pendingEffectsRoot = null;
+    pendingFinishedWork = pendingEffectsRoot = null;
     pendingEffectsLanes = 0;
     if (0 !== (executionContext & 6))
       throw Error("Cannot flush passive effects while already rendering.");
@@ -11143,11 +11174,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-92e65ca6-20250225" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-3607f483-20250227" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-92e65ca6-20250225\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-3607f483-20250227\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11194,26 +11225,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1274 = {
+  internals$jscomp$inline_1288 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-92e65ca6-20250225",
+    version: "19.1.0-native-fb-3607f483-20250227",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-92e65ca6-20250225"
+    reconcilerVersion: "19.1.0-native-fb-3607f483-20250227"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1274.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1288.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1608 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1628 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1608.isDisabled &&
-    hook$jscomp$inline_1608.supportsFiber
+    !hook$jscomp$inline_1628.isDisabled &&
+    hook$jscomp$inline_1628.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1608.inject(
-        internals$jscomp$inline_1274
+      (rendererID = hook$jscomp$inline_1628.inject(
+        internals$jscomp$inline_1288
       )),
-        (injectedHook = hook$jscomp$inline_1608);
+        (injectedHook = hook$jscomp$inline_1628);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
