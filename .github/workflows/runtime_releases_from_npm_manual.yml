@@ -83,9 +83,10 @@ jobs:
         run: |
           scripts/release/prepare-release-from-npm.js --skipTests --version=${{ inputs.version_to_promote }} --onlyPackages=${{ inputs.only_packages }}
           ls -R build/node_modules
-          # scripts/release/publish.js --ci --tags=${{ inputs.tags }} --publishVersion=${{ inputs.version_to_publish }} --onlyPackages=${{ inputs.only_packages }} --dry=${{ inputs.dry || 'false' }}
+          find build/node_modules -name package.json -exec cat "{}" \;
+          scripts/release/publish.js --ci --tags=${{ inputs.tags }} --publishVersion=${{ inputs.version_to_publish }} --onlyPackages=${{ inputs.only_packages }} --dry=${{ inputs.dry || 'true' }}
       - if: '${{ inputs.skip_packages }}'
         run: |
           scripts/release/prepare-release-from-npm.js --skipTests --version=${{ inputs.version_to_promote }} --skipPackages=${{ inputs.skip_packages }}
-          ls -R build/node_modules
-          # scripts/release/publish.js --ci --tags=${{ inputs.tags }} --publishVersion=${{ inputs.version_to_publish }} --skipPackages=${{ inputs.skip_packages }} --dry=${{ inputs.dry || 'false' }}
+          find build/node_modules -name package.json -exec cat "{}" \;
+          scripts/release/publish.js --ci --tags=${{ inputs.tags }} --publishVersion=${{ inputs.version_to_publish }} --skipPackages=${{ inputs.skip_packages }} --dry=${{ inputs.dry || 'true' }}
