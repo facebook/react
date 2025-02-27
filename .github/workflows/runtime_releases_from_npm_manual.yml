@@ -80,44 +80,40 @@ jobs:
         working-directory: scripts/release
       - run: cp ./scripts/release/ci-npmrc ~/.npmrc
       - if: '${{ inputs.only_packages }}'
-        name: 'Prepare and publish ${{ inputs.only_packages }}'
+        name: 'Prepare ${{ inputs.only_packages }} from NPM'
         run: |
-          echo -e "===== Preparing release from NPM =====\n"
           scripts/release/prepare-release-from-npm.js \
             --ci \
             --skipTests \
             --version=${{ inputs.version_to_promote }} \
             --publishVersion=${{ inputs.version_to_publish }} \
             --onlyPackages=${{ inputs.only_packages }}
-
-          echo -e "\n\n===== Check prepared files =====\n"
-          ls -R build/node_modules
-
-          echo -e "\n\n===== Publishing to NPM =====\n"
-          scripts/release/publish.js \
-            --ci \
-            --tags=${{ inputs.tags }} \
-            --publishVersion=${{ inputs.version_to_publish }} \
-            --onlyPackages=${{ inputs.only_packages }} \
-            --dry=${{ inputs.dry }}
       - if: '${{ inputs.skip_packages }}'
-        name: 'Prepare and publish all packages EXCEPT ${{ inputs.skip_packages }}'
+        name: 'Prepare all packages EXCEPT ${{ inputs.skip_packages }} from NPM'
         run: |
-          echo -e "===== Preparing release from NPM =====\n"
           scripts/release/prepare-release-from-npm.js \
             --ci \
             --skipTests \
             --version=${{ inputs.version_to_promote }} \
             --publishVersion=${{ inputs.version_to_publish }} \
             --skipPackages=${{ inputs.skip_packages }}
-
-          echo -e "\n\n===== Check prepared files =====\n"
-          ls -R build/node_modules
-
-          echo -e "\n\n===== Publishing to NPM =====\n"
+      - name: Check prepared files
+        run: ls -R build/node_modules
+      - if: '${{ inputs.only_packages }}'
+        name: 'Publish ${{ inputs.only_packages }}'
+        run: |
           scripts/release/publish.js \
             --ci \
             --tags=${{ inputs.tags }} \
             --publishVersion=${{ inputs.version_to_publish }} \
-            --skipPackages=${{ inputs.skip_packages }} \
-            --dry=${{ inputs.dry }}
+            --onlyPackages=${{ inputs.only_packages }} ${{ (inputs.dry && '') || '\'}}
+            ${{ inputs.dry && '--dry'}}
+      - if: '${{ inputs.skip_packages }}'
+        name: 'Publish all packages EXCEPT ${{ inputs.skip_packages }}'
+        run: |
+          scripts/release/publish.js \
+            --ci \
+            --tags=${{ inputs.tags }} \
+            --publishVersion=${{ inputs.version_to_publish }} \
+            --skipPackages=${{ inputs.skip_packages }} ${{ (inputs.dry && '') || '\'}}
+            ${{ inputs.dry && '--dry'}}
