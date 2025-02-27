@@ -773,6 +773,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           throw new Error('Not yet implemented.');
         },
 
+        removeRootViewTransitionClone(
+          rootContainer: Container,
+          clone: Instance,
+        ): void {
+          throw new Error('Not implemented.');
+        },
+
         measureInstance(instance: Instance): InstanceMeasurement {
           return null;
         },

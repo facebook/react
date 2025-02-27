@@ -577,6 +577,13 @@ export function cloneRootViewTransitionContainer(
   throw new Error('Not implemented.');
 }
 
+export function removeRootViewTransitionClone(
+  rootContainer: Container,
+  clone: Instance,
+): void {
+  throw new Error('Not implemented.');
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance: Instance): InstanceMeasurement {

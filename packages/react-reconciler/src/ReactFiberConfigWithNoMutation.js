@@ -43,6 +43,7 @@ export const cancelViewTransitionName = shim;
 export const cancelRootViewTransitionName = shim;
 export const restoreRootViewTransitionName = shim;
 export const cloneRootViewTransitionContainer = shim;
+export const removeRootViewTransitionClone = shim;
 export type InstanceMeasurement = null;
 export const measureInstance = shim;
 export const wasInstanceInViewport = shim;

@@ -145,6 +145,8 @@ export const restoreRootViewTransitionName =
   $$$config.restoreRootViewTransitionName;
 export const cloneRootViewTransitionContainer =
   $$$config.cloneRootViewTransitionContainer;
+export const removeRootViewTransitionClone =
+  $$$config.removeRootViewTransitionClone;
 export const measureInstance = $$$config.measureInstance;
 export const wasInstanceInViewport = $$$config.wasInstanceInViewport;
 export const hasInstanceChanged = $$$config.hasInstanceChanged;

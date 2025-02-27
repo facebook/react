@@ -376,6 +376,13 @@ export function cloneRootViewTransitionContainer(
   };
 }
 
+export function removeRootViewTransitionClone(
+  rootContainer: Container,
+  clone: Instance,
+): void {
+  // Noop since it was never inserted anywhere.
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance: Instance): InstanceMeasurement {

@@ -1220,10 +1220,24 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
 }
 
 export function restoreRootViewTransitionName(rootContainer: Container): void {
+  let containerInstance: Instance;
+  if (rootContainer.nodeType === DOCUMENT_NODE) {
+    containerInstance = (rootContainer: any).body;
+  } else if (rootContainer.nodeName === 'HTML') {
+    containerInstance = (rootContainer.ownerDocument.body: any);
+  } else {
+    // If the container is not the whole document, then we ideally should probably
+    // clone the whole document outside of the React too.
+    containerInstance = (rootContainer: any);
+  }
+  // $FlowFixMe[prop-missing]
+  if (containerInstance.style.viewTransitionName === 'root') {
+    // If we moved the root view transition name to the container in a gesture
+    // we need to restore it now.
+    containerInstance.style.viewTransitionName = '';
+  }
   const documentElement: null | HTMLElement =
-    rootContainer.nodeType === DOCUMENT_NODE
-      ? (rootContainer: any).documentElement
-      : rootContainer.ownerDocument.documentElement;
+    containerInstance.ownerDocument.documentElement;
   if (
     documentElement !== null &&
     // $FlowFixMe[prop-missing]
@@ -1237,7 +1251,122 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
 export function cloneRootViewTransitionContainer(
   rootContainer: Container,
 ): Instance {
-  return (rootContainer: any);
+  // This implies that we're not going to animate the root document but instead
+  // the clone so we first clear the name of the root container.
+  const documentElement: null | HTMLElement =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? (rootContainer: any).documentElement
+      : rootContainer.ownerDocument.documentElement;
+  if (
+    documentElement !== null &&
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName === ''
+  ) {
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName = 'none';
+  }
+
+  let containerInstance: Instance;
+  if (rootContainer.nodeType === DOCUMENT_NODE) {
+    containerInstance = (rootContainer: any).body;
+  } else if (rootContainer.nodeName === 'HTML') {
+    containerInstance = (rootContainer.ownerDocument.body: any);
+  } else {
+    // If the container is not the whole document, then we ideally should probably
+    // clone the whole document outside of the React too.
+    containerInstance = (rootContainer: any);
+  }
+
+  const containerParent = containerInstance.parentNode;
+  if (containerParent === null) {
+    throw new Error('Cannot use a useSwipeTransition() in a detached root.');
+  }
+
+  const clone: HTMLElement = containerInstance.cloneNode(false);
+
+  const computedStyle = getComputedStyle(containerInstance);
+
+  if (
+    computedStyle.position === 'absolute' ||
+    computedStyle.position === 'fixed'
+  ) {
+    // If the style is already absolute, we don't have to do anything because it'll appear
+    // in the same place.
+  } else {
+    // Otherwise we need to absolutely position the clone in the same location as the original.
+    let positionedAncestor: HTMLElement = containerParent;
+    while (
+      positionedAncestor.parentNode != null &&
+      positionedAncestor.parentNode.nodeType !== DOCUMENT_NODE
+    ) {
+      if (getComputedStyle(positionedAncestor).position !== 'static') {
+        break;
+      }
+      // $FlowFixMe: This is refined.
+      positionedAncestor = positionedAncestor.parentNode;
+    }
+
+    // Clear the transform while we're measuring since it affects the bounding client rect.
+    const prevAncestorTransform = positionedAncestor.style.transform;
+    const prevTransform = containerInstance.style.transform;
+    positionedAncestor.style.transform = 'none';
+    containerInstance.style.transform = 'none';
+
+    const ancestorRect = positionedAncestor.getBoundingClientRect();
+    const rect = containerInstance.getBoundingClientRect();
+
+    clone.style.position = 'absolute';
+    clone.style.top = rect.top - ancestorRect.top + 'px';
+    clone.style.left = rect.left - ancestorRect.left + 'px';
+    clone.style.width = rect.width + 'px';
+    clone.style.height = rect.height + 'px';
+    clone.style.margin = '0px';
+    clone.style.boxSizing = 'border-box';
+
+    positionedAncestor.style.transform = prevAncestorTransform;
+    containerInstance.style.transform = prevTransform;
+  }
+
+  // For this transition the container will act as the root. Nothing outside of it should
+  // be affected anyway. This lets us transition from the cloned container to the original.
+  // $FlowFixMe[prop-missing]
+  clone.style.viewTransitionName = 'root';
+
+  // Insert the clone after the root container as a sibling. This may inject a body
+  // as the next sibling of an existing body. document.body will still point to the
+  // first one and any id selectors will still find the first one. That's why it's
+  // important that it's after the existing node.
+  containerInstance.parentNode.insertBefore(
+    clone,
+    containerInstance.nextSibling,
+  );
+
+  return clone;
+}
+
+export function removeRootViewTransitionClone(
+  rootContainer: Container,
+  clone: Instance,
+): void {
+  let containerInstance: Instance;
+  if (rootContainer.nodeType === DOCUMENT_NODE) {
+    containerInstance = (rootContainer: any).body;
+  } else if (rootContainer.nodeName === 'HTML') {
+    containerInstance = (rootContainer.ownerDocument.body: any);
+  } else {
+    // If the container is not the whole document, then we ideally should probably
+    // clone the whole document outside of the React too.
+    containerInstance = (rootContainer: any);
+  }
+  const containerParent = containerInstance.parentNode;
+  if (containerParent === null) {
+    throw new Error('Cannot use a useSwipeTransition() in a detached root.');
+  }
+  // We assume that the clone is still within the same parent.
+  containerParent.removeChild(clone);
+
+  // Now the root is on the containerInstance itself until we call restoreRootViewTransitionName.
+  containerInstance.style.viewTransitionName = 'root';
 }
 
 export type InstanceMeasurement = {

@@ -17,6 +17,7 @@ import {
   cloneMutableInstance,
   cloneMutableTextInstance,
   cloneRootViewTransitionContainer,
+  removeRootViewTransitionClone,
   cancelRootViewTransitionName,
   restoreRootViewTransitionName,
   appendChild,
@@ -305,6 +306,8 @@ export function insertDestinationClones(
   root: FiberRoot,
   finishedWork: Fiber,
 ): void {
+  // We'll either not transition the root, or we'll transition the clone. Regardless
+  // we cancel the root view transition name.
   const needsClone = detectMutationOrInsertClones(finishedWork);
   if (needsClone) {
     if (__DEV__) {
@@ -319,10 +322,12 @@ export function insertDestinationClones(
       }
     }
     // Clone the whole root
-    const hostParentClone = cloneRootViewTransitionContainer(
-      root.containerInfo,
-    );
-    recursivelyInsertClones(finishedWork, hostParentClone);
+    const rootClone = cloneRootViewTransitionContainer(root.containerInfo);
+    root.gestureClone = rootClone;
+    recursivelyInsertClones(finishedWork, rootClone);
+  } else {
+    root.gestureClone = null;
+    cancelRootViewTransitionName(root.containerInfo);
   }
 }
 
@@ -331,8 +336,12 @@ export function applyDepartureTransitions(
   root: FiberRoot,
   finishedWork: Fiber,
 ): void {
+  const rootClone = root.gestureClone;
+  if (rootClone !== null) {
+    root.gestureClone = null;
+    removeRootViewTransitionClone(root.containerInfo, rootClone);
+  }
   // TODO
-  cancelRootViewTransitionName(root.containerInfo);
 }
 
 // Revert transition names and start/adjust animations on the started View Transition.
