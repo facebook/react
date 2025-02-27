@@ -236,6 +236,7 @@ function getInspectorDataForViewAtPoint(
             pointerY: locationY,
             frame: {left, top, width, height},
             touchedViewTag: nativeViewTag,
+            // $FlowExpectedError[incompatible-call]
             closestPublicInstance: nativeViewTag,
           });
         },

@@ -68,6 +68,10 @@ function getVersion() {
   return query.version || 'local';
 }
 
+export function isLocal() {
+  return getVersion() === 'local';
+}
+
 export function reactPaths(version = getVersion()) {
   let query = parseQuery(window.location.search);
   let isProduction = query.production === 'true';

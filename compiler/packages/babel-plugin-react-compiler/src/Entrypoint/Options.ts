@@ -176,37 +176,48 @@ export type CompilationMode = z.infer<typeof CompilationModeSchema>;
  *   babel or other unhandled exceptions).
  */
 export type LoggerEvent =
-  | {
-      kind: 'CompileError';
-      fnLoc: t.SourceLocation | null;
-      detail: CompilerErrorDetailOptions;
-    }
-  | {
-      kind: 'CompileDiagnostic';
-      fnLoc: t.SourceLocation | null;
-      detail: Omit<Omit<CompilerErrorDetailOptions, 'severity'>, 'suggestions'>;
-    }
-  | {
-      kind: 'CompileSkip';
-      fnLoc: t.SourceLocation | null;
-      reason: string;
-      loc: t.SourceLocation | null;
-    }
-  | {
-      kind: 'CompileSuccess';
-      fnLoc: t.SourceLocation | null;
-      fnName: string | null;
-      memoSlots: number;
-      memoBlocks: number;
-      memoValues: number;
-      prunedMemoBlocks: number;
-      prunedMemoValues: number;
-    }
-  | {
-      kind: 'PipelineError';
-      fnLoc: t.SourceLocation | null;
-      data: string;
-    };
+  | CompileSuccessEvent
+  | CompileErrorEvent
+  | CompileDiagnosticEvent
+  | CompileSkipEvent
+  | PipelineErrorEvent
+  | TimingEvent;
+
+export type CompileErrorEvent = {
+  kind: 'CompileError';
+  fnLoc: t.SourceLocation | null;
+  detail: CompilerErrorDetailOptions;
+};
+export type CompileDiagnosticEvent = {
+  kind: 'CompileDiagnostic';
+  fnLoc: t.SourceLocation | null;
+  detail: Omit<Omit<CompilerErrorDetailOptions, 'severity'>, 'suggestions'>;
+};
+export type CompileSuccessEvent = {
+  kind: 'CompileSuccess';
+  fnLoc: t.SourceLocation | null;
+  fnName: string | null;
+  memoSlots: number;
+  memoBlocks: number;
+  memoValues: number;
+  prunedMemoBlocks: number;
+  prunedMemoValues: number;
+};
+export type CompileSkipEvent = {
+  kind: 'CompileSkip';
+  fnLoc: t.SourceLocation | null;
+  reason: string;
+  loc: t.SourceLocation | null;
+};
+export type PipelineErrorEvent = {
+  kind: 'PipelineError';
+  fnLoc: t.SourceLocation | null;
+  data: string;
+};
+export type TimingEvent = {
+  kind: 'Timing';
+  measurement: PerformanceMeasure;
+};
 
 export type Logger = {
   logEvent: (filename: string | null, event: LoggerEvent) => void;

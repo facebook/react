@@ -40,8 +40,10 @@ export opaque type NoTimeout = mixed;
 export opaque type RendererInspectionConfig = mixed;
 export opaque type TransitionStatus = mixed;
 export opaque type FormInstance = mixed;
+export type ViewTransitionInstance = null | {name: string, ...};
 export opaque type InstanceMeasurement = mixed;
 export type EventResponder = any;
+export type GestureTimeline = any;
 
 export const rendererVersion = $$$config.rendererVersion;
 export const rendererPackageName = $$$config.rendererPackageName;
@@ -143,6 +145,11 @@ export const wasInstanceInViewport = $$$config.wasInstanceInViewport;
 export const hasInstanceChanged = $$$config.hasInstanceChanged;
 export const hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent;
 export const startViewTransition = $$$config.startViewTransition;
+export const getCurrentGestureOffset = $$$config.getCurrentGestureOffset;
+export const subscribeToGestureDirection =
+  $$$config.subscribeToGestureDirection;
+export const createViewTransitionInstance =
+  $$$config.createViewTransitionInstance;
 export const clearContainer = $$$config.clearContainer;
 
 // -------------------
@@ -171,11 +178,15 @@ export const registerSuspenseInstanceRetry =
 export const canHydrateFormStateMarker = $$$config.canHydrateFormStateMarker;
 export const isFormStateMarkerMatching = $$$config.isFormStateMarkerMatching;
 export const getNextHydratableSibling = $$$config.getNextHydratableSibling;
+export const getNextHydratableSiblingAfterSingleton =
+  $$$config.getNextHydratableSiblingAfterSingleton;
 export const getFirstHydratableChild = $$$config.getFirstHydratableChild;
 export const getFirstHydratableChildWithinContainer =
   $$$config.getFirstHydratableChildWithinContainer;
 export const getFirstHydratableChildWithinSuspenseInstance =
   $$$config.getFirstHydratableChildWithinSuspenseInstance;
+export const getFirstHydratableChildWithinSingleton =
+  $$$config.getFirstHydratableChildWithinSingleton;
 export const canHydrateInstance = $$$config.canHydrateInstance;
 export const canHydrateTextInstance = $$$config.canHydrateTextInstance;
 export const canHydrateSuspenseInstance = $$$config.canHydrateSuspenseInstance;
@@ -229,7 +240,7 @@ export const suspendResource = $$$config.suspendResource;
 // -------------------
 export const supportsSingletons = $$$config.supportsSingletons;
 export const resolveSingletonInstance = $$$config.resolveSingletonInstance;
-export const clearSingleton = $$$config.clearSingleton;
 export const acquireSingletonInstance = $$$config.acquireSingletonInstance;
 export const releaseSingletonInstance = $$$config.releaseSingletonInstance;
 export const isHostSingletonType = $$$config.isHostSingletonType;
+export const isSingletonScope = $$$config.isSingletonScope;

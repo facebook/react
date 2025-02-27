@@ -245,8 +245,6 @@ const EnvironmentConfigSchema = z.object({
    */
   enableUseTypeAnnotations: z.boolean().default(false),
 
-  enableFunctionDependencyRewrite: z.boolean().default(true),
-
   /**
    * Enables inference of optional dependency chains. Without this flag
    * a property chain such as `props?.items?.foo` will infer as a dep on
@@ -352,6 +350,11 @@ const EnvironmentConfigSchema = z.object({
    */
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
   validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
+
+  /**
+   * Validate against impure functions called during render
+   */
+  validateNoImpureFunctionsInRender: z.boolean().default(false),
 
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
@@ -547,6 +550,8 @@ const EnvironmentConfigSchema = z.object({
    */
   disableMemoizationForDebugging: z.boolean().default(false),
 
+  enableMinimalTransformsForRetry: z.boolean().default(false),
+
   /**
    * When true, rather using memoized values, the compiler will always re-compute
    * values, and then use a heuristic to compare the memoized value to the newly
@@ -621,6 +626,17 @@ const EnvironmentConfigSchema = z.object({
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
 
+export const MINIMAL_RETRY_CONFIG: PartialEnvironmentConfig = {
+  validateHooksUsage: false,
+  validateRefAccessDuringRender: false,
+  validateNoSetStateInRender: false,
+  validateNoSetStateInPassiveEffects: false,
+  validateNoJSXInTryStatements: false,
+  validateMemoizedEffectDependencies: false,
+  validateNoCapitalizedCalls: null,
+  validateBlocklistedImports: null,
+  enableMinimalTransformsForRetry: true,
+};
 /**
  * For test fixtures and playground only.
  *

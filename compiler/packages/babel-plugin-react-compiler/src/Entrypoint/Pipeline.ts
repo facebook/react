@@ -99,6 +99,7 @@ import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHI
 import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
 import {transformFire} from '../Transform';
+import {validateNoImpureFunctionsInRender} from '../Validation/ValiateNoImpureFunctionsInRender';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -161,7 +162,8 @@ function runWithEnvironment(
   if (
     !env.config.enablePreserveExistingManualUseMemo &&
     !env.config.disableMemoizationForDebugging &&
-    !env.config.enableChangeDetectionForDebugging
+    !env.config.enableChangeDetectionForDebugging &&
+    !env.config.enableMinimalTransformsForRetry
   ) {
     dropManualMemoization(hir);
     log({kind: 'hir', name: 'DropManualMemoization', value: hir});
@@ -257,6 +259,10 @@ function runWithEnvironment(
     validateNoJSXInTryStatement(hir);
   }
 
+  if (env.config.validateNoImpureFunctionsInRender) {
+    validateNoImpureFunctionsInRender(hir);
+  }
+
   inferReactivePlaces(hir);
   log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
 
@@ -274,8 +280,10 @@ function runWithEnvironment(
     value: hir,
   });
 
-  inferReactiveScopeVariables(hir);
-  log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
+  if (!env.config.enableMinimalTransformsForRetry) {
+    inferReactiveScopeVariables(hir);
+    log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
+  }
 
   const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
   log({

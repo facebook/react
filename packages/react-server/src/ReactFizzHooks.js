@@ -16,6 +16,7 @@ import type {
   Usable,
   ReactCustomFormAction,
   Awaited,
+  StartGesture,
 } from 'shared/ReactTypes';
 
 import type {ResumableState} from './ReactFizzConfig';
@@ -40,7 +41,7 @@ import {createFastHash} from './ReactServerStreamConfig';
 
 import {
   enableUseEffectEventHook,
-  enableUseResourceEffectHook,
+  enableSwipeTransition,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -798,6 +799,19 @@ function useMemoCache(size: number): Array<mixed> {
   return data;
 }
 
+function unsupportedStartGesture() {
+  throw new Error('startGesture cannot be called during server rendering.');
+}
+
+function useSwipeTransition<T>(
+  previous: T,
+  current: T,
+  next: T,
+): [T, StartGesture] {
+  resolveCurrentlyRenderingComponent();
+  return [current, unsupportedStartGesture];
+}
+
 function noop(): void {}
 
 function clientHookNotSupported() {
@@ -834,29 +848,31 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useActionState,
       useFormState: useActionState,
       useHostTransitionStatus,
+      useMemoCache,
+      useCacheRefresh,
     }
   : {
       readContext,
       use,
+      useCallback,
       useContext,
+      useEffect: clientHookNotSupported,
+      useImperativeHandle: clientHookNotSupported,
+      useInsertionEffect: clientHookNotSupported,
+      useLayoutEffect: clientHookNotSupported,
       useMemo,
       useReducer: clientHookNotSupported,
       useRef: clientHookNotSupported,
       useState: clientHookNotSupported,
-      useInsertionEffect: clientHookNotSupported,
-      useLayoutEffect: clientHookNotSupported,
-      useCallback,
-      useImperativeHandle: clientHookNotSupported,
-      useEffect: clientHookNotSupported,
       useDebugValue: noop,
       useDeferredValue: clientHookNotSupported,
       useTransition: clientHookNotSupported,
-      useId,
       useSyncExternalStore: clientHookNotSupported,
-      useOptimistic,
-      useActionState,
-      useFormState: useActionState,
+      useId,
       useHostTransitionStatus,
+      useFormState: useActionState,
+      useActionState,
+      useOptimistic,
       useMemoCache,
       useCacheRefresh,
     };
@@ -864,9 +880,9 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
 if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = useEffectEvent;
 }
-if (enableUseResourceEffectHook) {
-  HooksDispatcher.useResourceEffect = supportsClientAPIs
-    ? noop
+if (enableSwipeTransition) {
+  HooksDispatcher.useSwipeTransition = supportsClientAPIs
+    ? useSwipeTransition
     : clientHookNotSupported;
 }
 

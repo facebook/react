@@ -41,7 +41,6 @@ let waitFor;
 let waitForThrow;
 let waitForPaint;
 let assertLog;
-let useResourceEffect;
 let assertConsoleErrorDev;
 
 describe('ReactHooksWithNoopRenderer', () => {
@@ -70,7 +69,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     useDeferredValue = React.useDeferredValue;
     Suspense = React.Suspense;
     Activity = React.unstable_Activity;
-    useResourceEffect = React.experimental_useResourceEffect;
     ContinuousEventPriority =
       require('react-reconciler/constants').ContinuousEventPriority;
     if (gate(flags => flags.enableSuspenseList)) {
@@ -3311,8 +3309,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  // @gate enableUseResourceEffectHook
-  describe('useResourceEffect', () => {
+  // @gate enableUseEffectCRUDOverload
+  describe('useEffect CRUD overload', () => {
     class Resource {
       isDeleted: false;
       id: string;
@@ -3333,36 +3331,36 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
     }
 
-    // @gate !enableUseResourceEffectHook
+    // @gate !enableUseEffectCRUDOverload
     it('is null when flag is disabled', async () => {
-      expect(useResourceEffect).toBeUndefined();
-    });
-
-    // @gate enableUseResourceEffectHook
-    it('validates create return value', async () => {
       function App({id}) {
-        useResourceEffect(() => {
-          Scheduler.log(`create(${id})`);
-        }, [id]);
+        useEffect(
+          () => {
+            Scheduler.log(`create(${id})`);
+            return {};
+          },
+          [id],
+          () => {
+            Scheduler.log('update');
+          },
+          [],
+        );
         return null;
       }
 
-      await act(() => {
-        ReactNoop.render(<App id={1} />);
-      });
-      assertConsoleErrorDev(
-        [
-          'useResourceEffect must provide a callback which returns a resource. ' +
-            'If a managed resource is not needed here, use useEffect. Received undefined',
-        ],
-        {withoutStack: true},
+      await expect(async () => {
+        await act(() => {
+          ReactNoop.render(<App id={1} />);
+        });
+      }).rejects.toThrow(
+        'useEffect CRUD overload is not enabled in this build of React.',
       );
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('validates non-empty update deps', async () => {
       function App({id}) {
-        useResourceEffect(
+        useEffect(
           () => {
             Scheduler.log(`create(${id})`);
             return {};
@@ -3380,19 +3378,19 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.render(<App id={1} />);
       });
       assertConsoleErrorDev([
-        'useResourceEffect received a dependency array with no dependencies. ' +
+        'useEffect received a dependency array with no dependencies. ' +
           'When specified, the dependency array must have at least one dependency.\n' +
           '    in App (at **)',
       ]);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('simple mount and update', async () => {
       function App({id, username}) {
         const opts = useMemo(() => {
           return {username};
         }, [username]);
-        useResourceEffect(
+        useEffect(
           () => {
             const resource = new Resource(id, opts);
             Scheduler.log(`create(${resource.id}, ${resource.opts.username})`);
@@ -3443,13 +3441,13 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['destroy(2, Jack)']);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('simple mount with no update', async () => {
       function App({id, username}) {
         const opts = useMemo(() => {
           return {username};
         }, [username]);
-        useResourceEffect(
+        useEffect(
           () => {
             const resource = new Resource(id, opts);
             Scheduler.log(`create(${resource.id}, ${resource.opts.username})`);
@@ -3480,13 +3478,13 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['destroy(1, Jack)']);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('calls update on every render if no deps are specified', async () => {
       function App({id, username}) {
         const opts = useMemo(() => {
           return {username};
         }, [username]);
-        useResourceEffect(
+        useEffect(
           () => {
             const resource = new Resource(id, opts);
             Scheduler.log(`create(${resource.id}, ${resource.opts.username})`);
@@ -3523,10 +3521,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['update(2, Lauren)']);
     });
 
-    // @gate enableUseResourceEffectHook
-    it('does not unmount previous useResourceEffect between updates', async () => {
+    // @gate enableUseEffectCRUDOverload
+    it('does not unmount previous useEffect between updates', async () => {
       function App({id}) {
-        useResourceEffect(
+        useEffect(
           () => {
             const resource = new Resource(id);
             Scheduler.log(`create(${resource.id})`);
@@ -3562,10 +3560,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['update(0)']);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('unmounts only on deletion', async () => {
       function App({id}) {
-        useResourceEffect(
+        useEffect(
           () => {
             const resource = new Resource(id);
             Scheduler.log(`create(${resource.id})`);
@@ -3596,7 +3594,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('unmounts on deletion', async () => {
       function Wrapper(props) {
         return <App {...props} />;
@@ -3605,7 +3603,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         const opts = useMemo(() => {
           return {username};
         }, [username]);
-        useResourceEffect(
+        useEffect(
           () => {
             const resource = new Resource(id, opts);
             Scheduler.log(`create(${resource.id}, ${resource.opts.username})`);
@@ -3650,10 +3648,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('handles errors in create on mount', async () => {
       function App({id}) {
-        useResourceEffect(
+        useEffect(
           () => {
             Scheduler.log(`Mount A [${id}]`);
             return {};
@@ -3665,7 +3663,7 @@ describe('ReactHooksWithNoopRenderer', () => {
             Scheduler.log(`Unmount A [${id}]`);
           },
         );
-        useResourceEffect(
+        useEffect(
           () => {
             Scheduler.log('Oops!');
             throw new Error('Oops!');
@@ -3700,10 +3698,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('handles errors in create on update', async () => {
       function App({id}) {
-        useResourceEffect(
+        useEffect(
           () => {
             Scheduler.log(`Mount A [${id}]`);
             return {};
@@ -3744,13 +3742,13 @@ describe('ReactHooksWithNoopRenderer', () => {
       }).rejects.toThrow('Oops error!');
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('handles errors in destroy on update', async () => {
       function App({id, username}) {
         const opts = useMemo(() => {
           return {username};
         }, [username]);
-        useResourceEffect(
+        useEffect(
           () => {
             const resource = new Resource(id, opts);
             Scheduler.log(`Mount A [${id}, ${resource.opts.username}]`);
@@ -3800,13 +3798,13 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
-    // @gate enableUseResourceEffectHook && enableActivity
+    // @gate enableUseEffectCRUDOverload && enableActivity
     it('composes with activity', async () => {
       function App({id, username}) {
         const opts = useMemo(() => {
           return {username};
         }, [username]);
-        useResourceEffect(
+        useEffect(
           () => {
             const resource = new Resource(id, opts);
             Scheduler.log(`create(${resource.id}, ${resource.opts.username})`);
@@ -3873,7 +3871,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['destroy(0, Lauren)']);
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('composes with suspense', async () => {
       function TextBox({text}) {
         return <AsyncText text={text} ms={0} />;
@@ -3885,7 +3883,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         const opts = useMemo(() => {
           return {username};
         }, [username]);
-        useResourceEffect(
+        useEffect(
           () => {
             const resource = new Resource(id, opts);
             Scheduler.log(`create(${resource.id}, ${resource.opts.username})`);
@@ -3991,7 +3989,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       );
     });
 
-    // @gate enableUseResourceEffectHook
+    // @gate enableUseEffectCRUDOverload
     it('composes with other kinds of effects', async () => {
       let rerender;
       function App({id, username}) {
@@ -4003,7 +4001,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         useEffect(() => {
           Scheduler.log(`useEffect(${count})`);
         }, [count]);
-        useResourceEffect(
+        useEffect(
           () => {
             const resource = new Resource(id, opts);
             Scheduler.log(`create(${resource.id}, ${resource.opts.username})`);

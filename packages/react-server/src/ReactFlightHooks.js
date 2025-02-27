@@ -17,6 +17,10 @@ import {
 } from 'shared/ReactSymbols';
 import {createThenableState, trackUsedThenable} from './ReactFlightThenable';
 import {isClientReference} from './ReactFlightServerConfig';
+import {
+  enableUseEffectEventHook,
+  enableSwipeTransition,
+} from 'shared/ReactFeatureFlags';
 
 let currentRequest = null;
 let thenableIndexCounter = 0;
@@ -58,33 +62,32 @@ export function getThenableStateAfterSuspending(): ThenableState {
 }
 
 export const HooksDispatcher: Dispatcher = {
-  useMemo<T>(nextCreate: () => T): T {
-    return nextCreate();
-  },
+  readContext: (unsupportedContext: any),
+
+  use,
   useCallback<T>(callback: T): T {
     return callback;
   },
-  useDebugValue(): void {},
-  useDeferredValue: (unsupportedHook: any),
-  useTransition: (unsupportedHook: any),
-  readContext: (unsupportedContext: any),
   useContext: (unsupportedContext: any),
+  useEffect: (unsupportedHook: any),
+  useImperativeHandle: (unsupportedHook: any),
+  useLayoutEffect: (unsupportedHook: any),
+  useInsertionEffect: (unsupportedHook: any),
+  useMemo<T>(nextCreate: () => T): T {
+    return nextCreate();
+  },
   useReducer: (unsupportedHook: any),
   useRef: (unsupportedHook: any),
   useState: (unsupportedHook: any),
-  useInsertionEffect: (unsupportedHook: any),
-  useLayoutEffect: (unsupportedHook: any),
-  useImperativeHandle: (unsupportedHook: any),
-  useEffect: (unsupportedHook: any),
+  useDebugValue(): void {},
+  useDeferredValue: (unsupportedHook: any),
+  useTransition: (unsupportedHook: any),
+  useSyncExternalStore: (unsupportedHook: any),
   useId,
   useHostTransitionStatus: (unsupportedHook: any),
-  useOptimistic: (unsupportedHook: any),
   useFormState: (unsupportedHook: any),
   useActionState: (unsupportedHook: any),
-  useSyncExternalStore: (unsupportedHook: any),
-  useCacheRefresh(): <T>(?() => T, ?T) => void {
-    return unsupportedRefresh;
-  },
+  useOptimistic: (unsupportedHook: any),
   useMemoCache(size: number): Array<any> {
     const data = new Array<any>(size);
     for (let i = 0; i < size; i++) {
@@ -92,8 +95,16 @@ export const HooksDispatcher: Dispatcher = {
     }
     return data;
   },
-  use,
+  useCacheRefresh(): <T>(?() => T, ?T) => void {
+    return unsupportedRefresh;
+  },
 };
+if (enableUseEffectEventHook) {
+  HooksDispatcher.useEffectEvent = (unsupportedHook: any);
+}
+if (enableSwipeTransition) {
+  HooksDispatcher.useSwipeTransition = (unsupportedHook: any);
+}
 
 function unsupportedHook(): void {
   throw new Error('This Hook is not supported in Server Components.');

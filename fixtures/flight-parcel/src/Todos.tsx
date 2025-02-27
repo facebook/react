@@ -2,7 +2,6 @@
 
 import './client';
 import './Todos.css';
-import {Resources} from '@parcel/runtime-rsc';
 import {Dialog} from './Dialog';
 import {TodoDetail} from './TodoDetail';
 import {TodoCreate} from './TodoCreate';
@@ -13,7 +12,6 @@ export async function Todos({id}: {id?: number}) {
     <html style={{colorScheme: 'dark light'}}>
       <head>
         <title>Todos</title>
-        <Resources />
       </head>
       <body>
         <header>

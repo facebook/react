@@ -145,9 +145,10 @@ function collectTemporaries(
     }
     case 'PropertyLoad': {
       if (sidemap.react.has(value.object.identifier.id)) {
-        if (value.property === 'useMemo' || value.property === 'useCallback') {
+        const property = value.property;
+        if (property === 'useMemo' || property === 'useCallback') {
           sidemap.manualMemos.set(instr.lvalue.identifier.id, {
-            kind: value.property,
+            kind: property as 'useMemo' | 'useCallback',
             loadInstr: instr as TInstruction<PropertyLoad>,
           });
         }

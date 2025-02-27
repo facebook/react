@@ -27,7 +27,10 @@ import {
   hydrateRoot as hydrateRootImpl,
 } from './ReactDOMRoot';
 
-import {disableLegacyMode} from 'shared/ReactFeatureFlags';
+import {
+  disableLegacyMode,
+  disableCommentsAsDOMContainers,
+} from 'shared/ReactFeatureFlags';
 import {clearContainer} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
 import {
   getInstanceFromNode,
@@ -36,7 +39,7 @@ import {
   unmarkContainerAsRoot,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
-import {isValidContainerLegacy} from 'react-dom-bindings/src/client/ReactDOMContainer';
+import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {
   DOCUMENT_NODE,
   ELEMENT_NODE,
@@ -244,7 +247,9 @@ function legacyCreateRootFromDOMContainer(
     markContainerAsRoot(root.current, container);
 
     const rootContainerElement =
-      container.nodeType === COMMENT_NODE ? container.parentNode : container;
+      !disableCommentsAsDOMContainers && container.nodeType === COMMENT_NODE
+        ? container.parentNode
+        : container;
     // $FlowFixMe[incompatible-call]
     listenToAllSupportedEvents(rootContainerElement);
 
@@ -278,7 +283,9 @@ function legacyCreateRootFromDOMContainer(
     markContainerAsRoot(root.current, container);
 
     const rootContainerElement =
-      container.nodeType === COMMENT_NODE ? container.parentNode : container;
+      !disableCommentsAsDOMContainers && container.nodeType === COMMENT_NODE
+        ? container.parentNode
+        : container;
     // $FlowFixMe[incompatible-call]
     listenToAllSupportedEvents(rootContainerElement);
 
@@ -394,7 +401,7 @@ export function render(
     );
   }
 
-  if (!isValidContainerLegacy(container)) {
+  if (!isValidContainer(container)) {
     throw new Error('Target container is not a DOM element.');
   }
 
@@ -428,7 +435,7 @@ export function unmountComponentAtNode(container: Container): boolean {
     }
     throw new Error('ReactDOM: Unsupported Legacy Mode API.');
   }
-  if (!isValidContainerLegacy(container)) {
+  if (!isValidContainer(container)) {
     throw new Error('Target container is not a DOM element.');
   }
 
@@ -472,7 +479,7 @@ export function unmountComponentAtNode(container: Container): boolean {
       // Check if the container itself is a React root node.
       const isContainerReactRoot =
         container.nodeType === ELEMENT_NODE &&
-        isValidContainerLegacy(container.parentNode) &&
+        isValidContainer(container.parentNode) &&
         // $FlowFixMe[prop-missing]
         // $FlowFixMe[incompatible-use]
         !!container.parentNode._reactRootContainer;

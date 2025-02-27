@@ -37,6 +37,15 @@ export function resolveClientReferenceMetadata<T>(
   config: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
+  if (clientReference.$$importMap) {
+    return [
+      clientReference.$$id,
+      clientReference.$$name,
+      clientReference.$$bundles,
+      clientReference.$$importMap,
+    ];
+  }
+
   return [
     clientReference.$$id,
     clientReference.$$name,

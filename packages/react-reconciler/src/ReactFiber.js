@@ -21,7 +21,7 @@ import type {
 } from './ReactFiberActivityComponent';
 import type {
   ViewTransitionProps,
-  ViewTransitionInstance,
+  ViewTransitionState,
 } from './ReactFiberViewTransitionComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
@@ -884,9 +884,10 @@ export function createFiberFromViewTransition(
   const fiber = createFiber(ViewTransitionComponent, pendingProps, key, mode);
   fiber.elementType = REACT_VIEW_TRANSITION_TYPE;
   fiber.lanes = lanes;
-  const instance: ViewTransitionInstance = {
+  const instance: ViewTransitionState = {
     autoName: null,
     paired: null,
+    ref: null,
   };
   fiber.stateNode = instance;
   return fiber;

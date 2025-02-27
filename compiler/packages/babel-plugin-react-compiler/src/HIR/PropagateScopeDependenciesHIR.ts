@@ -22,6 +22,7 @@ import {
   TInstruction,
   FunctionExpression,
   ObjectMethod,
+  PropertyLiteral,
 } from './HIR';
 import {
   collectHoistablePropertyLoads,
@@ -321,7 +322,7 @@ function collectTemporariesSidemapImpl(
 
 function getProperty(
   object: Place,
-  propertyName: string,
+  propertyName: PropertyLiteral,
   optional: boolean,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): ReactiveScopeDependency {
@@ -519,7 +520,11 @@ class Context {
     );
   }
 
-  visitProperty(object: Place, property: string, optional: boolean): void {
+  visitProperty(
+    object: Place,
+    property: PropertyLiteral,
+    optional: boolean,
+  ): void {
     const nextDependency = getProperty(
       object,
       property,
@@ -738,9 +743,8 @@ function collectDependencies(
       }
       for (const instr of block.instructions) {
         if (
-          fn.env.config.enableFunctionDependencyRewrite &&
-          (instr.value.kind === 'FunctionExpression' ||
-            instr.value.kind === 'ObjectMethod')
+          instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod'
         ) {
           context.declare(instr.lvalue.identifier, {
             id: instr.id,

@@ -1,7 +1,10 @@
 import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
+  unstable_useSwipeTransition as useSwipeTransition,
 } from 'react';
+
+import SwipeRecognizer from './SwipeRecognizer';
 
 import './Page.css';
 
@@ -35,9 +38,23 @@ function Component() {
 }
 
 export default function Page({url, navigate}) {
-  const show = url === '/?b';
+  const [renderedUrl, startGesture] = useSwipeTransition('/?a', url, '/?b');
+  const show = renderedUrl === '/?b';
+  function onTransition(viewTransition, types) {
+    const keyframes = [
+      {rotate: '0deg', transformOrigin: '30px 8px'},
+      {rotate: '360deg', transformOrigin: '30px 8px'},
+    ];
+    viewTransition.old.animate(keyframes, 250);
+    viewTransition.new.animate(keyframes, 250);
+  }
+
+  function swipeAction() {
+    navigate(show ? '/?a' : '/?b');
+  }
+
   const exclamation = (
-    <ViewTransition name="exclamation">
+    <ViewTransition name="exclamation" onShare={onTransition}>
       <span>!</span>
     </ViewTransition>
   );
@@ -49,8 +66,18 @@ export default function Page({url, navigate}) {
         }}>
         {show ? 'A' : 'B'}
       </button>
-      <ViewTransition>
+      <ViewTransition className="none">
         <div>
+          <ViewTransition className={transitions['slide-on-nav']}>
+            <h1>{!show ? 'A' : 'B'}</h1>
+          </ViewTransition>
+          <ViewTransition
+            className={{
+              'navigation-back': transitions['slide-right'],
+              'navigation-forward': transitions['slide-left'],
+            }}>
+            <h1>{!show ? 'A' : 'B'}</h1>
+          </ViewTransition>
           {show ? (
             <div>
               {a}
@@ -72,6 +99,14 @@ export default function Page({url, navigate}) {
           <p></p>
           <p></p>
           <p></p>
+          <div className="swipe-recognizer">
+            <SwipeRecognizer
+              action={swipeAction}
+              gesture={startGesture}
+              direction={show ? 'left' : 'right'}>
+              Swipe me
+            </SwipeRecognizer>
+          </div>
           <p></p>
           <p></p>
           {show ? null : (
@@ -84,7 +119,7 @@ export default function Page({url, navigate}) {
               <div>!!</div>
             </ViewTransition>
           </Activity>
-          {show ? <Component /> : <p>&nbsp;</p>}
+          {show ? <Component /> : null}
         </div>
       </ViewTransition>
     </div>

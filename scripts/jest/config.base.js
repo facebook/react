@@ -7,7 +7,11 @@ module.exports = {
     '<rootDir>/scripts/bench/',
   ],
   transform: {
-    '.*': require.resolve('./preprocessor.js'),
+    '^.+\\.ts$': [
+      'babel-jest',
+      {configFile: require.resolve('../../babel.config-ts.js')},
+    ],
+    '.(?!ts$)': require.resolve('./preprocessor.js'),
   },
   prettierPath: require.resolve('prettier-2'),
   setupFiles: [require.resolve('./setupEnvironment.js')],

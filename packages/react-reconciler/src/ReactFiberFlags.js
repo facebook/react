@@ -44,6 +44,7 @@ export const StoreConsistency = /*             */ 0b0000000000000000100000000000
 // possible, because we're about to run out of bits.
 export const ScheduleRetry = StoreConsistency;
 export const ShouldSuspendCommit = Visibility;
+export const ViewTransitionNamedMount = ShouldSuspendCommit;
 export const DidDefer = ContentReset;
 export const FormReset = Snapshot;
 export const AffectedParentLayout = ContentReset;
@@ -74,8 +75,10 @@ export const PassiveStatic = /*                */ 0b0000000100000000000000000000
 export const MaySuspendCommit = /*             */ 0b0000001000000000000000000000000;
 // ViewTransitionNamedStatic tracks explicitly name ViewTransition components deeply
 // that might need to be visited during clean up. This is similar to SnapshotStatic
-// if there was any other use for it.
-export const ViewTransitionNamedStatic = /*    */ SnapshotStatic;
+// if there was any other use for it. It also needs to run in the same phase as
+// MaySuspendCommit tracking.
+export const ViewTransitionNamedStatic =
+  /*    */ SnapshotStatic | MaySuspendCommit;
 // ViewTransitionStatic tracks whether there are an ViewTransition components from
 // the nearest HostComponent down. It resets at every HostComponent level.
 export const ViewTransitionStatic = /*         */ 0b0000010000000000000000000000000;

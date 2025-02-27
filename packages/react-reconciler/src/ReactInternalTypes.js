@@ -17,6 +17,7 @@ import type {
   Awaited,
   ReactComponentInfo,
   ReactDebugInfo,
+  StartGesture,
 } from 'shared/ReactTypes';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -38,6 +39,7 @@ import type {
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
 import type {ComponentStackNode} from 'react-server/src/ReactFizzComponentStack';
 import type {ThenableState} from './ReactFiberThenable';
+import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -47,7 +49,6 @@ export type HookType =
   | 'useRef'
   | 'useEffect'
   | 'useEffectEvent'
-  | 'useResourceEffect'
   | 'useInsertionEffect'
   | 'useLayoutEffect'
   | 'useCallback'
@@ -61,7 +62,8 @@ export type HookType =
   | 'useCacheRefresh'
   | 'useOptimistic'
   | 'useFormState'
-  | 'useActionState';
+  | 'useActionState'
+  | 'useSwipeTransition';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -280,6 +282,9 @@ type BaseFiberRootProperties = {
   ) => void,
 
   formState: ReactFormState<any, any> | null,
+
+  // enableSwipeTransition only
+  gestures: null | ScheduledGesture,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.
@@ -391,17 +396,14 @@ export type Dispatcher = {
   useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {current: T},
   useEffect(
-    create: () => (() => void) | void,
-    deps: Array<mixed> | void | null,
-  ): void,
-  useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
-  useResourceEffect?: (
-    create: () => mixed,
+    create: (() => (() => void) | void) | (() => {...} | void | null),
     createDeps: Array<mixed> | void | null,
-    update: ((resource: mixed) => void) | void,
-    updateDeps: Array<mixed> | void | null,
-    destroy: ((resource: mixed) => void) | void,
-  ) => void,
+    update?: ((resource: {...} | void | null) => void) | void,
+    updateDeps?: Array<mixed> | void | null,
+    destroy?: ((resource: {...} | void | null) => void) | void,
+  ): void,
+  // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
+  useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
@@ -429,8 +431,8 @@ export type Dispatcher = {
     getServerSnapshot?: () => T,
   ): T,
   useId(): string,
-  useCacheRefresh?: () => <T>(?() => T, ?T) => void,
-  useMemoCache?: (size: number) => Array<any>,
+  useCacheRefresh: () => <T>(?() => T, ?T) => void,
+  useMemoCache: (size: number) => Array<any>,
   useHostTransitionStatus: () => TransitionStatus,
   useOptimistic: <S, A>(
     passthrough: S,
@@ -446,6 +448,12 @@ export type Dispatcher = {
     initialState: Awaited<S>,
     permalink?: string,
   ) => [Awaited<S>, (P) => void, boolean],
+  // TODO: Non-nullable once `enableSwipeTransition` is on everywhere.
+  useSwipeTransition?: <T>(
+    previous: T,
+    current: T,
+    next: T,
+  ) => [T, StartGesture],
 };
 
 export type AsyncDispatcher = {

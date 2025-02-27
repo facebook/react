@@ -33,6 +33,18 @@ declare interface ConsoleTask {
   run<T>(f: () => T): T;
 }
 
+type ScrollTimelineOptions = {
+  source: Element,
+  axis?: 'block' | 'inline' | 'x' | 'y',
+  ...
+};
+
+declare class ScrollTimeline extends AnimationTimeline {
+  constructor(options?: ScrollTimelineOptions): void;
+  axis: 'block' | 'inline' | 'x' | 'y';
+  source: Element;
+}
+
 // Flow hides the props of React$Element, this overrides it to unhide
 // them for React internals.
 // prettier-ignore
@@ -106,8 +118,10 @@ declare const __turbopack_require__: ((id: string) => any) & {
 declare var parcelRequire: {
   (id: string): any,
   load: (url: string) => Promise<mixed>,
+  extendImportMap: (importMap: {[string]: string}) => void,
   meta: {
     publicUrl: string,
+    devServer: string | null,
   },
 };
 
