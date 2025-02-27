@@ -80,6 +80,7 @@ jobs:
         working-directory: scripts/release
       - run: cp ./scripts/release/ci-npmrc ~/.npmrc
       - if: '${{ inputs.only_packages }}'
+        name: 'Prepare and publish ${{ inputs.only_packages }}'
         run: |
           echo -e "===== Preparing release from NPM =====\n"
           scripts/release/prepare-release-from-npm.js \
@@ -100,6 +101,7 @@ jobs:
             --onlyPackages=${{ inputs.only_packages }} \
             --dry=${{ inputs.dry }}
       - if: '${{ inputs.skip_packages }}'
+        name: 'Prepare and publish alll packages EXCEPT ${{ inputs.skip_packages }}'
         run: |
           echo -e "===== Preparing release from NPM =====\n"
           scripts/release/prepare-release-from-npm.js \
