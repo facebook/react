@@ -28,6 +28,9 @@ const run = async () => {
 
     params.packages = await getPublicPackages(isExperimental);
     params.packages = params.packages.filter(packageName => {
+      if (params.onlyPackages.length > 0) {
+        return params.onlyPackages.includes(packageName);
+      }
       return !params.skipPackages.includes(packageName);
     });
 
