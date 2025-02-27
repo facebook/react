@@ -20,7 +20,7 @@ on:
       tags:
         description: NPM tags (space separated)
         type: string
-        default: "['untagged']"
+        default: untagged
       dry:
         required: true
         description: Dry run instead of publish?
