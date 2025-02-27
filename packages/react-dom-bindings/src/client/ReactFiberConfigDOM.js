@@ -544,6 +544,13 @@ export function createInstance(
   return domElement;
 }
 
+export function cloneMutableInstance(
+  instance: Instance,
+  keepChildren: boolean,
+): Instance {
+  return instance.cloneNode(keepChildren);
+}
+
 export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
@@ -607,6 +614,12 @@ export function createTextInstance(
   ).createTextNode(text);
   precacheFiberNode(internalInstanceHandle, textNode);
   return textNode;
+}
+
+export function cloneMutableTextInstance(
+  textInstance: TextInstance,
+): TextInstance {
+  return textInstance.cloneNode(false);
 }
 
 let currentPopstateTransitionEvent: Event | null = null;
@@ -1219,6 +1232,12 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
     // $FlowFixMe[prop-missing]
     documentElement.style.viewTransitionName = '';
   }
+}
+
+export function cloneRootViewTransitionContainer(
+  rootContainer: Container,
+): Instance {
+  return (rootContainer: any);
 }
 
 export type InstanceMeasurement = {

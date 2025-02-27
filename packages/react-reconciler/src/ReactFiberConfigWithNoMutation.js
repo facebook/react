@@ -20,6 +20,8 @@ function shim(...args: any): empty {
 
 // Mutation (when unsupported)
 export const supportsMutation = false;
+export const cloneMutableInstance = shim;
+export const cloneMutableTextInstance = shim;
 export const appendChild = shim;
 export const appendChildToContainer = shim;
 export const commitTextUpdate = shim;
@@ -40,6 +42,7 @@ export const restoreViewTransitionName = shim;
 export const cancelViewTransitionName = shim;
 export const cancelRootViewTransitionName = shim;
 export const restoreRootViewTransitionName = shim;
+export const cloneRootViewTransitionContainer = shim;
 export type InstanceMeasurement = null;
 export const measureInstance = shim;
 export const wasInstanceInViewport = shim;

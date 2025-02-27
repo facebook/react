@@ -14,6 +14,9 @@ import type {Instance, TextInstance} from './ReactFiberConfig';
 import type {OffscreenState} from './ReactFiberActivityComponent';
 
 import {
+  cloneMutableInstance,
+  cloneMutableTextInstance,
+  cloneRootViewTransitionContainer,
   cancelRootViewTransitionName,
   restoreRootViewTransitionName,
   appendChild,
@@ -55,7 +58,7 @@ function recursivelyInsertClonesFromExistingTree(
       case HostComponent: {
         const instance: Instance = child.stateNode;
         // If we have no mutations in this subtree, we just need to make a deep clone.
-        const clone: Instance = instance.cloneNode(true); // TODO: Make this a Config.
+        const clone: Instance = cloneMutableInstance(instance, true);
         appendChild(hostParentClone, clone);
         // TODO: We may need to transfer some DOM state such as scroll position
         // for the deep clones.
@@ -72,7 +75,7 @@ function recursivelyInsertClonesFromExistingTree(
               'caused by a bug in React. Please file an issue.',
           );
         }
-        const clone = textInstance.cloneNode(false); // TODO: Make this a Config.
+        const clone = cloneMutableTextInstance(textInstance);
         appendChild(hostParentClone, clone);
         break;
       }
@@ -217,14 +220,14 @@ function insertDestinationClonesOfFiber(
         if (finishedWork.child === null) {
           // This node is terminal. We still do a deep clone in case this has user
           // inserted content, text content or dangerouslySetInnerHTML.
-          clone = instance.cloneNode(true); // TODO: Make this a Config.
+          clone = cloneMutableInstance(instance, true);
           if (finishedWork.flags & ContentReset) {
             resetTextContent(clone);
           }
         } else {
           // If we have children we'll clone them as we walk the tree so we just
           // do a shallow clone here.
-          clone = instance.cloneNode(false); // TODO: Make this a Config.
+          clone = cloneMutableInstance(instance, false);
         }
 
         if (flags & Update) {
@@ -253,7 +256,7 @@ function insertDestinationClonesOfFiber(
         // For insertions we don't need to clone. It's already new state node.
         appendChild(hostParentClone, textInstance);
       } else {
-        const clone = textInstance.cloneNode(false); // TODO: Make this a Config.
+        const clone = cloneMutableTextInstance(textInstance);
         if (flags & Update) {
           const newText: string = finishedWork.memoizedProps;
           const oldText: string = current.memoizedProps;
@@ -316,8 +319,9 @@ export function insertDestinationClones(
       }
     }
     // Clone the whole root
-    // TODO: Create a cloned root container to insert stuff into.
-    const hostParentClone = root.containerInfo; // Insert into the root container
+    const hostParentClone = cloneRootViewTransitionContainer(
+      root.containerInfo,
+    );
     recursivelyInsertClones(finishedWork, hostParentClone);
   }
 }

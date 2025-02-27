@@ -453,6 +453,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return inst;
     },
 
+    cloneMutableInstance(instance: Instance, keepChildren: boolean): Instance {
+      throw new Error('Not yet implemented.');
+    },
+
     appendInitialChild(
       parentInstance: Instance,
       child: Instance | TextInstance,
@@ -502,6 +506,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         enumerable: false,
       });
       return inst;
+    },
+
+    cloneMutableTextInstance(textInstance: TextInstance): TextInstance {
+      throw new Error('Not yet implemented.');
     },
 
     scheduleTimeout: setTimeout,
@@ -760,6 +768,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         cancelRootViewTransitionName(rootContainer: Container): void {},
 
         restoreRootViewTransitionName(rootContainer: Container): void {},
+
+        cloneRootViewTransitionContainer(rootContainer: Container): Instance {
+          throw new Error('Not yet implemented.');
+        },
 
         measureInstance(instance: Instance): InstanceMeasurement {
           return null;
