@@ -12,22 +12,22 @@ on:
         description: Version to publish for the specified packages
         type: string
       only_packages:
-        description: Space separated list of packages to publish on NPM. Use this OR skip_packages, not together.
+        description: Packages to publish (space separated)
         type: string
       skip_packages:
-        description: Space separated list of packages to NOT publish on NPM. Use this OR only_packages, not together.
+        description: Packages to NOT publish (space separated)
         type: string
       tags:
-        description: Space separated list of tags to tag the release with on NPM
+        description: NPM tags (space separated)
         type: string
-        default: "['untagged']"
+        default: untagged
       dry:
         required: true
-        description: Don't actually publish, just run a dry run
+        description: Dry run instead of publish?
         type: boolean
         default: true
       force_notify:
-        description: Force a Discord notification
+        description: Force a Discord notification?
         type: boolean
         default: false
 
@@ -52,8 +52,8 @@ jobs:
           embed-author-icon-url: ${{ github.event.sender.avatar_url }}
           embed-title: '⚠️ Publishing release from NPM'
           embed-description: |
-            ```
-            inputs: ${{ toJson(inputs) }}
+            ```json
+            ${{ toJson(inputs) }}
             ```
           embed-url: https://github.com/facebook/react/actions/runs/${{ github.run_id }}
 
@@ -80,12 +80,44 @@ jobs:
         working-directory: scripts/release
       - run: cp ./scripts/release/ci-npmrc ~/.npmrc
       - if: '${{ inputs.only_packages }}'
+        name: 'Prepare and publish ${{ inputs.only_packages }}'
         run: |
-          scripts/release/prepare-release-from-npm.js --skipTests --version=${{ inputs.version_to_promote }} --onlyPackages=${{ inputs.only_packages }}
+          echo -e "===== Preparing release from NPM =====\n"
+          scripts/release/prepare-release-from-npm.js \
+            --ci \
+            --skipTests \
+            --version=${{ inputs.version_to_promote }} \
+            --publishVersion=${{ inputs.version_to_publish }} \
+            --onlyPackages=${{ inputs.only_packages }}
+
+          echo -e "\n\n===== Check prepared files =====\n"
           ls -R build/node_modules
-          # scripts/release/publish.js --ci --tags=${{ inputs.tags }} --publishVersion=${{ inputs.version_to_publish }} --onlyPackages=${{ inputs.only_packages }} --dry=${{ inputs.dry || 'false' }}
+
+          echo -e "\n\n===== Publishing to NPM =====\n"
+          scripts/release/publish.js \
+            --ci \
+            --tags=${{ inputs.tags }} \
+            --publishVersion=${{ inputs.version_to_publish }} \
+            --onlyPackages=${{ inputs.only_packages }} \
+            --dry=${{ inputs.dry }}
       - if: '${{ inputs.skip_packages }}'
+        name: 'Prepare and publish alll packages EXCEPT ${{ inputs.skip_packages }}'
         run: |
-          scripts/release/prepare-release-from-npm.js --skipTests --version=${{ inputs.version_to_promote }} --skipPackages=${{ inputs.skip_packages }}
+          echo -e "===== Preparing release from NPM =====\n"
+          scripts/release/prepare-release-from-npm.js \
+            --ci \
+            --skipTests \
+            --version=${{ inputs.version_to_promote }} \
+            --publishVersion=${{ inputs.version_to_publish }} \
+            --skipPackages=${{ inputs.skip_packages }}
+
+          echo -e "\n\n===== Check prepared files =====\n"
           ls -R build/node_modules
-          # scripts/release/publish.js --ci --tags=${{ inputs.tags }} --publishVersion=${{ inputs.version_to_publish }} --skipPackages=${{ inputs.skip_packages }} --dry=${{ inputs.dry || 'false' }}
+
+          echo -e "\n\n===== Publishing to NPM =====\n"
+          scripts/release/publish.js \
+            --ci \
+            --tags=${{ inputs.tags }} \
+            --publishVersion=${{ inputs.version_to_publish }} \
+            --skipPackages=${{ inputs.skip_packages }} \
+            --dry=${{ inputs.dry }}
