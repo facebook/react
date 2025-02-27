@@ -10503,30 +10503,7 @@ function commitAfterMutationEffectsOnFiber(finishedWork, root) {
                   }
                 );
             }
-          finishedWork = root.containerInfo;
-          finishedWork =
-            9 === finishedWork.nodeType
-              ? finishedWork.documentElement
-              : finishedWork.ownerDocument.documentElement;
-          null !== finishedWork &&
-            "" === finishedWork.style.viewTransitionName &&
-            ((finishedWork.style.viewTransitionName = "none"),
-            finishedWork.animate(
-              { opacity: [0, 0], pointerEvents: ["none", "none"] },
-              {
-                duration: 0,
-                fill: "forwards",
-                pseudoElement: "::view-transition-group(root)"
-              }
-            ),
-            finishedWork.animate(
-              { width: [0, 0], height: [0, 0] },
-              {
-                duration: 0,
-                fill: "forwards",
-                pseudoElement: "::view-transition"
-              }
-            ));
+          cancelRootViewTransitionName(root.containerInfo);
         }
         break;
       case 5:
@@ -12772,9 +12749,10 @@ function commitRoot(
           (ReactSharedInternals.T = recoverableErrors);
       }
     }
+    finishedWork = shouldStartViewTransition;
     pendingEffectsStatus = 1;
     (enableViewTransition &&
-      shouldStartViewTransition &&
+      finishedWork &&
       startViewTransition(
         root.containerInfo,
         pendingTransitionTypes,
@@ -12967,7 +12945,7 @@ function flushSpawnedWork() {
     0 !== (finishedWork.flags & passiveSubtreeMask)
       ? (pendingEffectsStatus = 5)
       : ((pendingEffectsStatus = 0),
-        (pendingEffectsRoot = null),
+        (pendingFinishedWork = pendingEffectsRoot = null),
         releaseRootPooledCache(root, root.pendingLanes));
     passiveSubtreeMask = root.pendingLanes;
     0 === passiveSubtreeMask && (legacyErrorBoundariesThatAlreadyFailed = null);
@@ -13040,6 +13018,26 @@ function flushSpawnedWork() {
     }
   }
 }
+function flushGestureMutations() {
+  if (6 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
+    var root = pendingEffectsRoot,
+      prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    var previousPriority = Internals.p;
+    Internals.p = 2;
+    var prevExecutionContext = executionContext;
+    executionContext |= 4;
+    try {
+      cancelRootViewTransitionName(root.containerInfo);
+    } finally {
+      (executionContext = prevExecutionContext),
+        (Internals.p = previousPriority),
+        (ReactSharedInternals.T = prevTransition);
+    }
+    pendingEffectsStatus = 7;
+  }
+}
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
     ((remainingLanes = root.pooledCache),
@@ -13047,6 +13045,28 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
+  flushGestureMutations();
+  flushGestureMutations();
+  if (7 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
+    var root = pendingEffectsRoot;
+    pendingFinishedWork = pendingEffectsRoot = null;
+    pendingEffectsLanes = 0;
+    var prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    var previousPriority = Internals.p;
+    Internals.p = 2;
+    var prevExecutionContext = executionContext;
+    executionContext |= 4;
+    try {
+      restoreRootViewTransitionName(root.containerInfo);
+    } finally {
+      (executionContext = prevExecutionContext),
+        (Internals.p = previousPriority),
+        (ReactSharedInternals.T = prevTransition);
+    }
+    ensureRootIsScheduled(root);
+  }
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -13078,7 +13098,7 @@ function flushPassiveEffectsImpl() {
   var root = pendingEffectsRoot,
     lanes = pendingEffectsLanes;
   pendingEffectsStatus = 0;
-  pendingEffectsRoot = null;
+  pendingFinishedWork = pendingEffectsRoot = null;
   pendingEffectsLanes = 0;
   if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(331));
   var prevExecutionContext = executionContext;
@@ -14297,14 +14317,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$362;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1670 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1670) {
-      var element$jscomp$inline_1671 = document.createElement("div");
-      element$jscomp$inline_1671.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1670 =
-        "function" === typeof element$jscomp$inline_1671.oninput;
+    var isSupported$jscomp$inline_1691 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1691) {
+      var element$jscomp$inline_1692 = document.createElement("div");
+      element$jscomp$inline_1692.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1691 =
+        "function" === typeof element$jscomp$inline_1692.oninput;
     }
-    JSCompiler_inline_result$jscomp$362 = isSupported$jscomp$inline_1670;
+    JSCompiler_inline_result$jscomp$362 = isSupported$jscomp$inline_1691;
   } else JSCompiler_inline_result$jscomp$362 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$362 &&
@@ -14627,20 +14647,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1711 = 0;
-  i$jscomp$inline_1711 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1711++
+  var i$jscomp$inline_1732 = 0;
+  i$jscomp$inline_1732 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1732++
 ) {
-  var eventName$jscomp$inline_1712 =
-      simpleEventPluginEvents[i$jscomp$inline_1711],
-    domEventName$jscomp$inline_1713 =
-      eventName$jscomp$inline_1712.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1714 =
-      eventName$jscomp$inline_1712[0].toUpperCase() +
-      eventName$jscomp$inline_1712.slice(1);
+  var eventName$jscomp$inline_1733 =
+      simpleEventPluginEvents[i$jscomp$inline_1732],
+    domEventName$jscomp$inline_1734 =
+      eventName$jscomp$inline_1733.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1735 =
+      eventName$jscomp$inline_1733[0].toUpperCase() +
+      eventName$jscomp$inline_1733.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1713,
-    "on" + capitalizedEvent$jscomp$inline_1714
+    domEventName$jscomp$inline_1734,
+    "on" + capitalizedEvent$jscomp$inline_1735
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16631,6 +16651,27 @@ function restoreViewTransitionName(instance, props) {
   instance.style.viewTransitionClass =
     null == props || "boolean" === typeof props ? "" : ("" + props).trim();
 }
+function cancelRootViewTransitionName(rootContainer) {
+  rootContainer =
+    9 === rootContainer.nodeType
+      ? rootContainer.documentElement
+      : rootContainer.ownerDocument.documentElement;
+  null !== rootContainer &&
+    "" === rootContainer.style.viewTransitionName &&
+    ((rootContainer.style.viewTransitionName = "none"),
+    rootContainer.animate(
+      { opacity: [0, 0], pointerEvents: ["none", "none"] },
+      {
+        duration: 0,
+        fill: "forwards",
+        pseudoElement: "::view-transition-group(root)"
+      }
+    ),
+    rootContainer.animate(
+      { width: [0, 0], height: [0, 0] },
+      { duration: 0, fill: "forwards", pseudoElement: "::view-transition" }
+    ));
+}
 function restoreRootViewTransitionName(rootContainer) {
   rootContainer =
     9 === rootContainer.nodeType
@@ -16713,7 +16754,8 @@ function startViewTransition(
     ownerDocument.__reactViewTransition = transition;
     transition.ready.then(spawnedWorkCallback, spawnedWorkCallback);
     transition.finished.then(function () {
-      ownerDocument.__reactViewTransition = null;
+      ownerDocument.__reactViewTransition === transition &&
+        (ownerDocument.__reactViewTransition = null);
       passiveCallback();
     });
     return !0;
@@ -18483,16 +18525,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1889 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1910 = React.version;
 if (
-  "19.1.0-www-modern-92e65ca6-20250225" !==
-  isomorphicReactPackageVersion$jscomp$inline_1889
+  "19.1.0-www-modern-3607f483-20250227" !==
+  isomorphicReactPackageVersion$jscomp$inline_1910
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1889,
-      "19.1.0-www-modern-92e65ca6-20250225"
+      isomorphicReactPackageVersion$jscomp$inline_1910,
+      "19.1.0-www-modern-3607f483-20250227"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18508,24 +18550,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2447 = {
+var internals$jscomp$inline_2475 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-92e65ca6-20250225",
+  version: "19.1.0-www-modern-3607f483-20250227",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-92e65ca6-20250225"
+  reconcilerVersion: "19.1.0-www-modern-3607f483-20250227"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2448 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2476 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2448.isDisabled &&
-    hook$jscomp$inline_2448.supportsFiber
+    !hook$jscomp$inline_2476.isDisabled &&
+    hook$jscomp$inline_2476.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2448.inject(
-        internals$jscomp$inline_2447
+      (rendererID = hook$jscomp$inline_2476.inject(
+        internals$jscomp$inline_2475
       )),
-        (injectedHook = hook$jscomp$inline_2448);
+        (injectedHook = hook$jscomp$inline_2476);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -19028,4 +19070,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-92e65ca6-20250225";
+exports.version = "19.1.0-www-modern-3607f483-20250227";

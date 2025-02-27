@@ -11675,9 +11675,10 @@ module.exports = function ($$$config) {
             (ReactSharedInternals.T = recoverableErrors);
         }
       }
+      finishedWork = shouldStartViewTransition;
       pendingEffectsStatus = 1;
       (enableViewTransition &&
-        shouldStartViewTransition &&
+        finishedWork &&
         startViewTransition(
           root.containerInfo,
           pendingTransitionTypes,
@@ -11767,7 +11768,7 @@ module.exports = function ($$$config) {
       0 !== (finishedWork.flags & passiveSubtreeMask)
         ? (pendingEffectsStatus = 5)
         : ((pendingEffectsStatus = 0),
-          (pendingEffectsRoot = null),
+          (pendingFinishedWork = pendingEffectsRoot = null),
           releaseRootPooledCache(root, root.pendingLanes));
       passiveSubtreeMask = root.pendingLanes;
       0 === passiveSubtreeMask &&
@@ -11841,6 +11842,26 @@ module.exports = function ($$$config) {
       }
     }
   }
+  function flushGestureMutations() {
+    if (6 === pendingEffectsStatus) {
+      pendingEffectsStatus = 0;
+      var root = pendingEffectsRoot,
+        prevTransition = ReactSharedInternals.T;
+      ReactSharedInternals.T = null;
+      var previousPriority = getCurrentUpdatePriority();
+      setCurrentUpdatePriority(2);
+      var prevExecutionContext = executionContext;
+      executionContext |= 4;
+      try {
+        cancelRootViewTransitionName(root.containerInfo);
+      } finally {
+        (executionContext = prevExecutionContext),
+          setCurrentUpdatePriority(previousPriority),
+          (ReactSharedInternals.T = prevTransition);
+      }
+      pendingEffectsStatus = 7;
+    }
+  }
   function releaseRootPooledCache(root, remainingLanes) {
     0 === (root.pooledCacheLanes &= remainingLanes) &&
       ((remainingLanes = root.pooledCache),
@@ -11848,6 +11869,28 @@ module.exports = function ($$$config) {
         ((root.pooledCache = null), releaseCache(remainingLanes)));
   }
   function flushPendingEffects(wasDelayedCommit) {
+    flushGestureMutations();
+    flushGestureMutations();
+    if (7 === pendingEffectsStatus) {
+      pendingEffectsStatus = 0;
+      var root = pendingEffectsRoot;
+      pendingFinishedWork = pendingEffectsRoot = null;
+      pendingEffectsLanes = 0;
+      var prevTransition = ReactSharedInternals.T;
+      ReactSharedInternals.T = null;
+      var previousPriority = getCurrentUpdatePriority();
+      setCurrentUpdatePriority(2);
+      var prevExecutionContext = executionContext;
+      executionContext |= 4;
+      try {
+        restoreRootViewTransitionName(root.containerInfo);
+      } finally {
+        (executionContext = prevExecutionContext),
+          setCurrentUpdatePriority(previousPriority),
+          (ReactSharedInternals.T = prevTransition);
+      }
+      ensureRootIsScheduled(root);
+    }
     flushMutationEffects();
     flushLayoutEffects();
     flushSpawnedWork();
@@ -11880,7 +11923,7 @@ module.exports = function ($$$config) {
     var root = pendingEffectsRoot,
       lanes = pendingEffectsLanes;
     pendingEffectsStatus = 0;
-    pendingEffectsRoot = null;
+    pendingFinishedWork = pendingEffectsRoot = null;
     pendingEffectsLanes = 0;
     if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(331));
     var prevExecutionContext = executionContext;
@@ -12709,6 +12752,8 @@ module.exports = function ($$$config) {
     hasInstanceChanged = $$$config.hasInstanceChanged,
     hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent,
     startViewTransition = $$$config.startViewTransition;
+  $$$config.startGestureTransition;
+  $$$config.stopGestureTransition;
   $$$config.getCurrentGestureOffset;
   $$$config.subscribeToGestureDirection;
   var createViewTransitionInstance = $$$config.createViewTransitionInstance,
@@ -13753,7 +13798,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-92e65ca6-20250225"
+      reconcilerVersion: "19.1.0-www-classic-3607f483-20250227"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

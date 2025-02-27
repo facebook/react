@@ -15779,9 +15779,10 @@ __DEV__ &&
               (ReactSharedInternals.T = recoverableErrors);
           }
         }
+        finishedWork = shouldStartViewTransition;
         pendingEffectsStatus = PENDING_MUTATION_PHASE;
         (enableViewTransition &&
-          shouldStartViewTransition &&
+          finishedWork &&
           startViewTransition(
             root.containerInfo,
             pendingTransitionTypes,
@@ -15903,7 +15904,7 @@ __DEV__ &&
           0 !== (finishedWork.flags & passiveSubtreeMask))
           ? (pendingEffectsStatus = PENDING_PASSIVE_PHASE)
           : ((pendingEffectsStatus = NO_PENDING_EFFECTS),
-            (pendingEffectsRoot = null),
+            (pendingFinishedWork = pendingEffectsRoot = null),
             releaseRootPooledCache(root, root.pendingLanes),
             (nestedPassiveUpdateCount = 0),
             (rootWithPassiveNestedUpdates = null));
@@ -15988,6 +15989,26 @@ __DEV__ &&
         }
       }
     }
+    function flushGestureMutations() {
+      if (pendingEffectsStatus === PENDING_GESTURE_MUTATION_PHASE) {
+        pendingEffectsStatus = NO_PENDING_EFFECTS;
+        var root = pendingEffectsRoot,
+          prevTransition = ReactSharedInternals.T;
+        ReactSharedInternals.T = null;
+        var previousPriority = getCurrentUpdatePriority();
+        setCurrentUpdatePriority(2);
+        var prevExecutionContext = executionContext;
+        executionContext |= CommitContext;
+        try {
+          cancelRootViewTransitionName(root.containerInfo);
+        } finally {
+          (executionContext = prevExecutionContext),
+            setCurrentUpdatePriority(previousPriority),
+            (ReactSharedInternals.T = prevTransition);
+        }
+        pendingEffectsStatus = PENDING_GESTURE_ANIMATION_PHASE;
+      }
+    }
     function makeErrorInfo(componentStack) {
       componentStack = { componentStack: componentStack };
       Object.defineProperty(componentStack, "digest", {
@@ -16006,6 +16027,28 @@ __DEV__ &&
           ((root.pooledCache = null), releaseCache(remainingLanes)));
     }
     function flushPendingEffects(wasDelayedCommit) {
+      flushGestureMutations();
+      flushGestureMutations();
+      if (pendingEffectsStatus === PENDING_GESTURE_ANIMATION_PHASE) {
+        pendingEffectsStatus = NO_PENDING_EFFECTS;
+        var root = pendingEffectsRoot;
+        pendingFinishedWork = pendingEffectsRoot = null;
+        pendingEffectsLanes = 0;
+        var prevTransition = ReactSharedInternals.T;
+        ReactSharedInternals.T = null;
+        var previousPriority = getCurrentUpdatePriority();
+        setCurrentUpdatePriority(2);
+        var prevExecutionContext = executionContext;
+        executionContext |= CommitContext;
+        try {
+          restoreRootViewTransitionName(root.containerInfo);
+        } finally {
+          (executionContext = prevExecutionContext),
+            setCurrentUpdatePriority(previousPriority),
+            (ReactSharedInternals.T = prevTransition);
+        }
+        ensureRootIsScheduled(root);
+      }
       flushMutationEffects();
       flushLayoutEffects();
       flushSpawnedWork();
@@ -16038,7 +16081,7 @@ __DEV__ &&
       var root = pendingEffectsRoot,
         lanes = pendingEffectsLanes;
       pendingEffectsStatus = NO_PENDING_EFFECTS;
-      pendingEffectsRoot = null;
+      pendingFinishedWork = pendingEffectsRoot = null;
       pendingEffectsLanes = 0;
       if ((executionContext & (RenderContext | CommitContext)) !== NoContext)
         throw Error("Cannot flush passive effects while already rendering.");
@@ -17324,6 +17367,8 @@ __DEV__ &&
       hasInstanceChanged = $$$config.hasInstanceChanged,
       hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent,
       startViewTransition = $$$config.startViewTransition;
+    $$$config.startGestureTransition;
+    $$$config.stopGestureTransition;
     $$$config.getCurrentGestureOffset;
     $$$config.subscribeToGestureDirection;
     var createViewTransitionInstance = $$$config.createViewTransitionInstance,
@@ -19364,6 +19409,8 @@ __DEV__ &&
       PENDING_AFTER_MUTATION_PHASE = 3,
       PENDING_SPAWNED_WORK = 4,
       PENDING_PASSIVE_PHASE = 5,
+      PENDING_GESTURE_MUTATION_PHASE = 6,
+      PENDING_GESTURE_ANIMATION_PHASE = 7,
       pendingEffectsStatus = 0,
       pendingEffectsRoot = null,
       pendingFinishedWork = null,
@@ -19912,7 +19959,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-92e65ca6-20250225"
+        reconcilerVersion: "19.1.0-www-classic-3607f483-20250227"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
