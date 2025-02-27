@@ -14,6 +14,13 @@ const paramDefinitions = [
     defaultValue: false,
   },
   {
+    name: 'onlyPackages',
+    type: String,
+    multiple: true,
+    description: 'Packages to include in publishing',
+    defaultValue: [],
+  },
+  {
     name: 'skipPackages',
     type: String,
     multiple: true,
