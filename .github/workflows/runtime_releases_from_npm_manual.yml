@@ -1,0 +1,90 @@
+name: (Runtime) Publish Releases from NPM Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_to_promote:
+        required: true
+        description: Current npm version (non-experimental) to promote
+        type: string
+      version_to_publish:
+        required: true
+        description: Version to publish for the specified packages
+        type: string
+      only_packages:
+        description: Comma separated list of packages to publish on NPM. Use this OR skip_packages, not together.
+        type: string
+      skip_packages:
+        description: Comma separated list of packages to NOT publish on NPM. Use this OR only_packages, not together.
+        type: string
+      tags:
+        description: Comma separated list of tags to tag the release with on NPM
+        type: string
+      dry:
+        required: true
+        description: Don't actually publish, just run a dry run
+        type: boolean
+        default: true
+      force_notify:
+        description: Force a Discord notification
+        type: boolean
+        default: false
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+  # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+  GH_TOKEN: ${{ github.token }}
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+jobs:
+  notify:
+    if: ${{ inputs.force_notify || inputs.dry == false || inputs.dry == 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v6.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-author-name: ${{ github.event.sender.login }}
+          embed-author-url: ${{ github.event.sender.html_url }}
+          embed-author-icon-url: ${{ github.event.sender.avatar_url }}
+          embed-title: '⚠️ Publishing release from NPM'
+          embed-description: |
+            ```
+            inputs: ${{ inputs }}
+            ```
+          embed-url: https://github.com/facebook/react/actions/runs/${{ github.run_id }}
+
+  publish:
+    name: Publish releases
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: runtime-release-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
+      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile
+        working-directory: scripts/release
+      - run: cp ./scripts/release/ci-npmrc ~/.npmrc
+      - if: '${{ inputs.only_packages }}'
+        run: |
+          scripts/release/prepare-release-from-npm.js --skipTests --version=${{ inputs.version_to_promote }} --onlyPackages=${{ inputs.only_packages }}
+          ls -R build/node_modules
+          # scripts/release/publish.js --ci --tags=${{ inputs.tags }} --publishVersion=${{ inputs.version_to_publish }} --onlyPackages=${{ inputs.only_packages }} --dry=${{ inputs.dry || 'false' }}
+      - if: '${{ inputs.skip_packages }}'
+        run: |
+          scripts/release/prepare-release-from-npm.js --skipTests --version=${{ inputs.version_to_promote }} --skipPackages=${{ inputs.skip_packages }}
+          ls -R build/node_modules
+          # scripts/release/publish.js --ci --tags=${{ inputs.tags }} --publishVersion=${{ inputs.version_to_publish }} --skipPackages=${{ inputs.skip_packages }} --dry=${{ inputs.dry || 'false' }}
