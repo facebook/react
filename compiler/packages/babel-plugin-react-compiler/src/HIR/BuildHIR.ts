@@ -1459,7 +1459,7 @@ function lowerObjectPropertyKey(
     return {
       kind: 'identifier',
       name: String(key.node.value),
-    }
+    };
   }
 
   builder.errors.push({
