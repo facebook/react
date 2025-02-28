@@ -20,6 +20,13 @@ const paramDefinitions = [
     defaultValue: ['untagged'],
   },
   {
+    name: 'onlyPackages',
+    type: String,
+    multiple: true,
+    description: 'Packages to include in publishing',
+    defaultValue: [],
+  },
+  {
     name: 'skipPackages',
     type: String,
     multiple: true,
@@ -31,6 +38,11 @@ const paramDefinitions = [
     type: Boolean,
     description: 'Run in automated environment, without interactive prompts.',
     defaultValue: false,
+  },
+  {
+    name: 'publishVersion',
+    type: String,
+    description: 'Version to publish',
   },
 ];
 

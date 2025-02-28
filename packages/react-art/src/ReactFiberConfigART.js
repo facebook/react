@@ -500,12 +500,32 @@ export function startViewTransition() {
   return false;
 }
 
+export type RunningGestureTransition = null;
+
+export function startGestureTransition() {}
+
+export function stopGestureTransition(transition: RunningGestureTransition) {}
+
 export type ViewTransitionInstance = null | {name: string, ...};
 
 export function createViewTransitionInstance(
   name: string,
 ): ViewTransitionInstance {
   return null;
+}
+
+export type GestureTimeline = null;
+
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
+  throw new Error('useSwipeTransition is not yet supported in react-art.');
+}
+
+export function subscribeToGestureDirection(
+  provider: GestureTimeline,
+  currentOffset: number,
+  directionCallback: (direction: boolean) => void,
+): () => void {
+  throw new Error('useSwipeTransition is not yet supported in react-art.');
 }
 
 export function clearContainer(container) {

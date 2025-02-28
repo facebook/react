@@ -597,12 +597,41 @@ export function startViewTransition(
   return false;
 }
 
+export type RunningGestureTransition = null;
+
+export function startGestureTransition(
+  rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  animateCallback: () => void,
+): RunningGestureTransition {
+  mutationCallback();
+  animateCallback();
+  return null;
+}
+
+export function stopGestureTransition(transition: RunningGestureTransition) {}
+
 export type ViewTransitionInstance = null | {name: string, ...};
 
 export function createViewTransitionInstance(
   name: string,
 ): ViewTransitionInstance {
   return null;
+}
+
+export type GestureTimeline = null;
+
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
+  throw new Error('useSwipeTransition is not yet supported in React Native.');
+}
+
+export function subscribeToGestureDirection(
+  provider: GestureTimeline,
+  currentOffset: number,
+  directionCallback: (direction: boolean) => void,
+): () => void {
+  throw new Error('useSwipeTransition is not yet supported in React Native.');
 }
 
 export function clearContainer(container: Container): void {
