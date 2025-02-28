@@ -31,7 +31,7 @@
   "main": "./index.js",
   "types": "./index.d.ts",
   "engines": {
-    "node": ">=10"
+    "node": ">=18"
   },
   "homepage": "https://react.dev/",
   "peerDependencies": {
