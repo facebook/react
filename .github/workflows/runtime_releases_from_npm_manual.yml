@@ -117,3 +117,9 @@ jobs:
             --publishVersion=${{ inputs.version_to_publish }} \
             --skipPackages=${{ inputs.skip_packages }} ${{ (inputs.dry && '') || '\'}}
             ${{ inputs.dry && '--dry'}}
+      - name: Archive released package for debugging
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: |
+            ./build/node_modules
