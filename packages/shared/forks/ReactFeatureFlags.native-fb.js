@@ -34,7 +34,6 @@ export const {
 
 // These two can be removed
 export const enableOwnerStacks = true;
-export const enableRemoveConsolePatches = true;
 
 // The rest of the flags are static for better dead code elimination.
 export const disableClientCache = true;

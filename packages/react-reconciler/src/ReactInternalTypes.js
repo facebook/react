@@ -284,7 +284,8 @@ type BaseFiberRootProperties = {
   formState: ReactFormState<any, any> | null,
 
   // enableSwipeTransition only
-  gestures: null | ScheduledGesture,
+  pendingGestures: null | ScheduledGesture,
+  stoppingGestures: null | ScheduledGesture,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.

@@ -14,6 +14,13 @@ const paramDefinitions = [
     defaultValue: false,
   },
   {
+    name: 'onlyPackages',
+    type: String,
+    multiple: true,
+    description: 'Packages to include in publishing',
+    defaultValue: [],
+  },
+  {
     name: 'skipPackages',
     type: String,
     multiple: true,
@@ -31,6 +38,17 @@ const paramDefinitions = [
     type: String,
     description:
       'Version of published "next" release (e.g. 0.0.0-0e526bcec-20210202)',
+  },
+  {
+    name: 'publishVersion',
+    type: String,
+    description: 'Version to publish',
+  },
+  {
+    name: 'ci',
+    type: Boolean,
+    description: 'Run in automated environment, without interactive prompts.',
+    defaultValue: false,
   },
 ];
 
