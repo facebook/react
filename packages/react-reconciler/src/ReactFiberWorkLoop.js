@@ -228,6 +228,7 @@ import {
   invokePassiveEffectUnmountInDEV,
   accumulateSuspenseyCommit,
 } from './ReactFiberCommitWork';
+import {resetShouldStartViewTransition} from './ReactFiberCommitViewTransitions';
 import {shouldStartViewTransition} from './ReactFiberCommitViewTransitions';
 import {
   insertDestinationClones,
@@ -3448,6 +3449,8 @@ function commitRoot(
       }
     }
   }
+
+  resetShouldStartViewTransition();
 
   // The commit phase is broken into several sub-phases. We do a separate pass
   // of the effect list for each phase: all mutation effects come before all
