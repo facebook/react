@@ -3900,6 +3900,11 @@ function commitGestureOnRoot(
 
   finishedGesture.running = startGestureTransition(
     root.containerInfo,
+    finishedGesture.provider,
+    finishedGesture.rangeCurrent,
+    finishedGesture.direction
+      ? finishedGesture.rangeNext
+      : finishedGesture.rangePrevious,
     pendingTransitionTypes,
     flushGestureMutations,
     flushGestureAnimations,

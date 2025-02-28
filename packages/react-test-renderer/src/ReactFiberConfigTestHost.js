@@ -425,6 +425,9 @@ export type RunningGestureTransition = null;
 
 export function startGestureTransition(
   rootContainer: Container,
+  timeline: GestureTimeline,
+  rangeStart: number,
+  rangeEnd: number,
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   animateCallback: () => void,

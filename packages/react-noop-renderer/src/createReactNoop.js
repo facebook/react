@@ -815,6 +815,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         startGestureTransition(
           rootContainer: Container,
+          timeline: GestureTimeline,
+          rangeStart: number,
+          rangeEnd: number,
           transitionTypes: null | TransitionTypes,
           mutationCallback: () => void,
           animateCallback: () => void,

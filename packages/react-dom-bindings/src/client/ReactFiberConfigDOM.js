@@ -1567,6 +1567,9 @@ export type RunningGestureTransition = {
 
 export function startGestureTransition(
   rootContainer: Container,
+  timeline: GestureTimeline,
+  rangeStart: number,
+  rangeEnd: number,
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   animateCallback: () => void,
@@ -1585,12 +1588,27 @@ export function startGestureTransition(
     ownerDocument.__reactViewTransition = transition;
     let blockingAnim = null;
     const readyCallback = () => {
+      const documentElement: Element = (ownerDocument.documentElement: any);
+      // Loop through all View Transition Animations.
+      const animations = documentElement.getAnimations({subtree: true});
+      for (let i = 0; i < animations.length; i++) {
+        const anim = animations[i];
+        // $FlowFixMe
+        const pseudo: ?string = anim.effect.pseudoElement;
+        if (pseudo != null && pseudo.startsWith('::view-transition')) {
+          // Set the timeline to the current gesture timeline to drive the updates.
+          anim.timeline = timeline;
+          // TODO: Set range start/end.
+          if (rangeStart < rangeEnd) {
+            anim.reverse();
+          }
+        }
+      }
       // View Transitions with ScrollTimeline has a quirk where they end if the
       // ScrollTimeline ever reaches 100% but that doesn't mean we're done because
       // you can swipe back again. We can prevent this by adding a paused Animation
       // that never stops. This seems to keep all running Animations alive until
       // we explicitly abort (or something forces the View Transition to cancel).
-      const documentElement: Element = (ownerDocument.documentElement: any);
       blockingAnim = documentElement.animate([{}, {}], {
         pseudoElement: '::view-transition',
         duration: 1,
