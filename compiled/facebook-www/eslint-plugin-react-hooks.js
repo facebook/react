@@ -2703,9 +2703,14 @@ var configRules = {
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
 };
-// Legacy config
-var legacyRecommendedConfig = {
-    plugins: ['react-hooks'],
+// Flat config
+var recommendedConfig = {
+    name: 'react-hooks/recommended',
+    plugins: {
+        get 'react-hooks'() {
+            return plugin;
+        },
+    },
     rules: configRules,
 };
 // Plugin object
@@ -2716,22 +2721,16 @@ var plugin = {
     rules: rules,
     configs: {
         /** Legacy recommended config, to be used with rc-based configurations */
-        'recommended-legacy': legacyRecommendedConfig,
-        /**
-         * 'recommended' is currently aliased to the legacy / rc recommended config) to maintain backwards compatibility.
-         * This is deprecated and in v6, it will switch to alias the flat recommended config.
-         */
-        recommended: legacyRecommendedConfig,
-        /** Latest recommended config, to be used with flat configurations */
-        'recommended-latest': {
-            name: 'react-hooks/recommended',
-            plugins: {
-                get 'react-hooks'() {
-                    return plugin;
-                },
-            },
+        'recommended-legacy': {
+            plugins: ['react-hooks'],
             rules: configRules,
         },
+        /**
+         * Recommended config, to be used with flat configs.
+         */
+        recommended: recommendedConfig,
+        /** @deprecated please use `recommended`; will be removed in v7  */
+        'recommended-latest': recommendedConfig,
     },
 };
 var configs = plugin.configs;
