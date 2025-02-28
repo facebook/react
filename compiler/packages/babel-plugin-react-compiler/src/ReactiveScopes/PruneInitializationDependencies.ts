@@ -12,6 +12,7 @@ import {
   IdentifierId,
   InstructionId,
   Place,
+  PropertyLiteral,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
@@ -64,13 +65,13 @@ type KindMap = Map<IdentifierId, CreateUpdate>;
 class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
   map: KindMap = new Map();
   aliases: DisjointSet<IdentifierId>;
-  paths: Map<IdentifierId, Map<string, IdentifierId>>;
+  paths: Map<IdentifierId, Map<PropertyLiteral, IdentifierId>>;
   env: Environment;
 
   constructor(
     env: Environment,
     aliases: DisjointSet<IdentifierId>,
-    paths: Map<IdentifierId, Map<string, IdentifierId>>,
+    paths: Map<IdentifierId, Map<PropertyLiteral, IdentifierId>>,
   ) {
     super();
     this.aliases = aliases;
@@ -218,9 +219,9 @@ export default function pruneInitializationDependencies(
 }
 
 function update(
-  map: Map<IdentifierId, Map<string, IdentifierId>>,
+  map: Map<IdentifierId, Map<PropertyLiteral, IdentifierId>>,
   key: IdentifierId,
-  path: string,
+  path: PropertyLiteral,
   value: IdentifierId,
 ): void {
   const inner = map.get(key) ?? new Map();
@@ -230,7 +231,7 @@ function update(
 
 class AliasVisitor extends ReactiveFunctionVisitor {
   scopeIdentifiers: DisjointSet<IdentifierId> = new DisjointSet<IdentifierId>();
-  scopePaths: Map<IdentifierId, Map<string, IdentifierId>> = new Map();
+  scopePaths: Map<IdentifierId, Map<PropertyLiteral, IdentifierId>> = new Map();
 
   override visitInstruction(instr: ReactiveInstruction): void {
     if (
@@ -271,11 +272,14 @@ class AliasVisitor extends ReactiveFunctionVisitor {
 
 function getAliases(
   fn: ReactiveFunction,
-): [DisjointSet<IdentifierId>, Map<IdentifierId, Map<string, IdentifierId>>] {
+): [
+  DisjointSet<IdentifierId>,
+  Map<IdentifierId, Map<PropertyLiteral, IdentifierId>>,
+] {
   const visitor = new AliasVisitor();
   visitReactiveFunction(fn, visitor, null);
   let disjoint = visitor.scopeIdentifiers;
-  let scopePaths = new Map<IdentifierId, Map<string, IdentifierId>>();
+  let scopePaths = new Map<IdentifierId, Map<PropertyLiteral, IdentifierId>>();
   for (const [key, value] of visitor.scopePaths) {
     for (const [path, id] of value) {
       update(

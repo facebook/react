@@ -30,6 +30,7 @@ export const enableAsyncIterableChildren = false;
 export const enableCPUSuspense = false;
 export const enableCreateEventHandleAPI = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+export const enableFabricCompleteRootInCommitPhase = false;
 export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
 export const enableHalt = false;
@@ -40,7 +41,7 @@ export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
 export const enableNoCloningMemoCache = false;
 export const enableObjectFiber = false;
-export const enableOwnerStacks = false;
+export const enableOwnerStacks = true;
 export const enablePersistedModeClonedFlag = false;
 export const enablePostpone = false;
 export const enableReactTestRendererWarning = false;
@@ -80,7 +81,6 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
-export const enableRemoveConsolePatches = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

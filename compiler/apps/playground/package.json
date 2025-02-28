@@ -34,7 +34,7 @@
     "invariant": "^2.2.4",
     "lz-string": "^1.5.0",
     "monaco-editor": "^0.52.0",
-    "next": "^15.0.1",
+    "next": "^15.2.0-canary.64",
     "notistack": "^3.0.0-alpha.7",
     "prettier": "^3.3.3",
     "pretty-format": "^29.3.1",

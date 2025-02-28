@@ -390,29 +390,31 @@ class InferenceState {
 
   freezeValues(values: Set<InstructionValue>, reason: Set<ValueReason>): void {
     for (const value of values) {
+      if (value.kind === 'DeclareContext') {
+        /**
+         * Avoid freezing hoisted context declarations
+         * function Component() {
+         *   const cb = useBar(() => foo(2)); // produces a hoisted context declaration
+         *   const foo = useFoo();            // reassigns to the context variable
+         *   return <Foo cb={cb} />;
+         * }
+         */
+        continue;
+      }
       this.#values.set(value, {
         kind: ValueKind.Frozen,
         reason,
         context: new Set(),
       });
-      if (value.kind === 'FunctionExpression') {
-        if (
-          this.#env.config.enablePreserveExistingMemoizationGuarantees ||
-          this.#env.config.enableTransitivelyFreezeFunctionExpressions
-        ) {
-          if (value.kind === 'FunctionExpression') {
-            /*
-             * We want to freeze the captured values, not mark the operands
-             * themselves as frozen. There could be mutations that occur
-             * before the freeze we are processing, and it would be invalid
-             * to overwrite those mutations as a freeze.
-             */
-            for (const operand of eachInstructionValueOperand(value)) {
-              const operandValues = this.#variables.get(operand.identifier.id);
-              if (operandValues !== undefined) {
-                this.freezeValues(operandValues, reason);
-              }
-            }
+      if (
+        value.kind === 'FunctionExpression' &&
+        (this.#env.config.enablePreserveExistingMemoizationGuarantees ||
+          this.#env.config.enableTransitivelyFreezeFunctionExpressions)
+      ) {
+        for (const operand of value.loweredFunc.func.context) {
+          const operandValues = this.#variables.get(operand.identifier.id);
+          if (operandValues !== undefined) {
+            this.freezeValues(operandValues, reason);
           }
         }
       }
@@ -1143,17 +1145,17 @@ function inferBlock(
       case 'ObjectMethod':
       case 'FunctionExpression': {
         let hasMutableOperand = false;
-        const mutableOperands: Array<Place> = [];
         for (const operand of eachInstructionOperand(instr)) {
+          CompilerError.invariant(operand.effect !== Effect.Unknown, {
+            reason: 'Expected fn effects to be populated',
+            loc: operand.loc,
+          });
           state.referenceAndRecordEffects(
             freezeActions,
             operand,
-            operand.effect === Effect.Unknown ? Effect.Read : operand.effect,
+            operand.effect,
             ValueReason.Other,
           );
-          if (isMutableEffect(operand.effect, operand.loc)) {
-            mutableOperands.push(operand);
-          }
           hasMutableOperand ||= isMutableEffect(operand.effect, operand.loc);
         }
         /*
@@ -1596,18 +1598,14 @@ function inferBlock(
         break;
       }
       case 'LoadLocal': {
+        /**
+         * Due to backedges in the CFG, we may revisit LoadLocal lvalues
+         * multiple times. Unlike StoreLocal which may reassign to existing
+         * identifiers, LoadLocal always evaluates to store a new temporary.
+         * This means that we should always model LoadLocal as a Capture effect
+         * on the rvalue.
+         */
         const lvalue = instr.lvalue;
-        CompilerError.invariant(
-          !(
-            state.isDefined(lvalue) &&
-            state.kind(lvalue).kind === ValueKind.Context
-          ),
-          {
-            reason:
-              '[InferReferenceEffects] Unexpected LoadLocal with context kind',
-            loc: lvalue.loc,
-          },
-        );
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.place,

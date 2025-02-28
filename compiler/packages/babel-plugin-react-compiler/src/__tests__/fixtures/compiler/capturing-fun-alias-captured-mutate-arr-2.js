@@ -1,4 +1,6 @@
-function component(foo, bar) {
+import {mutate} from 'shared-runtime';
+
+function Component({foo, bar}) {
   let x = {foo};
   let y = {bar};
   const f0 = function () {
@@ -10,3 +12,14 @@ function component(foo, bar) {
   mutate(y);
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{foo: 2, bar: 3}],
+  sequentialRenders: [
+    {foo: 2, bar: 3},
+    {foo: 2, bar: 3},
+    {foo: 2, bar: 4},
+    {foo: 3, bar: 4},
+  ],
+};

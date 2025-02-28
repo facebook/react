@@ -1343,7 +1343,8 @@ describe('ReactUse', () => {
     });
     assertLog(['Async text requested [Hi]']);
     assertConsoleErrorDev([
-      'async/await is not yet supported in Client Components, only Server Components. ' +
+      '<App> is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
         "This error is often caused by accidentally adding `'use client'` " +
         'to a module that was originally written for the server.\n' +
         '    in App (at **)',
@@ -1443,7 +1444,8 @@ describe('ReactUse', () => {
     });
     assertLog(['A', 'Mount: A']);
     assertConsoleErrorDev([
-      'async/await is not yet supported in Client Components, only Server Components. ' +
+      '<App> is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
         "This error is often caused by accidentally adding `'use client'` " +
         'to a module that was originally written for the server.\n' +
         '    in App (at **)',
@@ -1915,25 +1917,29 @@ describe('ReactUse', () => {
       );
     });
     assertConsoleErrorDev([
-      'async/await is not yet supported in Client Components, only Server Components. ' +
+      '<AsyncClientComponent> is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
         "This error is often caused by accidentally adding `'use client'` " +
         'to a module that was originally written for the server.\n' +
         '    in AsyncClientComponent (at **)' +
         (gate('enableOwnerStacks') ? '' : '\n    in ErrorBoundary (at **)'),
     ]);
     assertLog([
-      'async/await is not yet supported in Client Components, only Server ' +
-        'Components. This error is often caused by accidentally adding ' +
+      'An unknown Component is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
+        'This error is often caused by accidentally adding ' +
         "`'use client'` to a module that was originally written for " +
         'the server.',
-      'async/await is not yet supported in Client Components, only Server ' +
-        'Components. This error is often caused by accidentally adding ' +
+      'An unknown Component is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
+        'This error is often caused by accidentally adding ' +
         "`'use client'` to a module that was originally written for " +
         'the server.',
     ]);
     expect(root).toMatchRenderedOutput(
-      'async/await is not yet supported in Client Components, only Server ' +
-        'Components. This error is often caused by accidentally adding ' +
+      'An unknown Component is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
+        'This error is often caused by accidentally adding ' +
         "`'use client'` to a module that was originally written for " +
         'the server.',
     );
@@ -1967,25 +1973,29 @@ describe('ReactUse', () => {
       );
     });
     assertConsoleErrorDev([
-      'async/await is not yet supported in Client Components, only Server Components. ' +
+      '<AsyncClientComponent> is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
         "This error is often caused by accidentally adding `'use client'` " +
         'to a module that was originally written for the server.\n' +
         '    in AsyncClientComponent (at **)' +
         (gate('enableOwnerStacks') ? '' : '\n    in ErrorBoundary (at **)'),
     ]);
     assertLog([
-      'async/await is not yet supported in Client Components, only Server ' +
-        'Components. This error is often caused by accidentally adding ' +
+      'An unknown Component is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
+        'This error is often caused by accidentally adding ' +
         "`'use client'` to a module that was originally written for " +
         'the server.',
-      'async/await is not yet supported in Client Components, only Server ' +
-        'Components. This error is often caused by accidentally adding ' +
+      'An unknown Component is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
+        'This error is often caused by accidentally adding ' +
         "`'use client'` to a module that was originally written for " +
         'the server.',
     ]);
     expect(root).toMatchRenderedOutput(
-      'async/await is not yet supported in Client Components, only Server ' +
-        'Components. This error is often caused by accidentally adding ' +
+      'An unknown Component is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
+        'This error is often caused by accidentally adding ' +
         "`'use client'` to a module that was originally written for " +
         'the server.',
     );
@@ -2012,7 +2022,8 @@ describe('ReactUse', () => {
         // decided to warn for _any_ async client component regardless of
         // whether the update is sync. But if we ever add back support for async
         // client components, we should add back the hook warning.
-        'async/await is not yet supported in Client Components, only Server Components. ' +
+        '<AsyncClientComponent> is an async Client Component. ' +
+          'Only Server Components can be async at the moment. ' +
           "This error is often caused by accidentally adding `'use client'` " +
           'to a module that was originally written for the server.\n' +
           '    in AsyncClientComponent (at **)',
@@ -2044,7 +2055,8 @@ describe('ReactUse', () => {
       // decided to warn for _any_ async client component regardless of
       // whether the update is sync. But if we ever add back support for async
       // client components, we should add back the hook warning.
-      'async/await is not yet supported in Client Components, only Server Components. ' +
+      '<AsyncClientComponent> is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
         "This error is often caused by accidentally adding `'use client'` " +
         'to a module that was originally written for the server.\n' +
         '    in AsyncClientComponent (at **)',
@@ -2079,7 +2091,8 @@ describe('ReactUse', () => {
       });
     });
     assertConsoleErrorDev([
-      'async/await is not yet supported in Client Components, only Server Components. ' +
+      '<App> is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
         "This error is often caused by accidentally adding `'use client'` " +
         'to a module that was originally written for the server.\n' +
         '    in App (at **)',
