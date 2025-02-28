@@ -50,7 +50,7 @@ jobs:
           embed-author-name: ${{ github.event.sender.login }}
           embed-author-url: ${{ github.event.sender.html_url }}
           embed-author-icon-url: ${{ github.event.sender.avatar_url }}
-          embed-title: "⚠️ Publishing release from NPM${{ inputs.dry && ' (dry run)' }}"
+          embed-title: "⚠️ Publishing release from NPM${{ (inputs.dry && ' (dry run)') || '' }}"
           embed-description: |
             ```json
             ${{ toJson(inputs) }}
