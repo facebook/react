@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import RulesOfHooks from './RulesOfHooks';
-import ExhaustiveDeps from './ExhaustiveDeps';
+import RulesOfHooks from './rules/RulesOfHooks';
+import ExhaustiveDeps from './rules/ExhaustiveDeps';
 import type {ESLint, Linter, Rule} from 'eslint';
 
 // All rules
