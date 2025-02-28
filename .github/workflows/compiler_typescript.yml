@@ -75,8 +75,8 @@ jobs:
     name: Test ${{ matrix.workspace_name }}
     needs: discover_yarn_workspaces
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         workspace_name: ${{ fromJSON(needs.discover_yarn_workspaces.outputs.matrix) }}
     steps:
