@@ -26,13 +26,21 @@ import {
   resetTextContent,
   supportsResources,
   supportsSingletons,
+  unhideInstance,
+  unhideTextInstance,
 } from './ReactFiberConfig';
 import {
   popMutationContext,
   pushMutationContext,
   viewTransitionMutationContext,
 } from './ReactFiberMutationTracking';
-import {MutationMask, Update, ContentReset, NoFlags} from './ReactFiberFlags';
+import {
+  MutationMask,
+  Update,
+  ContentReset,
+  NoFlags,
+  Visibility,
+} from './ReactFiberFlags';
 import {
   HostComponent,
   HostHoistable,
@@ -48,6 +56,8 @@ let didWarnForRootClone = false;
 function detectMutationOrInsertClones(finishedWork: Fiber): boolean {
   return true;
 }
+
+let unhideHostChildren = false;
 
 function recursivelyInsertClonesFromExistingTree(
   parentFiber: Fiber,
@@ -66,6 +76,9 @@ function recursivelyInsertClonesFromExistingTree(
         // TODO: If there's a manual view-transition-name inside the clone we
         // should ideally remove it from the original and then restore it in mutation
         // phase. Otherwise it leads to duplicate names.
+        if (unhideHostChildren) {
+          unhideInstance(clone, child.memoizedProps);
+        }
         break;
       }
       case HostText: {
@@ -78,6 +91,9 @@ function recursivelyInsertClonesFromExistingTree(
         }
         const clone = cloneMutableTextInstance(textInstance);
         appendChild(hostParentClone, clone);
+        if (unhideHostChildren) {
+          unhideTextInstance(clone, child.memoizedProps);
+        }
         break;
       }
       case HostPortal: {
@@ -91,6 +107,8 @@ function recursivelyInsertClonesFromExistingTree(
           // Only insert clones if this tree is going to be visible. No need to
           // clone invisible content.
           // TODO: If this is visible but detached it should still be cloned.
+          // Since there was no mutation to this node, it couldn't have changed
+          // visibility so we don't need to update unhideHostChildren here.
           recursivelyInsertClonesFromExistingTree(child, hostParentClone);
         }
         break;
@@ -239,9 +257,16 @@ function insertDestinationClonesOfFiber(
           commitUpdate(clone, type, oldProps, newProps, finishedWork);
         }
 
-        recursivelyInsertClones(finishedWork, clone);
-
-        appendChild(hostParentClone, clone);
+        if (unhideHostChildren) {
+          unhideHostChildren = false;
+          recursivelyInsertClones(finishedWork, clone);
+          appendChild(hostParentClone, clone);
+          unhideHostChildren = true;
+          unhideInstance(clone, finishedWork.memoizedProps);
+        } else {
+          recursivelyInsertClones(finishedWork, clone);
+          appendChild(hostParentClone, clone);
+        }
       }
       break;
     }
@@ -264,6 +289,9 @@ function insertDestinationClonesOfFiber(
           commitTextUpdate(clone, newText, oldText);
         }
         appendChild(hostParentClone, clone);
+        if (unhideHostChildren) {
+          unhideTextInstance(clone, finishedWork.memoizedProps);
+        }
       }
       break;
     }
@@ -278,7 +306,10 @@ function insertDestinationClonesOfFiber(
         // Only insert clones if this tree is going to be visible. No need to
         // clone invisible content.
         // TODO: If this is visible but detached it should still be cloned.
+        const prevUnhide = unhideHostChildren;
+        unhideHostChildren = prevUnhide || (flags & Visibility) !== NoFlags;
         recursivelyInsertClones(finishedWork, hostParentClone);
+        unhideHostChildren = prevUnhide;
       }
       break;
     }
@@ -306,6 +337,7 @@ export function insertDestinationClones(
   root: FiberRoot,
   finishedWork: Fiber,
 ): void {
+  unhideHostChildren = false;
   // We'll either not transition the root, or we'll transition the clone. Regardless
   // we cancel the root view transition name.
   const needsClone = detectMutationOrInsertClones(finishedWork);
