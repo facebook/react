@@ -20,13 +20,13 @@ jobs:
     name: ESLint v${{ matrix.eslint_major }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         eslint_major:
           - "6"
           - "7"
           - "8"
           - "9"
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
