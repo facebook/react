@@ -2162,25 +2162,26 @@ FragmentInstancePseudoElement.prototype.removeEventListener = function (
   optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
 ): void {
   const listeners = this._eventListeners;
-  if (listeners === undefined || listeners.length === 0) {
-    return;
-  }
-  traverseFragmentInstanceChildren(
-    this,
-    this._fragmentFiber.child,
-    removeEventListenerFromChild.bind(
-      null,
+  if (typeof listeners !== 'undefined' && listeners.length > 0) {
+    traverseFragmentInstanceChildren(
+      this,
+      this._fragmentFiber.child,
+      removeEventListenerFromChild.bind(
+        null,
+        type,
+        listener,
+        optionsOrUseCapture,
+      ),
+    );
+    const index = indexOfEventListener(listeners, {
       type,
       listener,
       optionsOrUseCapture,
-    ),
-  );
-  const index = indexOfEventListener(listeners, {
-    type,
-    listener,
-    optionsOrUseCapture,
-  });
-  this._eventListeners = listeners.splice(index, 1);
+    });
+    if (this._eventListeners !== undefined) {
+      this._eventListeners.splice(index, 1);
+    }
+  }
 };
 function removeEventListenerFromChild(
   type: string,

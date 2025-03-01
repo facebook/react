@@ -412,6 +412,84 @@ describe('FragmentRefs', () => {
       expect(logs).toEqual(['Host A', 'Host B']);
     });
 
+    // @gate enableFragmentRefs
+    it('allows adding and cleaning up listeners in effects', async () => {
+      const root = ReactDOMClient.createRoot(container);
+
+      let logs = [];
+      function logClick(e) {
+        logs.push(e.currentTarget.id);
+      }
+
+      let rerender;
+      let removeEventListeners;
+
+      function Test() {
+        const fragmentRef = React.useRef(null);
+        // eslint-disable-next-line no-unused-vars
+        const [_, setState] = React.useState(0);
+        rerender = () => {
+          setState(p => p + 1);
+        };
+        removeEventListeners = () => {
+          fragmentRef.current.removeEventListener('click', logClick);
+        };
+        React.useEffect(() => {
+          fragmentRef.current.addEventListener('click', logClick);
+
+          return removeEventListeners;
+        });
+
+        return (
+          <Fragment ref={fragmentRef}>
+            <div id="child-a" />
+          </Fragment>
+        );
+      }
+
+      // The event listener was applied
+      await act(() => root.render(<Test />));
+      expect(logs).toEqual([]);
+      document.querySelector('#child-a').click();
+      expect(logs).toEqual(['child-a']);
+
+      // The event listener can be removed and re-added
+      logs = [];
+      await act(rerender);
+      document.querySelector('#child-a').click();
+      expect(logs).toEqual(['child-a']);
+    });
+
+    // @gate enableFragmentRefs
+    it('does not apply removed event listeners to new children', async () => {
+      const root = ReactDOMClient.createRoot(container);
+      const fragmentRef = React.createRef(null);
+      function Test() {
+        return (
+          <Fragment ref={fragmentRef}>
+            <div id="child-a" />
+          </Fragment>
+        );
+      }
+
+      let logs = [];
+      function logClick(e) {
+        logs.push(e.currentTarget.id);
+      }
+      await act(() => {
+        root.render(<Test />);
+      });
+      fragmentRef.current.addEventListener('click', logClick);
+      const childA = document.querySelector('#child-a');
+      childA.click();
+      expect(logs).toEqual(['child-a']);
+
+      logs = [];
+      fragmentRef.current.removeEventListener('click', logClick);
+      childA.click();
+      expect(logs).toEqual([]);
+    });
+
     describe('with activity', () => {
       // @gate enableFragmentRefs && enableActivity
       it('does not apply event listeners to hidden trees', async () => {
