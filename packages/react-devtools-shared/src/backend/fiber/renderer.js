@@ -147,6 +147,7 @@ import type {
 import type {Source} from 'react-devtools-shared/src/shared/types';
 import {getSourceLocationByFiber} from './DevToolsFiberComponentStack';
 import {formatOwnerStack} from '../shared/DevToolsOwnerStack';
+import {ActivityComponent} from 'react-reconciler/src/ReactWorkTags';
 
 // Kinds
 const FIBER_INSTANCE = 0;
@@ -1490,6 +1491,7 @@ export function attach(
         return true;
       case HostPortal:
       case HostText:
+      case ActivityComponent:
       case LegacyHiddenComponent:
       case OffscreenComponent:
       case Throw:
