@@ -154,6 +154,7 @@ import {
   REACT_OFFSCREEN_TYPE,
   REACT_POSTPONE_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
+  REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -2261,6 +2262,7 @@ function renderElement(
       task.keyPath = prevKeyPath;
       return;
     }
+    case REACT_ACTIVITY_TYPE:
     case REACT_OFFSCREEN_TYPE: {
       renderOffscreen(request, task, keyPath, props);
       return;

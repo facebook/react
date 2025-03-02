@@ -72,6 +72,7 @@ import {
   TracingMarkerComponent,
   Throw,
   ViewTransitionComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberActivityComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
@@ -108,6 +109,7 @@ import {
   REACT_TRACING_MARKER_TYPE,
   REACT_ELEMENT_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
+  REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
 import {
@@ -595,6 +597,8 @@ export function createFiberFromTypeAndProps(
     }
   } else {
     getTag: switch (type) {
+      case REACT_ACTIVITY_TYPE:
+        return createFiberFromActivity(pendingProps, mode, lanes, key);
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children, mode, lanes, key);
       case REACT_STRICT_MODE_TYPE:
@@ -872,6 +876,17 @@ export function createFiberFromOffscreen(
     attach: () => attachOffscreenInstance(primaryChildInstance),
   };
   fiber.stateNode = primaryChildInstance;
+  return fiber;
+}
+export function createFiberFromActivity(
+  pendingProps: OffscreenProps,
+  mode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+): Fiber {
+  const fiber = createFiber(ActivityComponent, pendingProps, key, mode);
+  fiber.elementType = REACT_ACTIVITY_TYPE;
+  fiber.lanes = lanes;
   return fiber;
 }
 
