@@ -146,6 +146,7 @@ import type {
 import type {Source} from 'react-devtools-shared/src/shared/types';
 import {getSourceLocationByFiber} from './DevToolsFiberComponentStack';
 import {formatOwnerStack} from '../shared/DevToolsOwnerStack';
+import {ActivityComponent} from 'react-reconciler/src/ReactWorkTags';
 
 // Kinds
 const FIBER_INSTANCE = 0;
@@ -385,6 +386,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: 29,
       ViewTransitionComponent: 30, // Experimental
+      ActivityComponent: 31,
     };
   } else if (gte(version, '17.0.0-alpha')) {
     ReactTypeOfWork = {
@@ -421,6 +423,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
@@ -457,6 +460,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
@@ -493,6 +497,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   } else {
     ReactTypeOfWork = {
@@ -529,6 +534,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: 9,
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   }
   // **********************************************************
@@ -622,6 +628,8 @@ export function getInternalReactConstants(version: string): {
     }
 
     switch (tag) {
+      case ActivityComponent:
+        return 'Activity';
       case CacheComponent:
         return 'Cache';
       case ClassComponent:
@@ -1480,6 +1488,7 @@ export function attach(
         return true;
       case HostPortal:
       case HostText:
+      case ActivityComponent:
       case LegacyHiddenComponent:
       case OffscreenComponent:
       case Throw:
