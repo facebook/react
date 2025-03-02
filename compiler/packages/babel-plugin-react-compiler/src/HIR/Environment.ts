@@ -1130,10 +1130,10 @@ export class Environment {
     receiver: Type,
     property: string,
   ): BuiltInType | PolyType | null {
-    let shapeId = null;
-    if (receiver.kind === 'Object' || receiver.kind === 'Function') {
-      shapeId = receiver.shapeId;
-    }
+    const shapeId =
+      receiver.kind === 'Object' || receiver.kind === 'Function'
+        ? receiver.shapeId
+        : null;
     if (shapeId !== null) {
       /*
        * If an object or function has a shapeId, it must have been assigned
@@ -1146,10 +1146,10 @@ export class Environment {
         loc: null,
         suggestions: null,
       });
-      let value =
+      const value =
         shape.properties.get(property) ?? shape.properties.get('*') ?? null;
       if (value === null && isHookName(property)) {
-        value = this.#getCustomHookType();
+        return this.#getCustomHookType();
       }
       return value;
     } else if (isHookName(property)) {
@@ -1180,11 +1180,9 @@ export class Environment {
   }
 
   #getCustomHookType(): Global {
-    if (this.config.enableAssumeHooksFollowRulesOfReact) {
-      return DefaultNonmutatingHook;
-    } else {
-      return DefaultMutatingHook;
-    }
+    return this.config.enableAssumeHooksFollowRulesOfReact
+      ? DefaultNonmutatingHook
+      : DefaultMutatingHook;
   }
 }
 
@@ -1199,11 +1197,7 @@ export function parseEnvironmentConfig(
   partialConfig: PartialEnvironmentConfig,
 ): Result<EnvironmentConfig, ZodError<PartialEnvironmentConfig>> {
   const config = EnvironmentConfigSchema.safeParse(partialConfig);
-  if (config.success) {
-    return Ok(config.data);
-  } else {
-    return Err(config.error);
-  }
+  return config.success ? Ok(config.data) : Err(config.error);
 }
 
 export function validateEnvironmentConfig(
