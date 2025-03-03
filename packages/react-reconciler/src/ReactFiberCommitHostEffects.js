@@ -59,6 +59,7 @@ import {captureCommitPhaseError} from './ReactFiberWorkLoop';
 import {trackHostMutation} from './ReactFiberMutationTracking';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
+import {enableFragmentRefs} from 'shared/ReactFeatureFlags';
 
 export function commitHostMount(finishedWork: Fiber) {
   const type = finishedWork.type;
@@ -355,6 +356,9 @@ function insertOrAppendPlacementNodeIntoContainer(
     } else {
       appendChildToContainer(parent, stateNode);
     }
+    if (enableFragmentRefs) {
+      commitFragmentInstanceInsertionEffects(node);
+    }
     trackHostMutation();
     return;
   } else if (tag === HostPortal) {
@@ -398,6 +402,9 @@ function insertOrAppendPlacementNode(
       insertBefore(parent, stateNode, before);
     } else {
       appendChild(parent, stateNode);
+    }
+    if (enableFragmentRefs) {
+      commitFragmentInstanceInsertionEffects(node);
     }
     trackHostMutation();
     return;
