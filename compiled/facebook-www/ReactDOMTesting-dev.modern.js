@@ -20373,9 +20373,10 @@ __DEV__ &&
             listeners.push(
               createDispatchListener(targetFiber, _instance3, stateNode)
             ));
+        if (3 === targetFiber.tag) return listeners;
         targetFiber = targetFiber.return;
       }
-      return listeners;
+      return [];
     }
     function getParent(inst) {
       if (null === inst) return null;
@@ -28230,9 +28231,10 @@ __DEV__ &&
       TRANSITION_END = getVendorPrefixedEventName("transitionend"),
       topLevelEventsToReactNames = new Map(),
       simpleEventPluginEvents =
-        "abort auxClick beforeToggle cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll scrollEnd toggle touchMove waiting wheel".split(
+        "abort auxClick beforeToggle cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll toggle touchMove waiting wheel".split(
           " "
         );
+    simpleEventPluginEvents.push("scrollEnd");
     topLevelEventsToReactNames.set("beforeblur", null);
     topLevelEventsToReactNames.set("afterblur", null);
     (function () {
@@ -28669,11 +28671,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-modern-ca12911d-20250228" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-modern-605a880c-20250303" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-modern-ca12911d-20250228\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-modern-605a880c-20250303\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -28716,10 +28718,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-modern-ca12911d-20250228",
+          version: "19.1.0-www-modern-605a880c-20250303",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-modern-ca12911d-20250228"
+          reconcilerVersion: "19.1.0-www-modern-605a880c-20250303"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -29483,5 +29485,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-modern-ca12911d-20250228";
+    exports.version = "19.1.0-www-modern-605a880c-20250303";
   })();

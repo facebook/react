@@ -14960,9 +14960,10 @@ var ANIMATION_END = getVendorPrefixedEventName("animationend"),
   TRANSITION_END = getVendorPrefixedEventName("transitionend"),
   topLevelEventsToReactNames = new Map(),
   simpleEventPluginEvents =
-    "abort auxClick beforeToggle cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll scrollEnd toggle touchMove waiting wheel".split(
+    "abort auxClick beforeToggle cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll toggle touchMove waiting wheel".split(
       " "
     );
+simpleEventPluginEvents.push("scrollEnd");
 topLevelEventsToReactNames.set("beforeblur", null);
 topLevelEventsToReactNames.set("afterblur", null);
 function registerSimpleEvent(domEventName, reactName) {
@@ -15854,9 +15855,10 @@ function accumulateTwoPhaseListeners(targetFiber, reactName) {
         listeners.push(
           createDispatchListener(targetFiber, _instance2, stateNode)
         ));
+    if (3 === targetFiber.tag) return listeners;
     targetFiber = targetFiber.return;
   }
-  return listeners;
+  return [];
 }
 function getParent(inst) {
   if (null === inst) return null;
@@ -18889,14 +18891,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1978 = React.version;
 if (
-  "19.1.0-www-modern-ca12911d-20250228" !==
+  "19.1.0-www-modern-605a880c-20250303" !==
   isomorphicReactPackageVersion$jscomp$inline_1978
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1978,
-      "19.1.0-www-modern-ca12911d-20250228"
+      "19.1.0-www-modern-605a880c-20250303"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18914,10 +18916,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1980 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-ca12911d-20250228",
+  version: "19.1.0-www-modern-605a880c-20250303",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-ca12911d-20250228"
+  reconcilerVersion: "19.1.0-www-modern-605a880c-20250303"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1980.getLaneLabelMap = getLaneLabelMap),
@@ -19284,7 +19286,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-ca12911d-20250228";
+exports.version = "19.1.0-www-modern-605a880c-20250303";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
