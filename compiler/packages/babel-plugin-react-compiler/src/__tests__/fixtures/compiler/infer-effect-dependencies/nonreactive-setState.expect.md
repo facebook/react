@@ -3,7 +3,7 @@
 
 ```javascript
 // @inferEffectDependencies
-import {useEffect, useRef} from 'react';
+import {useEffect, useState} from 'react';
 import {print} from 'shared-runtime';
 
 /**
@@ -12,9 +12,9 @@ import {print} from 'shared-runtime';
  * We know that local `useRef` return values are stable, regardless of
  * inferred memoization.
  */
-function NonReactiveRefInEffect() {
-  const ref = useRef('initial value');
-  useEffect(() => print(ref.current));
+function NonReactiveSetStateInEffect() {
+  const [_, setState] = useState('initial value');
+  useEffect(() => print(setState));
 }
 
 ```
@@ -23,7 +23,7 @@ function NonReactiveRefInEffect() {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { print } from "shared-runtime";
 
 /**
@@ -32,12 +32,12 @@ import { print } from "shared-runtime";
  * We know that local `useRef` return values are stable, regardless of
  * inferred memoization.
  */
-function NonReactiveRefInEffect() {
+function NonReactiveSetStateInEffect() {
   const $ = _c(1);
-  const ref = useRef("initial value");
+  const [, setState] = useState("initial value");
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => print(ref.current);
+    t0 = () => print(setState);
     $[0] = t0;
   } else {
     t0 = $[0];
