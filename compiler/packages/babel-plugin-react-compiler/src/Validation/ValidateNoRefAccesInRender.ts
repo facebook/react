@@ -401,7 +401,9 @@ function validateNoRefAccessInRenderImpl(
               }
             }
             for (const operand of eachInstructionValueOperand(instr.value)) {
-              if (hookKind != null) {
+              if (hookKind === 'useState') {
+                validateNoRefValueAccess(errors, env, operand);
+              } else if (hookKind != null) {
                 validateNoDirectRefValueAccess(errors, operand, env);
               } else {
                 validateNoRefAccess(errors, env, operand, operand.loc);
