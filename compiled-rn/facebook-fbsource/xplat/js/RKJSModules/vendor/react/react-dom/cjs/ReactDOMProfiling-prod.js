@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2410527e0f8cc63d2ad8807e985ed8d3>>
+ * @generated SignedSource<<23fa6851fddaee8032a63e845649553c>>
  */
 
 /*
@@ -712,7 +712,8 @@ var randomKey = Math.random().toString(36).slice(2),
   internalEventHandlerListenersKey = "__reactListeners$" + randomKey,
   internalEventHandlesSetKey = "__reactHandles$" + randomKey,
   internalRootNodeResourcesKey = "__reactResources$" + randomKey,
-  internalHoistableMarker = "__reactMarker$" + randomKey;
+  internalHoistableMarker = "__reactMarker$" + randomKey,
+  internalScrollTimer = "__reactScroll$" + randomKey;
 function detachDeletedInstance(node) {
   delete node[internalInstanceKey];
   delete node[internalPropsKey];
@@ -2060,6 +2061,16 @@ function isTextInputElement(elem) {
       ? !0
       : !1;
 }
+function isEventSupported(eventNameSuffix) {
+  if (!canUseDOM) return !1;
+  eventNameSuffix = "on" + eventNameSuffix;
+  var isSupported = eventNameSuffix in document;
+  isSupported ||
+    ((isSupported = document.createElement("div")),
+    isSupported.setAttribute(eventNameSuffix, "return;"),
+    (isSupported = "function" === typeof isSupported[eventNameSuffix]));
+  return isSupported;
+}
 function createAndAccumulateChangeEvent(
   dispatchQueue,
   inst,
@@ -2084,7 +2095,7 @@ function createAndAccumulateChangeEvent(
 }
 var activeElement$1 = null,
   activeElementInst$1 = null;
-function runEventInBatch(dispatchQueue) {
+function runEventInBatch$1(dispatchQueue) {
   processDispatchQueue(dispatchQueue, 0);
 }
 function getInstIfValueChanged(targetInst) {
@@ -2095,22 +2106,10 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
   if ("change" === domEventName) return targetInst;
 }
 var isInputEventSupported = !1;
-if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$294;
-  if (canUseDOM) {
-    var isSupported$jscomp$inline_427 = "oninput" in document;
-    if (!isSupported$jscomp$inline_427) {
-      var element$jscomp$inline_428 = document.createElement("div");
-      element$jscomp$inline_428.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_427 =
-        "function" === typeof element$jscomp$inline_428.oninput;
-    }
-    JSCompiler_inline_result$jscomp$294 = isSupported$jscomp$inline_427;
-  } else JSCompiler_inline_result$jscomp$294 = !1;
-  isInputEventSupported =
-    JSCompiler_inline_result$jscomp$294 &&
-    (!document.documentMode || 9 < document.documentMode);
-}
+canUseDOM &&
+  (isInputEventSupported =
+    isEventSupported("input") &&
+    (!document.documentMode || 9 < document.documentMode));
 function stopWatchingForValueChange() {
   activeElement$1 &&
     (activeElement$1.detachEvent("onpropertychange", handlePropertyChange),
@@ -2128,7 +2127,7 @@ function handlePropertyChange(nativeEvent) {
       nativeEvent,
       getEventTarget(nativeEvent)
     );
-    batchedUpdates$2(runEventInBatch, dispatchQueue);
+    batchedUpdates$2(runEventInBatch$1, dispatchQueue);
   }
 }
 function handleEventsForInputEventPolyfill(domEventName, target, targetInst) {
@@ -2348,7 +2347,7 @@ var ANIMATION_END = getVendorPrefixedEventName("animationend"),
   TRANSITION_END = getVendorPrefixedEventName("transitionend"),
   topLevelEventsToReactNames = new Map(),
   simpleEventPluginEvents =
-    "abort auxClick beforeToggle cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll scrollEnd toggle touchMove waiting wheel".split(
+    "abort auxClick beforeToggle cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll toggle touchMove waiting wheel".split(
       " "
     );
 function registerSimpleEvent(domEventName, reactName) {
@@ -10139,7 +10138,8 @@ function prepareToHydrateHostInstance(fiber) {
         listenToNonDelegatedEvent("toggle", instance)),
       null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
       null != props.onScrollEnd &&
-        listenToNonDelegatedEvent("scrollend", instance),
+        (listenToNonDelegatedEvent("scrollend", instance),
+        listenToNonDelegatedEvent("scroll", instance)),
       null != props.onClick && (instance.onclick = noop$2),
       (instance = !0))
     : (instance = !1);
@@ -12457,7 +12457,7 @@ function createFormDataWithSubmitter(form, submitter) {
   temp.parentNode.removeChild(temp);
   return form;
 }
-function extractEvents$1(
+function extractEvents$2(
   dispatchQueue,
   domEventName,
   maybeTargetInst,
@@ -12532,21 +12532,56 @@ function extractEvents$1(
     });
   }
 }
+var isScrollEndEventSupported = canUseDOM && isEventSupported("scrollend"),
+  isTouchStarted = !1,
+  isMouseDown = !1;
+function runEventInBatch(dispatchQueue) {
+  processDispatchQueue(dispatchQueue, 0);
+}
+function fireScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
+  nativeEventTarget[internalScrollTimer] = void 0;
+  if (isMouseDown || isTouchStarted)
+    debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget);
+  else {
+    var dispatchQueue = [];
+    targetInst = accumulateTwoPhaseListeners(targetInst, "onScrollEnd");
+    0 < targetInst.length &&
+      ((nativeEvent = new SyntheticUIEvent(
+        "onScrollEnd",
+        "scrollend",
+        null,
+        nativeEvent,
+        nativeEventTarget
+      )),
+      dispatchQueue.push({ event: nativeEvent, listeners: targetInst }));
+    batchedUpdates$2(runEventInBatch, dispatchQueue);
+  }
+}
+function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
+  var existingTimer = nativeEventTarget[internalScrollTimer];
+  null != existingTimer && clearTimeout(existingTimer);
+  null !== targetInst &&
+    ((targetInst = setTimeout(
+      fireScrollEnd.bind(null, targetInst, nativeEvent, nativeEventTarget),
+      200
+    )),
+    (nativeEventTarget[internalScrollTimer] = targetInst));
+}
 for (
-  var i$jscomp$inline_1564 = 0;
-  i$jscomp$inline_1564 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1564++
+  var i$jscomp$inline_1568 = 0;
+  i$jscomp$inline_1568 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1568++
 ) {
-  var eventName$jscomp$inline_1565 =
-      simpleEventPluginEvents[i$jscomp$inline_1564],
-    domEventName$jscomp$inline_1566 =
-      eventName$jscomp$inline_1565.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1567 =
-      eventName$jscomp$inline_1565[0].toUpperCase() +
-      eventName$jscomp$inline_1565.slice(1);
+  var eventName$jscomp$inline_1569 =
+      simpleEventPluginEvents[i$jscomp$inline_1568],
+    domEventName$jscomp$inline_1570 =
+      eventName$jscomp$inline_1569.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1571 =
+      eventName$jscomp$inline_1569[0].toUpperCase() +
+      eventName$jscomp$inline_1569.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1566,
-    "on" + capitalizedEvent$jscomp$inline_1567
+    domEventName$jscomp$inline_1570,
+    "on" + capitalizedEvent$jscomp$inline_1571
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -12590,6 +12625,12 @@ registerTwoPhaseEvent(
 registerTwoPhaseEvent(
   "onCompositionUpdate",
   "compositionupdate focusout keydown keypress keyup mousedown".split(" ")
+);
+registerTwoPhaseEvent(
+  "onScrollEnd",
+  "scroll scrollend touchstart touchcancel touchend mousedown mouseup".split(
+    " "
+  )
 );
 var mediaEventTypes =
     "abort canplay canplaythrough durationchange emptied encrypted ended error loadeddata loadedmetadata loadstart pause play playing progress ratechange resize seeked seeking stalled suspend timeupdate volumechange waiting".split(
@@ -12873,35 +12914,15 @@ function dispatchEventForPluginEventSystem(
           case "beforetoggle":
             SyntheticEventCtor = SyntheticToggleEvent;
         }
-        var inCapturePhase = 0 !== (eventSystemFlags & 4),
-          accumulateTargetOnly =
-            !inCapturePhase &&
-            ("scroll" === domEventName || "scrollend" === domEventName),
-          reactEventName = inCapturePhase
-            ? null !== reactName
-              ? reactName + "Capture"
-              : null
-            : reactName;
-        inCapturePhase = [];
-        for (
-          var instance = targetInst, lastHostComponent;
-          null !== instance;
-
-        ) {
-          var _instance = instance;
-          lastHostComponent = _instance.stateNode;
-          _instance = _instance.tag;
-          (5 !== _instance && 26 !== _instance && 27 !== _instance) ||
-            null === lastHostComponent ||
-            null === reactEventName ||
-            ((_instance = getListener(instance, reactEventName)),
-            null != _instance &&
-              inCapturePhase.push(
-                createDispatchListener(instance, _instance, lastHostComponent)
-              ));
-          if (accumulateTargetOnly) break;
-          instance = instance.return;
-        }
+        var inCapturePhase = 0 !== (eventSystemFlags & 4);
+        inCapturePhase = accumulateSinglePhaseListeners(
+          targetInst,
+          reactName,
+          nativeEvent.type,
+          inCapturePhase,
+          !inCapturePhase &&
+            ("scroll" === domEventName || "scrollend" === domEventName)
+        );
         0 < inCapturePhase.length &&
           ((reactName = new SyntheticEventCtor(
             reactName,
@@ -12943,108 +12964,103 @@ function dispatchEventForPluginEventSystem(
               (reactEventType = reactEventType
                 ? getClosestInstanceFromNode(reactEventType)
                 : null),
-              null !== reactEventType &&
-                ((accumulateTargetOnly =
-                  getNearestMountedFiber(reactEventType)),
-                (inCapturePhase = reactEventType.tag),
-                reactEventType !== accumulateTargetOnly ||
-                  (5 !== inCapturePhase &&
-                    27 !== inCapturePhase &&
-                    6 !== inCapturePhase)))
-            )
-              reactEventType = null;
+              null !== reactEventType)
+            ) {
+              inCapturePhase = getNearestMountedFiber(reactEventType);
+              var tag = reactEventType.tag;
+              if (
+                reactEventType !== inCapturePhase ||
+                (5 !== tag && 27 !== tag && 6 !== tag)
+              )
+                reactEventType = null;
+            }
           } else (SyntheticEventCtor = null), (reactEventType = targetInst);
           if (SyntheticEventCtor !== reactEventType) {
-            inCapturePhase = SyntheticMouseEvent;
-            _instance = "onMouseLeave";
-            reactEventName = "onMouseEnter";
-            instance = "mouse";
+            tag = SyntheticMouseEvent;
+            var leaveEventType = "onMouseLeave",
+              enterEventType = "onMouseEnter",
+              eventTypePrefix = "mouse";
             if ("pointerout" === domEventName || "pointerover" === domEventName)
-              (inCapturePhase = SyntheticPointerEvent),
-                (_instance = "onPointerLeave"),
-                (reactEventName = "onPointerEnter"),
-                (instance = "pointer");
-            accumulateTargetOnly =
+              (tag = SyntheticPointerEvent),
+                (leaveEventType = "onPointerLeave"),
+                (enterEventType = "onPointerEnter"),
+                (eventTypePrefix = "pointer");
+            inCapturePhase =
               null == SyntheticEventCtor
                 ? reactName
                 : getNodeFromInstance(SyntheticEventCtor);
-            lastHostComponent =
+            var toNode =
               null == reactEventType
                 ? reactName
                 : getNodeFromInstance(reactEventType);
-            reactName = new inCapturePhase(
-              _instance,
-              instance + "leave",
+            reactName = new tag(
+              leaveEventType,
+              eventTypePrefix + "leave",
               SyntheticEventCtor,
               nativeEvent,
               nativeEventTarget
             );
-            reactName.target = accumulateTargetOnly;
-            reactName.relatedTarget = lastHostComponent;
-            _instance = null;
+            reactName.target = inCapturePhase;
+            reactName.relatedTarget = toNode;
+            leaveEventType = null;
             getClosestInstanceFromNode(nativeEventTarget) === targetInst &&
-              ((inCapturePhase = new inCapturePhase(
-                reactEventName,
-                instance + "enter",
+              ((tag = new tag(
+                enterEventType,
+                eventTypePrefix + "enter",
                 reactEventType,
                 nativeEvent,
                 nativeEventTarget
               )),
-              (inCapturePhase.target = lastHostComponent),
-              (inCapturePhase.relatedTarget = accumulateTargetOnly),
-              (_instance = inCapturePhase));
-            accumulateTargetOnly = _instance;
+              (tag.target = toNode),
+              (tag.relatedTarget = inCapturePhase),
+              (leaveEventType = tag));
+            inCapturePhase = leaveEventType;
             if (SyntheticEventCtor && reactEventType)
               b: {
-                inCapturePhase = SyntheticEventCtor;
-                reactEventName = reactEventType;
-                instance = 0;
+                tag = SyntheticEventCtor;
+                enterEventType = reactEventType;
+                eventTypePrefix = 0;
+                for (toNode = tag; toNode; toNode = getParent(toNode))
+                  eventTypePrefix++;
+                toNode = 0;
                 for (
-                  lastHostComponent = inCapturePhase;
-                  lastHostComponent;
-                  lastHostComponent = getParent(lastHostComponent)
+                  leaveEventType = enterEventType;
+                  leaveEventType;
+                  leaveEventType = getParent(leaveEventType)
                 )
-                  instance++;
-                lastHostComponent = 0;
-                for (
-                  _instance = reactEventName;
-                  _instance;
-                  _instance = getParent(_instance)
-                )
-                  lastHostComponent++;
-                for (; 0 < instance - lastHostComponent; )
-                  (inCapturePhase = getParent(inCapturePhase)), instance--;
-                for (; 0 < lastHostComponent - instance; )
-                  (reactEventName = getParent(reactEventName)),
-                    lastHostComponent--;
-                for (; instance--; ) {
+                  toNode++;
+                for (; 0 < eventTypePrefix - toNode; )
+                  (tag = getParent(tag)), eventTypePrefix--;
+                for (; 0 < toNode - eventTypePrefix; )
+                  (enterEventType = getParent(enterEventType)), toNode--;
+                for (; eventTypePrefix--; ) {
                   if (
-                    inCapturePhase === reactEventName ||
-                    (null !== reactEventName &&
-                      inCapturePhase === reactEventName.alternate)
+                    tag === enterEventType ||
+                    (null !== enterEventType &&
+                      tag === enterEventType.alternate)
                   )
                     break b;
-                  inCapturePhase = getParent(inCapturePhase);
-                  reactEventName = getParent(reactEventName);
+                  tag = getParent(tag);
+                  enterEventType = getParent(enterEventType);
                 }
-                inCapturePhase = null;
+                tag = null;
               }
-            else inCapturePhase = null;
+            else tag = null;
             null !== SyntheticEventCtor &&
               accumulateEnterLeaveListenersForEvent(
                 dispatchQueue,
                 reactName,
                 SyntheticEventCtor,
-                inCapturePhase,
+                tag,
                 !1
               );
             null !== reactEventType &&
-              null !== accumulateTargetOnly &&
+              null !== inCapturePhase &&
               accumulateEnterLeaveListenersForEvent(
                 dispatchQueue,
-                accumulateTargetOnly,
-                reactEventType,
                 inCapturePhase,
+                reactEventType,
+                tag,
                 !0
               );
           }
@@ -13189,13 +13205,65 @@ function dispatchEventForPluginEventSystem(
               listeners: eventType
             }),
             (handleEventFunc.data = fallbackData));
-      extractEvents$1(
+      extractEvents$2(
         dispatchQueue,
         domEventName,
         targetInst,
         nativeEvent,
         nativeEventTarget
       );
+    }
+    a: if (
+      ((fallbackData = 0 !== (eventSystemFlags & 4)),
+      "scrollend" !== domEventName)
+    ) {
+      if (!isScrollEndEventSupported && fallbackData)
+        switch (domEventName) {
+          case "scroll":
+            null !== nativeEventTarget &&
+              debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget);
+            break;
+          case "touchstart":
+            isTouchStarted = !0;
+            break;
+          case "touchcancel":
+          case "touchend":
+            isTouchStarted = !1;
+            break;
+          case "mousedown":
+            isMouseDown = !0;
+            break;
+          case "mouseup":
+            isMouseDown = !1;
+        }
+    } else {
+      if (!isScrollEndEventSupported && null !== nativeEventTarget)
+        if (
+          ((eventType = nativeEventTarget[internalScrollTimer]),
+          null != eventType)
+        )
+          clearTimeout(eventType),
+            (nativeEventTarget[internalScrollTimer] = void 0);
+        else break a;
+      targetInst = accumulateSinglePhaseListeners(
+        targetInst,
+        "onScrollEnd",
+        "scrollend",
+        fallbackData,
+        !fallbackData
+      );
+      0 < targetInst.length &&
+        ((nativeEventTarget = new SyntheticUIEvent(
+          "onScrollEnd",
+          "scrollend",
+          null,
+          nativeEvent,
+          nativeEventTarget
+        )),
+        dispatchQueue.push({
+          event: nativeEventTarget,
+          listeners: targetInst
+        }));
     }
     processDispatchQueue(dispatchQueue, eventSystemFlags);
   });
@@ -13206,6 +13274,35 @@ function createDispatchListener(instance, listener, currentTarget) {
     listener: listener,
     currentTarget: currentTarget
   };
+}
+function accumulateSinglePhaseListeners(
+  targetFiber,
+  reactName,
+  nativeEventType,
+  inCapturePhase,
+  accumulateTargetOnly
+) {
+  reactName = inCapturePhase
+    ? null !== reactName
+      ? reactName + "Capture"
+      : null
+    : reactName;
+  for (nativeEventType = []; null !== targetFiber; ) {
+    var _instance = targetFiber;
+    inCapturePhase = _instance.stateNode;
+    _instance = _instance.tag;
+    (5 !== _instance && 26 !== _instance && 27 !== _instance) ||
+      null === inCapturePhase ||
+      null === reactName ||
+      ((_instance = getListener(targetFiber, reactName)),
+      null != _instance &&
+        nativeEventType.push(
+          createDispatchListener(targetFiber, _instance, inCapturePhase)
+        ));
+    if (accumulateTargetOnly) break;
+    targetFiber = targetFiber.return;
+  }
+  return nativeEventType;
 }
 function accumulateTwoPhaseListeners(targetFiber, reactName) {
   for (
@@ -13228,9 +13325,10 @@ function accumulateTwoPhaseListeners(targetFiber, reactName) {
         listeners.push(
           createDispatchListener(targetFiber, _instance2, stateNode)
         ));
+    if (3 === targetFiber.tag) return listeners;
     targetFiber = targetFiber.return;
   }
-  return listeners;
+  return [];
 }
 function getParent(inst) {
   if (null === inst) return null;
@@ -13395,7 +13493,9 @@ function setProp(domElement, tag, key, value, props, prevValue) {
       null != value && listenToNonDelegatedEvent("scroll", domElement);
       break;
     case "onScrollEnd":
-      null != value && listenToNonDelegatedEvent("scrollend", domElement);
+      null != value &&
+        (listenToNonDelegatedEvent("scrollend", domElement),
+        listenToNonDelegatedEvent("scroll", domElement));
       break;
     case "dangerouslySetInnerHTML":
       if (null != value) {
@@ -13632,7 +13732,9 @@ function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
       null != value && listenToNonDelegatedEvent("scroll", domElement);
       break;
     case "onScrollEnd":
-      null != value && listenToNonDelegatedEvent("scrollend", domElement);
+      null != value &&
+        (listenToNonDelegatedEvent("scrollend", domElement),
+        listenToNonDelegatedEvent("scroll", domElement));
       break;
     case "onClick":
       null != value && (domElement.onclick = noop$2);
@@ -16078,16 +16180,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1812 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1817 = React.version;
 if (
-  "19.1.0-native-fb-3607f483-20250227" !==
-  isomorphicReactPackageVersion$jscomp$inline_1812
+  "19.1.0-native-fb-605a880c-20250303" !==
+  isomorphicReactPackageVersion$jscomp$inline_1817
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1812,
-      "19.1.0-native-fb-3607f483-20250227"
+      isomorphicReactPackageVersion$jscomp$inline_1817,
+      "19.1.0-native-fb-605a880c-20250303"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16107,24 +16209,24 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2285 = {
+var internals$jscomp$inline_2290 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-3607f483-20250227",
+  version: "19.1.0-native-fb-605a880c-20250303",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-3607f483-20250227"
+  reconcilerVersion: "19.1.0-native-fb-605a880c-20250303"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2286 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2291 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2286.isDisabled &&
-    hook$jscomp$inline_2286.supportsFiber
+    !hook$jscomp$inline_2291.isDisabled &&
+    hook$jscomp$inline_2291.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2286.inject(
-        internals$jscomp$inline_2285
+      (rendererID = hook$jscomp$inline_2291.inject(
+        internals$jscomp$inline_2290
       )),
-        (injectedHook = hook$jscomp$inline_2286);
+        (injectedHook = hook$jscomp$inline_2291);
     } catch (err) {}
 }
 function noop() {}
@@ -16370,4 +16472,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-3607f483-20250227";
+exports.version = "19.1.0-native-fb-605a880c-20250303";
