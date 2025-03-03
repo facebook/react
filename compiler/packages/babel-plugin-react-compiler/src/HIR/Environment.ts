@@ -285,7 +285,7 @@ const EnvironmentConfigSchema = z.object({
       z.array(
         z.object({
           function: ExternalFunctionSchema,
-          numRequiredArgs: z.number(),
+          numRequiredArgs: z.number().min(1, 'numRequiredArgs must be > 0'),
         }),
       ),
     )
