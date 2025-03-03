@@ -237,8 +237,8 @@ import {
   commitHostRemoveChild,
   commitHostSingletonAcquisition,
   commitHostSingletonRelease,
-  commitFragmentInstanceInsertionEffects,
   commitFragmentInstanceDeletionEffects,
+  commitFragmentInstanceInsertionEffects,
 } from './ReactFiberCommitHostEffects';
 import {
   commitEnterViewTransitions,
@@ -2387,9 +2387,6 @@ function commitReconciliationEffects(
   const flags = finishedWork.flags;
   if (flags & Placement) {
     commitHostPlacement(finishedWork);
-    if (enableFragmentRefs && finishedWork.tag === HostComponent) {
-      commitFragmentInstanceInsertionEffects(finishedWork);
-    }
     // Clear the "placement" from effect tag so that we know that this is
     // inserted, before any life-cycles like componentDidMount gets called.
     // TODO: findDOMNode doesn't rely on this any more but isMounted does
