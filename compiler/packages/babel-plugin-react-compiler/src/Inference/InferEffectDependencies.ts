@@ -196,6 +196,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
                 // exclude non-reactive hook results, which will never be in a memo block
                 continue;
               }
+
               const {place, instructions} = writeDependencyToInstructions(
                 dep,
                 reactiveIds.has(dep.identifier.id),
