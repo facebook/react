@@ -9,6 +9,7 @@
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer.www';
+import {enableReplaceLegacyHiddenWithActivity} from './ReactFeatureFlags.www';
 
 export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
@@ -86,6 +87,7 @@ export const enableViewTransition = false;
 export const enableSwipeTransition = false;
 export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
+export const enableReplaceLegacyHiddenWithActivity = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

@@ -34,7 +34,10 @@ import {
 } from './ReactFiberLane';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {HostRoot, OffscreenComponent} from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberActivityComponent';
+import {
+  isLegacyHiddenMode,
+  OffscreenVisible,
+} from './ReactFiberActivityComponent';
 
 export type ConcurrentUpdate = {
   next: ConcurrentUpdate,
@@ -233,7 +236,7 @@ function markUpdateLaneFromFiberToRoot(
       alternate.childLanes = mergeLanes(alternate.childLanes, lane);
     }
 
-    if (parent.tag === OffscreenComponent) {
+    if (parent.tag === OffscreenComponent && !isLegacyHiddenMode(parent)) {
       // Check if this offscreen boundary is currently hidden.
       //
       // The instance may be null if the Offscreen parent was unmounted. Usually

@@ -26,7 +26,10 @@ import type {SuspenseState, RetryQueue} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {Wakeable} from 'shared/ReactTypes';
-import {isOffscreenManual} from './ReactFiberActivityComponent';
+import {
+  isLegacyHiddenMode,
+  isOffscreenManual,
+} from './ReactFiberActivityComponent';
 import type {
   OffscreenState,
   OffscreenInstance,
@@ -61,6 +64,7 @@ import {
   disableLegacyMode,
   enableComponentPerformanceTrack,
   enableViewTransition,
+  enableReplaceLegacyHiddenWithActivity,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -700,6 +704,18 @@ function commitLayoutEffectOnFiber(
       break;
     }
     case OffscreenComponent: {
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        (isLegacyHiddenMode(finishedWork) || isLegacyHiddenMode(current))
+      ) {
+        recursivelyTraverseLayoutEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+        );
+        break;
+      }
+
       const isModernRoot =
         disableLegacyMode || (finishedWork.mode & ConcurrentMode) !== NoMode;
       if (isModernRoot) {
@@ -1534,6 +1550,17 @@ function commitDeletionEffectsOnFiber(
       return;
     }
     case OffscreenComponent: {
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        isLegacyHiddenMode(deletedFiber)
+      ) {
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber,
+        );
+        break;
+      }
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
       }
@@ -1643,13 +1670,20 @@ function getRetryCache(finishedWork: Fiber) {
       return retryCache;
     }
     case OffscreenComponent: {
-      const instance: OffscreenInstance = finishedWork.stateNode;
-      let retryCache: null | Set<Wakeable> | WeakSet<Wakeable> =
-        instance._retryCache;
-      if (retryCache === null) {
-        retryCache = instance._retryCache = new PossiblyWeakSet();
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        isLegacyHiddenMode(finishedWork)
+      ) {
+        // Fall through to error
+      } else {
+        const instance: OffscreenInstance = finishedWork.stateNode;
+        let retryCache: null | Set<Wakeable> | WeakSet<Wakeable> =
+          instance._retryCache;
+        if (retryCache === null) {
+          retryCache = instance._retryCache = new PossiblyWeakSet();
+        }
+        return retryCache;
       }
-      return retryCache;
     }
     default: {
       throw new Error(
@@ -2168,6 +2202,14 @@ function commitMutationEffectsOnFiber(
       break;
     }
     case OffscreenComponent: {
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        (isLegacyHiddenMode(finishedWork) || isLegacyHiddenMode(current))
+      ) {
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes);
+        break;
+      }
       if (flags & Ref) {
         if (!offscreenSubtreeWasHidden && current !== null) {
           safelyDetachRef(current, current.return);
@@ -2473,6 +2515,13 @@ function commitAfterMutationEffectsOnFiber(
       break;
     }
     case OffscreenComponent: {
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        (isLegacyHiddenMode(finishedWork) || isLegacyHiddenMode(current))
+      ) {
+        recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
+        break;
+      }
       const isModernRoot =
         disableLegacyMode || (finishedWork.mode & ConcurrentMode) !== NoMode;
       if (isModernRoot) {
@@ -2645,6 +2694,14 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       break;
     }
     case OffscreenComponent: {
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        isLegacyHiddenMode(finishedWork)
+      ) {
+        recursivelyTraverseDisappearLayoutEffects(finishedWork);
+        break;
+      }
+
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
 
@@ -2835,6 +2892,17 @@ export function reappearLayoutEffects(
       break;
     }
     case OffscreenComponent: {
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        isLegacyHiddenMode(finishedWork)
+      ) {
+        recursivelyTraverseReappearLayoutEffects(
+          finishedRoot,
+          finishedWork,
+          includeWorkInProgressEffects,
+        );
+        break;
+      }
       const offscreenState: OffscreenState = finishedWork.memoizedState;
       const isHidden = offscreenState !== null;
       if (isHidden) {
@@ -3463,6 +3531,27 @@ function commitPassiveMountOnFiber(
       break;
     }
     case OffscreenComponent: {
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        (isLegacyHiddenMode(finishedWork) ||
+          isLegacyHiddenMode(finishedWork.alternate))
+      ) {
+        recursivelyTraversePassiveMountEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions,
+          endTime,
+        );
+
+        if (flags & Passive) {
+          const current = finishedWork.alternate;
+          const instance: OffscreenInstance = finishedWork.stateNode;
+          commitOffscreenPassiveMountEffects(current, finishedWork, instance);
+        }
+        break;
+      }
+
       // TODO: Pass `current` as argument to this function
       const instance: OffscreenInstance = finishedWork.stateNode;
       const current = finishedWork.alternate;
@@ -3780,6 +3869,21 @@ export function reconnectPassiveEffects(
       break;
     }
     case OffscreenComponent: {
+      if (
+        (enableReplaceLegacyHiddenWithActivity &&
+          isLegacyHiddenMode(finishedWork)) ||
+        isLegacyHiddenMode(finishedWork.alternate)
+      ) {
+        recursivelyTraverseReconnectPassiveEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions,
+          includeWorkInProgressEffects,
+          endTime,
+        );
+        break;
+      }
       const instance: OffscreenInstance = finishedWork.stateNode;
       const nextState: OffscreenState | null = finishedWork.memoizedState;
 
@@ -3995,11 +4099,16 @@ function commitAtomicPassiveEffects(
         committedTransitions,
         endTime,
       );
-      if (flags & Passive) {
-        // TODO: Pass `current` as argument to this function
-        const current = finishedWork.alternate;
-        const instance: OffscreenInstance = finishedWork.stateNode;
-        commitOffscreenPassiveMountEffects(current, finishedWork, instance);
+      // TODO: Pass `current` as argument to this function
+      const current = finishedWork.alternate;
+      if (
+        !enableReplaceLegacyHiddenWithActivity ||
+        (!isLegacyHiddenMode(finishedWork) && !isLegacyHiddenMode(current))
+      ) {
+        if (flags & Passive) {
+          const instance: OffscreenInstance = finishedWork.stateNode;
+          commitOffscreenPassiveMountEffects(current, finishedWork, instance);
+        }
       }
       break;
     }
@@ -4110,6 +4219,13 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
       break;
     }
     case OffscreenComponent: {
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        (isLegacyHiddenMode(fiber) || isLegacyHiddenMode(fiber.alternate))
+      ) {
+        recursivelyAccumulateSuspenseyCommit(fiber);
+        break;
+      }
       const isHidden = (fiber.memoizedState: OffscreenState | null) !== null;
       if (isHidden) {
         // Don't suspend in hidden trees
@@ -4257,6 +4373,14 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
       break;
     }
     case OffscreenComponent: {
+      if (
+        (enableReplaceLegacyHiddenWithActivity &&
+          isLegacyHiddenMode(finishedWork)) ||
+        isLegacyHiddenMode(finishedWork.alternate)
+      ) {
+        recursivelyTraversePassiveUnmountEffects(finishedWork);
+        break;
+      }
       const instance: OffscreenInstance = finishedWork.stateNode;
       const nextState: OffscreenState | null = finishedWork.memoizedState;
 
@@ -4355,6 +4479,14 @@ export function disconnectPassiveEffect(finishedWork: Fiber): void {
       break;
     }
     case OffscreenComponent: {
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        (isLegacyHiddenMode(finishedWork) ||
+          isLegacyHiddenMode(finishedWork.alternate))
+      ) {
+        recursivelyTraverseDisconnectPassiveEffects(finishedWork);
+        break;
+      }
       const instance: OffscreenInstance = finishedWork.stateNode;
       if (instance._visibility & OffscreenPassiveEffectsConnected) {
         instance._visibility &= ~OffscreenPassiveEffectsConnected;

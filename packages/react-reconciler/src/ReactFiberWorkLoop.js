@@ -351,6 +351,7 @@ import {
   deleteScheduledGesture,
   stopCompletedGestures,
 } from './ReactFiberGestureScheduler';
+import {isLegacyHiddenMode} from './ReactFiberActivityComponent';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -4442,6 +4443,9 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
       retryCache = boundaryFiber.stateNode;
       break;
     case OffscreenComponent: {
+      if (isLegacyHiddenMode(boundaryFiber)) {
+        // Fall through to error.
+      }
       const instance: OffscreenInstance = boundaryFiber.stateNode;
       retryCache = instance._retryCache;
       break;
@@ -4560,7 +4564,7 @@ function doubleInvokeEffectsInDEVIfNecessary(
 
   // First case: the fiber **is not** of type OffscreenComponent. No
   // special rules apply to double invoking effects.
-  if (fiber.tag !== OffscreenComponent) {
+  if (fiber.tag !== OffscreenComponent || isLegacyHiddenMode(fiber)) {
     if (fiber.flags & PlacementDEV) {
       if (isInStrictMode) {
         runWithFiberInDEV(

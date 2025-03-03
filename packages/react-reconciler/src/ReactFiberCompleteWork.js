@@ -28,7 +28,10 @@ import type {
   OffscreenState,
   OffscreenQueue,
 } from './ReactFiberActivityComponent';
-import {isOffscreenManual} from './ReactFiberActivityComponent';
+import {
+  isLegacyHiddenMode,
+  isOffscreenManual,
+} from './ReactFiberActivityComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import {
@@ -180,6 +183,7 @@ import {
   popRootMarkerInstance,
 } from './ReactFiberTracingMarkerComponent';
 import {suspendCommit} from './ReactFiberThenable';
+import {enableReplaceLegacyHiddenWithActivity} from 'shared/forks/ReactFeatureFlags.native-fb-dynamic';
 
 /**
  * Tag the fiber with an update effect. This turns a Placement into
@@ -299,7 +303,8 @@ function appendAllChildren(
         // the portal directly.
       } else if (
         node.tag === OffscreenComponent &&
-        node.memoizedState !== null
+        node.memoizedState !== null &&
+        !isLegacyHiddenMode(node)
       ) {
         // The children in this boundary are hidden. Toggle their visibility
         // before appending.
@@ -371,7 +376,8 @@ function appendAllChildrenToContainer(
         // the portal directly.
       } else if (
         node.tag === OffscreenComponent &&
-        node.memoizedState !== null
+        node.memoizedState !== null &&
+        !isLegacyHiddenMode(node)
       ) {
         // The children in this boundary are hidden. Toggle their visibility
         // before appending.
@@ -619,7 +625,8 @@ function scheduleRetryEffect(
       // TODO: This check should probably be moved into claimNextRetryLane
       // I also suspect that we need some further consolidation of offscreen
       // and retry lanes.
-      workInProgress.tag !== OffscreenComponent
+      workInProgress.tag !== OffscreenComponent ||
+      isLegacyHiddenMode(workInProgress)
         ? claimNextRetryLane()
         : OffscreenLane;
     workInProgress.lanes = mergeLanes(workInProgress.lanes, retryLane);
@@ -1755,10 +1762,18 @@ function completeWork(
       const nextState: OffscreenState | null = workInProgress.memoizedState;
       const nextIsHidden = nextState !== null;
 
-      // Schedule a Visibility effect if the visibility has changed
-      if (enableLegacyHidden && workInProgress.tag === LegacyHiddenComponent) {
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        isLegacyHiddenMode(workInProgress)
+      ) {
+        // LegacyHidden doesn't do any hiding — it only pre-renders.
+      } else if (
+        enableLegacyHidden &&
+        workInProgress.tag === LegacyHiddenComponent
+      ) {
         // LegacyHidden doesn't do any hiding — it only pre-renders.
       } else {
+        // Schedule a Visibility effect if the visibility has changed
         if (current !== null) {
           const prevState: OffscreenState | null = current.memoizedState;
           const prevIsHidden = prevState !== null;
@@ -1793,10 +1808,16 @@ function completeWork(
           // If so, we need to hide those nodes in the commit phase, so
           // schedule a visibility effect.
           if (
-            (!enableLegacyHidden ||
-              workInProgress.tag !== LegacyHiddenComponent) &&
-            workInProgress.subtreeFlags & (Placement | Update)
+            enableLegacyHidden &&
+            workInProgress.tag === LegacyHiddenComponent
           ) {
+            // LegacyHidden doesn't do any hiding — it only pre-renders.
+          } else if (
+            enableReplaceLegacyHiddenWithActivity &&
+            isLegacyHiddenMode(workInProgress)
+          ) {
+            // LegacyHidden doesn't do any hiding — it only pre-renders.
+          } else if (workInProgress.subtreeFlags & (Placement | Update)) {
             workInProgress.flags |= Visibility;
           }
         }

@@ -139,9 +139,13 @@ export type Thenable<T> =
 
 export type OffscreenMode =
   | 'hidden'
-  | 'unstable-defer-without-hiding'
   | 'visible'
-  | 'manual';
+  | 'manual'
+  // These two modes are not shipping and www only.
+  // This will SSR the content, and mount the effects when hydrating.
+  | 'unstable-legacy-hidden'
+  // This will SSR the content, defer rendering, but will not hide the content, or defer effects.
+  | 'unstable-defer-without-hiding';
 
 export type StartTransitionOptions = {
   name?: string,

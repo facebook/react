@@ -16,6 +16,8 @@ import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
 import {OffscreenComponent} from './ReactWorkTags';
+import {isLegacyHiddenMode} from './ReactFiberActivityComponent';
+import {enableReplaceLegacyHiddenWithActivity} from 'shared/forks/ReactFeatureFlags.native-fb-dynamic';
 
 // The Suspense handler is the boundary that should capture if something
 // suspends, i.e. it's the nearest `catch` block on the stack.
@@ -107,7 +109,10 @@ export function pushFallbackTreeSuspenseHandler(fiber: Fiber): void {
 }
 
 export function pushOffscreenSuspenseHandler(fiber: Fiber): void {
-  if (fiber.tag === OffscreenComponent) {
+  if (
+    fiber.tag === OffscreenComponent &&
+    (!enableReplaceLegacyHiddenWithActivity || !isLegacyHiddenMode(fiber))
+  ) {
     // A SuspenseList context is only pushed here to avoid a push/pop mismatch.
     // Reuse the current value on the stack.
     // TODO: We can avoid needing to push here by by forking popSuspenseHandler

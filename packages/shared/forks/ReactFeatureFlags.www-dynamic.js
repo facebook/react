@@ -46,3 +46,5 @@ export const enableViewTransition = __VARIANT__;
 export const enableTrustedTypesIntegration = false;
 // You probably *don't* want to add more hardcoded ones.
 // Instead, try to add them above with the __VARIANT__ value.
+
+export const enableReplaceLegacyHiddenWithActivity = __VARIANT__;

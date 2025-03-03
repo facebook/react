@@ -28,3 +28,4 @@ export const enableSiblingPrerendering = __VARIANT__;
 export const enableUseEffectCRUDOverload = __VARIANT__;
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = __VARIANT__;
+export const enableReplaceLegacyHiddenWithActivity = __VARIANT__;

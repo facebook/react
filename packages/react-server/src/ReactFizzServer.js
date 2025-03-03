@@ -175,6 +175,7 @@ import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
 import {SuspenseException, getSuspendedThenable} from './ReactFizzThenable';
 import type {Postpone} from 'react/src/ReactPostpone';
+import {enableReplaceLegacyHiddenWithActivity} from 'shared/forks/ReactFeatureFlags.native-fb-dynamic';
 
 // Linked list representing the identity of a component given the component/tag name and key.
 // The name might be minified but we assume that it's going to be the same generated name. Typically
@@ -2264,6 +2265,18 @@ function renderElement(
     }
     case REACT_ACTIVITY_TYPE:
     case REACT_OFFSCREEN_TYPE: {
+      if (
+        enableReplaceLegacyHiddenWithActivity &&
+        (props.mode === 'unstable-legacy-hidden' ||
+          props.mode === 'unstable-defer-without-hiding')
+      ) {
+        // Always render hidden content for legacy hidden modes.
+        const prevKeyPath = task.keyPath;
+        task.keyPath = keyPath;
+        renderNodeDestructive(request, task, props.children, -1);
+        task.keyPath = prevKeyPath;
+        return;
+      }
       renderOffscreen(request, task, keyPath, props);
       return;
     }

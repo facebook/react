@@ -30,6 +30,7 @@ export const {
   enableSiblingPrerendering,
   enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric,
+  enableReplaceLegacyHiddenWithActivity,
 } = dynamicFlags;
 
 // These two can be removed

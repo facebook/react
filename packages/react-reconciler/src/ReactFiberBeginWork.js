@@ -304,6 +304,7 @@ import {
   callComponentInDEV,
   callRenderInDEV,
 } from './ReactFiberCallUserSpace';
+import {enableReplaceLegacyHiddenWithActivity} from 'shared/ReactFeatureFlags';
 
 // A special exception that's used to unwind the stack when an update flows
 // into a dehydrated boundary.
@@ -659,6 +660,8 @@ function updateOffscreenComponent(
     nextProps.mode === 'hidden' ||
     (enableLegacyHidden &&
       nextProps.mode === 'unstable-defer-without-hiding') ||
+    (enableReplaceLegacyHiddenWithActivity &&
+      nextProps.mode === 'unstable-legacy-hidden') ||
     nextIsDetached
   ) {
     // Rendering a hidden tree.

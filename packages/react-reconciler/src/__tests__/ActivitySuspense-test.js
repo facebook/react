@@ -141,9 +141,12 @@ describe('Activity Suspense', () => {
   test('LegacyHidden does not handle suspense', async () => {
     const root = ReactNoop.createRoot();
 
+    function Fallback() {
+      return <Text text="Loading..." />;
+    }
     function App() {
       return (
-        <Suspense fallback={<Text text="Loading..." />}>
+        <Suspense fallback={<Fallback />}>
           <span>
             <Text text="Visible" />
           </span>

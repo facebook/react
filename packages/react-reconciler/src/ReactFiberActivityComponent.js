@@ -69,3 +69,12 @@ export function isOffscreenManual(offscreenFiber: Fiber): boolean {
     offscreenFiber.memoizedProps.mode === 'manual'
   );
 }
+
+export function isLegacyHiddenMode(fiber: Fiber): boolean {
+  return (
+    fiber != null &&
+    fiber.memoizedProps != null &&
+    (fiber.memoizedProps.mode === 'unstable-legacy-hidden' ||
+      fiber.memoizedProps.mode === 'unstable-defer-without-hiding')
+  );
+}

@@ -86,6 +86,7 @@ import {noopSuspenseyCommitThenable} from './ReactFiberThenable';
 import {REACT_POSTPONE_TYPE} from 'shared/ReactSymbols';
 import {runWithFiberInDEV} from './ReactCurrentFiber';
 import {callComponentDidCatchInDEV} from './ReactFiberCallUserSpace';
+import {isLegacyHiddenMode} from './ReactFiberActivityComponent';
 
 function createRootErrorUpdate(
   root: FiberRoot,
@@ -484,6 +485,9 @@ function throwException(
             return false;
           }
           case OffscreenComponent: {
+            if (isLegacyHiddenMode(suspenseBoundary)) {
+              // Fall through to error.
+            }
             if (disableLegacyMode || suspenseBoundary.mode & ConcurrentMode) {
               suspenseBoundary.flags |= ShouldCapture;
               const isSuspenseyResource =

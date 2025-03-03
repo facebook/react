@@ -65,6 +65,7 @@ import {addTransitionType} from './ReactTransitionType';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
 import * as ReactCompilerRuntime from './ReactCompilerRuntime';
+import {enableReplaceLegacyHiddenWithActivity} from 'shared/ReactFeatureFlags';
 
 const Children = {
   map,
@@ -115,7 +116,6 @@ export {
   startTransition,
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
-  REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
   REACT_ACTIVITY_TYPE as unstable_Activity,
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
@@ -134,3 +134,19 @@ export {
   act,
   captureOwnerStack,
 };
+
+let unstable_LegacyHidden;
+if (enableReplaceLegacyHiddenWithActivity) {
+  const Activity = REACT_ACTIVITY_TYPE;
+  unstable_LegacyHidden = function LegacyHidden({mode, children}) {
+    return (
+      <Activity mode={mode === 'hidden' ? 'unstable-legacy-hidden' : mode}>
+        {children}
+      </Activity>
+    );
+  };
+} else {
+  unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
+}
+
+export {unstable_LegacyHidden};
