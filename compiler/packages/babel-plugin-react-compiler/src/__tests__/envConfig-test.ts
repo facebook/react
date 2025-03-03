@@ -24,6 +24,24 @@ describe('parseConfigPragma()', () => {
     );
   });
 
+  it('effect autodeps config must have at least 1 required argument', () => {
+    expect(() => {
+      validateEnvironmentConfig({
+        inferEffectDependencies: [
+          {
+            function: {
+              source: 'react',
+              importSpecifierName: 'useEffect',
+            },
+            numRequiredArgs: 0,
+          },
+        ],
+      } as any);
+    }).toThrowErrorMatchingInlineSnapshot(
+      `"InvalidConfig: Could not validate environment config. Update React Compiler config to fix the error. Validation error: numRequiredArgs must be > 0 at "inferEffectDependencies[0].numRequiredArgs""`,
+    );
+  });
+
   it('can parse stringy enums', () => {
     const stringyHook = {
       effectKind: 'freeze',
