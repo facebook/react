@@ -310,6 +310,26 @@ export function createTextInstance(
   return text;
 }
 
+export type FragmentInstance = null | {
+  _fragmentFiber: Object,
+  ...
+};
+
+export function createFragmentInstance(parentInstance): null {
+  return null;
+}
+
+export function commitNewChildToFragmentInstance(
+  child,
+  fragmentInstance,
+): void {
+  // Noop
+}
+
+export function deleteChildFromFragmentInstance(child, fragmentInstance): void {
+  // Noop
+}
+
 export function finalizeInitialChildren(domElement, type, props) {
   return false;
 }

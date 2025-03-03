@@ -61,6 +61,7 @@ import {
   disableLegacyMode,
   enableComponentPerformanceTrack,
   enableViewTransition,
+  enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -85,6 +86,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   ViewTransitionComponent,
+  Fragment,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -235,6 +237,8 @@ import {
   commitHostRemoveChild,
   commitHostSingletonAcquisition,
   commitHostSingletonRelease,
+  commitFragmentInstanceDeletionEffects,
+  commitFragmentInstanceInsertionEffects,
 } from './ReactFiberCommitHostEffects';
 import {
   commitEnterViewTransitions,
@@ -772,6 +776,13 @@ function commitLayoutEffectOnFiber(
       }
       // Fallthrough
     }
+    case Fragment:
+      if (enableFragmentRefs) {
+        if (flags & Ref) {
+          safelyAttachRef(finishedWork, finishedWork.return);
+        }
+      }
+    // Fallthrough
     default: {
       recursivelyTraverseLayoutEffects(
         finishedRoot,
@@ -1355,6 +1366,9 @@ function commitDeletionEffectsOnFiber(
     case HostComponent: {
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      }
+      if (enableFragmentRefs) {
+        commitFragmentInstanceDeletionEffects(deletedFiber);
       }
       // Intentional fallthrough to next branch
     }
@@ -1950,6 +1964,7 @@ function commitMutationEffectsOnFiber(
     }
     case HostComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+
       commitReconciliationEffects(finishedWork, lanes);
 
       if (flags & Ref) {
@@ -2273,7 +2288,7 @@ function commitMutationEffectsOnFiber(
       }
       break;
     }
-    case ViewTransitionComponent:
+    case ViewTransitionComponent: {
       if (enableViewTransition) {
         if (flags & Ref) {
           if (!offscreenSubtreeWasHidden && current !== null) {
@@ -2301,7 +2316,8 @@ function commitMutationEffectsOnFiber(
         popMutationContext(prevMutationContext);
         break;
       }
-    // Fallthrough
+      break;
+    }
     case ScopeComponent: {
       if (enableScopeAPI) {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -2324,6 +2340,16 @@ function commitMutationEffectsOnFiber(
       }
       break;
     }
+    case Fragment:
+      if (enableFragmentRefs) {
+        if (current && current.stateNode !== null) {
+          current.stateNode._fragmentFiber = finishedWork;
+        }
+        if (flags & Ref) {
+          safelyAttachRef(finishedWork, finishedWork.return);
+        }
+      }
+    // Fallthrough
     default: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork, lanes);
@@ -2641,6 +2667,10 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
 
+      if (enableFragmentRefs && finishedWork.tag === HostComponent) {
+        commitFragmentInstanceDeletionEffects(finishedWork);
+      }
+
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
       break;
     }
@@ -2768,6 +2798,9 @@ export function reappearLayoutEffects(
     }
     case HostHoistable:
     case HostComponent: {
+      if (enableFragmentRefs && finishedWork.tag === HostComponent) {
+        commitFragmentInstanceInsertionEffects(finishedWork);
+      }
       recursivelyTraverseReappearLayoutEffects(
         finishedRoot,
         finishedWork,

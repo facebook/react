@@ -45,6 +45,7 @@ export type ViewTransitionInstance = null | {name: string, ...};
 export opaque type InstanceMeasurement = mixed;
 export type EventResponder = any;
 export type GestureTimeline = any;
+export type FragmentInstance = null | {_fragmentFiber: Object, ...};
 
 export const rendererVersion = $$$config.rendererVersion;
 export const rendererPackageName = $$$config.rendererPackageName;
@@ -154,6 +155,11 @@ export const subscribeToGestureDirection =
 export const createViewTransitionInstance =
   $$$config.createViewTransitionInstance;
 export const clearContainer = $$$config.clearContainer;
+export const createFragmentInstance = $$$config.createFragmentInstance;
+export const commitNewChildToFragmentInstance =
+  $$$config.commitNewChildToFragmentInstance;
+export const deleteChildFromFragmentInstance =
+  $$$config.deleteChildFromFragmentInstance;
 
 // -------------------
 //     Persistence

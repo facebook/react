@@ -504,6 +504,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return inst;
     },
 
+    createFragmentInstance(parentInstance) {
+      return null;
+    },
+
+    commitNewChildToFragmentInstance(child, fragmentInstance) {
+      // Noop
+    },
+
+    deleteChildFromFragmentInstance(child, fragmentInstance) {
+      // Noop
+    },
+
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: -1,

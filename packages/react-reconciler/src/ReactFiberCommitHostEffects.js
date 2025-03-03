@@ -13,6 +13,7 @@ import type {
   SuspenseInstance,
   Container,
   ChildSet,
+  FragmentInstance,
 } from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 
@@ -24,6 +25,7 @@ import {
   HostText,
   HostPortal,
   DehydratedFragment,
+  Fragment,
 } from './ReactWorkTags';
 import {ContentReset, Placement} from './ReactFiberFlags';
 import {
@@ -50,11 +52,14 @@ import {
   acquireSingletonInstance,
   releaseSingletonInstance,
   isSingletonScope,
+  commitNewChildToFragmentInstance,
+  deleteChildFromFragmentInstance,
 } from './ReactFiberConfig';
 import {captureCommitPhaseError} from './ReactFiberWorkLoop';
 import {trackHostMutation} from './ReactFiberMutationTracking';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
+import {enableFragmentRefs} from 'shared/ReactFeatureFlags';
 
 export function commitHostMount(finishedWork: Fiber) {
   const type = finishedWork.type;
@@ -199,7 +204,7 @@ export function commitShowHideHostTextInstance(node: Fiber, isHidden: boolean) {
   }
 }
 
-function getHostParentFiber(fiber: Fiber): Fiber {
+export function getHostParentFiber(fiber: Fiber): Fiber {
   let parent = fiber.return;
   while (parent !== null) {
     if (isHostParent(parent)) {
@@ -214,6 +219,55 @@ function getHostParentFiber(fiber: Fiber): Fiber {
   );
 }
 
+export function commitFragmentInstanceInsertionEffects(fiber: Fiber): void {
+  let parent = fiber.return;
+  while (parent !== null) {
+    if (isFragmentInstanceParent(parent)) {
+      const fragmentInstance: FragmentInstance = parent.stateNode;
+      commitNewChildToFragmentInstance(fiber.stateNode, fragmentInstance);
+    }
+
+    if (isHostParent(parent)) {
+      return;
+    }
+
+    parent = parent.return;
+  }
+}
+
+export function commitFragmentInstanceDeletionEffects(fiber: Fiber): void {
+  commitEffectsForFragmentInstanceParents(fiber);
+  let parent = fiber.return;
+  while (parent !== null) {
+    if (isFragmentInstanceParent(parent)) {
+      const fragmentInstance: FragmentInstance = parent.stateNode;
+      deleteChildFromFragmentInstance(fiber.stateNode, fragmentInstance);
+    }
+
+    if (isHostParent(parent)) {
+      return;
+    }
+
+    parent = parent.return;
+  }
+}
+
+function commitEffectsForFragmentInstanceParents(fiber: Fiber): void {
+  let parent = fiber.return;
+  while (parent !== null) {
+    if (isFragmentInstanceParent(parent)) {
+      const fragmentInstance: FragmentInstance = parent.stateNode;
+      deleteChildFromFragmentInstance(fiber.stateNode, fragmentInstance);
+    }
+
+    if (isHostParent(parent)) {
+      return;
+    }
+
+    parent = parent.return;
+  }
+}
+
 function isHostParent(fiber: Fiber): boolean {
   return (
     fiber.tag === HostComponent ||
@@ -224,6 +278,10 @@ function isHostParent(fiber: Fiber): boolean {
       : false) ||
     fiber.tag === HostPortal
   );
+}
+
+function isFragmentInstanceParent(fiber: Fiber): boolean {
+  return fiber && fiber.tag === Fragment && fiber.stateNode !== null;
 }
 
 function getHostSibling(fiber: Fiber): ?Instance {
@@ -298,6 +356,9 @@ function insertOrAppendPlacementNodeIntoContainer(
     } else {
       appendChildToContainer(parent, stateNode);
     }
+    if (enableFragmentRefs) {
+      commitFragmentInstanceInsertionEffects(node);
+    }
     trackHostMutation();
     return;
   } else if (tag === HostPortal) {
@@ -341,6 +402,9 @@ function insertOrAppendPlacementNode(
       insertBefore(parent, stateNode, before);
     } else {
       appendChild(parent, stateNode);
+    }
+    if (enableFragmentRefs) {
+      commitFragmentInstanceInsertionEffects(node);
     }
     trackHostMutation();
     return;

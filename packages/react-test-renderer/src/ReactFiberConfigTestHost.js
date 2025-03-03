@@ -398,6 +398,31 @@ export function createViewTransitionInstance(
   return null;
 }
 
+export type FragmentInstance = null | {
+  _fragmentFiber: Object,
+  ...
+};
+
+export function createFragmentInstance(
+  fragmentFiber: Object,
+): FragmentInstance {
+  return null;
+}
+
+export function commitNewChildToFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstance,
+): void {
+  // noop
+}
+
+export function deleteChildFromFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstance,
+): void {
+  // Noop
+}
+
 export function getInstanceFromNode(mockNode: Object): Object | null {
   const instance = nodeToInstanceMap.get(mockNode);
   if (instance !== undefined) {

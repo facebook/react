@@ -189,6 +189,29 @@ export function createTextInstance(
   return tag;
 }
 
+export type FragmentInstance = null | {
+  _fragmentFiber: Fiber,
+  ...
+};
+
+export function createFragmentInstance(fragmentFiber: Fiber): FragmentInstance {
+  return null;
+}
+
+export function commitNewChildToFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstance,
+): void {
+  // Noop
+}
+
+export function deleteChildFromFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstance,
+): void {
+  // Noop
+}
+
 export function finalizeInitialChildren(
   parentInstance: Instance,
   type: string,
