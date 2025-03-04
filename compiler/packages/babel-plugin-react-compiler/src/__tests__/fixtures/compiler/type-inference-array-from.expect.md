@@ -37,6 +37,12 @@ function useFoo({val1, val2}) {
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
   params: [{val1: 1, val2: 2}],
+  params: [
+    {val1: 1, val2: 2},
+    {val1: 1, val2: 2},
+    {val1: 1, val2: 3},
+    {val1: 4, val2: 2},
+  ],
 };
 
 ```
@@ -71,29 +77,51 @@ function Validate({ x, val1, val2 }) {
 }
 function useFoo(t0) {
   "use memo";
-  const $ = _c(4);
+  const $ = _c(8);
   const { val1, val2 } = t0;
 
   const x = Array.from([]);
   useIdentity();
-  x.push([val1]);
-  x.push([val2]);
   let t1;
-  if ($[0] !== val1 || $[1] !== val2 || $[2] !== x) {
-    t1 = <Validate x={x} val1={val1} val2={val2} />;
+  if ($[0] !== val1) {
+    t1 = [val1];
     $[0] = val1;
-    $[1] = val2;
-    $[2] = x;
-    $[3] = t1;
+    $[1] = t1;
   } else {
-    t1 = $[3];
+    t1 = $[1];
   }
-  return t1;
+  x.push(t1);
+  let t2;
+  if ($[2] !== val2) {
+    t2 = [val2];
+    $[2] = val2;
+    $[3] = t2;
+  } else {
+    t2 = $[3];
+  }
+  x.push(t2);
+  let t3;
+  if ($[4] !== val1 || $[5] !== val2 || $[6] !== x) {
+    t3 = <Validate x={x} val1={val1} val2={val2} />;
+    $[4] = val1;
+    $[5] = val2;
+    $[6] = x;
+    $[7] = t3;
+  } else {
+    t3 = $[7];
+  }
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
   params: [{ val1: 1, val2: 2 }],
+  params: [
+    { val1: 1, val2: 2 },
+    { val1: 1, val2: 2 },
+    { val1: 1, val2: 3 },
+    { val1: 4, val2: 2 },
+  ],
 };
 
 ```
