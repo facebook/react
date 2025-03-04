@@ -879,11 +879,31 @@ function inferBlock(
                 reason: new Set([ValueReason.Other]),
                 context: new Set(),
               };
+
+        for (const element of instrValue.elements) {
+          if (element.kind === 'Spread') {
+            state.referenceAndRecordEffects(
+              freezeActions,
+              element.place,
+              Effect.ConditionallyMutate,
+              ValueReason.Other,
+            );
+          } else if (element.kind === 'Identifier') {
+            state.referenceAndRecordEffects(
+              freezeActions,
+              element,
+              Effect.Capture,
+              ValueReason.Other,
+            );
+          } else {
+            let _: 'Hole' = element.kind;
+          }
+        }
+        state.initialize(instrValue, valueKind);
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.Store;
         continuation = {
-          kind: 'initialize',
-          valueKind,
-          effect: {kind: Effect.Capture, reason: ValueReason.Other},
-          lvalueEffect: Effect.Store,
+          kind: 'funeffects',
         };
         break;
       }
@@ -1248,21 +1268,12 @@ function inferBlock(
         for (let i = 0; i < instrValue.args.length; i++) {
           const arg = instrValue.args[i];
           const place = arg.kind === 'Identifier' ? arg : arg.place;
-          if (effects !== null) {
-            state.referenceAndRecordEffects(
-              freezeActions,
-              place,
-              effects[i],
-              ValueReason.Other,
-            );
-          } else {
-            state.referenceAndRecordEffects(
-              freezeActions,
-              place,
-              Effect.ConditionallyMutate,
-              ValueReason.Other,
-            );
-          }
+          state.referenceAndRecordEffects(
+            freezeActions,
+            place,
+            getArgumentEffect(effects != null ? effects[i] : null, arg),
+            ValueReason.Other,
+          );
           hasCaptureArgument ||= place.effect === Effect.Capture;
         }
         if (signature !== null) {
@@ -1314,7 +1325,10 @@ function inferBlock(
           signature !== null
             ? {
                 kind: signature.returnValueKind,
-                reason: new Set([ValueReason.Other]),
+                reason: new Set([
+                  signature.returnValueReason ??
+                    ValueReason.KnownReturnSignature,
+                ]),
                 context: new Set(),
               }
             : {
@@ -1337,7 +1351,8 @@ function inferBlock(
             state.referenceAndRecordEffects(
               freezeActions,
               place,
-              Effect.Read,
+              // see call-spread-argument-mutable-iterator test fixture
+              arg.kind === 'Spread' ? Effect.ConditionallyMutate : Effect.Read,
               ValueReason.Other,
             );
           }
@@ -1363,25 +1378,16 @@ function inferBlock(
         for (let i = 0; i < instrValue.args.length; i++) {
           const arg = instrValue.args[i];
           const place = arg.kind === 'Identifier' ? arg : arg.place;
-          if (effects !== null) {
-            /*
-             * If effects are inferred for an argument, we should fail invalid
-             * mutating effects
-             */
-            state.referenceAndRecordEffects(
-              freezeActions,
-              place,
-              effects[i],
-              ValueReason.Other,
-            );
-          } else {
-            state.referenceAndRecordEffects(
-              freezeActions,
-              place,
-              Effect.ConditionallyMutate,
-              ValueReason.Other,
-            );
-          }
+          /*
+           * If effects are inferred for an argument, we should fail invalid
+           * mutating effects
+           */
+          state.referenceAndRecordEffects(
+            freezeActions,
+            place,
+            getArgumentEffect(effects != null ? effects[i] : null, arg),
+            ValueReason.Other,
+          );
           hasCaptureArgument ||= place.effect === Effect.Capture;
         }
         if (signature !== null) {
@@ -2055,4 +2061,32 @@ function areArgumentsImmutableAndNonMutating(
     }
   }
   return true;
+}
+
+function getArgumentEffect(
+  signatureEffect: Effect | null,
+  arg: Place | SpreadPattern,
+): Effect {
+  if (signatureEffect != null) {
+    if (arg.kind === 'Identifier') {
+      return signatureEffect;
+    } else if (
+      signatureEffect === Effect.Mutate ||
+      signatureEffect === Effect.ConditionallyMutate
+    ) {
+      return signatureEffect;
+    } else {
+      // see call-spread-argument-mutable-iterator test fixture
+      if (signatureEffect === Effect.Freeze) {
+        CompilerError.throwTodo({
+          reason: 'Support spread syntax for hook arguments',
+          loc: arg.place.loc,
+        });
+      }
+      // effects[i] is Effect.Capture | Effect.Read | Effect.Store
+      return Effect.ConditionallyMutate;
+    }
+  } else {
+    return Effect.ConditionallyMutate;
+  }
 }
