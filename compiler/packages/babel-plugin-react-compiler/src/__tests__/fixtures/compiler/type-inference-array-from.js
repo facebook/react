@@ -33,4 +33,10 @@ function useFoo({val1, val2}) {
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
   params: [{val1: 1, val2: 2}],
+  params: [
+    {val1: 1, val2: 2},
+    {val1: 1, val2: 2},
+    {val1: 1, val2: 3},
+    {val1: 4, val2: 2},
+  ],
 };
