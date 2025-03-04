@@ -13,7 +13,6 @@ export function captureOwnerStack(): null | string {
   if (__DEV__) {
     const getCurrentStack = ReactSharedInternals.getCurrentStack;
     if (getCurrentStack === null) {
-      // TODO: when is this true?
       return null;
     }
     // The current stack will be the owner stack which it is always here.

@@ -1280,8 +1280,6 @@ function renderFunctionComponent<Props>(
           ),
         );
       } else {
-        // TODO: Sketchy else, the above block was previously gated by enableOwnerStacks
-        // If this block still needed?
         result = componentStorage.run(
           componentDebugInfo,
           callComponentInDEV,
@@ -1296,8 +1294,6 @@ function renderFunctionComponent<Props>(
           callComponentInDEV.bind(null, Component, props, componentDebugInfo),
         );
       } else {
-        // TODO: Sketchy else, the above block was previously gated by enableOwnerStacks
-        // If this block still needed?
         result = callComponentInDEV(Component, props, componentDebugInfo);
       }
     }
@@ -1393,8 +1389,6 @@ function warnForMissingKey(
           ),
         );
       } else {
-        // TODO: Sketchy else, the above block was previously gated by enableOwnerStacks
-        // If this block still needed?
         componentStorage.run(
           componentDebugInfo,
           callComponentInDEV,
@@ -1409,8 +1403,6 @@ function warnForMissingKey(
           callComponentInDEV.bind(null, logKeyError, null, componentDebugInfo),
         );
       } else {
-        // TODO: Sketchy else, the above block was previously gated by enableOwnerStacks
-        // If this block still needed?
         callComponentInDEV(logKeyError, null, componentDebugInfo);
       }
     }

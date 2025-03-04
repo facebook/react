@@ -1102,7 +1102,6 @@ export function attach(
 
   function getComponentStack(
     topFrame: Error,
-    // TODO: is this needed now that owner stacks have landed? e.g. for backwards compat of devtools?
   ): null | {enableOwnerStacks: boolean, componentStack: string} {
     if (getCurrentFiber == null) {
       // Expected this to be part of the renderer. Ignore.

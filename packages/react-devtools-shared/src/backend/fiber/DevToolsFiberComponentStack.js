@@ -135,7 +135,6 @@ export function supportsConsoleTasks(fiber: Fiber): boolean {
   return !!fiber._debugTask;
 }
 
-// TODO: clean this up?
 export function supportsOwnerStacks(fiber: Fiber): boolean {
   // If this Fiber supports owner stacks then it'll have the _debugStack field.
   // It might be null but that still means we should use the owner stack logic.

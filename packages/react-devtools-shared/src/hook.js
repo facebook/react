@@ -500,7 +500,6 @@ export function installHook(
               const topFrame = Error('react-stack-top-frame');
               const match = getComponentStack(topFrame);
               if (match !== null) {
-                // TODO: is this needed now that owner stacks have landed? e.g. for backwards compat of devtools?
                 const {enableOwnerStacks, componentStack} = match;
                 // Empty string means we have a match but no component stack.
                 // We don't need to look in other renderers but we also don't add anything.
