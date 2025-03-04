@@ -59,7 +59,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
   transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
-  enableViewTransition = dynamicFeatureFlags.enableViewTransition;
+  enableViewTransition = dynamicFeatureFlags.enableViewTransition,
+  enableScrollEndPolyfill = dynamicFeatureFlags.enableScrollEndPolyfill;
 function getNearestMountedFiber(fiber) {
   var node = fiber,
     nearestMounted = fiber;
@@ -1770,7 +1771,9 @@ function prepareToHydrateHostInstance(fiber) {
         listenToNonDelegatedEvent("toggle", instance)),
       null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
       null != props.onScrollEnd &&
-        listenToNonDelegatedEvent("scrollend", instance),
+        (listenToNonDelegatedEvent("scrollend", instance),
+        enableScrollEndPolyfill &&
+          listenToNonDelegatedEvent("scroll", instance)),
       null != props.onClick && (instance.onclick = noop$1),
       (instance = !0))
     : (instance = !1);
@@ -14283,6 +14286,16 @@ function isTextInputElement(elem) {
       ? !0
       : !1;
 }
+function isEventSupported(eventNameSuffix) {
+  if (!canUseDOM) return !1;
+  eventNameSuffix = "on" + eventNameSuffix;
+  var isSupported = eventNameSuffix in document;
+  isSupported ||
+    ((isSupported = document.createElement("div")),
+    isSupported.setAttribute(eventNameSuffix, "return;"),
+    (isSupported = "function" === typeof isSupported[eventNameSuffix]));
+  return isSupported;
+}
 function createAndAccumulateChangeEvent(
   dispatchQueue,
   inst,
@@ -14303,7 +14316,7 @@ function createAndAccumulateChangeEvent(
 }
 var activeElement$1 = null,
   activeElementInst$1 = null;
-function runEventInBatch(dispatchQueue) {
+function runEventInBatch$1(dispatchQueue) {
   processDispatchQueue(dispatchQueue, 0);
 }
 function getInstIfValueChanged(targetInst) {
@@ -14314,22 +14327,10 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
   if ("change" === domEventName) return targetInst;
 }
 var isInputEventSupported = !1;
-if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$362;
-  if (canUseDOM) {
-    var isSupported$jscomp$inline_1691 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1691) {
-      var element$jscomp$inline_1692 = document.createElement("div");
-      element$jscomp$inline_1692.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1691 =
-        "function" === typeof element$jscomp$inline_1692.oninput;
-    }
-    JSCompiler_inline_result$jscomp$362 = isSupported$jscomp$inline_1691;
-  } else JSCompiler_inline_result$jscomp$362 = !1;
-  isInputEventSupported =
-    JSCompiler_inline_result$jscomp$362 &&
-    (!document.documentMode || 9 < document.documentMode);
-}
+canUseDOM &&
+  (isInputEventSupported =
+    isEventSupported("input") &&
+    (!document.documentMode || 9 < document.documentMode));
 function stopWatchingForValueChange() {
   activeElement$1 &&
     (activeElement$1.detachEvent("onpropertychange", handlePropertyChange),
@@ -14347,7 +14348,7 @@ function handlePropertyChange(nativeEvent) {
       nativeEvent,
       getEventTarget(nativeEvent)
     );
-    batchedUpdates(runEventInBatch, dispatchQueue);
+    batchedUpdates(runEventInBatch$1, dispatchQueue);
   }
 }
 function handleEventsForInputEventPolyfill(domEventName, target, targetInst) {
@@ -14544,7 +14545,7 @@ var ANIMATION_END = getVendorPrefixedEventName("animationend"),
     "abort auxClick beforeToggle cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll toggle touchMove waiting wheel".split(
       " "
     );
-simpleEventPluginEvents.push("scrollEnd");
+enableScrollEndPolyfill || simpleEventPluginEvents.push("scrollEnd");
 topLevelEventsToReactNames.set("beforeblur", null);
 topLevelEventsToReactNames.set("afterblur", null);
 function registerSimpleEvent(domEventName, reactName) {
@@ -14572,7 +14573,7 @@ function createFormDataWithSubmitter(form, submitter) {
   temp.parentNode.removeChild(temp);
   return form;
 }
-function extractEvents$1(
+function extractEvents$2(
   dispatchQueue,
   domEventName,
   maybeTargetInst,
@@ -14647,21 +14648,57 @@ function extractEvents$1(
     });
   }
 }
+var isScrollEndEventSupported =
+    enableScrollEndPolyfill && canUseDOM && isEventSupported("scrollend"),
+  isTouchStarted = !1,
+  isMouseDown = !1;
+function runEventInBatch(dispatchQueue) {
+  processDispatchQueue(dispatchQueue, 0);
+}
+function fireScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
+  nativeEventTarget[internalScrollTimer] = void 0;
+  if (isMouseDown || isTouchStarted)
+    debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget);
+  else {
+    var dispatchQueue = [];
+    targetInst = accumulateTwoPhaseListeners(targetInst, "onScrollEnd");
+    0 < targetInst.length &&
+      ((nativeEvent = new SyntheticUIEvent(
+        "onScrollEnd",
+        "scrollend",
+        null,
+        nativeEvent,
+        nativeEventTarget
+      )),
+      dispatchQueue.push({ event: nativeEvent, listeners: targetInst }));
+    batchedUpdates(runEventInBatch, dispatchQueue);
+  }
+}
+function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
+  var existingTimer = nativeEventTarget[internalScrollTimer];
+  null != existingTimer && clearTimeout(existingTimer);
+  null !== targetInst &&
+    ((targetInst = setTimeout(
+      fireScrollEnd.bind(null, targetInst, nativeEvent, nativeEventTarget),
+      200
+    )),
+    (nativeEventTarget[internalScrollTimer] = targetInst));
+}
 for (
-  var i$jscomp$inline_1732 = 0;
-  i$jscomp$inline_1732 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1732++
+  var i$jscomp$inline_1736 = 0;
+  i$jscomp$inline_1736 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1736++
 ) {
-  var eventName$jscomp$inline_1733 =
-      simpleEventPluginEvents[i$jscomp$inline_1732],
-    domEventName$jscomp$inline_1734 =
-      eventName$jscomp$inline_1733.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1735 =
-      eventName$jscomp$inline_1733[0].toUpperCase() +
-      eventName$jscomp$inline_1733.slice(1);
+  var eventName$jscomp$inline_1737 =
+      simpleEventPluginEvents[i$jscomp$inline_1736],
+    domEventName$jscomp$inline_1738 =
+      eventName$jscomp$inline_1737.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1739 =
+      eventName$jscomp$inline_1737[0].toUpperCase() +
+      eventName$jscomp$inline_1737.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1734,
-    "on" + capitalizedEvent$jscomp$inline_1735
+    domEventName$jscomp$inline_1738,
+    "on" + capitalizedEvent$jscomp$inline_1739
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14706,6 +14743,13 @@ registerTwoPhaseEvent(
   "onCompositionUpdate",
   "compositionupdate focusout keydown keypress keyup mousedown".split(" ")
 );
+enableScrollEndPolyfill &&
+  registerTwoPhaseEvent(
+    "onScrollEnd",
+    "scroll scrollend touchstart touchcancel touchend mousedown mouseup".split(
+      " "
+    )
+  );
 var mediaEventTypes =
     "abort canplay canplaythrough durationchange emptied encrypted ended error loadeddata loadedmetadata loadstart pause play playing progress ratechange resize seeked seeking stalled suspend timeupdate volumechange waiting".split(
       " "
@@ -15327,7 +15371,7 @@ function dispatchEventForPluginEventSystem(
               listeners: eventType
             }),
             (handleEventFunc.data = fallbackData));
-      extractEvents$1(
+      extractEvents$2(
         dispatchQueue,
         domEventName,
         targetInst,
@@ -15335,6 +15379,61 @@ function dispatchEventForPluginEventSystem(
         nativeEventTarget
       );
     }
+    if (enableScrollEndPolyfill)
+      a: if (enableScrollEndPolyfill)
+        if (
+          ((fallbackData = 0 !== (eventSystemFlags & 4)),
+          "scrollend" !== domEventName)
+        ) {
+          if (!isScrollEndEventSupported && fallbackData)
+            switch (domEventName) {
+              case "scroll":
+                null !== nativeEventTarget &&
+                  debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget);
+                break;
+              case "touchstart":
+                isTouchStarted = !0;
+                break;
+              case "touchcancel":
+              case "touchend":
+                isTouchStarted = !1;
+                break;
+              case "mousedown":
+                isMouseDown = !0;
+                break;
+              case "mouseup":
+                isMouseDown = !1;
+            }
+        } else {
+          if (!isScrollEndEventSupported && null !== nativeEventTarget)
+            if (
+              ((eventType = nativeEventTarget[internalScrollTimer]),
+              null != eventType)
+            )
+              clearTimeout(eventType),
+                (nativeEventTarget[internalScrollTimer] = void 0);
+            else break a;
+          targetInst = accumulateSinglePhaseListeners(
+            targetInst,
+            "onScrollEnd",
+            "scrollend",
+            fallbackData,
+            !fallbackData,
+            nativeEvent
+          );
+          0 < targetInst.length &&
+            ((nativeEventTarget = new SyntheticUIEvent(
+              "onScrollEnd",
+              "scrollend",
+              null,
+              nativeEvent,
+              nativeEventTarget
+            )),
+            dispatchQueue.push({
+              event: nativeEventTarget,
+              listeners: targetInst
+            }));
+        }
     processDispatchQueue(dispatchQueue, eventSystemFlags);
   });
 }
@@ -15621,7 +15720,10 @@ function setProp(domElement, tag, key, value, props, prevValue) {
       null != value && listenToNonDelegatedEvent("scroll", domElement);
       return;
     case "onScrollEnd":
-      null != value && listenToNonDelegatedEvent("scrollend", domElement);
+      null != value &&
+        (listenToNonDelegatedEvent("scrollend", domElement),
+        enableScrollEndPolyfill &&
+          listenToNonDelegatedEvent("scroll", domElement));
       return;
     case "dangerouslySetInnerHTML":
       if (null != value) {
@@ -15863,7 +15965,10 @@ function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
       null != value && listenToNonDelegatedEvent("scroll", domElement);
       return;
     case "onScrollEnd":
-      null != value && listenToNonDelegatedEvent("scrollend", domElement);
+      null != value &&
+        (listenToNonDelegatedEvent("scrollend", domElement),
+        enableScrollEndPolyfill &&
+          listenToNonDelegatedEvent("scroll", domElement));
       return;
     case "onClick":
       null != value && (domElement.onclick = noop$1);
@@ -17823,7 +17928,8 @@ var HostTransitionContext = {
   internalEventHandlerListenersKey = "__reactListeners$" + randomKey,
   internalEventHandlesSetKey = "__reactHandles$" + randomKey,
   internalRootNodeResourcesKey = "__reactResources$" + randomKey,
-  internalHoistableMarker = "__reactMarker$" + randomKey;
+  internalHoistableMarker = "__reactMarker$" + randomKey,
+  internalScrollTimer = "__reactScroll$" + randomKey;
 function detachDeletedInstance(node) {
   delete node[internalInstanceKey];
   delete node[internalPropsKey];
@@ -18527,16 +18633,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1910 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1915 = React.version;
 if (
-  "19.1.0-www-modern-605a880c-20250303" !==
-  isomorphicReactPackageVersion$jscomp$inline_1910
+  "19.1.0-www-modern-d48c6924-20250304" !==
+  isomorphicReactPackageVersion$jscomp$inline_1915
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1910,
-      "19.1.0-www-modern-605a880c-20250303"
+      isomorphicReactPackageVersion$jscomp$inline_1915,
+      "19.1.0-www-modern-d48c6924-20250304"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18552,24 +18658,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2475 = {
+var internals$jscomp$inline_2480 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-605a880c-20250303",
+  version: "19.1.0-www-modern-d48c6924-20250304",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-605a880c-20250303"
+  reconcilerVersion: "19.1.0-www-modern-d48c6924-20250304"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2476 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2481 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2476.isDisabled &&
-    hook$jscomp$inline_2476.supportsFiber
+    !hook$jscomp$inline_2481.isDisabled &&
+    hook$jscomp$inline_2481.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2476.inject(
-        internals$jscomp$inline_2475
+      (rendererID = hook$jscomp$inline_2481.inject(
+        internals$jscomp$inline_2480
       )),
-        (injectedHook = hook$jscomp$inline_2476);
+        (injectedHook = hook$jscomp$inline_2481);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -19072,4 +19178,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-605a880c-20250303";
+exports.version = "19.1.0-www-modern-d48c6924-20250304";
