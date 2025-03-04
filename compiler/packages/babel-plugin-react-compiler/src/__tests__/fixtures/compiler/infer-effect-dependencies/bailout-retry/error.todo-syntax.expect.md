@@ -2,25 +2,23 @@
 ## Input
 
 ```javascript
-// @enableFire @panicThreshold(none)
-import {fire} from 'react';
+// @inferEffectDependencies @panicThreshold(none)
+import {useSpecialEffect} from 'shared-runtime';
 
 /**
  * Note that a react compiler-based transform still has limitations on JS syntax.
- * In practice, we expect to surface these as actionable errors to the user, in
- * the same way that invalid `fire` calls error.
+ * We should surface these as actionable lint / build errors to devs.
  */
 function Component({prop1}) {
-  const foo = () => {
+  'use memo';
+  useSpecialEffect(() => {
     try {
       console.log(prop1);
     } finally {
-      console.log('jbrown215');
+      console.log('exiting');
     }
-  };
-  useEffect(() => {
-    fire(foo());
-  });
+  }, [prop1]);
+  return <div>{prop1}</div>;
 }
 
 ```
@@ -29,21 +27,21 @@ function Component({prop1}) {
 ## Error
 
 ```
-   9 | function Component({prop1}) {
-  10 |   const foo = () => {
+   9 |   'use memo';
+  10 |   useSpecialEffect(() => {
 > 11 |     try {
      |     ^^^^^
 > 12 |       console.log(prop1);
      | ^^^^^^^^^^^^^^^^^^^^^^^^^
 > 13 |     } finally {
      | ^^^^^^^^^^^^^^^^^^^^^^^^^
-> 14 |       console.log('jbrown215');
+> 14 |       console.log('exiting');
      | ^^^^^^^^^^^^^^^^^^^^^^^^^
 > 15 |     }
      | ^^^^^^ Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:15)
-  16 |   };
-  17 |   useEffect(() => {
-  18 |     fire(foo());
+  16 |   }, [prop1]);
+  17 |   return <div>{prop1}</div>;
+  18 | }
 ```
           
       

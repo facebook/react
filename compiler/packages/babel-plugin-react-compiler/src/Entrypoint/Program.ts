@@ -419,7 +419,10 @@ export function compileProgram(
       }
     }
     // If non-memoization features are enabled, retry regardless of error kind
-    if (compileResult.kind === 'error' && environment.enableFire) {
+    if (
+      compileResult.kind === 'error' &&
+      (environment.enableFire || environment.inferEffectDependencies != null)
+    ) {
       try {
         compileResult = {
           kind: 'compile',
@@ -435,7 +438,8 @@ export function compileProgram(
           ),
         };
       } catch (err) {
-        compileResult = {kind: 'error', error: err};
+        logError(err, pass, fn.node.loc ?? null);
+        throw err;
       }
     }
     if (compileResult.kind === 'error') {
