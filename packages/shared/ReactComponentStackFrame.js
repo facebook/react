@@ -73,7 +73,7 @@ if (__DEV__) {
  *   (3) diffing the control and sample error stacks to find the stack frame
  *       which represents our component.
  */
-export function describeNativeComponentFrame(
+export function describeFunctionComponentFrame(
   fn: Function,
   construct: boolean,
 ): string {
@@ -294,11 +294,7 @@ export function describeNativeComponentFrame(
 }
 
 export function describeClassComponentFrame(ctor: Function): string {
-  return describeNativeComponentFrame(ctor, true);
-}
-
-export function describeFunctionComponentFrame(fn: Function): string {
-  return describeNativeComponentFrame(fn, false);
+  return describeFunctionComponentFrame(ctor, true);
 }
 
 function shouldConstruct(Component: Function) {
@@ -315,7 +311,7 @@ export function describeUnknownElementTypeFrameInDEV(type: any): string {
     return '';
   }
   if (typeof type === 'function') {
-    return describeNativeComponentFrame(type, shouldConstruct(type));
+    return describeFunctionComponentFrame(type, shouldConstruct(type));
   }
   if (typeof type === 'string') {
     return describeBuiltInComponentFrame(type);
