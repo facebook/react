@@ -41,6 +41,7 @@ const simpleEventPluginEvents = [
   'abort',
   'auxClick',
   'beforeToggle',
+  'beforeInput',
   'cancel',
   'canPlay',
   'canPlayThrough',
