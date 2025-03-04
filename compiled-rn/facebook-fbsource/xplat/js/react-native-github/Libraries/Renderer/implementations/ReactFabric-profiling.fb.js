@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c7854c6a2bebf674817d913cc649fdb3>>
+ * @generated SignedSource<<b272070980fde542dc4ee319ac756fa1>>
  */
 
 "use strict";
@@ -21,6 +21,8 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   Scheduler = require("scheduler"),
   React = require("react"),
   isArrayImpl = Array.isArray,
+  ReactSharedInternals =
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   enableFabricCompleteRootInCommitPhase =
     dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
@@ -38,36 +40,7 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
     dynamicFlagsUntyped.enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric =
     dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
-  ReactSharedInternals =
-    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-  REACT_PORTAL_TYPE = Symbol.for("react.portal"),
-  REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
-  REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
-  REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
-  REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
-  REACT_CONTEXT_TYPE = Symbol.for("react.context"),
-  REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
-  REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
-  REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
-  REACT_MEMO_TYPE = Symbol.for("react.memo"),
-  REACT_LAZY_TYPE = Symbol.for("react.lazy");
-Symbol.for("react.scope");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
-Symbol.for("react.legacy_hidden");
-Symbol.for("react.tracing_marker");
-var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
-Symbol.for("react.view_transition");
-var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-function getIteratorFn(maybeIterable) {
-  if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
-  maybeIterable =
-    (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
-    maybeIterable["@@iterator"];
-  return "function" === typeof maybeIterable ? maybeIterable : null;
-}
-var assign = Object.assign,
+  assign = Object.assign,
   prefix,
   suffix;
 function describeBuiltInComponentFrame(name) {
@@ -254,6 +227,33 @@ function getStackByFiberInDevAndProd(workInProgress) {
   } catch (x) {
     return "\nError generating stack: " + x.message + "\n" + x.stack;
   }
+}
+var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+  REACT_PORTAL_TYPE = Symbol.for("react.portal"),
+  REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
+  REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
+  REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
+  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
+  REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
+  REACT_CONTEXT_TYPE = Symbol.for("react.context"),
+  REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
+  REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
+  REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
+  REACT_MEMO_TYPE = Symbol.for("react.memo"),
+  REACT_LAZY_TYPE = Symbol.for("react.lazy");
+Symbol.for("react.scope");
+var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+Symbol.for("react.legacy_hidden");
+Symbol.for("react.tracing_marker");
+var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
+Symbol.for("react.view_transition");
+var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+function getIteratorFn(maybeIterable) {
+  if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
+  maybeIterable =
+    (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
+    maybeIterable["@@iterator"];
+  return "function" === typeof maybeIterable ? maybeIterable : null;
 }
 var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function getComponentNameFromType(type) {
@@ -11742,10 +11742,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1336 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-605a880c-20250303",
+    version: "19.1.0-native-fb-e0fe3479-20250304",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-605a880c-20250303"
+    reconcilerVersion: "19.1.0-native-fb-e0fe3479-20250304"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1336.rendererConfig = extraDevToolsConfig);

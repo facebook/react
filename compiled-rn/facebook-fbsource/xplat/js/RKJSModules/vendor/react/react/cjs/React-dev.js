@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dbce80ef5b96e57e4350b19c0c9006ad>>
+ * @generated SignedSource<<3d93f240f62c837e40d896346a35b4be>>
  */
 
 "use strict";
@@ -752,9 +752,7 @@ __DEV__ &&
         getCurrentStack: null
       },
       hasOwnProperty = Object.prototype.hasOwnProperty,
-      REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
-    new ("function" === typeof WeakMap ? WeakMap : Map)();
-    var createTask = console.createTask
+      createTask = console.createTask
         ? console.createTask
         : function () {
             return null;
@@ -765,6 +763,7 @@ __DEV__ &&
     var didWarnAboutKeySpread = {},
       didWarnAboutMaps = !1,
       userProvidedKeyEscapeRegex = /\/+/g,
+      REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       reportGlobalError =
         "function" === typeof reportError
           ? reportError
@@ -1415,7 +1414,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-605a880c-20250303";
+    exports.version = "19.1.0-native-fb-e0fe3479-20250304";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

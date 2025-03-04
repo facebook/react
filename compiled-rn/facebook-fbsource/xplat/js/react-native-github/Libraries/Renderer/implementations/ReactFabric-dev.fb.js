@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a8ac44890377589b2d6e8a6a7d35d60b>>
+ * @generated SignedSource<<88936e3804e9391486685f087babadf4>>
  */
 
 "use strict";
@@ -170,14 +170,6 @@ __DEV__ &&
     }
     function batchedUpdatesImpl(fn, bookkeeping) {
       return fn(bookkeeping);
-    }
-    function getIteratorFn(maybeIterable) {
-      if (null === maybeIterable || "object" !== typeof maybeIterable)
-        return null;
-      maybeIterable =
-        (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
-        maybeIterable["@@iterator"];
-      return "function" === typeof maybeIterable ? maybeIterable : null;
     }
     function disabledLog() {}
     function disableLogs() {
@@ -471,6 +463,14 @@ __DEV__ &&
       return (fn = fn ? fn.displayName || fn.name : "")
         ? describeBuiltInComponentFrame(fn)
         : "";
+    }
+    function getIteratorFn(maybeIterable) {
+      if (null === maybeIterable || "object" !== typeof maybeIterable)
+        return null;
+      maybeIterable =
+        (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
+        maybeIterable["@@iterator"];
+      return "function" === typeof maybeIterable ? maybeIterable : null;
     }
     function getComponentNameFromType(type) {
       if (null == type) return null;
@@ -14565,6 +14565,8 @@ __DEV__ &&
       ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/ReactNativePrivateInterface"),
       Scheduler = require("scheduler"),
       isArrayImpl = Array.isArray,
+      ReactSharedInternals =
+        React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
       enableFabricCompleteRootInCommitPhase =
         dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
@@ -14583,9 +14585,23 @@ __DEV__ &&
         dynamicFlagsUntyped.enableFastAddPropertiesInDiffing,
       enableLazyPublicInstanceInFabric =
         dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
-      ReactSharedInternals =
-        React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-      REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      assign = Object.assign,
+      disabledDepth = 0,
+      prevLog,
+      prevInfo,
+      prevWarn,
+      prevError,
+      prevGroup,
+      prevGroupCollapsed,
+      prevGroupEnd;
+    disabledLog.__reactDisabledLog = !0;
+    var prefix,
+      suffix,
+      reentry = !1;
+    var componentFrameCache = new (
+      "function" === typeof WeakMap ? WeakMap : Map
+    )();
+    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -14606,23 +14622,7 @@ __DEV__ &&
     var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
     Symbol.for("react.view_transition");
     var MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
-      assign = Object.assign,
-      disabledDepth = 0,
-      prevLog,
-      prevInfo,
-      prevWarn,
-      prevError,
-      prevGroup,
-      prevGroupCollapsed,
-      prevGroupEnd;
-    disabledLog.__reactDisabledLog = !0;
-    var prefix,
-      suffix,
-      reentry = !1;
-    var componentFrameCache = new (
-      "function" === typeof WeakMap ? WeakMap : Map
-    )();
-    var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
+      REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       current = null,
       isRendering = !1,
       hasError = !1,
@@ -17438,10 +17438,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-605a880c-20250303",
+        version: "19.1.0-native-fb-e0fe3479-20250304",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-605a880c-20250303"
+        reconcilerVersion: "19.1.0-native-fb-e0fe3479-20250304"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<98cb8a787086b378d463840c5aa59bd0>>
+ * @generated SignedSource<<a1ac152b9f6d8eb7e2dc73d27e537d44>>
  */
 
 "use strict";
@@ -299,9 +299,8 @@ __DEV__ &&
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
       hasOwnProperty = Object.prototype.hasOwnProperty,
-      isArrayImpl = Array.isArray;
-    new ("function" === typeof WeakMap ? WeakMap : Map)();
-    var createTask = console.createTask
+      isArrayImpl = Array.isArray,
+      createTask = console.createTask
         ? console.createTask
         : function () {
             return null;
