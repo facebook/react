@@ -9,7 +9,7 @@ const {join, relative} = require('path');
 const {confirm, execRead, printDiff} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, packages, version}, versionsMap) => {
+const run = async ({cwd, packages, version, ci}, versionsMap) => {
   const nodeModulesPath = join(cwd, 'build/node_modules');
 
   // Cache all package JSONs for easy lookup below.
@@ -107,7 +107,9 @@ const run = async ({cwd, packages, version}, versionsMap) => {
     printDependencies(packageJSON.dependencies, 'dependency');
     printDependencies(packageJSON.peerDependencies, 'peer');
   }
-  await confirm('Do the versions above look correct?');
+  if (ci !== true) {
+    await confirm('Do the versions above look correct?');
+  }
 
   clear();
 
@@ -167,7 +169,9 @@ const run = async ({cwd, packages, version}, versionsMap) => {
     console.log(
       theme`A full diff is available at {path ${relative(cwd, diffPath)}}.`
     );
-    await confirm('Do the changes above look correct?');
+    if (ci !== true) {
+      await confirm('Do the changes above look correct?');
+    }
   } else {
     console.log(
       theme`Skipping React renderer version update because React is not included in the release.`

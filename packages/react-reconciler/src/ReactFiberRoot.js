@@ -99,7 +99,8 @@ function FiberRootNode(
   this.formState = formState;
 
   if (enableSwipeTransition) {
-    this.gestures = null;
+    this.pendingGestures = null;
+    this.stoppingGestures = null;
   }
 
   this.incompleteTransitions = new Map();

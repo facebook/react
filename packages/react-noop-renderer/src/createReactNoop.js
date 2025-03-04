@@ -93,7 +93,11 @@ export type TransitionStatus = mixed;
 
 export type FormInstance = Instance;
 
+export type RunningGestureTransition = null;
+
 export type ViewTransitionInstance = null | {name: string, ...};
+
+export type GestureTimeline = null;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -790,8 +794,33 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           return false;
         },
 
+        startGestureTransition(
+          rootContainer: Container,
+          transitionTypes: null | TransitionTypes,
+          mutationCallback: () => void,
+          animateCallback: () => void,
+        ): RunningGestureTransition {
+          mutationCallback();
+          animateCallback();
+          return null;
+        },
+
+        stopGestureTransition(transition: RunningGestureTransition) {},
+
         createViewTransitionInstance(name: string): ViewTransitionInstance {
           return null;
+        },
+
+        getCurrentGestureOffset(provider: GestureTimeline): number {
+          return 0;
+        },
+
+        subscribeToGestureDirection(
+          provider: GestureTimeline,
+          currentOffset: number,
+          directionCallback: (direction: boolean) => void,
+        ): () => void {
+          return () => {};
         },
 
         resetTextContent(instance: Instance): void {

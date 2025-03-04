@@ -375,6 +375,21 @@ export function startViewTransition(
   return false;
 }
 
+export type RunningGestureTransition = null;
+
+export function startGestureTransition(
+  rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  animateCallback: () => void,
+): RunningGestureTransition {
+  mutationCallback();
+  animateCallback();
+  return null;
+}
+
+export function stopGestureTransition(transition: RunningGestureTransition) {}
+
 export type ViewTransitionInstance = null | {name: string, ...};
 
 export function createViewTransitionInstance(
@@ -389,6 +404,20 @@ export function getInstanceFromNode(mockNode: Object): Object | null {
     return instance.internalInstanceHandle;
   }
   return null;
+}
+
+export type GestureTimeline = null;
+
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
+  return 0;
+}
+
+export function subscribeToGestureDirection(
+  provider: GestureTimeline,
+  currentOffset: number,
+  directionCallback: (direction: boolean) => void,
+): () => void {
+  return () => {};
 }
 
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {

@@ -75,8 +75,8 @@ jobs:
     name: Test ${{ matrix.workspace_name }}
     needs: discover_yarn_workspaces
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         workspace_name: ${{ fromJSON(needs.discover_yarn_workspaces.outputs.matrix) }}
     steps:
@@ -93,4 +93,7 @@ jobs:
           path: "**/node_modules"
           key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+      - run: xvfb-run -a yarn workspace ${{ matrix.workspace_name }} test
+        if: runner.os == 'Linux' && matrix.workspace_name == 'react-forgive'
       - run: yarn workspace ${{ matrix.workspace_name }} test
+        if: runner.os != 'Linux' && matrix.workspace_name != 'react-forgive'

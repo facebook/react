@@ -42,7 +42,7 @@ function NonReactiveRefInEffect() {
   } else {
     t0 = $[0];
   }
-  useEffect(t0, [ref]);
+  useEffect(t0, []);
 }
 
 ```

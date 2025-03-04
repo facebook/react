@@ -36,6 +36,7 @@ export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableMoveBefore = false;
+export const enableFabricCompleteRootInCommitPhase = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
 export const enableHydrationLaneScheduling = true;
 
@@ -73,6 +74,7 @@ export const enableViewTransition = false;
 export const enableSwipeTransition = false;
 export const enableFastAddPropertiesInDiffing = true;
 export const enableLazyPublicInstanceInFabric = false;
+export const enableScrollEndPolyfill = true;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the
@@ -90,7 +92,6 @@ export const disableDefaultPropsExceptForClasses = true;
 
 export const enableObjectFiber = false;
 export const enableOwnerStacks = true;
-export const enableRemoveConsolePatches = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

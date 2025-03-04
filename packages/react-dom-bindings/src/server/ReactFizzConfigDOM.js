@@ -858,7 +858,7 @@ export function makeId(
 ): string {
   const idPrefix = resumableState.idPrefix;
 
-  let id = ':' + idPrefix + 'R' + treeId;
+  let id = '\u00AB' + idPrefix + 'R' + treeId;
 
   // Unless this is the first id at this level, append a number at the end
   // that represents the position of this useId hook among all the useId
@@ -867,7 +867,7 @@ export function makeId(
     id += 'H' + localId.toString(32);
   }
 
-  return id + ':';
+  return id + '\u00BB';
 }
 
 function encodeHTMLTextNode(text: string): string {
@@ -2958,6 +2958,9 @@ function pushImg(
       if (
         headers &&
         headers.remainingCapacity > 0 &&
+        // browsers today don't support preloading responsive images from link headers so we bail out
+        // if the img has srcset defined
+        typeof props.srcSet !== 'string' &&
         // this is a hueristic similar to capping element preloads to 10 unless explicitly
         // fetchPriority="high". We use length here which means it will fit fewer images when
         // the urls are long and more when short. arguably byte size is a better hueristic because
@@ -5703,6 +5706,10 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
         if (
           headers &&
           headers.remainingCapacity > 0 &&
+          // browsers today don't support preloading responsive images from link headers so we bail out
+          // if the img has srcset defined
+          typeof imageSrcSet !== 'string' &&
+          // We only include high priority images in the link header
           fetchPriority === 'high' &&
           // Compute the header since we might be able to fit it in the max length
           ((header = getPreloadAsHeader(href, as, options)),

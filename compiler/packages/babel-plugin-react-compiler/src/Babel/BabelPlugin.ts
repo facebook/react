@@ -11,6 +11,7 @@ import {
   injectReanimatedFlag,
   pipelineUsesReanimatedPlugin,
 } from '../Entrypoint/Reanimated';
+import validateNoUntransformedReferences from '../Entrypoint/ValidateNoUntransformedReferences';
 
 const ENABLE_REACT_COMPILER_TIMINGS =
   process.env['ENABLE_REACT_COMPILER_TIMINGS'] === '1';
@@ -73,7 +74,13 @@ export default function BabelPluginReactCompiler(
             });
           }
         },
-        exit(_, pass): void {
+        exit(prog, pass): void {
+          prog.scope.crawl();
+          validateNoUntransformedReferences(
+            prog,
+            (pass.opts as any).environment,
+          );
+
           if (ENABLE_REACT_COMPILER_TIMINGS === true) {
             const filename = pass.filename ?? 'unknown';
             const measurement = performance.measure(filename, {

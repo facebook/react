@@ -30,6 +30,7 @@ export const enableAsyncIterableChildren = false;
 export const enableCPUSuspense = false;
 export const enableCreateEventHandleAPI = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+export const enableFabricCompleteRootInCommitPhase = false;
 export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
 export const enableHalt = false;
@@ -74,13 +75,13 @@ export const enableViewTransition = false;
 export const enableSwipeTransition = false;
 export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
+export const enableScrollEndPolyfill = true;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
-export const enableRemoveConsolePatches = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

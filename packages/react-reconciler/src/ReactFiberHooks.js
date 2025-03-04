@@ -16,6 +16,7 @@ import type {
   Awaited,
   StartGesture,
   GestureProvider,
+  GestureOptions,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -27,7 +28,7 @@ import type {
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Flags} from './ReactFiberFlags';
-import type {TransitionStatus} from './ReactFiberConfig';
+import type {TransitionStatus, GestureTimeline} from './ReactFiberConfig';
 import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 import {
@@ -35,6 +36,7 @@ import {
   NotPendingTransition as NoPendingHostTransition,
   setCurrentUpdatePriority,
   getCurrentUpdatePriority,
+  getCurrentGestureOffset,
 } from './ReactFiberConfig';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -473,10 +475,13 @@ function warnIfAsyncClientComponent(Component: Function) {
       if (!didWarnAboutAsyncClientComponent.has(componentName)) {
         didWarnAboutAsyncClientComponent.add(componentName);
         console.error(
-          'async/await is not yet supported in Client Components, only ' +
-            'Server Components. This error is often caused by accidentally ' +
+          '%s is an async Client Component. ' +
+            'Only Server Components can be async at the moment. This error is often caused by accidentally ' +
             "adding `'use client'` to a module that was originally written " +
             'for the server.',
+          componentName === null
+            ? 'An unknown Component'
+            : `<${componentName}>`,
         );
       }
     }
@@ -3590,7 +3595,7 @@ function mountId(): string {
     const treeId = getTreeId();
 
     // Use a captial R prefix for server-generated ids.
-    id = ':' + identifierPrefix + 'R' + treeId;
+    id = '\u00AB' + identifierPrefix + 'R' + treeId;
 
     // Unless this is the first id at this level, append a number at the end
     // that represents the position of this useId hook among all the useId
@@ -3600,11 +3605,16 @@ function mountId(): string {
       id += 'H' + localId.toString(32);
     }
 
-    id += ':';
+    id += '\u00BB';
   } else {
     // Use a lowercase r prefix for client-generated ids.
     const globalClientId = globalClientIdCounter++;
-    id = ':' + identifierPrefix + 'r' + globalClientId.toString(32) + ':';
+    id =
+      '\u00AB' +
+      identifierPrefix +
+      'r' +
+      globalClientId.toString(32) +
+      '\u00BB';
   }
 
   hook.memoizedState = id;
@@ -3981,12 +3991,14 @@ type SwipeTransitionGestureUpdate = {
 type SwipeTransitionUpdateQueue = {
   pending: null | SwipeTransitionGestureUpdate,
   dispatch: StartGesture,
+  initialDirection: boolean,
 };
 
 function startGesture(
   fiber: Fiber,
   queue: SwipeTransitionUpdateQueue,
   gestureProvider: GestureProvider,
+  gestureOptions?: GestureOptions,
 ): () => void {
   const root = enqueueGestureRender(fiber);
   if (root === null) {
@@ -3996,9 +4008,48 @@ function startGesture(
       // Noop.
     };
   }
-  const scheduledGesture = scheduleGesture(root, gestureProvider);
+  const gestureTimeline: GestureTimeline = gestureProvider;
+  const currentOffset = getCurrentGestureOffset(gestureTimeline);
+  const range = gestureOptions && gestureOptions.range;
+  const rangePrevious: number = range ? range[0] : 0; // If no range is provider we assume it's the starting point of the range.
+  const rangeCurrent: number = range ? range[1] : currentOffset;
+  const rangeNext: number = range ? range[2] : 100; // If no range is provider we assume it's the starting point of the range.
+  if (__DEV__) {
+    if (
+      (rangePrevious > rangeCurrent && rangeNext > rangeCurrent) ||
+      (rangePrevious < rangeCurrent && rangeNext < rangeCurrent)
+    ) {
+      console.error(
+        'The range of a gesture needs "previous" and "next" to be on either side of ' +
+          'the "current" offset. Both cannot be above current and both cannot be below current.',
+      );
+    }
+  }
+  const isFlippedDirection = rangePrevious > rangeNext;
+  const initialDirection =
+    // If a range is specified we can imply initial direction if it's not the current
+    // value such as if the gesture starts after it has already moved.
+    currentOffset < rangeCurrent
+      ? isFlippedDirection
+      : currentOffset > rangeCurrent
+        ? !isFlippedDirection
+        : // Otherwise, look for an explicit option.
+          gestureOptions && gestureOptions.direction === 'next'
+          ? true
+          : gestureOptions && gestureOptions.direction === 'previous'
+            ? false
+            : // If no option is specified, imply from the values specified.
+              queue.initialDirection;
+  const scheduledGesture = scheduleGesture(
+    root,
+    gestureTimeline,
+    initialDirection,
+    rangePrevious,
+    rangeCurrent,
+    rangeNext,
+  );
   // Add this particular instance to the queue.
-  // We add multiple of the same provider even if they get batched so
+  // We add multiple of the same timeline even if they get batched so
   // that if we cancel one but not the other we can keep track of this.
   // Order doesn't matter but we insert in the beginning to avoid two fields.
   const update: SwipeTransitionGestureUpdate = {
@@ -4041,6 +4092,7 @@ function mountSwipeTransition<T>(
   const queue: SwipeTransitionUpdateQueue = {
     pending: null,
     dispatch: (null: any),
+    initialDirection: previous === current,
   };
   const startGestureOnHook: StartGesture = (queue.dispatch = (startGesture.bind(
     null,
@@ -4062,31 +4114,34 @@ function updateSwipeTransition<T>(
   const startGestureOnHook: StartGesture = queue.dispatch;
   const rootRenderLanes = getWorkInProgressRootRenderLanes();
   let value = current;
-  if (isGestureRender(rootRenderLanes)) {
-    // We're inside a gesture render. We'll traverse the queue to see if
-    // this specific Hook is part of this gesture and, if so, which
-    // direction to render.
-    const root: FiberRoot | null = getWorkInProgressRoot();
-    if (root === null) {
-      throw new Error(
-        'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-      );
-    }
-    // We assume that the currently rendering gesture is the one first in the queue.
-    const rootRenderGesture = root.gestures;
-    let update = queue.pending;
-    while (update !== null) {
-      if (rootRenderGesture === update.gesture) {
-        // We had a match, meaning we're currently rendering a direction of this
-        // hook for this gesture.
-        // TODO: Determine which direction this gesture is currently rendering.
-        value = previous;
-        break;
-      }
-      update = update.next;
-    }
-  }
   if (queue.pending !== null) {
+    if (isGestureRender(rootRenderLanes)) {
+      // We're inside a gesture render. We'll traverse the queue to see if
+      // this specific Hook is part of this gesture and, if so, which
+      // direction to render.
+      const root: FiberRoot | null = getWorkInProgressRoot();
+      if (root === null) {
+        throw new Error(
+          'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+        );
+      }
+      // We assume that the currently rendering gesture is the one first in the queue.
+      const rootRenderGesture = root.pendingGestures;
+      if (rootRenderGesture !== null) {
+        let update = queue.pending;
+        while (update !== null) {
+          if (rootRenderGesture === update.gesture) {
+            // We had a match, meaning we're currently rendering a direction of this
+            // hook for this gesture.
+            value = rootRenderGesture.direction ? next : previous;
+            break;
+          }
+          update = update.next;
+        }
+      }
+      // This lane cannot be cleared as long as we have active gestures.
+      markWorkInProgressReceivedUpdate();
+    }
     // As long as there are any active gestures we need to leave the lane on
     // in case we need to render it later. Since a gesture render doesn't commit
     // the only time it really fully gets cleared is if something else rerenders
@@ -4096,6 +4151,11 @@ function updateSwipeTransition<T>(
       GestureLane,
     );
   }
+  // By default, we don't know which direction we should start until a movement
+  // has happened. However, if one direction has the same value as current we
+  // know that it's probably not that direction since it won't do anything anyway.
+  // TODO: Add an explicit option to provide this.
+  queue.initialDirection = previous === current;
   return [value, startGestureOnHook];
 }
 

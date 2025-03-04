@@ -44,12 +44,12 @@ export const {
 
 // Can remove these two
 export const enableOwnerStacks = true;
-export const enableRemoveConsolePatches = true;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
+export const enableFabricCompleteRootInCommitPhase = false;
 
 export const enableSuspenseAvoidThisFallback = true;
 
@@ -115,6 +115,8 @@ export const enableShallowPropDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
 
 export const enableSwipeTransition = false;
+
+export const enableScrollEndPolyfill = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

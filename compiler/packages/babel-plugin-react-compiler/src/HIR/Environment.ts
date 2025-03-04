@@ -96,6 +96,11 @@ export const MacroSchema = z.union([
   z.tuple([z.string(), z.array(MacroMethodSchema)]),
 ]);
 
+export enum CompilerMode {
+  AllFeatures = 'all_features',
+  NoInferredMemo = 'no_inferred_memo',
+}
+
 export type Macro = z.infer<typeof MacroSchema>;
 export type MacroMethod = z.infer<typeof MacroMethodSchema>;
 
@@ -285,7 +290,7 @@ const EnvironmentConfigSchema = z.object({
       z.array(
         z.object({
           function: ExternalFunctionSchema,
-          numRequiredArgs: z.number(),
+          numRequiredArgs: z.number().min(1, 'numRequiredArgs must be > 0'),
         }),
       ),
     )
@@ -550,8 +555,6 @@ const EnvironmentConfigSchema = z.object({
    */
   disableMemoizationForDebugging: z.boolean().default(false),
 
-  enableMinimalTransformsForRetry: z.boolean().default(false),
-
   /**
    * When true, rather using memoized values, the compiler will always re-compute
    * values, and then use a heuristic to compare the memoized value to the newly
@@ -626,17 +629,6 @@ const EnvironmentConfigSchema = z.object({
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
 
-export const MINIMAL_RETRY_CONFIG: PartialEnvironmentConfig = {
-  validateHooksUsage: false,
-  validateRefAccessDuringRender: false,
-  validateNoSetStateInRender: false,
-  validateNoSetStateInPassiveEffects: false,
-  validateNoJSXInTryStatements: false,
-  validateMemoizedEffectDependencies: false,
-  validateNoCapitalizedCalls: null,
-  validateBlocklistedImports: null,
-  enableMinimalTransformsForRetry: true,
-};
 /**
  * For test fixtures and playground only.
  *
@@ -851,6 +843,7 @@ export class Environment {
   code: string | null;
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
+  compilerMode: CompilerMode;
   useMemoCacheIdentifier: string;
   hasLoweredContextAccess: boolean;
   hasFireRewrite: boolean;
@@ -861,6 +854,7 @@ export class Environment {
   constructor(
     scope: BabelScope,
     fnType: ReactFunctionType,
+    compilerMode: CompilerMode,
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>,
     logger: Logger | null,
@@ -870,6 +864,7 @@ export class Environment {
   ) {
     this.#scope = scope;
     this.fnType = fnType;
+    this.compilerMode = compilerMode;
     this.config = config;
     this.filename = filename;
     this.code = code;
@@ -922,6 +917,10 @@ export class Environment {
 
     this.#contextIdentifiers = contextIdentifiers;
     this.#hoistedIdentifiers = new Set();
+  }
+
+  get isInferredMemoEnabled(): boolean {
+    return this.compilerMode !== CompilerMode.NoInferredMemo;
   }
 
   get nextIdentifierId(): IdentifierId {

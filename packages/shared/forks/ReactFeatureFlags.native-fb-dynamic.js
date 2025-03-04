@@ -23,6 +23,7 @@ export const enableHiddenSubtreeInsertionEffectCleanup = __VARIANT__;
 export const enablePersistedModeClonedFlag = __VARIANT__;
 export const enableShallowPropDiffing = __VARIANT__;
 export const passChildrenWhenCloningPersistedNodes = __VARIANT__;
+export const enableFabricCompleteRootInCommitPhase = __VARIANT__;
 export const enableSiblingPrerendering = __VARIANT__;
 export const enableUseEffectCRUDOverload = __VARIANT__;
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
