@@ -9,7 +9,7 @@ function Component(props) {
   const deps = [foo, props];
 
   useEffect(() => {
-    fire(foo(props));
+    fire(foo)(props);
   }, deps);
 
   return null;
