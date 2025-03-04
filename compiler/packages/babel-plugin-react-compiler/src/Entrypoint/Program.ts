@@ -419,7 +419,10 @@ export function compileProgram(
       }
     }
     // If non-memoization features are enabled, retry regardless of error kind
-    if (compileResult.kind === 'error' && environment.enableFire) {
+    if (
+      compileResult.kind === 'error' &&
+      (environment.enableFire || environment.inferEffectDependencies != null)
+    ) {
       try {
         compileResult = {
           kind: 'compile',
@@ -435,6 +438,7 @@ export function compileProgram(
           ),
         };
       } catch (err) {
+        // TODO: maybe stash the error for later reporting in ValidateNoUntransformedReferences
         compileResult = {kind: 'error', error: err};
       }
     }
