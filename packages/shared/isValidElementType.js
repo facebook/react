@@ -36,7 +36,7 @@ import {
 const REACT_CLIENT_REFERENCE: symbol = Symbol.for('react.client.reference');
 
 // This function is deprecated. Don't use. Only the renderer knows what a valid type is.
-// TODO: Delete this when enableOwnerStacks ships.
+// TODO: Delete this now that owner stacks shipped.
 export default function isValidElementType(type: mixed): boolean {
   if (typeof type === 'string' || typeof type === 'function') {
     return true;

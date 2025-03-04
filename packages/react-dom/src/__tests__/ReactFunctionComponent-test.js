@@ -116,7 +116,6 @@ describe('ReactFunctionComponent', () => {
         '    in GrandParent (at **)',
       'Child uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-        (gate('enableOwnerStacks') ? '' : '    in Child (at **)\n') +
         '    in Parent (at **)\n' +
         '    in GrandParent (at **)',
     ]);
@@ -260,7 +259,6 @@ describe('ReactFunctionComponent', () => {
         '    in Parent (at **)',
       'Child uses the legacy contextTypes API which will be removed soon. ' +
         'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
-        '    in Child (at **)\n' +
         '    in Parent (at **)',
     ]);
     expect(el.textContent).toBe('en');
