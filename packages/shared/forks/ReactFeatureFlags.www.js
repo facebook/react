@@ -38,6 +38,9 @@ export const {
   enableFastAddPropertiesInDiffing,
   enableViewTransition,
   enableScrollEndPolyfill,
+  ownerStackLimit,
+  debugTaskLimit,
+  debugInfoLimitsResetIntervalMs,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
