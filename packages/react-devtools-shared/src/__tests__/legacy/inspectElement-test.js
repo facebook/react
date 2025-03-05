@@ -21,7 +21,7 @@ describe('InspectedElementContext', () => {
   const act = (callback: Function) => {
     callback();
 
-    jest.runAllTimers(); // Flush Bridge operations
+    jest.runOnlyPendingTimers(); // Flush Bridge operations
   };
 
   async function read(

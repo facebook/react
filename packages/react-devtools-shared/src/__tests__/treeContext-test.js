@@ -1421,21 +1421,21 @@ describe('TreeListContext', () => {
     function clearAllErrors() {
       utils.act(() => clearErrorsAndWarningsAPI({bridge, store}));
       // flush events to the renderer
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
     }
 
     function clearErrorsForElement(id) {
       const rendererID = store.getRendererIDForElement(id);
       utils.act(() => clearErrorsForElementAPI({bridge, id, rendererID}));
       // flush events to the renderer
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
     }
 
     function clearWarningsForElement(id) {
       const rendererID = store.getRendererIDForElement(id);
       utils.act(() => clearWarningsForElementAPI({bridge, id, rendererID}));
       // flush events to the renderer
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
     }
 
     function selectNextErrorOrWarning() {
@@ -2358,7 +2358,7 @@ describe('TreeListContext', () => {
         );
         utils.act(() => TestRenderer.create(<Contexts />));
 
-        jest.runAllTimers();
+        jest.runOnlyPendingTimers();
 
         expect(state).toMatchInlineSnapshot(`
                   [root]
