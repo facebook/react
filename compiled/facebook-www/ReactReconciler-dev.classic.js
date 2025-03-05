@@ -11785,7 +11785,7 @@ __DEV__ &&
     }
     function commitBeforeMutationEffects(root, firstChild, committedLanes) {
       focusedInstanceHandle = prepareForCommit(root.containerInfo);
-      shouldStartViewTransition = shouldFireAfterActiveInstanceBlur = !1;
+      shouldFireAfterActiveInstanceBlur = !1;
       root =
         enableViewTransition && (committedLanes & 335544064) === committedLanes;
       nextEffect = firstChild;
@@ -15763,6 +15763,7 @@ __DEV__ &&
             }))
           : ((root.callbackNode = null), (root.callbackPriority = 0));
         commitStartTime = now();
+        shouldStartViewTransition = !1;
         recoverableErrors = 0 !== (finishedWork.flags & 13878);
         if (0 !== (finishedWork.subtreeFlags & 13878) || recoverableErrors) {
           recoverableErrors = ReactSharedInternals.T;
@@ -16000,7 +16001,10 @@ __DEV__ &&
         var prevExecutionContext = executionContext;
         executionContext |= CommitContext;
         try {
-          cancelRootViewTransitionName(root.containerInfo);
+          var rootClone = root.gestureClone;
+          null !== rootClone &&
+            ((root.gestureClone = null),
+            removeRootViewTransitionClone(root.containerInfo, rootClone));
         } finally {
           (executionContext = prevExecutionContext),
             setCurrentUpdatePriority(previousPriority),
@@ -17295,12 +17299,14 @@ __DEV__ &&
       getChildHostContext = $$$config.getChildHostContext,
       prepareForCommit = $$$config.prepareForCommit,
       resetAfterCommit = $$$config.resetAfterCommit,
-      createInstance = $$$config.createInstance,
-      appendInitialChild = $$$config.appendInitialChild,
+      createInstance = $$$config.createInstance;
+    $$$config.cloneMutableInstance;
+    var appendInitialChild = $$$config.appendInitialChild,
       finalizeInitialChildren = $$$config.finalizeInitialChildren,
       shouldSetTextContent = $$$config.shouldSetTextContent,
-      createTextInstance = $$$config.createTextInstance,
-      scheduleTimeout = $$$config.scheduleTimeout,
+      createTextInstance = $$$config.createTextInstance;
+    $$$config.cloneMutableTextInstance;
+    var scheduleTimeout = $$$config.scheduleTimeout,
       cancelTimeout = $$$config.cancelTimeout,
       noTimeout = $$$config.noTimeout,
       isPrimaryRenderer = $$$config.isPrimaryRenderer;
@@ -17361,7 +17367,9 @@ __DEV__ &&
       restoreViewTransitionName = $$$config.restoreViewTransitionName,
       cancelViewTransitionName = $$$config.cancelViewTransitionName,
       cancelRootViewTransitionName = $$$config.cancelRootViewTransitionName,
-      restoreRootViewTransitionName = $$$config.restoreRootViewTransitionName,
+      restoreRootViewTransitionName = $$$config.restoreRootViewTransitionName;
+    $$$config.cloneRootViewTransitionContainer;
+    var removeRootViewTransitionClone = $$$config.removeRootViewTransitionClone,
       measureInstance = $$$config.measureInstance,
       wasInstanceInViewport = $$$config.wasInstanceInViewport,
       hasInstanceChanged = $$$config.hasInstanceChanged,
@@ -19959,7 +19967,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-e0fe3479-20250304"
+        reconcilerVersion: "19.1.0-www-classic-e9252bcd-20250304"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

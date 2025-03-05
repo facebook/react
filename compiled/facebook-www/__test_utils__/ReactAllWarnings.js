@@ -394,5 +394,8 @@ export default [
   "unmountComponentAtNode(): The node you're attempting to unmount was rendered by another copy of React.",
   "useEffect must provide a callback which returns a resource. If a managed resource is not needed here, do not provide an updater or destroy callback. Received %s",
   "useInsertionEffect must not schedule updates.",
-  "useOptimistic is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release."
+  "useOptimistic is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release.",
+  "useSwipeTransition() caused something to mutate <%s>. This is not possible in the current implementation. Make sure that the swipe doesn't update any state which causes <%s> to change.",
+  "useSwipeTransition() caused something to mutate or relayout the root. This currently requires a clone of the whole document. Make sure to add a <ViewTransition> directly around an absolutely positioned DOM node to minimize the impact of any changes caused by the Swipe Transition.",
+  "useSwipeTransition() caused something to render a new <%s>. This is not possible in the current implementation. Make sure that the swipe doesn't mount any new <%s> elements."
 ];

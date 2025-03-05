@@ -10512,14 +10512,21 @@ function flushSpawnedWork() {
 function flushGestureMutations() {
   if (6 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
-    var prevTransition = ReactSharedInternals.T,
-      previousPriority = currentUpdatePriority;
+    var root = pendingEffectsRoot,
+      prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    var previousPriority = currentUpdatePriority;
     currentUpdatePriority = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
-    executionContext = prevExecutionContext;
-    currentUpdatePriority = previousPriority;
-    ReactSharedInternals.T = prevTransition;
+    try {
+      if (null !== root.gestureClone)
+        throw ((root.gestureClone = null), Error(formatProdErrorMessage(248)));
+    } finally {
+      (executionContext = prevExecutionContext),
+        (currentUpdatePriority = previousPriority),
+        (ReactSharedInternals.T = prevTransition);
+    }
     pendingEffectsStatus = 7;
   }
 }
@@ -11290,24 +11297,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1577 = {
+var internals$jscomp$inline_1582 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-e0fe3479-20250304",
+  version: "19.1.0-www-classic-e9252bcd-20250304",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-e0fe3479-20250304"
+  reconcilerVersion: "19.1.0-www-classic-e9252bcd-20250304"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1578 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1583 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1578.isDisabled &&
-    hook$jscomp$inline_1578.supportsFiber
+    !hook$jscomp$inline_1583.isDisabled &&
+    hook$jscomp$inline_1583.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1578.inject(
-        internals$jscomp$inline_1577
+      (rendererID = hook$jscomp$inline_1583.inject(
+        internals$jscomp$inline_1582
       )),
-        (injectedHook = hook$jscomp$inline_1578);
+        (injectedHook = hook$jscomp$inline_1583);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11321,4 +11328,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-e0fe3479-20250304";
+exports.version = "19.1.0-www-classic-e9252bcd-20250304";

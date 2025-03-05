@@ -13985,14 +13985,21 @@ __DEV__ &&
     function flushGestureMutations() {
       if (pendingEffectsStatus === PENDING_GESTURE_MUTATION_PHASE) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var prevTransition = ReactSharedInternals.T,
-          previousPriority = currentUpdatePriority;
+        var root = pendingEffectsRoot,
+          prevTransition = ReactSharedInternals.T;
+        ReactSharedInternals.T = null;
+        var previousPriority = currentUpdatePriority;
         currentUpdatePriority = DiscreteEventPriority;
         var prevExecutionContext = executionContext;
         executionContext |= CommitContext;
-        executionContext = prevExecutionContext;
-        currentUpdatePriority = previousPriority;
-        ReactSharedInternals.T = prevTransition;
+        try {
+          if (null !== root.gestureClone)
+            throw ((root.gestureClone = null), Error("Not implemented."));
+        } finally {
+          (executionContext = prevExecutionContext),
+            (currentUpdatePriority = previousPriority),
+            (ReactSharedInternals.T = prevTransition);
+        }
         pendingEffectsStatus = PENDING_GESTURE_ANIMATION_PHASE;
       }
     }
@@ -17349,10 +17356,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-e0fe3479-20250304",
+        version: "19.1.0-www-classic-e9252bcd-20250304",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-e0fe3479-20250304"
+        reconcilerVersion: "19.1.0-www-classic-e9252bcd-20250304"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -17386,7 +17393,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-classic-e0fe3479-20250304";
+    exports.version = "19.1.0-www-classic-e9252bcd-20250304";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
