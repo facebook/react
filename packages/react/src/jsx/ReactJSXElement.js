@@ -72,9 +72,20 @@ function getOwner() {
 let specialPropKeyWarningShown;
 let didWarnAboutElementRef;
 let didWarnAboutOldJSXRuntime;
+let unknownOwnerDebugStack;
+let unknownOwnerDebugTask;
 
 if (__DEV__) {
   didWarnAboutElementRef = {};
+  const unknownOwnerElement = {
+    'react-stack-bottom-frame': () => {
+      return (function UnknownOwner() {
+        return jsxDEV(() => null, {}, null);
+      })();
+    },
+  }['react-stack-bottom-frame']();
+  unknownOwnerDebugStack = unknownOwnerElement._debugStack;
+  unknownOwnerDebugTask = unknownOwnerElement._debugTask;
 }
 
 function hasValidRef(config) {
@@ -392,16 +403,14 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
       isStaticChildren,
       source,
       self,
-      // TODO: Reuse a placeholder stack to indicate the deopt.
       __DEV__ &&
         (recentlyCreatedOwnerStacks++ < ownerStackLimit
           ? Error('react-stack-top-frame')
-          : null),
-      // TODO: If task.run is not the bottleneck, reuse a placeholder task to indicate the deop.
+          : unknownOwnerDebugStack),
       __DEV__ &&
         (recentlyCreatedDebugTasks++ < debugTaskLimit
           ? createTask(getTaskName(type))
-          : null),
+          : unknownOwnerDebugTask),
     );
   }
 }
@@ -422,16 +431,14 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
       isStaticChildren,
       source,
       self,
-      // TODO: Reuse a placeholder stack to indicate the deopt.
       __DEV__ &&
         (recentlyCreatedOwnerStacks++ < ownerStackLimit
           ? Error('react-stack-top-frame')
-          : null),
-      // TODO: If task.run is not the bottleneck, reuse a placeholder task to indicate the deop.
+          : unknownOwnerDebugStack),
       __DEV__ &&
         (recentlyCreatedDebugTasks++ < debugTaskLimit
           ? createTask(getTaskName(type))
-          : null),
+          : unknownOwnerDebugTask),
     );
   }
 }
@@ -452,16 +459,14 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
     isStaticChildren,
     source,
     self,
-    // TODO: Reuse a placeholder stack to indicate the deopt.
     __DEV__ &&
       (recentlyCreatedOwnerStacks++ < ownerStackLimit
         ? Error('react-stack-top-frame')
-        : null),
-    // TODO: If task.run is not the bottleneck, reuse a placeholder task to indicate the deop.
+        : unknownOwnerDebugStack),
     __DEV__ &&
       (recentlyCreatedDebugTasks++ < debugTaskLimit
         ? createTask(getTaskName(type))
-        : null),
+        : unknownOwnerDebugTask),
   );
 }
 
@@ -736,16 +741,14 @@ export function createElement(type, config, children) {
     undefined,
     getOwner(),
     props,
-    // TODO: Reuse a placeholder stack to indicate the deopt.
     __DEV__ &&
       (recentlyCreatedOwnerStacks++ < ownerStackLimit
         ? Error('react-stack-top-frame')
-        : null),
-    // TODO: If task.run is not the bottleneck, reuse a placeholder task to indicate the deop.
+        : unknownOwnerDebugStack),
     __DEV__ &&
       (recentlyCreatedDebugTasks++ < debugTaskLimit
         ? createTask(getTaskName(type))
-        : null),
+        : unknownOwnerDebugTask),
   );
 }
 

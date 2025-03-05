@@ -94,6 +94,8 @@ describe('ReactOwnerStacks', () => {
         let i = 0;
         i <
         siblingsBeforeStackOne -
+          // One built-in JSX callsite for the unknown Owner Stack
+          1 -
           // Number of JSX callsites before this render
           1 -
           // Stop so that OwnerStackOne will be right before cutoff
@@ -139,7 +141,7 @@ describe('ReactOwnerStacks', () => {
       stackOne: '\n    in App (at **)',
       stackTwo: __VARIANT__
         ? // captured right after cutoff
-          ''
+          '\n    in UnknownOwner (at **)'
         : '\n    in App (at **)',
     });
 
