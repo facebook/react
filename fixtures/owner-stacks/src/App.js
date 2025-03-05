@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {flushSync} from 'react-dom';
 import './App.css';
 
 const text = `
@@ -105,7 +106,11 @@ function App() {
   const [highlight, setHighlight] = useState(false);
 
   const toggleHighlight = () => {
-    setHighlight(!highlight);
+    console.time('toggleHighlight');
+    flushSync(() => {
+      setHighlight(!highlight);
+    });
+    console.timeEnd('toggleHighlight');
   };
 
   return (
