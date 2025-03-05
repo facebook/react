@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<52f1f04cc0a3c247eabb6e136fee3700>>
+ * @generated SignedSource<<17d37138688ba956b97d6d4b14b58e30>>
  */
 
 /*
@@ -14580,6 +14580,8 @@ function setInitialProperties(domElement, tag, props) {
           }
       return;
     case "dialog":
+      listenToNonDelegatedEvent("beforetoggle", domElement);
+      listenToNonDelegatedEvent("toggle", domElement);
       listenToNonDelegatedEvent("cancel", domElement);
       listenToNonDelegatedEvent("close", domElement);
       break;
@@ -16821,14 +16823,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1912 = React.version;
 if (
-  "19.1.0-native-fb-e9252bcd-20250304" !==
+  "19.1.0-native-fb-aac177c4-20250305" !==
   isomorphicReactPackageVersion$jscomp$inline_1912
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1912,
-      "19.1.0-native-fb-e9252bcd-20250304"
+      "19.1.0-native-fb-aac177c4-20250305"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16850,10 +16852,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1919 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-e9252bcd-20250304",
+  version: "19.1.0-native-fb-aac177c4-20250305",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-e9252bcd-20250304",
+  reconcilerVersion: "19.1.0-native-fb-aac177c4-20250305",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$294 = 0;
@@ -16972,4 +16974,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-e9252bcd-20250304";
+exports.version = "19.1.0-native-fb-aac177c4-20250305";

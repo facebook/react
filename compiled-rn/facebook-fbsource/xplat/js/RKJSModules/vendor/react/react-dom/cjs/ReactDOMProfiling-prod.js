@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7d07afb1fab6ca0e51d5d7b7e05339cd>>
+ * @generated SignedSource<<bc301a657fd89a1617a446de6f16115c>>
  */
 
 /*
@@ -13938,6 +13938,8 @@ function setInitialProperties(domElement, tag, props) {
           }
       return;
     case "dialog":
+      listenToNonDelegatedEvent("beforetoggle", domElement);
+      listenToNonDelegatedEvent("toggle", domElement);
       listenToNonDelegatedEvent("cancel", domElement);
       listenToNonDelegatedEvent("close", domElement);
       break;
@@ -16182,14 +16184,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1818 = React.version;
 if (
-  "19.1.0-native-fb-e9252bcd-20250304" !==
+  "19.1.0-native-fb-aac177c4-20250305" !==
   isomorphicReactPackageVersion$jscomp$inline_1818
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1818,
-      "19.1.0-native-fb-e9252bcd-20250304"
+      "19.1.0-native-fb-aac177c4-20250305"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16211,10 +16213,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2293 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-e9252bcd-20250304",
+  version: "19.1.0-native-fb-aac177c4-20250305",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-e9252bcd-20250304"
+  reconcilerVersion: "19.1.0-native-fb-aac177c4-20250305"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2294 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16472,4 +16474,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-e9252bcd-20250304";
+exports.version = "19.1.0-native-fb-aac177c4-20250305";
