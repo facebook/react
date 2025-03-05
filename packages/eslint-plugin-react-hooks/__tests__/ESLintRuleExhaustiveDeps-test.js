@@ -629,6 +629,8 @@ const tests = {
           const [isPending2, startTransition2] = useTransition();
           const [isPending3] = React.useTransition();
           const [isPending4, startTransition4] = React.useTransition();
+          const [state11, dispatch7, isPending5] = useActionState();
+          const [state12, dispatch8, isPending6] = React.useActionState();
           const mySetState = useCallback(() => {}, []);
           let myDispatch = useCallback(() => {}, []);
 
@@ -644,6 +646,8 @@ const tests = {
             dispatch2();
             dispatch5();
             dispatch6();
+            dispatch7();
+            dispatch8();
             startTransition1();
             startTransition2();
             startTransition3();
@@ -656,8 +660,12 @@ const tests = {
             console.log(state4);
             console.log(state5);
             console.log(state6);
+            console.log(state11);
+            console.log(state12);
             console.log(isPending2);
             console.log(isPending4);
+            console.log(isPending5);
+            console.log(isPending6);
             mySetState();
             myDispatch();
 
@@ -666,9 +674,9 @@ const tests = {
             maybeDispatch();
           }, [
             // Dynamic
-            state1, state2, state3, state4, state5, state6, state9, state10,
+            state1, state2, state3, state4, state5, state6, state9, state10, state11, state12,
             maybeRef1, maybeRef2,
-            isPending2, isPending4,
+            isPending2, isPending4, isPending5, isPending6,
 
             // Not sure; assume dynamic
             mySetState, myDispatch,
