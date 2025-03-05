@@ -62,6 +62,18 @@ export default function BabelPluginReactCompiler(
               },
             };
           }
+          if (opts.environment.enableEmitHookGuards != null) {
+            const enableEmitHookGuards = opts.environment.enableEmitHookGuards;
+            if (enableEmitHookGuards.devonly === true && !isDev) {
+              opts = {
+                ...opts,
+                environment: {
+                  ...opts.environment,
+                  enableEmitHookGuards: null,
+                },
+              };
+            }
+          }
           compileProgram(prog, {
             opts,
             filename: pass.filename ?? null,

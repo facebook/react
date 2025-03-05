@@ -172,6 +172,21 @@ export function createInstance(
   };
 }
 
+export function cloneMutableInstance(
+  instance: Instance,
+  keepChildren: boolean,
+): Instance {
+  return {
+    type: instance.type,
+    props: instance.props,
+    isHidden: instance.isHidden,
+    children: keepChildren ? instance.children : [],
+    internalInstanceHandle: null,
+    rootContainerInstance: instance.rootContainerInstance,
+    tag: 'INSTANCE',
+  };
+}
+
 export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
@@ -206,6 +221,16 @@ export function createTextInstance(
   return {
     text,
     isHidden: false,
+    tag: 'TEXT',
+  };
+}
+
+export function cloneMutableTextInstance(
+  textInstance: TextInstance,
+): TextInstance {
+  return {
+    text: textInstance.text,
+    isHidden: textInstance.isHidden,
     tag: 'TEXT',
   };
 }
@@ -337,6 +362,27 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
   // Noop
 }
 
+export function cloneRootViewTransitionContainer(
+  rootContainer: Container,
+): Instance {
+  return {
+    type: 'ROOT',
+    props: {},
+    isHidden: false,
+    children: [],
+    internalInstanceHandle: null,
+    rootContainerInstance: rootContainer,
+    tag: 'INSTANCE',
+  };
+}
+
+export function removeRootViewTransitionClone(
+  rootContainer: Container,
+  clone: Instance,
+): void {
+  // Noop since it was never inserted anywhere.
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
@@ -379,6 +425,9 @@ export type RunningGestureTransition = null;
 
 export function startGestureTransition(
   rootContainer: Container,
+  timeline: GestureTimeline,
+  rangeStart: number,
+  rangeEnd: number,
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   animateCallback: () => void,

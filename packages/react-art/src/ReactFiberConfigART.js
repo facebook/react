@@ -302,12 +302,20 @@ export function createInstance(type, props, internalInstanceHandle) {
   return instance;
 }
 
+export function cloneMutableInstance(instance, keepChildren) {
+  return instance;
+}
+
 export function createTextInstance(
   text,
   rootContainerInstance,
   internalInstanceHandle,
 ) {
   return text;
+}
+
+export function cloneMutableTextInstance(textInstance) {
+  return textInstance;
 }
 
 export function finalizeInitialChildren(domElement, type, props) {
@@ -473,6 +481,14 @@ export function cancelRootViewTransitionName(rootContainer) {
 
 export function restoreRootViewTransitionName(rootContainer) {
   // Noop
+}
+
+export function cloneRootViewTransitionContainer(rootContainer) {
+  throw new Error('Not implemented.');
+}
+
+export function removeRootViewTransitionClone(rootContainer, clone) {
+  throw new Error('Not implemented.');
 }
 
 export type InstanceMeasurement = null;

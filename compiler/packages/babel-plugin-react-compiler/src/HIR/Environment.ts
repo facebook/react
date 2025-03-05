@@ -398,7 +398,27 @@ const EnvironmentConfigSchema = z.object({
    */
   enableEmitFreeze: ExternalFunctionSchema.nullable().default(null),
 
-  enableEmitHookGuards: ExternalFunctionSchema.nullable().default(null),
+  enableEmitHookGuards: z
+    .intersection(
+      ExternalFunctionSchema,
+      z.object({
+        devonly: z.union([
+          z.literal(true),
+          z.literal(false),
+          /**
+           * Backwards compatibility with previous configuration, which did not
+           * have this field.
+           */
+          z.literal(undefined),
+        ]),
+      }),
+    )
+    .nullable()
+    .default({
+      source: 'react-compiler-runtime',
+      importSpecifierName: '$dispatcherGuard',
+      devonly: true,
+    }),
 
   /**
    * Enable instruction reordering. See InstructionReordering.ts for the details
@@ -657,6 +677,7 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
   enableEmitHookGuards: {
     source: 'react-compiler-runtime',
     importSpecifierName: '$dispatcherGuard',
+    devonly: false,
   },
   inlineJsxTransform: {
     elementSymbol: 'react.transitional.element',
@@ -700,6 +721,7 @@ function parseConfigPragmaEnvironmentForTest(
   const maybeConfig: any = {};
   // Get the defaults to programmatically check for boolean properties
   const defaultConfig = EnvironmentConfigSchema.parse({});
+  defaultConfig.enableEmitHookGuards = null;
 
   for (const token of pragma.split(' ')) {
     if (!token.startsWith('@')) {
