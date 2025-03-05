@@ -341,7 +341,7 @@ function appendAllChildrenToContainer(
   workInProgress: Fiber,
   needsVisibilityToggle: boolean,
   isHidden: boolean,
-) {
+): boolean {
   let hasOffscreenComponentChild = false;
   if (supportsPersistence) {
     // We only have the top Fiber that was created but we need recurse down its
