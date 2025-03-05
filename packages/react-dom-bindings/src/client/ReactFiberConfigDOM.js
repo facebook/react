@@ -1754,7 +1754,7 @@ function animateGesture(
     moveOldFrameIntoViewport(keyframes[0]);
   }
   const reverse = rangeStart > rangeEnd;
-  const anim = targetElement.animate(keyframes, {
+  targetElement.animate(keyframes, {
     pseudoElement: pseudoElement,
     // Set the timeline to the current gesture timeline to drive the updates.
     timeline: timeline,
@@ -1764,20 +1764,14 @@ function animateGesture(
     easing: 'linear',
     // We fill in both direction for overscroll.
     fill: 'both',
+    // We play all gestures in reverse, except if we're in reverse direction
+    // in which case we need to play it in reverse of the reverse.
+    direction: reverse ? 'normal' : 'reverse',
     // Range start needs to be higher than range end. If it goes in reverse
     // we reverse the whole animation below.
     rangeStart: (reverse ? rangeEnd : rangeStart) + '%',
     rangeEnd: (reverse ? rangeStart : rangeEnd) + '%',
   });
-  if (!reverse) {
-    // We play all gestures in reverse, except if we're in reverse direction
-    // in which case we need to play it in reverse of the reverse.
-    anim.reverse();
-    // In Safari, there's a bug where the starting position isn't immediately
-    // picked up from the ScrollTimeline for one frame.
-    // $FlowFixMe[cannot-resolve-name]
-    anim.currentTime = CSS.percent(100);
-  }
 }
 
 export function startGestureTransition(
