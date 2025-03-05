@@ -1147,6 +1147,7 @@ export class Environment {
       moduleName.toLowerCase() === 'react-dom'
     );
   }
+  static knownReactModules: ReadonlyArray<string> = ['react', 'react-dom'];
 
   getPropertyType(
     receiver: Type,
