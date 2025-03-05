@@ -56,10 +56,12 @@ export const getChildHostContext = $$$config.getChildHostContext;
 export const prepareForCommit = $$$config.prepareForCommit;
 export const resetAfterCommit = $$$config.resetAfterCommit;
 export const createInstance = $$$config.createInstance;
+export const cloneMutableInstance = $$$config.cloneMutableInstance;
 export const appendInitialChild = $$$config.appendInitialChild;
 export const finalizeInitialChildren = $$$config.finalizeInitialChildren;
 export const shouldSetTextContent = $$$config.shouldSetTextContent;
 export const createTextInstance = $$$config.createTextInstance;
+export const cloneMutableTextInstance = $$$config.cloneMutableTextInstance;
 export const scheduleTimeout = $$$config.scheduleTimeout;
 export const cancelTimeout = $$$config.cancelTimeout;
 export const noTimeout = $$$config.noTimeout;
@@ -141,6 +143,10 @@ export const cancelRootViewTransitionName =
   $$$config.cancelRootViewTransitionName;
 export const restoreRootViewTransitionName =
   $$$config.restoreRootViewTransitionName;
+export const cloneRootViewTransitionContainer =
+  $$$config.cloneRootViewTransitionContainer;
+export const removeRootViewTransitionClone =
+  $$$config.removeRootViewTransitionClone;
 export const measureInstance = $$$config.measureInstance;
 export const wasInstanceInViewport = $$$config.wasInstanceInViewport;
 export const hasInstanceChanged = $$$config.hasInstanceChanged;

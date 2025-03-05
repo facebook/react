@@ -41,7 +41,6 @@ export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
 export const enableNoCloningMemoCache = false;
 export const enableObjectFiber = false;
-export const enableOwnerStacks = true;
 export const enablePersistedModeClonedFlag = false;
 export const enablePostpone = false;
 export const enableReactTestRendererWarning = false;
@@ -75,6 +74,7 @@ export const enableViewTransition = false;
 export const enableSwipeTransition = false;
 export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
+export const enableScrollEndPolyfill = true;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;

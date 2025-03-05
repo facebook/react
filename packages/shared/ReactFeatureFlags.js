@@ -94,6 +94,8 @@ export const enableViewTransition = __EXPERIMENTAL__;
 
 export const enableSwipeTransition = __EXPERIMENTAL__;
 
+export const enableScrollEndPolyfill = __EXPERIMENTAL__;
+
 /**
  * Switches the Fabric API from doing layout in commit work instead of complete work.
  */
@@ -133,8 +135,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
  * of cloned host components.
  */
 export const enablePersistedModeClonedFlag = false;
-
-export const enableOwnerStacks = true;
 
 export const enableShallowPropDiffing = false;
 

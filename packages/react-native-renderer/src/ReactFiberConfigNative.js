@@ -165,6 +165,13 @@ export function createInstance(
   return ((component: any): Instance);
 }
 
+export function cloneMutableInstance(
+  instance: Instance,
+  keepChildren: boolean,
+): Instance {
+  throw new Error('Not yet implemented.');
+}
+
 export function createTextInstance(
   text: string,
   rootContainerInstance: Container,
@@ -187,6 +194,12 @@ export function createTextInstance(
   precacheFiberNode(internalInstanceHandle, tag);
 
   return tag;
+}
+
+export function cloneMutableTextInstance(
+  textInstance: TextInstance,
+): TextInstance {
+  throw new Error('Not yet implemented.');
 }
 
 export function finalizeInitialChildren(
@@ -558,6 +571,19 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
   // Not yet implemented
 }
 
+export function cloneRootViewTransitionContainer(
+  rootContainer: Container,
+): Instance {
+  throw new Error('Not implemented.');
+}
+
+export function removeRootViewTransitionClone(
+  rootContainer: Container,
+  clone: Instance,
+): void {
+  throw new Error('Not implemented.');
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
@@ -601,6 +627,9 @@ export type RunningGestureTransition = null;
 
 export function startGestureTransition(
   rootContainer: Container,
+  timeline: GestureTimeline,
+  rangeStart: number,
+  rangeEnd: number,
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   animateCallback: () => void,

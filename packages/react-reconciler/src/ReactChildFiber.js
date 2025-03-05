@@ -47,7 +47,6 @@ import isArray from 'shared/isArray';
 import {
   enableAsyncIterableChildren,
   disableLegacyMode,
-  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -488,9 +487,7 @@ function createChildReconciler(
       if (__DEV__) {
         // We treat the parent as the owner for stack purposes.
         created._debugOwner = returnFiber;
-        if (enableOwnerStacks) {
-          created._debugTask = returnFiber._debugTask;
-        }
+        created._debugTask = returnFiber._debugTask;
         created._debugInfo = currentDebugInfo;
       }
       return created;
@@ -609,9 +606,7 @@ function createChildReconciler(
       if (__DEV__) {
         // We treat the parent as the owner for stack purposes.
         created._debugOwner = returnFiber;
-        if (enableOwnerStacks) {
-          created._debugTask = returnFiber._debugTask;
-        }
+        created._debugTask = returnFiber._debugTask;
         created._debugInfo = currentDebugInfo;
       }
       return created;
@@ -649,9 +644,7 @@ function createChildReconciler(
       if (__DEV__) {
         // We treat the parent as the owner for stack purposes.
         created._debugOwner = returnFiber;
-        if (enableOwnerStacks) {
-          created._debugTask = returnFiber._debugTask;
-        }
+        created._debugTask = returnFiber._debugTask;
         created._debugInfo = currentDebugInfo;
       }
       return created;
@@ -718,9 +711,7 @@ function createChildReconciler(
         if (__DEV__) {
           // We treat the parent as the owner for stack purposes.
           created._debugOwner = returnFiber;
-          if (enableOwnerStacks) {
-            created._debugTask = returnFiber._debugTask;
-          }
+          created._debugTask = returnFiber._debugTask;
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
           created._debugInfo = currentDebugInfo;
           currentDebugInfo = prevDebugInfo;
@@ -1605,9 +1596,7 @@ function createChildReconciler(
     if (__DEV__) {
       // We treat the parent as the owner for stack purposes.
       created._debugOwner = returnFiber;
-      if (enableOwnerStacks) {
-        created._debugTask = returnFiber._debugTask;
-      }
+      created._debugTask = returnFiber._debugTask;
       created._debugInfo = currentDebugInfo;
     }
     return created;
@@ -1685,9 +1674,7 @@ function createChildReconciler(
       if (__DEV__) {
         // We treat the parent as the owner for stack purposes.
         created._debugOwner = returnFiber;
-        if (enableOwnerStacks) {
-          created._debugTask = returnFiber._debugTask;
-        }
+        created._debugTask = returnFiber._debugTask;
         created._debugInfo = currentDebugInfo;
       }
       validateFragmentProps(element, created, returnFiber);
@@ -1980,16 +1967,12 @@ function createChildReconciler(
         // thing when it's thrown from the same async component but not if you await
         // a promise started from a different component/task.
         throwFiber._debugOwner = returnFiber._debugOwner;
-        if (enableOwnerStacks) {
-          throwFiber._debugTask = returnFiber._debugTask;
-        }
+        throwFiber._debugTask = returnFiber._debugTask;
         if (debugInfo != null) {
           for (let i = debugInfo.length - 1; i >= 0; i--) {
             if (typeof debugInfo[i].stack === 'string') {
               throwFiber._debugOwner = (debugInfo[i]: any);
-              if (enableOwnerStacks) {
-                throwFiber._debugTask = debugInfo[i].debugTask;
-              }
+              throwFiber._debugTask = debugInfo[i].debugTask;
               break;
             }
           }

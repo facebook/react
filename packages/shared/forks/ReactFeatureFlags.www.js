@@ -37,13 +37,11 @@ export const {
   transitionLaneExpirationMs,
   enableFastAddPropertiesInDiffing,
   enableViewTransition,
+  enableScrollEndPolyfill,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
 // It's not used anywhere in production yet.
-
-// Can remove these two
-export const enableOwnerStacks = true;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
