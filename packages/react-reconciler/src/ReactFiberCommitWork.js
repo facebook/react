@@ -247,7 +247,6 @@ import {
   restoreNestedViewTransitions,
   measureUpdateViewTransition,
   measureNestedViewTransitions,
-  resetShouldStartViewTransition,
   resetAppearingViewTransitions,
   trackAppearingViewTransition,
   viewTransitionCancelableChildren,
@@ -289,8 +288,6 @@ export function commitBeforeMutationEffects(
 ): void {
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
   shouldFireAfterActiveInstanceBlur = false;
-
-  resetShouldStartViewTransition();
 
   const isViewTransitionEligible =
     enableViewTransition &&
