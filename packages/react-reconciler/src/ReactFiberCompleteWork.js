@@ -519,7 +519,10 @@ function updateHostComponent(
         // Otherwise parents won't know that there are new children to propagate upwards.
         markUpdate(workInProgress);
       }
-    } else if (!passChildrenWhenCloningPersistedNodes || hasOffscreenComponentChild) {
+    } else if (
+      !passChildrenWhenCloningPersistedNodes ||
+      hasOffscreenComponentChild
+    ) {
       // If children have changed, we have to add them all to the set.
       appendAllChildren(
         newInstance,
