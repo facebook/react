@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dc18344e2038c11f61fd0f42724389c9>>
+ * @generated SignedSource<<52f1f04cc0a3c247eabb6e136fee3700>>
  */
 
 /*
@@ -12630,26 +12630,21 @@ function flushGestureMutations() {
     var prevExecutionContext = executionContext;
     executionContext |= 4;
     try {
-      var rootContainer = root.containerInfo,
-        documentElement =
+      var rootClone = root.gestureClone;
+      if (null !== rootClone) {
+        root.gestureClone = null;
+        var rootContainer = root.containerInfo;
+        var containerInstance =
           9 === rootContainer.nodeType
-            ? rootContainer.documentElement
-            : rootContainer.ownerDocument.documentElement;
-      null !== documentElement &&
-        "" === documentElement.style.viewTransitionName &&
-        ((documentElement.style.viewTransitionName = "none"),
-        documentElement.animate(
-          { opacity: [0, 0], pointerEvents: ["none", "none"] },
-          {
-            duration: 0,
-            fill: "forwards",
-            pseudoElement: "::view-transition-group(root)"
-          }
-        ),
-        documentElement.animate(
-          { width: [0, 0], height: [0, 0] },
-          { duration: 0, fill: "forwards", pseudoElement: "::view-transition" }
-        ));
+            ? rootContainer.body
+            : "HTML" === rootContainer.nodeName
+              ? rootContainer.ownerDocument.body
+              : rootContainer;
+        var containerParent = containerInstance.parentNode;
+        if (null === containerParent) throw Error(formatProdErrorMessage(552));
+        containerParent.removeChild(rootClone);
+        containerInstance.style.viewTransitionName = "root";
+      }
     } finally {
       (executionContext = prevExecutionContext),
         (ReactDOMSharedInternals.p = previousPriority),
@@ -12679,11 +12674,16 @@ function flushPendingEffects(wasDelayedCommit) {
     var prevExecutionContext = executionContext;
     executionContext |= 4;
     try {
-      var rootContainer = root.containerInfo,
-        documentElement =
-          9 === rootContainer.nodeType
-            ? rootContainer.documentElement
-            : rootContainer.ownerDocument.documentElement;
+      var rootContainer = root.containerInfo;
+      var containerInstance =
+        9 === rootContainer.nodeType
+          ? rootContainer.body
+          : "HTML" === rootContainer.nodeName
+            ? rootContainer.ownerDocument.body
+            : rootContainer;
+      "root" === containerInstance.style.viewTransitionName &&
+        (containerInstance.style.viewTransitionName = "");
+      var documentElement = containerInstance.ownerDocument.documentElement;
       null !== documentElement &&
         "none" === documentElement.style.viewTransitionName &&
         (documentElement.style.viewTransitionName = "");
@@ -13210,20 +13210,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1660 = 0;
-  i$jscomp$inline_1660 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1660++
+  var i$jscomp$inline_1661 = 0;
+  i$jscomp$inline_1661 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1661++
 ) {
-  var eventName$jscomp$inline_1661 =
-      simpleEventPluginEvents[i$jscomp$inline_1660],
-    domEventName$jscomp$inline_1662 =
-      eventName$jscomp$inline_1661.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1663 =
-      eventName$jscomp$inline_1661[0].toUpperCase() +
-      eventName$jscomp$inline_1661.slice(1);
+  var eventName$jscomp$inline_1662 =
+      simpleEventPluginEvents[i$jscomp$inline_1661],
+    domEventName$jscomp$inline_1663 =
+      eventName$jscomp$inline_1662.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1664 =
+      eventName$jscomp$inline_1662[0].toUpperCase() +
+      eventName$jscomp$inline_1662.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1662,
-    "on" + capitalizedEvent$jscomp$inline_1663
+    domEventName$jscomp$inline_1663,
+    "on" + capitalizedEvent$jscomp$inline_1664
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16819,16 +16819,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1911 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1912 = React.version;
 if (
-  "19.1.0-native-fb-e0fe3479-20250304" !==
-  isomorphicReactPackageVersion$jscomp$inline_1911
+  "19.1.0-native-fb-e9252bcd-20250304" !==
+  isomorphicReactPackageVersion$jscomp$inline_1912
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1911,
-      "19.1.0-native-fb-e0fe3479-20250304"
+      isomorphicReactPackageVersion$jscomp$inline_1912,
+      "19.1.0-native-fb-e9252bcd-20250304"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16848,12 +16848,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1918 = {
+var internals$jscomp$inline_1919 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-e0fe3479-20250304",
+  version: "19.1.0-native-fb-e9252bcd-20250304",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-e0fe3479-20250304",
+  reconcilerVersion: "19.1.0-native-fb-e9252bcd-20250304",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$294 = 0;
@@ -16871,16 +16871,16 @@ var internals$jscomp$inline_1918 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2347 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2350 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2347.isDisabled &&
-    hook$jscomp$inline_2347.supportsFiber
+    !hook$jscomp$inline_2350.isDisabled &&
+    hook$jscomp$inline_2350.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2347.inject(
-        internals$jscomp$inline_1918
+      (rendererID = hook$jscomp$inline_2350.inject(
+        internals$jscomp$inline_1919
       )),
-        (injectedHook = hook$jscomp$inline_2347);
+        (injectedHook = hook$jscomp$inline_2350);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -16972,4 +16972,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-e0fe3479-20250304";
+exports.version = "19.1.0-native-fb-e9252bcd-20250304";

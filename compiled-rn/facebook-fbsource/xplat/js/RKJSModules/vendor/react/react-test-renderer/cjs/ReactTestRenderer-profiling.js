@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d04e3058f263b473cd6bbdc28c432d68>>
+ * @generated SignedSource<<16a6c328e21259a52231362e60e0f729>>
  */
 
 "use strict";
@@ -9490,14 +9490,20 @@ function flushSpawnedWork() {
 function flushGestureMutations() {
   if (6 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
-    var prevTransition = ReactSharedInternals.T,
-      previousPriority = currentUpdatePriority;
+    var root = pendingEffectsRoot,
+      prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    var previousPriority = currentUpdatePriority;
     currentUpdatePriority = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
-    executionContext = prevExecutionContext;
-    currentUpdatePriority = previousPriority;
-    ReactSharedInternals.T = prevTransition;
+    try {
+      null !== root.gestureClone && (root.gestureClone = null);
+    } finally {
+      (executionContext = prevExecutionContext),
+        (currentUpdatePriority = previousPriority),
+        (ReactSharedInternals.T = prevTransition);
+    }
     pendingEffectsStatus = 7;
   }
 }
@@ -10388,12 +10394,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1223 = {
+var internals$jscomp$inline_1227 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-e0fe3479-20250304",
+  version: "19.1.0-native-fb-e9252bcd-20250304",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-e0fe3479-20250304",
+  reconcilerVersion: "19.1.0-native-fb-e9252bcd-20250304",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$147 = 0;
@@ -10411,16 +10417,16 @@ var internals$jscomp$inline_1223 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1470 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1474 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1470.isDisabled &&
-    hook$jscomp$inline_1470.supportsFiber
+    !hook$jscomp$inline_1474.isDisabled &&
+    hook$jscomp$inline_1474.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1470.inject(
-        internals$jscomp$inline_1223
+      (rendererID = hook$jscomp$inline_1474.inject(
+        internals$jscomp$inline_1227
       )),
-        (injectedHook = hook$jscomp$inline_1470);
+        (injectedHook = hook$jscomp$inline_1474);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10544,4 +10550,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-e0fe3479-20250304";
+exports.version = "19.1.0-native-fb-e9252bcd-20250304";

@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<97afa1c809172751252fe9784d681d8d>>
+ * @generated SignedSource<<4d866fcccf7a4c21314bb62cdbda6d26>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1132() {
+    function JSCompiler_object_inline_createNodeMock_1136() {
       return null;
     }
     function findHook(fiber, id) {
@@ -12265,14 +12265,20 @@ __DEV__ &&
     function flushGestureMutations() {
       if (pendingEffectsStatus === PENDING_GESTURE_MUTATION_PHASE) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var prevTransition = ReactSharedInternals.T,
-          previousPriority = currentUpdatePriority;
+        var root = pendingEffectsRoot,
+          prevTransition = ReactSharedInternals.T;
+        ReactSharedInternals.T = null;
+        var previousPriority = currentUpdatePriority;
         currentUpdatePriority = DiscreteEventPriority;
         var prevExecutionContext = executionContext;
         executionContext |= CommitContext;
-        executionContext = prevExecutionContext;
-        currentUpdatePriority = previousPriority;
-        ReactSharedInternals.T = prevTransition;
+        try {
+          null !== root.gestureClone && (root.gestureClone = null);
+        } finally {
+          (executionContext = prevExecutionContext),
+            (currentUpdatePriority = previousPriority),
+            (ReactSharedInternals.T = prevTransition);
+        }
         pendingEffectsStatus = PENDING_GESTURE_ANIMATION_PHASE;
       }
     }
@@ -15601,10 +15607,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-e0fe3479-20250304",
+        version: "19.1.0-native-fb-e9252bcd-20250304",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-e0fe3479-20250304"
+        reconcilerVersion: "19.1.0-native-fb-e9252bcd-20250304"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15626,7 +15632,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1132,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1136,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15749,5 +15755,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-e0fe3479-20250304";
+    exports.version = "19.1.0-native-fb-e9252bcd-20250304";
   })();

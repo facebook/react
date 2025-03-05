@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<88936e3804e9391486685f087babadf4>>
+ * @generated SignedSource<<d9a09feadf01ed54c91c3bd6fdc89faf>>
  */
 
 "use strict";
@@ -13193,14 +13193,16 @@ __DEV__ &&
     function flushGestureMutations() {
       if (pendingEffectsStatus === PENDING_GESTURE_MUTATION_PHASE) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var prevTransition = ReactSharedInternals.T;
+        var root = pendingEffectsRoot,
+          prevTransition = ReactSharedInternals.T;
         ReactSharedInternals.T = null;
         var previousPriority = currentUpdatePriority;
         currentUpdatePriority = DiscreteEventPriority;
         var prevExecutionContext = executionContext;
         executionContext |= CommitContext;
         try {
-          cancelRootViewTransitionName();
+          null !== root.gestureClone &&
+            ((root.gestureClone = null), removeRootViewTransitionClone());
         } finally {
           (executionContext = prevExecutionContext),
             (currentUpdatePriority = previousPriority),
@@ -17222,8 +17224,8 @@ __DEV__ &&
       };
     };
     var commitMount = shim$2,
-      cancelRootViewTransitionName = shim$2,
       restoreRootViewTransitionName = shim$2,
+      removeRootViewTransitionClone = shim$2,
       supportsHydration = !1,
       isSuspenseInstancePending = shim$1,
       isSuspenseInstanceFallback = shim$1,
@@ -17438,10 +17440,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-e0fe3479-20250304",
+        version: "19.1.0-native-fb-e9252bcd-20250304",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-e0fe3479-20250304"
+        reconcilerVersion: "19.1.0-native-fb-e9252bcd-20250304"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

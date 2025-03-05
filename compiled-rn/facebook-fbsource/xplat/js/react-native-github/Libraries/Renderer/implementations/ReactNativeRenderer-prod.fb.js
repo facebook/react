@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<250c152c6ae68e314ff8809a66ff02b1>>
+ * @generated SignedSource<<0a641128ae1086d9a92eac712f1898a4>>
  */
 
 "use strict";
@@ -10574,14 +10574,21 @@ function flushSpawnedWork() {
 function flushGestureMutations() {
   if (6 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
-    var prevTransition = ReactSharedInternals.T,
-      previousPriority = currentUpdatePriority;
+    var root = pendingEffectsRoot,
+      prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    var previousPriority = currentUpdatePriority;
     currentUpdatePriority = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
-    executionContext = prevExecutionContext;
-    currentUpdatePriority = previousPriority;
-    ReactSharedInternals.T = prevTransition;
+    try {
+      if (null !== root.gestureClone)
+        throw ((root.gestureClone = null), Error("Not implemented."));
+    } finally {
+      (executionContext = prevExecutionContext),
+        (currentUpdatePriority = previousPriority),
+        (ReactSharedInternals.T = prevTransition);
+    }
     pendingEffectsStatus = 7;
   }
 }
@@ -11174,11 +11181,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-e0fe3479-20250304" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-e9252bcd-20250304" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-e0fe3479-20250304\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-e9252bcd-20250304\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11225,26 +11232,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1288 = {
+  internals$jscomp$inline_1292 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-e0fe3479-20250304",
+    version: "19.1.0-native-fb-e9252bcd-20250304",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-e0fe3479-20250304"
+    reconcilerVersion: "19.1.0-native-fb-e9252bcd-20250304"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1288.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1292.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1628 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1633 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1628.isDisabled &&
-    hook$jscomp$inline_1628.supportsFiber
+    !hook$jscomp$inline_1633.isDisabled &&
+    hook$jscomp$inline_1633.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1628.inject(
-        internals$jscomp$inline_1288
+      (rendererID = hook$jscomp$inline_1633.inject(
+        internals$jscomp$inline_1292
       )),
-        (injectedHook = hook$jscomp$inline_1628);
+        (injectedHook = hook$jscomp$inline_1633);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

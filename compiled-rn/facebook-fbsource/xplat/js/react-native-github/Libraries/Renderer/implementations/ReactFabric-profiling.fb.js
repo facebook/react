@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b272070980fde542dc4ee319ac756fa1>>
+ * @generated SignedSource<<f6f9def9d1c52a75aeb68fa5b424bc7c>>
  */
 
 "use strict";
@@ -10899,14 +10899,15 @@ function flushSpawnedWork() {
 function flushGestureMutations() {
   if (6 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
-    var prevTransition = ReactSharedInternals.T;
+    var root = pendingEffectsRoot,
+      prevTransition = ReactSharedInternals.T;
     ReactSharedInternals.T = null;
     var previousPriority = currentUpdatePriority;
     currentUpdatePriority = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
     try {
-      shim$2();
+      null !== root.gestureClone && ((root.gestureClone = null), shim$2());
     } finally {
       (executionContext = prevExecutionContext),
         (currentUpdatePriority = previousPriority),
@@ -11740,16 +11741,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1336 = {
+  internals$jscomp$inline_1337 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-e0fe3479-20250304",
+    version: "19.1.0-native-fb-e9252bcd-20250304",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-e0fe3479-20250304"
+    reconcilerVersion: "19.1.0-native-fb-e9252bcd-20250304"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1336.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1336.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1337.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1337.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$156 = 0;
     31 > index$156;
@@ -11761,20 +11762,20 @@ internals$jscomp$inline_1336.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1336.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1337.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1617 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1618 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1617.isDisabled &&
-    hook$jscomp$inline_1617.supportsFiber
+    !hook$jscomp$inline_1618.isDisabled &&
+    hook$jscomp$inline_1618.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1617.inject(
-        internals$jscomp$inline_1336
+      (rendererID = hook$jscomp$inline_1618.inject(
+        internals$jscomp$inline_1337
       )),
-        (injectedHook = hook$jscomp$inline_1617);
+        (injectedHook = hook$jscomp$inline_1618);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

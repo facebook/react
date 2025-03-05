@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<757ec7ec98878362568c1b4e99832098>>
+ * @generated SignedSource<<6c014d1d325912131a4fd78ca977ac12>>
  */
 
 "use strict";
@@ -10285,14 +10285,15 @@ function flushSpawnedWork() {
 function flushGestureMutations() {
   if (6 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
-    var prevTransition = ReactSharedInternals.T;
+    var root = pendingEffectsRoot,
+      prevTransition = ReactSharedInternals.T;
     ReactSharedInternals.T = null;
     var previousPriority = currentUpdatePriority;
     currentUpdatePriority = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
     try {
-      shim$2();
+      null !== root.gestureClone && ((root.gestureClone = null), shim$2());
     } finally {
       (executionContext = prevExecutionContext),
         (currentUpdatePriority = previousPriority),
@@ -11087,26 +11088,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1243 = {
+  internals$jscomp$inline_1244 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-e0fe3479-20250304",
+    version: "19.1.0-native-fb-e9252bcd-20250304",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-e0fe3479-20250304"
+    reconcilerVersion: "19.1.0-native-fb-e9252bcd-20250304"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1243.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1244.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1558 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1559 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1558.isDisabled &&
-    hook$jscomp$inline_1558.supportsFiber
+    !hook$jscomp$inline_1559.isDisabled &&
+    hook$jscomp$inline_1559.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1558.inject(
-        internals$jscomp$inline_1243
+      (rendererID = hook$jscomp$inline_1559.inject(
+        internals$jscomp$inline_1244
       )),
-        (injectedHook = hook$jscomp$inline_1558);
+        (injectedHook = hook$jscomp$inline_1559);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

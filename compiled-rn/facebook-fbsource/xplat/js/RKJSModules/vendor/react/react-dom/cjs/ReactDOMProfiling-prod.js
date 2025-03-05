@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<58518f8e04fa3caaae17295245bca126>>
+ * @generated SignedSource<<7d07afb1fab6ca0e51d5d7b7e05339cd>>
  */
 
 /*
@@ -12007,26 +12007,21 @@ function flushGestureMutations() {
     var prevExecutionContext = executionContext;
     executionContext |= 4;
     try {
-      var rootContainer = root.containerInfo,
-        documentElement =
+      var rootClone = root.gestureClone;
+      if (null !== rootClone) {
+        root.gestureClone = null;
+        var rootContainer = root.containerInfo;
+        var containerInstance =
           9 === rootContainer.nodeType
-            ? rootContainer.documentElement
-            : rootContainer.ownerDocument.documentElement;
-      null !== documentElement &&
-        "" === documentElement.style.viewTransitionName &&
-        ((documentElement.style.viewTransitionName = "none"),
-        documentElement.animate(
-          { opacity: [0, 0], pointerEvents: ["none", "none"] },
-          {
-            duration: 0,
-            fill: "forwards",
-            pseudoElement: "::view-transition-group(root)"
-          }
-        ),
-        documentElement.animate(
-          { width: [0, 0], height: [0, 0] },
-          { duration: 0, fill: "forwards", pseudoElement: "::view-transition" }
-        ));
+            ? rootContainer.body
+            : "HTML" === rootContainer.nodeName
+              ? rootContainer.ownerDocument.body
+              : rootContainer;
+        var containerParent = containerInstance.parentNode;
+        if (null === containerParent) throw Error(formatProdErrorMessage(552));
+        containerParent.removeChild(rootClone);
+        containerInstance.style.viewTransitionName = "root";
+      }
     } finally {
       (executionContext = prevExecutionContext),
         (ReactDOMSharedInternals.p = previousPriority),
@@ -12056,11 +12051,16 @@ function flushPendingEffects(wasDelayedCommit) {
     var prevExecutionContext = executionContext;
     executionContext |= 4;
     try {
-      var rootContainer = root.containerInfo,
-        documentElement =
-          9 === rootContainer.nodeType
-            ? rootContainer.documentElement
-            : rootContainer.ownerDocument.documentElement;
+      var rootContainer = root.containerInfo;
+      var containerInstance =
+        9 === rootContainer.nodeType
+          ? rootContainer.body
+          : "HTML" === rootContainer.nodeName
+            ? rootContainer.ownerDocument.body
+            : rootContainer;
+      "root" === containerInstance.style.viewTransitionName &&
+        (containerInstance.style.viewTransitionName = "");
+      var documentElement = containerInstance.ownerDocument.documentElement;
       null !== documentElement &&
         "none" === documentElement.style.viewTransitionName &&
         (documentElement.style.viewTransitionName = "");
@@ -12568,20 +12568,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1568 = 0;
-  i$jscomp$inline_1568 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1568++
+  var i$jscomp$inline_1569 = 0;
+  i$jscomp$inline_1569 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1569++
 ) {
-  var eventName$jscomp$inline_1569 =
-      simpleEventPluginEvents[i$jscomp$inline_1568],
-    domEventName$jscomp$inline_1570 =
-      eventName$jscomp$inline_1569.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1571 =
-      eventName$jscomp$inline_1569[0].toUpperCase() +
-      eventName$jscomp$inline_1569.slice(1);
+  var eventName$jscomp$inline_1570 =
+      simpleEventPluginEvents[i$jscomp$inline_1569],
+    domEventName$jscomp$inline_1571 =
+      eventName$jscomp$inline_1570.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1572 =
+      eventName$jscomp$inline_1570[0].toUpperCase() +
+      eventName$jscomp$inline_1570.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1570,
-    "on" + capitalizedEvent$jscomp$inline_1571
+    domEventName$jscomp$inline_1571,
+    "on" + capitalizedEvent$jscomp$inline_1572
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16180,16 +16180,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1817 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1818 = React.version;
 if (
-  "19.1.0-native-fb-e0fe3479-20250304" !==
-  isomorphicReactPackageVersion$jscomp$inline_1817
+  "19.1.0-native-fb-e9252bcd-20250304" !==
+  isomorphicReactPackageVersion$jscomp$inline_1818
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1817,
-      "19.1.0-native-fb-e0fe3479-20250304"
+      isomorphicReactPackageVersion$jscomp$inline_1818,
+      "19.1.0-native-fb-e9252bcd-20250304"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16209,24 +16209,24 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2290 = {
+var internals$jscomp$inline_2293 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-e0fe3479-20250304",
+  version: "19.1.0-native-fb-e9252bcd-20250304",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-e0fe3479-20250304"
+  reconcilerVersion: "19.1.0-native-fb-e9252bcd-20250304"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2291 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2294 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2291.isDisabled &&
-    hook$jscomp$inline_2291.supportsFiber
+    !hook$jscomp$inline_2294.isDisabled &&
+    hook$jscomp$inline_2294.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2291.inject(
-        internals$jscomp$inline_2290
+      (rendererID = hook$jscomp$inline_2294.inject(
+        internals$jscomp$inline_2293
       )),
-        (injectedHook = hook$jscomp$inline_2291);
+        (injectedHook = hook$jscomp$inline_2294);
     } catch (err) {}
 }
 function noop() {}
@@ -16472,4 +16472,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-e0fe3479-20250304";
+exports.version = "19.1.0-native-fb-e9252bcd-20250304";

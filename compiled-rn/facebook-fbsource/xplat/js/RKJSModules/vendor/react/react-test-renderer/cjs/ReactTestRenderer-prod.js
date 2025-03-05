@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a312790ce4da0c63ee1ec5d61ca50a01>>
+ * @generated SignedSource<<470ba214b96590329021baa98fbdcad5>>
  */
 
 "use strict";
@@ -8945,14 +8945,20 @@ function flushSpawnedWork() {
 function flushGestureMutations() {
   if (6 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
-    var prevTransition = ReactSharedInternals.T,
-      previousPriority = currentUpdatePriority;
+    var root = pendingEffectsRoot,
+      prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    var previousPriority = currentUpdatePriority;
     currentUpdatePriority = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
-    executionContext = prevExecutionContext;
-    currentUpdatePriority = previousPriority;
-    ReactSharedInternals.T = prevTransition;
+    try {
+      null !== root.gestureClone && (root.gestureClone = null);
+    } finally {
+      (executionContext = prevExecutionContext),
+        (currentUpdatePriority = previousPriority),
+        (ReactSharedInternals.T = prevTransition);
+    }
     pendingEffectsStatus = 7;
   }
 }
@@ -9817,24 +9823,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1412 = {
+var internals$jscomp$inline_1416 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-e0fe3479-20250304",
+  version: "19.1.0-native-fb-e9252bcd-20250304",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-e0fe3479-20250304"
+  reconcilerVersion: "19.1.0-native-fb-e9252bcd-20250304"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1413 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1417 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1413.isDisabled &&
-    hook$jscomp$inline_1413.supportsFiber
+    !hook$jscomp$inline_1417.isDisabled &&
+    hook$jscomp$inline_1417.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1413.inject(
-        internals$jscomp$inline_1412
+      (rendererID = hook$jscomp$inline_1417.inject(
+        internals$jscomp$inline_1416
       )),
-        (injectedHook = hook$jscomp$inline_1413);
+        (injectedHook = hook$jscomp$inline_1417);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9958,4 +9964,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-e0fe3479-20250304";
+exports.version = "19.1.0-native-fb-e9252bcd-20250304";
