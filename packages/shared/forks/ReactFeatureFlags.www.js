@@ -39,7 +39,6 @@ export const {
   enableViewTransition,
   enableScrollEndPolyfill,
   ownerStackLimit,
-  debugTaskLimit,
   debugInfoLimitsResetIntervalMs,
 } = dynamicFeatureFlags;
 
