@@ -16209,6 +16209,8 @@ function setInitialProperties(domElement, tag, props) {
           }
       return;
     case "dialog":
+      listenToNonDelegatedEvent("beforetoggle", domElement);
+      listenToNonDelegatedEvent("toggle", domElement);
       listenToNonDelegatedEvent("cancel", domElement);
       listenToNonDelegatedEvent("close", domElement);
       break;
@@ -18597,14 +18599,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1900 = React.version;
 if (
-  "19.1.0-www-classic-e9252bcd-20250304" !==
+  "19.1.0-www-classic-aac177c4-20250305" !==
   isomorphicReactPackageVersion$jscomp$inline_1900
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1900,
-      "19.1.0-www-classic-e9252bcd-20250304"
+      "19.1.0-www-classic-aac177c4-20250305"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18622,10 +18624,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2473 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-e9252bcd-20250304",
+  version: "19.1.0-www-classic-aac177c4-20250305",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-e9252bcd-20250304"
+  reconcilerVersion: "19.1.0-www-classic-aac177c4-20250305"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2474 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18989,4 +18991,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-e9252bcd-20250304";
+exports.version = "19.1.0-www-classic-aac177c4-20250305";
