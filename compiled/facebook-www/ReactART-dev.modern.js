@@ -1731,6 +1731,90 @@ __DEV__ &&
                 ));
       return skipToNode + debugInfo + propName;
     }
+    function getCurrentFiberStackInDev() {
+      if (null === current) return "";
+      var workInProgress = current;
+      try {
+        var info = "";
+        6 === workInProgress.tag && (workInProgress = workInProgress.return);
+        switch (workInProgress.tag) {
+          case 26:
+          case 27:
+          case 5:
+            info += describeBuiltInComponentFrame(workInProgress.type);
+            break;
+          case 13:
+            info += describeBuiltInComponentFrame("Suspense");
+            break;
+          case 19:
+            info += describeBuiltInComponentFrame("SuspenseList");
+            break;
+          case 30:
+            if (enableViewTransition) {
+              info += describeBuiltInComponentFrame("SuspenseList");
+              break;
+            }
+          case 0:
+          case 15:
+          case 1:
+            workInProgress._debugOwner ||
+              "" !== info ||
+              (info += describeFunctionComponentFrameWithoutLineNumber(
+                workInProgress.type
+              ));
+            break;
+          case 11:
+            workInProgress._debugOwner ||
+              "" !== info ||
+              (info += describeFunctionComponentFrameWithoutLineNumber(
+                workInProgress.type.render
+              ));
+        }
+        for (; workInProgress; )
+          if ("number" === typeof workInProgress.tag) {
+            var fiber = workInProgress;
+            workInProgress = fiber._debugOwner;
+            var debugStack = fiber._debugStack;
+            workInProgress &&
+              debugStack &&
+              ("string" !== typeof debugStack &&
+                (fiber._debugStack = debugStack = formatOwnerStack(debugStack)),
+              "" !== debugStack && (info += "\n" + debugStack));
+          } else if (null != workInProgress.debugStack) {
+            var ownerStack = workInProgress.debugStack;
+            (workInProgress = workInProgress.owner) &&
+              ownerStack &&
+              (info += "\n" + formatOwnerStack(ownerStack));
+          } else break;
+        var JSCompiler_inline_result = info;
+      } catch (x) {
+        JSCompiler_inline_result =
+          "\nError generating stack: " + x.message + "\n" + x.stack;
+      }
+      return JSCompiler_inline_result;
+    }
+    function runWithFiberInDEV(fiber, callback, arg0, arg1, arg2, arg3, arg4) {
+      var previousFiber = current;
+      setCurrentFiber(fiber);
+      try {
+        return null !== fiber && fiber._debugTask
+          ? fiber._debugTask.run(
+              callback.bind(null, arg0, arg1, arg2, arg3, arg4)
+            )
+          : callback(arg0, arg1, arg2, arg3, arg4);
+      } finally {
+        setCurrentFiber(previousFiber);
+      }
+      throw Error(
+        "runWithFiberInDEV should never be called in production. This is a bug in React."
+      );
+    }
+    function setCurrentFiber(fiber) {
+      ReactSharedInternals.getCurrentStack =
+        null === fiber ? null : getCurrentFiberStackInDev;
+      isRendering = !1;
+      current = fiber;
+    }
     function upgradeHydrationErrorsToRecoverable() {
       var queuedErrors = hydrationErrors;
       null !== queuedErrors &&
@@ -1742,6 +1826,25 @@ __DEV__ &&
             ),
         (hydrationErrors = null));
       return queuedErrors;
+    }
+    function emitPendingHydrationWarnings() {
+      var diffRoot = hydrationDiffRootDEV;
+      if (null !== diffRoot) {
+        hydrationDiffRootDEV = null;
+        try {
+          var diff = "\n\n" + describeNode(diffRoot, 0);
+        } catch (x) {
+          diff = "";
+        }
+        for (; 0 < diffRoot.children.length; ) diffRoot = diffRoot.children[0];
+        runWithFiberInDEV(diffRoot.fiber, function () {
+          console.error(
+            "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s",
+            "https://react.dev/link/hydration-mismatch",
+            diff
+          );
+        });
+      }
     }
     function getViewTransitionName(props, instance) {
       return null != props.name && "auto" !== props.name
@@ -2398,90 +2501,6 @@ __DEV__ &&
           return !1;
       }
       return !0;
-    }
-    function getCurrentFiberStackInDev() {
-      if (null === current) return "";
-      var workInProgress = current;
-      try {
-        var info = "";
-        6 === workInProgress.tag && (workInProgress = workInProgress.return);
-        switch (workInProgress.tag) {
-          case 26:
-          case 27:
-          case 5:
-            info += describeBuiltInComponentFrame(workInProgress.type);
-            break;
-          case 13:
-            info += describeBuiltInComponentFrame("Suspense");
-            break;
-          case 19:
-            info += describeBuiltInComponentFrame("SuspenseList");
-            break;
-          case 30:
-            if (enableViewTransition) {
-              info += describeBuiltInComponentFrame("SuspenseList");
-              break;
-            }
-          case 0:
-          case 15:
-          case 1:
-            workInProgress._debugOwner ||
-              "" !== info ||
-              (info += describeFunctionComponentFrameWithoutLineNumber(
-                workInProgress.type
-              ));
-            break;
-          case 11:
-            workInProgress._debugOwner ||
-              "" !== info ||
-              (info += describeFunctionComponentFrameWithoutLineNumber(
-                workInProgress.type.render
-              ));
-        }
-        for (; workInProgress; )
-          if ("number" === typeof workInProgress.tag) {
-            var fiber = workInProgress;
-            workInProgress = fiber._debugOwner;
-            var debugStack = fiber._debugStack;
-            workInProgress &&
-              debugStack &&
-              ("string" !== typeof debugStack &&
-                (fiber._debugStack = debugStack = formatOwnerStack(debugStack)),
-              "" !== debugStack && (info += "\n" + debugStack));
-          } else if (null != workInProgress.debugStack) {
-            var ownerStack = workInProgress.debugStack;
-            (workInProgress = workInProgress.owner) &&
-              ownerStack &&
-              (info += "\n" + formatOwnerStack(ownerStack));
-          } else break;
-        var JSCompiler_inline_result = info;
-      } catch (x) {
-        JSCompiler_inline_result =
-          "\nError generating stack: " + x.message + "\n" + x.stack;
-      }
-      return JSCompiler_inline_result;
-    }
-    function runWithFiberInDEV(fiber, callback, arg0, arg1, arg2, arg3, arg4) {
-      var previousFiber = current;
-      setCurrentFiber(fiber);
-      try {
-        return null !== fiber && fiber._debugTask
-          ? fiber._debugTask.run(
-              callback.bind(null, arg0, arg1, arg2, arg3, arg4)
-            )
-          : callback(arg0, arg1, arg2, arg3, arg4);
-      } finally {
-        setCurrentFiber(previousFiber);
-      }
-      throw Error(
-        "runWithFiberInDEV should never be called in production. This is a bug in React."
-      );
-    }
-    function setCurrentFiber(fiber) {
-      ReactSharedInternals.getCurrentStack =
-        null === fiber ? null : getCurrentFiberStackInDev;
-      isRendering = !1;
-      current = fiber;
     }
     function createThenableState() {
       return { didWarnAboutUncachedPromise: !1, thenables: [] };
@@ -9006,41 +9025,25 @@ __DEV__ &&
                   "Expected prepareToHydrateHostSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue."
                 );
               }
-              instance = hydrationDiffRootDEV;
-              if (null !== instance) {
-                hydrationDiffRootDEV = null;
-                try {
-                  var fallthroughToNormalSuspensePath =
-                    "\n\n" + describeNode(instance, 0);
-                } catch (x) {
-                  fallthroughToNormalSuspensePath = "";
-                }
-                console.error(
-                  "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s",
-                  "https://react.dev/link/hydration-mismatch",
-                  fallthroughToNormalSuspensePath
-                );
-              }
+              emitPendingHydrationWarnings();
               0 === (workInProgress.flags & 128) &&
                 (workInProgress.memoizedState = null);
               workInProgress.flags |= 4;
               bubbleProperties(workInProgress);
               0 !== (workInProgress.mode & 2) &&
                 null !== newProps &&
-                ((fallthroughToNormalSuspensePath = workInProgress.child),
-                null !== fallthroughToNormalSuspensePath &&
+                ((instance = workInProgress.child),
+                null !== instance &&
                   (workInProgress.treeBaseDuration -=
-                    fallthroughToNormalSuspensePath.treeBaseDuration));
-              fallthroughToNormalSuspensePath = !1;
+                    instance.treeBaseDuration));
+              instance = !1;
             } else
-              (fallthroughToNormalSuspensePath =
-                upgradeHydrationErrorsToRecoverable()),
+              (instance = upgradeHydrationErrorsToRecoverable()),
                 null !== current &&
                   null !== current.memoizedState &&
-                  (current.memoizedState.hydrationErrors =
-                    fallthroughToNormalSuspensePath),
-                (fallthroughToNormalSuspensePath = !0);
-            if (!fallthroughToNormalSuspensePath) {
+                  (current.memoizedState.hydrationErrors = instance),
+                (instance = !0);
+            if (!instance) {
               if (workInProgress.flags & 256)
                 return popSuspenseHandler(workInProgress), workInProgress;
               popSuspenseHandler(workInProgress);
@@ -9057,20 +9060,19 @@ __DEV__ &&
             );
           renderLanes = null !== newProps;
           current = null !== current && null !== current.memoizedState;
-          renderLanes &&
-            ((newProps = workInProgress.child),
-            (fallthroughToNormalSuspensePath = null),
+          if (renderLanes) {
+            newProps = workInProgress.child;
+            instance = null;
             null !== newProps.alternate &&
               null !== newProps.alternate.memoizedState &&
               null !== newProps.alternate.memoizedState.cachePool &&
-              (fallthroughToNormalSuspensePath =
-                newProps.alternate.memoizedState.cachePool.pool),
-            (instance = null),
+              (instance = newProps.alternate.memoizedState.cachePool.pool);
+            var _cache = null;
             null !== newProps.memoizedState &&
               null !== newProps.memoizedState.cachePool &&
-              (instance = newProps.memoizedState.cachePool.pool),
-            instance !== fallthroughToNormalSuspensePath &&
-              (newProps.flags |= 2048));
+              (_cache = newProps.memoizedState.cachePool.pool);
+            _cache !== instance && (newProps.flags |= 2048);
+          }
           renderLanes !== current &&
             (enableTransitionTracing && (workInProgress.child.flags |= 2048),
             renderLanes && (workInProgress.child.flags |= 8192));
@@ -9104,25 +9106,23 @@ __DEV__ &&
           );
         case 19:
           pop(suspenseStackCursor, workInProgress);
-          fallthroughToNormalSuspensePath = workInProgress.memoizedState;
-          if (null === fallthroughToNormalSuspensePath)
-            return bubbleProperties(workInProgress), null;
+          instance = workInProgress.memoizedState;
+          if (null === instance) return bubbleProperties(workInProgress), null;
           newProps = 0 !== (workInProgress.flags & 128);
-          instance = fallthroughToNormalSuspensePath.rendering;
-          if (null === instance)
-            if (newProps)
-              cutOffTailIfNeeded(fallthroughToNormalSuspensePath, !1);
+          _cache = instance.rendering;
+          if (null === _cache)
+            if (newProps) cutOffTailIfNeeded(instance, !1);
             else {
               if (
                 workInProgressRootExitStatus !== RootInProgress ||
                 (null !== current && 0 !== (current.flags & 128))
               )
                 for (current = workInProgress.child; null !== current; ) {
-                  instance = findFirstSuspended(current);
-                  if (null !== instance) {
+                  _cache = findFirstSuspended(current);
+                  if (null !== _cache) {
                     workInProgress.flags |= 128;
-                    cutOffTailIfNeeded(fallthroughToNormalSuspensePath, !1);
-                    current = instance.updateQueue;
+                    cutOffTailIfNeeded(instance, !1);
+                    current = _cache.updateQueue;
                     workInProgress.updateQueue = current;
                     scheduleRetryEffect(workInProgress, current);
                     workInProgress.subtreeFlags = 0;
@@ -9145,54 +9145,51 @@ __DEV__ &&
                   }
                   current = current.sibling;
                 }
-              null !== fallthroughToNormalSuspensePath.tail &&
+              null !== instance.tail &&
                 now$1() > workInProgressRootRenderTargetTime &&
                 ((workInProgress.flags |= 128),
                 (newProps = !0),
-                cutOffTailIfNeeded(fallthroughToNormalSuspensePath, !1),
+                cutOffTailIfNeeded(instance, !1),
                 (workInProgress.lanes = 4194304));
             }
           else {
             if (!newProps)
-              if (
-                ((current = findFirstSuspended(instance)), null !== current)
-              ) {
+              if (((current = findFirstSuspended(_cache)), null !== current)) {
                 if (
                   ((workInProgress.flags |= 128),
                   (newProps = !0),
                   (current = current.updateQueue),
                   (workInProgress.updateQueue = current),
                   scheduleRetryEffect(workInProgress, current),
-                  cutOffTailIfNeeded(fallthroughToNormalSuspensePath, !0),
-                  null === fallthroughToNormalSuspensePath.tail &&
-                    "hidden" === fallthroughToNormalSuspensePath.tailMode &&
-                    !instance.alternate)
+                  cutOffTailIfNeeded(instance, !0),
+                  null === instance.tail &&
+                    "hidden" === instance.tailMode &&
+                    !_cache.alternate)
                 )
                   return bubbleProperties(workInProgress), null;
               } else
-                2 * now$1() -
-                  fallthroughToNormalSuspensePath.renderingStartTime >
+                2 * now$1() - instance.renderingStartTime >
                   workInProgressRootRenderTargetTime &&
                   536870912 !== renderLanes &&
                   ((workInProgress.flags |= 128),
                   (newProps = !0),
-                  cutOffTailIfNeeded(fallthroughToNormalSuspensePath, !1),
+                  cutOffTailIfNeeded(instance, !1),
                   (workInProgress.lanes = 4194304));
-            fallthroughToNormalSuspensePath.isBackwards
-              ? ((instance.sibling = workInProgress.child),
-                (workInProgress.child = instance))
-              : ((current = fallthroughToNormalSuspensePath.last),
+            instance.isBackwards
+              ? ((_cache.sibling = workInProgress.child),
+                (workInProgress.child = _cache))
+              : ((current = instance.last),
                 null !== current
-                  ? (current.sibling = instance)
-                  : (workInProgress.child = instance),
-                (fallthroughToNormalSuspensePath.last = instance));
+                  ? (current.sibling = _cache)
+                  : (workInProgress.child = _cache),
+                (instance.last = _cache));
           }
-          if (null !== fallthroughToNormalSuspensePath.tail)
+          if (null !== instance.tail)
             return (
-              (current = fallthroughToNormalSuspensePath.tail),
-              (fallthroughToNormalSuspensePath.rendering = current),
-              (fallthroughToNormalSuspensePath.tail = current.sibling),
-              (fallthroughToNormalSuspensePath.renderingStartTime = now$1()),
+              (current = instance.tail),
+              (instance.rendering = current),
+              (instance.tail = current.sibling),
+              (instance.renderingStartTime = now$1()),
               (current.sibling = null),
               (renderLanes = suspenseStackCursor.current),
               (renderLanes = newProps
@@ -15060,6 +15057,8 @@ __DEV__ &&
       rootInstanceStackCursor = createCursor(null),
       hostTransitionProviderCursor = createCursor(null),
       needsEscaping = /["'&<>\n\t]|^\s|\s$/,
+      current = null,
+      isRendering = !1,
       hydrationDiffRootDEV = null,
       hydrationErrors = null,
       globalClientIdCounter$1 = 0,
@@ -15130,8 +15129,6 @@ __DEV__ &&
     var resumedCache = createCursor(null),
       transitionStack = createCursor(null),
       hasOwnProperty = Object.prototype.hasOwnProperty,
-      current = null,
-      isRendering = !1,
       ReactStrictModeWarnings = {
         recordUnsafeLifecycleWarnings: function () {},
         flushPendingUnsafeLifecycleWarnings: function () {},
@@ -17128,10 +17125,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-aac177c4-20250305",
+        version: "19.1.0-www-modern-029e8bd6-20250306",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-aac177c4-20250305"
+        reconcilerVersion: "19.1.0-www-modern-029e8bd6-20250306"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -17165,7 +17162,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-modern-aac177c4-20250305";
+    exports.version = "19.1.0-www-modern-029e8bd6-20250306";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
