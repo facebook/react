@@ -23,6 +23,7 @@ function errorHandler() {
 
 describe('ReactDOMServerHydration', () => {
   let container;
+  let ownerStacks;
 
   beforeEach(() => {
     jest.resetModules();
@@ -32,7 +33,15 @@ describe('ReactDOMServerHydration', () => {
     act = React.act;
 
     window.addEventListener('error', errorHandler);
-    console.error = jest.fn();
+    ownerStacks = [];
+    console.error = jest.fn(() => {
+      const ownerStack = React.captureOwnerStack();
+      if (typeof ownerStack === 'string') {
+        ownerStacks.push(ownerStack === '' ? ' <empty>' : ownerStack);
+      } else {
+        ownerStacks.push(' ' + String(ownerStack));
+      }
+    });
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -44,15 +53,25 @@ describe('ReactDOMServerHydration', () => {
   });
 
   function normalizeCodeLocInfo(str) {
-    return (
-      typeof str === 'string' &&
-      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
-        return '\n    in ' + name + ' (at **)';
-      })
-    );
+    return typeof str === 'string'
+      ? str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+          return '\n    in ' + name + ' (at **)';
+        })
+      : str;
   }
 
-  function formatMessage(args) {
+  function formatMessage(args, index) {
+    const ownerStack = ownerStacks[index];
+
+    if (ownerStack === undefined) {
+      throw new Error(
+        'Expected an owner stack for message ' +
+          index +
+          ':\n' +
+          util.format(...args),
+      );
+    }
+
     const [format, ...rest] = args;
     if (format instanceof Error) {
       if (format.cause instanceof Error) {
@@ -61,13 +80,23 @@ describe('ReactDOMServerHydration', () => {
           format.message +
           ']\n  Cause [' +
           format.cause.message +
-          ']'
+          ']\n  Owner Stack:' +
+          normalizeCodeLocInfo(ownerStack)
         );
       }
-      return 'Caught [' + format.message + ']';
+      return (
+        'Caught [' +
+        format.message +
+        ']\n  Owner Stack:' +
+        normalizeCodeLocInfo(ownerStack)
+      );
     }
     rest[rest.length - 1] = normalizeCodeLocInfo(rest[rest.length - 1]);
-    return util.format(format, ...rest);
+    return (
+      util.format(format, ...rest) +
+      '\n  Owner Stack:' +
+      normalizeCodeLocInfo(ownerStack)
+    );
   }
 
   function formatConsoleErrors() {
@@ -115,7 +144,10 @@ describe('ReactDOMServerHydration', () => {
                 <main className="child">
           +       client
           -       server
-          ]",
+          ]
+            Owner Stack:
+              in main (at **)
+              in Mismatch (at **)",
           ]
         `);
       } else {
@@ -138,7 +170,8 @@ describe('ReactDOMServerHydration', () => {
                 <main className="child">
           +       client
           -       server
-          ",
+
+            Owner Stack: <empty>",
           ]
         `);
       }
@@ -177,7 +210,10 @@ describe('ReactDOMServerHydration', () => {
               <div>
           +     This markup contains an nbsp entity:   client text
           -     This markup contains an nbsp entity:   server text
-          ]",
+          ]
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       } else {
@@ -199,7 +235,8 @@ describe('ReactDOMServerHydration', () => {
               <div>
           +     This markup contains an nbsp entity:   client text
           -     This markup contains an nbsp entity:   server text
-          ",
+
+            Owner Stack: <empty>",
           ]
         `);
       }
@@ -245,7 +282,8 @@ describe('ReactDOMServerHydration', () => {
         -         __html: "<span>server</span>"
                 }}
               >
-        ",
+
+          Owner Stack: <empty>",
         ]
       `);
     });
@@ -286,7 +324,8 @@ describe('ReactDOMServerHydration', () => {
         +       dir="ltr"
         -       dir="rtl"
               >
-        ",
+
+          Owner Stack: <empty>",
         ]
       `);
     });
@@ -327,7 +366,8 @@ describe('ReactDOMServerHydration', () => {
         +       dir="ltr"
         -       dir={null}
               >
-        ",
+
+          Owner Stack: <empty>",
         ]
       `);
     });
@@ -368,7 +408,8 @@ describe('ReactDOMServerHydration', () => {
         +       dir={null}
         -       dir="rtl"
               >
-        ",
+
+          Owner Stack: <empty>",
         ]
       `);
     });
@@ -409,7 +450,8 @@ describe('ReactDOMServerHydration', () => {
         +       dir={null}
         -       dir="rtl"
               >
-        ",
+
+          Owner Stack: <empty>",
         ]
       `);
     });
@@ -449,7 +491,8 @@ describe('ReactDOMServerHydration', () => {
         +       style={{opacity:1}}
         -       style={{opacity:"0"}}
               >
-        ",
+
+          Owner Stack: <empty>",
         ]
       `);
     });
@@ -483,7 +526,10 @@ describe('ReactDOMServerHydration', () => {
             <Mismatch isClient={true}>
               <div className="parent">
           +     <main className="only">
-          ]",
+          ]
+            Owner Stack:
+              in main (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -518,7 +564,10 @@ describe('ReactDOMServerHydration', () => {
           +     <header className="1">
           -     <main className="2">
                 ...
-          ]",
+          ]
+            Owner Stack:
+              in header (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -554,7 +603,10 @@ describe('ReactDOMServerHydration', () => {
           +     <main className="2">
           -     <footer className="3">
                 ...
-          ]",
+          ]
+            Owner Stack:
+              in main (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -589,7 +641,10 @@ describe('ReactDOMServerHydration', () => {
                 <header>
                 <main>
           +     <footer className="3">
-          ]",
+          ]
+            Owner Stack:
+              in footer (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -620,7 +675,10 @@ describe('ReactDOMServerHydration', () => {
                 <div className="parent">
             +     only
             -     
-            ]",
+            ]
+              Owner Stack:
+                in div (at **)
+                in Mismatch (at **)",
             ]
           `);
         } else {
@@ -642,7 +700,8 @@ describe('ReactDOMServerHydration', () => {
                 <div className="parent">
             +     only
             -     
-            ",
+
+              Owner Stack: <empty>",
             ]
           `);
         }
@@ -679,7 +738,10 @@ describe('ReactDOMServerHydration', () => {
           +     second
           -     <footer className="3">
                 ...
-          ]",
+          ]
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -714,7 +776,10 @@ describe('ReactDOMServerHydration', () => {
           +     first
           -     <main className="2">
                 ...
-          ]",
+          ]
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -749,7 +814,10 @@ describe('ReactDOMServerHydration', () => {
                 <header>
                 <main>
           +     third
-          ]",
+          ]
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -784,7 +852,10 @@ describe('ReactDOMServerHydration', () => {
             <Mismatch isClient={true}>
               <div className="parent">
           -     <main className="only">
-          ]",
+          ]
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -819,7 +890,10 @@ describe('ReactDOMServerHydration', () => {
           +     <main className="2">
           -     <header className="1">
                 ...
-          ]",
+          ]
+            Owner Stack:
+              in main (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -854,7 +928,10 @@ describe('ReactDOMServerHydration', () => {
                 <header>
           +     <footer className="3">
           -     <main className="2">
-          ]",
+          ]
+            Owner Stack:
+              in footer (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -887,7 +964,10 @@ describe('ReactDOMServerHydration', () => {
             <Mismatch isClient={true}>
               <div className="parent">
           -     <footer className="3">
-          ]",
+          ]
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -916,7 +996,10 @@ describe('ReactDOMServerHydration', () => {
             <Mismatch isClient={true}>
               <div className="parent">
           -     only
-          ]",
+          ]
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -951,7 +1034,10 @@ describe('ReactDOMServerHydration', () => {
           +     <main className="2">
           -     first
                 ...
-          ]",
+          ]
+            Owner Stack:
+              in main (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -986,7 +1072,10 @@ describe('ReactDOMServerHydration', () => {
                 <header>
           +     <footer className="3">
           -     second
-          ]",
+          ]
+            Owner Stack:
+              in footer (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -1019,7 +1108,10 @@ describe('ReactDOMServerHydration', () => {
             <Mismatch isClient={true}>
               <div className="parent">
           -     third
-          ]",
+          ]
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -1062,7 +1154,10 @@ describe('ReactDOMServerHydration', () => {
             <Mismatch isClient={true}>
               <div className="parent">
           +     <Suspense fallback={<p>}>
-          ]",
+          ]
+            Owner Stack:
+              in Suspense (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -1097,7 +1192,10 @@ describe('ReactDOMServerHydration', () => {
             <Mismatch isClient={true}>
               <div className="parent">
           -     <Suspense>
-          ]",
+          ]
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -1134,7 +1232,10 @@ describe('ReactDOMServerHydration', () => {
             <Mismatch isClient={true}>
               <div className="parent">
           +     <Suspense fallback={<p>}>
-          ]",
+          ]
+            Owner Stack:
+              in Suspense (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -1175,7 +1276,10 @@ describe('ReactDOMServerHydration', () => {
             <Mismatch isClient={true}>
               <div className="parent">
           -     <Suspense>
-          ]",
+          ]
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -1214,7 +1318,10 @@ describe('ReactDOMServerHydration', () => {
           +       <main className="second">
           -       <footer className="3">
                   ...
-          ]",
+          ]
+            Owner Stack:
+              in main (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -1252,7 +1359,10 @@ describe('ReactDOMServerHydration', () => {
                   <header>
           +       <footer className="3">
           -       <main className="second">
-          ]",
+          ]
+            Owner Stack:
+              in footer (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -1280,7 +1390,8 @@ describe('ReactDOMServerHydration', () => {
           [
             "Caught [Switched to client rendering because the server rendering aborted due to:
 
-          The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToPipeableStream" which supports Suspense on the server]",
+          The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToPipeableStream" which supports Suspense on the server]
+            Owner Stack: null",
           ]
         `);
       });
@@ -1308,7 +1419,8 @@ describe('ReactDOMServerHydration', () => {
           [
             "Caught [Switched to client rendering because the server rendering aborted due to:
 
-          The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToPipeableStream" which supports Suspense on the server]",
+          The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToPipeableStream" which supports Suspense on the server]
+            Owner Stack: null",
           ]
         `);
       });
@@ -1348,7 +1460,10 @@ describe('ReactDOMServerHydration', () => {
               <div className="parent">
           +     <header className="1">
                 ...
-          ]",
+          ]
+            Owner Stack:
+              in header (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -1387,7 +1502,10 @@ describe('ReactDOMServerHydration', () => {
           -     <header className="1">
           -     <main className="2">
           -     <footer className="3">
-          ]",
+          ]
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       });
@@ -1451,7 +1569,12 @@ describe('ReactDOMServerHydration', () => {
                   <header>
                   <main>
         +         <footer className="3">
-        ]",
+        ]
+          Owner Stack:
+            in footer (at **)
+            in Panel (at **)
+            in ProfileSettings (at **)
+            in Mismatch (at **)",
         ]
       `);
     });
@@ -1508,7 +1631,11 @@ describe('ReactDOMServerHydration', () => {
             <ProfileSettings>
               <div className="parent">
         -       <footer className="3">
-        ]",
+        ]
+          Owner Stack:
+            in div (at **)
+            in ProfileSettings (at **)
+            in Mismatch (at **)",
         ]
       `);
     });
