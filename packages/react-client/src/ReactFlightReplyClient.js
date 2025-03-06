@@ -1125,11 +1125,12 @@ function createFakeServerFunction<A: Iterable<any>, T>(
   }
 }
 
-function registerServerReference(
-  proxy: any,
-  reference: {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+export function registerBoundServerReference<T: Function>(
+  reference: T,
+  id: ServerReferenceId,
+  bound: null | Thenable<Array<any>>,
   encodeFormAction: void | EncodeFormActionCallback,
-) {
+): void {
   // Expose encoder for use by SSR, as well as a special bind that can be used to
   // keep server capabilities.
   if (usedWithSSR) {
@@ -1147,13 +1148,22 @@ function registerServerReference(
               encodeFormAction,
             );
           };
-    Object.defineProperties((proxy: any), {
+    Object.defineProperties((reference: any), {
       $$FORM_ACTION: {value: $$FORM_ACTION},
       $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
       bind: {value: bind},
     });
   }
-  knownServerReferences.set(proxy, reference);
+  knownServerReferences.set(reference, {id, bound});
+}
+
+export function registerServerReference<T: Function>(
+  reference: T,
+  id: ServerReferenceId,
+  encodeFormAction?: EncodeFormActionCallback,
+): ServerReference<T> {
+  registerBoundServerReference(reference, id, null, encodeFormAction);
+  return reference;
 }
 
 // $FlowFixMe[method-unbinding]
@@ -1258,7 +1268,7 @@ export function createBoundServerReference<A: Iterable<any>, T>(
       );
     }
   }
-  registerServerReference(action, {id, bound}, encodeFormAction);
+  registerBoundServerReference(action, id, bound, encodeFormAction);
   return action;
 }
 
@@ -1358,6 +1368,6 @@ export function createServerReference<A: Iterable<any>, T>(
       );
     }
   }
-  registerServerReference(action, {id, bound: null}, encodeFormAction);
+  registerBoundServerReference(action, id, null, encodeFormAction);
   return action;
 }

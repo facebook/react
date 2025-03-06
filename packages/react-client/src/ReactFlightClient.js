@@ -64,7 +64,10 @@ import {
   rendererPackageName,
 } from './ReactFlightClientConfig';
 
-import {createBoundServerReference} from './ReactFlightReplyClient';
+import {
+  createBoundServerReference,
+  registerBoundServerReference,
+} from './ReactFlightReplyClient';
 
 import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
@@ -1096,7 +1099,14 @@ function loadServerReference<A: Iterable<any>, T>(
   let promise: null | Thenable<any> = preloadModule(serverReference);
   if (!promise) {
     if (!metaData.bound) {
-      return (requireModule(serverReference): any);
+      const resolvedValue = (requireModule(serverReference): any);
+      registerBoundServerReference(
+        resolvedValue,
+        metaData.id,
+        metaData.bound,
+        response._encodeFormAction,
+      );
+      return resolvedValue;
     } else {
       promise = Promise.resolve(metaData.bound);
     }
@@ -1127,6 +1137,13 @@ function loadServerReference<A: Iterable<any>, T>(
       boundArgs.unshift(null); // this
       resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
     }
+
+    registerBoundServerReference(
+      resolvedValue,
+      metaData.id,
+      metaData.bound,
+      response._encodeFormAction,
+    );
 
     parentObject[key] = resolvedValue;
 
