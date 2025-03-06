@@ -188,6 +188,7 @@ export class CompilerError extends Error {
   constructor(...args: Array<any>) {
     super(...args);
     this.name = 'ReactCompilerError';
+    this.details = [];
   }
 
   override get message(): string {
@@ -197,7 +198,10 @@ export class CompilerError extends Error {
   override set message(_message: string) {}
 
   override toString(): string {
-    return this.details.map(detail => detail.toString()).join('\n\n');
+    if (Array.isArray(this.details)) {
+      return this.details.map(detail => detail.toString()).join('\n\n');
+    }
+    return this.name;
   }
 
   push(options: CompilerErrorDetailOptions): CompilerErrorDetail {
