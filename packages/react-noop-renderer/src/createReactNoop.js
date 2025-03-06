@@ -809,6 +809,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           afterMutationCallback: () => void,
           layoutCallback: () => void,
           passiveCallback: () => mixed,
+          errorCallback: mixed => void,
         ): boolean {
           return false;
         },
@@ -821,6 +822,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           transitionTypes: null | TransitionTypes,
           mutationCallback: () => void,
           animateCallback: () => void,
+          errorCallback: mixed => void,
         ): RunningGestureTransition {
           mutationCallback();
           animateCallback();

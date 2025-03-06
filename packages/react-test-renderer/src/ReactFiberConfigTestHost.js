@@ -417,6 +417,7 @@ export function startViewTransition(
   afterMutationCallback: () => void,
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
+  errorCallback: mixed => void,
 ): boolean {
   return false;
 }
@@ -431,6 +432,7 @@ export function startGestureTransition(
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   animateCallback: () => void,
+  errorCallback: mixed => void,
 ): RunningGestureTransition {
   mutationCallback();
   animateCallback();
