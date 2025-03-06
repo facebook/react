@@ -1612,7 +1612,9 @@ function customizeViewTransitionError(error: Object): mixed {
           error.message ===
             'View transition was skipped because document visibility state is hidden.' ||
           error.message ===
-            'Skipping view transition because document visibility state has become hidden.'
+            'Skipping view transition because document visibility state has become hidden.' ||
+          error.message ===
+            'Skipping view transition because viewport size changed.'
         ) {
           // Skip logging this. This is not considered an error.
           return null;
