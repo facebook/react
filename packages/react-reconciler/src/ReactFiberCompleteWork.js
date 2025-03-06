@@ -342,6 +342,10 @@ function appendAllChildrenToContainer(
   needsVisibilityToggle: boolean,
   isHidden: boolean,
 ): boolean {
+  // Host components that have their visibility toggled by an OffscreenComponent
+  // do not support passChildrenWhenCloningPersistedNodes. To inform the callee
+  // about their presence, we track and return if they were added to the
+  // child set.
   let hasOffscreenComponentChild = false;
   if (supportsPersistence) {
     // We only have the top Fiber that was created but we need recurse down its
