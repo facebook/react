@@ -10233,7 +10233,7 @@ describe('ReactDOMFizzServer', () => {
           '\n+         client' +
           '\n-         server' +
           '\n' +
-          '\n    in Suspense (at **)' +
+          '\n    in meta (at **)' +
           '\n    in ClientApp (at **)',
       ]);
     }

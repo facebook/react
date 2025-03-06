@@ -171,7 +171,9 @@ describe('ReactDOMServerHydration', () => {
           +       client
           -       server
 
-            Owner Stack: <empty>",
+            Owner Stack:
+              in main (at **)
+              in Mismatch (at **)",
           ]
         `);
       }
@@ -236,7 +238,9 @@ describe('ReactDOMServerHydration', () => {
           +     This markup contains an nbsp entity:   client text
           -     This markup contains an nbsp entity:   server text
 
-            Owner Stack: <empty>",
+            Owner Stack:
+              in div (at **)
+              in Mismatch (at **)",
           ]
         `);
       }
@@ -283,7 +287,9 @@ describe('ReactDOMServerHydration', () => {
                 }}
               >
 
-          Owner Stack: <empty>",
+          Owner Stack:
+            in main (at **)
+            in Mismatch (at **)",
         ]
       `);
     });
@@ -325,7 +331,9 @@ describe('ReactDOMServerHydration', () => {
         -       dir="rtl"
               >
 
-          Owner Stack: <empty>",
+          Owner Stack:
+            in main (at **)
+            in Mismatch (at **)",
         ]
       `);
     });
@@ -367,7 +375,9 @@ describe('ReactDOMServerHydration', () => {
         -       dir={null}
               >
 
-          Owner Stack: <empty>",
+          Owner Stack:
+            in main (at **)
+            in Mismatch (at **)",
         ]
       `);
     });
@@ -409,7 +419,9 @@ describe('ReactDOMServerHydration', () => {
         -       dir="rtl"
               >
 
-          Owner Stack: <empty>",
+          Owner Stack:
+            in main (at **)
+            in Mismatch (at **)",
         ]
       `);
     });
@@ -451,7 +463,9 @@ describe('ReactDOMServerHydration', () => {
         -       dir="rtl"
               >
 
-          Owner Stack: <empty>",
+          Owner Stack:
+            in main (at **)
+            in Mismatch (at **)",
         ]
       `);
     });
@@ -492,7 +506,77 @@ describe('ReactDOMServerHydration', () => {
         -       style={{opacity:"0"}}
               >
 
-          Owner Stack: <empty>",
+          Owner Stack:
+            in main (at **)
+            in Mismatch (at **)",
+        ]
+      `);
+    });
+
+    // @gate __DEV__
+    it('picks the DFS-first Fiber as the error Owner', () => {
+      function LeftMismatch({isClient}) {
+        return <div className={isClient ? 'client' : 'server'} />;
+      }
+
+      function LeftIndirection({isClient}) {
+        return <LeftMismatch isClient={isClient} />;
+      }
+
+      function MiddleMismatch({isClient}) {
+        return <span className={isClient ? 'client' : 'server'} />;
+      }
+
+      function RightMisMatch({isClient}) {
+        return <p className={isClient ? 'client' : 'server'} />;
+      }
+
+      function App({isClient}) {
+        return (
+          <>
+            <LeftIndirection isClient={isClient} />
+            <MiddleMismatch isClient={isClient} />
+            <RightMisMatch isClient={isClient} />
+          </>
+        );
+      }
+      expect(testMismatch(App)).toMatchInlineSnapshot(`
+        [
+          "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+        - A server/client branch \`if (typeof window !== 'undefined')\`.
+        - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
+        - Date formatting in a user's locale which doesn't match the server.
+        - External changing data without sending a snapshot of it along with the HTML.
+        - Invalid HTML tag nesting.
+
+        It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+        https://react.dev/link/hydration-mismatch
+
+          <App isClient={true}>
+            <LeftIndirection isClient={true}>
+              <LeftMismatch isClient={true}>
+                <div
+        +         className="client"
+        -         className="server"
+                >
+            <MiddleMismatch isClient={true}>
+              <span
+        +       className="client"
+        -       className="server"
+              >
+            <RightMisMatch isClient={true}>
+              <p
+        +       className="client"
+        -       className="server"
+              >
+
+          Owner Stack:
+            in div (at **)
+            in LeftMismatch (at **)
+            in LeftIndirection (at **)
+            in App (at **)",
         ]
       `);
     });
@@ -701,7 +785,9 @@ describe('ReactDOMServerHydration', () => {
             +     only
             -     
 
-              Owner Stack: <empty>",
+              Owner Stack:
+                in div (at **)
+                in Mismatch (at **)",
             ]
           `);
         }
