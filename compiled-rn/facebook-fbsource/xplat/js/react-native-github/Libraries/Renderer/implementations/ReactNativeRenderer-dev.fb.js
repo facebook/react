@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<95aa1467e740df03dadf32834ff9b394>>
+ * @generated SignedSource<<babcacabae1910454e853978f53de865>>
  */
 
 "use strict";
@@ -2803,6 +2803,25 @@ __DEV__ &&
             ),
         (hydrationErrors = null));
       return queuedErrors;
+    }
+    function emitPendingHydrationWarnings() {
+      var diffRoot = hydrationDiffRootDEV;
+      if (null !== diffRoot) {
+        hydrationDiffRootDEV = null;
+        try {
+          var diff = "\n\n" + describeNode(diffRoot, 0);
+        } catch (x) {
+          diff = "";
+        }
+        for (; 0 < diffRoot.children.length; ) diffRoot = diffRoot.children[0];
+        runWithFiberInDEV(diffRoot.fiber, function () {
+          console.error(
+            "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s",
+            "https://react.dev/link/hydration-mismatch",
+            diff
+          );
+        });
+      }
     }
     function is(x, y) {
       return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -9570,20 +9589,7 @@ __DEV__ &&
                   "Expected prepareToHydrateHostSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue."
                 );
               }
-              key = hydrationDiffRootDEV;
-              if (null !== key) {
-                hydrationDiffRootDEV = null;
-                try {
-                  _type2 = "\n\n" + describeNode(key, 0);
-                } catch (x) {
-                  _type2 = "";
-                }
-                console.error(
-                  "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s",
-                  "https://react.dev/link/hydration-mismatch",
-                  _type2
-                );
-              }
+              emitPendingHydrationWarnings();
               0 === (workInProgress.flags & 128) &&
                 (workInProgress.memoizedState = null);
               workInProgress.flags |= 4;
@@ -17606,11 +17612,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.1.0-native-fb-aac177c4-20250305" !== isomorphicReactPackageVersion)
+    if ("19.1.0-native-fb-029e8bd6-20250306" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.1.0-native-fb-aac177c4-20250305\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.1.0-native-fb-029e8bd6-20250306\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17636,10 +17642,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-aac177c4-20250305",
+        version: "19.1.0-native-fb-029e8bd6-20250306",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-aac177c4-20250305"
+        reconcilerVersion: "19.1.0-native-fb-029e8bd6-20250306"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
