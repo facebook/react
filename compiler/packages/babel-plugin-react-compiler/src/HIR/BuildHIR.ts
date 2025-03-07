@@ -3560,7 +3560,7 @@ function lowerAssignment(
   builder: HIRBuilder,
   loc: SourceLocation,
   kind: InstructionKind,
-  lvaluePath: NodePath<t.LVal | t.OptionalMemberExpression>,
+  lvaluePath: NodePath<t.LVal>,
   value: Place,
   assignmentKind: 'Destructure' | 'Assignment',
 ): InstructionValue {
