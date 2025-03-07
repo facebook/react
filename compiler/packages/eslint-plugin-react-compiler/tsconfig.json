@@ -6,9 +6,6 @@
     "rootDir": "../",
     "noEmit": true,
     "jsx": "react-jsxdev",
-    "paths": {
-      "*": ["./src/types/*"]
-    },
 
     // weaken strictness from preset
     "importsNotUsedAsValues": "remove",
