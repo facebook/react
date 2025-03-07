@@ -341,7 +341,12 @@ function appendAllChildrenToContainer(
   workInProgress: Fiber,
   needsVisibilityToggle: boolean,
   isHidden: boolean,
-) {
+): boolean {
+  // Host components that have their visibility toggled by an OffscreenComponent
+  // do not support passChildrenWhenCloningPersistedNodes. To inform the callee
+  // about their presence, we track and return if they were added to the
+  // child set.
+  let hasOffscreenComponentChild = false;
   if (supportsPersistence) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
@@ -386,6 +391,8 @@ function appendAllChildrenToContainer(
           /* needsVisibilityToggle */ _needsVisibilityToggle,
           /* isHidden */ true,
         );
+
+        hasOffscreenComponentChild = true;
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -393,13 +400,13 @@ function appendAllChildrenToContainer(
       }
       node = (node: Fiber);
       if (node === workInProgress) {
-        return;
+        return hasOffscreenComponentChild;
       }
       // $FlowFixMe[incompatible-use] found when upgrading Flow
       while (node.sibling === null) {
         // $FlowFixMe[incompatible-use] found when upgrading Flow
         if (node.return === null || node.return === workInProgress) {
-          return;
+          return hasOffscreenComponentChild;
         }
         node = node.return;
       }
@@ -408,6 +415,8 @@ function appendAllChildrenToContainer(
       node = node.sibling;
     }
   }
+
+  return hasOffscreenComponentChild;
 }
 
 function updateHostContainer(current: null | Fiber, workInProgress: Fiber) {
@@ -468,11 +477,12 @@ function updateHostComponent(
     const currentHostContext = getHostContext();
 
     let newChildSet = null;
+    let hasOffscreenComponentChild = false;
     if (requiresClone && passChildrenWhenCloningPersistedNodes) {
       markCloned(workInProgress);
       newChildSet = createContainerChildSet();
       // If children might have changed, we have to add them all to the set.
-      appendAllChildrenToContainer(
+      hasOffscreenComponentChild = appendAllChildrenToContainer(
         newChildSet,
         workInProgress,
         /* needsVisibilityToggle */ false,
@@ -486,7 +496,7 @@ function updateHostComponent(
       oldProps,
       newProps,
       !requiresClone,
-      newChildSet,
+      !hasOffscreenComponentChild ? newChildSet : undefined,
     );
     if (newInstance === currentInstance) {
       // No changes, just reuse the existing instance.
@@ -513,7 +523,10 @@ function updateHostComponent(
         // Otherwise parents won't know that there are new children to propagate upwards.
         markUpdate(workInProgress);
       }
-    } else if (!passChildrenWhenCloningPersistedNodes) {
+    } else if (
+      !passChildrenWhenCloningPersistedNodes ||
+      hasOffscreenComponentChild
+    ) {
       // If children have changed, we have to add them all to the set.
       appendAllChildren(
         newInstance,
