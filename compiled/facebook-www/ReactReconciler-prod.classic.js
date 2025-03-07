@@ -6643,6 +6643,7 @@ module.exports = function ($$$config) {
     needsVisibilityToggle,
     isHidden
   ) {
+    var hasOffscreenComponentChild = !1;
     if (supportsPersistence)
       for (var node = workInProgress.child; null !== node; ) {
         if (5 === node.tag) {
@@ -6666,8 +6667,9 @@ module.exports = function ($$$config) {
             appendChildToContainerChildSet(containerChildSet, instance);
         else if (4 !== node.tag)
           if (22 === node.tag && null !== node.memoizedState)
-            (instance = node.child),
-              null !== instance && (instance.return = node),
+            (hasOffscreenComponentChild = node.child),
+              null !== hasOffscreenComponentChild &&
+                (hasOffscreenComponentChild.return = node),
               appendAllChildrenToContainer(
                 containerChildSet,
                 node,
@@ -6676,7 +6678,8 @@ module.exports = function ($$$config) {
                   "manual" === node.memoizedProps.mode
                 ),
                 !0
-              );
+              ),
+              (hasOffscreenComponentChild = !0);
           else if (null !== node.child) {
             node.child.return = node;
             node = node.child;
@@ -6684,12 +6687,14 @@ module.exports = function ($$$config) {
           }
         if (node === workInProgress) break;
         for (; null === node.sibling; ) {
-          if (null === node.return || node.return === workInProgress) return;
+          if (null === node.return || node.return === workInProgress)
+            return hasOffscreenComponentChild;
           node = node.return;
         }
         node.sibling.return = node.return;
         node = node.sibling;
       }
+    return hasOffscreenComponentChild;
   }
   function updateHostContainer(current, workInProgress) {
     if (supportsPersistence && doesRequireClone(current, workInProgress)) {
@@ -13806,7 +13811,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-f9d78089-20250306"
+      reconcilerVersion: "19.1.0-www-classic-cc680065-20250307"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
