@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bcc95753b45e47eff7bb341b4ea72c89>>
+ * @generated SignedSource<<b5158928793dc9a03741ced8d569f157>>
  */
 
 "use strict";
@@ -9270,7 +9270,11 @@ __DEV__ &&
       needsVisibilityToggle,
       isHidden
     ) {
-      for (var node = workInProgress.child; null !== node; ) {
+      for (
+        var hasOffscreenComponentChild = !1, node = workInProgress.child;
+        null !== node;
+
+      ) {
         if (5 === node.tag) {
           var instance = node.stateNode;
           needsVisibilityToggle &&
@@ -9290,8 +9294,9 @@ __DEV__ &&
             : appendChildNodeToSet(childSet, instance.node);
         } else if (4 !== node.tag)
           if (22 === node.tag && null !== node.memoizedState)
-            (childSet = node.child),
-              null !== childSet && (childSet.return = node),
+            (hasOffscreenComponentChild = node.child),
+              null !== hasOffscreenComponentChild &&
+                (hasOffscreenComponentChild.return = node),
               appendAllChildrenToContainer(
                 containerChildSet,
                 node,
@@ -9300,7 +9305,8 @@ __DEV__ &&
                   "manual" === node.memoizedProps.mode
                 ),
                 !0
-              );
+              ),
+              (hasOffscreenComponentChild = !0);
           else if (null !== node.child) {
             node.child.return = node;
             node = node.child;
@@ -9308,12 +9314,14 @@ __DEV__ &&
           }
         if (node === workInProgress) break;
         for (; null === node.sibling; ) {
-          if (null === node.return || node.return === workInProgress) return;
+          if (null === node.return || node.return === workInProgress)
+            return hasOffscreenComponentChild;
           node = node.return;
         }
         node.sibling.return = node.return;
         node = node.sibling;
       }
+      return hasOffscreenComponentChild;
     }
     function updateHostContainer(current, workInProgress) {
       if (doesRequireClone(current, workInProgress)) {
@@ -9480,20 +9488,22 @@ __DEV__ &&
             ) {
               requiredContext(contextStackCursor.current);
               var newChildSet = null;
+              _type2 = !1;
               current &&
                 passChildrenWhenCloningPersistedNodes &&
                 (markCloned(workInProgress),
                 (newChildSet = passChildrenWhenCloningPersistedNodes
                   ? []
                   : createChildNodeSet()),
-                appendAllChildrenToContainer(
+                (_type2 = appendAllChildrenToContainer(
                   newChildSet,
                   workInProgress,
                   !1,
                   !1
-                ));
+                )));
               b: {
-                _type2 = !current;
+                var keepChildren = !current;
+                newChildSet = _type2 ? void 0 : newChildSet;
                 _oldProps = diffProperties(
                   null,
                   _oldProps,
@@ -9502,7 +9512,7 @@ __DEV__ &&
                 );
                 renderLanes.canonical.currentProps = newProps;
                 newProps = renderLanes.node;
-                if (_type2)
+                if (keepChildren)
                   if (null !== _oldProps)
                     newProps = cloneNodeWithNewProps(newProps, _oldProps);
                   else {
@@ -9529,7 +9539,7 @@ __DEV__ &&
                 : (markCloned(workInProgress),
                   (workInProgress.stateNode = newProps),
                   current
-                    ? passChildrenWhenCloningPersistedNodes ||
+                    ? (passChildrenWhenCloningPersistedNodes && !_type2) ||
                       appendAllChildren(newProps, workInProgress, !1, !1)
                     : enablePersistedModeClonedFlag ||
                       (workInProgress.flags |= 4));
@@ -9548,26 +9558,26 @@ __DEV__ &&
             current = nextReactTag;
             nextReactTag += 2;
             _type2 = getViewConfigForType(_type2);
-            for (_oldProps in _type2.validAttributes)
-              newProps.hasOwnProperty(_oldProps) &&
+            for (keepChildren in _type2.validAttributes)
+              newProps.hasOwnProperty(keepChildren) &&
                 ReactNativePrivateInterface.deepFreezeAndThrowOnMutationInDev(
-                  newProps[_oldProps]
+                  newProps[keepChildren]
                 );
-            _oldProps = fastAddProperties(
+            keepChildren = fastAddProperties(
               null,
               newProps,
               _type2.validAttributes
             );
-            _oldProps = createNode(
+            keepChildren = createNode(
               current,
               _type2.uiViewClassName,
               renderLanes.containerTag,
-              _oldProps,
+              keepChildren,
               workInProgress
             );
             enableLazyPublicInstanceInFabric
-              ? (current = {
-                  node: _oldProps,
+              ? (newProps = {
+                  node: keepChildren,
                   canonical: {
                     nativeTag: current,
                     viewConfig: _type2,
@@ -9584,8 +9594,8 @@ __DEV__ &&
                     workInProgress,
                     renderLanes.publicInstance
                   )),
-                (current = {
-                  node: _oldProps,
+                (newProps = {
+                  node: keepChildren,
                   canonical: {
                     nativeTag: current,
                     viewConfig: _type2,
@@ -9595,8 +9605,8 @@ __DEV__ &&
                   }
                 }));
             markCloned(workInProgress);
-            appendAllChildren(current, workInProgress, !1, !1);
-            workInProgress.stateNode = current;
+            appendAllChildren(newProps, workInProgress, !1, !1);
+            workInProgress.stateNode = newProps;
           }
           bubbleProperties(workInProgress);
           workInProgress.flags &= -16777217;
@@ -9692,11 +9702,11 @@ __DEV__ &&
               null !== renderLanes.alternate.memoizedState &&
               null !== renderLanes.alternate.memoizedState.cachePool &&
               (_type2 = renderLanes.alternate.memoizedState.cachePool.pool),
-            (_oldProps = null),
+            (keepChildren = null),
             null !== renderLanes.memoizedState &&
               null !== renderLanes.memoizedState.cachePool &&
-              (_oldProps = renderLanes.memoizedState.cachePool.pool),
-            _oldProps !== _type2 && (renderLanes.flags |= 2048));
+              (keepChildren = renderLanes.memoizedState.cachePool.pool),
+            keepChildren !== _type2 && (renderLanes.flags |= 2048));
           newProps !== current &&
             newProps &&
             (workInProgress.child.flags |= 8192);
@@ -9707,9 +9717,9 @@ __DEV__ &&
           bubbleProperties(workInProgress);
           0 !== (workInProgress.mode & 2) &&
             newProps &&
-            ((current = workInProgress.child),
-            null !== current &&
-              (workInProgress.treeBaseDuration -= current.treeBaseDuration));
+            ((newProps = workInProgress.child),
+            null !== newProps &&
+              (workInProgress.treeBaseDuration -= newProps.treeBaseDuration));
           return null;
         case 4:
           return (
@@ -9736,8 +9746,8 @@ __DEV__ &&
           _type2 = workInProgress.memoizedState;
           if (null === _type2) return bubbleProperties(workInProgress), null;
           newProps = 0 !== (workInProgress.flags & 128);
-          _oldProps = _type2.rendering;
-          if (null === _oldProps)
+          keepChildren = _type2.rendering;
+          if (null === keepChildren)
             if (newProps) cutOffTailIfNeeded(_type2, !1);
             else {
               if (
@@ -9745,18 +9755,18 @@ __DEV__ &&
                 (null !== current && 0 !== (current.flags & 128))
               )
                 for (current = workInProgress.child; null !== current; ) {
-                  _oldProps = findFirstSuspended(current);
-                  if (null !== _oldProps) {
+                  keepChildren = findFirstSuspended(current);
+                  if (null !== keepChildren) {
                     workInProgress.flags |= 128;
                     cutOffTailIfNeeded(_type2, !1);
-                    current = _oldProps.updateQueue;
-                    workInProgress.updateQueue = current;
-                    scheduleRetryEffect(workInProgress, current);
+                    newProps = keepChildren.updateQueue;
+                    workInProgress.updateQueue = newProps;
+                    scheduleRetryEffect(workInProgress, newProps);
                     workInProgress.subtreeFlags = 0;
-                    current = renderLanes;
-                    for (newProps = workInProgress.child; null !== newProps; )
-                      resetWorkInProgress(newProps, current),
-                        (newProps = newProps.sibling);
+                    newProps = renderLanes;
+                    for (current = workInProgress.child; null !== current; )
+                      resetWorkInProgress(current, newProps),
+                        (current = current.sibling);
                     push(
                       suspenseStackCursor,
                       (suspenseStackCursor.current &
@@ -9778,7 +9788,7 @@ __DEV__ &&
           else {
             if (!newProps)
               if (
-                ((current = findFirstSuspended(_oldProps)), null !== current)
+                ((current = findFirstSuspended(keepChildren)), null !== current)
               ) {
                 if (
                   ((workInProgress.flags |= 128),
@@ -9789,7 +9799,7 @@ __DEV__ &&
                   cutOffTailIfNeeded(_type2, !0),
                   null === _type2.tail &&
                     "hidden" === _type2.tailMode &&
-                    !_oldProps.alternate)
+                    !keepChildren.alternate)
                 )
                   return bubbleProperties(workInProgress), null;
               } else
@@ -9801,13 +9811,13 @@ __DEV__ &&
                   cutOffTailIfNeeded(_type2, !1),
                   (workInProgress.lanes = 4194304));
             _type2.isBackwards
-              ? ((_oldProps.sibling = workInProgress.child),
-                (workInProgress.child = _oldProps))
+              ? ((keepChildren.sibling = workInProgress.child),
+                (workInProgress.child = keepChildren))
               : ((current = _type2.last),
                 null !== current
-                  ? (current.sibling = _oldProps)
-                  : (workInProgress.child = _oldProps),
-                (_type2.last = _oldProps));
+                  ? (current.sibling = keepChildren)
+                  : (workInProgress.child = keepChildren),
+                (_type2.last = keepChildren));
           }
           if (null !== _type2.tail)
             return (
@@ -17445,10 +17455,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-029e8bd6-20250306",
+        version: "19.1.0-native-fb-cc680065-20250307",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-029e8bd6-20250306"
+        reconcilerVersion: "19.1.0-native-fb-cc680065-20250307"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

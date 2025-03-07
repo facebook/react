@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a1a7d7caa0b643c4d1d79d4016c61810>>
+ * @generated SignedSource<<02d09af0971dbfe3f359e4f18b51a7f9>>
  */
 
 "use strict";
@@ -7483,7 +7483,11 @@ function appendAllChildrenToContainer(
   needsVisibilityToggle,
   isHidden
 ) {
-  for (var node = workInProgress.child; null !== node; ) {
+  for (
+    var hasOffscreenComponentChild = !1, node = workInProgress.child;
+    null !== node;
+
+  ) {
     if (5 === node.tag) {
       var instance = node.stateNode;
       needsVisibilityToggle &&
@@ -7503,8 +7507,9 @@ function appendAllChildrenToContainer(
         : appendChildNodeToSet(childSet, instance.node);
     } else if (4 !== node.tag)
       if (22 === node.tag && null !== node.memoizedState)
-        (childSet = node.child),
-          null !== childSet && (childSet.return = node),
+        (hasOffscreenComponentChild = node.child),
+          null !== hasOffscreenComponentChild &&
+            (hasOffscreenComponentChild.return = node),
           appendAllChildrenToContainer(
             containerChildSet,
             node,
@@ -7513,7 +7518,8 @@ function appendAllChildrenToContainer(
               "manual" === node.memoizedProps.mode
             ),
             !0
-          );
+          ),
+          (hasOffscreenComponentChild = !0);
       else if (null !== node.child) {
         node.child.return = node;
         node = node.child;
@@ -7521,12 +7527,14 @@ function appendAllChildrenToContainer(
       }
     if (node === workInProgress) break;
     for (; null === node.sibling; ) {
-      if (null === node.return || node.return === workInProgress) return;
+      if (null === node.return || node.return === workInProgress)
+        return hasOffscreenComponentChild;
       node = node.return;
     }
     node.sibling.return = node.return;
     node = node.sibling;
   }
+  return hasOffscreenComponentChild;
 }
 function updateHostContainer(current, workInProgress) {
   if (doesRequireClone(current, workInProgress)) {
@@ -7684,25 +7692,32 @@ function completeWork(current, workInProgress, renderLanes) {
     case 5:
       popHostContext(workInProgress);
       var type = workInProgress.type;
-      if (null !== current && null != workInProgress.stateNode)
+      if (null !== current && null != workInProgress.stateNode) {
+        renderLanes = current.stateNode;
+        var oldProps = current.memoizedProps;
         if (
-          ((renderLanes = current.stateNode),
-          (type = current.memoizedProps),
           (current = doesRequireClone(current, workInProgress)) ||
-            type !== newProps)
+          oldProps !== newProps
         ) {
           var newChildSet = null;
+          type = !1;
           current &&
             passChildrenWhenCloningPersistedNodes &&
             (markCloned(workInProgress),
             (newChildSet = passChildrenWhenCloningPersistedNodes
               ? []
               : createChildNodeSet()),
-            appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1));
+            (type = appendAllChildrenToContainer(
+              newChildSet,
+              workInProgress,
+              !1,
+              !1
+            )));
           b: {
-            type = diffProperties(
+            newChildSet = type ? void 0 : newChildSet;
+            oldProps = diffProperties(
               null,
-              type,
+              oldProps,
               newProps,
               renderLanes.canonical.viewConfig.validAttributes
             );
@@ -7711,18 +7726,18 @@ function completeWork(current, workInProgress, renderLanes) {
             if (current)
               newProps =
                 null != newChildSet
-                  ? null !== type
+                  ? null !== oldProps
                     ? cloneNodeWithNewChildrenAndProps(
                         newProps,
                         newChildSet,
-                        type
+                        oldProps
                       )
                     : cloneNodeWithNewChildren(newProps, newChildSet)
-                  : null !== type
-                    ? cloneNodeWithNewChildrenAndProps(newProps, type)
+                  : null !== oldProps
+                    ? cloneNodeWithNewChildrenAndProps(newProps, oldProps)
                     : cloneNodeWithNewChildren(newProps);
-            else if (null !== type)
-              newProps = cloneNodeWithNewProps(newProps, type);
+            else if (null !== oldProps)
+              newProps = cloneNodeWithNewProps(newProps, oldProps);
             else {
               newProps = renderLanes;
               break b;
@@ -7734,11 +7749,11 @@ function completeWork(current, workInProgress, renderLanes) {
             : (markCloned(workInProgress),
               (workInProgress.stateNode = newProps),
               current
-                ? passChildrenWhenCloningPersistedNodes ||
+                ? (passChildrenWhenCloningPersistedNodes && !type) ||
                   appendAllChildren(newProps, workInProgress, !1, !1)
                 : enablePersistedModeClonedFlag || (workInProgress.flags |= 4));
         } else workInProgress.stateNode = renderLanes;
-      else {
+      } else {
         if (!newProps) {
           if (null === workInProgress.stateNode)
             throw Error(
@@ -7751,17 +7766,17 @@ function completeWork(current, workInProgress, renderLanes) {
         current = nextReactTag;
         nextReactTag += 2;
         type = getViewConfigForType(type);
-        newChildSet = fastAddProperties(null, newProps, type.validAttributes);
-        newChildSet = createNode(
+        oldProps = fastAddProperties(null, newProps, type.validAttributes);
+        oldProps = createNode(
           current,
           type.uiViewClassName,
           renderLanes.containerTag,
-          newChildSet,
+          oldProps,
           workInProgress
         );
         enableLazyPublicInstanceInFabric
           ? (current = {
-              node: newChildSet,
+              node: oldProps,
               canonical: {
                 nativeTag: current,
                 viewConfig: type,
@@ -7778,7 +7793,7 @@ function completeWork(current, workInProgress, renderLanes) {
               renderLanes.publicInstance
             )),
             (current = {
-              node: newChildSet,
+              node: oldProps,
               canonical: {
                 nativeTag: current,
                 viewConfig: type,
@@ -7881,11 +7896,11 @@ function completeWork(current, workInProgress, renderLanes) {
           null !== renderLanes.alternate.memoizedState &&
           null !== renderLanes.alternate.memoizedState.cachePool &&
           (type = renderLanes.alternate.memoizedState.cachePool.pool),
-        (newChildSet = null),
+        (oldProps = null),
         null !== renderLanes.memoizedState &&
           null !== renderLanes.memoizedState.cachePool &&
-          (newChildSet = renderLanes.memoizedState.cachePool.pool),
-        newChildSet !== type && (renderLanes.flags |= 2048));
+          (oldProps = renderLanes.memoizedState.cachePool.pool),
+        oldProps !== type && (renderLanes.flags |= 2048));
       newProps !== current && newProps && (workInProgress.child.flags |= 8192);
       scheduleRetryEffect(workInProgress, workInProgress.updateQueue);
       null !== workInProgress.updateQueue &&
@@ -7920,8 +7935,8 @@ function completeWork(current, workInProgress, renderLanes) {
       type = workInProgress.memoizedState;
       if (null === type) return bubbleProperties(workInProgress), null;
       newProps = 0 !== (workInProgress.flags & 128);
-      newChildSet = type.rendering;
-      if (null === newChildSet)
+      oldProps = type.rendering;
+      if (null === oldProps)
         if (newProps) cutOffTailIfNeeded(type, !1);
         else {
           if (
@@ -7929,11 +7944,11 @@ function completeWork(current, workInProgress, renderLanes) {
             (null !== current && 0 !== (current.flags & 128))
           )
             for (current = workInProgress.child; null !== current; ) {
-              newChildSet = findFirstSuspended(current);
-              if (null !== newChildSet) {
+              oldProps = findFirstSuspended(current);
+              if (null !== oldProps) {
                 workInProgress.flags |= 128;
                 cutOffTailIfNeeded(type, !1);
-                current = newChildSet.updateQueue;
+                current = oldProps.updateQueue;
                 workInProgress.updateQueue = current;
                 scheduleRetryEffect(workInProgress, current);
                 workInProgress.subtreeFlags = 0;
@@ -7958,7 +7973,7 @@ function completeWork(current, workInProgress, renderLanes) {
         }
       else {
         if (!newProps)
-          if (((current = findFirstSuspended(newChildSet)), null !== current)) {
+          if (((current = findFirstSuspended(oldProps)), null !== current)) {
             if (
               ((workInProgress.flags |= 128),
               (newProps = !0),
@@ -7968,7 +7983,7 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(type, !0),
               null === type.tail &&
                 "hidden" === type.tailMode &&
-                !newChildSet.alternate)
+                !oldProps.alternate)
             )
               return bubbleProperties(workInProgress), null;
           } else
@@ -7980,13 +7995,13 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(type, !1),
               (workInProgress.lanes = 4194304));
         type.isBackwards
-          ? ((newChildSet.sibling = workInProgress.child),
-            (workInProgress.child = newChildSet))
+          ? ((oldProps.sibling = workInProgress.child),
+            (workInProgress.child = oldProps))
           : ((current = type.last),
             null !== current
-              ? (current.sibling = newChildSet)
-              : (workInProgress.child = newChildSet),
-            (type.last = newChildSet));
+              ? (current.sibling = oldProps)
+              : (workInProgress.child = oldProps),
+            (type.last = oldProps));
       }
       if (null !== type.tail)
         return (
@@ -11741,16 +11756,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1337 = {
+  internals$jscomp$inline_1338 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-029e8bd6-20250306",
+    version: "19.1.0-native-fb-cc680065-20250307",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-029e8bd6-20250306"
+    reconcilerVersion: "19.1.0-native-fb-cc680065-20250307"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1337.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1337.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1338.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1338.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$156 = 0;
     31 > index$156;
@@ -11762,20 +11777,20 @@ internals$jscomp$inline_1337.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1337.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1338.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1618 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1619 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1618.isDisabled &&
-    hook$jscomp$inline_1618.supportsFiber
+    !hook$jscomp$inline_1619.isDisabled &&
+    hook$jscomp$inline_1619.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1618.inject(
-        internals$jscomp$inline_1337
+      (rendererID = hook$jscomp$inline_1619.inject(
+        internals$jscomp$inline_1338
       )),
-        (injectedHook = hook$jscomp$inline_1618);
+        (injectedHook = hook$jscomp$inline_1619);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
