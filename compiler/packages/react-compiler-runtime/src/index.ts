@@ -41,7 +41,6 @@ export const c =
 
 const LazyGuardDispatcher: {[key: string]: (...args: Array<any>) => any} = {};
 [
-  'readContext',
   'useCallback',
   'useContext',
   'useEffect',
@@ -58,10 +57,8 @@ const LazyGuardDispatcher: {[key: string]: (...args: Array<any>) => any} = {};
   'useMutableSource',
   'useSyncExternalStore',
   'useId',
-  'unstable_isNewReconciler',
-  'getCacheSignal',
-  'getCacheForType',
   'useCacheRefresh',
+  'useOptimistic',
 ].forEach(name => {
   LazyGuardDispatcher[name] = () => {
     throw new Error(
@@ -74,15 +71,29 @@ const LazyGuardDispatcher: {[key: string]: (...args: Array<any>) => any} = {};
 let originalDispatcher: unknown = null;
 
 // Allow guards are not emitted for useMemoCache
-LazyGuardDispatcher['useMemoCache'] = (count: number) => {
-  if (originalDispatcher == null) {
-    throw new Error(
-      'React Compiler internal invariant violation: unexpected null dispatcher',
-    );
-  } else {
-    return (originalDispatcher as any).useMemoCache(count);
-  }
-};
+
+for (const key of [
+  // Allow guards may not be emitted for useMemoCache
+  'useMemoCache',
+  'unstable_useMemoCache',
+  // Not named as hooks
+  'readContext',
+  'unstable_isNewReconciler',
+  'getCacheSignal',
+  'getCacheForType',
+  // Not 'real' hooks (i.e. not implemented with an index based id)
+  'use',
+]) {
+  LazyGuardDispatcher[key] = (...args) => {
+    if (originalDispatcher == null) {
+      throw new Error(
+        'React Compiler internal invariant violation: unexpected null dispatcher',
+      );
+    } else {
+      return (originalDispatcher as any).useMemoCache(...args);
+    }
+  };
+}
 
 enum GuardKind {
   PushGuardContext = 0,
@@ -92,8 +103,13 @@ enum GuardKind {
 }
 
 function setCurrent(newDispatcher: any) {
-  ReactSecretInternals.ReactCurrentDispatcher.current = newDispatcher;
-  return ReactSecretInternals.ReactCurrentDispatcher.current;
+  if (ReactSecretInternals.ReactCurrentDispatcher != null) {
+    ReactSecretInternals.ReactCurrentDispatcher.current = newDispatcher;
+    return ReactSecretInternals.ReactCurrentDispatcher.current;
+  } else {
+    ReactSecretInternals.H = newDispatcher;
+    return ReactSecretInternals.H;
+  }
 }
 
 const guardFrames: Array<unknown> = [];
@@ -134,7 +150,9 @@ const guardFrames: Array<unknown> = [];
  * ```
  */
 export function $dispatcherGuard(kind: GuardKind) {
-  const curr = ReactSecretInternals.ReactCurrentDispatcher.current;
+  const curr =
+    ReactSecretInternals.H ??
+    ReactSecretInternals.ReactCurrentDispatcher.current;
   if (kind === GuardKind.PushGuardContext) {
     // Push before checking invariant or errors
     guardFrames.push(curr);
@@ -169,7 +187,29 @@ export function $dispatcherGuard(kind: GuardKind) {
     // ExpectHooks could be nested, so we save the current dispatcher
     // for the matching PopExpectHook to restore.
     guardFrames.push(curr);
-    setCurrent(originalDispatcher);
+    if (originalDispatcher != null) {
+      /**
+       * originalDispatcher could be null in the following case.
+       * ```js
+       * function Component() {
+       *   "use no memo";
+       *   const useFn = useMakeHook();
+       *   useFn();
+       * }
+       * function useMakeHook() {
+       *   // ...
+       *   return () => {
+       *     useState(...);
+       *   };
+       * }
+       * ```
+       *
+       * React compiler currently does not memoize within inner functions. While this
+       * code breaks the programming model (hooks as first class values), let's
+       * either ignore this or error with a better message (within another dispatcher)
+       */
+      setCurrent(originalDispatcher);
+    }
   } else if (kind === GuardKind.PopExpectHook) {
     const lastFrame = guardFrames.pop();
     if (lastFrame == null) {
