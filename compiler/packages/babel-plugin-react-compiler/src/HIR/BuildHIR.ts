@@ -1909,11 +1909,19 @@ function lowerExpression(
 
       if (operator === '=') {
         const left = expr.get('left');
+
+        // OptionalMemberExpressions as the left side of an AssignmentExpression are not yet supported
+        if (left.isNodeType('OptionalMemberExpression')) {
+          CompilerError.throwTodo({
+            reason: `Unsupported syntax: OptionalMemberExpression on the left side of an AssignmentExpression`,
+            loc: left.node.loc ?? null,
+          });
+        }
         return lowerAssignment(
           builder,
           left.node.loc ?? GeneratedSource,
           InstructionKind.Reassign,
-          left,
+          left as NodePath<t.LVal>,
           lowerExpressionToTemporary(builder, expr.get('right')),
           left.isArrayPattern() || left.isObjectPattern()
             ? 'Destructure'
@@ -3545,7 +3553,7 @@ function lowerAssignment(
   builder: HIRBuilder,
   loc: SourceLocation,
   kind: InstructionKind,
-  lvaluePath: NodePath<t.LVal | t.OptionalMemberExpression>,
+  lvaluePath: NodePath<t.LVal>,
   value: Place,
   assignmentKind: 'Destructure' | 'Assignment',
 ): InstructionValue {
