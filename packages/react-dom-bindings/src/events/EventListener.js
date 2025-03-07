@@ -7,45 +7,16 @@
  * @flow
  */
 
-export function addEventBubbleListener(
+export function addEventListener(
   target: EventTarget,
   eventType: string,
   listener: Function,
-): Function {
-  target.addEventListener(eventType, listener, false);
-  return listener;
-}
-
-export function addEventCaptureListener(
-  target: EventTarget,
-  eventType: string,
-  listener: Function,
-): Function {
-  target.addEventListener(eventType, listener, true);
-  return listener;
-}
-
-export function addEventCaptureListenerWithPassiveFlag(
-  target: EventTarget,
-  eventType: string,
-  listener: Function,
-  passive: boolean,
+  isCapture: boolean,
+  isPassive: boolean,
 ): Function {
   target.addEventListener(eventType, listener, {
-    capture: true,
-    passive,
-  });
-  return listener;
-}
-
-export function addEventBubbleListenerWithPassiveFlag(
-  target: EventTarget,
-  eventType: string,
-  listener: Function,
-  passive: boolean,
-): Function {
-  target.addEventListener(eventType, listener, {
-    passive,
+    capture: isCapture,
+    passive: isPassive,
   });
   return listener;
 }
