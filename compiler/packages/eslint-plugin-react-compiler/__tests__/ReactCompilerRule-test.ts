@@ -104,6 +104,18 @@ const tests: CompilerTestCases = {
         }
       `,
     },
+    {
+      name: 'Ref access in useEffect hook',
+      code: normalizeIndent`
+        function Component() {
+          const ref = useRef(1);
+          useEffect(() => {
+            ref.current = 2 * ref.current;
+          }, []);
+          return <div>Hello world</div>;
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -112,6 +124,22 @@ const tests: CompilerTestCases = {
         function Component(props) {
           const ref = useRef(null);
           const value = ref.current;
+          return value;
+        }
+      `,
+      errors: [
+        {
+          message:
+            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+        },
+      ],
+    },
+    {
+      name: '[InvalidInput] Ref access in useState initial value function',
+      code: normalizeIndent`
+        function Component(props) {
+          const ref = useRef(1);
+          const [value] = useState(() => ref.current);
           return value;
         }
       `,
