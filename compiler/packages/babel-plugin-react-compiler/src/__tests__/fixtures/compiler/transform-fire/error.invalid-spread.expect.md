@@ -10,7 +10,7 @@ function Component(props) {
     console.log(props);
   };
   useEffect(() => {
-    fire(...foo);
+    fire(...foo)();
   });
 
   return null;
@@ -24,8 +24,8 @@ function Component(props) {
 ```
    7 |   };
    8 |   useEffect(() => {
->  9 |     fire(...foo);
-     |     ^^^^^^^^^^^^ InvalidReact: Cannot compile `fire`. fire() can only take in a single call expression as an argument but received a spread argument (9:9)
+>  9 |     fire(...foo)();
+     |     ^^^^^^^^^^^^ InvalidReact: Cannot compile `fire`. fire() can only take in a single identifier as an argument but received a spread argument (9:9)
   10 |   });
   11 |
   12 |   return null;

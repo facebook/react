@@ -11,9 +11,9 @@ component Component(prop1, ref) {
     console.log(prop1);
   };
   useEffect(() => {
-    fire(foo(prop1));
+    fire(foo)(prop1);
     bar();
-    fire(foo());
+    fire(foo)();
   });
 
   print(ref.current);

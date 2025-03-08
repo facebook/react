@@ -9,7 +9,7 @@ function Component(props) {
     function nested() {
       function nestedAgain() {
         function nestedThrice() {
-          fire(foo(props));
+          fire(foo)(props);
         }
         nestedThrice();
       }

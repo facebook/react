@@ -6,7 +6,9 @@ function Component(props) {
     console.log(props);
   };
   useEffect(() => {
-    fire(props);
+    foo(fire(props)); // Can't be used as a function argument
+    const stored = fire(foo); // Cannot be assigned
+    fire(props); // Invalid as an expression statement
   });
 
   return null;

@@ -10,7 +10,9 @@ function Component(props) {
     console.log(props);
   };
   useEffect(() => {
-    fire(props);
+    foo(fire(props)); // Can't be used as a function argument
+    const stored = fire(foo); // Cannot be assigned
+    fire(props); // Invalid as an expression statement
   });
 
   return null;
@@ -24,11 +26,15 @@ function Component(props) {
 ```
    7 |   };
    8 |   useEffect(() => {
->  9 |     fire(props);
-     |     ^^^^^^^^^^^ InvalidReact: Cannot compile `fire`. `fire()` can only receive a function call such as `fire(fn(a,b)). Method calls and other expressions are not allowed (9:9)
-  10 |   });
-  11 |
-  12 |   return null;
+>  9 |     foo(fire(props)); // Can't be used as a function argument
+     |         ^^^^^^^^^^^ InvalidReact: Cannot compile `fire`. `fire()` expressions can only be called, like fire(myFunction)(myArguments) (9:9)
+
+InvalidReact: Cannot compile `fire`. `fire()` expressions can only be called, like fire(myFunction)(myArguments) (10:10)
+
+InvalidReact: Cannot compile `fire`. `fire(myFunction)` will not do anything on its own, you need to call the result like `fire(myFunction)(myArgument)` (11:11)
+  10 |     const stored = fire(foo); // Cannot be assigned
+  11 |     fire(props); // Invalid as an expression statement
+  12 |   });
 ```
           
       
