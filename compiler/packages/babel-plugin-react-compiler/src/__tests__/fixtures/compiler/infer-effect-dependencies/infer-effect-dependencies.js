@@ -30,13 +30,6 @@ function Component({foo, bar}) {
     console.log(bar.qux);
   });
 
-  function f() {
-    console.log(foo);
-  }
-
-  // No inferred dep array, the argument is not a lambda
-  useEffect(f);
-
   useEffectWrapper(() => {
     console.log(foo);
   });

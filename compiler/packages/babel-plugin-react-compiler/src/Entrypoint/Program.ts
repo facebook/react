@@ -16,7 +16,6 @@ import {
   EnvironmentConfig,
   ExternalFunction,
   ReactFunctionType,
-  MINIMAL_RETRY_CONFIG,
   tryParseExternalFunction,
 } from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
@@ -408,6 +407,7 @@ export function compileProgram(
             fn,
             environment,
             fnType,
+            'all_features',
             useMemoCacheIdentifier.name,
             pass.opts.logger,
             pass.filename,
@@ -419,17 +419,18 @@ export function compileProgram(
       }
     }
     // If non-memoization features are enabled, retry regardless of error kind
-    if (compileResult.kind === 'error' && environment.enableFire) {
+    if (
+      compileResult.kind === 'error' &&
+      (environment.enableFire || environment.inferEffectDependencies != null)
+    ) {
       try {
         compileResult = {
           kind: 'compile',
           compiledFn: compileFn(
             fn,
-            {
-              ...environment,
-              ...MINIMAL_RETRY_CONFIG,
-            },
+            environment,
             fnType,
+            'no_inferred_memo',
             useMemoCacheIdentifier.name,
             pass.opts.logger,
             pass.filename,
@@ -437,6 +438,7 @@ export function compileProgram(
           ),
         };
       } catch (err) {
+        // TODO: maybe stash the error for later reporting in ValidateNoUntransformedReferences
         compileResult = {kind: 'error', error: err};
       }
     }

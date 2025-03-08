@@ -181,6 +181,7 @@ function ReactForgetFunctionTransform() {
         fn,
         forgetOptions,
         'Other',
+        'all_features',
         '_c',
         null,
         null,

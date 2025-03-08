@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableFire
+// @enableFire @panicThreshold(none)
 import {fire} from 'react';
 
 /**
@@ -29,21 +29,13 @@ function Component({prop1}) {
 ## Error
 
 ```
-   9 | function Component({prop1}) {
-  10 |   const foo = () => {
-> 11 |     try {
-     |     ^^^^^
-> 12 |       console.log(prop1);
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^
-> 13 |     } finally {
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^
-> 14 |       console.log('jbrown215');
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^
-> 15 |     }
-     | ^^^^^^ Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:15)
   16 |   };
   17 |   useEffect(() => {
-  18 |     fire(foo());
+> 18 |     fire(foo());
+     |     ^^^^ Todo: Untransformed reference to experimental compiler-only feature (18:18)
+  19 |   });
+  20 | }
+  21 |
 ```
           
       
