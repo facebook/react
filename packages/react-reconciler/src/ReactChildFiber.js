@@ -1223,7 +1223,7 @@ function createChildReconciler(
       return resultingFirstChild;
     }
 
-    // Add all children to a key map for quick lookups.
+    // Add the remaining children to a key map for quick lookups.
     const existingChildren = mapRemainingChildren(oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
@@ -1517,7 +1517,7 @@ function createChildReconciler(
       return resultingFirstChild;
     }
 
-    // Add all children to a key map for quick lookups.
+    // Add the remaining children to a key map for quick lookups.
     const existingChildren = mapRemainingChildren(oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
