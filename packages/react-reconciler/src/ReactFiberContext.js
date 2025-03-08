@@ -246,7 +246,7 @@ function invalidateContextProvider(
   } else {
     const instance = workInProgress.stateNode;
 
-    if (!instance) {
+    if (instance === null) {
       throw new Error(
         'Expected to have an instance by this point. ' +
           'This error is likely caused by a bug in React. Please file an issue.',
