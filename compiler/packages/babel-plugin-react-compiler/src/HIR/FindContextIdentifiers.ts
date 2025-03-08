@@ -63,8 +63,21 @@ export function findContextIdentifiers(
         state: FindContextIdentifierState,
       ): void {
         const left = path.get('left');
+
+        // OptionalMemberExpressions as the left side of an AssignmentExpression are not yet supported
+        if (left.isNodeType('OptionalMemberExpression')) {
+          CompilerError.throwTodo({
+            reason: `Unsupported syntax: OptionalMemberExpression on the left side of an AssignmentExpression`,
+            loc: left.node.loc ?? null,
+          });
+        }
+
         const currentFn = state.currentFn.at(-1) ?? null;
-        handleAssignment(currentFn, state.identifiers, left);
+        handleAssignment(
+          currentFn,
+          state.identifiers,
+          left as NodePath<t.LVal>,
+        );
       },
       UpdateExpression(
         path: NodePath<t.UpdateExpression>,
