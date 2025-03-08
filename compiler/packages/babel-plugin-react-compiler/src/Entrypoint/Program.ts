@@ -16,7 +16,6 @@ import {
   EnvironmentConfig,
   ExternalFunction,
   ReactFunctionType,
-  MINIMAL_RETRY_CONFIG,
   tryParseExternalFunction,
 } from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
@@ -408,6 +407,7 @@ export function compileProgram(
             fn,
             environment,
             fnType,
+            'all_features',
             useMemoCacheIdentifier.name,
             pass.opts.logger,
             pass.filename,
@@ -425,11 +425,9 @@ export function compileProgram(
           kind: 'compile',
           compiledFn: compileFn(
             fn,
-            {
-              ...environment,
-              ...MINIMAL_RETRY_CONFIG,
-            },
+            environment,
             fnType,
+            'no_inferred_memo',
             useMemoCacheIdentifier.name,
             pass.opts.logger,
             pass.filename,
