@@ -76,6 +76,7 @@ import {
   TracingMarkerComponent,
   Throw,
   ViewTransitionComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
@@ -972,6 +973,7 @@ function completeWork(
       }
       // Fallthrough
     }
+    case ActivityComponent:
     case LazyComponent:
     case SimpleMemoComponent:
     case FunctionComponent:
