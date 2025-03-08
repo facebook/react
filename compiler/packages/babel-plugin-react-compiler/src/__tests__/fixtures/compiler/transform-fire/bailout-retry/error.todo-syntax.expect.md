@@ -19,7 +19,7 @@ function Component({prop1}) {
     }
   };
   useEffect(() => {
-    fire(foo());
+    fire(foo)();
   });
 }
 
@@ -43,7 +43,7 @@ function Component({prop1}) {
      | ^^^^^^ Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:15)
   16 |   };
   17 |   useEffect(() => {
-  18 |     fire(foo());
+  18 |     fire(foo)();
 ```
           
       

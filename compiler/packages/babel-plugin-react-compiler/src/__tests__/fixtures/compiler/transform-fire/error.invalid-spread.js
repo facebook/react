@@ -6,7 +6,7 @@ function Component(props) {
     console.log(props);
   };
   useEffect(() => {
-    fire(...foo);
+    fire(...foo)();
   });
 
   return null;

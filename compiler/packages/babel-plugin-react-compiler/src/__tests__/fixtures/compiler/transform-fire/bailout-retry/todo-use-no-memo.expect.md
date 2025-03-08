@@ -11,9 +11,9 @@ function Component({props, bar}) {
     console.log(props);
   };
   useEffect(() => {
-    fire(foo(props));
-    fire(foo());
-    fire(bar());
+    fire(foo)(props);
+    fire(foo)();
+    fire(bar)();
   });
 
   return null;
@@ -33,9 +33,9 @@ function Component({ props, bar }) {
     console.log(props);
   };
   useEffect(() => {
-    fire(foo(props));
-    fire(foo());
-    fire(bar());
+    fire(foo)(props);
+    fire(foo)();
+    fire(bar)();
   });
 
   return null;
