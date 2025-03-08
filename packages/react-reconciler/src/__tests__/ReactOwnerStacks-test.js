@@ -85,4 +85,85 @@ describe('ReactOwnerStacks', () => {
       expect(React.captureOwnerStack()).toBe(null);
     }
   });
+
+  // @gate __DEV__
+  it('cuts off at the owner stack limit', async () => {
+    function App({siblingsBeforeStackOne}) {
+      const children = [];
+      for (
+        let i = 0;
+        i <
+        siblingsBeforeStackOne -
+          // One built-in JSX callsite for the unknown Owner Stack
+          1 -
+          // Number of JSX callsites before this render
+          1 -
+          // Stop so that OwnerStackOne will be right before cutoff
+          1;
+        i++
+      ) {
+        children.push(<Component key={i} />);
+      }
+      children.push(<OwnerStackOne key="stackOne" />);
+      children.push(<OwnerStackTwo key="stackTwo" />);
+
+      return children;
+    }
+
+    function Component() {
+      return null;
+    }
+
+    let stackOne;
+    function OwnerStackOne() {
+      stackOne = React.captureOwnerStack();
+    }
+
+    let stackTwo;
+    function OwnerStackTwo() {
+      stackTwo = React.captureOwnerStack();
+    }
+
+    await act(() => {
+      ReactNoop.render(
+        <App
+          key="one"
+          // Should be the value with of `ownerStackLimit` with `__VARIANT__` so that we see the cutoff
+          siblingsBeforeStackOne={500}
+        />,
+      );
+    });
+
+    expect({
+      stackOne: normalizeCodeLocInfo(stackOne),
+      stackTwo: normalizeCodeLocInfo(stackTwo),
+    }).toEqual({
+      stackOne: '\n    in App (at **)',
+      stackTwo: __VARIANT__
+        ? // captured right after cutoff
+          '\n    in UnknownOwner (at **)'
+        : '\n    in App (at **)',
+    });
+
+    // Our internal act flushes pending timers, so this will render with owner
+    // stacks intact until we hit the limit again.
+    await act(() => {
+      ReactNoop.render(
+        <App
+          // TODO: Owner Stacks should update on re-render.
+          key="two"
+          siblingsBeforeStackOne={499}
+        />,
+      );
+    });
+
+    expect({
+      stackOne: normalizeCodeLocInfo(stackOne),
+      stackTwo: normalizeCodeLocInfo(stackTwo),
+    }).toEqual({
+      // rendered everything before cutoff
+      stackOne: '\n    in App (at **)',
+      stackTwo: '\n    in App (at **)',
+    });
+  });
 });

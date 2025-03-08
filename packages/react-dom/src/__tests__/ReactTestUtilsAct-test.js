@@ -347,7 +347,7 @@ function runActTests(render, unmount, rerender) {
             render(<App />, container);
           });
           act(() => {
-            jest.runAllTimers();
+            jest.runOnlyPendingTimers();
           });
 
           expect(container.innerHTML).toBe('1');
@@ -370,7 +370,7 @@ function runActTests(render, unmount, rerender) {
             render(<App />, container);
           });
           await act(async () => {
-            jest.runAllTimers();
+            jest.runOnlyPendingTimers();
           });
 
           expect(container.innerHTML).toBe('1');
@@ -417,13 +417,13 @@ function runActTests(render, unmount, rerender) {
           act(() => {
             render(<App />, container);
             // Since effects haven't been flushed yet, this does not advance the timer
-            jest.runAllTimers();
+            jest.runOnlyPendingTimers();
           });
 
           expect(container.innerHTML).toBe('1');
 
           act(() => {
-            jest.runAllTimers();
+            jest.runOnlyPendingTimers();
           });
 
           expect(container.innerHTML).toBe('2');

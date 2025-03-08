@@ -588,7 +588,7 @@ describe('useSubscription', () => {
       await waitForAll(['render:first:B', 'render:second:B']);
 
       // No more pending updates
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
 
       // Partial update "B" -> "C"
       // Interrupt with a second mutation "C" -> "D".
@@ -604,7 +604,7 @@ describe('useSubscription', () => {
       await waitForAll(['render:first:D', 'render:second:D']);
 
       // No more pending updates
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
     });
   });
 });
