@@ -75,6 +75,9 @@ export const enableSwipeTransition = false;
 export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
+export const ownerStackLimit = 1e4;
+export const debugTaskLimit = 1e4;
+export const debugInfoLimitsResetIntervalMs = 1000;
 
 export const enableFragmentRefs = false;
 
