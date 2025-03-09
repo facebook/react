@@ -104,10 +104,10 @@ describe('ReactOwnerStacks', () => {
         let i = 0;
         i <
         siblingsBeforeStackOne -
-          // One built-in JSX callsite for the unknown Owner Stack
-          1 -
-          // <App /> callsite
-          1 -
+          // JSX callsites before this are irrelevant since we always reset the limit
+          // when we start a render. Both <App /> and <UnknownOwner /> were created
+          // before we actually start rendering.
+          0 -
           // Stop so that OwnerStackOne will be right before cutoff
           1;
         i++
@@ -149,8 +149,7 @@ describe('ReactOwnerStacks', () => {
       stackOne: normalizeCodeLocInfo(stackOne),
       stackTwo: normalizeCodeLocInfo(stackTwo),
     }).toEqual({
-      // We continue resetting periodically.
-      pendingTimers: 1,
+      pendingTimers: 0,
       stackOne: '\n    in App (at **)',
       stackTwo: __VARIANT__
         ? // captured right after cutoff
@@ -176,8 +175,7 @@ describe('ReactOwnerStacks', () => {
       stackOne: normalizeCodeLocInfo(stackOne),
       stackTwo: normalizeCodeLocInfo(stackTwo),
     }).toEqual({
-      // We continue resetting periodically.
-      pendingTimers: 1,
+      pendingTimers: 0,
       // rendered everything before cutoff
       stackOne: '\n    in App (at **)',
       stackTwo: '\n    in App (at **)',
@@ -192,10 +190,10 @@ describe('ReactOwnerStacks', () => {
         let i = 0;
         i <
         siblingsBeforeStackOne -
-          // One built-in JSX callsite for the unknown Owner Stack
-          1 -
-          // <App /> callsite
-          1 -
+          // JSX callsites before this are irrelevant since we always reset the limit
+          // when we start a render. Both <App /> and <UnknownOwner /> were created
+          // before we actually start rendering.
+          0 -
           // Stop so that OwnerStackOne will be right before cutoff
           1;
         i++
@@ -273,8 +271,7 @@ describe('ReactOwnerStacks', () => {
       stackOne: normalizeCodeLocInfo(stackOne),
       stackTwo: normalizeCodeLocInfo(stackTwo),
     }).toEqual({
-      // 1 for periodically resetting the Owner Stack limit
-      pendingTimers: 1,
+      pendingTimers: 0,
       stackOne: '\n    in App (at **)',
       stackTwo:
         // captured after we reset the limit
@@ -295,10 +292,10 @@ describe('ReactOwnerStacks', () => {
         let i = 0;
         i <
         siblingsBeforeStackOne -
-          // One built-in JSX callsite for the unknown Owner Stack
-          1 -
-          // <App /> callsite
-          1 -
+          // JSX callsites before this are irrelevant since we always reset the limit
+          // when we start a render. Both <App /> and <UnknownOwner /> were created
+          // before we actually start rendering.
+          0 -
           // Stop so that OwnerStackOne will be right before cutoff
           1;
         i++
@@ -357,8 +354,7 @@ describe('ReactOwnerStacks', () => {
       stackTwo: normalizeCodeLocInfo(stackTwo),
     }).toEqual({
       // 1 for the timeout
-      // 1 for periodically resetting the Owner Stack limit
-      pendingTimers: 2,
+      pendingTimers: 1,
       stackOne: '\n    in App (at **)',
       stackTwo: undefined,
     });
@@ -372,8 +368,7 @@ describe('ReactOwnerStacks', () => {
       stackOne: normalizeCodeLocInfo(stackOne),
       stackTwo: normalizeCodeLocInfo(stackTwo),
     }).toEqual({
-      // 1 for periodically resetting the Owner Stack limit
-      pendingTimers: 1,
+      pendingTimers: 0,
       stackOne: '\n    in App (at **)',
       stackTwo:
         // captured after we reset the limit

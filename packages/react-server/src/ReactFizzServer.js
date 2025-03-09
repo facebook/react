@@ -134,6 +134,10 @@ import {
 } from './ReactFizzCallUserSpace';
 
 import {
+  startResettingOwnerStackLimit,
+  stopResettingOwnerStackLimit,
+} from 'shared/ReactOwnerStackReset';
+import {
   getIteratorFn,
   ASYNC_ITERATOR,
   REACT_ELEMENT_TYPE,
@@ -4571,6 +4575,8 @@ export function performWork(request: Request): void {
   if (__DEV__) {
     prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
     ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+
+    startResettingOwnerStackLimit();
   }
   const prevResumableState = currentResumableState;
   setCurrentResumableState(request.resumableState);
@@ -4591,10 +4597,13 @@ export function performWork(request: Request): void {
     fatalError(request, error, errorInfo, null);
   } finally {
     setCurrentResumableState(prevResumableState);
+
     ReactSharedInternals.H = prevDispatcher;
     ReactSharedInternals.A = prevAsyncDispatcher;
 
     if (__DEV__) {
+      stopResettingOwnerStackLimit();
+
       ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
     }
     if (prevDispatcher === HooksDispatcher) {

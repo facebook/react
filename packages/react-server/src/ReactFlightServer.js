@@ -103,6 +103,10 @@ import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
 import {getOwnerStackByComponentInfoInDev} from 'shared/ReactComponentInfoStack';
+import {
+  startResettingOwnerStackLimit,
+  stopResettingOwnerStackLimit,
+} from 'shared/ReactOwnerStackReset';
 
 import {
   callComponentInDEV,
@@ -4058,6 +4062,10 @@ function performWork(request: Request): void {
   currentRequest = request;
   prepareToUseHooksForRequest(request);
 
+  if (__DEV__) {
+    startResettingOwnerStackLimit();
+  }
+
   const hadAbortableTasks = request.abortableTasks.size > 0;
   try {
     const pingedTasks = request.pingedTasks;
@@ -4080,6 +4088,10 @@ function performWork(request: Request): void {
     logRecoverableError(request, error, null);
     fatalError(request, error);
   } finally {
+    if (__DEV__) {
+      stopResettingOwnerStackLimit();
+    }
+
     ReactSharedInternals.H = prevDispatcher;
     resetHooksForRequest();
     currentRequest = prevRequest;
