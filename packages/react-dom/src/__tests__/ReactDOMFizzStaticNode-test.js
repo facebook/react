@@ -103,7 +103,7 @@ describe('ReactDOMFizzStaticNode', () => {
       </div>,
     );
 
-    await jest.runOnlyPendingTimers();
+    await jest.runAllTimers();
 
     // Resolve the loading.
     hasLoaded = true;
@@ -199,7 +199,7 @@ describe('ReactDOMFizzStaticNode', () => {
       },
     );
 
-    await jest.runOnlyPendingTimers();
+    await jest.runAllTimers();
 
     controller.abort();
 
@@ -228,7 +228,7 @@ describe('ReactDOMFizzStaticNode', () => {
       },
     );
 
-    await jest.runOnlyPendingTimers();
+    await jest.runAllTimers();
 
     const theReason = new Error('aborted for reasons');
     controller.abort(theReason);
@@ -259,7 +259,7 @@ describe('ReactDOMFizzStaticNode', () => {
       },
     );
 
-    await jest.runOnlyPendingTimers();
+    await jest.runAllTimers();
 
     const theReason = new Error('aborted for reasons');
     controller.abort(theReason);
@@ -422,7 +422,7 @@ describe('ReactDOMFizzStaticNode', () => {
       },
     });
 
-    await jest.runOnlyPendingTimers();
+    await jest.runAllTimers();
 
     controller.abort('foobar');
 
@@ -464,7 +464,7 @@ describe('ReactDOMFizzStaticNode', () => {
       },
     });
 
-    await jest.runOnlyPendingTimers();
+    await jest.runAllTimers();
 
     controller.abort(new Error('uh oh'));
 

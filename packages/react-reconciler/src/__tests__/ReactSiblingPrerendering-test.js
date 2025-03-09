@@ -393,7 +393,7 @@ describe('ReactSiblingPrerendering', () => {
       expect(root).toMatchRenderedOutput(<div>Loading outer...</div>);
 
       // Fire the timer to commit the outer fallback.
-      jest.runOnlyPendingTimers();
+      jest.runAllTimers();
       expect(root).toMatchRenderedOutput(
         <div>
           <div>A</div>
@@ -471,7 +471,7 @@ describe('ReactSiblingPrerendering', () => {
         // block the inner Suspense fallback from appearing.
         await waitForPaint(['A', 'Suspend! [B]', 'Loading inner...']);
         // (Since this is a retry, the commit phase is throttled by a timer.)
-        jest.runOnlyPendingTimers();
+        jest.runAllTimers();
         // The inner fallback is now visible.
         expect(root).toMatchRenderedOutput(
           <>

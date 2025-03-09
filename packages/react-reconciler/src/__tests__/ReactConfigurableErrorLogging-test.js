@@ -188,7 +188,7 @@ describe('ReactConfigurableErrorLogging', () => {
 
     // The error thrown in caughtError should be rethrown with a clean stack
     expect(() => {
-      jest.runOnlyPendingTimers();
+      jest.runAllTimers();
     }).toThrow('onCaughtError error');
   });
 
