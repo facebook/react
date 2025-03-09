@@ -75,6 +75,9 @@ export const enableSwipeTransition = false;
 export const enableFastAddPropertiesInDiffing = true;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
+export const ownerStackLimit = 1e4;
+export const debugTaskLimit = 1e4;
+export const debugInfoLimitsResetIntervalMs = 1000;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the

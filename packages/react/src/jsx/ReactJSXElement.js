@@ -16,7 +16,19 @@ import {
 } from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isArray from 'shared/isArray';
-import {disableDefaultPropsExceptForClasses} from 'shared/ReactFeatureFlags';
+import {
+  disableDefaultPropsExceptForClasses,
+  debugInfoLimitsResetIntervalMs,
+  debugTaskLimit,
+  ownerStackLimit,
+} from 'shared/ReactFeatureFlags';
+
+let recentlyCreatedOwnerStacks = 0;
+let recentlyCreatedDebugTasks = 0;
+setInterval(() => {
+  recentlyCreatedOwnerStacks = 0;
+  recentlyCreatedDebugTasks = 0;
+}, debugInfoLimitsResetIntervalMs);
 
 const createTask =
   // eslint-disable-next-line react-internal/no-production-logging
@@ -60,9 +72,20 @@ function getOwner() {
 let specialPropKeyWarningShown;
 let didWarnAboutElementRef;
 let didWarnAboutOldJSXRuntime;
+let unknownOwnerDebugStack;
+let unknownOwnerDebugTask;
 
 if (__DEV__) {
   didWarnAboutElementRef = {};
+  const unknownOwnerElement = {
+    'react-stack-bottom-frame': () => {
+      return (function UnknownOwner() {
+        return jsxDEV(() => null, {}, null);
+      })();
+    },
+  }['react-stack-bottom-frame']();
+  unknownOwnerDebugStack = unknownOwnerElement._debugStack;
+  unknownOwnerDebugTask = unknownOwnerElement._debugTask;
 }
 
 function hasValidRef(config) {
@@ -380,8 +403,14 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
       isStaticChildren,
       source,
       self,
-      __DEV__ && Error('react-stack-top-frame'),
-      __DEV__ && createTask(getTaskName(type)),
+      __DEV__ &&
+        (recentlyCreatedOwnerStacks++ < ownerStackLimit
+          ? Error('react-stack-top-frame')
+          : unknownOwnerDebugStack),
+      __DEV__ &&
+        (recentlyCreatedDebugTasks++ < debugTaskLimit
+          ? createTask(getTaskName(type))
+          : unknownOwnerDebugTask),
     );
   }
 }
@@ -402,8 +431,14 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
       isStaticChildren,
       source,
       self,
-      __DEV__ && Error('react-stack-top-frame'),
-      __DEV__ && createTask(getTaskName(type)),
+      __DEV__ &&
+        (recentlyCreatedOwnerStacks++ < ownerStackLimit
+          ? Error('react-stack-top-frame')
+          : unknownOwnerDebugStack),
+      __DEV__ &&
+        (recentlyCreatedDebugTasks++ < debugTaskLimit
+          ? createTask(getTaskName(type))
+          : unknownOwnerDebugTask),
     );
   }
 }
@@ -424,8 +459,14 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
     isStaticChildren,
     source,
     self,
-    __DEV__ && Error('react-stack-top-frame'),
-    __DEV__ && createTask(getTaskName(type)),
+    __DEV__ &&
+      (recentlyCreatedOwnerStacks++ < ownerStackLimit
+        ? Error('react-stack-top-frame')
+        : unknownOwnerDebugStack),
+    __DEV__ &&
+      (recentlyCreatedDebugTasks++ < debugTaskLimit
+        ? createTask(getTaskName(type))
+        : unknownOwnerDebugTask),
   );
 }
 
@@ -700,8 +741,14 @@ export function createElement(type, config, children) {
     undefined,
     getOwner(),
     props,
-    __DEV__ && Error('react-stack-top-frame'),
-    __DEV__ && createTask(getTaskName(type)),
+    __DEV__ &&
+      (recentlyCreatedOwnerStacks++ < ownerStackLimit
+        ? Error('react-stack-top-frame')
+        : unknownOwnerDebugStack),
+    __DEV__ &&
+      (recentlyCreatedDebugTasks++ < debugTaskLimit
+        ? createTask(getTaskName(type))
+        : unknownOwnerDebugTask),
   );
 }
 
