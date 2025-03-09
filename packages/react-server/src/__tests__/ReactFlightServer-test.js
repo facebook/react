@@ -73,10 +73,10 @@ describe('ReactFlight', () => {
         let i = 0;
         i <
         siblingsBeforeStackOne -
-          // One built-in JSX callsite for the unknown Owner Stack
-          1 -
-          // <App /> callsite
-          1 -
+          // JSX callsites before this are irrelevant since we always reset the limit
+          // when we start a render. Both <App /> and <UnknownOwner /> were created
+          // before we actually start rendering.
+          0 -
           // Stop so that OwnerStackOne will be right before cutoff
           1;
         i++
@@ -143,8 +143,7 @@ describe('ReactFlight', () => {
       stackOne: normalizeCodeLocInfo(stackOne),
       stackTwo: normalizeCodeLocInfo(stackTwo),
     }).toEqual({
-      // 1 for periodically resetting the Owner Stack limit
-      pendingTimers: 1,
+      pendingTimers: 0,
       stackOne: '\n    in App (at **)',
       stackTwo:
         // captured after we reset the limit
