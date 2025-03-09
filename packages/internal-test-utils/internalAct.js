@@ -249,8 +249,7 @@ export async function serverAct<T>(scope: () => Thenable<T>): Thenable<T> {
 
       // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
       const j = jest;
-      // We have always one pending timer running that resets the Owner Stack limit.
-      if (j.getTimerCount() > 1) {
+      if (j.getTimerCount() > 0) {
         // There's a pending timer. Flush it now. We only do this in order to
         // force Suspense fallbacks to display; the fact that it's a timer
         // is an implementation detail. If there are other timers scheduled,

@@ -49,6 +49,10 @@ import {
   enableViewTransition,
   enableSwipeTransition,
 } from 'shared/ReactFeatureFlags';
+import {
+  startResettingOwnerStackLimit,
+  stopResettingOwnerStackLimit,
+} from 'shared/ReactOwnerStackReset';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
 
@@ -1320,6 +1324,10 @@ function finishConcurrentRender(
     }
   }
 
+  if (__DEV__) {
+    stopResettingOwnerStackLimit();
+  }
+
   if (shouldForceFlushFallbacksInDEV()) {
     // We're inside an `act` scope. Commit immediately.
     commitRoot(
@@ -1984,6 +1992,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   finishQueueingConcurrentUpdates();
 
   if (__DEV__) {
+    startResettingOwnerStackLimit();
+
     ReactStrictModeWarnings.discardPendingWarnings();
   }
 

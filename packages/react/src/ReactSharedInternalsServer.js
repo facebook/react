@@ -40,7 +40,7 @@ export type SharedStateServer = {
   // ReactDebugCurrentFrame
   getCurrentStack: null | (() => string),
 
-  //
+  // ReactOwnerStackReset
   recentlyCreatedOwnerStacks: 0,
 };
 
@@ -62,14 +62,7 @@ if (enableTaint) {
 if (__DEV__) {
   // Stack implementation injected by the current renderer.
   ReactSharedInternals.getCurrentStack = (null: null | (() => string));
-  // ReactOwnerStack
   ReactSharedInternals.recentlyCreatedOwnerStacks = 0;
-  if (typeof setInterval === 'function') {
-    // TODO: Stop outside of rendering.
-    setInterval(() => {
-      ReactSharedInternals.recentlyCreatedOwnerStacks = 0;
-    }, 1000);
-  }
 }
 
 export default ReactSharedInternals;
