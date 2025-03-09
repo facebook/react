@@ -314,7 +314,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     await waitForAll(['Suspend']);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // Unchanged
     expect(container.innerHTML).toBe(
@@ -407,7 +407,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     await waitForAll(['Suspend']);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // !! Unchanged, continue showing server content while suspended.
     expect(container.innerHTML).toBe(
@@ -425,7 +425,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Component',
       "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // Client rendered - suspense comment nodes removed.
     expect(container.innerHTML).toBe('Hello<article>Mismatch</article>');
@@ -491,7 +491,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     await waitForAll(['Suspend']);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // !! Unchanged, continue showing server content while suspended.
     expect(container.innerHTML).toBe(
@@ -509,7 +509,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Component',
       "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // Client rendered - suspense comment nodes removed
     expect(container.innerHTML).toBe('<div><article>Mismatch</article></div>');
@@ -585,7 +585,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     await waitForAll(['Component', 'Suspend']);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // !! Unchanged, continue showing server content while suspended.
     expect(container.innerHTML).toBe(
@@ -603,7 +603,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Hello',
       "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // Client rendered - suspense comment nodes removed
     expect(container.innerHTML).toBe(
@@ -687,7 +687,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Fallback',
       "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // !! Client switches to suspense fallback.
     expect(container.innerHTML).toBe('Loading...');
@@ -696,7 +696,7 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
     await waitForAll(['Component', 'Hello']);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // Client rendered - suspense comment nodes removed
     expect(container.innerHTML).toBe(
@@ -768,7 +768,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Fallback',
       "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // !! Client switches to suspense fallback.
     expect(container.innerHTML).toBe('Loading...');
@@ -777,7 +777,7 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
     await waitForAll(['Component', 'Hello']);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // Client rendered - suspense comment nodes removed
     expect(container.innerHTML).toBe('<article><div></div></article>');
@@ -848,7 +848,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Fallback',
       "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // !! Client switches to suspense fallback.
     expect(container.innerHTML).toBe('Loading...');
@@ -861,7 +861,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Component',
       'Hello',
     ]);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // Client rendered - suspense comment nodes removed
     expect(container.innerHTML).toBe('<article>Mismatch</article>Hello');
@@ -934,7 +934,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Fallback',
       "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // !! Client switches to suspense fallback.
     expect(container.innerHTML).toBe('Loading...');
@@ -947,7 +947,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Component',
       'Hello',
     ]);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // Client rendered - suspense comment nodes removed.
     expect(container.innerHTML).toBe(
@@ -2167,7 +2167,7 @@ describe('ReactDOMServerPartialHydration', () => {
           'an error during server rendering.',
       ]);
     }
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     expect(container.textContent).toBe('Hello');
 
@@ -2709,7 +2709,7 @@ describe('ReactDOMServerPartialHydration', () => {
           'an error during server rendering.',
       ]);
     }
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     expect(ref.current).toBe(span);
     expect(span.parentNode).not.toBe(null);
