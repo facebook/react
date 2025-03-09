@@ -225,7 +225,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
       ),
     );
 
-    await jest.runAllTimers();
+    await jest.runOnlyPendingTimers();
 
     // Resolve the loading.
     hasLoaded = true;
@@ -354,7 +354,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
       ),
     );
 
-    await jest.runAllTimers();
+    await jest.runOnlyPendingTimers();
 
     const theReason = new Error('aborted for reasons');
     controller.abort(theReason);
@@ -387,7 +387,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
       ),
     );
 
-    await jest.runAllTimers();
+    await jest.runOnlyPendingTimers();
 
     const theReason = new Error('aborted for reasons');
     controller.abort(theReason);
@@ -1377,7 +1377,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
       ),
     );
 
-    await jest.runAllTimers();
+    await jest.runOnlyPendingTimers();
 
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 

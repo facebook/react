@@ -1978,7 +1978,7 @@ describe('Store', () => {
       clearErrorsAndWarnings({bridge, store});
 
       // flush events to the renderer
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
 
       expect(store).toMatchInlineSnapshot(`
         [root]
@@ -2022,7 +2022,7 @@ describe('Store', () => {
       clearWarningsForElement({bridge, id, rendererID});
 
       // Flush events to the renderer.
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
 
       expect(store).toMatchInlineSnapshot(`
         ✕ 2, ⚠ 1
@@ -2067,7 +2067,7 @@ describe('Store', () => {
       clearErrorsForElement({bridge, id, rendererID});
 
       // Flush events to the renderer.
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
 
       expect(store).toMatchInlineSnapshot(`
         ✕ 1, ⚠ 2

@@ -1992,7 +1992,10 @@ describe('ReactFlightDOMBrowser', () => {
     hasLoaded = true;
     resolve();
 
-    await jest.runAllTimers();
+    // We have always one pending timer running that resets the Owner Stack limit.
+    while (jest.getTimerCount() > 1) {
+      await jest.runOnlyPendingTimers();
+    }
 
     expect(rendered).toBe(false);
 

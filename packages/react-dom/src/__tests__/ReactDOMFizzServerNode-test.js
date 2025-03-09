@@ -144,14 +144,14 @@ describe('ReactDOMFizzServerNode', () => {
         },
       },
     );
-    await jest.runAllTimers();
+    await jest.runOnlyPendingTimers();
     expect(output.result).toBe('');
     expect(isCompleteCalls).toBe(0);
     // Resolve the loading.
     hasLoaded = true;
     await resolve();
 
-    await jest.runAllTimers();
+    await jest.runOnlyPendingTimers();
 
     expect(output.result).toBe('');
     expect(isCompleteCalls).toBe(1);
@@ -354,7 +354,7 @@ describe('ReactDOMFizzServerNode', () => {
     const theReason = new Error('uh oh');
     abort(theReason);
 
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     await completed;
 
@@ -632,7 +632,7 @@ describe('ReactDOMFizzServerNode', () => {
 
     writable.end();
 
-    await jest.runAllTimers();
+    await jest.runOnlyPendingTimers();
 
     hasLoaded = true;
     resolve();

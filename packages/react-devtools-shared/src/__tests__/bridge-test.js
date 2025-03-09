@@ -26,7 +26,7 @@ describe('Bridge', () => {
 
     // Check that we're wired up correctly.
     bridge.send('reloadAppForProfiling');
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
     expect(wall.send).toHaveBeenCalledWith('reloadAppForProfiling');
 
     // Should flush pending messages and then shut down.
@@ -34,7 +34,7 @@ describe('Bridge', () => {
     bridge.send('update', '1');
     bridge.send('update', '2');
     bridge.shutdown();
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
     expect(wall.send).toHaveBeenCalledWith('update', '1');
     expect(wall.send).toHaveBeenCalledWith('update', '2');
     expect(wall.send).toHaveBeenCalledWith('shutdown');
@@ -44,7 +44,7 @@ describe('Bridge', () => {
     jest.spyOn(console, 'warn').mockImplementation(() => {});
     wall.send.mockClear();
     bridge.send('should not send');
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
     expect(wall.send).not.toHaveBeenCalled();
     expect(console.warn).toHaveBeenCalledWith(
       'Cannot send message "should not send" through a Bridge that has been shutdown.',

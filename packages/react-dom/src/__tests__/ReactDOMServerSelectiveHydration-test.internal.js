@@ -1008,7 +1008,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       dispatchClickEvent(innerDiv);
 
       await act(() => {
-        jest.runAllTimers();
+        jest.runOnlyPendingTimers();
         Scheduler.unstable_flushAllWithoutAsserting();
         OuterScheduler.unstable_flushAllWithoutAsserting();
         InnerScheduler.unstable_flushAllWithoutAsserting();
