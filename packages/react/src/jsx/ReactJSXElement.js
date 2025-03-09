@@ -18,17 +18,8 @@ import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isArray from 'shared/isArray';
 import {
   disableDefaultPropsExceptForClasses,
-  debugInfoLimitsResetIntervalMs,
-  debugTaskLimit,
   ownerStackLimit,
 } from 'shared/ReactFeatureFlags';
-
-let recentlyCreatedOwnerStacks = 0;
-let recentlyCreatedDebugTasks = 0;
-setInterval(() => {
-  recentlyCreatedOwnerStacks = 0;
-  recentlyCreatedDebugTasks = 0;
-}, debugInfoLimitsResetIntervalMs);
 
 const createTask =
   // eslint-disable-next-line react-internal/no-production-logging
@@ -396,6 +387,8 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
 ) {
   if (__DEV__) {
     const isStaticChildren = false;
+    const trackActualOwner =
+      ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
     return jsxDEVImpl(
       type,
       config,
@@ -404,11 +397,11 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
       source,
       self,
       __DEV__ &&
-        (recentlyCreatedOwnerStacks++ < ownerStackLimit
+        (trackActualOwner
           ? Error('react-stack-top-frame')
           : unknownOwnerDebugStack),
       __DEV__ &&
-        (recentlyCreatedDebugTasks++ < debugTaskLimit
+        (trackActualOwner
           ? createTask(getTaskName(type))
           : unknownOwnerDebugTask),
     );
@@ -424,6 +417,8 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
 ) {
   if (__DEV__) {
     const isStaticChildren = true;
+    const trackActualOwner =
+      ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
     return jsxDEVImpl(
       type,
       config,
@@ -432,11 +427,11 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
       source,
       self,
       __DEV__ &&
-        (recentlyCreatedOwnerStacks++ < ownerStackLimit
+        (trackActualOwner
           ? Error('react-stack-top-frame')
           : unknownOwnerDebugStack),
       __DEV__ &&
-        (recentlyCreatedDebugTasks++ < debugTaskLimit
+        (trackActualOwner
           ? createTask(getTaskName(type))
           : unknownOwnerDebugTask),
     );
@@ -452,6 +447,8 @@ const didWarnAboutKeySpread = {};
  * @param {string} key
  */
 export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
+  const trackActualOwner =
+    ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
   return jsxDEVImpl(
     type,
     config,
@@ -460,11 +457,11 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
     source,
     self,
     __DEV__ &&
-      (recentlyCreatedOwnerStacks++ < ownerStackLimit
+      (trackActualOwner
         ? Error('react-stack-top-frame')
         : unknownOwnerDebugStack),
     __DEV__ &&
-      (recentlyCreatedDebugTasks++ < debugTaskLimit
+      (trackActualOwner
         ? createTask(getTaskName(type))
         : unknownOwnerDebugTask),
   );
@@ -733,7 +730,8 @@ export function createElement(type, config, children) {
       defineKeyPropWarningGetter(props, displayName);
     }
   }
-
+  const trackActualOwner =
+    ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
   return ReactElement(
     type,
     key,
@@ -742,11 +740,11 @@ export function createElement(type, config, children) {
     getOwner(),
     props,
     __DEV__ &&
-      (recentlyCreatedOwnerStacks++ < ownerStackLimit
+      (trackActualOwner
         ? Error('react-stack-top-frame')
         : unknownOwnerDebugStack),
     __DEV__ &&
-      (recentlyCreatedDebugTasks++ < debugTaskLimit
+      (trackActualOwner
         ? createTask(getTaskName(type))
         : unknownOwnerDebugTask),
   );
