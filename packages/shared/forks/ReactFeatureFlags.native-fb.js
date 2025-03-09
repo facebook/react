@@ -31,6 +31,9 @@ export const {
   enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric,
   renameElementSymbol,
+  ownerStackLimit,
+  debugTaskLimit,
+  debugInfoLimitsResetIntervalMs,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
