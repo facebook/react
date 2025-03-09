@@ -20,7 +20,7 @@ describe('editing interface', () => {
   const act = (callback: Function) => {
     callback();
 
-    jest.runAllTimers(); // Flush Bridge operations
+    jest.runOnlyPendingTimers(); // Flush Bridge operations
   };
 
   const flushPendingUpdates = () => {
