@@ -270,5 +270,3 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 
 export const ownerStackLimit = 1e4;
-export const debugTaskLimit = 1e4;
-export const debugInfoLimitsResetIntervalMs = 1000;

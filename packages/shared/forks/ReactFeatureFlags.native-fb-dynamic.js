@@ -33,8 +33,3 @@ export const ownerStackLimit: number = __VARIANT__
   ? // Some value that doesn't impact existing tests
     500
   : 1e4;
-export const debugTaskLimit: number = __VARIANT__
-  ? // Some value that doesn't impact existing tests
-    500
-  : 1e4;
-export const debugInfoLimitsResetIntervalMs: number = __VARIANT__ ? 1000 : 2000;
