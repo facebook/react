@@ -68,7 +68,7 @@ describe('ReactErrorLoggingRecovery', () => {
       root.render(<Bad />);
     });
 
-    expect(() => jest.runOnlyPendingTimers()).toThrow('');
+    expect(() => jest.runAllTimers()).toThrow('');
 
     await fakeAct(() => {
       root.render(<span>Hello</span>);

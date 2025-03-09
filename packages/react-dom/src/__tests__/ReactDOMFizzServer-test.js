@@ -2881,7 +2881,7 @@ describe('ReactDOMFizzServer', () => {
         root.render(<App color="blue" />);
       });
       await waitForAll([]);
-      jest.runOnlyPendingTimers();
+      jest.runAllTimers();
       const clientFallback2 = container.getElementsByTagName('p')[0];
       expect(clientFallback2).toBe(serverFallback);
 
@@ -2987,7 +2987,7 @@ describe('ReactDOMFizzServer', () => {
       // actually force it to re-render on the client and throw away the server one.
       root.render(<App fallbackText="More loading..." />);
       await waitForAll([]);
-      jest.runOnlyPendingTimers();
+      jest.runAllTimers();
       assertLog([
         'onRecoverableError: The server could not finish this Suspense boundary, ' +
           'likely due to an error during server rendering. ' +
@@ -6414,7 +6414,7 @@ describe('ReactDOMFizzServer', () => {
       ref.current.dispatchEvent(
         new window.MouseEvent('click', {bubbles: true}),
       );
-      await jest.runOnlyPendingTimers();
+      await jest.runAllTimers();
       expect(getVisibleChildren(container)).toEqual(<button>1</button>);
     });
 

@@ -2710,7 +2710,7 @@ describe('DOMPluginEventSystem', () => {
             await act(() => {
               root.render(<Component />);
             });
-            jest.runOnlyPendingTimers();
+            jest.runAllTimers();
 
             const inner = innerRef.current;
             const target = createEventTarget(inner);
@@ -2722,7 +2722,7 @@ describe('DOMPluginEventSystem', () => {
             await act(() => {
               root.render(<Component />);
             });
-            jest.runOnlyPendingTimers();
+            jest.runAllTimers();
 
             expect(onBeforeBlur).toHaveBeenCalledTimes(1);
             expect(onAfterBlur).toHaveBeenCalledTimes(1);
@@ -2796,7 +2796,7 @@ describe('DOMPluginEventSystem', () => {
             await act(() => {
               root.render(<Component />);
             });
-            jest.runOnlyPendingTimers();
+            jest.runAllTimers();
 
             const inner = innerRef.current;
             const target = createEventTarget(inner);
@@ -2807,7 +2807,7 @@ describe('DOMPluginEventSystem', () => {
             await act(() => {
               root.render(<Component />);
             });
-            jest.runOnlyPendingTimers();
+            jest.runAllTimers();
 
             expect(onBeforeBlur).toHaveBeenCalledTimes(1);
             resolve();

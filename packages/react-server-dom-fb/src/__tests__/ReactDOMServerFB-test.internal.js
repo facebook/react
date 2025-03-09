@@ -85,12 +85,12 @@ describe('ReactDOMServerFB', () => {
         },
       },
     );
-    await jest.runOnlyPendingTimers();
+    await jest.runAllTimers();
     // Resolve the loading.
     hasLoaded = true;
     await resolve();
 
-    await jest.runOnlyPendingTimers();
+    await jest.runAllTimers();
 
     const result = readResult(stream);
     expect(result).toMatchInlineSnapshot(`"<div><!--$-->Done<!--/$--></div>"`);
