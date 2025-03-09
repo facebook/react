@@ -30,6 +30,7 @@ export const {
   enableSiblingPrerendering,
   enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric,
+  ownerStackLimit,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
