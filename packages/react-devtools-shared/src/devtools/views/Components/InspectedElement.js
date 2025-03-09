@@ -18,8 +18,16 @@ import Toggle from '../Toggle';
 import {ElementTypeSuspense} from 'react-devtools-shared/src/frontend/types';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
-import {getOpenInEditorURL} from '../../../utils';
-import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+import {
+  getOpenInEditorURL,
+  getOpenInEditorURLProtocolReplace,
+  getOpenInEditorURLProtocolReplaceWith,
+} from '../../../utils';
+import {
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE_WITH,
+} from '../../../constants';
 import FetchFileWithCachingContext from './FetchFileWithCachingContext';
 import {symbolicateSourceWithCache} from 'react-devtools-shared/src/symbolicateSource';
 import OpenInEditorButton from './OpenInEditorButton';
@@ -130,6 +138,42 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     },
   );
 
+  const editorURLProtocolReplace = useSyncExternalStore(
+    function subscribe(callback) {
+      window.addEventListener(
+        LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE,
+        callback,
+      );
+      return function unsubscribe() {
+        window.removeEventListener(
+          LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE,
+          callback,
+        );
+      };
+    },
+    function getState() {
+      return getOpenInEditorURLProtocolReplace();
+    },
+  );
+
+  const editorURLProtocolReplaceWith = useSyncExternalStore(
+    function subscribe(callback) {
+      window.addEventListener(
+        LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE_WITH,
+        callback,
+      );
+      return function unsubscribe() {
+        window.removeEventListener(
+          LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PROTOCOL_REPLACE_WITH,
+          callback,
+        );
+      };
+    },
+    function getState() {
+      return getOpenInEditorURLProtocolReplaceWith();
+    },
+  );
+
   const toggleErrored = useCallback(() => {
     if (inspectedElement == null) {
       return;
@@ -224,6 +268,8 @@ export default function InspectedElementWrapper(_: Props): React.Node {
             <React.Suspense fallback={<Skeleton height={16} width={24} />}>
               <OpenInEditorButton
                 editorURL={editorURL}
+                editorURLProtocolReplace={editorURLProtocolReplace}
+                editorURLProtocolReplaceWith={editorURLProtocolReplaceWith}
                 source={inspectedElement.source}
                 symbolicatedSourcePromise={symbolicatedSourcePromise}
               />
