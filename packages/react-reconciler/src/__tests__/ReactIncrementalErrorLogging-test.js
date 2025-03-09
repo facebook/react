@@ -209,7 +209,7 @@ describe('ReactIncrementalErrorLogging', () => {
     }
     // The error thrown in logCapturedError should be rethrown with a clean stack
     expect(() => {
-      jest.runOnlyPendingTimers();
+      jest.runAllTimers();
     }).toThrow('logCapturedError error');
   });
 

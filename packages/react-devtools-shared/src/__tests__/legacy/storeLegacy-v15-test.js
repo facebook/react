@@ -13,7 +13,7 @@ describe('Store (legacy)', () => {
   let store;
   const act = (callback: Function) => {
     callback();
-    jest.runOnlyPendingTimers(); // Flush Bridge operations
+    jest.runAllTimers(); // Flush Bridge operations
   };
   beforeEach(() => {
     store = global.store;

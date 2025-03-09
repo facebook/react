@@ -81,11 +81,10 @@ export function act(
 
   if (recursivelyFlush) {
     // Flush Bridge operations
-    // We have always one pending timer running that resets the Owner Stack limit.
-    while (jest.getTimerCount() > 1) {
+    while (jest.getTimerCount() > 0) {
       actDOM(() => {
         actTestRenderer(() => {
-          jest.runOnlyPendingTimers();
+          jest.runAllTimers();
         });
       });
     }
@@ -108,11 +107,10 @@ export async function actAsync(
   });
 
   if (recursivelyFlush) {
-    // We have always one pending timer running that resets the Owner Stack limit.
-    while (jest.getTimerCount() > 1) {
+    while (jest.getTimerCount() > 0) {
       await actDOM(async () => {
         await actTestRenderer(async () => {
-          jest.runOnlyPendingTimers();
+          jest.runAllTimers();
         });
       });
     }
