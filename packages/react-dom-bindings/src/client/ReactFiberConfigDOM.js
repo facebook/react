@@ -808,7 +808,7 @@ export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  if (supportsMoveBefore) {
+  if (supportsMoveBefore && child.parentNode !== null) {
     // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
     parentInstance.moveBefore(child, null);
   } else {
@@ -828,7 +828,7 @@ export function appendChildToContainer(
     container.nodeType === COMMENT_NODE
   ) {
     parentNode = (container.parentNode: any);
-    if (supportsMoveBefore) {
+    if (supportsMoveBefore && child.parentNode !== null) {
       // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
       parentNode.moveBefore(child, container);
     } else {
@@ -840,7 +840,7 @@ export function appendChildToContainer(
   } else {
     parentNode = (container: any);
   }
-  if (supportsMoveBefore) {
+  if (supportsMoveBefore && child.parentNode !== null) {
     // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
     parentNode.moveBefore(child, null);
   } else {
@@ -870,7 +870,7 @@ export function insertBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
-  if (supportsMoveBefore) {
+  if (supportsMoveBefore && child.parentNode !== null) {
     // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
     parentInstance.moveBefore(child, beforeChild);
   } else {
@@ -896,7 +896,7 @@ export function insertInContainerBefore(
   } else {
     parentNode = (container: any);
   }
-  if (supportsMoveBefore) {
+  if (supportsMoveBefore && child.parentNode !== null) {
     // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
     parentNode.moveBefore(child, beforeChild);
   } else {
