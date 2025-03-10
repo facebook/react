@@ -11,7 +11,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {HookFlags} from './ReactHookEffectTags';
-import type {FragmentInstance} from './ReactFiberConfig';
+import type {FragmentInstanceType} from './ReactFiberConfig';
 import {
   getViewTransitionName,
   type ViewTransitionState,
@@ -897,7 +897,7 @@ function commitAttachRef(finishedWork: Fiber) {
       }
       case Fragment:
         if (enableFragmentRefs) {
-          const instance: null | FragmentInstance = finishedWork.stateNode;
+          const instance: null | FragmentInstanceType = finishedWork.stateNode;
           if (instance === null) {
             finishedWork.stateNode = createFragmentInstance(finishedWork);
           }

@@ -13,7 +13,7 @@ import type {
   SuspenseInstance,
   Container,
   ChildSet,
-  FragmentInstance,
+  FragmentInstanceType,
 } from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 
@@ -223,7 +223,7 @@ export function commitFragmentInstanceInsertionEffects(fiber: Fiber): void {
   let parent = fiber.return;
   while (parent !== null) {
     if (isFragmentInstanceParent(parent)) {
-      const fragmentInstance: FragmentInstance = parent.stateNode;
+      const fragmentInstance: FragmentInstanceType = parent.stateNode;
       commitNewChildToFragmentInstance(fiber.stateNode, fragmentInstance);
     }
 
@@ -239,7 +239,7 @@ export function commitFragmentInstanceDeletionEffects(fiber: Fiber): void {
   let parent = fiber.return;
   while (parent !== null) {
     if (isFragmentInstanceParent(parent)) {
-      const fragmentInstance: FragmentInstance = parent.stateNode;
+      const fragmentInstance: FragmentInstanceType = parent.stateNode;
       deleteChildFromFragmentInstance(fiber.stateNode, fragmentInstance);
     }
 
@@ -339,7 +339,13 @@ function insertOrAppendPlacementNodeIntoContainer(
     } else {
       appendChildToContainer(parent, stateNode);
     }
-    if (enableFragmentRefs) {
+    // TODO: Enable HostText for RN
+    if (
+      enableFragmentRefs &&
+      tag === HostComponent &&
+      // Only run fragment insertion effects for initial insertions
+      node.alternate === null
+    ) {
       commitFragmentInstanceInsertionEffects(node);
     }
     trackHostMutation();
@@ -386,7 +392,8 @@ function insertOrAppendPlacementNode(
     } else {
       appendChild(parent, stateNode);
     }
-    if (enableFragmentRefs) {
+    // TODO: Enable HostText for RN
+    if (enableFragmentRefs && tag === HostComponent) {
       commitFragmentInstanceInsertionEffects(node);
     }
     trackHostMutation();

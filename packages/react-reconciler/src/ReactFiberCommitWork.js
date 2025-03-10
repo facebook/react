@@ -772,7 +772,7 @@ function commitLayoutEffectOnFiber(
         }
         break;
       }
-      // Fallthrough
+      break;
     }
     case Fragment:
       if (enableFragmentRefs) {
@@ -2351,9 +2351,6 @@ function commitMutationEffectsOnFiber(
         if (current && current.stateNode !== null) {
           updateFragmentInstanceFiber(finishedWork, current.stateNode);
         }
-        if (flags & Ref) {
-          safelyAttachRef(finishedWork, finishedWork.return);
-        }
       }
     // Fallthrough
     default: {
@@ -2811,6 +2808,7 @@ export function reappearLayoutEffects(
     }
     case HostHoistable:
     case HostComponent: {
+      // TODO: Enable HostText for RN
       if (enableFragmentRefs && finishedWork.tag === HostComponent) {
         commitFragmentInstanceInsertionEffects(finishedWork);
       }
@@ -2905,6 +2903,14 @@ export function reappearLayoutEffects(
         );
         safelyAttachRef(finishedWork, finishedWork.return);
         break;
+      }
+      break;
+    }
+    case Fragment: {
+      if (enableFragmentRefs) {
+        if (flags & Ref) {
+          safelyAttachRef(finishedWork, finishedWork.return);
+        }
       }
       // Fallthrough
     }
