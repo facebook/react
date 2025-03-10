@@ -204,7 +204,7 @@ export function commitShowHideHostTextInstance(node: Fiber, isHidden: boolean) {
   }
 }
 
-export function getHostParentFiber(fiber: Fiber): Fiber {
+function getHostParentFiber(fiber: Fiber): Fiber {
   let parent = fiber.return;
   while (parent !== null) {
     if (isHostParent(parent)) {
@@ -236,23 +236,6 @@ export function commitFragmentInstanceInsertionEffects(fiber: Fiber): void {
 }
 
 export function commitFragmentInstanceDeletionEffects(fiber: Fiber): void {
-  commitEffectsForFragmentInstanceParents(fiber);
-  let parent = fiber.return;
-  while (parent !== null) {
-    if (isFragmentInstanceParent(parent)) {
-      const fragmentInstance: FragmentInstance = parent.stateNode;
-      deleteChildFromFragmentInstance(fiber.stateNode, fragmentInstance);
-    }
-
-    if (isHostParent(parent)) {
-      return;
-    }
-
-    parent = parent.return;
-  }
-}
-
-function commitEffectsForFragmentInstanceParents(fiber: Fiber): void {
   let parent = fiber.return;
   while (parent !== null) {
     if (isFragmentInstanceParent(parent)) {

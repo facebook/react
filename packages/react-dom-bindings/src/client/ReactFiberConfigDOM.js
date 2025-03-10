@@ -2260,6 +2260,13 @@ export function createFragmentInstance(fragmentFiber: Fiber): FragmentInstance {
   return new (FragmentInstancePseudoElement: any)(fragmentFiber);
 }
 
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Fiber,
+  instance: FragmentInstance,
+): void {
+  instance._fragmentFiber = fragmentFiber;
+}
+
 export function commitNewChildToFragmentInstance(
   childElement: Element,
   fragmentInstance: FragmentInstance,

@@ -166,6 +166,7 @@ import {
   cancelRootViewTransitionName,
   restoreRootViewTransitionName,
   isSingletonScope,
+  updateFragmentInstanceFiber,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -1364,7 +1365,7 @@ function commitDeletionEffectsOnFiber(
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
       }
-      if (enableFragmentRefs) {
+      if (enableFragmentRefs && deletedFiber.tag === HostComponent) {
         commitFragmentInstanceDeletionEffects(deletedFiber);
       }
       // Intentional fallthrough to next branch
@@ -1576,6 +1577,14 @@ function commitDeletionEffectsOnFiber(
         );
       }
       break;
+    }
+    case Fragment: {
+      if (enableFragmentRefs) {
+        if (!offscreenSubtreeWasHidden) {
+          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        }
+      }
+      // Fallthrough
     }
     default: {
       recursivelyTraverseDeletionEffects(
@@ -2340,7 +2349,7 @@ function commitMutationEffectsOnFiber(
     case Fragment:
       if (enableFragmentRefs) {
         if (current && current.stateNode !== null) {
-          current.stateNode._fragmentFiber = finishedWork;
+          updateFragmentInstanceFiber(finishedWork, current.stateNode);
         }
         if (flags & Ref) {
           safelyAttachRef(finishedWork, finishedWork.return);
@@ -2686,6 +2695,13 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
     }
     case ViewTransitionComponent: {
       if (enableViewTransition) {
+        safelyDetachRef(finishedWork, finishedWork.return);
+      }
+      recursivelyTraverseDisappearLayoutEffects(finishedWork);
+      break;
+    }
+    case Fragment: {
+      if (enableFragmentRefs) {
         safelyDetachRef(finishedWork, finishedWork.return);
       }
       // Fallthrough

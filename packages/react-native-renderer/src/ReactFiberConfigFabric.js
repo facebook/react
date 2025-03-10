@@ -591,13 +591,17 @@ export function waitForCommitToBeReady(): null {
   return null;
 }
 
-export type FragmentInstance = null | {
-  _fragmentFiber: Fiber,
-  ...
-};
+export type FragmentInstance = null;
 
 export function createFragmentInstance(fragmentFiber: Fiber): FragmentInstance {
   return null;
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Fiber,
+  instance: FragmentInstance,
+): void {
+  // Noop
 }
 
 export function commitNewChildToFragmentInstance(

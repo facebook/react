@@ -318,13 +318,14 @@ export function cloneMutableTextInstance(textInstance) {
   return textInstance;
 }
 
-export type FragmentInstance = null | {
-  _fragmentFiber: Object,
-  ...
-};
+export type FragmentInstance = null;
 
-export function createFragmentInstance(parentInstance): null {
+export function createFragmentInstance(fiber): null {
   return null;
+}
+
+export function updateFragmentInstanceFiber(fiber, instance): void {
+  // Noop
 }
 
 export function commitNewChildToFragmentInstance(

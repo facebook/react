@@ -898,7 +898,7 @@ function commitAttachRef(finishedWork: Fiber) {
       case Fragment:
         if (enableFragmentRefs) {
           const instance: null | FragmentInstance = finishedWork.stateNode;
-          if (instance === null || instance._fragmentFiber !== finishedWork) {
+          if (instance === null) {
             finishedWork.stateNode = createFragmentInstance(finishedWork);
           }
           instanceToUse = finishedWork.stateNode;
