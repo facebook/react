@@ -309,6 +309,13 @@ describe('ReactFlightDOMEdge', () => {
       greet,
     });
 
+    // Registering the server reference also with the client must not break
+    // subsequent `.bind` calls.
+    ReactServerDOMClient.registerServerReference(
+      ServerModule.greet,
+      ServerModule.greet.$$id,
+    );
+
     const stream = await serverAct(() =>
       ReactServerDOMServer.renderToReadableStream(
         {

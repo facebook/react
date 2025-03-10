@@ -333,4 +333,27 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(replyResult.method).toBe(greet);
     expect(replyResult.boundMethod()).toBe('hi, there');
   });
+
+  it('can pass a bound registered server reference', async () => {
+    function greet(greeting, name) {
+      return greeting + ', ' + name;
+    }
+    const ServerModule = serverExports({
+      greet,
+    });
+
+    const boundGreet = ServerModule.greet.bind(null, 'hi');
+
+    ReactServerDOMClient.registerServerReference(boundGreet, boundGreet.$$id);
+
+    const body = await ReactServerDOMClient.encodeReply({
+      method: boundGreet,
+      boundMethod: boundGreet.bind(null, 'there'),
+    });
+    const replyResult = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+    expect(replyResult.boundMethod()).toBe('hi, there');
+  });
 });
