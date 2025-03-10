@@ -62,11 +62,7 @@ const Hook: React.AbstractComponent<HookProps> = memo(({hook, hookNames}) => {
           {hookName && <span className={styles.HookName}>({hookName})</span>}
         </span>
         {hook.subHooks?.map((subHook, index) => (
-          <Hook
-            key={`${hook.id}-${index}`}
-            hook={subHook}
-            hookNames={hookNames}
-          />
+          <Hook key={hook.id} hook={subHook} hookNames={hookNames} />
         ))}
       </li>
     </ul>
@@ -80,9 +76,12 @@ const shouldKeepHook = (
   if (hook.id !== null && hooksArray.includes(hook.id)) {
     return true;
   }
-  return (
-    hook.subHooks?.some(subHook => shouldKeepHook(subHook, hooksArray)) ?? false
-  );
+  const subHooks = hook.subHooks;
+  if (subHooks == null) {
+    return false;
+  }
+
+  return subHooks.some(subHook => shouldKeepHook(subHook, hooksArray));
 };
 
 const filterHooks = (
@@ -93,17 +92,17 @@ const filterHooks = (
     return null;
   }
 
-  if (hook.subHooks?.length > 0) {
-    const filteredSubHooks = hook.subHooks
-      .map(subHook => filterHooks(subHook, hooksArray))
-      .filter(Boolean);
-
-    return filteredSubHooks.length > 0
-      ? {...hook, subHooks: filteredSubHooks}
-      : {...hook};
+  const subHooks = hook.subHooks;
+  if (subHooks == null) {
+    return hook;
   }
 
-  return hook;
+  const filteredSubHooks = subHooks
+    .map(subHook => filterHooks(subHook, hooksArray))
+    .filter(Boolean);
+  return filteredSubHooks.length > 0
+    ? {...hook, subHooks: filteredSubHooks}
+    : hook;
 };
 
 type Props = {|
@@ -143,10 +142,7 @@ const HookChangeSummary: React.AbstractComponent<Props> = memo(
         .filter(Boolean);
     }, [inspectedElement?.hooks, hooks]);
 
-    const hookParsingFailed = useMemo(
-      () => parseHookNames && hookNames === null,
-      [parseHookNames, hookNames],
-    );
+    const hookParsingFailed = parseHookNames && hookNames === null;
 
     if (!hooks?.length) {
       return <span>No hooks changed</span>;
