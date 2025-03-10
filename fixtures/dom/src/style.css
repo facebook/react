@@ -358,3 +358,7 @@ tbody tr:nth-child(even) {
 .onscreen {
   background-color: green;
 }
+
+.highlight-focused-children *:focus {
+  outline: 2px solid green;
+}
