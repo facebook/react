@@ -1550,6 +1550,25 @@ export function hasInstanceAffectedParent(
   return oldRect.height !== newRect.height || oldRect.width !== newRect.width;
 }
 
+function cancelAllViewTransitionAnimations(scope: Element) {
+  // In Safari, we need to manually cancel all manually start animations
+  // or it'll block or interfer with future transitions.
+  const animations = scope.getAnimations({subtree: true});
+  for (let i = 0; i < animations.length; i++) {
+    const anim = animations[i];
+    const effect: KeyframeEffect = (anim.effect: any);
+    // $FlowFixMe
+    const pseudo: ?string = effect.pseudoElement;
+    if (
+      pseudo != null &&
+      pseudo.startsWith('::view-transition') &&
+      effect.target === scope
+    ) {
+      anim.cancel();
+    }
+  }
+}
+
 // How long to wait for new fonts to load before just committing anyway.
 // This freezes the screen. It needs to be short enough that it doesn't cause too much of
 // an issue when it's a new load and slow, yet long enough that you have a chance to load
@@ -1640,6 +1659,7 @@ export function startViewTransition(
     }
     transition.ready.then(spawnedWorkCallback, spawnedWorkCallback);
     transition.finished.then(() => {
+      cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
         // $FlowFixMe[prop-missing]
@@ -1817,12 +1837,16 @@ export function startGestureTransition(
       }
       for (let i = 0; i < animations.length; i++) {
         const anim = animations[i];
+        if (anim.playState !== 'running') {
+          continue;
+        }
         const effect: KeyframeEffect = (anim.effect: any);
         // $FlowFixMe
         const pseudoElement: ?string = effect.pseudoElement;
         if (
           pseudoElement != null &&
-          pseudoElement.startsWith('::view-transition')
+          pseudoElement.startsWith('::view-transition') &&
+          effect.target === documentElement
         ) {
           // Ideally we could mutate the existing animation but unfortunately
           // the mutable APIs seem less tested and therefore are lacking or buggy.
@@ -1913,19 +1937,7 @@ export function startGestureTransition(
         : readyCallback;
     transition.ready.then(readyForAnimations, readyCallback);
     transition.finished.then(() => {
-      // In Safari, we need to manually cancel all manually start animations
-      // or it'll block future transitions.
-      const documentElement: Element = (ownerDocument.documentElement: any);
-      const animations = documentElement.getAnimations({subtree: true});
-      for (let i = 0; i < animations.length; i++) {
-        const anim = animations[i];
-        const effect: KeyframeEffect = (anim.effect: any);
-        // $FlowFixMe
-        const pseudo: ?string = effect.pseudoElement;
-        if (pseudo != null && pseudo.startsWith('::view-transition')) {
-          anim.cancel();
-        }
-      }
+      cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
         // $FlowFixMe[prop-missing]
