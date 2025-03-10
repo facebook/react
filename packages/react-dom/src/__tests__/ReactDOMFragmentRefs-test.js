@@ -66,7 +66,7 @@ describe('FragmentRefs', () => {
       );
     });
 
-    expect(fragmentRef.current).not.toEqual(null);
+    expect(fragmentRef._fragmentFiber).toBeTruthy();
   });
 
   // @gate enableFragmentRefs
