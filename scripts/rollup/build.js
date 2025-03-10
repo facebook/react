@@ -12,6 +12,7 @@ const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
 const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const fs = require('fs');
+const childProcess = require('child_process');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
 const Bundles = require('./bundles');
@@ -812,6 +813,11 @@ function handleRollupError(error) {
   }
 }
 
+function runShellCommand(command) {
+  console.log(chalk.dim('Running: ') + chalk.cyan(command));
+  childProcess.execSync(command, {stdio: 'inherit', shell: true});
+}
+
 async function buildEverything() {
   if (!argv['unsafe-partial']) {
     await asyncRimRaf('build');
@@ -859,6 +865,9 @@ async function buildEverything() {
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const [bundle, bundleType] of bundles) {
+    if (bundle.prebuild) {
+      runShellCommand(bundle.prebuild);
+    }
     await createBundle(bundle, bundleType);
   }
 
