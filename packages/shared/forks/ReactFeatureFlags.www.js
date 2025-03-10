@@ -39,6 +39,7 @@ export const {
   enableViewTransition,
   enableComponentPerformanceTrack,
   enableScrollEndPolyfill,
+  enableFragmentRefs,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
