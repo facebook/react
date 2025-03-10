@@ -18422,6 +18422,21 @@ function startViewTransition(
     ownerDocument.__reactViewTransition = transition;
     transition.ready.then(spawnedWorkCallback, spawnedWorkCallback);
     transition.finished.then(function () {
+      for (
+        var scope = ownerDocument.documentElement,
+          animations = scope.getAnimations({ subtree: !0 }),
+          i = 0;
+        i < animations.length;
+        i++
+      ) {
+        var anim = animations[i],
+          effect = anim.effect,
+          pseudo = effect.pseudoElement;
+        null != pseudo &&
+          pseudo.startsWith("::view-transition") &&
+          effect.target === scope &&
+          anim.cancel();
+      }
       ownerDocument.__reactViewTransition === transition &&
         (ownerDocument.__reactViewTransition = null);
       passiveCallback();
@@ -20137,16 +20152,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2050 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2057 = React.version;
 if (
-  "19.1.0-www-modern-cc680065-20250307" !==
-  isomorphicReactPackageVersion$jscomp$inline_2050
+  "19.1.0-www-modern-a8c2bbda-20250310" !==
+  isomorphicReactPackageVersion$jscomp$inline_2057
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2050,
-      "19.1.0-www-modern-cc680065-20250307"
+      isomorphicReactPackageVersion$jscomp$inline_2057,
+      "19.1.0-www-modern-a8c2bbda-20250310"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20162,27 +20177,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2052 = {
+var internals$jscomp$inline_2059 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-cc680065-20250307",
+  version: "19.1.0-www-modern-a8c2bbda-20250310",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-cc680065-20250307"
+  reconcilerVersion: "19.1.0-www-modern-a8c2bbda-20250310"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2052.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2052.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2059.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2059.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2594 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2601 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2594.isDisabled &&
-    hook$jscomp$inline_2594.supportsFiber
+    !hook$jscomp$inline_2601.isDisabled &&
+    hook$jscomp$inline_2601.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2594.inject(
-        internals$jscomp$inline_2052
+      (rendererID = hook$jscomp$inline_2601.inject(
+        internals$jscomp$inline_2059
       )),
-        (injectedHook = hook$jscomp$inline_2594);
+        (injectedHook = hook$jscomp$inline_2601);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -20534,7 +20549,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-cc680065-20250307";
+exports.version = "19.1.0-www-modern-a8c2bbda-20250310";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
