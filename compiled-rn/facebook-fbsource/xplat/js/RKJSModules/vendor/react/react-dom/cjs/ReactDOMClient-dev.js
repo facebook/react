@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f3f5787e9cfdbd2fd44d8101d37054e0>>
+ * @generated SignedSource<<7a50db5e5c70bae65488515bcfa94adb>>
  */
 
 /*
@@ -11597,7 +11597,7 @@ __DEV__ &&
                   : "HTML" === parent.nodeName
                     ? parent.ownerDocument.body
                     : parent),
-              supportsMoveBefore
+              supportsMoveBefore && null !== node.parentNode
                 ? parent.moveBefore(node, before)
                 : parent.insertBefore(node, before))
             : ((before = parent),
@@ -11607,7 +11607,7 @@ __DEV__ &&
                   : "HTML" === before.nodeName
                     ? before.ownerDocument.body
                     : before),
-              supportsMoveBefore
+              supportsMoveBefore && null !== node.parentNode
                 ? parent.moveBefore(node, null)
                 : parent.appendChild(node),
               (before = before._reactRootContainer),
@@ -11636,11 +11636,11 @@ __DEV__ &&
       if (5 === tag || 6 === tag)
         (node = node.stateNode),
           before
-            ? supportsMoveBefore
+            ? supportsMoveBefore && null !== node.parentNode
               ? parent.moveBefore(node, before)
               : parent.insertBefore(node, before)
             : ((before = parent),
-              supportsMoveBefore
+              supportsMoveBefore && null !== node.parentNode
                 ? before.moveBefore(node, null)
                 : before.appendChild(node));
       else if (
@@ -26067,11 +26067,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-native-fb-50ab2dde-20250310" !== isomorphicReactPackageVersion)
+      if ("19.1.0-native-fb-99e10240-20250310" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-native-fb-50ab2dde-20250310\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-native-fb-99e10240-20250310\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26108,10 +26108,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-native-fb-50ab2dde-20250310",
+          version: "19.1.0-native-fb-99e10240-20250310",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-native-fb-50ab2dde-20250310"
+          reconcilerVersion: "19.1.0-native-fb-99e10240-20250310"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26255,5 +26255,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.1.0-native-fb-50ab2dde-20250310";
+    exports.version = "19.1.0-native-fb-99e10240-20250310";
   })();
