@@ -26,10 +26,7 @@ import {
   REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 
-import {
-  enableOwnerStacks,
-  enableViewTransition,
-} from 'shared/ReactFeatureFlags';
+import {enableViewTransition} from 'shared/ReactFeatureFlags';
 
 import {formatOwnerStack} from 'shared/ReactOwnerStackFrames';
 
@@ -134,7 +131,7 @@ function describeFunctionComponentFrameWithoutLineNumber(fn: Function): string {
 export function getOwnerStackByComponentStackNodeInDev(
   componentStack: ComponentStackNode,
 ): string {
-  if (!enableOwnerStacks || !__DEV__) {
+  if (!__DEV__) {
     return '';
   }
   try {

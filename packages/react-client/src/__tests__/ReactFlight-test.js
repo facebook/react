@@ -321,9 +321,7 @@ describe('ReactFlight', () => {
                 env: 'Server',
                 key: null,
                 owner: null,
-                stack: gate(flag => flag.enableOwnerStacks)
-                  ? '    in Object.<anonymous> (at **)'
-                  : undefined,
+                stack: '    in Object.<anonymous> (at **)',
                 props: {
                   firstName: 'Seb',
                   lastName: 'Smith',
@@ -367,9 +365,7 @@ describe('ReactFlight', () => {
                 env: 'Server',
                 key: null,
                 owner: null,
-                stack: gate(flag => flag.enableOwnerStacks)
-                  ? '    in Object.<anonymous> (at **)'
-                  : undefined,
+                stack: '    in Object.<anonymous> (at **)',
                 props: {
                   firstName: 'Seb',
                   lastName: 'Smith',
@@ -1387,6 +1383,7 @@ describe('ReactFlight', () => {
         errors: [
           {
             message: 'This is an error',
+            name: 'Error',
             stack: expect.stringContaining(
               'Error: This is an error\n' +
                 '    at eval (eval at testFunction (inspected-page.html:29:11),%20%3Canonymous%3E:1:35)\n' +
@@ -1399,30 +1396,19 @@ describe('ReactFlight', () => {
             environmentName: 'Server',
           },
         ],
-        findSourceMapURLCalls: gate(flags => flags.enableOwnerStacks)
-          ? [
-              [__filename, 'Server'],
-              [__filename, 'Server'],
-              // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
-              ['inspected-page.html:29:11), <anonymous>', 'Server'],
-              [
-                'file://~/(some)(really)(exotic-directory)/ReactFlight-test.js',
-                'Server',
-              ],
-              ['file:///testing.js', 'Server'],
-              ['', 'Server'],
-              [__filename, 'Server'],
-            ]
-          : [
-              // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
-              ['inspected-page.html:29:11), <anonymous>', 'Server'],
-              [
-                'file://~/(some)(really)(exotic-directory)/ReactFlight-test.js',
-                'Server',
-              ],
-              ['file:///testing.js', 'Server'],
-              ['', 'Server'],
-            ],
+        findSourceMapURLCalls: [
+          [__filename, 'Server'],
+          [__filename, 'Server'],
+          // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
+          ['inspected-page.html:29:11), <anonymous>', 'Server'],
+          [
+            'file://~/(some)(really)(exotic-directory)/ReactFlight-test.js',
+            'Server',
+          ],
+          ['file:///testing.js', 'Server'],
+          ['', 'Server'],
+          [__filename, 'Server'],
+        ],
       });
     } else {
       expect(errors.map(getErrorForJestMatcher)).toEqual([
@@ -1474,9 +1460,6 @@ describe('ReactFlight', () => {
         'Check the render method of `Component`. See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
         '    in Component (at **)\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? ''
-          : '    in Indirection (at **)\n') +
         '    in App (at **)',
     ]);
   });
@@ -1537,46 +1520,26 @@ describe('ReactFlight', () => {
       },
     };
     const transport = ReactNoopFlightServer.render(<input value={obj} />);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with toJSON methods are not supported. ' +
-            'Convert it manually to a simple value before passing it to props.\n' +
-            '  <input value={{toJSON: ...}}>\n' +
-            '               ^^^^^^^^^^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
-
-    ReactNoopFlightClient.read(transport);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
+    assertConsoleErrorDev(
+      [
         'Only plain objects can be passed to Client Components from Server Components. ' +
           'Objects with toJSON methods are not supported. ' +
           'Convert it manually to a simple value before passing it to props.\n' +
           '  <input value={{toJSON: ...}}>\n' +
-          '               ^^^^^^^^^^^^^^^\n' +
-          '    at  (<anonymous>)',
-      ]);
-    } else {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with toJSON methods are not supported. ' +
-            'Convert it manually to a simple value before passing it to props.\n' +
-            '  <input value={{toJSON: ...}}>\n' +
-            '               ^^^^^^^^^^^^^^^',
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with toJSON methods are not supported. ' +
-            'Convert it manually to a simple value before passing it to props.\n' +
-            '  <input value={{toJSON: ...}}>\n' +
-            '               ^^^^^^^^^^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
+          '               ^^^^^^^^^^^^^^^',
+      ],
+      {withoutStack: true},
+    );
+
+    ReactNoopFlightClient.read(transport);
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with toJSON methods are not supported. ' +
+        'Convert it manually to a simple value before passing it to props.\n' +
+        '  <input value={{toJSON: ...}}>\n' +
+        '               ^^^^^^^^^^^^^^^\n' +
+        '    at  (<anonymous>)',
+    ]);
   });
 
   it('should warn in DEV if a toJSON instance is passed to a host component child', () => {
@@ -1588,120 +1551,68 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(
       <div>Womp womp: {new MyError('spaghetti')}</div>,
     );
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
-            '  <div>Womp womp: {Error}</div>\n' +
-            '                  ^^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
-
-    ReactNoopFlightClient.read(transport);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
+    assertConsoleErrorDev(
+      [
         'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
           '  <div>Womp womp: {Error}</div>\n' +
-          '                  ^^^^^^^\n' +
-          '    at  (<anonymous>)',
-      ]);
-    } else {
-      assertConsoleErrorDev(
-        [
-          'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
-            '  <div>Womp womp: {Error}</div>\n' +
-            '                  ^^^^^^^',
-          'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
-            '  <div>Womp womp: {Error}</div>\n' +
-            '                  ^^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
+          '                  ^^^^^^^',
+      ],
+      {withoutStack: true},
+    );
+
+    ReactNoopFlightClient.read(transport);
+    assertConsoleErrorDev([
+      'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
+        '  <div>Womp womp: {Error}</div>\n' +
+        '                  ^^^^^^^\n' +
+        '    at  (<anonymous>)',
+    ]);
   });
 
   it('should warn in DEV if a special object is passed to a host component', () => {
     const transport = ReactNoopFlightServer.render(<input value={Math} />);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Math objects are not supported.\n' +
-            '  <input value={Math}>\n' +
-            '               ^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
-
-    ReactNoopFlightClient.read(transport);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
+    assertConsoleErrorDev(
+      [
         'Only plain objects can be passed to Client Components from Server Components. ' +
           'Math objects are not supported.\n' +
           '  <input value={Math}>\n' +
-          '               ^^^^^^\n' +
-          '    at  (<anonymous>)',
-      ]);
-    } else {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Math objects are not supported.\n' +
-            '  <input value={Math}>\n' +
-            '               ^^^^^^',
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Math objects are not supported.\n' +
-            '  <input value={Math}>\n' +
-            '               ^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
+          '               ^^^^^^',
+      ],
+      {withoutStack: true},
+    );
+
+    ReactNoopFlightClient.read(transport);
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Math objects are not supported.\n' +
+        '  <input value={Math}>\n' +
+        '               ^^^^^^\n' +
+        '    at  (<anonymous>)',
+    ]);
   });
 
   it('should warn in DEV if an object with symbols is passed to a host component', () => {
     const transport = ReactNoopFlightServer.render(
       <input value={{[Symbol.iterator]: {}}} />,
     );
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-            '  <input value={{}}>\n' +
-            '               ^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
-
-    ReactNoopFlightClient.read(transport);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
+    assertConsoleErrorDev(
+      [
         'Only plain objects can be passed to Client Components from Server Components. ' +
           'Objects with symbol properties like Symbol.iterator are not supported.\n' +
           '  <input value={{}}>\n' +
-          '               ^^^^\n' +
-          '    at  (<anonymous>)',
-      ]);
-    } else {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-            '  <input value={{}}>\n' +
-            '               ^^^^',
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-            '  <input value={{}}>\n' +
-            '               ^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
+          '               ^^^^',
+      ],
+      {withoutStack: true},
+    );
+
+    ReactNoopFlightClient.read(transport);
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with symbol properties like Symbol.iterator are not supported.\n' +
+        '  <input value={{}}>\n' +
+        '               ^^^^\n' +
+        '    at  (<anonymous>)',
+    ]);
   });
 
   it('should warn in DEV if a toJSON instance is passed to a Client Component', () => {
@@ -1715,46 +1626,26 @@ describe('ReactFlight', () => {
     }
     const Client = clientReference(ClientImpl);
     const transport = ReactNoopFlightServer.render(<Client value={obj} />);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with toJSON methods are not supported. ' +
-            'Convert it manually to a simple value before passing it to props.\n' +
-            '  <... value={{toJSON: ...}}>\n' +
-            '             ^^^^^^^^^^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
-
-    ReactNoopFlightClient.read(transport);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
+    assertConsoleErrorDev(
+      [
         'Only plain objects can be passed to Client Components from Server Components. ' +
           'Objects with toJSON methods are not supported. ' +
           'Convert it manually to a simple value before passing it to props.\n' +
           '  <... value={{toJSON: ...}}>\n' +
-          '             ^^^^^^^^^^^^^^^\n' +
-          '    at  (<anonymous>)',
-      ]);
-    } else {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with toJSON methods are not supported. ' +
-            'Convert it manually to a simple value before passing it to props.\n' +
-            '  <... value={{toJSON: ...}}>\n' +
-            '             ^^^^^^^^^^^^^^^',
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with toJSON methods are not supported. ' +
-            'Convert it manually to a simple value before passing it to props.\n' +
-            '  <... value={{toJSON: ...}}>\n' +
-            '             ^^^^^^^^^^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
+          '             ^^^^^^^^^^^^^^^',
+      ],
+      {withoutStack: true},
+    );
+
+    ReactNoopFlightClient.read(transport);
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with toJSON methods are not supported. ' +
+        'Convert it manually to a simple value before passing it to props.\n' +
+        '  <... value={{toJSON: ...}}>\n' +
+        '             ^^^^^^^^^^^^^^^\n' +
+        '    at  (<anonymous>)',
+    ]);
   });
 
   it('should warn in DEV if a toJSON instance is passed to a Client Component child', () => {
@@ -1770,46 +1661,26 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(
       <Client>Current date: {obj}</Client>,
     );
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with toJSON methods are not supported. ' +
-            'Convert it manually to a simple value before passing it to props.\n' +
-            '  <>Current date: {{toJSON: ...}}</>\n' +
-            '                  ^^^^^^^^^^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
-
-    ReactNoopFlightClient.read(transport);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
+    assertConsoleErrorDev(
+      [
         'Only plain objects can be passed to Client Components from Server Components. ' +
           'Objects with toJSON methods are not supported. ' +
           'Convert it manually to a simple value before passing it to props.\n' +
           '  <>Current date: {{toJSON: ...}}</>\n' +
-          '                  ^^^^^^^^^^^^^^^\n' +
-          '    at  (<anonymous>)',
-      ]);
-    } else {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with toJSON methods are not supported. ' +
-            'Convert it manually to a simple value before passing it to props.\n' +
-            '  <>Current date: {{toJSON: ...}}</>\n' +
-            '                  ^^^^^^^^^^^^^^^',
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with toJSON methods are not supported. ' +
-            'Convert it manually to a simple value before passing it to props.\n' +
-            '  <>Current date: {{toJSON: ...}}</>\n' +
-            '                  ^^^^^^^^^^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
+          '                  ^^^^^^^^^^^^^^^',
+      ],
+      {withoutStack: true},
+    );
+
+    ReactNoopFlightClient.read(transport);
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with toJSON methods are not supported. ' +
+        'Convert it manually to a simple value before passing it to props.\n' +
+        '  <>Current date: {{toJSON: ...}}</>\n' +
+        '                  ^^^^^^^^^^^^^^^\n' +
+        '    at  (<anonymous>)',
+    ]);
   });
 
   it('should warn in DEV if a special object is passed to a Client Component', () => {
@@ -1818,43 +1689,24 @@ describe('ReactFlight', () => {
     }
     const Client = clientReference(ClientImpl);
     const transport = ReactNoopFlightServer.render(<Client value={Math} />);
-
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Math objects are not supported.\n' +
-            '  <... value={Math}>\n' +
-            '             ^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
-
-    ReactNoopFlightClient.read(transport);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
+    assertConsoleErrorDev(
+      [
         'Only plain objects can be passed to Client Components from Server Components. ' +
           'Math objects are not supported.\n' +
           '  <... value={Math}>\n' +
-          '             ^^^^^^\n' +
-          '    at  (<anonymous>)',
-      ]);
-    } else {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Math objects are not supported.\n' +
-            '  <... value={Math}>\n' +
-            '             ^^^^^^',
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Math objects are not supported.\n' +
-            '  <... value={Math}>\n' +
-            '             ^^^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
+          '             ^^^^^^',
+      ],
+      {withoutStack: true},
+    );
+
+    ReactNoopFlightClient.read(transport);
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Math objects are not supported.\n' +
+        '  <... value={Math}>\n' +
+        '             ^^^^^^\n' +
+        '    at  (<anonymous>)',
+    ]);
   });
 
   it('should warn in DEV if an object with symbols is passed to a Client Component', () => {
@@ -1866,42 +1718,24 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(
       <Client value={{[Symbol.iterator]: {}}} />,
     );
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-            '  <... value={{}}>\n' +
-            '             ^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
-
-    ReactNoopFlightClient.read(transport);
-
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
+    assertConsoleErrorDev(
+      [
         'Only plain objects can be passed to Client Components from Server Components. ' +
           'Objects with symbol properties like Symbol.iterator are not supported.\n' +
           '  <... value={{}}>\n' +
-          '             ^^^^\n',
-      ]);
-    } else {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-            '  <... value={{}}>\n' +
-            '             ^^^^',
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-            '  <... value={{}}>\n' +
-            '             ^^^^',
-        ],
-        {withoutStack: true},
-      );
-    }
+          '             ^^^^',
+      ],
+      {withoutStack: true},
+    );
+
+    ReactNoopFlightClient.read(transport);
+
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with symbol properties like Symbol.iterator are not supported.\n' +
+        '  <... value={{}}>\n' +
+        '             ^^^^\n',
+    ]);
   });
 
   it('should warn in DEV if a special object is passed to a nested object in Client Component', () => {
@@ -1914,36 +1748,20 @@ describe('ReactFlight', () => {
     );
     ReactNoopFlightClient.read(transport);
 
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-            '  <... value={{}}>\n' +
-            '             ^^^^',
-          {withoutStack: true},
-        ],
+    assertConsoleErrorDev([
+      [
         'Only plain objects can be passed to Client Components from Server Components. ' +
           'Objects with symbol properties like Symbol.iterator are not supported.\n' +
           '  <... value={{}}>\n' +
-          '             ^^^^\n' +
-          '    at  (<anonymous>)',
-      ]);
-    } else {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-            '  <... value={{}}>\n' +
-            '             ^^^^',
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-            '  <... value={{}}>\n' +
-            '             ^^^^',
-        ],
+          '             ^^^^',
         {withoutStack: true},
-      );
-    }
+      ],
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with symbol properties like Symbol.iterator are not supported.\n' +
+        '  <... value={{}}>\n' +
+        '             ^^^^\n' +
+        '    at  (<anonymous>)',
+    ]);
   });
 
   it('should warn in DEV if a special object is passed to a nested array in Client Component', () => {
@@ -1955,36 +1773,20 @@ describe('ReactFlight', () => {
       <Client value={['looooong string takes up noise', Math, <h1>hi</h1>]} />,
     );
     ReactNoopFlightClient.read(transport);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Math objects are not supported.\n' +
-            '  [..., Math, <h1/>]\n' +
-            '        ^^^^',
-          {withoutStack: true},
-        ],
+    assertConsoleErrorDev([
+      [
         'Only plain objects can be passed to Client Components from Server Components. ' +
           'Math objects are not supported.\n' +
           '  [..., Math, <h1/>]\n' +
-          '        ^^^^\n' +
-          '    at  (<anonymous>)',
-      ]);
-    } else {
-      assertConsoleErrorDev(
-        [
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Math objects are not supported.\n' +
-            '  [..., Math, <h1/>]\n' +
-            '        ^^^^',
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Math objects are not supported.\n' +
-            '  [..., Math, <h1/>]\n' +
-            '        ^^^^',
-        ],
+          '        ^^^^',
         {withoutStack: true},
-      );
-    }
+      ],
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Math objects are not supported.\n' +
+        '  [..., Math, <h1/>]\n' +
+        '        ^^^^\n' +
+        '    at  (<anonymous>)',
+    ]);
   });
 
   it('should NOT warn in DEV for key getters', () => {
@@ -2011,26 +1813,16 @@ describe('ReactFlight', () => {
     jest.resetModules();
     jest.mock('react', () => React);
     ReactNoopFlightClient.read(transport);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
-        'Each child in a list should have a unique "key" prop. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in NoKey (at **)',
-        'Each child in a list should have a unique "key" prop. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in NoKey (at **)',
-      ]);
-    } else {
-      assertConsoleErrorDev([
-        'Each child in a list should have a unique "key" prop.\n\n' +
-          'Check the top-level render call using <div>. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in NoKey (at **)',
-      ]);
-    }
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in NoKey (at **)',
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in NoKey (at **)',
+    ]);
   });
 
-  // @gate !__DEV__ || enableOwnerStacks
   it('should warn in DEV a child is missing keys on a fragment', () => {
     // While we're on the server we need to have the Server version active to track component stacks.
     jest.resetModules();
@@ -2045,23 +1837,14 @@ describe('ReactFlight', () => {
     jest.resetModules();
     jest.mock('react', () => React);
     ReactNoopFlightClient.read(transport);
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
-        'Each child in a list should have a unique "key" prop. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in Fragment (at **)',
-        'Each child in a list should have a unique "key" prop. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in Fragment (at **)',
-      ]);
-    } else {
-      assertConsoleErrorDev([
-        'Each child in a list should have a unique "key" prop.\n\n' +
-          'Check the top-level render call using <div>. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in Fragment (at **)',
-      ]);
-    }
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Fragment (at **)',
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Fragment (at **)',
+    ]);
   });
 
   it('should warn in DEV a child is missing keys in client component', async () => {
@@ -2078,20 +1861,12 @@ describe('ReactFlight', () => {
 
       ReactNoop.render(await ReactNoopFlightClient.read(transport));
     });
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
-        'Each child in a list should have a unique "key" prop.\n\n' +
-          'Check the top-level render call using <ParentClient>. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in div (at **)',
-      ]);
-    } else {
-      assertConsoleErrorDev([
-        'Each child in a list should have a unique "key" prop. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in div (at **)',
-      ]);
-    }
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the top-level render call using <ParentClient>. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in div (at **)',
+    ]);
   });
 
   it('should error if a class instance is passed to a host component', () => {
@@ -3038,9 +2813,7 @@ describe('ReactFlight', () => {
                 env: 'Server',
                 key: null,
                 owner: null,
-                stack: gate(flag => flag.enableOwnerStacks)
-                  ? '    in Object.<anonymous> (at **)'
-                  : undefined,
+                stack: '    in Object.<anonymous> (at **)',
                 props: {
                   transport: expect.arrayContaining([]),
                 },
@@ -3062,9 +2835,7 @@ describe('ReactFlight', () => {
                 env: 'third-party',
                 key: null,
                 owner: null,
-                stack: gate(flag => flag.enableOwnerStacks)
-                  ? '    in Object.<anonymous> (at **)'
-                  : undefined,
+                stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
               {time: 14},
@@ -3081,9 +2852,7 @@ describe('ReactFlight', () => {
                 env: 'third-party',
                 key: null,
                 owner: null,
-                stack: gate(flag => flag.enableOwnerStacks)
-                  ? '    in myLazy (at **)\n    in lazyInitializer (at **)'
-                  : undefined,
+                stack: '    in myLazy (at **)\n    in lazyInitializer (at **)',
                 props: {},
               },
               {time: 16},
@@ -3099,9 +2868,7 @@ describe('ReactFlight', () => {
                 env: 'third-party',
                 key: '3',
                 owner: null,
-                stack: gate(flag => flag.enableOwnerStacks)
-                  ? '    in Object.<anonymous> (at **)'
-                  : undefined,
+                stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
               {time: 12},
@@ -3175,9 +2942,7 @@ describe('ReactFlight', () => {
                 env: 'Server',
                 key: null,
                 owner: null,
-                stack: gate(flag => flag.enableOwnerStacks)
-                  ? '    in Object.<anonymous> (at **)'
-                  : undefined,
+                stack: '    in Object.<anonymous> (at **)',
                 props: {
                   transport: expect.arrayContaining([]),
                 },
@@ -3197,9 +2962,7 @@ describe('ReactFlight', () => {
                 env: 'Server',
                 key: 'keyed',
                 owner: null,
-                stack: gate(flag => flag.enableOwnerStacks)
-                  ? '    in ServerComponent (at **)'
-                  : undefined,
+                stack: '    in ServerComponent (at **)',
                 props: {
                   children: {},
                 },
@@ -3218,9 +2981,7 @@ describe('ReactFlight', () => {
                 env: 'third-party',
                 key: null,
                 owner: null,
-                stack: gate(flag => flag.enableOwnerStacks)
-                  ? '    in Object.<anonymous> (at **)'
-                  : undefined,
+                stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
               {time: 12},
@@ -3334,15 +3095,9 @@ describe('ReactFlight', () => {
     });
 
     expect(sawReactPrefix).toBe(false);
-    if (__DEV__ && gate(flags => flags.enableOwnerStacks)) {
+    if (__DEV__) {
       expect(environments.slice(0, 4)).toEqual([
         'Server',
-        'third-party',
-        'third-party',
-        'third-party',
-      ]);
-    } else if (__DEV__) {
-      expect(environments.slice(0, 3)).toEqual([
         'third-party',
         'third-party',
         'third-party',
@@ -3383,9 +3138,7 @@ describe('ReactFlight', () => {
                 env: 'A',
                 key: null,
                 owner: null,
-                stack: gate(flag => flag.enableOwnerStacks)
-                  ? '    in Object.<anonymous> (at **)'
-                  : undefined,
+                stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
               {
@@ -3401,7 +3154,7 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<div>hi</div>);
   });
 
-  // @gate __DEV__ && enableOwnerStacks
+  // @gate __DEV__
   it('replays logs, but not onError logs', async () => {
     function foo() {
       return 'hello';
@@ -3573,9 +3326,7 @@ describe('ReactFlight', () => {
           env: 'Server',
           key: null,
           owner: null,
-          stack: gate(flag => flag.enableOwnerStacks)
-            ? '    in Object.<anonymous> (at **)'
-            : undefined,
+          stack: '    in Object.<anonymous> (at **)',
           props: {
             firstName: 'Seb',
           },
@@ -3589,9 +3340,7 @@ describe('ReactFlight', () => {
             env: 'Server',
             key: null,
             owner: greetInfo,
-            stack: gate(flag => flag.enableOwnerStacks)
-              ? '    in Greeting (at **)'
-              : undefined,
+            stack: '    in Greeting (at **)',
             props: {
               children: expect.objectContaining({
                 type: 'span',
@@ -3616,7 +3365,7 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb</span>);
   });
 
-  // @gate __DEV__ && enableOwnerStacks
+  // @gate __DEV__
   it('can get the component owner stacks during rendering in dev', () => {
     let stack;
 
@@ -3648,7 +3397,7 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate __DEV__ && enableOwnerStacks
+  // @gate __DEV__
   it('can track owner for a flight response created in another render', async () => {
     jest.resetModules();
     jest.mock('react', () => ReactServer);
@@ -3711,7 +3460,7 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate __DEV__ && enableOwnerStacks
+  // @gate __DEV__
   it('can get the component owner stacks for onError in dev', async () => {
     const thrownError = new Error('hi');
     let caughtError;
@@ -3753,7 +3502,6 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate (enableOwnerStacks) || !__DEV__
   it('should include only one component stack in replayed logs (if DevTools or polyfill adds them)', () => {
     class MyError extends Error {
       toJSON() {

@@ -21,6 +21,7 @@ import {
   InstructionKind,
   JsxAttribute,
   makeInstructionId,
+  makePropertyLiteral,
   ObjectProperty,
   Phi,
   Place,
@@ -446,7 +447,7 @@ function createSymbolProperty(
     value: {
       kind: 'PropertyLoad',
       object: {...symbolInstruction.lvalue},
-      property: 'for',
+      property: makePropertyLiteral('for'),
       loc: instr.value.loc,
     },
     loc: instr.loc,

@@ -1843,15 +1843,9 @@ describe('ReactDOMFizzServer', () => {
     assertConsoleErrorDev([
       '<inCorrectTag /> is using incorrect casing. Use PascalCase for React components, or lowercase for HTML elements.' +
         '\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? '    in inCorrectTag (at **)\n' +
-            '    in C (at **)\n' +
-            '    in A (at **)'
-          : '    in inCorrectTag (at **)\n' +
-            '    in C (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in div (at **)\n' +
-            '    in A (at **)'),
+        '    in inCorrectTag (at **)\n' +
+        '    in C (at **)\n' +
+        '    in A (at **)',
     ]);
 
     await act(() => {
@@ -1862,17 +1856,11 @@ describe('ReactDOMFizzServer', () => {
     assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.\n\nCheck the render method of `B`.' +
         ' See https://react.dev/link/warning-keys for more information.\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? '    in span (at **)\n' +
-            '    in mapper (at **)\n' +
-            '    in Array.map (at **)\n' +
-            '    in B (at **)\n' +
-            '    in A (at **)'
-          : '    in span (at **)\n' +
-            '    in B (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in div (at **)\n' +
-            '    in A (at **)'),
+        '    in span (at **)\n' +
+        '    in mapper (at **)\n' +
+        '    in Array.map (at **)\n' +
+        '    in B (at **)\n' +
+        '    in A (at **)',
     ]);
 
     expect(getVisibleChildren(container)).toEqual(
@@ -1954,13 +1942,7 @@ describe('ReactDOMFizzServer', () => {
         '    in TestProvider (at **)',
       'TestConsumer uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-        '    in TestConsumer (at **)' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '\n    in TestProvider (at **)' +
-            '\n    in Suspense (at **)' +
-            '\n    in div (at **)' +
-            '\n    in TestProvider (at **)'),
+        '    in TestConsumer (at **)',
     ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -3723,23 +3705,43 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
-  it('encodes img srcset and sizes into preload header params', async () => {
+  it('omits images from preload headers if they contain srcset and sizes', async () => {
     let headers = null;
     function onHeaders(x) {
       headers = x;
     }
 
     function App() {
-      ReactDOM.preload('presrc', {
+      ReactDOM.preload('responsive-preload-set-only', {
         as: 'image',
         fetchPriority: 'high',
-        imageSrcSet: 'presrcset',
-        imageSizes: 'presizes',
+        imageSrcSet: 'srcset',
+      });
+      ReactDOM.preload('responsive-preload', {
+        as: 'image',
+        fetchPriority: 'high',
+        imageSrcSet: 'srcset',
+        imageSizes: 'sizes',
+      });
+      ReactDOM.preload('non-responsive-preload', {
+        as: 'image',
+        fetchPriority: 'high',
       });
       return (
         <html>
           <body>
-            <img src="src" srcSet="srcset" sizes="sizes" />
+            <img
+              src="responsive-img-set-only"
+              fetchPriority="high"
+              srcSet="srcset"
+            />
+            <img
+              src="responsive-img"
+              fetchPriority="high"
+              srcSet="srcset"
+              sizes="sizes"
+            />
+            <img src="non-responsive-img" fetchPriority="high" />
           </body>
         </html>
       );
@@ -3751,8 +3753,8 @@ describe('ReactDOMFizzServer', () => {
 
     expect(headers).toEqual({
       Link: `
-<presrc>; rel=preload; as="image"; fetchpriority="high"; imagesrcset="presrcset"; imagesizes="presizes",
- <src>; rel=preload; as="image"; imagesrcset="srcset"; imagesizes="sizes"
+<non-responsive-preload>; rel=preload; as="image"; fetchpriority="high", 
+<non-responsive-img>; rel=preload; as="image"; fetchpriority="high"
 `
         .replaceAll('\n', '')
         .trim(),
@@ -5851,7 +5853,6 @@ describe('ReactDOMFizzServer', () => {
           'If your `children` prop is using this form try rewriting it using a template string: ' +
           '<title>{`hello ${nameOfUser}`}</title>.\n' +
           '    in title (at **)\n' +
-          (gate('enableOwnerStacks') ? '' : '    in head (at **)\n') +
           '    in App (at **)',
       ]);
 
@@ -5897,7 +5898,6 @@ describe('ReactDOMFizzServer', () => {
           'React Component try moving the <title> tag into that component. ' +
           'If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.\n' +
           '    in title (at **)\n' +
-          (gate('enableOwnerStacks') ? '' : '    in head (at **)\n') +
           '    in App (at **)',
       ]);
       // object titles are toStringed when float is on
@@ -5941,7 +5941,6 @@ describe('ReactDOMFizzServer', () => {
           'string or number value if so. Otherwise implement a `toString` method that React can ' +
           'use to produce a valid <title>.\n' +
           '    in title (at **)\n' +
-          (gate('enableOwnerStacks') ? '' : '    in head (at **)\n') +
           '    in App (at **)',
       ]);
       // object titles are toStringed when float is on
@@ -6525,23 +6524,11 @@ describe('ReactDOMFizzServer', () => {
 
     assertConsoleErrorDev([
       'A script element was rendered with a number for children. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.' +
-        componentStack(
-          gate(flags => flags.enableOwnerStacks)
-            ? ['script', 'App']
-            : ['script', 'body', 'html', 'App'],
-        ),
+        componentStack(['script', 'App']),
       'A script element was rendered with an array for children. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.' +
-        componentStack(
-          gate(flags => flags.enableOwnerStacks)
-            ? ['script', 'App']
-            : ['script', 'body', 'html', 'App'],
-        ),
+        componentStack(['script', 'App']),
       'A script element was rendered with something unexpected for children. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.' +
-        componentStack(
-          gate(flags => flags.enableOwnerStacks)
-            ? ['script', 'App']
-            : ['script', 'body', 'html', 'App'],
-        ),
+        componentStack(['script', 'App']),
     ]);
   });
 
@@ -8524,7 +8511,7 @@ describe('ReactDOMFizzServer', () => {
     expect(document.body.textContent).toBe('HelloWorld');
   });
 
-  // @gate __DEV__ && enableOwnerStacks
+  // @gate __DEV__
   it('can get the component owner stacks during rendering in dev', async () => {
     let stack;
 
@@ -8557,7 +8544,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate __DEV__ && enableOwnerStacks
+  // @gate __DEV__
   it('can get the component owner stacks for onError in dev', async () => {
     const thrownError = new Error('hi');
     let caughtError;
@@ -8923,7 +8910,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  it('can server render Suspense before, after, and around <html>', async () => {
+  it('can render Suspense before, after, and around <html>', async () => {
     function BlockedOn({value, children}) {
       readText(value);
       return children;
@@ -8989,9 +8976,32 @@ describe('ReactDOMFizzServer', () => {
         </body>
       </html>,
     );
+
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html lang="en">
+        <head>
+          <meta itemprop="" content="non-floaty meta" />
+        </head>
+        <body>
+          <div>before</div>
+          <div>hello world</div>
+          <div>after</div>
+        </body>
+      </html>,
+    );
+
+    root.unmount();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
+      </html>,
+    );
   });
 
-  it('can server render Suspense before, after, and around <body>', async () => {
+  it('can render Suspense before, after, and around <body>', async () => {
     function BlockedOn({value, children}) {
       readText(value);
       return children;
@@ -9052,9 +9062,57 @@ describe('ReactDOMFizzServer', () => {
         </body>
       </html>,
     );
+
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta content="before" />
+          <meta content="after" />
+        </head>
+        <body lang="en">
+          <meta itemprop="" content="before" />
+          <div>hello world</div>
+          <meta itemprop="" content="after" />
+        </body>
+      </html>,
+    );
+    assertConsoleErrorDev([
+      [
+        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
+        {withoutStack: true},
+      ],
+      'In HTML, <meta> cannot be a child of <html>.\nThis will cause a hydration error.' +
+        '\n' +
+        '\n  <App>' +
+        '\n>   <html>' +
+        '\n      <Suspense fallback="this fallb...">' +
+        '\n        <meta>' +
+        '\n>       <meta itemProp="" content="before">' +
+        '\n      ...' +
+        '\n' +
+        '\n    in meta (at **)' +
+        '\n    in App (at **)',
+      '<html> cannot contain a nested <meta>.\nSee this log for the ancestor stack trace.' +
+        '\n    in html (at **)' +
+        '\n    in App (at **)',
+      [
+        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
+        {withoutStack: true},
+      ],
+    ]);
+
+    await root.unmount();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
+      </html>,
+    );
   });
 
-  it('can server render Suspense before, after, and around <head>', async () => {
+  it('can render Suspense before, after, and around <head>', async () => {
     function BlockedOn({value, children}) {
       readText(value);
       return children;
@@ -9119,11 +9177,64 @@ describe('ReactDOMFizzServer', () => {
         </body>
       </html>,
     );
+
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head lang="en">
+          <meta content="before" />
+          <meta content="after" />
+          <meta itemprop="" />
+        </head>
+        <body>
+          <meta itemprop="" content="before" />
+          <meta itemprop="" content="after" />
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+    assertConsoleErrorDev([
+      [
+        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
+        {withoutStack: true},
+      ],
+      'In HTML, <meta> cannot be a child of <html>.\nThis will cause a hydration error.' +
+        '\n' +
+        '\n  <App>' +
+        '\n>   <html>' +
+        '\n      <Suspense fallback="this fallb...">' +
+        '\n        <meta>' +
+        '\n>       <meta itemProp="" content="before">' +
+        '\n      ...' +
+        '\n' +
+        '\n    in meta (at **)' +
+        '\n    in App (at **)',
+      '<html> cannot contain a nested <meta>.\nSee this log for the ancestor stack trace.' +
+        '\n    in html (at **)' +
+        '\n    in App (at **)',
+      [
+        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
+        {withoutStack: true},
+      ],
+    ]);
+
+    await root.unmount();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
+      </html>,
+    );
   });
 
-  it('will render fallback Document when erroring a boundary above the body', async () => {
+  it('will render fallback Document when erroring a boundary above the body and recover on the client', async () => {
+    let serverRendering = true;
     function Boom() {
-      throw new Error('Boom!');
+      if (serverRendering) {
+        throw new Error('Boom!');
+      }
+      return null;
     }
 
     function App() {
@@ -9174,11 +9285,50 @@ describe('ReactDOMFizzServer', () => {
         </body>
       </html>,
     );
+
+    serverRendering = false;
+
+    const recoverableErrors = [];
+    const root = ReactDOMClient.hydrateRoot(document, <App />, {
+      onRecoverableError(err) {
+        recoverableErrors.push(err);
+      },
+    });
+    await waitForAll([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-content-html="">
+        <head />
+        <body data-content-body="">
+          <span>hello world</span>
+        </body>
+      </html>,
+    );
+    expect(recoverableErrors).toEqual([
+      __DEV__
+        ? new Error(
+            'Switched to client rendering because the server rendering errored:\n\nBoom!',
+          )
+        : new Error(
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          ),
+    ]);
+
+    root.unmount();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
+      </html>,
+    );
   });
 
   it('will hoist resources and hositables from a primary tree into the <head> of a client rendered fallback', async () => {
+    let serverRendering = true;
     function Boom() {
-      throw new Error('Boom!');
+      if (serverRendering) {
+        throw new Error('Boom!');
+      }
+      return null;
     }
 
     function App() {
@@ -9253,6 +9403,65 @@ describe('ReactDOMFizzServer', () => {
         <body data-error-body="">
           <span>hello error</span>
         </body>
+      </html>,
+    );
+
+    serverRendering = false;
+
+    const recoverableErrors = [];
+    const root = ReactDOMClient.hydrateRoot(document, <App />, {
+      onRecoverableError(err) {
+        recoverableErrors.push(err);
+      },
+    });
+    await waitForAll([]);
+    expect(recoverableErrors).toEqual([
+      __DEV__
+        ? new Error(
+            'Switched to client rendering because the server rendering errored:\n\nBoom!',
+          )
+        : new Error(
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          ),
+    ]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-content-html="">
+        <head>
+          <link
+            rel="stylesheet"
+            href="hoistable before"
+            data-precedence="default"
+          />
+          <link
+            rel="stylesheet"
+            href="hoistable after"
+            data-precedence="default"
+          />
+          <meta content="hoistable before" />
+          <meta content="hoistable after" />
+        </head>
+        <body data-content-body="">
+          <span>hello world</span>
+        </body>
+      </html>,
+    );
+
+    root.unmount();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            href="hoistable before"
+            data-precedence="default"
+          />
+          <link
+            rel="stylesheet"
+            href="hoistable after"
+            data-precedence="default"
+          />
+        </head>
+        <body />
       </html>,
     );
   });
@@ -9353,8 +9562,12 @@ describe('ReactDOMFizzServer', () => {
   });
 
   it('Can render a fallback <head> alongside a non-fallback body', async () => {
+    let serverRendering = true;
     function Boom() {
-      throw new Error('Boom!');
+      if (serverRendering) {
+        throw new Error('Boom!');
+      }
+      return null;
     }
 
     function App() {
@@ -9416,11 +9629,52 @@ describe('ReactDOMFizzServer', () => {
         </body>
       </html>,
     );
+
+    serverRendering = false;
+
+    const recoverableErrors = [];
+    const root = ReactDOMClient.hydrateRoot(document, <App />, {
+      onRecoverableError(err) {
+        recoverableErrors.push(err);
+      },
+    });
+    await waitForAll([]);
+    expect(recoverableErrors).toEqual([
+      __DEV__
+        ? new Error(
+            'Switched to client rendering because the server rendering errored:\n\nBoom!',
+          )
+        : new Error(
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          ),
+    ]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head data-primary="">
+          <meta itemprop="" content="primary" />
+        </head>
+        <body data-primary="">
+          <div>primary body</div>
+        </body>
+      </html>,
+    );
+
+    root.unmount();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
+      </html>,
+    );
   });
 
   it('Can render a fallback <body> alongside a non-fallback head', async () => {
+    let serverRendering = true;
     function Boom() {
-      throw new Error('Boom!');
+      if (serverRendering) {
+        throw new Error('Boom!');
+      }
+      return null;
     }
 
     function App() {
@@ -9482,6 +9736,43 @@ describe('ReactDOMFizzServer', () => {
         </body>
       </html>,
     );
+
+    serverRendering = false;
+
+    const recoverableErrors = [];
+    const root = ReactDOMClient.hydrateRoot(document, <App />, {
+      onRecoverableError(err) {
+        recoverableErrors.push(err);
+      },
+    });
+    await waitForAll([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head data-primary="">
+          <meta itemprop="" content="primary" />
+        </head>
+        <body data-primary="">
+          <div>primary body</div>
+        </body>
+      </html>,
+    );
+    expect(recoverableErrors).toEqual([
+      __DEV__
+        ? new Error(
+            'Switched to client rendering because the server rendering errored:\n\nBoom!',
+          )
+        : new Error(
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          ),
+    ]);
+
+    root.unmount();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
+      </html>,
+    );
   });
 
   it('Can render a <head> outside of a containing <html>', async () => {
@@ -9526,6 +9817,27 @@ describe('ReactDOMFizzServer', () => {
         <body data-x="">
           <span>hello world</span>
         </body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-x="">
+        <head data-y="">
+          <meta itemprop="" />
+        </head>
+        <body data-x="">
+          <span>hello world</span>
+        </body>
+      </html>,
+    );
+
+    root.unmount();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
       </html>,
     );
   });
@@ -9661,6 +9973,28 @@ describe('ReactDOMFizzServer', () => {
         </body>
       </html>,
     );
+
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html lang="es">
+        <head data-main="">
+          <meta content="author" />
+          <meta content="published date" />
+        </head>
+        <body data-main="">
+          <div>This is soooo cool!</div>
+        </body>
+      </html>,
+    );
+
+    root.unmount();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
+      </html>,
+    );
   });
 
   it('will flush the preamble as soon as a complete preamble is available', async () => {
@@ -9738,6 +10072,177 @@ describe('ReactDOMFizzServer', () => {
           <div>body</div>
           loading after...
         </body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta content="head" />
+        </head>
+        <body>
+          loading before...
+          <div>body</div>
+          loading after...
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('before');
+      resolveText('after');
+    });
+    await waitForAll([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta content="head" />
+        </head>
+        <body>
+          <div>before</div>
+          <div>body</div>
+          <div>after</div>
+        </body>
+      </html>,
+    );
+
+    root.unmount();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
+      </html>,
+    );
+  });
+
+  it('will clean up the head when a hydration mismatch causes a boundary to recover on the client', async () => {
+    let content = 'server';
+
+    function ServerApp() {
+      return (
+        <Suspense>
+          <html data-x={content}>
+            <head data-x={content}>
+              <meta itemProp="" content={content} />
+            </head>
+            <body data-x={content}>{content}</body>
+          </html>
+        </Suspense>
+      );
+    }
+
+    function ClientApp() {
+      return (
+        <Suspense>
+          <html data-y={content}>
+            <head data-y={content}>
+              <meta itemProp="" name={content} />
+            </head>
+            <body data-y={content}>{content}</body>
+          </html>
+        </Suspense>
+      );
+    }
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<ServerApp />);
+      pipe(writable);
+    });
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-x="server">
+        <head data-x="server">
+          <meta itemprop="" content="server" />
+        </head>
+        <body data-x="server">server</body>
+      </html>,
+    );
+
+    content = 'client';
+
+    const recoverableErrors = [];
+    const root = ReactDOMClient.hydrateRoot(document, <ClientApp />, {
+      onRecoverableError(err) {
+        recoverableErrors.push(err.message);
+      },
+    });
+    await waitForAll([]);
+    if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
+      expect(getVisibleChildren(document)).toEqual(
+        <html data-y="client">
+          <head data-y="client">
+            <meta itemprop="" name="client" />
+          </head>
+          <body data-y="client">client</body>
+        </html>,
+      );
+      expect(recoverableErrors).toEqual([
+        expect.stringContaining(
+          "Hydration failed because the server rendered HTML didn't match the client.",
+        ),
+      ]);
+    } else {
+      expect(getVisibleChildren(document)).toEqual(
+        <html data-x="server">
+          <head data-x="server">
+            <meta itemprop="" content="server" />
+          </head>
+          <body data-x="server">server</body>
+        </html>,
+      );
+      expect(recoverableErrors).toEqual([]);
+      assertConsoleErrorDev([
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:" +
+          '\n' +
+          "\n- A server/client branch `if (typeof window !== 'undefined')`." +
+          "\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called." +
+          "\n- Date formatting in a user's locale which doesn't match the server." +
+          '\n- External changing data without sending a snapshot of it along with the HTML.' +
+          '\n- Invalid HTML tag nesting.' +
+          '\n' +
+          '\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.' +
+          '\n' +
+          '\nhttps://react.dev/link/hydration-mismatch' +
+          '\n' +
+          '\n  <ClientApp>' +
+          '\n    <Suspense>' +
+          '\n      <html' +
+          '\n+       data-y="client"' +
+          '\n-       data-y={null}' +
+          '\n-       data-x="server"' +
+          '\n      >' +
+          '\n        <head' +
+          '\n+         data-y="client"' +
+          '\n-         data-y={null}' +
+          '\n-         data-x="server"' +
+          '\n        >' +
+          '\n          <meta' +
+          '\n            itemProp=""' +
+          '\n+           name="client"' +
+          '\n-           name={null}' +
+          '\n-           content="server"' +
+          '\n          >' +
+          '\n        <body' +
+          '\n+         data-y="client"' +
+          '\n-         data-y={null}' +
+          '\n-         data-x="server"' +
+          '\n        >' +
+          '\n+         client' +
+          '\n-         server' +
+          '\n+         client' +
+          '\n-         server' +
+          '\n' +
+          '\n    in meta (at **)' +
+          '\n    in ClientApp (at **)',
+      ]);
+    }
+
+    root.unmount();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
       </html>,
     );
   });

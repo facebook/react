@@ -100,6 +100,7 @@ jobs:
     needs: build_devtools_and_process_artifacts
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         version:
           - "16.0"
@@ -108,7 +109,6 @@ jobs:
           - "17.0"
           - "18.0"
           - "18.2" # compiler polyfill
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -135,6 +135,7 @@ jobs:
     needs: build_devtools_and_process_artifacts
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         version:
           - "16.0"
@@ -142,7 +143,6 @@ jobs:
           - "16.8" # hooks
           - "17.0"
           - "18.0"
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

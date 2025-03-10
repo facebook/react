@@ -16,6 +16,7 @@ import {
   DependencyPathEntry,
   Instruction,
   Terminal,
+  PropertyLiteral,
 } from './HIR';
 import {printIdentifier} from './PrintHIR';
 
@@ -157,7 +158,7 @@ function matchOptionalTestBlock(
   blocks: ReadonlyMap<BlockId, BasicBlock>,
 ): {
   consequentId: IdentifierId;
-  property: string;
+  property: PropertyLiteral;
   propertyId: IdentifierId;
   storeLocalInstr: Instruction;
   consequentGoto: BlockId;

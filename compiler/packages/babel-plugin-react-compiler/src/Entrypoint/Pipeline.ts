@@ -162,7 +162,8 @@ function runWithEnvironment(
   if (
     !env.config.enablePreserveExistingManualUseMemo &&
     !env.config.disableMemoizationForDebugging &&
-    !env.config.enableChangeDetectionForDebugging
+    !env.config.enableChangeDetectionForDebugging &&
+    !env.config.enableMinimalTransformsForRetry
   ) {
     dropManualMemoization(hir);
     log({kind: 'hir', name: 'DropManualMemoization', value: hir});
@@ -279,8 +280,10 @@ function runWithEnvironment(
     value: hir,
   });
 
-  inferReactiveScopeVariables(hir);
-  log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
+  if (!env.config.enableMinimalTransformsForRetry) {
+    inferReactiveScopeVariables(hir);
+    log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
+  }
 
   const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
   log({

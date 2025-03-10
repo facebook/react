@@ -1,7 +1,12 @@
 import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
+  unstable_useSwipeTransition as useSwipeTransition,
+  useEffect,
+  useState,
 } from 'react';
+
+import SwipeRecognizer from './SwipeRecognizer';
 
 import './Page.css';
 
@@ -35,8 +40,9 @@ function Component() {
 }
 
 export default function Page({url, navigate}) {
-  const show = url === '/?b';
-  function onTransition(viewTransition) {
+  const [renderedUrl, startGesture] = useSwipeTransition('/?a', url, '/?b');
+  const show = renderedUrl === '/?b';
+  function onTransition(viewTransition, types) {
     const keyframes = [
       {rotate: '0deg', transformOrigin: '30px 8px'},
       {rotate: '360deg', transformOrigin: '30px 8px'},
@@ -44,6 +50,18 @@ export default function Page({url, navigate}) {
     viewTransition.old.animate(keyframes, 250);
     viewTransition.new.animate(keyframes, 250);
   }
+
+  function swipeAction() {
+    navigate(show ? '/?a' : '/?b');
+  }
+
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCounter(c => c + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const exclamation = (
     <ViewTransition name="exclamation" onShare={onTransition}>
       <span>!</span>
@@ -59,6 +77,16 @@ export default function Page({url, navigate}) {
       </button>
       <ViewTransition className="none">
         <div>
+          <ViewTransition className={transitions['slide-on-nav']}>
+            <h1>{!show ? 'A' : 'B'}</h1>
+          </ViewTransition>
+          <ViewTransition
+            className={{
+              'navigation-back': transitions['slide-right'],
+              'navigation-forward': transitions['slide-left'],
+            }}>
+            <h1>{!show ? 'A' + counter : 'B' + counter}</h1>
+          </ViewTransition>
           {show ? (
             <div>
               {a}
@@ -80,6 +108,14 @@ export default function Page({url, navigate}) {
           <p></p>
           <p></p>
           <p></p>
+          <div className="swipe-recognizer">
+            <SwipeRecognizer
+              action={swipeAction}
+              gesture={startGesture}
+              direction={show ? 'left' : 'right'}>
+              Swipe me
+            </SwipeRecognizer>
+          </div>
           <p></p>
           <p></p>
           {show ? null : (

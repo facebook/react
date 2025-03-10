@@ -71,11 +71,10 @@ export const disableDefaultPropsExceptForClasses = true;
 export const renameElementSymbol = false;
 
 export const enableObjectFiber = false;
-export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
 export const enableSiblingPrerendering = true;
 
-export const enableUseResourceEffectHook = false;
+export const enableUseEffectCRUDOverload = false;
 
 export const enableHydrationLaneScheduling = true;
 
@@ -83,7 +82,10 @@ export const enableYieldingBeforePassive = false;
 
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
-export const enableRemoveConsolePatches = false;
+export const enableSwipeTransition = false;
+export const enableFastAddPropertiesInDiffing = false;
+export const enableLazyPublicInstanceInFabric = false;
+export const enableScrollEndPolyfill = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

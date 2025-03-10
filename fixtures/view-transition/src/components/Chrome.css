@@ -1,3 +1,7 @@
+html {
+  touch-action: pan-x pan-y;
+}
+
 body {
   margin: 10px;
   padding: 0;

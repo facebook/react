@@ -65,7 +65,10 @@ import sanitizeURL from '../shared/sanitizeURL';
 
 import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
 
-import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
+import {
+  enableScrollEndPolyfill,
+  enableTrustedTypesIntegration,
+} from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
@@ -344,7 +347,7 @@ function setProp(
     case 'children': {
       if (typeof value === 'string') {
         if (__DEV__) {
-          validateTextNesting(value, tag);
+          validateTextNesting(value, tag, false);
         }
         // Avoid setting initial textContent when the text is empty. In IE11 setting
         // textContent on a <textarea> will cause the placeholder to not
@@ -358,7 +361,7 @@ function setProp(
       } else if (typeof value === 'number' || typeof value === 'bigint') {
         if (__DEV__) {
           // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
-          validateTextNesting('' + value, tag);
+          validateTextNesting('' + value, tag, false);
         }
         const canSetTextContent = tag !== 'body';
         if (canSetTextContent) {
@@ -545,6 +548,10 @@ function setProp(
           warnForInvalidEventListener(key, value);
         }
         listenToNonDelegatedEvent('scrollend', domElement);
+        if (enableScrollEndPolyfill) {
+          // For use by the polyfill.
+          listenToNonDelegatedEvent('scroll', domElement);
+        }
       }
       return;
     }
@@ -955,6 +962,10 @@ function setPropOnCustomElement(
           warnForInvalidEventListener(key, value);
         }
         listenToNonDelegatedEvent('scrollend', domElement);
+        if (enableScrollEndPolyfill) {
+          // For use by the polyfill.
+          listenToNonDelegatedEvent('scroll', domElement);
+        }
       }
       return;
     }
@@ -1269,6 +1280,8 @@ export function setInitialProperties(
       return;
     }
     case 'dialog': {
+      listenToNonDelegatedEvent('beforetoggle', domElement);
+      listenToNonDelegatedEvent('toggle', domElement);
       listenToNonDelegatedEvent('cancel', domElement);
       listenToNonDelegatedEvent('close', domElement);
       break;
@@ -3058,6 +3071,10 @@ export function hydrateProperties(
 
   if (props.onScrollEnd != null) {
     listenToNonDelegatedEvent('scrollend', domElement);
+    if (enableScrollEndPolyfill) {
+      // For use by the polyfill.
+      listenToNonDelegatedEvent('scroll', domElement);
+    }
   }
 
   if (props.onClick != null) {

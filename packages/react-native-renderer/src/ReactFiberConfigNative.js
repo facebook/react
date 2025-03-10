@@ -8,12 +8,14 @@
  */
 
 import type {InspectorData, TouchedViewDataAtPoint} from './ReactNativeTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 
 // Modules provided by RN:
 import {
   ReactNativeViewConfigRegistry,
   UIManager,
   deepFreezeAndThrowOnMutationInDev,
+  type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {create, diff} from './ReactNativeAttributePayload';
@@ -53,7 +55,10 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
 export type Type = string;
 export type Props = Object;
-export type Container = number;
+export type Container = {
+  containerTag: number,
+  publicInstance: PublicRootInstance | null,
+};
 export type Instance = ReactNativeFiberHostComponent;
 export type TextInstance = number;
 export type HydratableInstance = Instance | TextInstance;
@@ -142,7 +147,7 @@ export function createInstance(
   UIManager.createView(
     tag, // reactTag
     viewConfig.uiViewClassName, // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     updatePayload, // props
   );
 
@@ -160,6 +165,13 @@ export function createInstance(
   return ((component: any): Instance);
 }
 
+export function cloneMutableInstance(
+  instance: Instance,
+  keepChildren: boolean,
+): Instance {
+  throw new Error('Not yet implemented.');
+}
+
 export function createTextInstance(
   text: string,
   rootContainerInstance: Container,
@@ -175,13 +187,19 @@ export function createTextInstance(
   UIManager.createView(
     tag, // reactTag
     'RCTRawText', // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     {text: text}, // props
   );
 
   precacheFiberNode(internalInstanceHandle, tag);
 
   return tag;
+}
+
+export function cloneMutableTextInstance(
+  textInstance: TextInstance,
+): TextInstance {
+  throw new Error('Not yet implemented.');
 }
 
 export function finalizeInitialChildren(
@@ -348,7 +366,7 @@ export function appendChildToContainer(
 ): void {
   const childTag = typeof child === 'number' ? child : child._nativeTag;
   UIManager.setChildren(
-    parentInstance, // containerTag
+    parentInstance.containerTag, // containerTag
     [childTag], // reactTags
   );
 }
@@ -478,7 +496,7 @@ export function removeChildFromContainer(
 ): void {
   recursivelyUncacheFiberNode(child);
   UIManager.manageChildren(
-    parentInstance, // containerID
+    parentInstance.containerTag, // containerID
     [], // moveFromIndices
     [], // moveToIndices
     [], // addChildReactTags
@@ -553,6 +571,19 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
   // Not yet implemented
 }
 
+export function cloneRootViewTransitionContainer(
+  rootContainer: Container,
+): Instance {
+  throw new Error('Not implemented.');
+}
+
+export function removeRootViewTransitionClone(
+  rootContainer: Container,
+  clone: Instance,
+): void {
+  throw new Error('Not implemented.');
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
@@ -582,6 +613,7 @@ export function hasInstanceAffectedParent(
 
 export function startViewTransition(
   rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   layoutCallback: () => void,
   afterMutationCallback: () => void,
@@ -591,12 +623,44 @@ export function startViewTransition(
   return false;
 }
 
+export type RunningGestureTransition = null;
+
+export function startGestureTransition(
+  rootContainer: Container,
+  timeline: GestureTimeline,
+  rangeStart: number,
+  rangeEnd: number,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  animateCallback: () => void,
+): RunningGestureTransition {
+  mutationCallback();
+  animateCallback();
+  return null;
+}
+
+export function stopGestureTransition(transition: RunningGestureTransition) {}
+
 export type ViewTransitionInstance = null | {name: string, ...};
 
 export function createViewTransitionInstance(
   name: string,
 ): ViewTransitionInstance {
   return null;
+}
+
+export type GestureTimeline = null;
+
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
+  throw new Error('useSwipeTransition is not yet supported in React Native.');
+}
+
+export function subscribeToGestureDirection(
+  provider: GestureTimeline,
+  currentOffset: number,
+  directionCallback: (direction: boolean) => void,
+): () => void {
+  throw new Error('useSwipeTransition is not yet supported in React Native.');
 }
 
 export function clearContainer(container: Container): void {

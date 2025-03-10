@@ -9,9 +9,26 @@
 
 // libdefs cannot actually import. These are supposed to be the types imported
 // from 'react-native-renderer/src/ReactNativeTypes'
-type __MeasureOnSuccessCallback = any;
-type __MeasureInWindowOnSuccessCallback = any;
-type __MeasureLayoutOnSuccessCallback = any;
+type __MeasureOnSuccessCallback = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  pageX: number,
+  pageY: number,
+) => void;
+type __MeasureInWindowOnSuccessCallback = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) => void;
+type __MeasureLayoutOnSuccessCallback = (
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+) => void;
 type __ReactNativeBaseComponentViewConfig = any;
 type __ViewConfigGetter = any;
 type __ViewConfig = any;
@@ -143,6 +160,24 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   };
   declare export opaque type PublicInstance;
   declare export opaque type PublicTextInstance;
+  declare export opaque type PublicRootInstance;
+  declare export type MeasureOnSuccessCallback = __MeasureOnSuccessCallback;
+  declare export type MeasureInWindowOnSuccessCallback =
+    __MeasureInWindowOnSuccessCallback;
+  declare export type MeasureLayoutOnSuccessCallback =
+    __MeasureLayoutOnSuccessCallback;
+  declare export interface LegacyPublicInstance {
+    blur(): void;
+    focus(): void;
+    measure(callback: __MeasureOnSuccessCallback): void;
+    measureInWindow(callback: __MeasureInWindowOnSuccessCallback): void;
+    measureLayout(
+      relativeToNativeNode: number | LegacyPublicInstance,
+      onSuccess: __MeasureLayoutOnSuccessCallback,
+      onFail?: () => void,
+    ): void;
+    setNativeProps(nativeProps: {...}): void;
+  }
   declare export function getNodeFromPublicInstance(
     publicInstance: PublicInstance,
   ): Object;
@@ -153,7 +188,11 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     tag: number,
     viewConfig: __ViewConfig,
     internalInstanceHandle: mixed,
+    publicRootInstance: PublicRootInstance | null,
   ): PublicInstance;
+  declare export function createPublicRootInstance(
+    rootTag: number,
+  ): PublicRootInstance;
   declare export function createPublicTextInstance(
     internalInstanceHandle: mixed,
   ): PublicTextInstance;

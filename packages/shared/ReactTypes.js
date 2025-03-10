@@ -168,6 +168,20 @@ export type ReactFormState<S, ReferenceId> = [
   number /* number of bound arguments */,
 ];
 
+// Intrinsic GestureProvider. This type varies by Environment whether a particular
+// renderer supports it.
+export type GestureProvider = any;
+
+export type StartGesture = (
+  gestureProvider: GestureProvider,
+  gestureOptions: GestureOptions,
+) => () => void;
+
+export type GestureOptions = {
+  direction?: 'previous' | 'next',
+  range?: [/*previous*/ number, /*current*/ number, /*next*/ number],
+};
+
 export type Awaited<T> = T extends null | void
   ? T // special case for `null | undefined` when not in `--strictNullChecks` mode
   : T extends Object // `await` only unwraps object types with a callable then. Non-object types are not unwrapped.
@@ -202,6 +216,20 @@ export type ReactComponentInfo = {
 export type ReactEnvironmentInfo = {
   +env: string,
 };
+
+export type ReactErrorInfoProd = {
+  +digest: string,
+};
+
+export type ReactErrorInfoDev = {
+  +digest?: string,
+  +name: string,
+  +message: string,
+  +stack: ReactStackTrace,
+  +env: string,
+};
+
+export type ReactErrorInfo = ReactErrorInfoProd | ReactErrorInfoDev;
 
 export type ReactAsyncInfo = {
   +type: string,

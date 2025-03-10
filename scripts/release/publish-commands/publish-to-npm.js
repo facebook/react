@@ -27,7 +27,9 @@ const run = async ({cwd, dry, tags, ci}, packageName, otp) => {
       await confirm('Is this expected?');
     }
   } else {
-    console.log(theme`{spinnerSuccess ✓} Publishing {package ${packageName}}`);
+    console.log(
+      theme`{spinnerSuccess ✓} Publishing {package ${packageName}}${dry ? ' (dry-run)' : ''}`
+    );
 
     // Publish the package and tag it.
     if (!dry) {

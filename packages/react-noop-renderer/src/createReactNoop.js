@@ -22,6 +22,7 @@ import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue'
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -92,7 +93,11 @@ export type TransitionStatus = mixed;
 
 export type FormInstance = Instance;
 
+export type RunningGestureTransition = null;
+
 export type ViewTransitionInstance = null | {name: string, ...};
+
+export type GestureTimeline = null;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -448,6 +453,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return inst;
     },
 
+    cloneMutableInstance(instance: Instance, keepChildren: boolean): Instance {
+      throw new Error('Not yet implemented.');
+    },
+
     appendInitialChild(
       parentInstance: Instance,
       child: Instance | TextInstance,
@@ -497,6 +506,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         enumerable: false,
       });
       return inst;
+    },
+
+    cloneMutableTextInstance(textInstance: TextInstance): TextInstance {
+      throw new Error('Not yet implemented.');
     },
 
     scheduleTimeout: setTimeout,
@@ -756,6 +769,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         restoreRootViewTransitionName(rootContainer: Container): void {},
 
+        cloneRootViewTransitionContainer(rootContainer: Container): Instance {
+          throw new Error('Not yet implemented.');
+        },
+
+        removeRootViewTransitionClone(
+          rootContainer: Container,
+          clone: Instance,
+        ): void {
+          throw new Error('Not implemented.');
+        },
+
         measureInstance(instance: Instance): InstanceMeasurement {
           return null;
         },
@@ -780,6 +804,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         startViewTransition(
           rootContainer: Container,
+          transitionTypes: null | TransitionTypes,
           mutationCallback: () => void,
           afterMutationCallback: () => void,
           layoutCallback: () => void,
@@ -788,8 +813,36 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           return false;
         },
 
+        startGestureTransition(
+          rootContainer: Container,
+          timeline: GestureTimeline,
+          rangeStart: number,
+          rangeEnd: number,
+          transitionTypes: null | TransitionTypes,
+          mutationCallback: () => void,
+          animateCallback: () => void,
+        ): RunningGestureTransition {
+          mutationCallback();
+          animateCallback();
+          return null;
+        },
+
+        stopGestureTransition(transition: RunningGestureTransition) {},
+
         createViewTransitionInstance(name: string): ViewTransitionInstance {
           return null;
+        },
+
+        getCurrentGestureOffset(provider: GestureTimeline): number {
+          return 0;
+        },
+
+        subscribeToGestureDirection(
+          provider: GestureTimeline,
+          currentOffset: number,
+          directionCallback: (direction: boolean) => void,
+        ): () => void {
+          return () => {};
         },
 
         resetTextContent(instance: Instance): void {

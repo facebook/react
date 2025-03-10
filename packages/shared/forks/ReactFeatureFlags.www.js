@@ -29,14 +29,16 @@ export const {
   enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
-  enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
-  enableOwnerStacks,
-  enableRemoveConsolePatches,
+  enableFastAddPropertiesInDiffing,
+  enableViewTransition,
+  enableComponentPerformanceTrack,
+  enableScrollEndPolyfill,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -59,11 +61,8 @@ export const enableLegacyFBSupport = true;
 export const enableYieldingBeforePassive = false;
 
 export const enableThrottledScheduling = false;
-export const enableViewTransition = false;
 
 export const enableHydrationLaneScheduling = true;
-
-export const enableComponentPerformanceTrack = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -109,6 +108,10 @@ export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;
 
 export const enableShallowPropDiffing = false;
+
+export const enableLazyPublicInstanceInFabric = false;
+
+export const enableSwipeTransition = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

@@ -14,6 +14,7 @@ import {
   Identifier,
   IdentifierId,
   Instruction,
+  makePropertyLiteral,
   makeType,
   PropType,
   Type,
@@ -335,7 +336,7 @@ function* generateInstructionTypes(
               kind: 'Property',
               objectType: value.value.identifier.type,
               objectName: getName(names, value.value.identifier.id),
-              propertyName,
+              propertyName: makePropertyLiteral(propertyName),
             });
           } else {
             break;
@@ -352,7 +353,7 @@ function* generateInstructionTypes(
                 kind: 'Property',
                 objectType: value.value.identifier.type,
                 objectName: getName(names, value.value.identifier.id),
-                propertyName: property.key.name,
+                propertyName: makePropertyLiteral(property.key.name),
               });
             }
           }
@@ -420,7 +421,10 @@ function* generateInstructionTypes(
       break;
     }
     default:
-      assertExhaustive(value, `Unhandled instruction value kind: ${value}`);
+      assertExhaustive(
+        value,
+        `Unhandled instruction value kind: ${(value as any).kind}`,
+      );
   }
 }
 
@@ -450,10 +454,12 @@ class Unifier {
         return;
       }
       const objectType = this.get(tB.objectType);
-      const propertyType = this.env.getPropertyType(
-        objectType,
-        tB.propertyName,
-      );
+      let propertyType;
+      if (typeof tB.propertyName === 'number') {
+        propertyType = null;
+      } else {
+        propertyType = this.env.getPropertyType(objectType, tB.propertyName);
+      }
       if (propertyType !== null) {
         this.unify(tA, propertyType);
       }

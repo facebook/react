@@ -24,7 +24,14 @@ import {
   throwIfInfiniteUpdateLoopDetected,
   getWorkInProgressRoot,
 } from './ReactFiberWorkLoop';
-import {NoLane, NoLanes, mergeLanes, markHiddenUpdate} from './ReactFiberLane';
+import {
+  NoLane,
+  NoLanes,
+  mergeLanes,
+  markHiddenUpdate,
+  markRootUpdated,
+  GestureLane,
+} from './ReactFiberLane';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {HostRoot, OffscreenComponent} from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberActivityComponent';
@@ -169,6 +176,25 @@ export function enqueueConcurrentRenderForLane(
   return getRootForUpdatedFiber(fiber);
 }
 
+export function enqueueGestureRender(fiber: Fiber): FiberRoot | null {
+  // We can't use the concurrent queuing for these so this is basically just a
+  // short cut for marking the lane on the parent path. It is possible for a
+  // gesture render to suspend and then in the gap get another gesture starting.
+  // However, marking the lane doesn't make much different in this case because
+  // it would have to call startGesture with the same exact provider as was
+  // already rendering. Because otherwise it has no effect on the Hook itself.
+  // TODO: We could potentially solve this case by popping a ScheduledGesture
+  // off the root's queue while we're rendering it so that it can't dedupe
+  // and so new startGesture with the same provider would create a new
+  // ScheduledGesture which goes into a separate render pass anyway.
+  // This is such an edge case it probably doesn't matter much.
+  const root = markUpdateLaneFromFiberToRoot(fiber, null, GestureLane);
+  if (root !== null) {
+    markRootUpdated(root, GestureLane);
+  }
+  return root;
+}
+
 // Calling this function outside this module should only be done for backwards
 // compatibility and should always be accompanied by a warning.
 export function unsafe_markUpdateLaneFromFiberToRoot(
@@ -189,7 +215,7 @@ function markUpdateLaneFromFiberToRoot(
   sourceFiber: Fiber,
   update: ConcurrentUpdate | null,
   lane: Lane,
-): void {
+): null | FiberRoot {
   // Update the source fiber's lanes
   sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
   let alternate = sourceFiber.alternate;
@@ -238,10 +264,14 @@ function markUpdateLaneFromFiberToRoot(
     parent = parent.return;
   }
 
-  if (isHidden && update !== null && node.tag === HostRoot) {
+  if (node.tag === HostRoot) {
     const root: FiberRoot = node.stateNode;
-    markHiddenUpdate(root, update, lane);
+    if (isHidden && update !== null) {
+      markHiddenUpdate(root, update, lane);
+    }
+    return root;
   }
+  return null;
 }
 
 function getRootForUpdatedFiber(sourceFiber: Fiber): FiberRoot | null {

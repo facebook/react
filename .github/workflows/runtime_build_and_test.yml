@@ -38,8 +38,8 @@ jobs:
     name: Flow check ${{ matrix.flow_inline_config_shortname }}
     needs: discover_flow_inline_configs
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         flow_inline_config_shortname: ${{ fromJSON(needs.discover_flow_inline_configs.outputs.matrix) }}
     steps:
@@ -117,6 +117,7 @@ jobs:
     name: yarn test ${{ matrix.params }} (Shard ${{ matrix.shard }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         params:
           - "-r=stable --env=development"
@@ -144,7 +145,6 @@ jobs:
           - 3/5
           - 4/5
           - 5/5
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -170,6 +170,7 @@ jobs:
     name: yarn build and lint
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
         worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
@@ -215,6 +216,7 @@ jobs:
     name: yarn test-build
     needs: build_and_lint
     strategy:
+      fail-fast: false
       matrix:
         test_params: [
           # Intentionally passing these as strings instead of creating a
@@ -250,7 +252,6 @@ jobs:
           - 1/3
           - 2/3
           - 3/3
-    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -476,9 +477,7 @@ jobs:
           fi
       - name: Playwright install deps
         working-directory: fixtures/flight
-        run: |
-          npx playwright install
-          sudo npx playwright install-deps
+        run: npx playwright install --with-deps chromium
       - name: Run tests
         working-directory: fixtures/flight
         run: yarn test
@@ -501,6 +500,10 @@ jobs:
     name: Build DevTools and process artifacts
     needs: build_and_lint
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox, edge]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -525,31 +528,32 @@ jobs:
           pattern: _build_*
           path: build
           merge-multiple: true
-      - run: ./scripts/ci/pack_and_store_devtools_artifacts.sh
+      - run: ./scripts/ci/pack_and_store_devtools_artifacts.sh ${{ matrix.browser }}
         env:
           RELEASE_CHANNEL: experimental
       - name: Display structure of build
         run: ls -R build
-      - name: Archive devtools build
+      # Simplifies getting the extension for local testing
+      - name: Archive ${{ matrix.browser }} extension
         uses: actions/upload-artifact@v4
+        with:
+          name: react-devtools-${{ matrix.browser }}-extension
+          path: build/devtools/${{ matrix.browser }}-extension.zip
+
+  merge_devtools_artifacts:
+    name: Merge DevTools artifacts
+    needs: build_devtools_and_process_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge artifacts
+        uses: actions/upload-artifact/merge@v4
         with:
           name: react-devtools
-          path: build/devtools.tgz
-      # Simplifies getting the extension for local testing
-      - name: Archive chrome extension
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-devtools-chrome-extension
-          path: build/devtools/chrome-extension.zip
-      - name: Archive firefox extension
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-devtools-firefox-extension
-          path: build/devtools/firefox-extension.zip
+          pattern: react-devtools-*-extension
 
   run_devtools_e2e_tests:
     name: Run DevTools e2e tests
-    needs: build_devtools_and_process_artifacts
+    needs: build_and_lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -583,52 +587,10 @@ jobs:
           RELEASE_CHANNEL: experimental
 
   # ----- SIZEBOT -----
-  download_base_build_for_sizebot:
-    if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' }}
-    name: Download base build for sizebot
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
-      - name: Restore cached node_modules
-        uses: actions/cache@v4
-        id: node_modules
-        with:
-          path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
-      - name: Ensure clean build directory
-        run: rm -rf build
-      - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
-        working-directory: scripts/release
-      - name: Download artifacts for base revision
-        run: |
-          git fetch origin main
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse origin/main)
-          mv ./build ./base-build
-      # TODO: The `download-experimental-build` script copies the npm
-      # packages into the `node_modules` directory. This is a historical
-      # quirk of how the release script works. Let's pretend they
-      # don't exist.
-      - name: Delete extraneous files
-        run: rm -rf ./base-build/node_modules
-      - name: Display structure of base-build
-        run: ls -R base-build
-      - name: Archive base-build
-        uses: actions/upload-artifact@v4
-        with:
-          name: base-build
-          path: base-build
-
   sizebot:
+    if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' && github.event.pull_request.base.ref == 'main' }}
     name: Run sizebot
-    needs: [build_and_lint, download_base_build_for_sizebot]
+    needs: [build_and_lint]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -648,6 +610,22 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        working-directory: scripts/release
+      - name: Download artifacts for base revision
+        run: |
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse ${{ github.event.pull_request.base.sha }})
+          mv ./build ./base-build
+      # TODO: The `download-experimental-build` script copies the npm
+      # packages into the `node_modules` directory. This is a historical
+      # quirk of how the release script works. Let's pretend they
+      # don't exist.
+      - name: Delete extraneous files
+        run: rm -rf ./base-build/node_modules
+      - name: Display structure of base-build from origin/main
+        run: ls -R base-build
+      - name: Ensure clean build directory
+        run: rm -rf build
+      - run: yarn install --frozen-lockfile
       - name: Restore archived build for PR
         uses: actions/download-artifact@v4
         with:
@@ -660,13 +638,6 @@ jobs:
           node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
       - name: Display structure of build for PR
         run: ls -R build
-      - name: Restore archived base-build from origin/main
-        uses: actions/download-artifact@v4
-        with:
-          name: base-build
-          path: base-build
-      - name: Display structure of base-build from origin/main
-        run: ls -R base-build
       - run: echo ${{ github.sha }} >> build/COMMIT_SHA
       - run: node ./scripts/tasks/danger
       - name: Archive sizebot results

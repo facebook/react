@@ -240,9 +240,6 @@ describe('ReactLazy', () => {
         '  }\n\n' +
         'Your code should look like: \n  ' +
         "const MyComponent = lazy(() => import('./MyComponent'))\n" +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Lazy (at **)\n' + '    in Suspense (at **)\n') +
         '    in App (at **)',
       'lazy: Expected the result of a dynamic import() call. ' +
         'Instead received: function Text(props) {\n' +
@@ -251,9 +248,6 @@ describe('ReactLazy', () => {
         '  }\n\n' +
         'Your code should look like: \n  ' +
         "const MyComponent = lazy(() => import('./MyComponent'))\n" +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Lazy (at **)\n' + '    in Suspense (at **)\n') +
         '    in App (at **)',
     ]);
     expect(root).not.toMatchRenderedOutput('Hi');
@@ -749,8 +743,7 @@ describe('ReactLazy', () => {
       'T: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.\n' +
-        '    in T (at **)\n' +
-        '    in Suspense (at **)',
+        '    in T (at **)',
     ]);
 
     expect(root).toMatchRenderedOutput('Hi Bye');
@@ -855,11 +848,15 @@ describe('ReactLazy', () => {
     );
   });
 
-  async function verifyResolvesProps(
-    Add,
-    shouldWarnAboutFunctionDefaultProps,
-    shouldWarnAboutMemoDefaultProps,
-  ) {
+  // @gate !disableDefaultPropsExceptForClasses
+  it('resolves props for function component with defaultProps', async () => {
+    function Add(props) {
+      expect(props.innerWithDefault).toBe(42);
+      return props.inner + props.outer;
+    }
+    Add.defaultProps = {
+      innerWithDefault: 42,
+    };
     const LazyAdd = lazy(() => fakeImport(Add));
     const root = ReactTestRenderer.create(
       <Suspense fallback={<Text text="Loading..." />}>
@@ -876,18 +873,10 @@ describe('ReactLazy', () => {
     // Mount
     await act(() => resolveFakeImport(Add));
 
-    if (shouldWarnAboutFunctionDefaultProps) {
-      assertConsoleErrorDev([
-        'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.\n' +
-          '    in Add (at **)\n' +
-          '    in Suspense (at **)',
-      ]);
-    } else if (shouldWarnAboutMemoDefaultProps) {
-      assertConsoleErrorDev([
-        'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.\n' +
-          '    in Suspense (at **)',
-      ]);
-    }
+    assertConsoleErrorDev([
+      'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.\n' +
+        '    in Add (at **)',
+    ]);
 
     expect(root).toMatchRenderedOutput('22');
 
@@ -899,25 +888,38 @@ describe('ReactLazy', () => {
     );
     await waitForAll([]);
     expect(root).toMatchRenderedOutput('0');
-  }
-
-  // @gate !disableDefaultPropsExceptForClasses
-  it('resolves props for function component with defaultProps', async () => {
-    function Add(props) {
-      expect(props.innerWithDefault).toBe(42);
-      return props.inner + props.outer;
-    }
-    Add.defaultProps = {
-      innerWithDefault: 42,
-    };
-    await verifyResolvesProps(Add, true);
   });
 
   it('resolves props for function component without defaultProps', async () => {
     function Add(props) {
       return props.inner + props.outer;
     }
-    await verifyResolvesProps(Add);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('resolves props for class component with defaultProps', async () => {
@@ -930,7 +932,32 @@ describe('ReactLazy', () => {
     Add.defaultProps = {
       innerWithDefault: 42,
     };
-    await verifyResolvesProps(Add);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('resolves props for class component without defaultProps', async () => {
@@ -939,7 +966,32 @@ describe('ReactLazy', () => {
         return this.props.inner + this.props.outer;
       }
     }
-    await verifyResolvesProps(Add);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   // @gate !disableDefaultPropsExceptForClasses
@@ -952,7 +1004,32 @@ describe('ReactLazy', () => {
     Add.defaultProps = {
       innerWithDefault: 42,
     };
-    await verifyResolvesProps(Add);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('resolves props for forwardRef component without defaultProps', async () => {
@@ -960,7 +1037,33 @@ describe('ReactLazy', () => {
       return props.inner + props.outer;
     });
     Add.displayName = 'Add';
-    await verifyResolvesProps(Add);
+
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   // @gate !disableDefaultPropsExceptForClasses
@@ -973,7 +1076,39 @@ describe('ReactLazy', () => {
     Add.defaultProps = {
       innerWithDefault: 42,
     };
-    await verifyResolvesProps(Add, false, true);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    assertConsoleErrorDev(
+      [
+        'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+      ],
+      {withoutStack: true},
+    );
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('resolves props for outer memo component without defaultProps', async () => {
@@ -981,7 +1116,32 @@ describe('ReactLazy', () => {
       return props.inner + props.outer;
     };
     Add = React.memo(Add);
-    await verifyResolvesProps(Add);
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   // @gate !disableDefaultPropsExceptForClasses
@@ -994,7 +1154,40 @@ describe('ReactLazy', () => {
     Add.defaultProps = {
       innerWithDefault: 42,
     };
-    await verifyResolvesProps(React.memo(Add), true);
+    const MemoAdd = React.memo(Add);
+    const LazyAdd = lazy(() => fakeImport(MemoAdd));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(MemoAdd));
+
+    assertConsoleErrorDev(
+      [
+        'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+      ],
+      {withoutStack: true},
+    );
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('resolves props for inner memo component without defaultProps', async () => {
@@ -1002,7 +1195,32 @@ describe('ReactLazy', () => {
       return props.inner + props.outer;
     };
     Add.displayName = 'Add';
-    await verifyResolvesProps(React.memo(Add));
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('22');
+
+    // Mount
+    await act(() => resolveFakeImport(Add));
+
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner={false} outer={false} />
+      </Suspense>,
+    );
+    await waitForAll([]);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   // @gate !disableDefaultPropsExceptForClasses
@@ -1030,12 +1248,13 @@ describe('ReactLazy', () => {
     // Mount
     await act(() => resolveFakeImport(T));
     assertLog(['Inner default text']);
-    assertConsoleErrorDev([
-      'T: Support for defaultProps will be removed from function components in a future major release. ' +
-        'Use JavaScript default parameters instead.\n' +
-        '    in T (at **)\n' +
-        '    in Suspense (at **)',
-    ]);
+    assertConsoleErrorDev(
+      [
+        'T: Support for defaultProps will be removed from function components in a future major release. ' +
+          'Use JavaScript default parameters instead.',
+      ],
+      {withoutStack: true},
+    );
     expect(root).toMatchRenderedOutput('Inner default text');
 
     // Update
@@ -1074,11 +1293,7 @@ describe('ReactLazy', () => {
         '\n' +
         'Check the render method of `Foo`. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? '    in Foo (at **)'
-          : '    in Text (at **)\n' +
-            '    in Foo (at **)\n' +
-            '    in Suspense (at **)'),
+        '    in Foo (at **)',
     ]);
     expect(root).toMatchRenderedOutput(<div>AB</div>);
   });
@@ -1154,11 +1369,13 @@ describe('ReactLazy', () => {
 
     // Mount
     await act(() => resolveFakeImport(Add));
-    assertConsoleErrorDev([
-      'Unknown: Support for defaultProps will be removed from memo components in a future major release. ' +
-        'Use JavaScript default parameters instead.\n' +
-        '    in Suspense (at **)',
-    ]);
+    assertConsoleErrorDev(
+      [
+        'Unknown: Support for defaultProps will be removed from memo components in a future major release. ' +
+          'Use JavaScript default parameters instead.',
+      ],
+      {withoutStack: true},
+    );
     expect(root).toMatchRenderedOutput('4');
 
     // Update (shallowly equal)
@@ -1243,14 +1460,15 @@ describe('ReactLazy', () => {
 
     // Mount
     await act(() => resolveFakeImport(Add));
-    assertConsoleErrorDev([
-      'Memo: Support for defaultProps will be removed from memo components in a future major release. ' +
-        'Use JavaScript default parameters instead.\n' +
-        '    in Suspense (at **)',
-      'Unknown: Support for defaultProps will be removed from memo components in a future major release. ' +
-        'Use JavaScript default parameters instead.\n' +
-        '    in Suspense (at **)',
-    ]);
+    assertConsoleErrorDev(
+      [
+        'Memo: Support for defaultProps will be removed from memo components in a future major release. ' +
+          'Use JavaScript default parameters instead.',
+        'Unknown: Support for defaultProps will be removed from memo components in a future major release. ' +
+          'Use JavaScript default parameters instead.',
+      ],
+      {withoutStack: true},
+    );
     expect(root).toMatchRenderedOutput('4');
 
     // Update
