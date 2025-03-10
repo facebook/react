@@ -21,9 +21,8 @@
     "react"
   ],
   "scripts": {
-    "postinstall": "../../scripts/react-compiler/link-compiler.sh",
     "build:compiler": "cd ../../compiler && yarn workspace babel-plugin-react-compiler build",
-    "test": "jest",
+    "test": "yarn build:compiler && jest",
     "typecheck": "tsc --noEmit -p ./tsconfig.json"
   },
   "license": "MIT",

@@ -216,7 +216,6 @@ export type PipelineErrorEvent = {
 };
 export type TimingEvent = {
   kind: 'Timing';
-  // @ts-ignore
   measurement: PerformanceMeasure;
 };
 
