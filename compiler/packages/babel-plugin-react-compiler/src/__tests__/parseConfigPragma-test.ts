@@ -27,6 +27,7 @@ describe('parseConfigPragmaForTests()', () => {
       panicThreshold: 'all_errors',
       environment: {
         ...defaultOptions.environment,
+        enableEmitHookGuards: null,
         enableUseTypeAnnotations: true,
         validateNoSetStateInPassiveEffects: true,
         validateNoSetStateInRender: false,
