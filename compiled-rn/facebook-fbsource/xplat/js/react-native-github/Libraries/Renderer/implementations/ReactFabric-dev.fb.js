@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b5158928793dc9a03741ced8d569f157>>
+ * @generated SignedSource<<9365b560e937c619b4c18c65b56e79e0>>
  */
 
 "use strict";
@@ -14602,6 +14602,7 @@ __DEV__ &&
         dynamicFlagsUntyped.enableFastAddPropertiesInDiffing,
       enableLazyPublicInstanceInFabric =
         dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
+      renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
       assign = Object.assign,
       disabledDepth = 0,
       prevLog,
@@ -14619,7 +14620,9 @@ __DEV__ &&
       "function" === typeof WeakMap ? WeakMap : Map
     )();
     var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-      REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
+      REACT_ELEMENT_TYPE = renameElementSymbol
+        ? Symbol.for("react.transitional.element")
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -17455,10 +17458,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-cc680065-20250307",
+        version: "19.1.0-native-fb-50ab2dde-20250310",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-cc680065-20250307"
+        reconcilerVersion: "19.1.0-native-fb-50ab2dde-20250310"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

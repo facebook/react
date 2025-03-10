@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8d99bc6cec263574ded9c3094de604af>>
+ * @generated SignedSource<<21565715a09b85c6705e08b66f7bc712>>
  */
 
 "use strict";
@@ -664,9 +664,13 @@ __DEV__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-    var enableUseEffectCRUDOverload =
-        require("ReactNativeInternalFeatureFlags").enableUseEffectCRUDOverload,
-      REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+    var dynamicFlags = require("ReactNativeInternalFeatureFlags"),
+      enableUseEffectCRUDOverload = dynamicFlags.enableUseEffectCRUDOverload;
+    dynamicFlags = dynamicFlags.renameElementSymbol;
+    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = dynamicFlags
+        ? Symbol.for("react.transitional.element")
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -678,11 +682,11 @@ __DEV__ &&
       REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
       REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
-      REACT_LAZY_TYPE = Symbol.for("react.lazy"),
-      REACT_SCOPE_TYPE = Symbol.for("react.scope"),
-      REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-      REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-      REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
+      REACT_LAZY_TYPE = Symbol.for("react.lazy");
+    dynamicFlags = Symbol.for("react.scope");
+    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+    REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.legacy_hidden");
+    var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
       didWarnStateUpdateForUnmountedComponent = {},
@@ -732,10 +736,10 @@ __DEV__ &&
       deprecatedAPIs.hasOwnProperty(fnName) &&
         defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
     ComponentDummy.prototype = Component.prototype;
-    deprecatedAPIs = PureComponent.prototype = new ComponentDummy();
-    deprecatedAPIs.constructor = PureComponent;
-    assign(deprecatedAPIs, Component.prototype);
-    deprecatedAPIs.isPureReactComponent = !0;
+    var fnName = (PureComponent.prototype = new ComponentDummy());
+    fnName.constructor = PureComponent;
+    assign(fnName, Component.prototype);
+    fnName.isPureReactComponent = !0;
     var isArrayImpl = Array.isArray,
       REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference"),
       ReactSharedInternals = {
@@ -806,8 +810,8 @@ __DEV__ &&
               });
             }
           : enqueueTask;
-    deprecatedAPIs = Object.freeze({ __proto__: null, c: useMemoCache });
-    var fnName = {
+    fnName = Object.freeze({ __proto__: null, c: useMemoCache });
+    deprecatedAPIs = {
       map: mapChildren,
       forEach: function (children, forEachFunc, forEachContext) {
         mapChildren(
@@ -845,7 +849,7 @@ __DEV__ &&
       var getCurrentStack = ReactSharedInternals.getCurrentStack;
       return null === getCurrentStack ? null : getCurrentStack();
     };
-    exports.Children = fnName;
+    exports.Children = deprecatedAPIs;
     exports.Component = Component;
     exports.Fragment = REACT_FRAGMENT_TYPE;
     exports.Profiler = REACT_PROFILER_TYPE;
@@ -854,7 +858,7 @@ __DEV__ &&
     exports.Suspense = REACT_SUSPENSE_TYPE;
     exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
       ReactSharedInternals;
-    exports.__COMPILER_RUNTIME = deprecatedAPIs;
+    exports.__COMPILER_RUNTIME = fnName;
     exports.act = function (callback) {
       var prevIsBatchingLegacy = ReactSharedInternals.isBatchingLegacy,
         prevActQueue = ReactSharedInternals.actQueue,
@@ -1287,8 +1291,8 @@ __DEV__ &&
       }
     };
     exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
-    exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
-    exports.unstable_Scope = REACT_SCOPE_TYPE;
+    exports.unstable_LegacyHidden = REACT_LEGACY_ELEMENT_TYPE;
+    exports.unstable_Scope = dynamicFlags;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
@@ -1414,7 +1418,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-cc680065-20250307";
+    exports.version = "19.1.0-native-fb-50ab2dde-20250310";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

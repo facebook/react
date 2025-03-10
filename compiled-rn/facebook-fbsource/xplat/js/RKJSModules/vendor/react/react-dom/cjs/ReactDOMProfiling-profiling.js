@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6d765dd4f38cc7ab485a323b437fb85d>>
+ * @generated SignedSource<<0728b2a5ac3d13fd80eeb53acfb8798f>>
  */
 
 /*
@@ -44,7 +44,8 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   enablePersistedModeClonedFlag =
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
   enableUseEffectCRUDOverload = dynamicFlagsUntyped.enableUseEffectCRUDOverload,
-  enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering;
+  enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
+  renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol;
 function isValidContainer(node) {
   return !(
     !node ||
@@ -159,6 +160,9 @@ function findCurrentHostFiberImpl(node) {
 }
 var assign = Object.assign,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+  REACT_ELEMENT_TYPE = renameElementSymbol
+    ? Symbol.for("react.transitional.element")
+    : REACT_LEGACY_ELEMENT_TYPE,
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -5231,7 +5235,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       );
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           return (
             (lanes = createFiberFromTypeAndProps(
               newChild.type,
@@ -5295,7 +5299,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         : updateTextNode(returnFiber, oldFiber, "" + newChild, lanes);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           return newChild.key === key
             ? updateElement(returnFiber, oldFiber, newChild, lanes)
             : null;
@@ -5350,7 +5354,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       );
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           return (
             (existingChildren =
               existingChildren.get(
@@ -5586,7 +5590,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       (newChild = newChild.props.children);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           a: {
             for (var key = newChild.key; null !== currentFirstChild; ) {
               if (currentFirstChild.key === key) {
@@ -16838,14 +16842,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1913 = React.version;
 if (
-  "19.1.0-native-fb-cc680065-20250307" !==
+  "19.1.0-native-fb-50ab2dde-20250310" !==
   isomorphicReactPackageVersion$jscomp$inline_1913
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1913,
-      "19.1.0-native-fb-cc680065-20250307"
+      "19.1.0-native-fb-50ab2dde-20250310"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16867,10 +16871,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1920 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-cc680065-20250307",
+  version: "19.1.0-native-fb-50ab2dde-20250310",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-cc680065-20250307",
+  reconcilerVersion: "19.1.0-native-fb-50ab2dde-20250310",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$294 = 0;
@@ -17143,7 +17147,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-cc680065-20250307";
+exports.version = "19.1.0-native-fb-50ab2dde-20250310";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

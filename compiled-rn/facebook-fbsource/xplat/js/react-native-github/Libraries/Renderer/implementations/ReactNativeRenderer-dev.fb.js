@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b587eed4b9f3310f3dc1ab948d174cb1>>
+ * @generated SignedSource<<78435502c3919741163132bcf99f4f2d>>
  */
 
 "use strict";
@@ -14690,6 +14690,7 @@ __DEV__ &&
       enableUseEffectCRUDOverload =
         dynamicFlagsUntyped.enableUseEffectCRUDOverload,
       enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
+      renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
       assign = Object.assign,
       disabledDepth = 0,
       prevLog,
@@ -14707,7 +14708,9 @@ __DEV__ &&
       "function" === typeof WeakMap ? WeakMap : Map
     )();
     var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-      REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
+      REACT_ELEMENT_TYPE = renameElementSymbol
+        ? Symbol.for("react.transitional.element")
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -17612,11 +17615,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.1.0-native-fb-cc680065-20250307" !== isomorphicReactPackageVersion)
+    if ("19.1.0-native-fb-50ab2dde-20250310" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.1.0-native-fb-cc680065-20250307\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.1.0-native-fb-50ab2dde-20250310\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17642,10 +17645,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-cc680065-20250307",
+        version: "19.1.0-native-fb-50ab2dde-20250310",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-cc680065-20250307"
+        reconcilerVersion: "19.1.0-native-fb-50ab2dde-20250310"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

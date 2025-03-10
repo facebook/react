@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<608ceae51e00cabefeebc1da2537e215>>
+ * @generated SignedSource<<3e4580300c23f7364cf41f944eda750d>>
  */
 
 "use strict";
@@ -44,7 +44,12 @@ __DEV__ &&
         }
       }
     }
-    var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+    var renameElementSymbol =
+        require("ReactNativeInternalFeatureFlags").renameElementSymbol,
+      REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = renameElementSymbol
+        ? Symbol.for("react.transitional.element")
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),

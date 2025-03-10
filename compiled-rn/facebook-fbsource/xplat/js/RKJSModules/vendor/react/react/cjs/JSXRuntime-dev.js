@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6d7a9a58ab0c06d307f489ce3459e171>>
+ * @generated SignedSource<<abf680778749b9bc131e2785769daf82>>
  */
 
 "use strict";
@@ -281,8 +281,13 @@ __DEV__ &&
         node._store &&
         (node._store.validated = 1);
     }
-    var React = require("react"),
-      REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+    var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
+      React = require("react");
+    dynamicFlagsUntyped = dynamicFlagsUntyped.renameElementSymbol;
+    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = dynamicFlagsUntyped
+        ? Symbol.for("react.transitional.element")
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),

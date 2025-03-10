@@ -7,11 +7,16 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<73d358767882eb61a273bd94c8f9775a>>
+ * @generated SignedSource<<067a40ab0533b7fbe5433e72a9615081>>
  */
 
 "use strict";
-var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+var renameElementSymbol =
+    require("ReactNativeInternalFeatureFlags").renameElementSymbol,
+  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+  REACT_ELEMENT_TYPE = renameElementSymbol
+    ? Symbol.for("react.transitional.element")
+    : REACT_LEGACY_ELEMENT_TYPE,
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -31,7 +36,7 @@ function typeOf(object) {
   if ("object" === typeof object && null !== object) {
     var $$typeof = object.$$typeof;
     switch ($$typeof) {
-      case REACT_LEGACY_ELEMENT_TYPE:
+      case REACT_ELEMENT_TYPE:
         switch (((object = object.type), object)) {
           case REACT_FRAGMENT_TYPE:
           case REACT_PROFILER_TYPE:
@@ -60,7 +65,7 @@ function typeOf(object) {
 }
 exports.ContextConsumer = REACT_CONSUMER_TYPE;
 exports.ContextProvider = REACT_CONTEXT_TYPE;
-exports.Element = REACT_LEGACY_ELEMENT_TYPE;
+exports.Element = REACT_ELEMENT_TYPE;
 exports.ForwardRef = REACT_FORWARD_REF_TYPE;
 exports.Fragment = REACT_FRAGMENT_TYPE;
 exports.Lazy = REACT_LAZY_TYPE;
@@ -80,7 +85,7 @@ exports.isElement = function (object) {
   return (
     "object" === typeof object &&
     null !== object &&
-    object.$$typeof === REACT_LEGACY_ELEMENT_TYPE
+    object.$$typeof === REACT_ELEMENT_TYPE
   );
 };
 exports.isForwardRef = function (object) {

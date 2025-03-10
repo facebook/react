@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<54fc94ddf27e82c5890c2db787814091>>
+ * @generated SignedSource<<66e603c320f24373204c20ef148cb796>>
  */
 
 "use strict";
@@ -15,9 +15,13 @@
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-var enableUseEffectCRUDOverload =
-    require("ReactNativeInternalFeatureFlags").enableUseEffectCRUDOverload,
+var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
+  enableUseEffectCRUDOverload = dynamicFlagsUntyped.enableUseEffectCRUDOverload,
+  renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+  REACT_ELEMENT_TYPE = renameElementSymbol
+    ? Symbol.for("react.transitional.element")
+    : REACT_LEGACY_ELEMENT_TYPE,
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -91,7 +95,7 @@ var isArrayImpl = Array.isArray,
 function ReactElement(type, key, self, source, owner, props) {
   self = props.ref;
   return {
-    $$typeof: REACT_LEGACY_ELEMENT_TYPE,
+    $$typeof: REACT_ELEMENT_TYPE,
     type: type,
     key: key,
     ref: void 0 !== self ? self : null,
@@ -123,7 +127,7 @@ function isValidElement(object) {
   return (
     "object" === typeof object &&
     null !== object &&
-    object.$$typeof === REACT_LEGACY_ELEMENT_TYPE
+    object.$$typeof === REACT_ELEMENT_TYPE
   );
 }
 function escape(key) {
@@ -188,7 +192,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
         break;
       case "object":
         switch (children.$$typeof) {
-          case REACT_LEGACY_ELEMENT_TYPE:
+          case REACT_ELEMENT_TYPE:
           case REACT_PORTAL_TYPE:
             invokeCallback = !0;
             break;
@@ -607,7 +611,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.1.0-native-fb-cc680065-20250307";
+exports.version = "19.1.0-native-fb-50ab2dde-20250310";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

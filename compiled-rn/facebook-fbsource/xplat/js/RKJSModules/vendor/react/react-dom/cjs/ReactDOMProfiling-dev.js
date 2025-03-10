@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bdeb7247beb66d1cca26602f057756b5>>
+ * @generated SignedSource<<e36ed991c4596ad688caa81cb1a007e4>>
  */
 
 /*
@@ -22414,9 +22414,12 @@ __DEV__ &&
       enableUseEffectCRUDOverload =
         dynamicFlagsUntyped.enableUseEffectCRUDOverload,
       enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
+      renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
       assign = Object.assign,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-      REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
+      REACT_ELEMENT_TYPE = renameElementSymbol
+        ? Symbol.for("react.transitional.element")
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -26125,11 +26128,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-native-fb-cc680065-20250307" !== isomorphicReactPackageVersion)
+      if ("19.1.0-native-fb-50ab2dde-20250310" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-native-fb-cc680065-20250307\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-native-fb-50ab2dde-20250310\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26166,10 +26169,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-native-fb-cc680065-20250307",
+          version: "19.1.0-native-fb-50ab2dde-20250310",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-native-fb-cc680065-20250307"
+          reconcilerVersion: "19.1.0-native-fb-50ab2dde-20250310"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26629,7 +26632,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-native-fb-cc680065-20250307";
+    exports.version = "19.1.0-native-fb-50ab2dde-20250310";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

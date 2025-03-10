@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e0afae988fa2563080a265c64dd6afb7>>
+ * @generated SignedSource<<592c03c54372da4b3d2df33c58e5cd59>>
  */
 
 "use strict";
@@ -31,6 +31,7 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
   enableUseEffectCRUDOverload = dynamicFlagsUntyped.enableUseEffectCRUDOverload,
   enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
+  renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
   assign = Object.assign,
   prefix,
   suffix;
@@ -220,6 +221,9 @@ function getStackByFiberInDevAndProd(workInProgress) {
   }
 }
 var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+  REACT_ELEMENT_TYPE = renameElementSymbol
+    ? Symbol.for("react.transitional.element")
+    : REACT_LEGACY_ELEMENT_TYPE,
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -5013,7 +5017,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       );
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           return (
             (lanes = createFiberFromTypeAndProps(
               newChild.type,
@@ -5077,7 +5081,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         : updateTextNode(returnFiber, oldFiber, "" + newChild, lanes);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           return newChild.key === key
             ? updateElement(returnFiber, oldFiber, newChild, lanes)
             : null;
@@ -5132,7 +5136,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       );
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           return (
             (existingChildren =
               existingChildren.get(
@@ -5361,7 +5365,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       (newChild = newChild.props.children);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           a: {
             for (var key = newChild.key; null !== currentFirstChild; ) {
               if (currentFirstChild.key === key) {
@@ -11834,11 +11838,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-cc680065-20250307" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-50ab2dde-20250310" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-cc680065-20250307\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-50ab2dde-20250310\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11887,10 +11891,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1385 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-cc680065-20250307",
+    version: "19.1.0-native-fb-50ab2dde-20250310",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-cc680065-20250307"
+    reconcilerVersion: "19.1.0-native-fb-50ab2dde-20250310"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1385.rendererConfig = extraDevToolsConfig);
