@@ -1,8 +1,9 @@
 import {makeArray} from 'shared-runtime';
 
-function Component(props) {
+const other = [0, 1];
+function Component({}) {
   const items = makeArray(0, 1, 2, null, 4, false, 6);
-  const max = Math.max(...items.filter(Boolean));
+  const max = Math.max(2, items.push(5), ...other);
   return max;
 }
 

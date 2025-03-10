@@ -119,8 +119,8 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       ],
       /*
        * https://tc39.es/ecma262/multipage/indexed-collections.html#sec-array.from
-       * Array.from(arrayLike, optionalFn, optionalThis) not added because
-       * the Effect of `arrayLike` is polymorphic i.e.
+       * Array.from(arrayLike, optionalFn, optionalThis)
+       * Note that the Effect of `arrayLike` is polymorphic i.e.
        *  - Effect.read if
        *     - it does not have an @iterator property and is array-like
        *       (i.e. has a length property)
@@ -128,6 +128,20 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
        *  - Effect.mutate if it is a self-mutative iterator (e.g. a generator
        *    function)
        */
+      [
+        'from',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [
+            Effect.ConditionallyMutate,
+            Effect.ConditionallyMutate,
+            Effect.ConditionallyMutate,
+          ],
+          restParam: Effect.Read,
+          returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable,
+        }),
+      ],
       [
         'of',
         // Array.of(element0, ..., elementN)
