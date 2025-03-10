@@ -13,7 +13,10 @@ import type {Instance, TextInstance} from './ReactFiberConfig';
 
 import type {OffscreenState} from './ReactFiberActivityComponent';
 
-import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
+import type {
+  ViewTransitionState,
+  ViewTransitionProps,
+} from './ReactFiberViewTransitionComponent';
 
 import {
   cloneMutableInstance,
@@ -42,6 +45,8 @@ import {
   ContentReset,
   NoFlags,
   Visibility,
+  ViewTransitionNamedStatic,
+  ViewTransitionStatic,
 } from './ReactFiberFlags';
 import {
   HostComponent,
@@ -60,6 +65,52 @@ function detectMutationOrInsertClones(finishedWork: Fiber): boolean {
 }
 
 let unhideHostChildren = false;
+
+function trackDeletedPairViewTransitions(deletion: Fiber): void {
+  if ((deletion.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
+    // This has no named view transitions in its subtree.
+    return;
+  }
+  let child = deletion.child;
+  while (child !== null) {
+    if (child.tag === OffscreenComponent && child.memoizedState === null) {
+      // This tree was already hidden so we skip it.
+    } else {
+      if (
+        child.tag === ViewTransitionComponent &&
+        (child.flags & ViewTransitionNamedStatic) !== NoFlags
+      ) {
+        const props: ViewTransitionProps = child.memoizedProps;
+        const name = props.name;
+        if (name != null && name !== 'auto') {
+          // TODO: Find a pair
+        }
+      }
+      trackDeletedPairViewTransitions(child);
+    }
+    child = child.sibling;
+  }
+}
+
+function trackExitViewTransitions(deletion: Fiber): void {
+  if (deletion.tag === ViewTransitionComponent) {
+    const props: ViewTransitionProps = deletion.memoizedProps;
+    const name = props.name;
+    if (name != null && name !== 'auto') {
+      // TODO: Find a pair
+    }
+    // Look for more pairs deeper in the tree.
+    trackDeletedPairViewTransitions(deletion);
+  } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+    let child = deletion.child;
+    while (child !== null) {
+      trackExitViewTransitions(child);
+      child = child.sibling;
+    }
+  } else {
+    trackDeletedPairViewTransitions(deletion);
+  }
+}
 
 function recursivelyInsertClonesFromExistingTree(
   parentFiber: Fiber,
@@ -162,8 +213,8 @@ function recursivelyInsertClones(
   const deletions = parentFiber.deletions;
   if (deletions !== null) {
     for (let i = 0; i < deletions.length; i++) {
-      // const childToDelete = deletions[i];
-      // TODO
+      const childToDelete = deletions[i];
+      trackExitViewTransitions(childToDelete);
     }
   }
 
@@ -364,6 +415,9 @@ function insertDestinationClonesOfFiber(
           parentViewTransition,
         );
         unhideHostChildren = prevUnhide;
+      } else if (current !== null && current.memoizedState === null) {
+        // Was previously mounted as visible but is now hidden.
+        trackExitViewTransitions(current);
       }
       break;
     }
