@@ -30,6 +30,7 @@ export const {
   enableSiblingPrerendering,
   enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric,
+  renameElementSymbol,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -73,7 +74,6 @@ export const enableTrustedTypesIntegration = false;
 export const enableUpdaterTracking = __PROFILE__;
 export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
-export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
