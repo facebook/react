@@ -1198,7 +1198,7 @@ const bundles = [
     externals: [],
     tsconfig: './packages/eslint-plugin-react-hooks/tsconfig.json',
     prebuild:
-      'cd compiler/packages/babel-plugin-react-compiler && yarn && yarn tsc -b',
+      'cd compiler && yarn && yarn workspace babel-plugin-react-compiler build --dts',
   },
 
   /******* React Fresh *******/

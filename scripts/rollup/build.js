@@ -25,6 +25,7 @@ const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
 const codeFrame = require('@babel/code-frame').default;
 const Wrappers = require('./wrappers');
+const commonjs = require('@rollup/plugin-commonjs');
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
 
@@ -392,12 +393,15 @@ function getPlugins(
               };
             },
           },
+      bundle.tsconfig != null ? commonjs() : false,
       // Shim any modules that need forking in this environment.
       useForks(forks),
       // Ensure we don't try to bundle any fbjs modules.
       forbidFBJSImports(),
       // Use Node resolution mechanism.
       resolve({
+        preferBuiltins:
+          bundle.name === 'eslint-plugin-react-hooks' || undefined,
         // skip: externals, // TODO: options.skip was removed in @rollup/plugin-node-resolve 3.0.0
       }),
       // Remove license headers from individual modules
@@ -405,23 +409,29 @@ function getPlugins(
         exclude: 'node_modules/**/*',
       }),
       // Compile to ES2015.
-      babel(
-        getBabelConfig(
-          updateBabelOptions,
-          bundleType,
-          packageName,
-          externals,
-          !isProduction,
-          bundle
-        )
-      ),
-      // Remove 'use strict' from individual source files.
-      {
-        name: "remove 'use strict'",
-        transform(source) {
-          return source.replace(/['"]use strict["']/g, '');
-        },
-      },
+      bundle.tsconfig == null
+        ? babel(
+            getBabelConfig(
+              updateBabelOptions,
+              bundleType,
+              packageName,
+              externals,
+              !isProduction,
+              bundle
+            )
+          )
+        : false,
+      // Remove 'use strict' from individual source files. We skip eslint-plugin-react-hooks because
+      // it bundles compiler-type code that may examine "use strict" used outside of a directive
+      // context, e.g. as a StringLiteral.
+      bundle.name !== 'eslint-plugin-react-hooks'
+        ? {
+            name: "remove 'use strict'",
+            transform(source) {
+              return source.replace(/['"]use strict["']/g, '');
+            },
+          }
+        : false,
       // Turn __DEV__ and process.env checks into constants.
       replace({
         preventAssignment: true,
@@ -784,6 +794,7 @@ function handleRollupWarning(warning) {
 }
 
 function handleRollupError(error) {
+  console.trace();
   loggedErrors.add(error);
   if (!error.code) {
     console.error(error);
@@ -793,6 +804,7 @@ function handleRollupError(error) {
     `\x1b[31m-- ${error.code}${error.plugin ? ` (${error.plugin})` : ''} --`
   );
   console.error(error.stack);
+  console.error(error);
   if (error.loc && error.loc.file) {
     const {file, line, column} = error.loc;
     // This looks like an error from Rollup, e.g. missing export.

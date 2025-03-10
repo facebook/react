@@ -9,13 +9,25 @@
     "types": ["estree-jsx", "node"],
     "downlevelIteration": true,
     "paths": {
-      "babel-plugin-react-compiler": ["../../compiler/packages/babel-plugin-react-compiler/src/index.ts"]
-    }
+      "babel-plugin-react-compiler": ["../../compiler/packages/babel-plugin-react-compiler/dist"]
+    },
+    "jsx": "react-jsxdev",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "typeRoots": [
+      "../../node_modules/@types"
+    ],
+    "checkJs": false,
+    "allowJs": false,
+
+    // weaken strictness from preset
+    "importsNotUsedAsValues": "remove",
+    "noUncheckedIndexedAccess": false,
+    "noUnusedParameters": false,
+    "useUnknownInCatchVariables": true,
+    // ideally turn off only during dev, or on a per-file basis
+    "noUnusedLocals": false,
+    "removeComments": true,
   },
-  "include": ["src/**/*.ts", "__tests__/**/*.ts"],
-  "references": [
-    {
-      "path": "../../compiler/packages/babel-plugin-react-compiler/tsconfig.json"
-    }
-  ]
+  "include": ["src/**/*.ts", "__tests__/**/*.ts"]
 }

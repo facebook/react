@@ -21,8 +21,10 @@
     "react"
   ],
   "scripts": {
+    "postinstall": "../../scripts/react-compiler/link-compiler.sh",
+    "build:compiler": "cd ../../compiler && yarn workspace babel-plugin-react-compiler build",
     "test": "jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit -p ./tsconfig.json"
   },
   "license": "MIT",
   "bugs": {
@@ -41,7 +43,6 @@
     "@babel/core": "^7.24.4",
     "@babel/parser": "^7.24.4",
     "@babel/plugin-transform-private-methods": "^7.24.4",
-    "babel-plugin-react-compiler": "^19.0.0-0",
     "hermes-parser": "^0.25.1",
     "zod": "^3.22.4",
     "zod-validation-error": "^3.0.3"
