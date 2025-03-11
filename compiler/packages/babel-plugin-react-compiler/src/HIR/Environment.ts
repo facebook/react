@@ -571,6 +571,14 @@ const EnvironmentConfigSchema = z.object({
    */
   enableCustomTypeDefinitionForReanimated: z.boolean().default(false),
 
+
+  /**
+   * The import name of React Native Reanimated library, by default, it's `react-native-reanimated`.
+   * In case if you use a custom wrapper around the library, you can specify it here, so
+   * React Compiler will work with Reanimated Babel plugin
+   */
+  reanimatedImportNames: z.array(z.string()).optional(),
+
   /**
    * If specified, this value is used as a pattern for determing which global values should be
    * treated as hooks. The pattern should have a single capture group, which will be used as
@@ -917,7 +925,11 @@ export class Environment {
 
     if (config.enableCustomTypeDefinitionForReanimated) {
       const reanimatedModuleType = getReanimatedModuleType(this.#shapes);
-      this.#moduleTypes.set(REANIMATED_MODULE_NAME, reanimatedModuleType);
+      const reanimatedImportNames: Array<string> = config.reanimatedImportNames ?? [REANIMATED_MODULE_NAME];
+
+      reanimatedImportNames.forEach((importName) => {
+        this.#moduleTypes.set(importName, reanimatedModuleType);
+      });
     }
 
     this.#contextIdentifiers = contextIdentifiers;
