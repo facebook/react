@@ -9,7 +9,7 @@ export default defineConfig({
   dts: false,
   bundle: true,
   format: 'cjs',
-  platform: 'browser',
+  platform: 'node',
   target: 'es2015',
   banner: {
     js: `/**
