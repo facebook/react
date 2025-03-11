@@ -204,19 +204,14 @@ export function commitShowHideHostTextInstance(node: Fiber, isHidden: boolean) {
   }
 }
 
-function getHostParentFiber(fiber: Fiber): Fiber {
-  let parent = fiber.return;
-  while (parent !== null) {
-    if (isHostParent(parent)) {
-      return parent;
-    }
-    parent = parent.return;
+export function commitNewChildToFragmentInstances(
+  fiber: Fiber,
+  parentFragmentInstances: Array<FragmentInstanceType>,
+): void {
+  for (let i = 0; i < parentFragmentInstances.length; i++) {
+    const fragmentInstance = parentFragmentInstances[i];
+    commitNewChildToFragmentInstance(fiber.stateNode, fragmentInstance);
   }
-
-  throw new Error(
-    'Expected to find a host parent. This error is likely caused by a bug ' +
-      'in React. Please file an issue.',
-  );
 }
 
 export function commitFragmentInstanceInsertionEffects(fiber: Fiber): void {
@@ -329,6 +324,7 @@ function insertOrAppendPlacementNodeIntoContainer(
   node: Fiber,
   before: ?Instance,
   parent: Container,
+  parentFragmentInstances: null | Array<FragmentInstanceType>,
 ): void {
   const {tag} = node;
   const isHost = tag === HostComponent || tag === HostText;
@@ -344,9 +340,10 @@ function insertOrAppendPlacementNodeIntoContainer(
       enableFragmentRefs &&
       tag === HostComponent &&
       // Only run fragment insertion effects for initial insertions
-      node.alternate === null
+      node.alternate === null &&
+      parentFragmentInstances !== null
     ) {
-      commitFragmentInstanceInsertionEffects(node);
+      commitNewChildToFragmentInstances(node, parentFragmentInstances);
     }
     trackHostMutation();
     return;
@@ -369,10 +366,20 @@ function insertOrAppendPlacementNodeIntoContainer(
 
   const child = node.child;
   if (child !== null) {
-    insertOrAppendPlacementNodeIntoContainer(child, before, parent);
+    insertOrAppendPlacementNodeIntoContainer(
+      child,
+      before,
+      parent,
+      parentFragmentInstances,
+    );
     let sibling = child.sibling;
     while (sibling !== null) {
-      insertOrAppendPlacementNodeIntoContainer(sibling, before, parent);
+      insertOrAppendPlacementNodeIntoContainer(
+        sibling,
+        before,
+        parent,
+        parentFragmentInstances,
+      );
       sibling = sibling.sibling;
     }
   }
@@ -382,6 +389,7 @@ function insertOrAppendPlacementNode(
   node: Fiber,
   before: ?Instance,
   parent: Instance,
+  parentFragmentInstances: null | Array<FragmentInstanceType>,
 ): void {
   const {tag} = node;
   const isHost = tag === HostComponent || tag === HostText;
@@ -393,8 +401,14 @@ function insertOrAppendPlacementNode(
       appendChild(parent, stateNode);
     }
     // TODO: Enable HostText for RN
-    if (enableFragmentRefs && tag === HostComponent) {
-      commitFragmentInstanceInsertionEffects(node);
+    if (
+      enableFragmentRefs &&
+      tag === HostComponent &&
+      // Only run fragment insertion effects for initial insertions
+      node.alternate === null &&
+      parentFragmentInstances !== null
+    ) {
+      commitNewChildToFragmentInstances(node, parentFragmentInstances);
     }
     trackHostMutation();
     return;
@@ -416,10 +430,15 @@ function insertOrAppendPlacementNode(
 
   const child = node.child;
   if (child !== null) {
-    insertOrAppendPlacementNode(child, before, parent);
+    insertOrAppendPlacementNode(child, before, parent, parentFragmentInstances);
     let sibling = child.sibling;
     while (sibling !== null) {
-      insertOrAppendPlacementNode(sibling, before, parent);
+      insertOrAppendPlacementNode(
+        sibling,
+        before,
+        parent,
+        parentFragmentInstances,
+      );
       sibling = sibling.sibling;
     }
   }
@@ -431,40 +450,78 @@ function commitPlacement(finishedWork: Fiber): void {
   }
 
   // Recursively insert all host nodes into the parent.
-  const parentFiber = getHostParentFiber(finishedWork);
+  let hostParentFiber;
+  let parentFragmentInstances = null;
+  let parentFiber = finishedWork.return;
+  while (parentFiber !== null) {
+    if (enableFragmentRefs && isFragmentInstanceParent(parentFiber)) {
+      const fragmentInstance: FragmentInstanceType = parentFiber.stateNode;
+      if (parentFragmentInstances === null) {
+        parentFragmentInstances = [fragmentInstance];
+      } else {
+        parentFragmentInstances.push(fragmentInstance);
+      }
+    }
+    if (isHostParent(parentFiber)) {
+      hostParentFiber = parentFiber;
+      break;
+    }
+    parentFiber = parentFiber.return;
+  }
+  if (hostParentFiber == null) {
+    throw new Error(
+      'Expected to find a host parent. This error is likely caused by a bug ' +
+        'in React. Please file an issue.',
+    );
+  }
 
-  switch (parentFiber.tag) {
+  switch (hostParentFiber.tag) {
     case HostSingleton: {
       if (supportsSingletons) {
-        const parent: Instance = parentFiber.stateNode;
+        const parent: Instance = hostParentFiber.stateNode;
         const before = getHostSibling(finishedWork);
         // We only have the top Fiber that was inserted but we need to recurse down its
         // children to find all the terminal nodes.
-        insertOrAppendPlacementNode(finishedWork, before, parent);
+        insertOrAppendPlacementNode(
+          finishedWork,
+          before,
+          parent,
+          parentFragmentInstances,
+        );
         break;
       }
       // Fall through
     }
     case HostComponent: {
-      const parent: Instance = parentFiber.stateNode;
-      if (parentFiber.flags & ContentReset) {
+      const parent: Instance = hostParentFiber.stateNode;
+      if (hostParentFiber.flags & ContentReset) {
         // Reset the text content of the parent before doing any insertions
         resetTextContent(parent);
         // Clear ContentReset from the effect tag
-        parentFiber.flags &= ~ContentReset;
+        hostParentFiber.flags &= ~ContentReset;
       }
 
       const before = getHostSibling(finishedWork);
       // We only have the top Fiber that was inserted but we need to recurse down its
       // children to find all the terminal nodes.
-      insertOrAppendPlacementNode(finishedWork, before, parent);
+      insertOrAppendPlacementNode(
+        finishedWork,
+        before,
+        parent,
+        parentFragmentInstances,
+      );
       break;
     }
     case HostRoot:
     case HostPortal: {
-      const parent: Container = parentFiber.stateNode.containerInfo;
+      const parent: Container = hostParentFiber.stateNode.containerInfo;
       const before = getHostSibling(finishedWork);
-      insertOrAppendPlacementNodeIntoContainer(finishedWork, before, parent);
+      insertOrAppendPlacementNodeIntoContainer(
+        finishedWork,
+        before,
+        parent,
+        parentFragmentInstances,
+      );
       break;
     }
     default:
