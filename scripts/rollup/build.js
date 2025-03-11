@@ -794,7 +794,6 @@ function handleRollupWarning(warning) {
 }
 
 function handleRollupError(error) {
-  console.trace();
   loggedErrors.add(error);
   if (!error.code) {
     console.error(error);
@@ -804,7 +803,6 @@ function handleRollupError(error) {
     `\x1b[31m-- ${error.code}${error.plugin ? ` (${error.plugin})` : ''} --`
   );
   console.error(error.stack);
-  console.error(error);
   if (error.loc && error.loc.file) {
     const {file, line, column} = error.loc;
     // This looks like an error from Rollup, e.g. missing export.
