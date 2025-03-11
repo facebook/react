@@ -65,11 +65,14 @@ function detectMutationOrInsertClones(finishedWork: Fiber): boolean {
 }
 
 const CLONE_UPDATE = 0; // Mutations in this subtree or potentially affected by layout.
-const CLONE_ENTER = 1; // Inside a reappearing offscreen but before the next host component.
-const CLONE_UNHIDE = 2; // Like ENTER but we're already inside the entering View Transition.
+const CLONE_ENTER = 1; // Inside a reappearing offscreen before the next ViewTransition or HostComponent.
+const CLONE_UNHIDE = 2; // Inside a reappearing offscreen before the next HostComponent.
 const CLONE_APPEARING_PAIR = 3; // Like UNHIDE but we're already inside the first Host Component only finding pairs.
 const CLONE_UNCHANGED = 4; // Nothing in this tree was changed but we're still walking to clone it.
-let cloneState: 0 | 1 | 2 | 3 | 4 = 0;
+const INSERT_ENTER = 5; // Inside a newly mounted tree before the next ViewTransition or HostComponent.
+const INSERT_APPEND = 6; // Inside a newly mounted tree before the next HostComponent.
+const INSERT_APPEARING_PAIR = 7; // Inside a newly mounted tree only finding pairs.
+let cloneState: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 = 0;
 
 function trackDeletedPairViewTransitions(deletion: Fiber): void {
   if ((deletion.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
@@ -114,6 +117,146 @@ function trackExitViewTransitions(deletion: Fiber): void {
     }
   } else {
     trackDeletedPairViewTransitions(deletion);
+  }
+}
+
+function recursivelyInsertNew(
+  parentFiber: Fiber,
+  hostParentClone: Instance,
+  parentViewTransition: null | ViewTransitionState,
+): void {
+  if (
+    cloneState === INSERT_APPEARING_PAIR &&
+    (parentFiber.subtreeFlags & ViewTransitionNamedStatic) === NoFlags
+  ) {
+    // We're just searching for pairs but we have reached the end.
+    return;
+  }
+  let child = parentFiber.child;
+  while (child !== null) {
+    recursivelyInsertNewFiber(child, hostParentClone, parentViewTransition);
+    child = child.sibling;
+  }
+}
+
+function recursivelyInsertNewFiber(
+  finishedWork: Fiber,
+  hostParentClone: Instance,
+  parentViewTransition: null | ViewTransitionState,
+): void {
+  switch (finishedWork.tag) {
+    case HostHoistable: {
+      if (supportsResources) {
+        // TODO: Hoistables should get optimistically inserted and then removed.
+        recursivelyInsertNew(
+          finishedWork,
+          hostParentClone,
+          parentViewTransition,
+        );
+        break;
+      }
+      // Fall through
+    }
+    case HostSingleton: {
+      if (supportsSingletons) {
+        recursivelyInsertNew(
+          finishedWork,
+          hostParentClone,
+          parentViewTransition,
+        );
+        if (__DEV__) {
+          // We cannot apply mutations to Host Singletons since by definition
+          // they cannot be cloned. Therefore we warn in DEV if this commit
+          // had any effect.
+          if (finishedWork.flags & Update) {
+            console.error(
+              'useSwipeTransition() caused something to render a new <%s>. ' +
+                'This is not possible in the current implementation. ' +
+                "Make sure that the swipe doesn't mount any new <%s> elements.",
+              finishedWork.type,
+              finishedWork.type,
+            );
+          }
+        }
+        break;
+      }
+      // Fall through
+    }
+    case HostComponent: {
+      const instance: Instance = finishedWork.stateNode;
+      // For insertions we don't need to clone. It's already new state node.
+      if (cloneState !== INSERT_APPEARING_PAIR) {
+        appendChild(hostParentClone, instance);
+        if (parentViewTransition !== null) {
+          if (parentViewTransition.clones === null) {
+            parentViewTransition.clones = [instance];
+          } else {
+            parentViewTransition.clones.push(instance);
+          }
+        }
+        const prevCloneState = cloneState;
+        cloneState = INSERT_APPEARING_PAIR;
+        recursivelyInsertNew(finishedWork, instance, null);
+        cloneState = prevCloneState;
+      } else {
+        recursivelyInsertNew(finishedWork, instance, null);
+      }
+      break;
+    }
+    case HostText: {
+      const textInstance: TextInstance = finishedWork.stateNode;
+      if (textInstance === null) {
+        throw new Error(
+          'This should have a text node initialized. This error is likely ' +
+            'caused by a bug in React. Please file an issue.',
+        );
+      }
+      // For insertions we don't need to clone. It's already new state node.
+      if (cloneState !== INSERT_APPEARING_PAIR) {
+        appendChild(hostParentClone, textInstance);
+      }
+      break;
+    }
+    case HostPortal: {
+      // TODO: Consider what should happen to Portals. For now we exclude them.
+      break;
+    }
+    case OffscreenComponent: {
+      const newState: OffscreenState | null = finishedWork.memoizedState;
+      const isHidden = newState !== null;
+      if (!isHidden) {
+        // Only insert nodes if this tree is going to be visible. No need to
+        // insert invisible content.
+        // Since there was no mutation to this node, it couldn't have changed
+        // visibility so we don't need to update cloneState here.
+        recursivelyInsertNew(
+          finishedWork,
+          hostParentClone,
+          parentViewTransition,
+        );
+      }
+      break;
+    }
+    case ViewTransitionComponent:
+      const prevMutationContext = pushMutationContext();
+      const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
+      // TODO: If this was already cloned by a previous pass we can reuse those clones.
+      viewTransitionState.clones = null;
+      const prevCloneState = cloneState;
+      if (cloneState === INSERT_ENTER) {
+        // This was an Enter of a ViewTransition. We now move onto inserting the inner
+        // HostComponents and finding inner pairs.
+        cloneState = INSERT_APPEND;
+        // TODO: Mark the name and find a pair.
+      }
+      recursivelyInsertNew(finishedWork, hostParentClone, viewTransitionState);
+      cloneState = prevCloneState;
+      popMutationContext(prevMutationContext);
+      break;
+    default: {
+      recursivelyInsertNew(finishedWork, hostParentClone, parentViewTransition);
+      break;
+    }
   }
 }
 
@@ -213,11 +356,7 @@ function recursivelyInsertClonesFromExistingTree(
         const viewTransitionState: ViewTransitionState = child.stateNode;
         // TODO: If this was already cloned by a previous pass we can reuse those clones.
         viewTransitionState.clones = null;
-        recursivelyInsertClonesFromExistingTree(
-          child,
-          hostParentClone,
-          viewTransitionState,
-        );
+        const prevCloneState = cloneState;
         if (cloneState === CLONE_ENTER) {
           // This was an Enter of a ViewTransition. We now move onto unhiding the inner
           // HostComponents and finding inner pairs.
@@ -229,6 +368,12 @@ function recursivelyInsertClonesFromExistingTree(
           // position. After we've found its HostComponents we can bail out.
           cloneState = CLONE_UNCHANGED;
         }
+        recursivelyInsertClonesFromExistingTree(
+          child,
+          hostParentClone,
+          viewTransitionState,
+        );
+        cloneState = prevCloneState;
         // TODO: Only the first level should track if this was s
         // child.flags |= Update;
         popMutationContext(prevMutationContext);
@@ -290,6 +435,20 @@ function insertDestinationClonesOfFiber(
   parentViewTransition: null | ViewTransitionState,
 ) {
   const current = finishedWork.alternate;
+  if (current === null) {
+    // This is a newly mounted subtree. Insert any HostComponents and trigger
+    // Enter transitions.
+    const prevCloneState = cloneState;
+    cloneState = INSERT_ENTER;
+    recursivelyInsertNewFiber(
+      finishedWork,
+      hostParentClone,
+      parentViewTransition,
+    );
+    cloneState = prevCloneState;
+    return;
+  }
+
   const flags = finishedWork.flags;
   // The effect flag should be checked *after* we refine the type of fiber,
   // because the fiber tag is more specific. An exception is any flag related
@@ -319,42 +478,32 @@ function insertDestinationClonesOfFiber(
           // they cannot be cloned. Therefore we warn in DEV if this commit
           // had any effect.
           if (flags & Update) {
-            if (current === null) {
-              console.error(
-                'useSwipeTransition() caused something to render a new <%s>. ' +
-                  'This is not possible in the current implementation. ' +
-                  "Make sure that the swipe doesn't mount any new <%s> elements.",
-                finishedWork.type,
-                finishedWork.type,
-              );
-            } else {
-              const newProps = finishedWork.memoizedProps;
-              const oldProps = current.memoizedProps;
-              const instance = finishedWork.stateNode;
-              const type = finishedWork.type;
-              const prev = pushMutationContext();
+            const newProps = finishedWork.memoizedProps;
+            const oldProps = current.memoizedProps;
+            const instance = finishedWork.stateNode;
+            const type = finishedWork.type;
+            const prev = pushMutationContext();
 
-              try {
-                // Since we currently don't have a separate diffing algorithm for
-                // individual properties, the Update flag can be a false positive.
-                // We have to apply the new props first o detect any mutations and
-                // then revert them.
-                commitUpdate(instance, type, oldProps, newProps, finishedWork);
-                if (viewTransitionMutationContext) {
-                  console.error(
-                    'useSwipeTransition() caused something to mutate <%s>. ' +
-                      'This is not possible in the current implementation. ' +
-                      "Make sure that the swipe doesn't update any state which " +
-                      'causes <%s> to change.',
-                    finishedWork.type,
-                    finishedWork.type,
-                  );
-                }
-                // Revert
-                commitUpdate(instance, type, newProps, oldProps, finishedWork);
-              } finally {
-                popMutationContext(prev);
+            try {
+              // Since we currently don't have a separate diffing algorithm for
+              // individual properties, the Update flag can be a false positive.
+              // We have to apply the new props first o detect any mutations and
+              // then revert them.
+              commitUpdate(instance, type, oldProps, newProps, finishedWork);
+              if (viewTransitionMutationContext) {
+                console.error(
+                  'useSwipeTransition() caused something to mutate <%s>. ' +
+                    'This is not possible in the current implementation. ' +
+                    "Make sure that the swipe doesn't update any state which " +
+                    'causes <%s> to change.',
+                  finishedWork.type,
+                  finishedWork.type,
+                );
               }
+              // Revert
+              commitUpdate(instance, type, newProps, oldProps, finishedWork);
+            } finally {
+              popMutationContext(prev);
             }
           }
         }
@@ -365,44 +514,37 @@ function insertDestinationClonesOfFiber(
     case HostComponent: {
       const instance: Instance = finishedWork.stateNode;
       let clone: Instance;
-      if (current === null) {
-        // For insertions we don't need to clone. It's already new state node.
-        // TODO: Do we need to visit it for ViewTransitions though?
-        appendChild(hostParentClone, instance);
-        clone = instance;
+      if (finishedWork.child === null) {
+        // This node is terminal. We still do a deep clone in case this has user
+        // inserted content, text content or dangerouslySetInnerHTML.
+        clone = cloneMutableInstance(instance, true);
+        if (finishedWork.flags & ContentReset) {
+          resetTextContent(clone);
+        }
       } else {
-        if (finishedWork.child === null) {
-          // This node is terminal. We still do a deep clone in case this has user
-          // inserted content, text content or dangerouslySetInnerHTML.
-          clone = cloneMutableInstance(instance, true);
-          if (finishedWork.flags & ContentReset) {
-            resetTextContent(clone);
-          }
-        } else {
-          // If we have children we'll clone them as we walk the tree so we just
-          // do a shallow clone here.
-          clone = cloneMutableInstance(instance, false);
-        }
+        // If we have children we'll clone them as we walk the tree so we just
+        // do a shallow clone here.
+        clone = cloneMutableInstance(instance, false);
+      }
 
-        if (flags & Update) {
-          const newProps = finishedWork.memoizedProps;
-          const oldProps = current.memoizedProps;
-          const type = finishedWork.type;
-          // Apply the delta to the clone.
-          commitUpdate(clone, type, oldProps, newProps, finishedWork);
-        }
+      if (flags & Update) {
+        const newProps = finishedWork.memoizedProps;
+        const oldProps = current.memoizedProps;
+        const type = finishedWork.type;
+        // Apply the delta to the clone.
+        commitUpdate(clone, type, oldProps, newProps, finishedWork);
+      }
 
-        if (cloneState === CLONE_ENTER || cloneState === CLONE_UNHIDE) {
-          const prevCloneState = cloneState;
-          cloneState = CLONE_APPEARING_PAIR;
-          recursivelyInsertClones(finishedWork, clone, null);
-          appendChild(hostParentClone, clone);
-          cloneState = prevCloneState;
-          unhideInstance(clone, finishedWork.memoizedProps);
-        } else {
-          recursivelyInsertClones(finishedWork, clone, null);
-          appendChild(hostParentClone, clone);
-        }
+      if (cloneState === CLONE_ENTER || cloneState === CLONE_UNHIDE) {
+        const prevCloneState = cloneState;
+        cloneState = CLONE_APPEARING_PAIR;
+        recursivelyInsertClones(finishedWork, clone, null);
+        appendChild(hostParentClone, clone);
+        cloneState = prevCloneState;
+        unhideInstance(clone, finishedWork.memoizedProps);
+      } else {
+        recursivelyInsertClones(finishedWork, clone, null);
+        appendChild(hostParentClone, clone);
       }
       if (parentViewTransition !== null) {
         if (parentViewTransition.clones === null) {
@@ -421,20 +563,15 @@ function insertDestinationClonesOfFiber(
             'caused by a bug in React. Please file an issue.',
         );
       }
-      if (current === null) {
-        // For insertions we don't need to clone. It's already new state node.
-        appendChild(hostParentClone, textInstance);
-      } else {
-        const clone = cloneMutableTextInstance(textInstance);
-        if (flags & Update) {
-          const newText: string = finishedWork.memoizedProps;
-          const oldText: string = current.memoizedProps;
-          commitTextUpdate(clone, newText, oldText);
-        }
-        appendChild(hostParentClone, clone);
-        if (cloneState === CLONE_ENTER || cloneState === CLONE_UNHIDE) {
-          unhideTextInstance(clone, finishedWork.memoizedProps);
-        }
+      const clone = cloneMutableTextInstance(textInstance);
+      if (flags & Update) {
+        const newText: string = finishedWork.memoizedProps;
+        const oldText: string = current.memoizedProps;
+        commitTextUpdate(clone, newText, oldText);
+      }
+      appendChild(hostParentClone, clone);
+      if (cloneState === CLONE_ENTER || cloneState === CLONE_UNHIDE) {
+        unhideTextInstance(clone, finishedWork.memoizedProps);
       }
       break;
     }
@@ -474,6 +611,13 @@ function insertDestinationClonesOfFiber(
       const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
       // TODO: If this was already cloned by a previous pass we can reuse those clones.
       viewTransitionState.clones = null;
+      const prevCloneState = cloneState;
+      if (cloneState === CLONE_ENTER) {
+        // This was an Enter of a ViewTransition. We now move onto unhiding the inner
+        // HostComponents and finding inner pairs.
+        cloneState = CLONE_UNHIDE;
+        // TODO: Mark the name and find a pair.
+      }
       recursivelyInsertClones(
         finishedWork,
         hostParentClone,
@@ -484,12 +628,7 @@ function insertDestinationClonesOfFiber(
         // whether it resized or not.
         finishedWork.flags |= Update;
       }
-      if (cloneState === CLONE_ENTER) {
-        // This was an Enter of a ViewTransition. We now move onto unhiding the inner
-        // HostComponents and finding inner pairs.
-        cloneState = CLONE_UNHIDE;
-        // TODO: Mark the name and find a pair.
-      }
+      cloneState = prevCloneState;
       popMutationContext(prevMutationContext);
       break;
     default: {
