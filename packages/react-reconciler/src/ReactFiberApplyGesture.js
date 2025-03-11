@@ -72,7 +72,7 @@ const CLONE_UNCHANGED = 4; // Nothing in this tree was changed but we're still w
 const INSERT_ENTER = 5; // Inside a newly mounted tree before the next ViewTransition or HostComponent.
 const INSERT_APPEND = 6; // Inside a newly mounted tree before the next HostComponent.
 const INSERT_APPEARING_PAIR = 7; // Inside a newly mounted tree only finding pairs.
-let cloneState: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 = 0;
+type VisitPhase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 function trackDeletedPairViewTransitions(deletion: Fiber): void {
   if ((deletion.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
@@ -124,9 +124,10 @@ function recursivelyInsertNew(
   parentFiber: Fiber,
   hostParentClone: Instance,
   parentViewTransition: null | ViewTransitionState,
+  visitPhase: VisitPhase,
 ): void {
   if (
-    cloneState === INSERT_APPEARING_PAIR &&
+    visitPhase === INSERT_APPEARING_PAIR &&
     (parentFiber.subtreeFlags & ViewTransitionNamedStatic) === NoFlags
   ) {
     // We're just searching for pairs but we have reached the end.
@@ -134,7 +135,12 @@ function recursivelyInsertNew(
   }
   let child = parentFiber.child;
   while (child !== null) {
-    recursivelyInsertNewFiber(child, hostParentClone, parentViewTransition);
+    recursivelyInsertNewFiber(
+      child,
+      hostParentClone,
+      parentViewTransition,
+      visitPhase,
+    );
     child = child.sibling;
   }
 }
@@ -143,6 +149,7 @@ function recursivelyInsertNewFiber(
   finishedWork: Fiber,
   hostParentClone: Instance,
   parentViewTransition: null | ViewTransitionState,
+  visitPhase: VisitPhase,
 ): void {
   switch (finishedWork.tag) {
     case HostHoistable: {
@@ -152,6 +159,7 @@ function recursivelyInsertNewFiber(
           finishedWork,
           hostParentClone,
           parentViewTransition,
+          visitPhase,
         );
         break;
       }
@@ -163,7 +171,9 @@ function recursivelyInsertNewFiber(
           finishedWork,
           hostParentClone,
           parentViewTransition,
+          visitPhase,
         );
+
         if (__DEV__) {
           // We cannot apply mutations to Host Singletons since by definition
           // they cannot be cloned. Therefore we warn in DEV if this commit
@@ -185,7 +195,7 @@ function recursivelyInsertNewFiber(
     case HostComponent: {
       const instance: Instance = finishedWork.stateNode;
       // For insertions we don't need to clone. It's already new state node.
-      if (cloneState !== INSERT_APPEARING_PAIR) {
+      if (visitPhase !== INSERT_APPEARING_PAIR) {
         appendChild(hostParentClone, instance);
         if (parentViewTransition !== null) {
           if (parentViewTransition.clones === null) {
@@ -194,12 +204,14 @@ function recursivelyInsertNewFiber(
             parentViewTransition.clones.push(instance);
           }
         }
-        const prevCloneState = cloneState;
-        cloneState = INSERT_APPEARING_PAIR;
-        recursivelyInsertNew(finishedWork, instance, null);
-        cloneState = prevCloneState;
+        recursivelyInsertNew(
+          finishedWork,
+          instance,
+          null,
+          INSERT_APPEARING_PAIR,
+        );
       } else {
-        recursivelyInsertNew(finishedWork, instance, null);
+        recursivelyInsertNew(finishedWork, instance, null, visitPhase);
       }
       break;
     }
@@ -212,7 +224,7 @@ function recursivelyInsertNewFiber(
         );
       }
       // For insertions we don't need to clone. It's already new state node.
-      if (cloneState !== INSERT_APPEARING_PAIR) {
+      if (visitPhase !== INSERT_APPEARING_PAIR) {
         appendChild(hostParentClone, textInstance);
       }
       break;
@@ -228,11 +240,12 @@ function recursivelyInsertNewFiber(
         // Only insert nodes if this tree is going to be visible. No need to
         // insert invisible content.
         // Since there was no mutation to this node, it couldn't have changed
-        // visibility so we don't need to update cloneState here.
+        // visibility so we don't need to update visitPhase here.
         recursivelyInsertNew(
           finishedWork,
           hostParentClone,
           parentViewTransition,
+          visitPhase,
         );
       }
       break;
@@ -242,19 +255,30 @@ function recursivelyInsertNewFiber(
       const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
       // TODO: If this was already cloned by a previous pass we can reuse those clones.
       viewTransitionState.clones = null;
-      const prevCloneState = cloneState;
-      if (cloneState === INSERT_ENTER) {
+      let nextPhase;
+      if (visitPhase === INSERT_ENTER) {
         // This was an Enter of a ViewTransition. We now move onto inserting the inner
         // HostComponents and finding inner pairs.
-        cloneState = INSERT_APPEND;
+        nextPhase = INSERT_APPEND;
         // TODO: Mark the name and find a pair.
+      } else {
+        nextPhase = visitPhase;
       }
-      recursivelyInsertNew(finishedWork, hostParentClone, viewTransitionState);
-      cloneState = prevCloneState;
+      recursivelyInsertNew(
+        finishedWork,
+        hostParentClone,
+        viewTransitionState,
+        nextPhase,
+      );
       popMutationContext(prevMutationContext);
       break;
     default: {
-      recursivelyInsertNew(finishedWork, hostParentClone, parentViewTransition);
+      recursivelyInsertNew(
+        finishedWork,
+        hostParentClone,
+        parentViewTransition,
+        visitPhase,
+      );
       break;
     }
   }
@@ -264,6 +288,7 @@ function recursivelyInsertClonesFromExistingTree(
   parentFiber: Fiber,
   hostParentClone: Instance,
   parentViewTransition: null | ViewTransitionState,
+  visitPhase: VisitPhase,
 ): void {
   let child = parentFiber.child;
   while (child !== null) {
@@ -271,7 +296,7 @@ function recursivelyInsertClonesFromExistingTree(
       case HostComponent: {
         const instance: Instance = child.stateNode;
         let keepTraversing: boolean;
-        switch (cloneState) {
+        switch (visitPhase) {
           case CLONE_UPDATE:
           case CLONE_UNCHANGED:
             // We've found any "layout" View Transitions at this point so we can bail.
@@ -291,7 +316,12 @@ function recursivelyInsertClonesFromExistingTree(
           // We might need a handle on these clones, so we need to do a shallow clone
           // and keep going.
           clone = cloneMutableInstance(instance, false);
-          recursivelyInsertClonesFromExistingTree(child, clone, null);
+          recursivelyInsertClonesFromExistingTree(
+            child,
+            clone,
+            null,
+            visitPhase,
+          );
         } else {
           // If we have no mutations in this subtree, and we don't need a handle on the
           // clones, then we can do a deep clone instead and bailout.
@@ -310,7 +340,7 @@ function recursivelyInsertClonesFromExistingTree(
             parentViewTransition.clones.push(clone);
           }
         }
-        if (cloneState === CLONE_ENTER || cloneState === CLONE_UNHIDE) {
+        if (visitPhase === CLONE_ENTER || visitPhase === CLONE_UNHIDE) {
           unhideInstance(clone, child.memoizedProps);
         }
         break;
@@ -325,7 +355,7 @@ function recursivelyInsertClonesFromExistingTree(
         }
         const clone = cloneMutableTextInstance(textInstance);
         appendChild(hostParentClone, clone);
-        if (cloneState === CLONE_ENTER || cloneState === CLONE_UNHIDE) {
+        if (visitPhase === CLONE_ENTER || visitPhase === CLONE_UNHIDE) {
           unhideTextInstance(clone, child.memoizedProps);
         }
         break;
@@ -342,11 +372,12 @@ function recursivelyInsertClonesFromExistingTree(
           // clone invisible content.
           // TODO: If this is visible but detached it should still be cloned.
           // Since there was no mutation to this node, it couldn't have changed
-          // visibility so we don't need to update cloneState here.
+          // visibility so we don't need to update visitPhase here.
           recursivelyInsertClonesFromExistingTree(
             child,
             hostParentClone,
             parentViewTransition,
+            visitPhase,
           );
         }
         break;
@@ -356,24 +387,26 @@ function recursivelyInsertClonesFromExistingTree(
         const viewTransitionState: ViewTransitionState = child.stateNode;
         // TODO: If this was already cloned by a previous pass we can reuse those clones.
         viewTransitionState.clones = null;
-        const prevCloneState = cloneState;
-        if (cloneState === CLONE_ENTER) {
+        let nextPhase;
+        if (visitPhase === CLONE_ENTER) {
           // This was an Enter of a ViewTransition. We now move onto unhiding the inner
           // HostComponents and finding inner pairs.
-          cloneState = CLONE_UNHIDE;
+          nextPhase = CLONE_UNHIDE;
           // TODO: Mark the name and find a pair.
-        } else if (cloneState === CLONE_UPDATE) {
+        } else if (visitPhase === CLONE_UPDATE) {
           // If the tree had no mutations and we've found the top most ViewTransition
           // then this is the one we might apply the "layout" state too if it has changed
           // position. After we've found its HostComponents we can bail out.
-          cloneState = CLONE_UNCHANGED;
+          nextPhase = CLONE_UNCHANGED;
+        } else {
+          nextPhase = visitPhase;
         }
         recursivelyInsertClonesFromExistingTree(
           child,
           hostParentClone,
           viewTransitionState,
+          nextPhase,
         );
-        cloneState = prevCloneState;
         // TODO: Only the first level should track if this was s
         // child.flags |= Update;
         popMutationContext(prevMutationContext);
@@ -383,6 +416,7 @@ function recursivelyInsertClonesFromExistingTree(
           child,
           hostParentClone,
           parentViewTransition,
+          visitPhase,
         );
         break;
       }
@@ -395,6 +429,7 @@ function recursivelyInsertClones(
   parentFiber: Fiber,
   hostParentClone: Instance,
   parentViewTransition: null | ViewTransitionState,
+  visitPhase: VisitPhase,
 ) {
   const deletions = parentFiber.deletions;
   if (deletions !== null) {
@@ -415,6 +450,7 @@ function recursivelyInsertClones(
         child,
         hostParentClone,
         parentViewTransition,
+        visitPhase,
       );
       child = child.sibling;
     }
@@ -425,6 +461,7 @@ function recursivelyInsertClones(
       parentFiber,
       hostParentClone,
       parentViewTransition,
+      visitPhase,
     );
   }
 }
@@ -433,19 +470,18 @@ function insertDestinationClonesOfFiber(
   finishedWork: Fiber,
   hostParentClone: Instance,
   parentViewTransition: null | ViewTransitionState,
+  visitPhase: VisitPhase,
 ) {
   const current = finishedWork.alternate;
   if (current === null) {
     // This is a newly mounted subtree. Insert any HostComponents and trigger
     // Enter transitions.
-    const prevCloneState = cloneState;
-    cloneState = INSERT_ENTER;
     recursivelyInsertNewFiber(
       finishedWork,
       hostParentClone,
       parentViewTransition,
+      INSERT_ENTER,
     );
-    cloneState = prevCloneState;
     return;
   }
 
@@ -461,6 +497,7 @@ function insertDestinationClonesOfFiber(
           finishedWork,
           hostParentClone,
           parentViewTransition,
+          visitPhase,
         );
         break;
       }
@@ -472,6 +509,7 @@ function insertDestinationClonesOfFiber(
           finishedWork,
           hostParentClone,
           parentViewTransition,
+          visitPhase,
         );
         if (__DEV__) {
           // We cannot apply mutations to Host Singletons since by definition
@@ -535,15 +573,17 @@ function insertDestinationClonesOfFiber(
         commitUpdate(clone, type, oldProps, newProps, finishedWork);
       }
 
-      if (cloneState === CLONE_ENTER || cloneState === CLONE_UNHIDE) {
-        const prevCloneState = cloneState;
-        cloneState = CLONE_APPEARING_PAIR;
-        recursivelyInsertClones(finishedWork, clone, null);
+      if (visitPhase === CLONE_ENTER || visitPhase === CLONE_UNHIDE) {
+        recursivelyInsertClones(
+          finishedWork,
+          clone,
+          null,
+          CLONE_APPEARING_PAIR,
+        );
         appendChild(hostParentClone, clone);
-        cloneState = prevCloneState;
         unhideInstance(clone, finishedWork.memoizedProps);
       } else {
-        recursivelyInsertClones(finishedWork, clone, null);
+        recursivelyInsertClones(finishedWork, clone, null, visitPhase);
         appendChild(hostParentClone, clone);
       }
       if (parentViewTransition !== null) {
@@ -570,7 +610,7 @@ function insertDestinationClonesOfFiber(
         commitTextUpdate(clone, newText, oldText);
       }
       appendChild(hostParentClone, clone);
-      if (cloneState === CLONE_ENTER || cloneState === CLONE_UNHIDE) {
+      if (visitPhase === CLONE_ENTER || visitPhase === CLONE_UNHIDE) {
         unhideTextInstance(clone, finishedWork.memoizedProps);
       }
       break;
@@ -586,20 +626,19 @@ function insertDestinationClonesOfFiber(
         // Only insert clones if this tree is going to be visible. No need to
         // clone invisible content.
         // TODO: If this is visible but detached it should still be cloned.
-        const prevCloneState = cloneState;
-        if (
-          prevCloneState === CLONE_UPDATE &&
-          (flags & Visibility) !== NoFlags
-        ) {
+        let nextPhase;
+        if (visitPhase === CLONE_UPDATE && (flags & Visibility) !== NoFlags) {
           // This is the root of an appear. We need to trigger Enter transitions.
-          cloneState = CLONE_ENTER;
+          nextPhase = CLONE_ENTER;
+        } else {
+          nextPhase = visitPhase;
         }
         recursivelyInsertClones(
           finishedWork,
           hostParentClone,
           parentViewTransition,
+          nextPhase,
         );
-        cloneState = prevCloneState;
       } else if (current !== null && current.memoizedState === null) {
         // Was previously mounted as visible but is now hidden.
         trackExitViewTransitions(current);
@@ -611,24 +650,26 @@ function insertDestinationClonesOfFiber(
       const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
       // TODO: If this was already cloned by a previous pass we can reuse those clones.
       viewTransitionState.clones = null;
-      const prevCloneState = cloneState;
-      if (cloneState === CLONE_ENTER) {
+      let nextPhase;
+      if (visitPhase === CLONE_ENTER) {
         // This was an Enter of a ViewTransition. We now move onto unhiding the inner
         // HostComponents and finding inner pairs.
-        cloneState = CLONE_UNHIDE;
+        nextPhase = CLONE_UNHIDE;
         // TODO: Mark the name and find a pair.
+      } else {
+        nextPhase = visitPhase;
       }
       recursivelyInsertClones(
         finishedWork,
         hostParentClone,
         viewTransitionState,
+        nextPhase,
       );
       if (viewTransitionMutationContext) {
         // Track that this boundary had a mutation and therefore needs to animate
         // whether it resized or not.
         finishedWork.flags |= Update;
       }
-      cloneState = prevCloneState;
       popMutationContext(prevMutationContext);
       break;
     default: {
@@ -636,6 +677,7 @@ function insertDestinationClonesOfFiber(
         finishedWork,
         hostParentClone,
         parentViewTransition,
+        visitPhase,
       );
       break;
     }
@@ -648,7 +690,6 @@ export function insertDestinationClones(
   root: FiberRoot,
   finishedWork: Fiber,
 ): void {
-  cloneState = CLONE_UPDATE;
   // We'll either not transition the root, or we'll transition the clone. Regardless
   // we cancel the root view transition name.
   const needsClone = detectMutationOrInsertClones(finishedWork);
@@ -667,7 +708,7 @@ export function insertDestinationClones(
     // Clone the whole root
     const rootClone = cloneRootViewTransitionContainer(root.containerInfo);
     root.gestureClone = rootClone;
-    recursivelyInsertClones(finishedWork, rootClone, null);
+    recursivelyInsertClones(finishedWork, rootClone, null, CLONE_UPDATE);
   } else {
     root.gestureClone = null;
     cancelRootViewTransitionName(root.containerInfo);
