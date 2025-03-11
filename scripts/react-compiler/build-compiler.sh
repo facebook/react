@@ -6,5 +6,5 @@
 
 echo "Building babel-plugin-react-compiler..."
 cd compiler
-yarn --silent
+yarn install --frozen-lockfile
 yarn workspace babel-plugin-react-compiler build --dts
