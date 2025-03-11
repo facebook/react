@@ -19,7 +19,7 @@ module.exports = {
     '@babel/plugin-transform-shorthand-properties',
     '@babel/plugin-transform-computed-properties',
     '@babel/plugin-transform-for-of',
-    ['@babel/plugin-transform-spread', {useBuiltIns: true}],
+    ['@babel/plugin-transform-spread', {loose: true, useBuiltIns: true}],
     '@babel/plugin-transform-parameters',
     ['@babel/plugin-transform-destructuring', {loose: true, useBuiltIns: true}],
     ['@babel/plugin-transform-block-scoping', {throwIfClosureRequired: true}],
