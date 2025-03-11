@@ -63,12 +63,13 @@ export type EncodeFormActionCallback = <A>(
 
 export type ServerReferenceId = any;
 
-type ServerReferenceMetaData = {
+type ServerReferenceClosure = {
   id: ServerReferenceId,
+  originalBind: Function,
   bound: null | Thenable<Array<any>>,
 };
 
-const knownServerReferences: WeakMap<Function, ServerReferenceMetaData> =
+const knownServerReferences: WeakMap<Function, ServerReferenceClosure> =
   new WeakMap();
 
 // Serializable values
@@ -763,16 +764,17 @@ export function processReply(
     }
 
     if (typeof value === 'function') {
-      const metaData = knownServerReferences.get(value);
-      if (metaData !== undefined) {
-        const metaDataJSON = JSON.stringify(metaData, resolveToJSON);
+      const referenceClosure = knownServerReferences.get(value);
+      if (referenceClosure !== undefined) {
+        const {id, bound} = referenceClosure;
+        const referenceClosureJSON = JSON.stringify({id, bound}, resolveToJSON);
         if (formData === null) {
           // Upgrade to use FormData to allow us to stream this value.
           formData = new FormData();
         }
         // The reference to this function came from the same client so we can pass it back.
         const refId = nextPartId++;
-        formData.set(formFieldPrefix + refId, metaDataJSON);
+        formData.set(formFieldPrefix + refId, referenceClosureJSON);
         return serializeServerReferenceID(refId);
       }
       if (temporaryReferences !== undefined && key.indexOf(':') === -1) {
@@ -867,7 +869,7 @@ export function processReply(
 }
 
 const boundCache: WeakMap<
-  ServerReferenceMetaData,
+  ServerReferenceClosure,
   Thenable<FormData>,
 > = new WeakMap();
 
@@ -908,8 +910,8 @@ function defaultEncodeFormAction(
   this: any => Promise<any>,
   identifierPrefix: string,
 ): ReactCustomFormAction {
-  const metaData = knownServerReferences.get(this);
-  if (!metaData) {
+  const referenceClosure = knownServerReferences.get(this);
+  if (!referenceClosure) {
     throw new Error(
       'Tried to encode a Server Action from a different instance than the encoder is from. ' +
         'This is a bug in React.',
@@ -917,12 +919,13 @@ function defaultEncodeFormAction(
   }
   let data: null | FormData = null;
   let name;
-  const boundPromise = metaData.bound;
+  const boundPromise = referenceClosure.bound;
   if (boundPromise !== null) {
-    let thenable = boundCache.get(metaData);
+    let thenable = boundCache.get(referenceClosure);
     if (!thenable) {
-      thenable = encodeFormData(metaData);
-      boundCache.set(metaData, thenable);
+      const {id, bound} = referenceClosure;
+      thenable = encodeFormData({id, bound});
+      boundCache.set(referenceClosure, thenable);
     }
     if (thenable.status === 'rejected') {
       throw thenable.reason;
@@ -944,7 +947,7 @@ function defaultEncodeFormAction(
     name = '$ACTION_REF_' + identifierPrefix;
   } else {
     // This is the simple case so we can just encode the ID.
-    name = '$ACTION_ID_' + metaData.id;
+    name = '$ACTION_ID_' + referenceClosure.id;
   }
   return {
     name: name,
@@ -959,18 +962,18 @@ function customEncodeFormAction(
   identifierPrefix: string,
   encodeFormAction: EncodeFormActionCallback,
 ): ReactCustomFormAction {
-  const metaData = knownServerReferences.get(reference);
-  if (!metaData) {
+  const referenceClosure = knownServerReferences.get(reference);
+  if (!referenceClosure) {
     throw new Error(
       'Tried to encode a Server Action from a different instance than the encoder is from. ' +
         'This is a bug in React.',
     );
   }
-  let boundPromise: Promise<Array<any>> = (metaData.bound: any);
+  let boundPromise: Promise<Array<any>> = (referenceClosure.bound: any);
   if (boundPromise === null) {
     boundPromise = Promise.resolve([]);
   }
-  return encodeFormAction(metaData.id, boundPromise);
+  return encodeFormAction(referenceClosure.id, boundPromise);
 }
 
 function isSignatureEqual(
@@ -978,19 +981,19 @@ function isSignatureEqual(
   referenceId: ServerReferenceId,
   numberOfBoundArgs: number,
 ): boolean {
-  const metaData = knownServerReferences.get(this);
-  if (!metaData) {
+  const referenceClosure = knownServerReferences.get(this);
+  if (!referenceClosure) {
     throw new Error(
       'Tried to encode a Server Action from a different instance than the encoder is from. ' +
         'This is a bug in React.',
     );
   }
-  if (metaData.id !== referenceId) {
+  if (referenceClosure.id !== referenceId) {
     // These are different functions.
     return false;
   }
   // Now check if the number of bound arguments is the same.
-  const boundPromise = metaData.bound;
+  const boundPromise = referenceClosure.bound;
   if (boundPromise === null) {
     // No bound arguments.
     return numberOfBoundArgs === 0;
@@ -1134,6 +1137,16 @@ export function registerBoundServerReference<T: Function>(
   bound: null | Thenable<Array<any>>,
   encodeFormAction: void | EncodeFormActionCallback,
 ): void {
+  if (knownServerReferences.has(reference)) {
+    return;
+  }
+
+  knownServerReferences.set(reference, {
+    id,
+    originalBind: reference.bind,
+    bound,
+  });
+
   // Expose encoder for use by SSR, as well as a special bind that can be used to
   // keep server capabilities.
   if (usedWithSSR) {
@@ -1154,17 +1167,9 @@ export function registerBoundServerReference<T: Function>(
     Object.defineProperties((reference: any), {
       $$FORM_ACTION: {value: $$FORM_ACTION},
       $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
+      bind: {value: bind},
     });
-    defineBind(reference);
   }
-  knownServerReferences.set(reference, {id, bound});
-}
-
-// TODO: Ideally we'd use `isServerReference` from
-// 'react-server/src/ReactFlightServerConfig', but that can only be imported
-// in a react-server environment.
-function isServerReference(reference: Object): boolean {
-  return reference.$$typeof === Symbol.for('react.server.reference');
 }
 
 export function registerServerReference<T: Function>(
@@ -1172,12 +1177,7 @@ export function registerServerReference<T: Function>(
   id: ServerReferenceId,
   encodeFormAction?: EncodeFormActionCallback,
 ): ServerReference<T> {
-  const bound =
-    isServerReference(reference) && reference.$$bound
-      ? Promise.resolve(reference.$$bound)
-      : null;
-
-  registerBoundServerReference(reference, id, bound, encodeFormAction);
+  registerBoundServerReference(reference, id, null, encodeFormAction);
   return reference;
 }
 
@@ -1185,55 +1185,56 @@ export function registerServerReference<T: Function>(
 const FunctionBind = Function.prototype.bind;
 // $FlowFixMe[method-unbinding]
 const ArraySlice = Array.prototype.slice;
+function bind(this: Function): Function {
+  const referenceClosure = knownServerReferences.get(this);
 
-function defineBind<T: Function>(reference: T) {
-  // TODO: Instead of checking if it's a server reference, we could also use
-  // `reference.hasOwnProperty('bind')`.
-  const originalBind = isServerReference(reference)
-    ? reference.bind
-    : FunctionBind;
-
-  function bind(): Function {
+  if (!referenceClosure) {
     // $FlowFixMe[prop-missing]
-    const newFn = originalBind.apply(reference, arguments);
-    const metaData = knownServerReferences.get(reference);
-
-    if (metaData) {
-      if (__DEV__) {
-        const thisBind = arguments[0];
-        if (thisBind != null) {
-          // This doesn't warn in browser environments since it's not
-          // instrumented outside usedWithSSR. This makes this an SSR only
-          // warning which we don't generally do.
-          // TODO: Consider a DEV only instrumentation in the browser.
-          console.error(
-            'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
-          );
-        }
-      }
-      const args = ArraySlice.call(arguments, 1);
-      let boundPromise = null;
-      if (metaData.bound !== null) {
-        boundPromise = Promise.resolve((metaData.bound: any)).then(boundArgs =>
-          boundArgs.concat(args),
-        );
-      } else {
-        boundPromise = Promise.resolve(args);
-      }
-      // Expose encoder for use by SSR, as well as a special bind that can be
-      // used to keep server capabilities.
-      Object.defineProperties((newFn: any), {
-        $$FORM_ACTION: {value: reference.$$FORM_ACTION},
-        $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
-      });
-      defineBind(newFn);
-      knownServerReferences.set(newFn, {id: metaData.id, bound: boundPromise});
-    }
-
-    return newFn;
+    return FunctionBind.apply(this, arguments);
   }
 
-  Object.defineProperty((reference: any), 'bind', {value: bind});
+  const newFn = referenceClosure.originalBind.apply(this, arguments);
+
+  if (__DEV__) {
+    const thisBind = arguments[0];
+    if (thisBind != null) {
+      // This doesn't warn in browser environments since it's not instrumented outside
+      // usedWithSSR. This makes this an SSR only warning which we don't generally do.
+      // TODO: Consider a DEV only instrumentation in the browser.
+      console.error(
+        'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+      );
+    }
+  }
+
+  const args = ArraySlice.call(arguments, 1);
+  let boundPromise = null;
+  if (referenceClosure.bound !== null) {
+    boundPromise = Promise.resolve((referenceClosure.bound: any)).then(
+      boundArgs => boundArgs.concat(args),
+    );
+  } else {
+    boundPromise = Promise.resolve(args);
+  }
+
+  knownServerReferences.set(newFn, {
+    id: referenceClosure.id,
+    originalBind: newFn.bind,
+    bound: boundPromise,
+  });
+
+  // Expose encoder for use by SSR, as well as a special bind that can be used to
+  // keep server capabilities.
+  if (usedWithSSR) {
+    // Only expose this in builds that would actually use it. Not needed on the client.
+    Object.defineProperties((newFn: any), {
+      $$FORM_ACTION: {value: this.$$FORM_ACTION},
+      $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
+      bind: {value: bind},
+    });
+  }
+
+  return newFn;
 }
 
 export type FindSourceMapURLCallback = (
