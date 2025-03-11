@@ -447,31 +447,31 @@ export function createViewTransitionInstance(
   return null;
 }
 
-export type FragmentInstance = null;
+export type FragmentInstanceType = null;
 
 export function createFragmentInstance(
   fragmentFiber: Object,
-): FragmentInstance {
+): FragmentInstanceType {
   return null;
 }
 
 export function updateFragmentInstanceFiber(
   fragmentFiber: Object,
-  instance: FragmentInstance,
+  instance: FragmentInstanceType,
 ): void {
   // Noop
 }
 
 export function commitNewChildToFragmentInstance(
   child: Instance,
-  fragmentInstance: FragmentInstance,
+  fragmentInstance: FragmentInstanceType,
 ): void {
   // noop
 }
 
 export function deleteChildFromFragmentInstance(
   child: Instance,
-  fragmentInstance: FragmentInstance,
+  fragmentInstance: FragmentInstanceType,
 ): void {
   // Noop
 }

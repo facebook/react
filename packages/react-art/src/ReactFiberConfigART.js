@@ -318,7 +318,7 @@ export function cloneMutableTextInstance(textInstance) {
   return textInstance;
 }
 
-export type FragmentInstance = null;
+export type FragmentInstanceType = null;
 
 export function createFragmentInstance(fiber): null {
   return null;
