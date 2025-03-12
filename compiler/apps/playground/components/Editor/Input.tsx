@@ -89,6 +89,9 @@ export default function Input({errors, language}: Props): JSX.Element {
     _: editor.IStandaloneCodeEditor,
     monaco: Monaco,
   ) => void = (_, monaco) => {
+    if (typeof window != 'undefined') {
+      window['__MONACO_LOADED__'] = true;
+    }
     setMonaco(monaco);
 
     const tscOptions = {
