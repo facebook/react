@@ -60,7 +60,12 @@ import {
 import {
   restoreEnterOrExitViewTransitions,
   restoreNestedViewTransitions,
+  appearingViewTransitions,
 } from './ReactFiberCommitViewTransitions';
+import {
+  getViewTransitionName,
+  getViewTransitionClassName,
+} from './ReactFiberViewTransitionComponent';
 
 let didWarnForRootClone = false;
 
@@ -78,7 +83,27 @@ const INSERT_APPEND = 6; // Inside a newly mounted tree before the next HostComp
 const INSERT_APPEARING_PAIR = 7; // Inside a newly mounted tree only finding pairs.
 type VisitPhase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
+function applyViewTransitionToClones(
+  name: string,
+  className: ?string,
+  clones: Array<Instance>,
+): void {
+  // This gets called when we have found a pair, but after the clone in created. The clone is
+  // created by the insertion side. If the insertion side if found before the deletion side
+  // then this is called by the deletion. If the deletion is visited first then this is called
+  // later by the insertion when the clone has been created.
+  // TODO: Actually apply names to clones.
+}
+
 function trackDeletedPairViewTransitions(deletion: Fiber): void {
+  if (
+    appearingViewTransitions === null ||
+    appearingViewTransitions.size === 0
+  ) {
+    // We've found all.
+    return;
+  }
+  const pairs = appearingViewTransitions;
   if ((deletion.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
     // This has no named view transitions in its subtree.
     return;
@@ -95,7 +120,34 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
         const props: ViewTransitionProps = child.memoizedProps;
         const name = props.name;
         if (name != null && name !== 'auto') {
-          // TODO: Find a pair
+          const pair = pairs.get(name);
+          if (pair !== undefined) {
+            // Delete the entry so that we know when we've found all of them
+            // and can stop searching (size reaches zero).
+            pairs.delete(name);
+            const className: ?string = getViewTransitionClassName(
+              props.className,
+              props.share,
+            );
+            if (className !== 'none') {
+              // TODO: Should we measure if this in the viewport first?
+              // The "old" instance is actually the one we're inserting.
+              const oldInstance: ViewTransitionState = pair;
+              // The "new" instance is the already mounted one we're deleting.
+              const newInstance: ViewTransitionState = child.stateNode;
+              oldInstance.paired = newInstance;
+              const clones = oldInstance.clones;
+              if (clones !== null) {
+                // If we have clones that means that we've already visited this
+                // ViewTransition boundary before and we can now apply the name
+                // to those clones. Otherwise, we have to wait until we clone it.
+                applyViewTransitionToClones(name, className, clones);
+              }
+            }
+            if (pairs.size === 0) {
+              break;
+            }
+          }
         }
       }
       trackDeletedPairViewTransitions(child);
@@ -107,9 +159,35 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
 function trackEnterViewTransitions(deletion: Fiber): void {
   if (deletion.tag === ViewTransitionComponent) {
     const props: ViewTransitionProps = deletion.memoizedProps;
-    const name = props.name;
-    if (name != null && name !== 'auto') {
-      // TODO: Find a pair
+    const name = getViewTransitionName(props, deletion.stateNode);
+    const pair =
+      appearingViewTransitions !== null
+        ? appearingViewTransitions.get(name)
+        : undefined;
+    const className: ?string = getViewTransitionClassName(
+      props.className,
+      pair !== undefined ? props.share : props.enter,
+    );
+    if (className !== 'none') {
+      // TODO: Should we measure if this in the viewport first?
+      if (pair !== undefined) {
+        // Delete the entry so that we know when we've found all of them
+        // and can stop searching (size reaches zero).
+        // $FlowFixMe[incompatible-use]: Refined by the pair.
+        appearingViewTransitions.delete(name);
+        // The "old" instance is actually the one we're inserting.
+        const oldInstance: ViewTransitionState = pair;
+        // The "new" instance is the already mounted one we're deleting.
+        const newInstance: ViewTransitionState = deletion.stateNode;
+        oldInstance.paired = newInstance;
+        const clones = oldInstance.clones;
+        if (clones !== null) {
+          // If we have clones that means that we've already visited this
+          // ViewTransition boundary before and we can now apply the name
+          // to those clones. Otherwise, we have to wait until we clone it.
+          applyViewTransitionToClones(name, className, clones);
+        }
+      }
     }
     // Look for more pairs deeper in the tree.
     trackDeletedPairViewTransitions(deletion);

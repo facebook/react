@@ -49,7 +49,8 @@ export function resetShouldStartViewTransition(): void {
 
 // This tracks named ViewTransition components found in the accumulateSuspenseyCommit
 // phase that might need to find deleted pairs in the beforeMutation phase.
-let appearingViewTransitions: Map<string, ViewTransitionState> | null = null;
+export let appearingViewTransitions: Map<string, ViewTransitionState> | null =
+  null;
 
 export function resetAppearingViewTransitions(): void {
   appearingViewTransitions = null;
