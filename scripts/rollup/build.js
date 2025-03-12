@@ -503,15 +503,14 @@ function getPlugins(
           // takes care of it.
           renaming: false,
         }),
-      needsMinifiedByClosure ||
-        (bundle.name === 'eslint-plugin-react-hooks' &&
-          // Add the whitespace back
-          prettier({
-            parser: 'flow',
-            singleQuote: false,
-            trailingComma: 'none',
-            bracketSpacing: true,
-          })),
+      (needsMinifiedByClosure || bundle.name === 'eslint-plugin-react-hooks') &&
+        // Add the whitespace back
+        prettier({
+          parser: 'flow',
+          singleQuote: false,
+          trailingComma: 'none',
+          bracketSpacing: true,
+        }),
       {
         name: 'license-and-signature-header',
         renderChunk(source) {
