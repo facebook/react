@@ -20,7 +20,7 @@
     "watch": "yarn build --watch"
   },
   "dependencies": {
-    "@babel/types": "^7.19.0"
+    "@babel/types": "^7.26.0"
   },
   "devDependencies": {
     "@babel/core": "^7.2.0",
