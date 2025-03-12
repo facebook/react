@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cafea6098ab278431428f8ee4e09bc0a>>
+ * @generated SignedSource<<bb5d239e8e3e63d36e02cd182a18c45b>>
  */
 
 "use strict";
@@ -10379,6 +10379,9 @@ __DEV__ &&
           case 5:
             var instanceToUse = getPublicInstance(finishedWork.stateNode);
             break;
+          case 30:
+            instanceToUse = finishedWork.stateNode;
+            break;
           default:
             instanceToUse = finishedWork.stateNode;
         }
@@ -10771,6 +10774,8 @@ __DEV__ &&
             ("manual" === finishedWork.memoizedProps.mode
               ? safelyAttachRef(finishedWork, finishedWork.return)
               : safelyDetachRef(finishedWork, finishedWork.return));
+          break;
+        case 30:
           break;
         default:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
@@ -11170,6 +11175,7 @@ __DEV__ &&
               attachSuspenseRetryListeners(finishedWork, root)));
           break;
         case 30:
+          break;
         case 21:
           break;
         default:
@@ -11229,6 +11235,9 @@ __DEV__ &&
           safelyDetachRef(finishedWork, finishedWork.return);
           null === finishedWork.memoizedState &&
             recursivelyTraverseDisappearLayoutEffects(finishedWork);
+          break;
+        case 30:
+          recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
         default:
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -11342,6 +11351,8 @@ __DEV__ &&
               includeWorkInProgressEffects
             );
           safelyAttachRef(finishedWork, finishedWork.return);
+          break;
+        case 30:
           break;
         default:
           recursivelyTraverseReappearLayoutEffects(
@@ -17458,10 +17469,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-99e10240-20250310",
+        version: "19.1.0-native-fb-6aa8254b-20250312",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-99e10240-20250310"
+        reconcilerVersion: "19.1.0-native-fb-6aa8254b-20250312"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
