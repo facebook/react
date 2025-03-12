@@ -11692,9 +11692,16 @@ module.exports = function ($$$config) {
           flushLayoutEffects,
           flushAfterMutationEffects,
           flushSpawnedWork,
-          flushPassiveEffects
+          flushPassiveEffects,
+          reportViewTransitionError
         )) ||
         (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
+    }
+  }
+  function reportViewTransitionError(error) {
+    if (0 !== pendingEffectsStatus) {
+      var onRecoverableError = pendingEffectsRoot.onRecoverableError;
+      onRecoverableError(error, { componentStack: null });
     }
   }
   function flushAfterMutationEffects() {
@@ -13811,7 +13818,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-696950aa-20250310"
+      reconcilerVersion: "19.1.0-www-classic-ca8f91f6-20250311"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

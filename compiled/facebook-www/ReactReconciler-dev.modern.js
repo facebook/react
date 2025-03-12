@@ -16585,9 +16585,16 @@ __DEV__ &&
             flushLayoutEffects,
             flushAfterMutationEffects,
             flushSpawnedWork,
-            flushPassiveEffects
+            flushPassiveEffects,
+            reportViewTransitionError
           )) ||
           (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
+      }
+    }
+    function reportViewTransitionError(error) {
+      if (pendingEffectsStatus !== NO_PENDING_EFFECTS) {
+        var onRecoverableError = pendingEffectsRoot.onRecoverableError;
+        onRecoverableError(error, makeErrorInfo(null));
       }
     }
     function flushAfterMutationEffects() {
@@ -20890,7 +20897,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-696950aa-20250310"
+        reconcilerVersion: "19.1.0-www-modern-ca8f91f6-20250311"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

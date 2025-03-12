@@ -18649,9 +18649,16 @@ __DEV__ &&
             flushLayoutEffects,
             flushAfterMutationEffects,
             flushSpawnedWork,
-            flushPassiveEffects
+            flushPassiveEffects,
+            reportViewTransitionError
           )) ||
           (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
+      }
+    }
+    function reportViewTransitionError(error) {
+      if (pendingEffectsStatus !== NO_PENDING_EFFECTS) {
+        var onRecoverableError = pendingEffectsRoot.onRecoverableError;
+        onRecoverableError(error, makeErrorInfo(null));
       }
     }
     function flushAfterMutationEffects() {
@@ -24262,6 +24269,40 @@ __DEV__ &&
           rect.left <= ownerWindow.innerWidth
       };
     }
+    function customizeViewTransitionError(error) {
+      if ("object" === typeof error && null !== error)
+        switch (error.name) {
+          case "TimeoutError":
+            return Error(
+              "A ViewTransition timed out because a Navigation stalled. This can happen if a Navigation is blocked on React itself. Such as if it's resolved inside useEffect. This can be solved by moving the resolution to useLayoutEffect.",
+              { cause: error }
+            );
+          case "AbortError":
+            return Error(
+              "A ViewTransition was aborted early. This might be because you have other View Transition libraries on the page and only one can run at a time. To avoid this, use only React's built-in <ViewTransition> to coordinate.",
+              { cause: error }
+            );
+          case "InvalidStateError":
+            if (
+              "View transition was skipped because document visibility state is hidden." ===
+                error.message ||
+              "Skipping view transition because document visibility state has become hidden." ===
+                error.message ||
+              "Skipping view transition because viewport size changed." ===
+                error.message
+            )
+              return null;
+            if (
+              "Transition was aborted because of invalid state" ===
+              error.message
+            )
+              return Error(
+                "A ViewTransition could not start. See the console for more details.",
+                { cause: error }
+              );
+        }
+      return error;
+    }
     function startViewTransition(
       rootContainer,
       transitionTypes,
@@ -24269,7 +24310,8 @@ __DEV__ &&
       layoutCallback,
       afterMutationCallback,
       spawnedWorkCallback,
-      passiveCallback
+      passiveCallback,
+      errorCallback
     ) {
       var ownerDocument =
         rootContainer.nodeType === DOCUMENT_NODE
@@ -24314,16 +24356,15 @@ __DEV__ &&
           types: transitionTypes
         });
         ownerDocument.__reactViewTransition = transition;
-        transition.ready.then(void 0, function (reason) {
-          "object" === typeof reason &&
-            null !== reason &&
-            "TimeoutError" === reason.name &&
-            console.error(
-              "A ViewTransition timed out because a Navigation stalled. This can happen if a Navigation is blocked on React itself. Such as if it's resolved inside useEffect. This can be solved by moving the resolution to useLayoutEffect."
-            );
+        transition.ready.then(spawnedWorkCallback, function (error) {
+          try {
+            (error = customizeViewTransitionError(error)),
+              null !== error && errorCallback(error);
+          } finally {
+            spawnedWorkCallback();
+          }
         });
-        transition.ready.then(spawnedWorkCallback, spawnedWorkCallback);
-        transition.finished.then(function () {
+        transition.finished.finally(function () {
           for (
             var scope = ownerDocument.documentElement,
               animations = scope.getAnimations({ subtree: !0 }),
@@ -30181,11 +30222,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-classic-696950aa-20250310" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-classic-ca8f91f6-20250311" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-classic-696950aa-20250310\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-classic-ca8f91f6-20250311\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30228,10 +30269,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-classic-696950aa-20250310",
+          version: "19.1.0-www-classic-ca8f91f6-20250311",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-classic-696950aa-20250310"
+          reconcilerVersion: "19.1.0-www-classic-ca8f91f6-20250311"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30995,5 +31036,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-classic-696950aa-20250310";
+    exports.version = "19.1.0-www-classic-ca8f91f6-20250311";
   })();
