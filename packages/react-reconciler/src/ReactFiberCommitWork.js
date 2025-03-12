@@ -2908,9 +2908,7 @@ export function reappearLayoutEffects(
     }
     case Fragment: {
       if (enableFragmentRefs) {
-        if (flags & Ref) {
-          safelyAttachRef(finishedWork, finishedWork.return);
-        }
+        safelyAttachRef(finishedWork, finishedWork.return);
       }
       // Fallthrough
     }
