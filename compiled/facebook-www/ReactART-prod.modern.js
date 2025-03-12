@@ -36,13 +36,6 @@ function _inheritsLoose(subClass, superClass) {
   subClass.prototype.constructor = subClass;
   subClass.__proto__ = superClass;
 }
-function _assertThisInitialized(self) {
-  if (void 0 === self)
-    throw new ReferenceError(
-      "this hasn't been initialised - super() hasn't been called"
-    );
-  return self;
-}
 var assign = Object.assign;
 function formatProdErrorMessage(code) {
   var url = "https://react.dev/errors/" + code;
@@ -11029,7 +11022,7 @@ var slice = Array.prototype.slice,
     function Text(props) {
       var _this = _React$Component2.call(this, props) || this;
       ["height", "width", "x", "y"].forEach(function (key) {
-        Object.defineProperty(_assertThisInitialized(_this), key, {
+        Object.defineProperty(_this, key, {
           get: function () {
             return this._text ? this._text[key] : void 0;
           }
@@ -11054,10 +11047,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1560 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-75c97984-20250312",
+  version: "19.1.0-www-modern-f695f952-20250312",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-75c97984-20250312"
+  reconcilerVersion: "19.1.0-www-modern-f695f952-20250312"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1561 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11083,4 +11076,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-75c97984-20250312";
+exports.version = "19.1.0-www-modern-f695f952-20250312";
