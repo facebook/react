@@ -22,7 +22,7 @@ const useForks = require('./plugins/use-forks-plugin');
 const dynamicImports = require('./plugins/dynamic-imports');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
-const codeFrame = require('@babel/code-frame');
+const codeFrame = require('@babel/code-frame').default;
 const Wrappers = require('./wrappers');
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
