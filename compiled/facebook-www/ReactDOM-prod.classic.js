@@ -18933,16 +18933,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1924 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1925 = React.version;
 if (
-  "19.1.0-www-classic-6aa8254b-20250312" !==
-  isomorphicReactPackageVersion$jscomp$inline_1924
+  "19.1.0-www-classic-75c97984-20250312" !==
+  isomorphicReactPackageVersion$jscomp$inline_1925
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1924,
-      "19.1.0-www-classic-6aa8254b-20250312"
+      isomorphicReactPackageVersion$jscomp$inline_1925,
+      "19.1.0-www-classic-75c97984-20250312"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18958,24 +18958,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2504 = {
+var internals$jscomp$inline_2505 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-6aa8254b-20250312",
+  version: "19.1.0-www-classic-75c97984-20250312",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-6aa8254b-20250312"
+  reconcilerVersion: "19.1.0-www-classic-75c97984-20250312"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2505 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2506 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2505.isDisabled &&
-    hook$jscomp$inline_2505.supportsFiber
+    !hook$jscomp$inline_2506.isDisabled &&
+    hook$jscomp$inline_2506.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2505.inject(
-        internals$jscomp$inline_2504
+      (rendererID = hook$jscomp$inline_2506.inject(
+        internals$jscomp$inline_2505
       )),
-        (injectedHook = hook$jscomp$inline_2505);
+        (injectedHook = hook$jscomp$inline_2506);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -19327,4 +19327,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-6aa8254b-20250312";
+exports.version = "19.1.0-www-classic-75c97984-20250312";

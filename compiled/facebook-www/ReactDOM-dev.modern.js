@@ -23989,7 +23989,7 @@ __DEV__ &&
           rect.left <= ownerWindow.innerWidth
       };
     }
-    function customizeViewTransitionError(error) {
+    function customizeViewTransitionError(error, ignoreAbort) {
       if ("object" === typeof error && null !== error)
         switch (error.name) {
           case "TimeoutError":
@@ -23998,10 +23998,12 @@ __DEV__ &&
               { cause: error }
             );
           case "AbortError":
-            return Error(
-              "A ViewTransition was aborted early. This might be because you have other View Transition libraries on the page and only one can run at a time. To avoid this, use only React's built-in <ViewTransition> to coordinate.",
-              { cause: error }
-            );
+            return ignoreAbort
+              ? null
+              : Error(
+                  "A ViewTransition was aborted early. This might be because you have other View Transition libraries on the page and only one can run at a time. To avoid this, use only React's built-in <ViewTransition> to coordinate.",
+                  { cause: error }
+                );
           case "InvalidStateError":
             if (
               "View transition was skipped because document visibility state is hidden." ===
@@ -24078,7 +24080,7 @@ __DEV__ &&
         ownerDocument.__reactViewTransition = transition;
         transition.ready.then(spawnedWorkCallback, function (error) {
           try {
-            (error = customizeViewTransitionError(error)),
+            (error = customizeViewTransitionError(error, !1)),
               null !== error && errorCallback(error);
           } finally {
             spawnedWorkCallback();
@@ -29981,11 +29983,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-modern-6aa8254b-20250312" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-modern-75c97984-20250312" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-modern-6aa8254b-20250312\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-modern-75c97984-20250312\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30028,10 +30030,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-modern-6aa8254b-20250312",
+          version: "19.1.0-www-modern-75c97984-20250312",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-modern-6aa8254b-20250312"
+          reconcilerVersion: "19.1.0-www-modern-75c97984-20250312"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30629,7 +30631,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-modern-6aa8254b-20250312";
+    exports.version = "19.1.0-www-modern-75c97984-20250312";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

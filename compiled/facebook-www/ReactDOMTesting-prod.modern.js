@@ -18980,16 +18980,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1943 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1944 = React.version;
 if (
-  "19.1.0-www-modern-6aa8254b-20250312" !==
-  isomorphicReactPackageVersion$jscomp$inline_1943
+  "19.1.0-www-modern-75c97984-20250312" !==
+  isomorphicReactPackageVersion$jscomp$inline_1944
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1943,
-      "19.1.0-www-modern-6aa8254b-20250312"
+      isomorphicReactPackageVersion$jscomp$inline_1944,
+      "19.1.0-www-modern-75c97984-20250312"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19005,24 +19005,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2520 = {
+var internals$jscomp$inline_2521 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-6aa8254b-20250312",
+  version: "19.1.0-www-modern-75c97984-20250312",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-6aa8254b-20250312"
+  reconcilerVersion: "19.1.0-www-modern-75c97984-20250312"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2521 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2522 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2521.isDisabled &&
-    hook$jscomp$inline_2521.supportsFiber
+    !hook$jscomp$inline_2522.isDisabled &&
+    hook$jscomp$inline_2522.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2521.inject(
-        internals$jscomp$inline_2520
+      (rendererID = hook$jscomp$inline_2522.inject(
+        internals$jscomp$inline_2521
       )),
-        (injectedHook = hook$jscomp$inline_2521);
+        (injectedHook = hook$jscomp$inline_2522);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -19525,4 +19525,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-6aa8254b-20250312";
+exports.version = "19.1.0-www-modern-75c97984-20250312";

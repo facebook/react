@@ -20675,16 +20675,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2084 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2085 = React.version;
 if (
-  "19.1.0-www-classic-6aa8254b-20250312" !==
-  isomorphicReactPackageVersion$jscomp$inline_2084
+  "19.1.0-www-classic-75c97984-20250312" !==
+  isomorphicReactPackageVersion$jscomp$inline_2085
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2084,
-      "19.1.0-www-classic-6aa8254b-20250312"
+      isomorphicReactPackageVersion$jscomp$inline_2085,
+      "19.1.0-www-classic-75c97984-20250312"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20700,27 +20700,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2086 = {
+var internals$jscomp$inline_2087 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-6aa8254b-20250312",
+  version: "19.1.0-www-classic-75c97984-20250312",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-6aa8254b-20250312"
+  reconcilerVersion: "19.1.0-www-classic-75c97984-20250312"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2086.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2086.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2087.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2087.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2643 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2644 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2643.isDisabled &&
-    hook$jscomp$inline_2643.supportsFiber
+    !hook$jscomp$inline_2644.isDisabled &&
+    hook$jscomp$inline_2644.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2643.inject(
-        internals$jscomp$inline_2086
+      (rendererID = hook$jscomp$inline_2644.inject(
+        internals$jscomp$inline_2087
       )),
-        (injectedHook = hook$jscomp$inline_2643);
+        (injectedHook = hook$jscomp$inline_2644);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -21072,7 +21072,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-6aa8254b-20250312";
+exports.version = "19.1.0-www-classic-75c97984-20250312";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
