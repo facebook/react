@@ -1576,7 +1576,10 @@ function cancelAllViewTransitionAnimations(scope: Element) {
 // either cached the font or preloaded it earlier.
 const SUSPENSEY_FONT_TIMEOUT = 500;
 
-function customizeViewTransitionError(error: Object): mixed {
+function customizeViewTransitionError(
+  error: Object,
+  ignoreAbort: boolean,
+): mixed {
   if (typeof error === 'object' && error !== null) {
     switch (error.name) {
       case 'TimeoutError': {
@@ -1595,6 +1598,9 @@ function customizeViewTransitionError(error: Object): mixed {
         break;
       }
       case 'AbortError': {
+        if (ignoreAbort) {
+          return null;
+        }
         if (__DEV__) {
           // eslint-disable-next-line react-internal/prod-error-codes
           return new Error(
@@ -1707,7 +1713,7 @@ export function startViewTransition(
     ownerDocument.__reactViewTransition = transition;
     const handleError = (error: mixed) => {
       try {
-        error = customizeViewTransitionError(error);
+        error = customizeViewTransitionError(error, false);
         if (error !== null) {
           errorCallback(error);
         }
@@ -1997,7 +2003,7 @@ export function startGestureTransition(
         : readyCallback;
     const handleError = (error: mixed) => {
       try {
-        error = customizeViewTransitionError(error);
+        error = customizeViewTransitionError(error, true);
         if (error !== null) {
           errorCallback(error);
         }
