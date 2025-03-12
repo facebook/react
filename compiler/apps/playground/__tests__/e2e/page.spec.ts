@@ -105,6 +105,9 @@ function nonReactFn() {
 
 test('editor should open successfully', async ({page}) => {
   await page.goto(`/`, {waitUntil: 'networkidle'});
+  await page.waitForFunction(
+    () => typeof window['MonacoEnvironment'] !== 'undefined',
+  );
   await page.screenshot({
     fullPage: true,
     path: 'test-results/00-fresh-page.png',
@@ -120,6 +123,9 @@ test('editor should compile from hash successfully', async ({page}) => {
   };
   const hash = encodeStore(store);
   await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
+  await page.waitForFunction(
+    () => typeof window['MonacoEnvironment'] !== 'undefined',
+  );
 
   // User input from hash compiles
   await page.screenshot({
@@ -143,6 +149,9 @@ test('reset button works', async ({page}) => {
   };
   const hash = encodeStore(store);
   await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
+  await page.waitForFunction(
+    () => typeof window['MonacoEnvironment'] !== 'undefined',
+  );
 
   // Reset button works
   page.on('dialog', dialog => dialog.accept());
@@ -166,6 +175,9 @@ TEST_CASE_INPUTS.forEach((t, idx) =>
     };
     const hash = encodeStore(store);
     await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
+    await page.waitForFunction(
+      () => typeof window['MonacoEnvironment'] !== 'undefined',
+    );
     await page.screenshot({
       fullPage: true,
       path: `test-results/03-0${idx}-${t.name}.png`,
