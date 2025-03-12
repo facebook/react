@@ -5,6 +5,5 @@
 # LICENSE file in the root directory of this source tree.
 
 echo "Building babel-plugin-react-compiler..."
-cd compiler
-yarn install --frozen-lockfile
-yarn workspace babel-plugin-react-compiler build --dts
+yarn --cwd compiler install --frozen-lockfile
+yarn --cwd compiler workspace babel-plugin-react-compiler build --dts
