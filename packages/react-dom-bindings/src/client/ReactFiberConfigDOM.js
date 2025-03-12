@@ -34,6 +34,7 @@ import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostCo
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import {OffscreenComponent} from 'react-reconciler/src/ReactWorkTags';
 
 export {
   setCurrentUpdatePriority,
@@ -2156,6 +2157,235 @@ export function subscribeToGestureDirection(
     return () => {
       cancelAnimationFrame(callbackID);
     };
+  }
+}
+
+type EventListenerOptionsOrUseCapture =
+  | boolean
+  | {
+      capture?: boolean,
+      once?: boolean,
+      passive?: boolean,
+      signal?: AbortSignal,
+      ...
+    };
+
+type StoredEventListener = {
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
+};
+
+export type FragmentInstanceType = {
+  _fragmentFiber: Fiber,
+  _eventListeners: null | Array<StoredEventListener>,
+  addEventListener(
+    type: string,
+    listener: EventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+  ): void,
+  removeEventListener(
+    type: string,
+    listener: EventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+  ): void,
+  focus(): void,
+};
+
+function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
+  this._fragmentFiber = fragmentFiber;
+  this._eventListeners = null;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.addEventListener = function (
+  this: FragmentInstanceType,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+): void {
+  if (this._eventListeners === null) {
+    this._eventListeners = [];
+  }
+
+  const listeners = this._eventListeners;
+  // Element.addEventListener will only apply uniquely new event listeners by default. Since we
+  // need to collect the listeners to apply to appended children, we track them ourselves and use
+  // custom equality check for the options.
+  const isNewEventListener =
+    indexOfEventListener(listeners, type, listener, optionsOrUseCapture) === -1;
+  if (isNewEventListener) {
+    listeners.push({type, listener, optionsOrUseCapture});
+    traverseFragmentInstanceChildren(
+      this,
+      this._fragmentFiber.child,
+      addEventListenerToChild,
+      type,
+      listener,
+      optionsOrUseCapture,
+    );
+  }
+  this._eventListeners = listeners;
+};
+function addEventListenerToChild(
+  child: Instance,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+): boolean {
+  child.addEventListener(type, listener, optionsOrUseCapture);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.removeEventListener = function (
+  this: FragmentInstanceType,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+): void {
+  const listeners = this._eventListeners;
+  if (listeners === null) {
+    return;
+  }
+  if (typeof listeners !== 'undefined' && listeners.length > 0) {
+    traverseFragmentInstanceChildren(
+      this,
+      this._fragmentFiber.child,
+      removeEventListenerFromChild,
+      type,
+      listener,
+      optionsOrUseCapture,
+    );
+    const index = indexOfEventListener(
+      listeners,
+      type,
+      listener,
+      optionsOrUseCapture,
+    );
+    if (this._eventListeners !== null) {
+      this._eventListeners.splice(index, 1);
+    }
+  }
+};
+function removeEventListenerFromChild(
+  child: Instance,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+): boolean {
+  child.removeEventListener(type, listener, optionsOrUseCapture);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.focus = function (this: FragmentInstanceType) {
+  traverseFragmentInstanceChildren(
+    this,
+    this._fragmentFiber.child,
+    setFocusIfFocusable,
+  );
+};
+
+function traverseFragmentInstanceChildren<A, B, C>(
+  fragmentInstance: FragmentInstanceType,
+  child: Fiber | null,
+  fn: (Instance, A, B, C) => boolean,
+  a: A,
+  b: B,
+  c: C,
+): void {
+  while (child !== null) {
+    if (child.tag === HostComponent) {
+      if (fn(child.stateNode, a, b, c)) {
+        return;
+      }
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip hidden subtrees
+    } else {
+      traverseFragmentInstanceChildren(
+        fragmentInstance,
+        child.child,
+        fn,
+        a,
+        b,
+        c,
+      );
+    }
+    child = child.sibling;
+  }
+}
+
+function normalizeListenerOptions(
+  opts: ?EventListenerOptionsOrUseCapture,
+): string {
+  if (opts == null) {
+    return '0';
+  }
+
+  if (typeof opts === 'boolean') {
+    return `c=${opts ? '1' : '0'}`;
+  }
+
+  return `c=${opts.capture ? '1' : '0'}&o=${opts.once ? '1' : '0'}&p=${opts.passive ? '1' : '0'}`;
+}
+
+function indexOfEventListener(
+  eventListeners: Array<StoredEventListener>,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
+): number {
+  for (let i = 0; i < eventListeners.length; i++) {
+    const item = eventListeners[i];
+    if (
+      item.type === type &&
+      item.listener === listener &&
+      normalizeListenerOptions(item.optionsOrUseCapture) ===
+        normalizeListenerOptions(optionsOrUseCapture)
+    ) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+export function createFragmentInstance(
+  fragmentFiber: Fiber,
+): FragmentInstanceType {
+  return new (FragmentInstance: any)(fragmentFiber);
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Fiber,
+  instance: FragmentInstanceType,
+): void {
+  instance._fragmentFiber = fragmentFiber;
+}
+
+export function commitNewChildToFragmentInstance(
+  childElement: Instance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  const eventListeners = fragmentInstance._eventListeners;
+  if (eventListeners !== null) {
+    for (let i = 0; i < eventListeners.length; i++) {
+      const {type, listener, optionsOrUseCapture} = eventListeners[i];
+      childElement.addEventListener(type, listener, optionsOrUseCapture);
+    }
+  }
+}
+
+export function deleteChildFromFragmentInstance(
+  childElement: Instance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  const eventListeners = fragmentInstance._eventListeners;
+  if (eventListeners !== null) {
+    for (let i = 0; i < eventListeners.length; i++) {
+      const {type, listener, optionsOrUseCapture} = eventListeners[i];
+      childElement.removeEventListener(type, listener, optionsOrUseCapture);
+    }
   }
 }
 

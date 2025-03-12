@@ -202,6 +202,35 @@ export function cloneMutableTextInstance(
   throw new Error('Not yet implemented.');
 }
 
+export type FragmentInstanceType = null;
+
+export function createFragmentInstance(
+  fragmentFiber: Fiber,
+): FragmentInstanceType {
+  return null;
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Fiber,
+  instance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function commitNewChildToFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function deleteChildFromFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
 export function finalizeInitialChildren(
   parentInstance: Instance,
   type: string,

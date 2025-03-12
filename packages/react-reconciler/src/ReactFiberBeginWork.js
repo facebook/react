@@ -116,6 +116,7 @@ import {
   disableDefaultPropsExceptForClasses,
   enableHydrationLaneScheduling,
   enableViewTransition,
+  enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -987,6 +988,9 @@ function updateFragment(
   renderLanes: Lanes,
 ) {
   const nextChildren = workInProgress.pendingProps;
+  if (enableFragmentRefs) {
+    markRef(current, workInProgress);
+  }
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
