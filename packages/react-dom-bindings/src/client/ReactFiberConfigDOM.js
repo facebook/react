@@ -1576,6 +1576,69 @@ function cancelAllViewTransitionAnimations(scope: Element) {
 // either cached the font or preloaded it earlier.
 const SUSPENSEY_FONT_TIMEOUT = 500;
 
+function customizeViewTransitionError(error: Object): mixed {
+  if (typeof error === 'object' && error !== null) {
+    switch (error.name) {
+      case 'TimeoutError': {
+        // We assume that the only reason a Timeout can happen is because the Navigation
+        // promise. We expect any other work to either be fast or have a timeout (fonts).
+        if (__DEV__) {
+          // eslint-disable-next-line react-internal/prod-error-codes
+          return new Error(
+            'A ViewTransition timed out because a Navigation stalled. ' +
+              'This can happen if a Navigation is blocked on React itself. ' +
+              "Such as if it's resolved inside useEffect. " +
+              'This can be solved by moving the resolution to useLayoutEffect.',
+            {cause: error},
+          );
+        }
+        break;
+      }
+      case 'AbortError': {
+        if (__DEV__) {
+          // eslint-disable-next-line react-internal/prod-error-codes
+          return new Error(
+            'A ViewTransition was aborted early. This might be because you have ' +
+              'other View Transition libraries on the page and only one can run at ' +
+              "a time. To avoid this, use only React's built-in <ViewTransition> " +
+              'to coordinate.',
+            {cause: error},
+          );
+        }
+        break;
+      }
+      case 'InvalidStateError': {
+        if (
+          error.message ===
+            'View transition was skipped because document visibility state is hidden.' ||
+          error.message ===
+            'Skipping view transition because document visibility state has become hidden.' ||
+          error.message ===
+            'Skipping view transition because viewport size changed.'
+        ) {
+          // Skip logging this. This is not considered an error.
+          return null;
+        }
+        if (__DEV__) {
+          if (
+            error.message === 'Transition was aborted because of invalid state'
+          ) {
+            // Chrome doesn't include the reason in the message but logs it in the console..
+            // Redirect the user to look there.
+            // eslint-disable-next-line react-internal/prod-error-codes
+            return new Error(
+              'A ViewTransition could not start. See the console for more details.',
+              {cause: error},
+            );
+          }
+        }
+        break;
+      }
+    }
+  }
+  return error;
+}
+
 export function startViewTransition(
   rootContainer: Container,
   transitionTypes: null | TransitionTypes,
@@ -1584,6 +1647,7 @@ export function startViewTransition(
   afterMutationCallback: () => void,
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
+  errorCallback: mixed => void,
 ): boolean {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
@@ -1641,24 +1705,19 @@ export function startViewTransition(
     });
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
-    if (__DEV__) {
-      transition.ready.then(undefined, (reason: mixed) => {
-        if (
-          typeof reason === 'object' &&
-          reason !== null &&
-          reason.name === 'TimeoutError'
-        ) {
-          console.error(
-            'A ViewTransition timed out because a Navigation stalled. ' +
-              'This can happen if a Navigation is blocked on React itself. ' +
-              "Such as if it's resolved inside useEffect. " +
-              'This can be solved by moving the resolution to useLayoutEffect.',
-          );
+    const handleError = (error: mixed) => {
+      try {
+        error = customizeViewTransitionError(error);
+        if (error !== null) {
+          errorCallback(error);
         }
-      });
-    }
-    transition.ready.then(spawnedWorkCallback, spawnedWorkCallback);
-    transition.finished.then(() => {
+      } finally {
+        // Continue the reset of the work.
+        spawnedWorkCallback();
+      }
+    };
+    transition.ready.then(spawnedWorkCallback, handleError);
+    transition.finished.finally(() => {
       cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
@@ -1802,6 +1861,7 @@ export function startGestureTransition(
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   animateCallback: () => void,
+  errorCallback: mixed => void,
 ): null | RunningGestureTransition {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
@@ -1815,7 +1875,7 @@ export function startGestureTransition(
     });
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
-    const readyCallback = (x: any) => {
+    const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
       const animations = documentElement.getAnimations({subtree: true});
@@ -1935,8 +1995,19 @@ export function startGestureTransition(
       navigator.userAgent.indexOf('Chrome') !== -1
         ? () => requestAnimationFrame(readyCallback)
         : readyCallback;
-    transition.ready.then(readyForAnimations, readyCallback);
-    transition.finished.then(() => {
+    const handleError = (error: mixed) => {
+      try {
+        error = customizeViewTransitionError(error);
+        if (error !== null) {
+          errorCallback(error);
+        }
+      } finally {
+        // Continue the reset of the work.
+        readyCallback();
+      }
+    };
+    transition.ready.then(readyForAnimations, handleError);
+    transition.finished.finally(() => {
       cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
