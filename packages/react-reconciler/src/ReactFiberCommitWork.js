@@ -241,8 +241,7 @@ import {
   commitExitViewTransitions,
   commitBeforeUpdateViewTransition,
   commitNestedViewTransitions,
-  restoreEnterViewTransitions,
-  restoreExitViewTransitions,
+  restoreEnterOrExitViewTransitions,
   restoreUpdateViewTransition,
   restoreNestedViewTransitions,
   measureUpdateViewTransition,
@@ -3175,7 +3174,7 @@ function commitPassiveMountOnFiber(
     // This was a new mount. This means we could've triggered an enter animation on
     // the content. Restore the view transitions if there were any assigned in the
     // snapshot phase.
-    restoreEnterViewTransitions(finishedWork);
+    restoreEnterOrExitViewTransitions(finishedWork);
   }
 
   // When updating this function, also update reconnectPassiveEffects, which does
@@ -3476,7 +3475,7 @@ function commitPassiveMountOnFiber(
           // Content is now hidden but wasn't before. This means we could've
           // triggered an exit animation on the content. Restore the view
           // transitions if there were any assigned in the snapshot phase.
-          restoreExitViewTransitions(current);
+          restoreEnterOrExitViewTransitions(current);
         }
         if (instance._visibility & OffscreenPassiveEffectsConnected) {
           // The effects are currently connected. Update them.
@@ -3523,7 +3522,7 @@ function commitPassiveMountOnFiber(
           // Content is now visible but wasn't before. This means we could've
           // triggered an enter animation on the content. Restore the view
           // transitions if there were any assigned in the snapshot phase.
-          restoreEnterViewTransitions(finishedWork);
+          restoreEnterOrExitViewTransitions(finishedWork);
         }
         if (instance._visibility & OffscreenPassiveEffectsConnected) {
           // The effects are currently connected. Update them.
