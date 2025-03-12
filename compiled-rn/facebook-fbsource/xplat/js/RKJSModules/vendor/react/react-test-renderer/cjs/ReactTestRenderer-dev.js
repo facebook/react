@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<28a53aafbdefec86bba8f9729601f62e>>
+ * @generated SignedSource<<218f86e15f84fc78883226060529f7cd>>
  */
 
 "use strict";
@@ -15583,7 +15583,7 @@ __DEV__ &&
               : null
           );
         };
-        _createClass(ReactTestInstance, [
+        return _createClass(ReactTestInstance, [
           {
             key: "instance",
             get: function () {
@@ -15625,16 +15625,15 @@ __DEV__ &&
             }
           }
         ]);
-        return ReactTestInstance;
       })(),
       fiberToWrapper = new WeakMap();
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-6aa8254b-20250312",
+        version: "19.1.0-native-fb-f695f952-20250312",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-6aa8254b-20250312"
+        reconcilerVersion: "19.1.0-native-fb-f695f952-20250312"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15779,5 +15778,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-6aa8254b-20250312";
+    exports.version = "19.1.0-native-fb-f695f952-20250312";
   })();

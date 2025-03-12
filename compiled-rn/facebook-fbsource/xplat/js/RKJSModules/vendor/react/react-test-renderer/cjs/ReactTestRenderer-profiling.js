@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d84c3db23243b66758fafd8555e52ee5>>
+ * @generated SignedSource<<6416c1807cc6d7c7cb45b88dcc0a5075>>
  */
 
 "use strict";
@@ -10334,7 +10334,7 @@ var ReactTestInstance = (function () {
       1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : null
     );
   };
-  _createClass(ReactTestInstance, [
+  return _createClass(ReactTestInstance, [
     {
       key: "instance",
       get: function () {
@@ -10376,7 +10376,6 @@ var ReactTestInstance = (function () {
       }
     }
   ]);
-  return ReactTestInstance;
 })();
 function _findAll(root, predicate, options) {
   var deep = options ? options.deep : !0,
@@ -10409,10 +10408,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1227 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-6aa8254b-20250312",
+  version: "19.1.0-native-fb-f695f952-20250312",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-6aa8254b-20250312",
+  reconcilerVersion: "19.1.0-native-fb-f695f952-20250312",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$147 = 0;
@@ -10563,4 +10562,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-6aa8254b-20250312";
+exports.version = "19.1.0-native-fb-f695f952-20250312";
