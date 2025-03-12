@@ -12,7 +12,7 @@
     "vercel-build": "yarn build",
     "start": "next start",
     "lint": "next lint",
-    "test": "playwright test"
+    "test": "playwright test --workers 6"
   },
   "dependencies": {
     "@babel/core": "^7.18.9",
