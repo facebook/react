@@ -58,8 +58,7 @@ import {
   ViewTransitionComponent,
 } from './ReactWorkTags';
 import {
-  restoreEnterViewTransitions,
-  restoreExitViewTransitions,
+  restoreEnterOrExitViewTransitions,
   restoreNestedViewTransitions,
 } from './ReactFiberCommitViewTransitions';
 
@@ -70,11 +69,11 @@ function detectMutationOrInsertClones(finishedWork: Fiber): boolean {
 }
 
 const CLONE_UPDATE = 0; // Mutations in this subtree or potentially affected by layout.
-const CLONE_ENTER = 1; // Inside a reappearing offscreen before the next ViewTransition or HostComponent.
+const CLONE_EXIT = 1; // Inside a reappearing offscreen before the next ViewTransition or HostComponent.
 const CLONE_UNHIDE = 2; // Inside a reappearing offscreen before the next HostComponent.
 const CLONE_APPEARING_PAIR = 3; // Like UNHIDE but we're already inside the first Host Component only finding pairs.
 const CLONE_UNCHANGED = 4; // Nothing in this tree was changed but we're still walking to clone it.
-const INSERT_ENTER = 5; // Inside a newly mounted tree before the next ViewTransition or HostComponent.
+const INSERT_EXIT = 5; // Inside a newly mounted tree before the next ViewTransition or HostComponent.
 const INSERT_APPEND = 6; // Inside a newly mounted tree before the next HostComponent.
 const INSERT_APPEARING_PAIR = 7; // Inside a newly mounted tree only finding pairs.
 type VisitPhase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -105,7 +104,7 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
   }
 }
 
-function trackExitViewTransitions(deletion: Fiber): void {
+function trackEnterViewTransitions(deletion: Fiber): void {
   if (deletion.tag === ViewTransitionComponent) {
     const props: ViewTransitionProps = deletion.memoizedProps;
     const name = props.name;
@@ -117,7 +116,7 @@ function trackExitViewTransitions(deletion: Fiber): void {
   } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = deletion.child;
     while (child !== null) {
-      trackExitViewTransitions(child);
+      trackEnterViewTransitions(child);
       child = child.sibling;
     }
   } else {
@@ -261,7 +260,7 @@ function recursivelyInsertNewFiber(
       // TODO: If this was already cloned by a previous pass we can reuse those clones.
       viewTransitionState.clones = null;
       let nextPhase;
-      if (visitPhase === INSERT_ENTER) {
+      if (visitPhase === INSERT_EXIT) {
         // This was an Enter of a ViewTransition. We now move onto inserting the inner
         // HostComponents and finding inner pairs.
         nextPhase = INSERT_APPEND;
@@ -307,7 +306,7 @@ function recursivelyInsertClonesFromExistingTree(
             // We've found any "layout" View Transitions at this point so we can bail.
             keepTraversing = false;
             break;
-          case CLONE_ENTER:
+          case CLONE_EXIT:
           case CLONE_UNHIDE:
           case CLONE_APPEARING_PAIR:
             // If this was an unhide, we need to keep going if there are any named
@@ -345,7 +344,7 @@ function recursivelyInsertClonesFromExistingTree(
             parentViewTransition.clones.push(clone);
           }
         }
-        if (visitPhase === CLONE_ENTER || visitPhase === CLONE_UNHIDE) {
+        if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
           unhideInstance(clone, child.memoizedProps);
         }
         break;
@@ -360,7 +359,7 @@ function recursivelyInsertClonesFromExistingTree(
         }
         const clone = cloneMutableTextInstance(textInstance);
         appendChild(hostParentClone, clone);
-        if (visitPhase === CLONE_ENTER || visitPhase === CLONE_UNHIDE) {
+        if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
           unhideTextInstance(clone, child.memoizedProps);
         }
         break;
@@ -393,7 +392,7 @@ function recursivelyInsertClonesFromExistingTree(
         // TODO: If this was already cloned by a previous pass we can reuse those clones.
         viewTransitionState.clones = null;
         let nextPhase;
-        if (visitPhase === CLONE_ENTER) {
+        if (visitPhase === CLONE_EXIT) {
           // This was an Enter of a ViewTransition. We now move onto unhiding the inner
           // HostComponents and finding inner pairs.
           nextPhase = CLONE_UNHIDE;
@@ -440,7 +439,7 @@ function recursivelyInsertClones(
   if (deletions !== null) {
     for (let i = 0; i < deletions.length; i++) {
       const childToDelete = deletions[i];
-      trackExitViewTransitions(childToDelete);
+      trackEnterViewTransitions(childToDelete);
     }
   }
 
@@ -485,7 +484,7 @@ function insertDestinationClonesOfFiber(
       finishedWork,
       hostParentClone,
       parentViewTransition,
-      INSERT_ENTER,
+      INSERT_EXIT,
     );
     return;
   }
@@ -578,7 +577,7 @@ function insertDestinationClonesOfFiber(
         commitUpdate(clone, type, oldProps, newProps, finishedWork);
       }
 
-      if (visitPhase === CLONE_ENTER || visitPhase === CLONE_UNHIDE) {
+      if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
         recursivelyInsertClones(
           finishedWork,
           clone,
@@ -615,7 +614,7 @@ function insertDestinationClonesOfFiber(
         commitTextUpdate(clone, newText, oldText);
       }
       appendChild(hostParentClone, clone);
-      if (visitPhase === CLONE_ENTER || visitPhase === CLONE_UNHIDE) {
+      if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
         unhideTextInstance(clone, finishedWork.memoizedProps);
       }
       break;
@@ -634,7 +633,7 @@ function insertDestinationClonesOfFiber(
         let nextPhase;
         if (visitPhase === CLONE_UPDATE && (flags & Visibility) !== NoFlags) {
           // This is the root of an appear. We need to trigger Enter transitions.
-          nextPhase = CLONE_ENTER;
+          nextPhase = CLONE_EXIT;
         } else {
           nextPhase = visitPhase;
         }
@@ -646,7 +645,7 @@ function insertDestinationClonesOfFiber(
         );
       } else if (current !== null && current.memoizedState === null) {
         // Was previously mounted as visible but is now hidden.
-        trackExitViewTransitions(current);
+        trackEnterViewTransitions(current);
       }
       break;
     }
@@ -656,7 +655,7 @@ function insertDestinationClonesOfFiber(
       // TODO: If this was already cloned by a previous pass we can reuse those clones.
       viewTransitionState.clones = null;
       let nextPhase;
-      if (visitPhase === CLONE_ENTER) {
+      if (visitPhase === CLONE_EXIT) {
         // This was an Enter of a ViewTransition. We now move onto unhiding the inner
         // HostComponents and finding inner pairs.
         nextPhase = CLONE_UNHIDE;
@@ -746,7 +745,7 @@ function applyDeletedPairViewTransitions(deletion: Fiber): void {
   }
 }
 
-function applyExitViewTransitions(deletion: Fiber): void {
+function applyEnterViewTransitions(deletion: Fiber): void {
   if (deletion.tag === ViewTransitionComponent) {
     const props: ViewTransitionProps = deletion.memoizedProps;
     const name = props.name;
@@ -759,7 +758,7 @@ function applyExitViewTransitions(deletion: Fiber): void {
     // TODO: Check if this is a hidden Offscreen or a Portal.
     let child = deletion.child;
     while (child !== null) {
-      applyExitViewTransitions(child);
+      applyEnterViewTransitions(child);
       child = child.sibling;
     }
   } else {
@@ -811,7 +810,7 @@ function recursivelyApplyViewTransitions(parentFiber: Fiber) {
   if (deletions !== null) {
     for (let i = 0; i < deletions.length; i++) {
       const childToDelete = deletions[i];
-      applyExitViewTransitions(childToDelete);
+      applyEnterViewTransitions(childToDelete);
     }
   }
 
@@ -866,7 +865,7 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber) {
           measureEnterViewTransitions(finishedWork);
         } else if (current !== null && current.memoizedState === null) {
           // Was previously mounted as visible but is now hidden.
-          applyExitViewTransitions(current);
+          applyEnterViewTransitions(current);
         }
       }
       break;
@@ -903,7 +902,7 @@ function recursivelyRestoreViewTransitions(parentFiber: Fiber) {
   if (deletions !== null) {
     for (let i = 0; i < deletions.length; i++) {
       const childToDelete = deletions[i];
-      restoreExitViewTransitions(childToDelete);
+      restoreEnterOrExitViewTransitions(childToDelete);
     }
   }
 
@@ -928,7 +927,7 @@ function recursivelyRestoreViewTransitions(parentFiber: Fiber) {
 function restoreViewTransitionsOnFiber(finishedWork: Fiber) {
   const current = finishedWork.alternate;
   if (current === null) {
-    restoreEnterViewTransitions(finishedWork);
+    restoreEnterOrExitViewTransitions(finishedWork);
     return;
   }
 
@@ -955,10 +954,10 @@ function restoreViewTransitionsOnFiber(finishedWork: Fiber) {
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
         if (!isHidden) {
-          restoreEnterViewTransitions(finishedWork);
+          restoreEnterOrExitViewTransitions(finishedWork);
         } else if (current !== null && current.memoizedState === null) {
           // Was previously mounted as visible but is now hidden.
-          restoreExitViewTransitions(current);
+          restoreEnterOrExitViewTransitions(current);
         }
       }
       break;
