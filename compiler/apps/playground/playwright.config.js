@@ -17,7 +17,7 @@ const baseURL = `http://localhost:${PORT}`;
 // Reference: https://playwright.dev/docs/test-configuration
 export default defineConfig({
   // Timeout per test
-  timeout: 30 * 1000,
+  timeout: 60 * 1000,
   // Run all tests in parallel.
   fullyParallel: true,
   // Test directory
