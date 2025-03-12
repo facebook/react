@@ -61,6 +61,7 @@ import {
   disableLegacyMode,
   enableComponentPerformanceTrack,
   enableViewTransition,
+  enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -85,6 +86,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   ViewTransitionComponent,
+  Fragment,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -164,6 +166,7 @@ import {
   cancelRootViewTransitionName,
   restoreRootViewTransitionName,
   isSingletonScope,
+  updateFragmentInstanceFiber,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -235,6 +238,8 @@ import {
   commitHostRemoveChild,
   commitHostSingletonAcquisition,
   commitHostSingletonRelease,
+  commitFragmentInstanceDeletionEffects,
+  commitFragmentInstanceInsertionEffects,
 } from './ReactFiberCommitHostEffects';
 import {
   commitEnterViewTransitions,
@@ -767,8 +772,15 @@ function commitLayoutEffectOnFiber(
         }
         break;
       }
-      // Fallthrough
+      break;
     }
+    case Fragment:
+      if (enableFragmentRefs) {
+        if (flags & Ref) {
+          safelyAttachRef(finishedWork, finishedWork.return);
+        }
+      }
+    // Fallthrough
     default: {
       recursivelyTraverseLayoutEffects(
         finishedRoot,
@@ -1353,6 +1365,9 @@ function commitDeletionEffectsOnFiber(
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
       }
+      if (enableFragmentRefs && deletedFiber.tag === HostComponent) {
+        commitFragmentInstanceDeletionEffects(deletedFiber);
+      }
       // Intentional fallthrough to next branch
     }
     case HostText: {
@@ -1562,6 +1577,14 @@ function commitDeletionEffectsOnFiber(
         );
       }
       break;
+    }
+    case Fragment: {
+      if (enableFragmentRefs) {
+        if (!offscreenSubtreeWasHidden) {
+          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        }
+      }
+      // Fallthrough
     }
     default: {
       recursivelyTraverseDeletionEffects(
@@ -1947,6 +1970,7 @@ function commitMutationEffectsOnFiber(
     }
     case HostComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+
       commitReconciliationEffects(finishedWork, lanes);
 
       if (flags & Ref) {
@@ -2270,7 +2294,7 @@ function commitMutationEffectsOnFiber(
       }
       break;
     }
-    case ViewTransitionComponent:
+    case ViewTransitionComponent: {
       if (enableViewTransition) {
         if (flags & Ref) {
           if (!offscreenSubtreeWasHidden && current !== null) {
@@ -2298,7 +2322,8 @@ function commitMutationEffectsOnFiber(
         popMutationContext(prevMutationContext);
         break;
       }
-    // Fallthrough
+      break;
+    }
     case ScopeComponent: {
       if (enableScopeAPI) {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -2321,6 +2346,13 @@ function commitMutationEffectsOnFiber(
       }
       break;
     }
+    case Fragment:
+      if (enableFragmentRefs) {
+        if (current && current.stateNode !== null) {
+          updateFragmentInstanceFiber(finishedWork, current.stateNode);
+        }
+      }
+    // Fallthrough
     default: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork, lanes);
@@ -2638,6 +2670,10 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
 
+      if (enableFragmentRefs && finishedWork.tag === HostComponent) {
+        commitFragmentInstanceDeletionEffects(finishedWork);
+      }
+
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
       break;
     }
@@ -2656,6 +2692,13 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
     }
     case ViewTransitionComponent: {
       if (enableViewTransition) {
+        safelyDetachRef(finishedWork, finishedWork.return);
+      }
+      recursivelyTraverseDisappearLayoutEffects(finishedWork);
+      break;
+    }
+    case Fragment: {
+      if (enableFragmentRefs) {
         safelyDetachRef(finishedWork, finishedWork.return);
       }
       // Fallthrough
@@ -2765,6 +2808,10 @@ export function reappearLayoutEffects(
     }
     case HostHoistable:
     case HostComponent: {
+      // TODO: Enable HostText for RN
+      if (enableFragmentRefs && finishedWork.tag === HostComponent) {
+        commitFragmentInstanceInsertionEffects(finishedWork);
+      }
       recursivelyTraverseReappearLayoutEffects(
         finishedRoot,
         finishedWork,
@@ -2856,6 +2903,12 @@ export function reappearLayoutEffects(
         );
         safelyAttachRef(finishedWork, finishedWork.return);
         break;
+      }
+      break;
+    }
+    case Fragment: {
+      if (enableFragmentRefs) {
+        safelyAttachRef(finishedWork, finishedWork.return);
       }
       // Fallthrough
     }

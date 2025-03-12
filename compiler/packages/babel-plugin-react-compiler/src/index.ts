@@ -22,6 +22,8 @@ export {
   findDirectiveEnablingMemoization,
   findDirectiveDisablingMemoization,
   type CompilerPipelineValue,
+  type Logger,
+  type LoggerEvent,
   type PluginOptions,
 } from './Entrypoint';
 export {

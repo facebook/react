@@ -512,6 +512,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       throw new Error('Not yet implemented.');
     },
 
+    createFragmentInstance(parentInstance) {
+      return null;
+    },
+
+    commitNewChildToFragmentInstance(child, fragmentInstance) {
+      // Noop
+    },
+
+    deleteChildFromFragmentInstance(child, fragmentInstance) {
+      // Noop
+    },
+
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: -1,
@@ -809,6 +821,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           afterMutationCallback: () => void,
           layoutCallback: () => void,
           passiveCallback: () => mixed,
+          errorCallback: mixed => void,
         ): boolean {
           return false;
         },
@@ -821,6 +834,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           transitionTypes: null | TransitionTypes,
           mutationCallback: () => void,
           animateCallback: () => void,
+          errorCallback: mixed => void,
         ): RunningGestureTransition {
           mutationCallback();
           animateCallback();
