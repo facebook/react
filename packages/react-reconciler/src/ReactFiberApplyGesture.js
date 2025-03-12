@@ -57,6 +57,11 @@ import {
   OffscreenComponent,
   ViewTransitionComponent,
 } from './ReactWorkTags';
+import {
+  restoreEnterViewTransitions,
+  restoreExitViewTransitions,
+  restoreNestedViewTransitions,
+} from './ReactFiberCommitViewTransitions';
 
 let didWarnForRootClone = false;
 
@@ -893,11 +898,88 @@ export function applyDepartureTransitions(
   }
 }
 
+function recursivelyRestoreViewTransitions(parentFiber: Fiber) {
+  const deletions = parentFiber.deletions;
+  if (deletions !== null) {
+    for (let i = 0; i < deletions.length; i++) {
+      const childToDelete = deletions[i];
+      restoreExitViewTransitions(childToDelete);
+    }
+  }
+
+  if (
+    parentFiber.alternate === null ||
+    (parentFiber.subtreeFlags & MutationMask) !== NoFlags
+  ) {
+    // If we have mutations or if this is a newly inserted tree, clone as we go.
+    let child = parentFiber.child;
+    while (child !== null) {
+      restoreViewTransitionsOnFiber(child);
+      child = child.sibling;
+    }
+  } else {
+    // Nothing has changed in this subtree, but the parent may have still affected
+    // its size and position. We need to measure the old and new state to see if
+    // we should animate its size and position.
+    restoreNestedViewTransitions(parentFiber);
+  }
+}
+
+function restoreViewTransitionsOnFiber(finishedWork: Fiber) {
+  const current = finishedWork.alternate;
+  if (current === null) {
+    restoreEnterViewTransitions(finishedWork);
+    return;
+  }
+
+  const flags = finishedWork.flags;
+  // The effect flag should be checked *after* we refine the type of fiber,
+  // because the fiber tag is more specific. An exception is any flag related
+  // to reconciliation, because those can be set on all fiber types.
+  switch (finishedWork.tag) {
+    case HostComponent: {
+      // const instance: Instance = finishedWork.stateNode;
+      // TODO: Restore the name.
+      recursivelyRestoreViewTransitions(finishedWork);
+      break;
+    }
+    case HostText: {
+      break;
+    }
+    case HostPortal: {
+      // TODO: Consider what should happen to Portals. For now we exclude them.
+      break;
+    }
+    case OffscreenComponent: {
+      if (flags & Visibility) {
+        const newState: OffscreenState | null = finishedWork.memoizedState;
+        const isHidden = newState !== null;
+        if (!isHidden) {
+          restoreEnterViewTransitions(finishedWork);
+        } else if (current !== null && current.memoizedState === null) {
+          // Was previously mounted as visible but is now hidden.
+          restoreExitViewTransitions(current);
+        }
+      }
+      break;
+    }
+    case ViewTransitionComponent:
+      const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
+      viewTransitionState.clones = null; // Reset
+      recursivelyRestoreViewTransitions(finishedWork);
+      break;
+    default: {
+      recursivelyRestoreViewTransitions(finishedWork);
+      break;
+    }
+  }
+}
+
 // Revert transition names and start/adjust animations on the started View Transition.
 export function startGestureAnimations(
   root: FiberRoot,
   finishedWork: Fiber,
 ): void {
-  // TODO
+  restoreViewTransitionsOnFiber(finishedWork);
   restoreRootViewTransitionName(root.containerInfo);
 }
