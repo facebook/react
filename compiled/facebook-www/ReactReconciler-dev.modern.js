@@ -5379,7 +5379,11 @@ __DEV__ &&
     function validateFragmentProps(element, fiber, returnFiber) {
       for (var keys = Object.keys(element.props), i = 0; i < keys.length; i++) {
         var key = keys[i];
-        if ("children" !== key && "key" !== key) {
+        if (
+          "children" !== key &&
+          "key" !== key &&
+          (enableFragmentRefs ? "ref" !== key : 1)
+        ) {
           null === fiber &&
             ((fiber = createFiberFromElement(element, returnFiber.mode, 0)),
             (fiber._debugInfo = currentDebugInfo),
@@ -5387,10 +5391,15 @@ __DEV__ &&
           runWithFiberInDEV(
             fiber,
             function (erroredKey) {
-              console.error(
-                "Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.",
-                erroredKey
-              );
+              enableFragmentRefs
+                ? console.error(
+                    "Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key`, `ref`, and `children` props.",
+                    erroredKey
+                  )
+                : console.error(
+                    "Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.",
+                    erroredKey
+                  );
             },
             key
           );
@@ -5543,6 +5552,7 @@ __DEV__ &&
               lanes,
               element.key
             )),
+            enableFragmentRefs && coerceRef(current, element),
             validateFragmentProps(element, current, returnFiber),
             current
           );
@@ -6143,6 +6153,7 @@ __DEV__ &&
           null !== newChild &&
           newChild.type === REACT_FRAGMENT_TYPE &&
           null === newChild.key &&
+          (enableFragmentRefs ? void 0 === newChild.props.ref : 1) &&
           (validateFragmentProps(newChild, null, returnFiber),
           (newChild = newChild.props.children));
         if ("object" === typeof newChild && null !== newChild) {
@@ -6163,6 +6174,7 @@ __DEV__ &&
                           currentFirstChild,
                           newChild.props.children
                         );
+                        enableFragmentRefs && coerceRef(lanes, newChild);
                         lanes.return = returnFiber;
                         lanes._debugOwner = newChild._owner;
                         lanes._debugInfo = currentDebugInfo;
@@ -6205,6 +6217,7 @@ __DEV__ &&
                       lanes,
                       newChild.key
                     )),
+                    enableFragmentRefs && coerceRef(lanes, newChild),
                     (lanes.return = returnFiber),
                     (lanes._debugOwner = returnFiber),
                     (lanes._debugTask = returnFiber._debugTask),
@@ -9392,10 +9405,12 @@ __DEV__ &&
           );
         case 7:
           return (
+            (returnFiber = workInProgress.pendingProps),
+            enableFragmentRefs && markRef(current, workInProgress),
             reconcileChildren(
               current,
               workInProgress,
-              workInProgress.pendingProps,
+              returnFiber,
               renderLanes
             ),
             workInProgress.child
@@ -11196,6 +11211,15 @@ __DEV__ &&
               instanceToUse = instanceToUse.ref;
               break;
             }
+            instanceToUse = finishedWork.stateNode;
+            break;
+          case 7:
+            if (enableFragmentRefs) {
+              null === finishedWork.stateNode &&
+                (finishedWork.stateNode = createFragmentInstance(finishedWork));
+              instanceToUse = finishedWork.stateNode;
+              break;
+            }
           default:
             instanceToUse = finishedWork.stateNode;
         }
@@ -11377,6 +11401,21 @@ __DEV__ &&
         captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
     }
+    function commitNewChildToFragmentInstances(fiber, parentFragmentInstances) {
+      for (var i = 0; i < parentFragmentInstances.length; i++)
+        commitNewChildToFragmentInstance(
+          fiber.stateNode,
+          parentFragmentInstances[i]
+        );
+    }
+    function commitFragmentInstanceDeletionEffects(fiber) {
+      for (var parent = fiber.return; null !== parent; ) {
+        isFragmentInstanceParent(parent) &&
+          deleteChildFromFragmentInstance(fiber.stateNode, parent.stateNode);
+        if (isHostParent(parent)) break;
+        parent = parent.return;
+      }
+    }
     function isHostParent(fiber) {
       return (
         5 === fiber.tag ||
@@ -11387,6 +11426,9 @@ __DEV__ &&
           : !1) ||
         4 === fiber.tag
       );
+    }
+    function isFragmentInstanceParent(fiber) {
+      return fiber && 7 === fiber.tag && null !== fiber.stateNode;
     }
     function getHostSibling(fiber) {
       a: for (;;) {
@@ -11413,15 +11455,25 @@ __DEV__ &&
         if (!(fiber.flags & 2)) return fiber.stateNode;
       }
     }
-    function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
+    function insertOrAppendPlacementNodeIntoContainer(
+      node,
+      before,
+      parent,
+      parentFragmentInstances
+    ) {
       var tag = node.tag;
-      if (5 === tag || 6 === tag)
-        (node = node.stateNode),
-          before
-            ? insertInContainerBefore(parent, node, before)
-            : appendChildToContainer(parent, node),
-          trackHostMutation();
-      else if (
+      if (5 === tag || 6 === tag) {
+        var stateNode = node.stateNode;
+        before
+          ? insertInContainerBefore(parent, stateNode, before)
+          : appendChildToContainer(parent, stateNode);
+        enableFragmentRefs &&
+          5 === tag &&
+          null === node.alternate &&
+          null !== parentFragmentInstances &&
+          commitNewChildToFragmentInstances(node, parentFragmentInstances);
+        trackHostMutation();
+      } else if (
         4 !== tag &&
         (supportsSingletons &&
           27 === tag &&
@@ -11431,23 +11483,43 @@ __DEV__ &&
         null !== node)
       )
         for (
-          insertOrAppendPlacementNodeIntoContainer(node, before, parent),
+          insertOrAppendPlacementNodeIntoContainer(
+            node,
+            before,
+            parent,
+            parentFragmentInstances
+          ),
             node = node.sibling;
           null !== node;
 
         )
-          insertOrAppendPlacementNodeIntoContainer(node, before, parent),
+          insertOrAppendPlacementNodeIntoContainer(
+            node,
+            before,
+            parent,
+            parentFragmentInstances
+          ),
             (node = node.sibling);
     }
-    function insertOrAppendPlacementNode(node, before, parent) {
+    function insertOrAppendPlacementNode(
+      node,
+      before,
+      parent,
+      parentFragmentInstances
+    ) {
       var tag = node.tag;
-      if (5 === tag || 6 === tag)
-        (node = node.stateNode),
-          before
-            ? insertBefore(parent, node, before)
-            : appendChild(parent, node),
-          trackHostMutation();
-      else if (
+      if (5 === tag || 6 === tag) {
+        var stateNode = node.stateNode;
+        before
+          ? insertBefore(parent, stateNode, before)
+          : appendChild(parent, stateNode);
+        enableFragmentRefs &&
+          5 === tag &&
+          null === node.alternate &&
+          null !== parentFragmentInstances &&
+          commitNewChildToFragmentInstances(node, parentFragmentInstances);
+        trackHostMutation();
+      } else if (
         4 !== tag &&
         (supportsSingletons &&
           27 === tag &&
@@ -11457,51 +11529,83 @@ __DEV__ &&
         null !== node)
       )
         for (
-          insertOrAppendPlacementNode(node, before, parent),
+          insertOrAppendPlacementNode(
+            node,
+            before,
+            parent,
+            parentFragmentInstances
+          ),
             node = node.sibling;
           null !== node;
 
         )
-          insertOrAppendPlacementNode(node, before, parent),
+          insertOrAppendPlacementNode(
+            node,
+            before,
+            parent,
+            parentFragmentInstances
+          ),
             (node = node.sibling);
     }
     function commitPlacement(finishedWork) {
       if (supportsMutation) {
-        a: {
-          for (var parent = finishedWork.return; null !== parent; ) {
-            if (isHostParent(parent)) {
-              var parentFiber = parent;
-              break a;
-            }
-            parent = parent.return;
+        for (
+          var hostParentFiber,
+            parentFragmentInstances = null,
+            parentFiber = finishedWork.return;
+          null !== parentFiber;
+
+        ) {
+          if (enableFragmentRefs && isFragmentInstanceParent(parentFiber)) {
+            var fragmentInstance = parentFiber.stateNode;
+            null === parentFragmentInstances
+              ? (parentFragmentInstances = [fragmentInstance])
+              : parentFragmentInstances.push(fragmentInstance);
           }
+          if (isHostParent(parentFiber)) {
+            hostParentFiber = parentFiber;
+            break;
+          }
+          parentFiber = parentFiber.return;
+        }
+        if (null == hostParentFiber)
           throw Error(
             "Expected to find a host parent. This error is likely caused by a bug in React. Please file an issue."
           );
-        }
-        switch (parentFiber.tag) {
+        switch (hostParentFiber.tag) {
           case 27:
             if (supportsSingletons) {
-              parent = parentFiber.stateNode;
+              hostParentFiber = hostParentFiber.stateNode;
               parentFiber = getHostSibling(finishedWork);
-              insertOrAppendPlacementNode(finishedWork, parentFiber, parent);
+              insertOrAppendPlacementNode(
+                finishedWork,
+                parentFiber,
+                hostParentFiber,
+                parentFragmentInstances
+              );
               break;
             }
           case 5:
-            parent = parentFiber.stateNode;
-            parentFiber.flags & 32 &&
-              (resetTextContent(parent), (parentFiber.flags &= -33));
-            parentFiber = getHostSibling(finishedWork);
-            insertOrAppendPlacementNode(finishedWork, parentFiber, parent);
+            parentFiber = hostParentFiber.stateNode;
+            hostParentFiber.flags & 32 &&
+              (resetTextContent(parentFiber), (hostParentFiber.flags &= -33));
+            hostParentFiber = getHostSibling(finishedWork);
+            insertOrAppendPlacementNode(
+              finishedWork,
+              hostParentFiber,
+              parentFiber,
+              parentFragmentInstances
+            );
             break;
           case 3:
           case 4:
-            parent = parentFiber.stateNode.containerInfo;
+            hostParentFiber = hostParentFiber.stateNode.containerInfo;
             parentFiber = getHostSibling(finishedWork);
             insertOrAppendPlacementNodeIntoContainer(
               finishedWork,
               parentFiber,
-              parent
+              hostParentFiber,
+              parentFragmentInstances
             );
             break;
           default:
@@ -12313,11 +12417,14 @@ __DEV__ &&
               : safelyDetachRef(finishedWork, finishedWork.return));
           break;
         case 30:
-          if (enableViewTransition) {
-            recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-            flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
-            break;
-          }
+          enableViewTransition &&
+            (recursivelyTraverseLayoutEffects(finishedRoot, finishedWork),
+            flags & 512 && safelyAttachRef(finishedWork, finishedWork.return));
+          break;
+        case 7:
+          enableFragmentRefs &&
+            flags & 512 &&
+            safelyAttachRef(finishedWork, finishedWork.return);
         default:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
       }
@@ -12615,7 +12722,10 @@ __DEV__ &&
           }
         case 5:
           offscreenSubtreeWasHidden ||
-            safelyDetachRef(deletedFiber, nearestMountedAncestor);
+            safelyDetachRef(deletedFiber, nearestMountedAncestor),
+            enableFragmentRefs &&
+              5 === deletedFiber.tag &&
+              commitFragmentInstanceDeletionEffects(deletedFiber);
         case 6:
           if (supportsMutation) {
             if (
@@ -12778,6 +12888,10 @@ __DEV__ &&
           );
           offscreenSubtreeWasHidden = prevHostParent;
           break;
+        case 7:
+          enableFragmentRefs &&
+            (offscreenSubtreeWasHidden ||
+              safelyDetachRef(deletedFiber, nearestMountedAncestor));
         default:
           recursivelyTraverseDeletionEffects(
             finishedRoot,
@@ -13343,25 +13457,24 @@ __DEV__ &&
               attachSuspenseRetryListeners(finishedWork, flags)));
           break;
         case 30:
-          if (enableViewTransition) {
-            flags & 512 &&
+          enableViewTransition &&
+            (flags & 512 &&
               (offscreenSubtreeWasHidden ||
                 null === current ||
-                safelyDetachRef(current, current.return));
+                safelyDetachRef(current, current.return)),
             enableViewTransition
               ? ((flags = viewTransitionMutationContext),
                 (viewTransitionMutationContext = !1))
-              : (flags = !1);
-            recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-            commitReconciliationEffects(finishedWork);
+              : (flags = !1),
+            recursivelyTraverseMutationEffects(root, finishedWork, lanes),
+            commitReconciliationEffects(finishedWork),
             enableViewTransition &&
               (lanes & 335544064) === lanes &&
               null !== current &&
               viewTransitionMutationContext &&
-              (finishedWork.flags |= 4);
-            enableViewTransition && (viewTransitionMutationContext = flags);
-            break;
-          }
+              (finishedWork.flags |= 4),
+            enableViewTransition && (viewTransitionMutationContext = flags));
+          break;
         case 21:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
@@ -13373,6 +13486,11 @@ __DEV__ &&
               safelyAttachRef(finishedWork, finishedWork.return));
           flags & 4 && prepareScopeUpdate(finishedWork.stateNode, finishedWork);
           break;
+        case 7:
+          enableFragmentRefs &&
+            current &&
+            null !== current.stateNode &&
+            updateFragmentInstanceFiber(finishedWork, current.stateNode);
         default:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes),
             commitReconciliationEffects(finishedWork);
@@ -13576,6 +13694,9 @@ __DEV__ &&
         case 26:
         case 5:
           safelyDetachRef(finishedWork, finishedWork.return);
+          enableFragmentRefs &&
+            5 === finishedWork.tag &&
+            commitFragmentInstanceDeletionEffects(finishedWork);
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
         case 22:
@@ -13585,6 +13706,11 @@ __DEV__ &&
           break;
         case 30:
           enableViewTransition &&
+            safelyDetachRef(finishedWork, finishedWork.return);
+          recursivelyTraverseDisappearLayoutEffects(finishedWork);
+          break;
+        case 7:
+          enableFragmentRefs &&
             safelyDetachRef(finishedWork, finishedWork.return);
         default:
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -13666,6 +13792,16 @@ __DEV__ &&
           supportsSingletons && commitHostSingletonAcquisition(finishedWork);
         case 26:
         case 5:
+          if (enableFragmentRefs && 5 === finishedWork.tag)
+            a: for (var parent = finishedWork.return; null !== parent; ) {
+              isFragmentInstanceParent(parent) &&
+                commitNewChildToFragmentInstance(
+                  finishedWork.stateNode,
+                  parent.stateNode
+                );
+              if (isHostParent(parent)) break a;
+              parent = parent.return;
+            }
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
             finishedWork,
@@ -13727,15 +13863,17 @@ __DEV__ &&
           safelyAttachRef(finishedWork, finishedWork.return);
           break;
         case 30:
-          if (enableViewTransition) {
-            recursivelyTraverseReappearLayoutEffects(
+          enableViewTransition &&
+            (recursivelyTraverseReappearLayoutEffects(
               finishedRoot,
               finishedWork,
               includeWorkInProgressEffects
-            );
+            ),
+            safelyAttachRef(finishedWork, finishedWork.return));
+          break;
+        case 7:
+          enableFragmentRefs &&
             safelyAttachRef(finishedWork, finishedWork.return);
-            break;
-          }
         default:
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
@@ -18088,6 +18226,7 @@ __DEV__ &&
       enableViewTransition = dynamicFeatureFlags.enableViewTransition,
       enableComponentPerformanceTrack =
         dynamicFeatureFlags.enableComponentPerformanceTrack,
+      enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs,
       enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
@@ -18206,6 +18345,12 @@ __DEV__ &&
     $$$config.subscribeToGestureDirection;
     var createViewTransitionInstance = $$$config.createViewTransitionInstance,
       clearContainer = $$$config.clearContainer,
+      createFragmentInstance = $$$config.createFragmentInstance,
+      updateFragmentInstanceFiber = $$$config.updateFragmentInstanceFiber,
+      commitNewChildToFragmentInstance =
+        $$$config.commitNewChildToFragmentInstance,
+      deleteChildFromFragmentInstance =
+        $$$config.deleteChildFromFragmentInstance,
       cloneInstance = $$$config.cloneInstance,
       createContainerChildSet = $$$config.createContainerChildSet,
       appendChildToContainerChildSet = $$$config.appendChildToContainerChildSet,
@@ -20897,7 +21042,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-ca8f91f6-20250311"
+        reconcilerVersion: "19.1.0-www-modern-6aa8254b-20250312"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

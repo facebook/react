@@ -3356,12 +3356,16 @@ module.exports = function ($$$config) {
     function updateElement(returnFiber, current, element, lanes) {
       var elementType = element.type;
       if (elementType === REACT_FRAGMENT_TYPE)
-        return updateFragment(
-          returnFiber,
-          current,
-          element.props.children,
-          lanes,
-          element.key
+        return (
+          (returnFiber = updateFragment(
+            returnFiber,
+            current,
+            element.props.children,
+            lanes,
+            element.key
+          )),
+          enableFragmentRefs && coerceRef(returnFiber, element),
+          returnFiber
         );
       if (
         null !== current &&
@@ -3800,6 +3804,7 @@ module.exports = function ($$$config) {
         null !== newChild &&
         newChild.type === REACT_FRAGMENT_TYPE &&
         null === newChild.key &&
+        (enableFragmentRefs ? void 0 === newChild.props.ref : 1) &&
         (newChild = newChild.props.children);
       if ("object" === typeof newChild && null !== newChild) {
         switch (newChild.$$typeof) {
@@ -3818,6 +3823,7 @@ module.exports = function ($$$config) {
                         currentFirstChild,
                         newChild.props.children
                       );
+                      enableFragmentRefs && coerceRef(lanes, newChild);
                       lanes.return = returnFiber;
                       returnFiber = lanes;
                       break a;
@@ -3851,6 +3857,7 @@ module.exports = function ($$$config) {
                     lanes,
                     newChild.key
                   )),
+                  enableFragmentRefs && coerceRef(lanes, newChild),
                   (lanes.return = returnFiber),
                   (returnFiber = lanes))
                 : ((lanes = createFiberFromTypeAndProps(
@@ -6222,12 +6229,9 @@ module.exports = function ($$$config) {
         );
       case 7:
         return (
-          reconcileChildren(
-            current,
-            workInProgress,
-            workInProgress.pendingProps,
-            renderLanes
-          ),
+          (props = workInProgress.pendingProps),
+          enableFragmentRefs && markRef(current, workInProgress),
+          reconcileChildren(current, workInProgress, props, renderLanes),
           workInProgress.child
         );
       case 8:
@@ -7587,6 +7591,15 @@ module.exports = function ($$$config) {
               instanceToUse = instance.ref;
               break;
             }
+            instanceToUse = current.stateNode;
+            break;
+          case 7:
+            if (enableFragmentRefs) {
+              null === current.stateNode &&
+                (current.stateNode = createFragmentInstance(current));
+              instanceToUse = current.stateNode;
+              break;
+            }
           default:
             instanceToUse = current.stateNode;
         }
@@ -7615,8 +7628,8 @@ module.exports = function ($$$config) {
       else if ("function" === typeof ref)
         try {
           ref(null);
-        } catch (error$144) {
-          captureCommitPhaseError(current, nearestMountedAncestor, error$144);
+        } catch (error$145) {
+          captureCommitPhaseError(current, nearestMountedAncestor, error$145);
         }
       else ref.current = null;
   }
@@ -7680,6 +7693,21 @@ module.exports = function ($$$config) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
   }
+  function commitNewChildToFragmentInstances(fiber, parentFragmentInstances) {
+    for (var i = 0; i < parentFragmentInstances.length; i++)
+      commitNewChildToFragmentInstance(
+        fiber.stateNode,
+        parentFragmentInstances[i]
+      );
+  }
+  function commitFragmentInstanceDeletionEffects(fiber) {
+    for (var parent = fiber.return; null !== parent; ) {
+      isFragmentInstanceParent(parent) &&
+        deleteChildFromFragmentInstance(fiber.stateNode, parent.stateNode);
+      if (isHostParent(parent)) break;
+      parent = parent.return;
+    }
+  }
   function isHostParent(fiber) {
     return (
       5 === fiber.tag ||
@@ -7690,6 +7718,9 @@ module.exports = function ($$$config) {
         : !1) ||
       4 === fiber.tag
     );
+  }
+  function isFragmentInstanceParent(fiber) {
+    return fiber && 7 === fiber.tag && null !== fiber.stateNode;
   }
   function getHostSibling(fiber) {
     a: for (;;) {
@@ -7716,15 +7747,25 @@ module.exports = function ($$$config) {
       if (!(fiber.flags & 2)) return fiber.stateNode;
     }
   }
-  function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
+  function insertOrAppendPlacementNodeIntoContainer(
+    node,
+    before,
+    parent,
+    parentFragmentInstances
+  ) {
     var tag = node.tag;
-    if (5 === tag || 6 === tag)
-      (node = node.stateNode),
-        before
-          ? insertInContainerBefore(parent, node, before)
-          : appendChildToContainer(parent, node),
-        trackHostMutation();
-    else if (
+    if (5 === tag || 6 === tag) {
+      var stateNode = node.stateNode;
+      before
+        ? insertInContainerBefore(parent, stateNode, before)
+        : appendChildToContainer(parent, stateNode);
+      enableFragmentRefs &&
+        5 === tag &&
+        null === node.alternate &&
+        null !== parentFragmentInstances &&
+        commitNewChildToFragmentInstances(node, parentFragmentInstances);
+      trackHostMutation();
+    } else if (
       4 !== tag &&
       (supportsSingletons &&
         27 === tag &&
@@ -7734,21 +7775,43 @@ module.exports = function ($$$config) {
       null !== node)
     )
       for (
-        insertOrAppendPlacementNodeIntoContainer(node, before, parent),
+        insertOrAppendPlacementNodeIntoContainer(
+          node,
+          before,
+          parent,
+          parentFragmentInstances
+        ),
           node = node.sibling;
         null !== node;
 
       )
-        insertOrAppendPlacementNodeIntoContainer(node, before, parent),
+        insertOrAppendPlacementNodeIntoContainer(
+          node,
+          before,
+          parent,
+          parentFragmentInstances
+        ),
           (node = node.sibling);
   }
-  function insertOrAppendPlacementNode(node, before, parent) {
+  function insertOrAppendPlacementNode(
+    node,
+    before,
+    parent,
+    parentFragmentInstances
+  ) {
     var tag = node.tag;
-    if (5 === tag || 6 === tag)
-      (node = node.stateNode),
-        before ? insertBefore(parent, node, before) : appendChild(parent, node),
-        trackHostMutation();
-    else if (
+    if (5 === tag || 6 === tag) {
+      var stateNode = node.stateNode;
+      before
+        ? insertBefore(parent, stateNode, before)
+        : appendChild(parent, stateNode);
+      enableFragmentRefs &&
+        5 === tag &&
+        null === node.alternate &&
+        null !== parentFragmentInstances &&
+        commitNewChildToFragmentInstances(node, parentFragmentInstances);
+      trackHostMutation();
+    } else if (
       4 !== tag &&
       (supportsSingletons &&
         27 === tag &&
@@ -7758,11 +7821,22 @@ module.exports = function ($$$config) {
       null !== node)
     )
       for (
-        insertOrAppendPlacementNode(node, before, parent), node = node.sibling;
+        insertOrAppendPlacementNode(
+          node,
+          before,
+          parent,
+          parentFragmentInstances
+        ),
+          node = node.sibling;
         null !== node;
 
       )
-        insertOrAppendPlacementNode(node, before, parent),
+        insertOrAppendPlacementNode(
+          node,
+          before,
+          parent,
+          parentFragmentInstances
+        ),
           (node = node.sibling);
   }
   function commitHostPortalContainerChildren(
@@ -8493,11 +8567,14 @@ module.exports = function ($$$config) {
             : safelyDetachRef(finishedWork, finishedWork.return));
         break;
       case 30:
-        if (enableViewTransition) {
-          recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-          flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
-          break;
-        }
+        enableViewTransition &&
+          (recursivelyTraverseLayoutEffects(finishedRoot, finishedWork),
+          flags & 512 && safelyAttachRef(finishedWork, finishedWork.return));
+        break;
+      case 7:
+        enableFragmentRefs &&
+          flags & 512 &&
+          safelyAttachRef(finishedWork, finishedWork.return);
       default:
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
     }
@@ -8764,7 +8841,10 @@ module.exports = function ($$$config) {
         }
       case 5:
         offscreenSubtreeWasHidden ||
-          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+          safelyDetachRef(deletedFiber, nearestMountedAncestor),
+          enableFragmentRefs &&
+            5 === deletedFiber.tag &&
+            commitFragmentInstanceDeletionEffects(deletedFiber);
       case 6:
         if (supportsMutation) {
           if (
@@ -8909,6 +8989,10 @@ module.exports = function ($$$config) {
         );
         offscreenSubtreeWasHidden = prevHostParent;
         break;
+      case 7:
+        enableFragmentRefs &&
+          (offscreenSubtreeWasHidden ||
+            safelyDetachRef(deletedFiber, nearestMountedAncestor));
       default:
         recursivelyTraverseDeletionEffects(
           finishedRoot,
@@ -9373,25 +9457,24 @@ module.exports = function ($$$config) {
             attachSuspenseRetryListeners(finishedWork, current)));
         break;
       case 30:
-        if (enableViewTransition) {
-          flags & 512 &&
+        enableViewTransition &&
+          (flags & 512 &&
             (offscreenSubtreeWasHidden ||
               null === current ||
-              safelyDetachRef(current, current.return));
+              safelyDetachRef(current, current.return)),
           enableViewTransition
             ? ((flags = viewTransitionMutationContext),
               (viewTransitionMutationContext = !1))
-            : (flags = !1);
-          recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-          commitReconciliationEffects(finishedWork);
+            : (flags = !1),
+          recursivelyTraverseMutationEffects(root, finishedWork, lanes),
+          commitReconciliationEffects(finishedWork),
           enableViewTransition &&
             (lanes & 335544064) === lanes &&
             null !== current &&
             viewTransitionMutationContext &&
-            (finishedWork.flags |= 4);
-          enableViewTransition && (viewTransitionMutationContext = flags);
-          break;
-        }
+            (finishedWork.flags |= 4),
+          enableViewTransition && (viewTransitionMutationContext = flags));
+        break;
       case 21:
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork);
@@ -9403,6 +9486,11 @@ module.exports = function ($$$config) {
             safelyAttachRef(finishedWork, finishedWork.return));
         flags & 4 && prepareScopeUpdate(finishedWork.stateNode, finishedWork);
         break;
+      case 7:
+        enableFragmentRefs &&
+          current &&
+          null !== current.stateNode &&
+          updateFragmentInstanceFiber(finishedWork, current.stateNode);
       default:
         recursivelyTraverseMutationEffects(root, finishedWork, lanes),
           commitReconciliationEffects(finishedWork);
@@ -9413,44 +9501,60 @@ module.exports = function ($$$config) {
     if (flags & 2) {
       try {
         if (supportsMutation) {
-          a: {
-            for (var parent = finishedWork.return; null !== parent; ) {
-              if (isHostParent(parent)) {
-                var JSCompiler_inline_result = parent;
-                break a;
-              }
-              parent = parent.return;
+          for (
+            var hostParentFiber,
+              parentFragmentInstances = null,
+              parentFiber = finishedWork.return;
+            null !== parentFiber;
+
+          ) {
+            if (enableFragmentRefs && isFragmentInstanceParent(parentFiber)) {
+              var fragmentInstance = parentFiber.stateNode;
+              null === parentFragmentInstances
+                ? (parentFragmentInstances = [fragmentInstance])
+                : parentFragmentInstances.push(fragmentInstance);
             }
-            throw Error(formatProdErrorMessage(160));
+            if (isHostParent(parentFiber)) {
+              hostParentFiber = parentFiber;
+              break;
+            }
+            parentFiber = parentFiber.return;
           }
-          switch (JSCompiler_inline_result.tag) {
+          if (null == hostParentFiber) throw Error(formatProdErrorMessage(160));
+          switch (hostParentFiber.tag) {
             case 27:
               if (supportsSingletons) {
-                var parent$jscomp$0 = JSCompiler_inline_result.stateNode,
+                var parent = hostParentFiber.stateNode,
                   before = getHostSibling(finishedWork);
                 insertOrAppendPlacementNode(
                   finishedWork,
                   before,
-                  parent$jscomp$0
+                  parent,
+                  parentFragmentInstances
                 );
                 break;
               }
             case 5:
-              var parent$145 = JSCompiler_inline_result.stateNode;
-              JSCompiler_inline_result.flags & 32 &&
-                (resetTextContent(parent$145),
-                (JSCompiler_inline_result.flags &= -33));
-              var before$146 = getHostSibling(finishedWork);
-              insertOrAppendPlacementNode(finishedWork, before$146, parent$145);
+              var parent$146 = hostParentFiber.stateNode;
+              hostParentFiber.flags & 32 &&
+                (resetTextContent(parent$146), (hostParentFiber.flags &= -33));
+              var before$147 = getHostSibling(finishedWork);
+              insertOrAppendPlacementNode(
+                finishedWork,
+                before$147,
+                parent$146,
+                parentFragmentInstances
+              );
               break;
             case 3:
             case 4:
-              var parent$147 = JSCompiler_inline_result.stateNode.containerInfo,
-                before$148 = getHostSibling(finishedWork);
+              var parent$148 = hostParentFiber.stateNode.containerInfo,
+                before$149 = getHostSibling(finishedWork);
               insertOrAppendPlacementNodeIntoContainer(
                 finishedWork,
-                before$148,
-                parent$147
+                before$149,
+                parent$148,
+                parentFragmentInstances
               );
               break;
             default:
@@ -9627,6 +9731,9 @@ module.exports = function ($$$config) {
         case 26:
         case 5:
           safelyDetachRef(finishedWork, finishedWork.return);
+          enableFragmentRefs &&
+            5 === finishedWork.tag &&
+            commitFragmentInstanceDeletionEffects(finishedWork);
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
         case 22:
@@ -9636,6 +9743,11 @@ module.exports = function ($$$config) {
           break;
         case 30:
           enableViewTransition &&
+            safelyDetachRef(finishedWork, finishedWork.return);
+          recursivelyTraverseDisappearLayoutEffects(finishedWork);
+          break;
+        case 7:
+          enableFragmentRefs &&
             safelyDetachRef(finishedWork, finishedWork.return);
         default:
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -9706,6 +9818,18 @@ module.exports = function ($$$config) {
           supportsSingletons && commitHostSingletonAcquisition(finishedWork);
         case 26:
         case 5:
+          if (enableFragmentRefs && 5 === finishedWork.tag) {
+            instance = finishedWork;
+            for (var parent = instance.return; null !== parent; ) {
+              isFragmentInstanceParent(parent) &&
+                commitNewChildToFragmentInstance(
+                  instance.stateNode,
+                  parent.stateNode
+                );
+              if (isHostParent(parent)) break;
+              parent = parent.return;
+            }
+          }
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
             finishedWork,
@@ -9744,15 +9868,17 @@ module.exports = function ($$$config) {
           safelyAttachRef(finishedWork, finishedWork.return);
           break;
         case 30:
-          if (enableViewTransition) {
-            recursivelyTraverseReappearLayoutEffects(
+          enableViewTransition &&
+            (recursivelyTraverseReappearLayoutEffects(
               finishedRoot,
               finishedWork,
               includeWorkInProgressEffects
-            );
+            ),
+            safelyAttachRef(finishedWork, finishedWork.return));
+          break;
+        case 7:
+          enableFragmentRefs &&
             safelyAttachRef(finishedWork, finishedWork.return);
-            break;
-          }
         default:
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
@@ -9999,14 +10125,14 @@ module.exports = function ($$$config) {
           );
         break;
       case 22:
-        var instance$159 = finishedWork.stateNode,
-          current$160 = finishedWork.alternate;
+        var instance$160 = finishedWork.stateNode,
+          current$161 = finishedWork.alternate;
         null !== finishedWork.memoizedState
           ? (isViewTransitionEligible &&
-              null !== current$160 &&
-              null === current$160.memoizedState &&
-              restoreExitViewTransitions(current$160),
-            instance$159._visibility & 4
+              null !== current$161 &&
+              null === current$161.memoizedState &&
+              restoreExitViewTransitions(current$161),
+            instance$160._visibility & 4
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
@@ -10018,17 +10144,17 @@ module.exports = function ($$$config) {
                   finishedWork
                 ))
           : (isViewTransitionEligible &&
-              null !== current$160 &&
-              null !== current$160.memoizedState &&
+              null !== current$161 &&
+              null !== current$161.memoizedState &&
               restoreEnterViewTransitions(finishedWork),
-            instance$159._visibility & 4
+            instance$160._visibility & 4
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
                   committedLanes,
                   committedTransitions
                 )
-              : ((instance$159._visibility |= 4),
+              : ((instance$160._visibility |= 4),
                 recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -10038,9 +10164,9 @@ module.exports = function ($$$config) {
                 )));
         flags & 2048 &&
           commitOffscreenPassiveMountEffects(
-            current$160,
+            current$161,
             finishedWork,
-            instance$159
+            instance$160
           );
         break;
       case 24:
@@ -10136,9 +10262,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$163 = finishedWork.stateNode;
+          var instance$164 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$163._visibility & 4
+            ? instance$164._visibility & 4
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -10150,7 +10276,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-            : ((instance$163._visibility |= 4),
+            : ((instance$164._visibility |= 4),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -10163,7 +10289,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$163
+              instance$164
             );
           break;
         case 24:
@@ -11283,8 +11409,8 @@ module.exports = function ($$$config) {
         workLoopSync();
         exitStatus = workInProgressRootExitStatus;
         break;
-      } catch (thrownValue$179) {
-        handleThrow(root, thrownValue$179);
+      } catch (thrownValue$180) {
+        handleThrow(root, thrownValue$180);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -11405,8 +11531,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrentByScheduler();
         break;
-      } catch (thrownValue$181) {
-        handleThrow(root, thrownValue$181);
+      } catch (thrownValue$182) {
+        handleThrow(root, thrownValue$182);
       }
     while (1);
     lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -12661,6 +12787,7 @@ module.exports = function ($$$config) {
     syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
     transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
     enableViewTransition = dynamicFeatureFlags.enableViewTransition,
+    enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs,
     REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
     REACT_ELEMENT_TYPE = renameElementSymbol
       ? Symbol.for("react.transitional.element")
@@ -12778,6 +12905,11 @@ module.exports = function ($$$config) {
   $$$config.subscribeToGestureDirection;
   var createViewTransitionInstance = $$$config.createViewTransitionInstance,
     clearContainer = $$$config.clearContainer,
+    createFragmentInstance = $$$config.createFragmentInstance,
+    updateFragmentInstanceFiber = $$$config.updateFragmentInstanceFiber,
+    commitNewChildToFragmentInstance =
+      $$$config.commitNewChildToFragmentInstance,
+    deleteChildFromFragmentInstance = $$$config.deleteChildFromFragmentInstance,
     cloneInstance = $$$config.cloneInstance,
     createContainerChildSet = $$$config.createContainerChildSet,
     appendChildToContainerChildSet = $$$config.appendChildToContainerChildSet,
@@ -13818,7 +13950,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-ca8f91f6-20250311"
+      reconcilerVersion: "19.1.0-www-classic-6aa8254b-20250312"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
