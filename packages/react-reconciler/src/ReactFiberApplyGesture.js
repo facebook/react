@@ -299,24 +299,24 @@ function recursivelyInsertClonesFromExistingTree(
     switch (child.tag) {
       case HostComponent: {
         const instance: Instance = child.stateNode;
-        let keepTraversing: boolean;
+        let nextPhase: VisitPhase;
         switch (visitPhase) {
-          case CLONE_UPDATE:
-          case CLONE_UNCHANGED:
-            // We've found any "layout" View Transitions at this point so we can bail.
-            keepTraversing = false;
-            break;
           case CLONE_EXIT:
           case CLONE_UNHIDE:
           case CLONE_APPEARING_PAIR:
             // If this was an unhide, we need to keep going if there are any named
             // pairs in this subtree, since they might need to be marked.
-            keepTraversing =
-              (child.subtreeFlags & ViewTransitionNamedStatic) !== NoFlags;
+            nextPhase =
+              (child.subtreeFlags & ViewTransitionNamedStatic) !== NoFlags
+                ? CLONE_APPEARING_PAIR
+                : CLONE_UNCHANGED;
             break;
+          default:
+            // We've found any "layout" View Transitions at this point so we can bail.
+            nextPhase = CLONE_UNCHANGED;
         }
         let clone: Instance;
-        if (keepTraversing) {
+        if (nextPhase !== CLONE_UNCHANGED) {
           // We might need a handle on these clones, so we need to do a shallow clone
           // and keep going.
           clone = cloneMutableInstance(instance, false);
@@ -324,7 +324,7 @@ function recursivelyInsertClonesFromExistingTree(
             child,
             clone,
             null,
-            visitPhase,
+            nextPhase,
           );
         } else {
           // If we have no mutations in this subtree, and we don't need a handle on the
