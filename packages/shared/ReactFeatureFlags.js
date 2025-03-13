@@ -160,8 +160,9 @@ export const enableInfiniteRenderLoopDetection = false;
 export const enableUseEffectCRUDOverload = false;
 
 export const enableFastAddPropertiesInDiffing = true;
-
 export const enableLazyPublicInstanceInFabric = false;
+
+export const enableFragmentRefs = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.

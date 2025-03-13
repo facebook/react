@@ -34,6 +34,7 @@ import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostCo
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import {OffscreenComponent} from 'react-reconciler/src/ReactWorkTags';
 
 export {
   setCurrentUpdatePriority,
@@ -1576,6 +1577,75 @@ function cancelAllViewTransitionAnimations(scope: Element) {
 // either cached the font or preloaded it earlier.
 const SUSPENSEY_FONT_TIMEOUT = 500;
 
+function customizeViewTransitionError(
+  error: Object,
+  ignoreAbort: boolean,
+): mixed {
+  if (typeof error === 'object' && error !== null) {
+    switch (error.name) {
+      case 'TimeoutError': {
+        // We assume that the only reason a Timeout can happen is because the Navigation
+        // promise. We expect any other work to either be fast or have a timeout (fonts).
+        if (__DEV__) {
+          // eslint-disable-next-line react-internal/prod-error-codes
+          return new Error(
+            'A ViewTransition timed out because a Navigation stalled. ' +
+              'This can happen if a Navigation is blocked on React itself. ' +
+              "Such as if it's resolved inside useEffect. " +
+              'This can be solved by moving the resolution to useLayoutEffect.',
+            {cause: error},
+          );
+        }
+        break;
+      }
+      case 'AbortError': {
+        if (ignoreAbort) {
+          return null;
+        }
+        if (__DEV__) {
+          // eslint-disable-next-line react-internal/prod-error-codes
+          return new Error(
+            'A ViewTransition was aborted early. This might be because you have ' +
+              'other View Transition libraries on the page and only one can run at ' +
+              "a time. To avoid this, use only React's built-in <ViewTransition> " +
+              'to coordinate.',
+            {cause: error},
+          );
+        }
+        break;
+      }
+      case 'InvalidStateError': {
+        if (
+          error.message ===
+            'View transition was skipped because document visibility state is hidden.' ||
+          error.message ===
+            'Skipping view transition because document visibility state has become hidden.' ||
+          error.message ===
+            'Skipping view transition because viewport size changed.'
+        ) {
+          // Skip logging this. This is not considered an error.
+          return null;
+        }
+        if (__DEV__) {
+          if (
+            error.message === 'Transition was aborted because of invalid state'
+          ) {
+            // Chrome doesn't include the reason in the message but logs it in the console..
+            // Redirect the user to look there.
+            // eslint-disable-next-line react-internal/prod-error-codes
+            return new Error(
+              'A ViewTransition could not start. See the console for more details.',
+              {cause: error},
+            );
+          }
+        }
+        break;
+      }
+    }
+  }
+  return error;
+}
+
 export function startViewTransition(
   rootContainer: Container,
   transitionTypes: null | TransitionTypes,
@@ -1584,6 +1654,7 @@ export function startViewTransition(
   afterMutationCallback: () => void,
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
+  errorCallback: mixed => void,
 ): boolean {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
@@ -1641,24 +1712,19 @@ export function startViewTransition(
     });
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
-    if (__DEV__) {
-      transition.ready.then(undefined, (reason: mixed) => {
-        if (
-          typeof reason === 'object' &&
-          reason !== null &&
-          reason.name === 'TimeoutError'
-        ) {
-          console.error(
-            'A ViewTransition timed out because a Navigation stalled. ' +
-              'This can happen if a Navigation is blocked on React itself. ' +
-              "Such as if it's resolved inside useEffect. " +
-              'This can be solved by moving the resolution to useLayoutEffect.',
-          );
+    const handleError = (error: mixed) => {
+      try {
+        error = customizeViewTransitionError(error, false);
+        if (error !== null) {
+          errorCallback(error);
         }
-      });
-    }
-    transition.ready.then(spawnedWorkCallback, spawnedWorkCallback);
-    transition.finished.then(() => {
+      } finally {
+        // Continue the reset of the work.
+        spawnedWorkCallback();
+      }
+    };
+    transition.ready.then(spawnedWorkCallback, handleError);
+    transition.finished.finally(() => {
       cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
@@ -1802,6 +1868,7 @@ export function startGestureTransition(
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   animateCallback: () => void,
+  errorCallback: mixed => void,
 ): null | RunningGestureTransition {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
@@ -1815,7 +1882,7 @@ export function startGestureTransition(
     });
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
-    const readyCallback = (x: any) => {
+    const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
       const animations = documentElement.getAnimations({subtree: true});
@@ -1935,8 +2002,19 @@ export function startGestureTransition(
       navigator.userAgent.indexOf('Chrome') !== -1
         ? () => requestAnimationFrame(readyCallback)
         : readyCallback;
-    transition.ready.then(readyForAnimations, readyCallback);
-    transition.finished.then(() => {
+    const handleError = (error: mixed) => {
+      try {
+        error = customizeViewTransitionError(error, true);
+        if (error !== null) {
+          errorCallback(error);
+        }
+      } finally {
+        // Continue the reset of the work.
+        readyCallback();
+      }
+    };
+    transition.ready.then(readyForAnimations, handleError);
+    transition.finished.finally(() => {
       cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
@@ -2085,6 +2163,235 @@ export function subscribeToGestureDirection(
     return () => {
       cancelAnimationFrame(callbackID);
     };
+  }
+}
+
+type EventListenerOptionsOrUseCapture =
+  | boolean
+  | {
+      capture?: boolean,
+      once?: boolean,
+      passive?: boolean,
+      signal?: AbortSignal,
+      ...
+    };
+
+type StoredEventListener = {
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
+};
+
+export type FragmentInstanceType = {
+  _fragmentFiber: Fiber,
+  _eventListeners: null | Array<StoredEventListener>,
+  addEventListener(
+    type: string,
+    listener: EventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+  ): void,
+  removeEventListener(
+    type: string,
+    listener: EventListener,
+    optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+  ): void,
+  focus(): void,
+};
+
+function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
+  this._fragmentFiber = fragmentFiber;
+  this._eventListeners = null;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.addEventListener = function (
+  this: FragmentInstanceType,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+): void {
+  if (this._eventListeners === null) {
+    this._eventListeners = [];
+  }
+
+  const listeners = this._eventListeners;
+  // Element.addEventListener will only apply uniquely new event listeners by default. Since we
+  // need to collect the listeners to apply to appended children, we track them ourselves and use
+  // custom equality check for the options.
+  const isNewEventListener =
+    indexOfEventListener(listeners, type, listener, optionsOrUseCapture) === -1;
+  if (isNewEventListener) {
+    listeners.push({type, listener, optionsOrUseCapture});
+    traverseFragmentInstanceChildren(
+      this,
+      this._fragmentFiber.child,
+      addEventListenerToChild,
+      type,
+      listener,
+      optionsOrUseCapture,
+    );
+  }
+  this._eventListeners = listeners;
+};
+function addEventListenerToChild(
+  child: Instance,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+): boolean {
+  child.addEventListener(type, listener, optionsOrUseCapture);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.removeEventListener = function (
+  this: FragmentInstanceType,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+): void {
+  const listeners = this._eventListeners;
+  if (listeners === null) {
+    return;
+  }
+  if (typeof listeners !== 'undefined' && listeners.length > 0) {
+    traverseFragmentInstanceChildren(
+      this,
+      this._fragmentFiber.child,
+      removeEventListenerFromChild,
+      type,
+      listener,
+      optionsOrUseCapture,
+    );
+    const index = indexOfEventListener(
+      listeners,
+      type,
+      listener,
+      optionsOrUseCapture,
+    );
+    if (this._eventListeners !== null) {
+      this._eventListeners.splice(index, 1);
+    }
+  }
+};
+function removeEventListenerFromChild(
+  child: Instance,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+): boolean {
+  child.removeEventListener(type, listener, optionsOrUseCapture);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.focus = function (this: FragmentInstanceType) {
+  traverseFragmentInstanceChildren(
+    this,
+    this._fragmentFiber.child,
+    setFocusIfFocusable,
+  );
+};
+
+function traverseFragmentInstanceChildren<A, B, C>(
+  fragmentInstance: FragmentInstanceType,
+  child: Fiber | null,
+  fn: (Instance, A, B, C) => boolean,
+  a: A,
+  b: B,
+  c: C,
+): void {
+  while (child !== null) {
+    if (child.tag === HostComponent) {
+      if (fn(child.stateNode, a, b, c)) {
+        return;
+      }
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip hidden subtrees
+    } else {
+      traverseFragmentInstanceChildren(
+        fragmentInstance,
+        child.child,
+        fn,
+        a,
+        b,
+        c,
+      );
+    }
+    child = child.sibling;
+  }
+}
+
+function normalizeListenerOptions(
+  opts: ?EventListenerOptionsOrUseCapture,
+): string {
+  if (opts == null) {
+    return '0';
+  }
+
+  if (typeof opts === 'boolean') {
+    return `c=${opts ? '1' : '0'}`;
+  }
+
+  return `c=${opts.capture ? '1' : '0'}&o=${opts.once ? '1' : '0'}&p=${opts.passive ? '1' : '0'}`;
+}
+
+function indexOfEventListener(
+  eventListeners: Array<StoredEventListener>,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
+): number {
+  for (let i = 0; i < eventListeners.length; i++) {
+    const item = eventListeners[i];
+    if (
+      item.type === type &&
+      item.listener === listener &&
+      normalizeListenerOptions(item.optionsOrUseCapture) ===
+        normalizeListenerOptions(optionsOrUseCapture)
+    ) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+export function createFragmentInstance(
+  fragmentFiber: Fiber,
+): FragmentInstanceType {
+  return new (FragmentInstance: any)(fragmentFiber);
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Fiber,
+  instance: FragmentInstanceType,
+): void {
+  instance._fragmentFiber = fragmentFiber;
+}
+
+export function commitNewChildToFragmentInstance(
+  childElement: Instance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  const eventListeners = fragmentInstance._eventListeners;
+  if (eventListeners !== null) {
+    for (let i = 0; i < eventListeners.length; i++) {
+      const {type, listener, optionsOrUseCapture} = eventListeners[i];
+      childElement.addEventListener(type, listener, optionsOrUseCapture);
+    }
+  }
+}
+
+export function deleteChildFromFragmentInstance(
+  childElement: Instance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  const eventListeners = fragmentInstance._eventListeners;
+  if (eventListeners !== null) {
+    for (let i = 0; i < eventListeners.length; i++) {
+      const {type, listener, optionsOrUseCapture} = eventListeners[i];
+      childElement.removeEventListener(type, listener, optionsOrUseCapture);
+    }
   }
 }
 

@@ -12,6 +12,7 @@ const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
 const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const fs = require('fs');
+const childProcess = require('child_process');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
 const Bundles = require('./bundles');
@@ -22,8 +23,10 @@ const useForks = require('./plugins/use-forks-plugin');
 const dynamicImports = require('./plugins/dynamic-imports');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
-const codeFrame = require('@babel/code-frame');
+const codeFrame = require('@babel/code-frame').default;
 const Wrappers = require('./wrappers');
+const commonjs = require('@rollup/plugin-commonjs');
+const {getBabelOutputPlugin} = require('@rollup/plugin-babel');
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
 
@@ -391,6 +394,7 @@ function getPlugins(
               };
             },
           },
+      bundle.tsconfig != null ? commonjs() : false,
       // Shim any modules that need forking in this environment.
       useForks(forks),
       // Ensure we don't try to bundle any fbjs modules.
@@ -414,13 +418,23 @@ function getPlugins(
           bundle
         )
       ),
-      // Remove 'use strict' from individual source files.
-      {
-        name: "remove 'use strict'",
-        transform(source) {
-          return source.replace(/['"]use strict["']/g, '');
-        },
-      },
+      // For Meta internal requirements this package needs to be built targeting ES5.
+      bundle.name === 'eslint-plugin-react-hooks'
+        ? getBabelOutputPlugin({
+            presets: ['@babel/preset-env'],
+          })
+        : false,
+      // Remove 'use strict' from individual source files. We skip eslint-plugin-react-hooks because
+      // it bundles compiler-type code that may examine "use strict" used outside of a directive
+      // context, e.g. as a StringLiteral.
+      bundle.name !== 'eslint-plugin-react-hooks'
+        ? {
+            name: "remove 'use strict'",
+            transform(source) {
+              return source.replace(/['"]use strict["']/g, '');
+            },
+          }
+        : false,
       // Turn __DEV__ and process.env checks into constants.
       replace({
         preventAssignment: true,
@@ -489,7 +503,7 @@ function getPlugins(
           // takes care of it.
           renaming: false,
         }),
-      needsMinifiedByClosure &&
+      (needsMinifiedByClosure || bundle.name === 'eslint-plugin-react-hooks') &&
         // Add the whitespace back
         prettier({
           parser: 'flow',
@@ -812,6 +826,11 @@ function handleRollupError(error) {
   }
 }
 
+function runShellCommand(command) {
+  console.log(chalk.dim('Running: ') + chalk.cyan(command));
+  childProcess.execSync(command, {stdio: 'inherit', shell: true});
+}
+
 async function buildEverything() {
   if (!argv['unsafe-partial']) {
     await asyncRimRaf('build');
@@ -859,6 +878,9 @@ async function buildEverything() {
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const [bundle, bundleType] of bundles) {
+    if (bundle.prebuild) {
+      runShellCommand(bundle.prebuild);
+    }
     await createBundle(bundle, bundleType);
   }
 

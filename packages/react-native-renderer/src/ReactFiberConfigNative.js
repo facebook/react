@@ -202,6 +202,35 @@ export function cloneMutableTextInstance(
   throw new Error('Not yet implemented.');
 }
 
+export type FragmentInstanceType = null;
+
+export function createFragmentInstance(
+  fragmentFiber: Fiber,
+): FragmentInstanceType {
+  return null;
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Fiber,
+  instance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function commitNewChildToFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function deleteChildFromFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
 export function finalizeInitialChildren(
   parentInstance: Instance,
   type: string,
@@ -619,6 +648,7 @@ export function startViewTransition(
   afterMutationCallback: () => void,
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
+  errorCallback: mixed => void,
 ): boolean {
   return false;
 }
@@ -633,6 +663,7 @@ export function startGestureTransition(
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   animateCallback: () => void,
+  errorCallback: mixed => void,
 ): RunningGestureTransition {
   mutationCallback();
   animateCallback();
