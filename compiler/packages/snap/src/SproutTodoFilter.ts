@@ -462,7 +462,6 @@ const skipFilter = new Set([
 
   // bugs
   'bug-object-expression-computed-key-modified-during-after-construction-hoisted-sequence-expr',
-  'bug-array-spread-mutable-iterator',
   `bug-capturing-func-maybealias-captured-mutate`,
   'bug-aliased-capture-aliased-mutate',
   'bug-aliased-capture-mutate',
