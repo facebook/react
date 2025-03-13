@@ -272,6 +272,9 @@ function isFilePartOfSources(
   return false;
 }
 
+type CompileProgramResult = {
+  retryErrors: Array<{fn: BabelFn; error: CompilerError}>;
+} | null;
 /**
  * `compileProgram` is directly invoked by the react-compiler babel plugin, so
  * exceptions thrown by this function will fail the babel build.
@@ -286,16 +289,16 @@ function isFilePartOfSources(
 export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass,
-): void {
+): CompileProgramResult {
   if (shouldSkipCompilation(program, pass)) {
-    return;
+    return null;
   }
 
   const environment = pass.opts.environment;
   const restrictedImportsErr = validateRestrictedImports(program, environment);
   if (restrictedImportsErr) {
     handleError(restrictedImportsErr, pass, null);
-    return;
+    return null;
   }
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
 
@@ -366,7 +369,7 @@ export function compileProgram(
       filename: pass.filename ?? null,
     },
   );
-
+  const retryErrors: Array<{fn: BabelFn; error: CompilerError}> = [];
   const processFn = (
     fn: BabelFn,
     fnType: ReactFunctionType,
@@ -419,7 +422,10 @@ export function compileProgram(
       }
     }
     // If non-memoization features are enabled, retry regardless of error kind
-    if (compileResult.kind === 'error' && environment.enableFire) {
+    if (
+      compileResult.kind === 'error' &&
+      (environment.enableFire || environment.inferEffectDependencies != null)
+    ) {
       try {
         compileResult = {
           kind: 'compile',
@@ -435,7 +441,11 @@ export function compileProgram(
           ),
         };
       } catch (err) {
+        // TODO: maybe stash the error for later reporting in ValidateNoUntransformedReferences
         compileResult = {kind: 'error', error: err};
+        if (err instanceof CompilerError) {
+          retryErrors.push({fn, error: err});
+        }
       }
     }
     if (compileResult.kind === 'error') {
@@ -537,7 +547,7 @@ export function compileProgram(
     program.node.directives,
   );
   if (moduleScopeOptOutDirectives.length > 0) {
-    return;
+    return null;
   }
 
   if (pass.opts.gating != null) {
@@ -549,7 +559,7 @@ export function compileProgram(
     );
     if (error) {
       handleError(error, pass, null);
-      return;
+      return null;
     }
   }
 
@@ -599,7 +609,7 @@ export function compileProgram(
     }
   } catch (err) {
     handleError(err, pass, null);
-    return;
+    return null;
   }
 
   /*
@@ -636,6 +646,7 @@ export function compileProgram(
     }
     addImportsToProgram(program, externalFunctions);
   }
+  return {retryErrors};
 }
 
 function shouldSkipCompilation(
