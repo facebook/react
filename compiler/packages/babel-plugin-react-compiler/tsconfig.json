@@ -15,7 +15,6 @@
     // ideally turn off only during dev, or on a per-file basis
     "noUnusedLocals": false,
     "removeComments": true,
-
     "declaration": true,
   },
   "exclude": [
