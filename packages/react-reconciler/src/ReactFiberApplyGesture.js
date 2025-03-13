@@ -132,6 +132,7 @@ function recursivelyInsertNew(
 ): void {
   if (
     visitPhase === INSERT_APPEARING_PAIR &&
+    parentViewTransition === null &&
     (parentFiber.subtreeFlags & ViewTransitionNamedStatic) === NoFlags
   ) {
     // We're just searching for pairs but we have reached the end.
