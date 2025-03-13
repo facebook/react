@@ -25,6 +25,8 @@ const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
 const codeFrame = require('@babel/code-frame').default;
 const Wrappers = require('./wrappers');
+const commonjs = require('@rollup/plugin-commonjs');
+const {getBabelOutputPlugin} = require('@rollup/plugin-babel');
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
 
@@ -392,6 +394,7 @@ function getPlugins(
               };
             },
           },
+      bundle.tsconfig != null ? commonjs() : false,
       // Shim any modules that need forking in this environment.
       useForks(forks),
       // Ensure we don't try to bundle any fbjs modules.
@@ -415,13 +418,23 @@ function getPlugins(
           bundle
         )
       ),
-      // Remove 'use strict' from individual source files.
-      {
-        name: "remove 'use strict'",
-        transform(source) {
-          return source.replace(/['"]use strict["']/g, '');
-        },
-      },
+      // For Meta internal requirements this package needs to be built targeting ES5.
+      bundle.name === 'eslint-plugin-react-hooks'
+        ? getBabelOutputPlugin({
+            presets: ['@babel/preset-env'],
+          })
+        : false,
+      // Remove 'use strict' from individual source files. We skip eslint-plugin-react-hooks because
+      // it bundles compiler-type code that may examine "use strict" used outside of a directive
+      // context, e.g. as a StringLiteral.
+      bundle.name !== 'eslint-plugin-react-hooks'
+        ? {
+            name: "remove 'use strict'",
+            transform(source) {
+              return source.replace(/['"]use strict["']/g, '');
+            },
+          }
+        : false,
       // Turn __DEV__ and process.env checks into constants.
       replace({
         preventAssignment: true,
@@ -490,7 +503,7 @@ function getPlugins(
           // takes care of it.
           renaming: false,
         }),
-      needsMinifiedByClosure &&
+      (needsMinifiedByClosure || bundle.name === 'eslint-plugin-react-hooks') &&
         // Add the whitespace back
         prettier({
           parser: 'flow',

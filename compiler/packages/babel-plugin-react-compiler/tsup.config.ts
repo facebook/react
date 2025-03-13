@@ -10,6 +10,7 @@ export default defineConfig({
   bundle: true,
   format: 'cjs',
   platform: 'node',
+  target: 'es2015',
   banner: {
     js: `/**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -22,8 +23,6 @@ export default defineConfig({
  * @nolint
  * @preventMunge
  * @preserve-invariant-messages
- */
-
-"use no memo";`,
+ */`,
   },
 });
