@@ -3,7 +3,7 @@
 
 ```javascript
 // @gating @compilationMode(annotation)
-function Bar(props) {
+export default function Bar(props) {
   'use forget';
   return <div>{props.bar}</div>;
 }
@@ -16,6 +16,11 @@ function Foo(props) {
   'use forget';
   return <Foo>{props.bar}</Foo>;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: eval('Bar'),
+  params: [{bar: 2}],
+};
 
 ```
 
@@ -42,6 +47,7 @@ const Bar = isForgetEnabled_Fixtures()
       "use forget";
       return <div>{props.bar}</div>;
     };
+export default Bar;
 
 function NoForget(props) {
   return <Bar>{props.noForget}</Bar>;
@@ -65,5 +71,12 @@ const Foo = isForgetEnabled_Fixtures()
       return <Foo>{props.bar}</Foo>;
     };
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: eval("Bar"),
+  params: [{ bar: 2 }],
+};
+
 ```
       
+### Eval output
+(kind: ok) <div>2</div>

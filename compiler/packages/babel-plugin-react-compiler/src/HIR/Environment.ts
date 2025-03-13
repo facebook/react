@@ -663,7 +663,7 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
       source: 'react-compiler-runtime',
       importSpecifierName: 'shouldInstrument',
     },
-    globalGating: '__DEV__',
+    globalGating: 'DEV',
   },
   enableEmitHookGuards: {
     source: 'react-compiler-runtime',
