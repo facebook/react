@@ -36,3 +36,6 @@ export default React.forwardRef(
 
 ```
       
+### Eval output
+(kind: exception) Fixture not implemented
+logs: ['forwardRef render functions accept exactly two parameters: props and ref. %s','Did you forget to use the ref parameter?']

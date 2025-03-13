@@ -13,6 +13,11 @@ component Component(value: string) {
 
 export default memo<Props>(Component);
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: eval('Component'),
+  params: [{value: 'foo'}],
+};
+
 ```
 
 ## Code
@@ -43,5 +48,12 @@ const Component = isForgetEnabled_Fixtures()
 
 export default memo<Props>(Component);
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: eval("Component"),
+  params: [{ value: "foo" }],
+};
+
 ```
       
+### Eval output
+(kind: ok) <div>foo</div>

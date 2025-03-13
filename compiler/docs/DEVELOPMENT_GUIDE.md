@@ -1,6 +1,6 @@
 # React Compiler Development Guide
 
-Note: for general notes about contributing, see the [CONTRIBUTING.md](../CONTRIBUTING.md).
+Note: for general notes about contributing, see the [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## Compiler Development
 

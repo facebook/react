@@ -21,7 +21,7 @@ import {
 import { c as _c } from "react/compiler-runtime"; // @enableEmitFreeze @enableEmitInstrumentForget
 
 function useFoo(props) {
-  if (__DEV__ && shouldInstrument)
+  if (DEV && shouldInstrument)
     useRenderCounter("useFoo", "/codegen-emit-imports-same-source.ts");
   const $ = _c(2);
   let t0;

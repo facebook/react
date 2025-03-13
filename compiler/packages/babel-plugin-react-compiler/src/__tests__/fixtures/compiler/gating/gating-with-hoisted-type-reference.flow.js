@@ -8,3 +8,8 @@ component Component(value: string) {
 }
 
 export default memo<Props>(Component);
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: eval('Component'),
+  params: [{value: 'foo'}],
+};

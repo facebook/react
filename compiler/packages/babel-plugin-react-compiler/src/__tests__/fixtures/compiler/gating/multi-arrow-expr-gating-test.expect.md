@@ -3,16 +3,23 @@
 
 ```javascript
 // @gating
-const ErrorView = (error, _retry) => <MessageBox error={error}></MessageBox>;
+import {Stringify} from 'shared-runtime';
+
+const ErrorView = (error, _retry) => <Stringify error={error}></Stringify>;
 
 const Renderer = props => (
-  <Foo>
-    <Bar></Bar>
+  <div>
+    <span></span>
     <ErrorView></ErrorView>
-  </Foo>
+  </div>
 );
 
 export default Renderer;
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: eval('Renderer'),
+  params: [{}],
+};
 
 ```
 
@@ -21,12 +28,14 @@ export default Renderer;
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime"; // @gating
+import { Stringify } from "shared-runtime";
+
 const ErrorView = isForgetEnabled_Fixtures()
   ? (error, _retry) => {
       const $ = _c(2);
       let t0;
       if ($[0] !== error) {
-        t0 = <MessageBox error={error} />;
+        t0 = <Stringify error={error} />;
         $[0] = error;
         $[1] = t0;
       } else {
@@ -34,7 +43,7 @@ const ErrorView = isForgetEnabled_Fixtures()
       }
       return t0;
     }
-  : (error, _retry) => <MessageBox error={error}></MessageBox>;
+  : (error, _retry) => <Stringify error={error}></Stringify>;
 
 const Renderer = isForgetEnabled_Fixtures()
   ? (props) => {
@@ -42,10 +51,10 @@ const Renderer = isForgetEnabled_Fixtures()
       let t0;
       if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
         t0 = (
-          <Foo>
-            <Bar />
+          <div>
+            <span />
             <ErrorView />
-          </Foo>
+          </div>
         );
         $[0] = t0;
       } else {
@@ -54,12 +63,19 @@ const Renderer = isForgetEnabled_Fixtures()
       return t0;
     }
   : (props) => (
-      <Foo>
-        <Bar></Bar>
+      <div>
+        <span></span>
         <ErrorView></ErrorView>
-      </Foo>
+      </div>
     );
 export default Renderer;
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: eval("Renderer"),
+  params: [{}],
+};
+
 ```
       
+### Eval output
+(kind: ok) <div><span></span><div>{"error":{}}</div></div>

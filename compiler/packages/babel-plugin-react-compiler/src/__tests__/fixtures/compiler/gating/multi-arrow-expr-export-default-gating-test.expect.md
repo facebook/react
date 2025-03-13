@@ -3,9 +3,11 @@
 
 ```javascript
 // @gating
-const ErrorView = (error, _retry) => <MessageBox error={error}></MessageBox>;
+import {Stringify} from 'shared-runtime';
 
-export const Renderer = props => (
+const ErrorView = (error, _retry) => <Stringify error={error}></Stringify>;
+
+export default props => (
   <Foo>
     <Bar></Bar>
     <ErrorView></ErrorView>
@@ -19,12 +21,14 @@ export const Renderer = props => (
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime"; // @gating
+import { Stringify } from "shared-runtime";
+
 const ErrorView = isForgetEnabled_Fixtures()
   ? (error, _retry) => {
       const $ = _c(2);
       let t0;
       if ($[0] !== error) {
-        t0 = <MessageBox error={error} />;
+        t0 = <Stringify error={error} />;
         $[0] = error;
         $[1] = t0;
       } else {
@@ -32,9 +36,9 @@ const ErrorView = isForgetEnabled_Fixtures()
       }
       return t0;
     }
-  : (error, _retry) => <MessageBox error={error}></MessageBox>;
+  : (error, _retry) => <Stringify error={error}></Stringify>;
 
-export const Renderer = isForgetEnabled_Fixtures()
+export default isForgetEnabled_Fixtures()
   ? (props) => {
       const $ = _c(1);
       let t0;
@@ -60,3 +64,5 @@ export const Renderer = isForgetEnabled_Fixtures()
 
 ```
       
+### Eval output
+(kind: exception) Fixture not implemented
