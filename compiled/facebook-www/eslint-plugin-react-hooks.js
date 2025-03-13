@@ -6078,372 +6078,385 @@ if (process.env.NODE_ENV !== "production") {
       return (0, _helperValidatorIdentifier$1.isIdentifierName)(name);
     }
     var lib$1 = {};
-    Object.defineProperty(lib$1, "__esModule", { value: true });
-    lib$1.readCodePoint = readCodePoint;
-    lib$1.readInt = readInt;
-    lib$1.readStringContents = readStringContents;
-    var _isDigit = function isDigit(code) {
-      return code >= 48 && code <= 57;
-    };
-    var forbiddenNumericSeparatorSiblings = {
-      decBinOct: new Set([46, 66, 69, 79, 95, 98, 101, 111]),
-      hex: new Set([46, 88, 95, 120])
-    };
-    var isAllowedNumericSeparatorSibling = {
-      bin: function bin(ch) {
-        return ch === 48 || ch === 49;
-      },
-      oct: function oct(ch) {
-        return ch >= 48 && ch <= 55;
-      },
-      dec: function dec(ch) {
-        return ch >= 48 && ch <= 57;
-      },
-      hex: function hex(ch) {
-        return (
-          (ch >= 48 && ch <= 57) ||
-          (ch >= 65 && ch <= 70) ||
-          (ch >= 97 && ch <= 102)
-        );
-      }
-    };
-    function readStringContents(type, input, pos, lineStart, curLine, errors) {
-      var initialPos = pos;
-      var initialLineStart = lineStart;
-      var initialCurLine = curLine;
-      var out = "";
-      var firstInvalidLoc = null;
-      var chunkStart = pos;
-      var length = input.length;
-      for (;;) {
-        if (pos >= length) {
-          errors.unterminated(initialPos, initialLineStart, initialCurLine);
-          out += input.slice(chunkStart, pos);
-          break;
-        }
-        var ch = input.charCodeAt(pos);
-        if (isStringEnd(type, ch, input, pos)) {
-          out += input.slice(chunkStart, pos);
-          break;
-        }
-        if (ch === 92) {
-          out += input.slice(chunkStart, pos);
-          var res = readEscapedChar(
-            input,
-            pos,
-            lineStart,
-            curLine,
-            type === "template",
-            errors
-          );
-          if (res.ch === null && !firstInvalidLoc) {
-            firstInvalidLoc = {
-              pos: pos,
-              lineStart: lineStart,
-              curLine: curLine
-            };
-          } else {
-            out += res.ch;
-          }
-          pos = res.pos;
-          lineStart = res.lineStart;
-          curLine = res.curLine;
-          chunkStart = pos;
-        } else if (ch === 8232 || ch === 8233) {
-          ++pos;
-          ++curLine;
-          lineStart = pos;
-        } else if (ch === 10 || ch === 13) {
-          if (type === "template") {
-            out += input.slice(chunkStart, pos) + "\n";
-            ++pos;
-            if (ch === 13 && input.charCodeAt(pos) === 10) {
-              ++pos;
-            }
-            ++curLine;
-            chunkStart = lineStart = pos;
-          } else {
-            errors.unterminated(initialPos, initialLineStart, initialCurLine);
-          }
-        } else {
-          ++pos;
-        }
-      }
-      return {
-        pos: pos,
-        str: out,
-        firstInvalidLoc: firstInvalidLoc,
-        lineStart: lineStart,
-        curLine: curLine,
-        containsInvalid: !!firstInvalidLoc
+    var hasRequiredLib$1;
+    function requireLib$1() {
+      if (hasRequiredLib$1) return lib$1;
+      hasRequiredLib$1 = 1;
+      Object.defineProperty(lib$1, "__esModule", { value: true });
+      lib$1.readCodePoint = readCodePoint;
+      lib$1.readInt = readInt;
+      lib$1.readStringContents = readStringContents;
+      var _isDigit = function isDigit(code) {
+        return code >= 48 && code <= 57;
       };
-    }
-    function isStringEnd(type, ch, input, pos) {
-      if (type === "template") {
-        return ch === 96 || (ch === 36 && input.charCodeAt(pos + 1) === 123);
-      }
-      return ch === (type === "double" ? 34 : 39);
-    }
-    function readEscapedChar(
-      input,
-      pos,
-      lineStart,
-      curLine,
-      inTemplate,
-      errors
-    ) {
-      var throwOnInvalid = !inTemplate;
-      pos++;
-      var res = function res(ch) {
-        return { pos: pos, ch: ch, lineStart: lineStart, curLine: curLine };
+      var forbiddenNumericSeparatorSiblings = {
+        decBinOct: new Set([46, 66, 69, 79, 95, 98, 101, 111]),
+        hex: new Set([46, 88, 95, 120])
       };
-      var ch = input.charCodeAt(pos++);
-      switch (ch) {
-        case 110:
-          return res("\n");
-        case 114:
-          return res("\r");
-        case 120: {
-          var code;
-          var _readHexChar = readHexChar(
-            input,
-            pos,
-            lineStart,
-            curLine,
-            2,
-            false,
-            throwOnInvalid,
-            errors
+      var isAllowedNumericSeparatorSibling = {
+        bin: function bin(ch) {
+          return ch === 48 || ch === 49;
+        },
+        oct: function oct(ch) {
+          return ch >= 48 && ch <= 55;
+        },
+        dec: function dec(ch) {
+          return ch >= 48 && ch <= 57;
+        },
+        hex: function hex(ch) {
+          return (
+            (ch >= 48 && ch <= 57) ||
+            (ch >= 65 && ch <= 70) ||
+            (ch >= 97 && ch <= 102)
           );
-          code = _readHexChar.code;
-          pos = _readHexChar.pos;
-          return res(code === null ? null : String.fromCharCode(code));
         }
-        case 117: {
-          var _code;
-          var _readCodePoint = readCodePoint(
-            input,
-            pos,
-            lineStart,
-            curLine,
-            throwOnInvalid,
-            errors
-          );
-          _code = _readCodePoint.code;
-          pos = _readCodePoint.pos;
-          return res(_code === null ? null : String.fromCodePoint(_code));
-        }
-        case 116:
-          return res("\t");
-        case 98:
-          return res("\b");
-        case 118:
-          return res("\x0B");
-        case 102:
-          return res("\f");
-        case 13:
-          if (input.charCodeAt(pos) === 10) {
-            ++pos;
-          }
-        case 10:
-          lineStart = pos;
-          ++curLine;
-        case 8232:
-        case 8233:
-          return res("");
-        case 56:
-        case 57:
-          if (inTemplate) {
-            return res(null);
-          } else {
-            errors.strictNumericEscape(pos - 1, lineStart, curLine);
-          }
-        default:
-          if (ch >= 48 && ch <= 55) {
-            var startPos = pos - 1;
-            var match = /^[0-7]+/.exec(input.slice(startPos, pos + 2));
-            var octalStr = match[0];
-            var octal = parseInt(octalStr, 8);
-            if (octal > 255) {
-              octalStr = octalStr.slice(0, -1);
-              octal = parseInt(octalStr, 8);
-            }
-            pos += octalStr.length - 1;
-            var next = input.charCodeAt(pos);
-            if (octalStr !== "0" || next === 56 || next === 57) {
-              if (inTemplate) {
-                return res(null);
-              } else {
-                errors.strictNumericEscape(startPos, lineStart, curLine);
-              }
-            }
-            return res(String.fromCharCode(octal));
-          }
-          return res(String.fromCharCode(ch));
-      }
-    }
-    function readHexChar(
-      input,
-      pos,
-      lineStart,
-      curLine,
-      len,
-      forceLen,
-      throwOnInvalid,
-      errors
-    ) {
-      var initialPos = pos;
-      var n;
-      var _readInt = readInt(
+      };
+      function readStringContents(
+        type,
         input,
         pos,
         lineStart,
         curLine,
-        16,
-        len,
-        forceLen,
-        false,
-        errors,
-        !throwOnInvalid
-      );
-      n = _readInt.n;
-      pos = _readInt.pos;
-      if (n === null) {
-        if (throwOnInvalid) {
-          errors.invalidEscapeSequence(initialPos, lineStart, curLine);
-        } else {
-          pos = initialPos - 1;
-        }
-      }
-      return { code: n, pos: pos };
-    }
-    function readInt(
-      input,
-      pos,
-      lineStart,
-      curLine,
-      radix,
-      len,
-      forceLen,
-      allowNumSeparator,
-      errors,
-      bailOnError
-    ) {
-      var start = pos;
-      var forbiddenSiblings =
-        radix === 16
-          ? forbiddenNumericSeparatorSiblings.hex
-          : forbiddenNumericSeparatorSiblings.decBinOct;
-      var isAllowedSibling =
-        radix === 16
-          ? isAllowedNumericSeparatorSibling.hex
-          : radix === 10
-            ? isAllowedNumericSeparatorSibling.dec
-            : radix === 8
-              ? isAllowedNumericSeparatorSibling.oct
-              : isAllowedNumericSeparatorSibling.bin;
-      var invalid = false;
-      var total = 0;
-      for (var i = 0, e = len == null ? Infinity : len; i < e; ++i) {
-        var code = input.charCodeAt(pos);
-        var val = void 0;
-        if (code === 95 && allowNumSeparator !== "bail") {
-          var prev = input.charCodeAt(pos - 1);
-          var next = input.charCodeAt(pos + 1);
-          if (!allowNumSeparator) {
-            if (bailOnError) return { n: null, pos: pos };
-            errors.numericSeparatorInEscapeSequence(pos, lineStart, curLine);
-          } else if (
-            Number.isNaN(next) ||
-            !isAllowedSibling(next) ||
-            forbiddenSiblings.has(prev) ||
-            forbiddenSiblings.has(next)
-          ) {
-            if (bailOnError) return { n: null, pos: pos };
-            errors.unexpectedNumericSeparator(pos, lineStart, curLine);
-          }
-          ++pos;
-          continue;
-        }
-        if (code >= 97) {
-          val = code - 97 + 10;
-        } else if (code >= 65) {
-          val = code - 65 + 10;
-        } else if (_isDigit(code)) {
-          val = code - 48;
-        } else {
-          val = Infinity;
-        }
-        if (val >= radix) {
-          if (val <= 9 && bailOnError) {
-            return { n: null, pos: pos };
-          } else if (
-            val <= 9 &&
-            errors.invalidDigit(pos, lineStart, curLine, radix)
-          ) {
-            val = 0;
-          } else if (forceLen) {
-            val = 0;
-            invalid = true;
-          } else {
+        errors
+      ) {
+        var initialPos = pos;
+        var initialLineStart = lineStart;
+        var initialCurLine = curLine;
+        var out = "";
+        var firstInvalidLoc = null;
+        var chunkStart = pos;
+        var length = input.length;
+        for (;;) {
+          if (pos >= length) {
+            errors.unterminated(initialPos, initialLineStart, initialCurLine);
+            out += input.slice(chunkStart, pos);
             break;
           }
-        }
-        ++pos;
-        total = total * radix + val;
-      }
-      if (pos === start || (len != null && pos - start !== len) || invalid) {
-        return { n: null, pos: pos };
-      }
-      return { n: total, pos: pos };
-    }
-    function readCodePoint(
-      input,
-      pos,
-      lineStart,
-      curLine,
-      throwOnInvalid,
-      errors
-    ) {
-      var ch = input.charCodeAt(pos);
-      var code;
-      if (ch === 123) {
-        ++pos;
-        var _readHexChar2 = readHexChar(
-          input,
-          pos,
-          lineStart,
-          curLine,
-          input.indexOf("}", pos) - pos,
-          true,
-          throwOnInvalid,
-          errors
-        );
-        code = _readHexChar2.code;
-        pos = _readHexChar2.pos;
-        ++pos;
-        if (code !== null && code > 0x10ffff) {
-          if (throwOnInvalid) {
-            errors.invalidCodePoint(pos, lineStart, curLine);
+          var ch = input.charCodeAt(pos);
+          if (isStringEnd(type, ch, input, pos)) {
+            out += input.slice(chunkStart, pos);
+            break;
+          }
+          if (ch === 92) {
+            out += input.slice(chunkStart, pos);
+            var res = readEscapedChar(
+              input,
+              pos,
+              lineStart,
+              curLine,
+              type === "template",
+              errors
+            );
+            if (res.ch === null && !firstInvalidLoc) {
+              firstInvalidLoc = {
+                pos: pos,
+                lineStart: lineStart,
+                curLine: curLine
+              };
+            } else {
+              out += res.ch;
+            }
+            pos = res.pos;
+            lineStart = res.lineStart;
+            curLine = res.curLine;
+            chunkStart = pos;
+          } else if (ch === 8232 || ch === 8233) {
+            ++pos;
+            ++curLine;
+            lineStart = pos;
+          } else if (ch === 10 || ch === 13) {
+            if (type === "template") {
+              out += input.slice(chunkStart, pos) + "\n";
+              ++pos;
+              if (ch === 13 && input.charCodeAt(pos) === 10) {
+                ++pos;
+              }
+              ++curLine;
+              chunkStart = lineStart = pos;
+            } else {
+              errors.unterminated(initialPos, initialLineStart, initialCurLine);
+            }
           } else {
-            return { code: null, pos: pos };
+            ++pos;
           }
         }
-      } else {
-        var _readHexChar3 = readHexChar(
+        return {
+          pos: pos,
+          str: out,
+          firstInvalidLoc: firstInvalidLoc,
+          lineStart: lineStart,
+          curLine: curLine,
+          containsInvalid: !!firstInvalidLoc
+        };
+      }
+      function isStringEnd(type, ch, input, pos) {
+        if (type === "template") {
+          return ch === 96 || (ch === 36 && input.charCodeAt(pos + 1) === 123);
+        }
+        return ch === (type === "double" ? 34 : 39);
+      }
+      function readEscapedChar(
+        input,
+        pos,
+        lineStart,
+        curLine,
+        inTemplate,
+        errors
+      ) {
+        var throwOnInvalid = !inTemplate;
+        pos++;
+        var res = function res(ch) {
+          return { pos: pos, ch: ch, lineStart: lineStart, curLine: curLine };
+        };
+        var ch = input.charCodeAt(pos++);
+        switch (ch) {
+          case 110:
+            return res("\n");
+          case 114:
+            return res("\r");
+          case 120: {
+            var code;
+            var _readHexChar = readHexChar(
+              input,
+              pos,
+              lineStart,
+              curLine,
+              2,
+              false,
+              throwOnInvalid,
+              errors
+            );
+            code = _readHexChar.code;
+            pos = _readHexChar.pos;
+            return res(code === null ? null : String.fromCharCode(code));
+          }
+          case 117: {
+            var _code;
+            var _readCodePoint = readCodePoint(
+              input,
+              pos,
+              lineStart,
+              curLine,
+              throwOnInvalid,
+              errors
+            );
+            _code = _readCodePoint.code;
+            pos = _readCodePoint.pos;
+            return res(_code === null ? null : String.fromCodePoint(_code));
+          }
+          case 116:
+            return res("\t");
+          case 98:
+            return res("\b");
+          case 118:
+            return res("\x0B");
+          case 102:
+            return res("\f");
+          case 13:
+            if (input.charCodeAt(pos) === 10) {
+              ++pos;
+            }
+          case 10:
+            lineStart = pos;
+            ++curLine;
+          case 8232:
+          case 8233:
+            return res("");
+          case 56:
+          case 57:
+            if (inTemplate) {
+              return res(null);
+            } else {
+              errors.strictNumericEscape(pos - 1, lineStart, curLine);
+            }
+          default:
+            if (ch >= 48 && ch <= 55) {
+              var startPos = pos - 1;
+              var match = /^[0-7]+/.exec(input.slice(startPos, pos + 2));
+              var octalStr = match[0];
+              var octal = parseInt(octalStr, 8);
+              if (octal > 255) {
+                octalStr = octalStr.slice(0, -1);
+                octal = parseInt(octalStr, 8);
+              }
+              pos += octalStr.length - 1;
+              var next = input.charCodeAt(pos);
+              if (octalStr !== "0" || next === 56 || next === 57) {
+                if (inTemplate) {
+                  return res(null);
+                } else {
+                  errors.strictNumericEscape(startPos, lineStart, curLine);
+                }
+              }
+              return res(String.fromCharCode(octal));
+            }
+            return res(String.fromCharCode(ch));
+        }
+      }
+      function readHexChar(
+        input,
+        pos,
+        lineStart,
+        curLine,
+        len,
+        forceLen,
+        throwOnInvalid,
+        errors
+      ) {
+        var initialPos = pos;
+        var n;
+        var _readInt = readInt(
           input,
           pos,
           lineStart,
           curLine,
-          4,
+          16,
+          len,
+          forceLen,
           false,
-          throwOnInvalid,
-          errors
+          errors,
+          !throwOnInvalid
         );
-        code = _readHexChar3.code;
-        pos = _readHexChar3.pos;
+        n = _readInt.n;
+        pos = _readInt.pos;
+        if (n === null) {
+          if (throwOnInvalid) {
+            errors.invalidEscapeSequence(initialPos, lineStart, curLine);
+          } else {
+            pos = initialPos - 1;
+          }
+        }
+        return { code: n, pos: pos };
       }
-      return { code: code, pos: pos };
+      function readInt(
+        input,
+        pos,
+        lineStart,
+        curLine,
+        radix,
+        len,
+        forceLen,
+        allowNumSeparator,
+        errors,
+        bailOnError
+      ) {
+        var start = pos;
+        var forbiddenSiblings =
+          radix === 16
+            ? forbiddenNumericSeparatorSiblings.hex
+            : forbiddenNumericSeparatorSiblings.decBinOct;
+        var isAllowedSibling =
+          radix === 16
+            ? isAllowedNumericSeparatorSibling.hex
+            : radix === 10
+              ? isAllowedNumericSeparatorSibling.dec
+              : radix === 8
+                ? isAllowedNumericSeparatorSibling.oct
+                : isAllowedNumericSeparatorSibling.bin;
+        var invalid = false;
+        var total = 0;
+        for (var i = 0, e = len == null ? Infinity : len; i < e; ++i) {
+          var code = input.charCodeAt(pos);
+          var val = void 0;
+          if (code === 95 && allowNumSeparator !== "bail") {
+            var prev = input.charCodeAt(pos - 1);
+            var next = input.charCodeAt(pos + 1);
+            if (!allowNumSeparator) {
+              if (bailOnError) return { n: null, pos: pos };
+              errors.numericSeparatorInEscapeSequence(pos, lineStart, curLine);
+            } else if (
+              Number.isNaN(next) ||
+              !isAllowedSibling(next) ||
+              forbiddenSiblings.has(prev) ||
+              forbiddenSiblings.has(next)
+            ) {
+              if (bailOnError) return { n: null, pos: pos };
+              errors.unexpectedNumericSeparator(pos, lineStart, curLine);
+            }
+            ++pos;
+            continue;
+          }
+          if (code >= 97) {
+            val = code - 97 + 10;
+          } else if (code >= 65) {
+            val = code - 65 + 10;
+          } else if (_isDigit(code)) {
+            val = code - 48;
+          } else {
+            val = Infinity;
+          }
+          if (val >= radix) {
+            if (val <= 9 && bailOnError) {
+              return { n: null, pos: pos };
+            } else if (
+              val <= 9 &&
+              errors.invalidDigit(pos, lineStart, curLine, radix)
+            ) {
+              val = 0;
+            } else if (forceLen) {
+              val = 0;
+              invalid = true;
+            } else {
+              break;
+            }
+          }
+          ++pos;
+          total = total * radix + val;
+        }
+        if (pos === start || (len != null && pos - start !== len) || invalid) {
+          return { n: null, pos: pos };
+        }
+        return { n: total, pos: pos };
+      }
+      function readCodePoint(
+        input,
+        pos,
+        lineStart,
+        curLine,
+        throwOnInvalid,
+        errors
+      ) {
+        var ch = input.charCodeAt(pos);
+        var code;
+        if (ch === 123) {
+          ++pos;
+          var _readHexChar2 = readHexChar(
+            input,
+            pos,
+            lineStart,
+            curLine,
+            input.indexOf("}", pos) - pos,
+            true,
+            throwOnInvalid,
+            errors
+          );
+          code = _readHexChar2.code;
+          pos = _readHexChar2.pos;
+          ++pos;
+          if (code !== null && code > 0x10ffff) {
+            if (throwOnInvalid) {
+              errors.invalidCodePoint(pos, lineStart, curLine);
+            } else {
+              return { code: null, pos: pos };
+            }
+          }
+        } else {
+          var _readHexChar3 = readHexChar(
+            input,
+            pos,
+            lineStart,
+            curLine,
+            4,
+            false,
+            throwOnInvalid,
+            errors
+          );
+          code = _readHexChar3.code;
+          pos = _readHexChar3.pos;
+        }
+        return { code: code, pos: pos };
+      }
+      return lib$1;
     }
     var constants = {};
     Object.defineProperty(constants, "__esModule", { value: true });
@@ -7030,7 +7043,7 @@ if (process.env.NODE_ENV !== "production") {
       var _is = requireIs();
       var _isValidIdentifier = isValidIdentifier$1;
       var _helperValidatorIdentifier = lib$2;
-      var _helperStringParser = lib$1;
+      var _helperStringParser = requireLib$1();
       var _index = constants;
       var _utils = requireUtils();
       var defineType = (0, _utils.defineAliasedType)("Standardized");
@@ -42518,6 +42531,20 @@ PERFORMANCE OF THIS SOFTWARE.
             })
           ],
           [
+            "from",
+            addFunction(DEFAULT_SHAPES, [], {
+              positionalParams: [
+                Effect.ConditionallyMutate,
+                Effect.ConditionallyMutate,
+                Effect.ConditionallyMutate
+              ],
+              restParam: Effect.Read,
+              returnType: { kind: "Object", shapeId: BuiltInArrayId },
+              calleeEffect: Effect.Read,
+              returnValueKind: ValueKind.Mutable
+            })
+          ],
+          [
             "of",
             addFunction(DEFAULT_SHAPES, [], {
               positionalParams: [],
@@ -56900,7 +56927,7 @@ PERFORMANCE OF THIS SOFTWARE.
       return { kind: kind, reason: reason, context: context };
     }
     function inferBlock(env, state, block, functionEffects) {
-      var _a, _b, _c, _d;
+      var _a, _b, _c, _d, _e;
       var _iterator309 = _createForOfIteratorHelper(block.phis),
         _step309;
       try {
@@ -56949,12 +56976,40 @@ PERFORMANCE OF THIS SOFTWARE.
                       reason: new Set([ValueReason.Other]),
                       context: new Set()
                     };
-              continuation = {
-                kind: "initialize",
-                valueKind: valueKind,
-                effect: { kind: Effect.Capture, reason: ValueReason.Other },
-                lvalueEffect: Effect.Store
-              };
+              var _iterator312 = _createForOfIteratorHelper(
+                  instrValue.elements
+                ),
+                _step312;
+              try {
+                for (_iterator312.s(); !(_step312 = _iterator312.n()).done; ) {
+                  var element = _step312.value;
+                  if (element.kind === "Spread") {
+                    state.referenceAndRecordEffects(
+                      freezeActions,
+                      element.place,
+                      isArrayType(element.place.identifier)
+                        ? Effect.Capture
+                        : Effect.ConditionallyMutate,
+                      ValueReason.Other
+                    );
+                  } else if (element.kind === "Identifier") {
+                    state.referenceAndRecordEffects(
+                      freezeActions,
+                      element,
+                      Effect.Capture,
+                      ValueReason.Other
+                    );
+                  } else;
+                }
+              } catch (err) {
+                _iterator312.e(err);
+              } finally {
+                _iterator312.f();
+              }
+              state.initialize(instrValue, valueKind);
+              state.define(instr.lvalue, instrValue);
+              instr.lvalue.effect = Effect.Store;
+              continuation = { kind: "funeffects" };
               break;
             }
             case "NewExpression": {
@@ -56969,13 +57024,13 @@ PERFORMANCE OF THIS SOFTWARE.
                 Effect.Read,
                 ValueReason.Other
               );
-              var _iterator312 = _createForOfIteratorHelper(
+              var _iterator313 = _createForOfIteratorHelper(
                   eachCallArgument(instrValue.args)
                 ),
-                _step312;
+                _step313;
               try {
-                for (_iterator312.s(); !(_step312 = _iterator312.n()).done; ) {
-                  var operand = _step312.value;
+                for (_iterator313.s(); !(_step313 = _iterator313.n()).done; ) {
+                  var operand = _step313.value;
                   state.referenceAndRecordEffects(
                     freezeActions,
                     operand,
@@ -56984,9 +57039,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   );
                 }
               } catch (err) {
-                _iterator312.e(err);
+                _iterator313.e(err);
               } finally {
-                _iterator312.f();
+                _iterator313.f();
               }
               state.initialize(instrValue, _valueKind);
               state.define(instr.lvalue, instrValue);
@@ -57008,13 +57063,13 @@ PERFORMANCE OF THIS SOFTWARE.
                       reason: new Set([ValueReason.Other]),
                       context: new Set()
                     };
-              var _iterator313 = _createForOfIteratorHelper(
+              var _iterator314 = _createForOfIteratorHelper(
                   instrValue.properties
                 ),
-                _step313;
+                _step314;
               try {
-                for (_iterator313.s(); !(_step313 = _iterator313.n()).done; ) {
-                  var property = _step313.value;
+                for (_iterator314.s(); !(_step314 = _iterator314.n()).done; ) {
+                  var property = _step314.value;
                   switch (property.kind) {
                     case "ObjectProperty": {
                       if (property.key.kind === "computed") {
@@ -57051,9 +57106,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   }
                 }
               } catch (err) {
-                _iterator313.e(err);
+                _iterator314.e(err);
               } finally {
-                _iterator313.f();
+                _iterator314.f();
               }
               state.initialize(instrValue, _valueKind2);
               state.define(instr.lvalue, instrValue);
@@ -57095,17 +57150,17 @@ PERFORMANCE OF THIS SOFTWARE.
                 );
               }
               if (instrValue.children !== null) {
-                var _iterator314 = _createForOfIteratorHelper(
+                var _iterator315 = _createForOfIteratorHelper(
                     instrValue.children
                   ),
-                  _step314;
+                  _step315;
                 try {
                   for (
-                    _iterator314.s();
-                    !(_step314 = _iterator314.n()).done;
+                    _iterator315.s();
+                    !(_step315 = _iterator315.n()).done;
 
                   ) {
-                    var child = _step314.value;
+                    var child = _step315.value;
                     state.referenceAndRecordEffects(
                       freezeActions,
                       child,
@@ -57114,16 +57169,16 @@ PERFORMANCE OF THIS SOFTWARE.
                     );
                   }
                 } catch (err) {
-                  _iterator314.e(err);
+                  _iterator315.e(err);
                 } finally {
-                  _iterator314.f();
+                  _iterator315.f();
                 }
               }
-              var _iterator315 = _createForOfIteratorHelper(instrValue.props),
-                _step315;
+              var _iterator316 = _createForOfIteratorHelper(instrValue.props),
+                _step316;
               try {
-                for (_iterator315.s(); !(_step315 = _iterator315.n()).done; ) {
-                  var attr = _step315.value;
+                for (_iterator316.s(); !(_step316 = _iterator316.n()).done; ) {
+                  var attr = _step316.value;
                   if (attr.kind === "JsxSpreadAttribute") {
                     state.referenceAndRecordEffects(
                       freezeActions,
@@ -57141,9 +57196,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   }
                 }
               } catch (err) {
-                _iterator315.e(err);
+                _iterator316.e(err);
               } finally {
-                _iterator315.f();
+                _iterator316.f();
               }
               state.initialize(instrValue, {
                 kind: ValueKind.Frozen,
@@ -57241,13 +57296,13 @@ PERFORMANCE OF THIS SOFTWARE.
             case "ObjectMethod":
             case "FunctionExpression": {
               var hasMutableOperand = false;
-              var _iterator316 = _createForOfIteratorHelper(
+              var _iterator317 = _createForOfIteratorHelper(
                   eachInstructionOperand(instr)
                 ),
-                _step316;
+                _step317;
               try {
-                for (_iterator316.s(); !(_step316 = _iterator316.n()).done; ) {
-                  var _operand17 = _step316.value;
+                for (_iterator317.s(); !(_step317 = _iterator317.n()).done; ) {
+                  var _operand17 = _step317.value;
                   CompilerError.invariant(
                     _operand17.effect !== Effect.Unknown,
                     {
@@ -57268,9 +57323,9 @@ PERFORMANCE OF THIS SOFTWARE.
                     ));
                 }
               } catch (err) {
-                _iterator316.e(err);
+                _iterator317.e(err);
               } finally {
-                _iterator316.f();
+                _iterator317.f();
               }
               state.initialize(instrValue, {
                 kind: hasMutableOperand ? ValueKind.Mutable : ValueKind.Frozen,
@@ -57363,21 +57418,12 @@ PERFORMANCE OF THIS SOFTWARE.
               for (var i = 0; i < instrValue.args.length; i++) {
                 var arg = instrValue.args[i];
                 var place = arg.kind === "Identifier" ? arg : arg.place;
-                if (effects !== null) {
-                  state.referenceAndRecordEffects(
-                    freezeActions,
-                    place,
-                    effects[i],
-                    ValueReason.Other
-                  );
-                } else {
-                  state.referenceAndRecordEffects(
-                    freezeActions,
-                    place,
-                    Effect.ConditionallyMutate,
-                    ValueReason.Other
-                  );
-                }
+                state.referenceAndRecordEffects(
+                  freezeActions,
+                  place,
+                  getArgumentEffect(effects != null ? effects[i] : null, arg),
+                  ValueReason.Other
+                );
                 hasCaptureArgument ||
                   (hasCaptureArgument = place.effect === Effect.Capture);
               }
@@ -57429,7 +57475,12 @@ PERFORMANCE OF THIS SOFTWARE.
                 _signature2 !== null
                   ? {
                       kind: _signature2.returnValueKind,
-                      reason: new Set([ValueReason.Other]),
+                      reason: new Set([
+                        (_d = _signature2.returnValueReason) !== null &&
+                        _d !== void 0
+                          ? _d
+                          : ValueReason.KnownReturnSignature
+                      ]),
                       context: new Set()
                     }
                   : {
@@ -57442,15 +57493,15 @@ PERFORMANCE OF THIS SOFTWARE.
                 _signature2.mutableOnlyIfOperandsAreMutable &&
                 areArgumentsImmutableAndNonMutating(state, instrValue.args)
               ) {
-                var _iterator317 = _createForOfIteratorHelper(instrValue.args),
-                  _step317;
+                var _iterator318 = _createForOfIteratorHelper(instrValue.args),
+                  _step318;
                 try {
                   for (
-                    _iterator317.s();
-                    !(_step317 = _iterator317.n()).done;
+                    _iterator318.s();
+                    !(_step318 = _iterator318.n()).done;
 
                   ) {
-                    var _arg = _step317.value;
+                    var _arg = _step318.value;
                     var _place24 =
                       _arg.kind === "Identifier" ? _arg : _arg.place;
                     state.referenceAndRecordEffects(
@@ -57461,9 +57512,9 @@ PERFORMANCE OF THIS SOFTWARE.
                     );
                   }
                 } catch (err) {
-                  _iterator317.e(err);
+                  _iterator318.e(err);
                 } finally {
-                  _iterator317.f();
+                  _iterator318.f();
                 }
                 state.referenceAndRecordEffects(
                   freezeActions,
@@ -57489,21 +57540,15 @@ PERFORMANCE OF THIS SOFTWARE.
                 var _arg2 = instrValue.args[_i38];
                 var _place25 =
                   _arg2.kind === "Identifier" ? _arg2 : _arg2.place;
-                if (_effects2 !== null) {
-                  state.referenceAndRecordEffects(
-                    freezeActions,
-                    _place25,
-                    _effects2[_i38],
-                    ValueReason.Other
-                  );
-                } else {
-                  state.referenceAndRecordEffects(
-                    freezeActions,
-                    _place25,
-                    Effect.ConditionallyMutate,
-                    ValueReason.Other
-                  );
-                }
+                state.referenceAndRecordEffects(
+                  freezeActions,
+                  _place25,
+                  getArgumentEffect(
+                    _effects2 != null ? _effects2[_i38] : null,
+                    _arg2
+                  ),
+                  ValueReason.Other
+                );
                 _hasCaptureArgument ||
                   (_hasCaptureArgument = _place25.effect === Effect.Capture);
               }
@@ -57684,13 +57729,13 @@ PERFORMANCE OF THIS SOFTWARE.
             }
             case "StartMemoize":
             case "FinishMemoize": {
-              var _iterator318 = _createForOfIteratorHelper(
+              var _iterator319 = _createForOfIteratorHelper(
                   eachInstructionValueOperand(instrValue)
                 ),
-                _step318;
+                _step319;
               try {
-                for (_iterator318.s(); !(_step318 = _iterator318.n()).done; ) {
-                  var val = _step318.value;
+                for (_iterator319.s(); !(_step319 = _iterator319.n()).done; ) {
+                  var val = _step319.value;
                   if (env.config.enablePreserveExistingMemoizationGuarantees) {
                     state.referenceAndRecordEffects(
                       freezeActions,
@@ -57708,9 +57753,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   }
                 }
               } catch (err) {
-                _iterator318.e(err);
+                _iterator319.e(err);
               } finally {
-                _iterator318.f();
+                _iterator319.f();
               }
               var _lvalue14 = instr.lvalue;
               _lvalue14.effect = Effect.ConditionallyMutate;
@@ -57855,13 +57900,13 @@ PERFORMANCE OF THIS SOFTWARE.
             }
             case "Destructure": {
               var _effect4 = Effect.Capture;
-              var _iterator319 = _createForOfIteratorHelper(
+              var _iterator320 = _createForOfIteratorHelper(
                   eachPatternOperand(instrValue.lvalue.pattern)
                 ),
-                _step319;
+                _step320;
               try {
-                for (_iterator319.s(); !(_step319 = _iterator319.n()).done; ) {
-                  var _place26 = _step319.value;
+                for (_iterator320.s(); !(_step320 = _iterator320.n()).done; ) {
+                  var _place26 = _step320.value;
                   if (
                     state.isDefined(_place26) &&
                     state.kind(_place26).kind === ValueKind.Context
@@ -57871,9 +57916,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   }
                 }
               } catch (err) {
-                _iterator319.e(err);
+                _iterator320.e(err);
               } finally {
-                _iterator319.f();
+                _iterator320.f();
               }
               state.referenceAndRecordEffects(
                 freezeActions,
@@ -57884,20 +57929,20 @@ PERFORMANCE OF THIS SOFTWARE.
               var _lvalue21 = instr.lvalue;
               state.alias(_lvalue21, instrValue.value);
               _lvalue21.effect = Effect.Store;
-              var _iterator320 = _createForOfIteratorHelper(
+              var _iterator321 = _createForOfIteratorHelper(
                   eachPatternOperand(instrValue.lvalue.pattern)
                 ),
-                _step320;
+                _step321;
               try {
-                for (_iterator320.s(); !(_step320 = _iterator320.n()).done; ) {
-                  var _place27 = _step320.value;
+                for (_iterator321.s(); !(_step321 = _iterator321.n()).done; ) {
+                  var _place27 = _step321.value;
                   state.alias(_place27, instrValue.value);
                   _place27.effect = Effect.Store;
                 }
               } catch (err) {
-                _iterator320.e(err);
+                _iterator321.e(err);
               } finally {
-                _iterator320.f();
+                _iterator321.f();
               }
               continuation = { kind: "funeffects" };
               break;
@@ -57967,13 +58012,13 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
           if (continuation.kind === "initialize") {
-            var _iterator321 = _createForOfIteratorHelper(
+            var _iterator322 = _createForOfIteratorHelper(
                 eachInstructionOperand(instr)
               ),
-              _step321;
+              _step322;
             try {
-              for (_iterator321.s(); !(_step321 = _iterator321.n()).done; ) {
-                var _operand18 = _step321.value;
+              for (_iterator322.s(); !(_step322 = _iterator322.n()).done; ) {
+                var _operand18 = _step322.value;
                 CompilerError.invariant(continuation.effect != null, {
                   reason:
                     "effectKind must be set for instruction value `".concat(
@@ -57992,15 +58037,15 @@ PERFORMANCE OF THIS SOFTWARE.
                 );
               }
             } catch (err) {
-              _iterator321.e(err);
+              _iterator322.e(err);
             } finally {
-              _iterator321.f();
+              _iterator322.f();
             }
             state.initialize(instrValue, continuation.valueKind);
             state.define(instr.lvalue, instrValue);
             instr.lvalue.effect =
-              (_d = continuation.lvalueEffect) !== null && _d !== void 0
-                ? _d
+              (_e = continuation.lvalueEffect) !== null && _e !== void 0
+                ? _e
                 : defaultLvalueEffect;
           }
           functionEffects.push.apply(
@@ -58068,13 +58113,13 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function getContextRefOperand(state, instrValue) {
       var result = [];
-      var _iterator322 = _createForOfIteratorHelper(
+      var _iterator323 = _createForOfIteratorHelper(
           eachInstructionValueOperand(instrValue)
         ),
-        _step322;
+        _step323;
       try {
-        for (_iterator322.s(); !(_step322 = _iterator322.n()).done; ) {
-          var place = _step322.value;
+        for (_iterator323.s(); !(_step323 = _iterator323.n()).done; ) {
+          var place = _step323.value;
           if (
             state.isDefined(place) &&
             state.kind(place).kind === ValueKind.Context
@@ -58083,9 +58128,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator322.e(err);
+        _iterator323.e(err);
       } finally {
-        _iterator322.f();
+        _iterator323.f();
       }
       return result;
     }
@@ -58114,11 +58159,11 @@ PERFORMANCE OF THIS SOFTWARE.
       return results;
     }
     function areArgumentsImmutableAndNonMutating(state, args) {
-      var _iterator323 = _createForOfIteratorHelper(args),
-        _step323;
+      var _iterator324 = _createForOfIteratorHelper(args),
+        _step324;
       try {
-        for (_iterator323.s(); !(_step323 = _iterator323.n()).done; ) {
-          var arg = _step323.value;
+        for (_iterator324.s(); !(_step324 = _iterator324.n()).done; ) {
+          var arg = _step324.value;
           var place = arg.kind === "Identifier" ? arg : arg.place;
           var kind = state.kind(place).kind;
           switch (kind) {
@@ -58132,11 +58177,11 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
           var values = state.values(place);
-          var _iterator324 = _createForOfIteratorHelper(values),
-            _step324;
+          var _iterator325 = _createForOfIteratorHelper(values),
+            _step325;
           try {
-            for (_iterator324.s(); !(_step324 = _iterator324.n()).done; ) {
-              var value = _step324.value;
+            for (_iterator325.s(); !(_step325 = _iterator325.n()).done; ) {
+              var value = _step325.value;
               if (
                 value.kind === "FunctionExpression" &&
                 value.loweredFunc.func.params.some(function (param) {
@@ -58149,25 +58194,47 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator324.e(err);
+            _iterator325.e(err);
           } finally {
-            _iterator324.f();
+            _iterator325.f();
           }
         }
       } catch (err) {
-        _iterator323.e(err);
+        _iterator324.e(err);
       } finally {
-        _iterator323.f();
+        _iterator324.f();
       }
       return true;
     }
+    function getArgumentEffect(signatureEffect, arg) {
+      if (signatureEffect != null) {
+        if (arg.kind === "Identifier") {
+          return signatureEffect;
+        } else if (
+          signatureEffect === Effect.Mutate ||
+          signatureEffect === Effect.ConditionallyMutate
+        ) {
+          return signatureEffect;
+        } else {
+          if (signatureEffect === Effect.Freeze) {
+            CompilerError.throwTodo({
+              reason: "Support spread syntax for hook arguments",
+              loc: arg.place.loc
+            });
+          }
+          return Effect.ConditionallyMutate;
+        }
+      } else {
+        return Effect.ConditionallyMutate;
+      }
+    }
     function pruneNonEscapingScopes(fn) {
       var state = new State(fn.env);
-      var _iterator325 = _createForOfIteratorHelper(fn.params),
-        _step325;
+      var _iterator326 = _createForOfIteratorHelper(fn.params),
+        _step326;
       try {
-        for (_iterator325.s(); !(_step325 = _iterator325.n()).done; ) {
-          var param = _step325.value;
+        for (_iterator326.s(); !(_step326 = _iterator326.n()).done; ) {
+          var param = _step326.value;
           if (param.kind === "Identifier") {
             state.declare(param.identifier.declarationId);
           } else {
@@ -58175,9 +58242,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator325.e(err);
+        _iterator326.e(err);
       } finally {
-        _iterator325.f();
+        _iterator326.f();
       }
       visitReactiveFunction(fn, new CollectDependenciesVisitor(fn.env), state);
       var memoized = computeMemoizedIdentifiers(state);
@@ -58286,18 +58353,18 @@ PERFORMANCE OF THIS SOFTWARE.
         node.seen = true;
         node.memoized = false;
         var hasMemoizedDependency = false;
-        var _iterator326 = _createForOfIteratorHelper(node.dependencies),
-          _step326;
+        var _iterator327 = _createForOfIteratorHelper(node.dependencies),
+          _step327;
         try {
-          for (_iterator326.s(); !(_step326 = _iterator326.n()).done; ) {
-            var dep = _step326.value;
+          for (_iterator327.s(); !(_step327 = _iterator327.n()).done; ) {
+            var dep = _step327.value;
             var isDepMemoized = visit(dep);
             hasMemoizedDependency || (hasMemoizedDependency = isDepMemoized);
           }
         } catch (err) {
-          _iterator326.e(err);
+          _iterator327.e(err);
         } finally {
-          _iterator326.f();
+          _iterator327.f();
         }
         if (
           node.level === MemoizationLevel.Memoized ||
@@ -58307,17 +58374,17 @@ PERFORMANCE OF THIS SOFTWARE.
         ) {
           node.memoized = true;
           memoized.add(id);
-          var _iterator327 = _createForOfIteratorHelper(node.scopes),
-            _step327;
+          var _iterator328 = _createForOfIteratorHelper(node.scopes),
+            _step328;
           try {
-            for (_iterator327.s(); !(_step327 = _iterator327.n()).done; ) {
-              var scope = _step327.value;
+            for (_iterator328.s(); !(_step328 = _iterator328.n()).done; ) {
+              var scope = _step328.value;
               forceMemoizeScopeDependencies(scope);
             }
           } catch (err) {
-            _iterator327.e(err);
+            _iterator328.e(err);
           } finally {
-            _iterator327.f();
+            _iterator328.f();
           }
         }
         return node.memoized;
@@ -58334,31 +58401,31 @@ PERFORMANCE OF THIS SOFTWARE.
           return;
         }
         node.seen = true;
-        var _iterator328 = _createForOfIteratorHelper(node.dependencies),
-          _step328;
+        var _iterator329 = _createForOfIteratorHelper(node.dependencies),
+          _step329;
         try {
-          for (_iterator328.s(); !(_step328 = _iterator328.n()).done; ) {
-            var dep = _step328.value;
+          for (_iterator329.s(); !(_step329 = _iterator329.n()).done; ) {
+            var dep = _step329.value;
             visit(dep, true);
           }
         } catch (err) {
-          _iterator328.e(err);
+          _iterator329.e(err);
         } finally {
-          _iterator328.f();
+          _iterator329.f();
         }
         return;
       }
-      var _iterator329 = _createForOfIteratorHelper(state.escapingValues),
-        _step329;
+      var _iterator330 = _createForOfIteratorHelper(state.escapingValues),
+        _step330;
       try {
-        for (_iterator329.s(); !(_step329 = _iterator329.n()).done; ) {
-          var value = _step329.value;
+        for (_iterator330.s(); !(_step330 = _iterator330.n()).done; ) {
+          var value = _step330.value;
           visit(value);
         }
       } catch (err) {
-        _iterator329.e(err);
+        _iterator330.e(err);
       } finally {
-        _iterator329.f();
+        _iterator330.f();
       }
       return memoized;
     }
@@ -58414,11 +58481,11 @@ PERFORMANCE OF THIS SOFTWARE.
           if (value.tag.kind === "Identifier") {
             operands.push(value.tag);
           }
-          var _iterator330 = _createForOfIteratorHelper(value.props),
-            _step330;
+          var _iterator331 = _createForOfIteratorHelper(value.props),
+            _step331;
           try {
-            for (_iterator330.s(); !(_step330 = _iterator330.n()).done; ) {
-              var prop = _step330.value;
+            for (_iterator331.s(); !(_step331 = _iterator331.n()).done; ) {
+              var prop = _step331.value;
               if (prop.kind === "JsxAttribute") {
                 operands.push(prop.place);
               } else {
@@ -58426,22 +58493,22 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator330.e(err);
+            _iterator331.e(err);
           } finally {
-            _iterator330.f();
+            _iterator331.f();
           }
           if (value.children !== null) {
-            var _iterator331 = _createForOfIteratorHelper(value.children),
-              _step331;
+            var _iterator332 = _createForOfIteratorHelper(value.children),
+              _step332;
             try {
-              for (_iterator331.s(); !(_step331 = _iterator331.n()).done; ) {
-                var child = _step331.value;
+              for (_iterator332.s(); !(_step332 = _iterator332.n()).done; ) {
+                var child = _step332.value;
                 operands.push(child);
               }
             } catch (err) {
-              _iterator331.e(err);
+              _iterator332.e(err);
             } finally {
-              _iterator331.f();
+              _iterator332.f();
             }
           }
           var level = options.memoizeJsxElements
@@ -58789,11 +58856,11 @@ PERFORMANCE OF THIS SOFTWARE.
       var lvalues = [];
       switch (pattern.kind) {
         case "ArrayPattern": {
-          var _iterator332 = _createForOfIteratorHelper(pattern.items),
-            _step332;
+          var _iterator333 = _createForOfIteratorHelper(pattern.items),
+            _step333;
           try {
-            for (_iterator332.s(); !(_step332 = _iterator332.n()).done; ) {
-              var item = _step332.value;
+            for (_iterator333.s(); !(_step333 = _iterator333.n()).done; ) {
+              var item = _step333.value;
               if (item.kind === "Identifier") {
                 lvalues.push({
                   place: item,
@@ -58807,18 +58874,18 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator332.e(err);
+            _iterator333.e(err);
           } finally {
-            _iterator332.f();
+            _iterator333.f();
           }
           break;
         }
         case "ObjectPattern": {
-          var _iterator333 = _createForOfIteratorHelper(pattern.properties),
-            _step333;
+          var _iterator334 = _createForOfIteratorHelper(pattern.properties),
+            _step334;
           try {
-            for (_iterator333.s(); !(_step333 = _iterator333.n()).done; ) {
-              var property = _step333.value;
+            for (_iterator334.s(); !(_step334 = _iterator334.n()).done; ) {
+              var property = _step334.value;
               if (property.kind === "ObjectProperty") {
                 lvalues.push({
                   place: property.place,
@@ -58832,9 +58899,9 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator333.e(err);
+            _iterator334.e(err);
           } finally {
-            _iterator333.f();
+            _iterator334.f();
           }
           break;
         }
@@ -58874,11 +58941,11 @@ PERFORMANCE OF THIS SOFTWARE.
               instruction.lvalue,
               this.options
             );
-            var _iterator334 = _createForOfIteratorHelper(aliasing.rvalues),
-              _step334;
+            var _iterator335 = _createForOfIteratorHelper(aliasing.rvalues),
+              _step335;
             try {
-              for (_iterator334.s(); !(_step334 = _iterator334.n()).done; ) {
-                var _operand20 = _step334.value;
+              for (_iterator335.s(); !(_step335 = _iterator335.n()).done; ) {
+                var _operand20 = _step335.value;
                 var operandId =
                   (_a = state.definitions.get(
                     _operand20.identifier.declarationId
@@ -58888,17 +58955,17 @@ PERFORMANCE OF THIS SOFTWARE.
                 state.visitOperand(instruction.id, _operand20, operandId);
               }
             } catch (err) {
-              _iterator334.e(err);
+              _iterator335.e(err);
             } finally {
-              _iterator334.f();
+              _iterator335.f();
             }
-            var _iterator335 = _createForOfIteratorHelper(aliasing.lvalues),
-              _step335;
+            var _iterator336 = _createForOfIteratorHelper(aliasing.lvalues),
+              _step336;
             try {
-              for (_iterator335.s(); !(_step335 = _iterator335.n()).done; ) {
-                var _step335$value = _step335.value,
-                  lvalue = _step335$value.place,
-                  level = _step335$value.level;
+              for (_iterator336.s(); !(_step336 = _iterator336.n()).done; ) {
+                var _step336$value = _step336.value,
+                  lvalue = _step336$value.place,
+                  level = _step336$value.level;
                 var lvalueId =
                   (_b = state.definitions.get(
                     lvalue.identifier.declarationId
@@ -58917,15 +58984,15 @@ PERFORMANCE OF THIS SOFTWARE.
                   state.identifiers.set(lvalueId, _node12);
                 }
                 _node12.level = joinAliases(_node12.level, level);
-                var _iterator337 = _createForOfIteratorHelper(aliasing.rvalues),
-                  _step337;
+                var _iterator338 = _createForOfIteratorHelper(aliasing.rvalues),
+                  _step338;
                 try {
                   for (
-                    _iterator337.s();
-                    !(_step337 = _iterator337.n()).done;
+                    _iterator338.s();
+                    !(_step338 = _iterator338.n()).done;
 
                   ) {
-                    var _operand21 = _step337.value;
+                    var _operand21 = _step338.value;
                     var _operandId =
                       (_c = state.definitions.get(
                         _operand21.identifier.declarationId
@@ -58938,16 +59005,16 @@ PERFORMANCE OF THIS SOFTWARE.
                     _node12.dependencies.add(_operandId);
                   }
                 } catch (err) {
-                  _iterator337.e(err);
+                  _iterator338.e(err);
                 } finally {
-                  _iterator337.f();
+                  _iterator338.f();
                 }
                 state.visitOperand(instruction.id, lvalue, lvalueId);
               }
             } catch (err) {
-              _iterator335.e(err);
+              _iterator336.e(err);
             } finally {
-              _iterator335.f();
+              _iterator336.f();
             }
             if (
               instruction.value.kind === "LoadLocal" &&
@@ -58973,25 +59040,25 @@ PERFORMANCE OF THIS SOFTWARE.
                 if (signature && signature.noAlias === true) {
                   return;
                 }
-                var _iterator336 = _createForOfIteratorHelper(
+                var _iterator337 = _createForOfIteratorHelper(
                     instruction.value.args
                   ),
-                  _step336;
+                  _step337;
                 try {
                   for (
-                    _iterator336.s();
-                    !(_step336 = _iterator336.n()).done;
+                    _iterator337.s();
+                    !(_step337 = _iterator337.n()).done;
 
                   ) {
-                    var operand = _step336.value;
+                    var operand = _step337.value;
                     var place =
                       operand.kind === "Spread" ? operand.place : operand;
                     state.escapingValues.add(place.identifier.declarationId);
                   }
                 } catch (err) {
-                  _iterator336.e(err);
+                  _iterator337.e(err);
                 } finally {
-                  _iterator336.f();
+                  _iterator337.f();
                 }
               }
             }
@@ -59123,15 +59190,15 @@ PERFORMANCE OF THIS SOFTWARE.
           key: "visitPrunedScope",
           value: function visitPrunedScope(scopeBlock, state) {
             this.traversePrunedScope(scopeBlock, state);
-            var _iterator338 = _createForOfIteratorHelper(
+            var _iterator339 = _createForOfIteratorHelper(
                 scopeBlock.scope.declarations
               ),
-              _step338;
+              _step339;
             try {
-              for (_iterator338.s(); !(_step338 = _iterator338.n()).done; ) {
-                var _step338$value = _slicedToArray(_step338.value, 2),
-                  id = _step338$value[0],
-                  decl = _step338$value[1];
+              for (_iterator339.s(); !(_step339 = _iterator339.n()).done; ) {
+                var _step339$value = _slicedToArray(_step339.value, 2),
+                  id = _step339$value[0],
+                  decl = _step339$value[1];
                 if (
                   !isPrimitiveType(decl.identifier) &&
                   !isStableRefType(decl.identifier, state)
@@ -59140,9 +59207,9 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator338.e(err);
+              _iterator339.e(err);
             } finally {
-              _iterator338.f();
+              _iterator339.f();
             }
           }
         }
@@ -59194,26 +59261,26 @@ PERFORMANCE OF THIS SOFTWARE.
               }
               case "Destructure": {
                 if (state.has(value.value.identifier.id)) {
-                  var _iterator339 = _createForOfIteratorHelper(
+                  var _iterator340 = _createForOfIteratorHelper(
                       eachPatternOperand(value.lvalue.pattern)
                     ),
-                    _step339;
+                    _step340;
                   try {
                     for (
-                      _iterator339.s();
-                      !(_step339 = _iterator339.n()).done;
+                      _iterator340.s();
+                      !(_step340 = _iterator340.n()).done;
 
                     ) {
-                      var _lvalue22 = _step339.value;
+                      var _lvalue22 = _step340.value;
                       if (isStableType(_lvalue22.identifier)) {
                         continue;
                       }
                       state.add(_lvalue22.identifier.id);
                     }
                   } catch (err) {
-                    _iterator339.e(err);
+                    _iterator340.e(err);
                   } finally {
-                    _iterator339.f();
+                    _iterator340.f();
                   }
                   if (lvalue !== null) {
                     state.add(lvalue.identifier.id);
@@ -59248,52 +59315,52 @@ PERFORMANCE OF THIS SOFTWARE.
           key: "visitScope",
           value: function visitScope(scopeBlock, state) {
             this.traverseScope(scopeBlock, state);
-            var _iterator340 = _createForOfIteratorHelper(
+            var _iterator341 = _createForOfIteratorHelper(
                 scopeBlock.scope.dependencies
               ),
-              _step340;
+              _step341;
             try {
-              for (_iterator340.s(); !(_step340 = _iterator340.n()).done; ) {
-                var dep = _step340.value;
+              for (_iterator341.s(); !(_step341 = _iterator341.n()).done; ) {
+                var dep = _step341.value;
                 var isReactive = state.has(dep.identifier.id);
                 if (!isReactive) {
                   scopeBlock.scope.dependencies["delete"](dep);
                 }
               }
             } catch (err) {
-              _iterator340.e(err);
+              _iterator341.e(err);
             } finally {
-              _iterator340.f();
+              _iterator341.f();
             }
             if (scopeBlock.scope.dependencies.size !== 0) {
-              var _iterator341 = _createForOfIteratorHelper(
-                  scopeBlock.scope.declarations
-                ),
-                _step341;
-              try {
-                for (_iterator341.s(); !(_step341 = _iterator341.n()).done; ) {
-                  var _step341$value = _slicedToArray(_step341.value, 2),
-                    declaration = _step341$value[1];
-                  state.add(declaration.identifier.id);
-                }
-              } catch (err) {
-                _iterator341.e(err);
-              } finally {
-                _iterator341.f();
-              }
               var _iterator342 = _createForOfIteratorHelper(
-                  scopeBlock.scope.reassignments
+                  scopeBlock.scope.declarations
                 ),
                 _step342;
               try {
                 for (_iterator342.s(); !(_step342 = _iterator342.n()).done; ) {
-                  var reassignment = _step342.value;
-                  state.add(reassignment.id);
+                  var _step342$value = _slicedToArray(_step342.value, 2),
+                    declaration = _step342$value[1];
+                  state.add(declaration.identifier.id);
                 }
               } catch (err) {
                 _iterator342.e(err);
               } finally {
                 _iterator342.f();
+              }
+              var _iterator343 = _createForOfIteratorHelper(
+                  scopeBlock.scope.reassignments
+                ),
+                _step343;
+              try {
+                for (_iterator343.s(); !(_step343 = _iterator343.n()).done; ) {
+                  var reassignment = _step343.value;
+                  state.add(reassignment.id);
+                }
+              } catch (err) {
+                _iterator343.e(err);
+              } finally {
+                _iterator343.f();
               }
             }
           }
@@ -59303,18 +59370,18 @@ PERFORMANCE OF THIS SOFTWARE.
     function pruneUnusedLValues(fn) {
       var lvalues = new Map();
       visitReactiveFunction(fn, new Visitor$5(), lvalues);
-      var _iterator343 = _createForOfIteratorHelper(lvalues),
-        _step343;
+      var _iterator344 = _createForOfIteratorHelper(lvalues),
+        _step344;
       try {
-        for (_iterator343.s(); !(_step343 = _iterator343.n()).done; ) {
-          var _step343$value = _slicedToArray(_step343.value, 2),
-            instr = _step343$value[1];
+        for (_iterator344.s(); !(_step344 = _iterator344.n()).done; ) {
+          var _step344$value = _slicedToArray(_step344.value, 2),
+            instr = _step344$value[1];
           instr.lvalue = null;
         }
       } catch (err) {
-        _iterator343.e(err);
+        _iterator344.e(err);
       } finally {
-        _iterator343.f();
+        _iterator344.f();
       }
     }
     var Visitor$5 = /*#__PURE__*/ (function (_ReactiveFunctionVisi14) {
@@ -59441,21 +59508,21 @@ PERFORMANCE OF THIS SOFTWARE.
       ]);
     })(ReactiveFunctionTransform);
     function hasOwnDeclaration(block) {
-      var _iterator344 = _createForOfIteratorHelper(
+      var _iterator345 = _createForOfIteratorHelper(
           block.scope.declarations.values()
         ),
-        _step344;
+        _step345;
       try {
-        for (_iterator344.s(); !(_step344 = _iterator344.n()).done; ) {
-          var declaration = _step344.value;
+        for (_iterator345.s(); !(_step345 = _iterator345.n()).done; ) {
+          var declaration = _step345.value;
           if (declaration.scope.id === block.scope.id) {
             return true;
           }
         }
       } catch (err) {
-        _iterator344.e(err);
+        _iterator345.e(err);
       } finally {
-        _iterator344.f();
+        _iterator345.f();
       }
       return false;
     }
@@ -59513,11 +59580,11 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function renameVariablesImpl(fn, visitor, scopes) {
       scopes.enter(function () {
-        var _iterator345 = _createForOfIteratorHelper(fn.params),
-          _step345;
+        var _iterator346 = _createForOfIteratorHelper(fn.params),
+          _step346;
         try {
-          for (_iterator345.s(); !(_step345 = _iterator345.n()).done; ) {
-            var param = _step345.value;
+          for (_iterator346.s(); !(_step346 = _iterator346.n()).done; ) {
+            var param = _step346.value;
             if (param.kind === "Identifier") {
               scopes.visit(param.identifier);
             } else {
@@ -59525,9 +59592,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator345.e(err);
+          _iterator346.e(err);
         } finally {
-          _iterator345.f();
+          _iterator346.f();
         }
         visitReactiveFunction(fn, visitor, scopes);
       });
@@ -59575,21 +59642,21 @@ PERFORMANCE OF THIS SOFTWARE.
         {
           key: "visitScope",
           value: function visitScope(scope, state) {
-            var _iterator346 = _createForOfIteratorHelper(
+            var _iterator347 = _createForOfIteratorHelper(
                 scope.scope.declarations
               ),
-              _step346;
+              _step347;
             try {
-              for (_iterator346.s(); !(_step346 = _iterator346.n()).done; ) {
-                var _step346$value = _slicedToArray(_step346.value, 2),
-                  _ = _step346$value[0],
-                  declaration = _step346$value[1];
+              for (_iterator347.s(); !(_step347 = _iterator347.n()).done; ) {
+                var _step347$value = _slicedToArray(_step347.value, 2),
+                  _ = _step347$value[0],
+                  declaration = _step347$value[1];
                 state.visit(declaration.identifier);
               }
             } catch (err) {
-              _iterator346.e(err);
+              _iterator347.e(err);
             } finally {
-              _iterator346.f();
+              _iterator347.f();
             }
             this.traverseScope(scope, state);
           }
@@ -59721,17 +59788,17 @@ PERFORMANCE OF THIS SOFTWARE.
       var referenced = new Set();
       visitReactiveFunction(fn, new CollectReferencedLabels(), referenced);
       var mappings = new Map();
-      var _iterator347 = _createForOfIteratorHelper(referenced),
-        _step347;
+      var _iterator348 = _createForOfIteratorHelper(referenced),
+        _step348;
       try {
-        for (_iterator347.s(); !(_step347 = _iterator347.n()).done; ) {
-          var blockId = _step347.value;
+        for (_iterator348.s(); !(_step348 = _iterator348.n()).done; ) {
+          var blockId = _step348.value;
           mappings.set(blockId, makeBlockId(mappings.size));
         }
       } catch (err) {
-        _iterator347.e(err);
+        _iterator348.e(err);
       } finally {
-        _iterator347.f();
+        _iterator348.f();
       }
       visitReactiveFunction(fn, new RewriteBlockIds(), mappings);
     }
@@ -59816,30 +59883,30 @@ PERFORMANCE OF THIS SOFTWARE.
     })(ReactiveFunctionVisitor);
     function inferAliases(func) {
       var aliases = new DisjointSet();
-      var _iterator348 = _createForOfIteratorHelper(func.body.blocks),
-        _step348;
+      var _iterator349 = _createForOfIteratorHelper(func.body.blocks),
+        _step349;
       try {
-        for (_iterator348.s(); !(_step348 = _iterator348.n()).done; ) {
-          var _step348$value = _slicedToArray(_step348.value, 2),
-            _ = _step348$value[0],
-            block = _step348$value[1];
-          var _iterator349 = _createForOfIteratorHelper(block.instructions),
-            _step349;
+        for (_iterator349.s(); !(_step349 = _iterator349.n()).done; ) {
+          var _step349$value = _slicedToArray(_step349.value, 2),
+            _ = _step349$value[0],
+            block = _step349$value[1];
+          var _iterator350 = _createForOfIteratorHelper(block.instructions),
+            _step350;
           try {
-            for (_iterator349.s(); !(_step349 = _iterator349.n()).done; ) {
-              var instr = _step349.value;
+            for (_iterator350.s(); !(_step350 = _iterator350.n()).done; ) {
+              var instr = _step350.value;
               inferInstr(instr, aliases);
             }
           } catch (err) {
-            _iterator349.e(err);
+            _iterator350.e(err);
           } finally {
-            _iterator349.f();
+            _iterator350.f();
           }
         }
       } catch (err) {
-        _iterator348.e(err);
+        _iterator349.e(err);
       } finally {
-        _iterator348.f();
+        _iterator349.f();
       }
       return aliases;
     }
@@ -59881,18 +59948,18 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function inferAliasForPhis(func, aliases) {
       var _a, _b;
-      var _iterator350 = _createForOfIteratorHelper(func.body.blocks),
-        _step350;
+      var _iterator351 = _createForOfIteratorHelper(func.body.blocks),
+        _step351;
       try {
-        for (_iterator350.s(); !(_step350 = _iterator350.n()).done; ) {
-          var _step350$value = _slicedToArray(_step350.value, 2),
-            _ = _step350$value[0],
-            block = _step350$value[1];
-          var _iterator351 = _createForOfIteratorHelper(block.phis),
-            _step351;
+        for (_iterator351.s(); !(_step351 = _iterator351.n()).done; ) {
+          var _step351$value = _slicedToArray(_step351.value, 2),
+            _ = _step351$value[0],
+            block = _step351$value[1];
+          var _iterator352 = _createForOfIteratorHelper(block.phis),
+            _step352;
           try {
-            for (_iterator351.s(); !(_step351 = _iterator351.n()).done; ) {
-              var phi = _step351.value;
+            for (_iterator352.s(); !(_step352 = _iterator352.n()).done; ) {
+              var phi = _step352.value;
               var isPhiMutatedAfterCreation =
                 phi.place.identifier.mutableRange.end >
                 ((_b =
@@ -59902,50 +59969,50 @@ PERFORMANCE OF THIS SOFTWARE.
                   ? _b
                   : block.terminal.id);
               if (isPhiMutatedAfterCreation) {
-                var _iterator352 = _createForOfIteratorHelper(phi.operands),
-                  _step352;
+                var _iterator353 = _createForOfIteratorHelper(phi.operands),
+                  _step353;
                 try {
                   for (
-                    _iterator352.s();
-                    !(_step352 = _iterator352.n()).done;
+                    _iterator353.s();
+                    !(_step353 = _iterator353.n()).done;
 
                   ) {
-                    var _step352$value = _slicedToArray(_step352.value, 2),
-                      operand = _step352$value[1];
+                    var _step353$value = _slicedToArray(_step353.value, 2),
+                      operand = _step353$value[1];
                     aliases.union([phi.place.identifier, operand.identifier]);
                   }
                 } catch (err) {
-                  _iterator352.e(err);
+                  _iterator353.e(err);
                 } finally {
-                  _iterator352.f();
+                  _iterator353.f();
                 }
               }
             }
           } catch (err) {
-            _iterator351.e(err);
+            _iterator352.e(err);
           } finally {
-            _iterator351.f();
+            _iterator352.f();
           }
         }
       } catch (err) {
-        _iterator350.e(err);
+        _iterator351.e(err);
       } finally {
-        _iterator350.f();
+        _iterator351.f();
       }
     }
     function inferAliasForStores(func, aliases) {
-      var _iterator353 = _createForOfIteratorHelper(func.body.blocks),
-        _step353;
+      var _iterator354 = _createForOfIteratorHelper(func.body.blocks),
+        _step354;
       try {
-        for (_iterator353.s(); !(_step353 = _iterator353.n()).done; ) {
-          var _step353$value = _slicedToArray(_step353.value, 2),
-            _ = _step353$value[0],
-            block = _step353$value[1];
-          var _iterator354 = _createForOfIteratorHelper(block.instructions),
-            _step354;
+        for (_iterator354.s(); !(_step354 = _iterator354.n()).done; ) {
+          var _step354$value = _slicedToArray(_step354.value, 2),
+            _ = _step354$value[0],
+            block = _step354$value[1];
+          var _iterator355 = _createForOfIteratorHelper(block.instructions),
+            _step355;
           try {
-            for (_iterator354.s(); !(_step354 = _iterator354.n()).done; ) {
-              var instr = _step354.value;
+            for (_iterator355.s(); !(_step355 = _iterator355.n()).done; ) {
+              var instr = _step355.value;
               var value = instr.value,
                 lvalue = instr.lvalue;
               var isStore =
@@ -59958,27 +60025,27 @@ PERFORMANCE OF THIS SOFTWARE.
               if (!isStore) {
                 continue;
               }
-              var _iterator355 = _createForOfIteratorHelper(
-                  eachInstructionLValue(instr)
-                ),
-                _step355;
-              try {
-                for (_iterator355.s(); !(_step355 = _iterator355.n()).done; ) {
-                  var operand = _step355.value;
-                  maybeAlias(aliases, lvalue, operand, instr.id);
-                }
-              } catch (err) {
-                _iterator355.e(err);
-              } finally {
-                _iterator355.f();
-              }
               var _iterator356 = _createForOfIteratorHelper(
-                  eachInstructionValueOperand(value)
+                  eachInstructionLValue(instr)
                 ),
                 _step356;
               try {
                 for (_iterator356.s(); !(_step356 = _iterator356.n()).done; ) {
-                  var _operand22 = _step356.value;
+                  var operand = _step356.value;
+                  maybeAlias(aliases, lvalue, operand, instr.id);
+                }
+              } catch (err) {
+                _iterator356.e(err);
+              } finally {
+                _iterator356.f();
+              }
+              var _iterator357 = _createForOfIteratorHelper(
+                  eachInstructionValueOperand(value)
+                ),
+                _step357;
+              try {
+                for (_iterator357.s(); !(_step357 = _iterator357.n()).done; ) {
+                  var _operand22 = _step357.value;
                   if (
                     _operand22.effect === Effect.Capture ||
                     _operand22.effect === Effect.Store
@@ -59987,21 +60054,21 @@ PERFORMANCE OF THIS SOFTWARE.
                   }
                 }
               } catch (err) {
-                _iterator356.e(err);
+                _iterator357.e(err);
               } finally {
-                _iterator356.f();
+                _iterator357.f();
               }
             }
           } catch (err) {
-            _iterator354.e(err);
+            _iterator355.e(err);
           } finally {
-            _iterator354.f();
+            _iterator355.f();
           }
         }
       } catch (err) {
-        _iterator353.e(err);
+        _iterator354.e(err);
       } finally {
-        _iterator353.f();
+        _iterator354.f();
       }
     }
     function maybeAlias(aliases, lvalue, rvalue, id) {
@@ -60048,18 +60115,18 @@ PERFORMANCE OF THIS SOFTWARE.
     function inferMutableLifetimes(func, inferMutableRangeForStores) {
       var _a, _b;
       var contextVariableDeclarationInstructions = new Map();
-      var _iterator357 = _createForOfIteratorHelper(func.body.blocks),
-        _step357;
+      var _iterator358 = _createForOfIteratorHelper(func.body.blocks),
+        _step358;
       try {
-        for (_iterator357.s(); !(_step357 = _iterator357.n()).done; ) {
-          var _step357$value = _slicedToArray(_step357.value, 2),
-            _ = _step357$value[0],
-            block = _step357$value[1];
-          var _iterator358 = _createForOfIteratorHelper(block.phis),
-            _step358;
+        for (_iterator358.s(); !(_step358 = _iterator358.n()).done; ) {
+          var _step358$value = _slicedToArray(_step358.value, 2),
+            _ = _step358$value[0],
+            block = _step358$value[1];
+          var _iterator359 = _createForOfIteratorHelper(block.phis),
+            _step359;
           try {
-            for (_iterator358.s(); !(_step358 = _iterator358.n()).done; ) {
-              var phi = _step358.value;
+            for (_iterator359.s(); !(_step359 = _iterator359.n()).done; ) {
+              var phi = _step359.value;
               var isPhiMutatedAfterCreation =
                 phi.place.identifier.mutableRange.end >
                 ((_b =
@@ -60073,16 +60140,16 @@ PERFORMANCE OF THIS SOFTWARE.
                 isPhiMutatedAfterCreation &&
                 phi.place.identifier.mutableRange.start === 0
               ) {
-                var _iterator361 = _createForOfIteratorHelper(phi.operands),
-                  _step361;
+                var _iterator362 = _createForOfIteratorHelper(phi.operands),
+                  _step362;
                 try {
                   for (
-                    _iterator361.s();
-                    !(_step361 = _iterator361.n()).done;
+                    _iterator362.s();
+                    !(_step362 = _iterator362.n()).done;
 
                   ) {
-                    var _step361$value = _slicedToArray(_step361.value, 2),
-                      operand = _step361$value[1];
+                    var _step362$value = _slicedToArray(_step362.value, 2),
+                      operand = _step362$value[1];
                     if (phi.place.identifier.mutableRange.start === 0) {
                       phi.place.identifier.mutableRange.start =
                         operand.identifier.mutableRange.start;
@@ -60097,51 +60164,51 @@ PERFORMANCE OF THIS SOFTWARE.
                     }
                   }
                 } catch (err) {
-                  _iterator361.e(err);
+                  _iterator362.e(err);
                 } finally {
-                  _iterator361.f();
+                  _iterator362.f();
                 }
               }
             }
           } catch (err) {
-            _iterator358.e(err);
+            _iterator359.e(err);
           } finally {
-            _iterator358.f();
+            _iterator359.f();
           }
-          var _iterator359 = _createForOfIteratorHelper(block.instructions),
-            _step359;
+          var _iterator360 = _createForOfIteratorHelper(block.instructions),
+            _step360;
           try {
-            for (_iterator359.s(); !(_step359 = _iterator359.n()).done; ) {
-              var instr = _step359.value;
-              var _iterator362 = _createForOfIteratorHelper(
+            for (_iterator360.s(); !(_step360 = _iterator360.n()).done; ) {
+              var instr = _step360.value;
+              var _iterator363 = _createForOfIteratorHelper(
                   eachInstructionLValue(instr)
                 ),
-                _step362;
+                _step363;
               try {
-                for (_iterator362.s(); !(_step362 = _iterator362.n()).done; ) {
-                  var _operand23 = _step362.value;
+                for (_iterator363.s(); !(_step363 = _iterator363.n()).done; ) {
+                  var _operand23 = _step363.value;
                   var lvalueId = _operand23.identifier;
                   lvalueId.mutableRange.start = instr.id;
                   lvalueId.mutableRange.end = makeInstructionId(instr.id + 1);
                 }
               } catch (err) {
-                _iterator362.e(err);
-              } finally {
-                _iterator362.f();
-              }
-              var _iterator363 = _createForOfIteratorHelper(
-                  eachInstructionOperand(instr)
-                ),
-                _step363;
-              try {
-                for (_iterator363.s(); !(_step363 = _iterator363.n()).done; ) {
-                  var _operand24 = _step363.value;
-                  inferPlace(_operand24, instr.id, inferMutableRangeForStores);
-                }
-              } catch (err) {
                 _iterator363.e(err);
               } finally {
                 _iterator363.f();
+              }
+              var _iterator364 = _createForOfIteratorHelper(
+                  eachInstructionOperand(instr)
+                ),
+                _step364;
+              try {
+                for (_iterator364.s(); !(_step364 = _iterator364.n()).done; ) {
+                  var _operand24 = _step364.value;
+                  inferPlace(_operand24, instr.id, inferMutableRangeForStores);
+                }
+              } catch (err) {
+                _iterator364.e(err);
+              } finally {
+                _iterator364.f();
               }
               if (
                 instr.value.kind === "DeclareContext" ||
@@ -60172,17 +60239,17 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator359.e(err);
+            _iterator360.e(err);
           } finally {
-            _iterator359.f();
+            _iterator360.f();
           }
-          var _iterator360 = _createForOfIteratorHelper(
+          var _iterator361 = _createForOfIteratorHelper(
               eachTerminalOperand(block.terminal)
             ),
-            _step360;
+            _step361;
           try {
-            for (_iterator360.s(); !(_step360 = _iterator360.n()).done; ) {
-              var _operand25 = _step360.value;
+            for (_iterator361.s(); !(_step361 = _iterator361.n()).done; ) {
+              var _operand25 = _step361.value;
               inferPlace(
                 _operand25,
                 block.terminal.id,
@@ -60190,24 +60257,24 @@ PERFORMANCE OF THIS SOFTWARE.
               );
             }
           } catch (err) {
-            _iterator360.e(err);
+            _iterator361.e(err);
           } finally {
-            _iterator360.f();
+            _iterator361.f();
           }
         }
       } catch (err) {
-        _iterator357.e(err);
+        _iterator358.e(err);
       } finally {
-        _iterator357.f();
+        _iterator358.f();
       }
     }
     function inferMutableRangesForAlias(_fn, aliases) {
       var aliasSets = aliases.buildSets();
-      var _iterator364 = _createForOfIteratorHelper(aliasSets),
-        _step364;
+      var _iterator365 = _createForOfIteratorHelper(aliasSets),
+        _step365;
       try {
-        for (_iterator364.s(); !(_step364 = _iterator364.n()).done; ) {
-          var aliasSet = _step364.value;
+        for (_iterator365.s(); !(_step365 = _iterator365.n()).done; ) {
+          var aliasSet = _step365.value;
           var mutatingIdentifiers = _toConsumableArray(aliasSet).filter(
             function (id) {
               return (
@@ -60218,25 +60285,25 @@ PERFORMANCE OF THIS SOFTWARE.
           );
           if (mutatingIdentifiers.length > 0) {
             var lastMutatingInstructionId = 0;
-            var _iterator365 = _createForOfIteratorHelper(mutatingIdentifiers),
-              _step365;
+            var _iterator366 = _createForOfIteratorHelper(mutatingIdentifiers),
+              _step366;
             try {
-              for (_iterator365.s(); !(_step365 = _iterator365.n()).done; ) {
-                var id = _step365.value;
+              for (_iterator366.s(); !(_step366 = _iterator366.n()).done; ) {
+                var id = _step366.value;
                 if (id.mutableRange.end > lastMutatingInstructionId) {
                   lastMutatingInstructionId = id.mutableRange.end;
                 }
               }
             } catch (err) {
-              _iterator365.e(err);
+              _iterator366.e(err);
             } finally {
-              _iterator365.f();
+              _iterator366.f();
             }
-            var _iterator366 = _createForOfIteratorHelper(aliasSet),
-              _step366;
+            var _iterator367 = _createForOfIteratorHelper(aliasSet),
+              _step367;
             try {
-              for (_iterator366.s(); !(_step366 = _iterator366.n()).done; ) {
-                var alias = _step366.value;
+              for (_iterator367.s(); !(_step367 = _iterator367.n()).done; ) {
+                var alias = _step367.value;
                 if (
                   alias.mutableRange.end < lastMutatingInstructionId &&
                   !isRefOrRefValue(alias)
@@ -60245,27 +60312,27 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator366.e(err);
+              _iterator367.e(err);
             } finally {
-              _iterator366.f();
+              _iterator367.f();
             }
           }
         }
       } catch (err) {
-        _iterator364.e(err);
+        _iterator365.e(err);
       } finally {
-        _iterator364.f();
+        _iterator365.f();
       }
     }
     function inferTryCatchAliases(fn, aliases) {
       var handlerParams = new Map();
-      var _iterator367 = _createForOfIteratorHelper(fn.body.blocks),
-        _step367;
+      var _iterator368 = _createForOfIteratorHelper(fn.body.blocks),
+        _step368;
       try {
-        for (_iterator367.s(); !(_step367 = _iterator367.n()).done; ) {
-          var _step367$value = _slicedToArray(_step367.value, 2),
-            _ = _step367$value[0],
-            block = _step367$value[1];
+        for (_iterator368.s(); !(_step368 = _iterator368.n()).done; ) {
+          var _step368$value = _slicedToArray(_step368.value, 2),
+            _ = _step368$value[0],
+            block = _step368$value[1];
           if (
             block.terminal.kind === "try" &&
             block.terminal.handlerBinding !== null
@@ -60279,24 +60346,24 @@ PERFORMANCE OF THIS SOFTWARE.
             if (handlerParam === undefined) {
               continue;
             }
-            var _iterator368 = _createForOfIteratorHelper(block.instructions),
-              _step368;
+            var _iterator369 = _createForOfIteratorHelper(block.instructions),
+              _step369;
             try {
-              for (_iterator368.s(); !(_step368 = _iterator368.n()).done; ) {
-                var instr = _step368.value;
+              for (_iterator369.s(); !(_step369 = _iterator369.n()).done; ) {
+                var instr = _step369.value;
                 aliases.union([handlerParam, instr.lvalue.identifier]);
               }
             } catch (err) {
-              _iterator368.e(err);
+              _iterator369.e(err);
             } finally {
-              _iterator368.f();
+              _iterator369.f();
             }
           }
         }
       } catch (err) {
-        _iterator367.e(err);
+        _iterator368.e(err);
       } finally {
-        _iterator367.f();
+        _iterator368.f();
       }
     }
     function inferMutableRanges(ir) {
@@ -60330,13 +60397,13 @@ PERFORMANCE OF THIS SOFTWARE.
       if (a.size !== b.size) {
         return false;
       }
-      var _iterator369 = _createForOfIteratorHelper(a),
-        _step369;
+      var _iterator370 = _createForOfIteratorHelper(a),
+        _step370;
       try {
-        for (_iterator369.s(); !(_step369 = _iterator369.n()).done; ) {
-          var _step369$value = _slicedToArray(_step369.value, 2),
-            _key38 = _step369$value[0],
-            value = _step369$value[1];
+        for (_iterator370.s(); !(_step370 = _iterator370.n()).done; ) {
+          var _step370$value = _slicedToArray(_step370.value, 2),
+            _key38 = _step370$value[0],
+            value = _step370$value[1];
           if (!b.has(_key38)) {
             return false;
           }
@@ -60345,41 +60412,41 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator369.e(err);
+        _iterator370.e(err);
       } finally {
-        _iterator369.f();
+        _iterator370.f();
       }
       return true;
     }
     function analyseFunctions(func) {
-      var _iterator370 = _createForOfIteratorHelper(func.body.blocks),
-        _step370;
+      var _iterator371 = _createForOfIteratorHelper(func.body.blocks),
+        _step371;
       try {
-        for (_iterator370.s(); !(_step370 = _iterator370.n()).done; ) {
-          var _step370$value = _slicedToArray(_step370.value, 2),
-            _ = _step370$value[0],
-            block = _step370$value[1];
-          var _iterator371 = _createForOfIteratorHelper(block.instructions),
-            _step371;
+        for (_iterator371.s(); !(_step371 = _iterator371.n()).done; ) {
+          var _step371$value = _slicedToArray(_step371.value, 2),
+            _ = _step371$value[0],
+            block = _step371$value[1];
+          var _iterator372 = _createForOfIteratorHelper(block.instructions),
+            _step372;
           try {
-            for (_iterator371.s(); !(_step371 = _iterator371.n()).done; ) {
-              var instr = _step371.value;
+            for (_iterator372.s(); !(_step372 = _iterator372.n()).done; ) {
+              var instr = _step372.value;
               switch (instr.value.kind) {
                 case "ObjectMethod":
                 case "FunctionExpression": {
                   lower(instr.value.loweredFunc.func);
                   infer(instr.value.loweredFunc);
-                  var _iterator372 = _createForOfIteratorHelper(
+                  var _iterator373 = _createForOfIteratorHelper(
                       instr.value.loweredFunc.func.context
                     ),
-                    _step372;
+                    _step373;
                   try {
                     for (
-                      _iterator372.s();
-                      !(_step372 = _iterator372.n()).done;
+                      _iterator373.s();
+                      !(_step373 = _iterator373.n()).done;
 
                     ) {
-                      var operand = _step372.value;
+                      var operand = _step373.value;
                       operand.identifier.mutableRange.start =
                         makeInstructionId(0);
                       operand.identifier.mutableRange.end =
@@ -60387,24 +60454,24 @@ PERFORMANCE OF THIS SOFTWARE.
                       operand.identifier.scope = null;
                     }
                   } catch (err) {
-                    _iterator372.e(err);
+                    _iterator373.e(err);
                   } finally {
-                    _iterator372.f();
+                    _iterator373.f();
                   }
                   break;
                 }
               }
             }
           } catch (err) {
-            _iterator371.e(err);
+            _iterator372.e(err);
           } finally {
-            _iterator371.f();
+            _iterator372.f();
           }
         }
       } catch (err) {
-        _iterator370.e(err);
+        _iterator371.e(err);
       } finally {
-        _iterator370.f();
+        _iterator371.f();
       }
     }
     function lower(func) {
@@ -60427,11 +60494,11 @@ PERFORMANCE OF THIS SOFTWARE.
           });
     }
     function infer(loweredFunc) {
-      var _iterator373 = _createForOfIteratorHelper(loweredFunc.func.context),
-        _step373;
+      var _iterator374 = _createForOfIteratorHelper(loweredFunc.func.context),
+        _step374;
       try {
-        for (_iterator373.s(); !(_step373 = _iterator373.n()).done; ) {
-          var operand = _step373.value;
+        for (_iterator374.s(); !(_step374 = _iterator374.n()).done; ) {
+          var operand = _step374.value;
           var _identifier15 = operand.identifier;
           CompilerError.invariant(operand.effect === Effect.Unknown, {
             reason:
@@ -60447,9 +60514,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator373.e(err);
+        _iterator374.e(err);
       } finally {
-        _iterator373.f();
+        _iterator374.f();
       }
     }
     function isMutatedOrReassigned(id) {
@@ -60689,13 +60756,13 @@ PERFORMANCE OF THIS SOFTWARE.
       };
       var nextManualMemoId = 0;
       var queuedInserts = new Map();
-      var _iterator374 = _createForOfIteratorHelper(func.body.blocks),
-        _step374;
+      var _iterator375 = _createForOfIteratorHelper(func.body.blocks),
+        _step375;
       try {
-        for (_iterator374.s(); !(_step374 = _iterator374.n()).done; ) {
-          var _step374$value = _slicedToArray(_step374.value, 2),
-            _33 = _step374$value[0],
-            _block15 = _step374$value[1];
+        for (_iterator375.s(); !(_step375 = _iterator375.n()).done; ) {
+          var _step375$value = _slicedToArray(_step375.value, 2),
+            _33 = _step375$value[0],
+            _block15 = _step375$value[1];
           for (var _i39 = 0; _i39 < _block15.instructions.length; _i39++) {
             var _instr7 = _block15.instructions[_i39];
             if (
@@ -60762,19 +60829,19 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator374.e(err);
+        _iterator375.e(err);
       } finally {
-        _iterator374.f();
+        _iterator375.f();
       }
       if (queuedInserts.size > 0) {
         var hasChanges = false;
-        var _iterator375 = _createForOfIteratorHelper(func.body.blocks),
-          _step375;
+        var _iterator376 = _createForOfIteratorHelper(func.body.blocks),
+          _step376;
         try {
-          for (_iterator375.s(); !(_step375 = _iterator375.n()).done; ) {
-            var _step375$value = _slicedToArray(_step375.value, 2),
-              _ = _step375$value[0],
-              block = _step375$value[1];
+          for (_iterator376.s(); !(_step376 = _iterator376.n()).done; ) {
+            var _step376$value = _slicedToArray(_step376.value, 2),
+              _ = _step376$value[0],
+              block = _step376$value[1];
             var nextInstructions = null;
             for (var i = 0; i < block.instructions.length; i++) {
               var instr = block.instructions[i];
@@ -60796,9 +60863,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator375.e(err);
+          _iterator376.e(err);
         } finally {
-          _iterator375.f();
+          _iterator376.f();
         }
         if (hasChanges) {
           markInstructionIds(func.body);
@@ -60807,12 +60874,12 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function findOptionalPlaces(fn) {
       var optionals = new Set();
-      var _iterator376 = _createForOfIteratorHelper(fn.body.blocks),
-        _step376;
+      var _iterator377 = _createForOfIteratorHelper(fn.body.blocks),
+        _step377;
       try {
-        for (_iterator376.s(); !(_step376 = _iterator376.n()).done; ) {
-          var _step376$value = _slicedToArray(_step376.value, 2),
-            block = _step376$value[1];
+        for (_iterator377.s(); !(_step377 = _iterator377.n()).done; ) {
+          var _step377$value = _slicedToArray(_step377.value, 2),
+            block = _step377$value[1];
           if (block.terminal.kind === "optional" && block.terminal.optional) {
             var optionalTerminal = block.terminal;
             var testBlock = fn.body.blocks.get(block.terminal.test);
@@ -60853,9 +60920,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator376.e(err);
+        _iterator377.e(err);
       } finally {
-        _iterator376.f();
+        _iterator377.f();
       }
       return optionals;
     }
@@ -60863,18 +60930,18 @@ PERFORMANCE OF THIS SOFTWARE.
       var reactiveIdentifiers = new ReactivityMap(
         findDisjointMutableValues(fn)
       );
-      var _iterator377 = _createForOfIteratorHelper(fn.params),
-        _step377;
+      var _iterator378 = _createForOfIteratorHelper(fn.params),
+        _step378;
       try {
-        for (_iterator377.s(); !(_step377 = _iterator377.n()).done; ) {
-          var param = _step377.value;
+        for (_iterator378.s(); !(_step378 = _iterator378.n()).done; ) {
+          var param = _step378.value;
           var place = param.kind === "Identifier" ? param : param.place;
           reactiveIdentifiers.markReactive(place);
         }
       } catch (err) {
-        _iterator377.e(err);
+        _iterator378.e(err);
       } finally {
-        _iterator377.f();
+        _iterator378.f();
       }
       var postDominators = computePostDominatorTree(fn, {
         includeThrowsAsExitNode: false
@@ -60886,11 +60953,11 @@ PERFORMANCE OF THIS SOFTWARE.
           controlBlocks = postDominatorFrontier(fn, postDominators, id);
           postDominatorFrontierCache.set(id, controlBlocks);
         }
-        var _iterator378 = _createForOfIteratorHelper(controlBlocks),
-          _step378;
+        var _iterator379 = _createForOfIteratorHelper(controlBlocks),
+          _step379;
         try {
-          for (_iterator378.s(); !(_step378 = _iterator378.n()).done; ) {
-            var blockId = _step378.value;
+          for (_iterator379.s(); !(_step379 = _iterator379.n()).done; ) {
+            var blockId = _step379.value;
             var controlBlock = fn.body.blocks.get(blockId);
             switch (controlBlock.terminal.kind) {
               case "if":
@@ -60908,17 +60975,17 @@ PERFORMANCE OF THIS SOFTWARE.
                 ) {
                   return true;
                 }
-                var _iterator379 = _createForOfIteratorHelper(
+                var _iterator380 = _createForOfIteratorHelper(
                     controlBlock.terminal.cases
                   ),
-                  _step379;
+                  _step380;
                 try {
                   for (
-                    _iterator379.s();
-                    !(_step379 = _iterator379.n()).done;
+                    _iterator380.s();
+                    !(_step380 = _iterator380.n()).done;
 
                   ) {
-                    var case_ = _step379.value;
+                    var case_ = _step380.value;
                     if (
                       case_.test !== null &&
                       reactiveIdentifiers.isReactive(case_.test)
@@ -60927,113 +60994,113 @@ PERFORMANCE OF THIS SOFTWARE.
                     }
                   }
                 } catch (err) {
-                  _iterator379.e(err);
+                  _iterator380.e(err);
                 } finally {
-                  _iterator379.f();
+                  _iterator380.f();
                 }
                 break;
               }
             }
           }
         } catch (err) {
-          _iterator378.e(err);
+          _iterator379.e(err);
         } finally {
-          _iterator378.f();
+          _iterator379.f();
         }
         return false;
       }
       do {
-        var _iterator380 = _createForOfIteratorHelper(fn.body.blocks),
-          _step380;
+        var _iterator381 = _createForOfIteratorHelper(fn.body.blocks),
+          _step381;
         try {
-          for (_iterator380.s(); !(_step380 = _iterator380.n()).done; ) {
-            var _step380$value = _slicedToArray(_step380.value, 2),
-              block = _step380$value[1];
+          for (_iterator381.s(); !(_step381 = _iterator381.n()).done; ) {
+            var _step381$value = _slicedToArray(_step381.value, 2),
+              block = _step381$value[1];
             var hasReactiveControl = isReactiveControlledBlock(block.id);
-            var _iterator381 = _createForOfIteratorHelper(block.phis),
-              _step381;
+            var _iterator382 = _createForOfIteratorHelper(block.phis),
+              _step382;
             try {
-              for (_iterator381.s(); !(_step381 = _iterator381.n()).done; ) {
-                var phi = _step381.value;
+              for (_iterator382.s(); !(_step382 = _iterator382.n()).done; ) {
+                var phi = _step382.value;
                 if (reactiveIdentifiers.isReactive(phi.place)) {
                   continue;
                 }
                 var isPhiReactive = false;
-                var _iterator384 = _createForOfIteratorHelper(phi.operands),
-                  _step384;
+                var _iterator385 = _createForOfIteratorHelper(phi.operands),
+                  _step385;
                 try {
                   for (
-                    _iterator384.s();
-                    !(_step384 = _iterator384.n()).done;
+                    _iterator385.s();
+                    !(_step385 = _iterator385.n()).done;
 
                   ) {
-                    var _step384$value = _slicedToArray(_step384.value, 2),
-                      operand = _step384$value[1];
+                    var _step385$value = _slicedToArray(_step385.value, 2),
+                      operand = _step385$value[1];
                     if (reactiveIdentifiers.isReactive(operand)) {
                       isPhiReactive = true;
                       break;
                     }
                   }
                 } catch (err) {
-                  _iterator384.e(err);
+                  _iterator385.e(err);
                 } finally {
-                  _iterator384.f();
+                  _iterator385.f();
                 }
                 if (isPhiReactive) {
                   reactiveIdentifiers.markReactive(phi.place);
                 } else {
-                  var _iterator385 = _createForOfIteratorHelper(phi.operands),
-                    _step385;
+                  var _iterator386 = _createForOfIteratorHelper(phi.operands),
+                    _step386;
                   try {
                     for (
-                      _iterator385.s();
-                      !(_step385 = _iterator385.n()).done;
+                      _iterator386.s();
+                      !(_step386 = _iterator386.n()).done;
 
                     ) {
-                      var _step385$value = _slicedToArray(_step385.value, 1),
-                        pred = _step385$value[0];
+                      var _step386$value = _slicedToArray(_step386.value, 1),
+                        pred = _step386$value[0];
                       if (isReactiveControlledBlock(pred)) {
                         reactiveIdentifiers.markReactive(phi.place);
                         break;
                       }
                     }
                   } catch (err) {
-                    _iterator385.e(err);
+                    _iterator386.e(err);
                   } finally {
-                    _iterator385.f();
+                    _iterator386.f();
                   }
                 }
               }
             } catch (err) {
-              _iterator381.e(err);
+              _iterator382.e(err);
             } finally {
-              _iterator381.f();
+              _iterator382.f();
             }
-            var _iterator382 = _createForOfIteratorHelper(block.instructions),
-              _step382;
+            var _iterator383 = _createForOfIteratorHelper(block.instructions),
+              _step383;
             try {
-              for (_iterator382.s(); !(_step382 = _iterator382.n()).done; ) {
-                var instruction = _step382.value;
+              for (_iterator383.s(); !(_step383 = _iterator383.n()).done; ) {
+                var instruction = _step383.value;
                 var value = instruction.value;
                 var hasReactiveInput = false;
-                var _iterator386 = _createForOfIteratorHelper(
+                var _iterator387 = _createForOfIteratorHelper(
                     eachInstructionValueOperand(value)
                   ),
-                  _step386;
+                  _step387;
                 try {
                   for (
-                    _iterator386.s();
-                    !(_step386 = _iterator386.n()).done;
+                    _iterator387.s();
+                    !(_step387 = _iterator387.n()).done;
 
                   ) {
-                    var _operand27 = _step386.value;
+                    var _operand27 = _step387.value;
                     var reactive = reactiveIdentifiers.isReactive(_operand27);
                     hasReactiveInput || (hasReactiveInput = reactive);
                   }
                 } catch (err) {
-                  _iterator386.e(err);
+                  _iterator387.e(err);
                 } finally {
-                  _iterator386.f();
+                  _iterator387.f();
                 }
                 if (
                   value.kind === "CallExpression" &&
@@ -61049,31 +61116,8 @@ PERFORMANCE OF THIS SOFTWARE.
                   hasReactiveInput = true;
                 }
                 if (hasReactiveInput) {
-                  var _iterator387 = _createForOfIteratorHelper(
-                      eachInstructionLValue(instruction)
-                    ),
-                    _step387;
-                  try {
-                    for (
-                      _iterator387.s();
-                      !(_step387 = _iterator387.n()).done;
-
-                    ) {
-                      var lvalue = _step387.value;
-                      if (isStableType(lvalue.identifier)) {
-                        continue;
-                      }
-                      reactiveIdentifiers.markReactive(lvalue);
-                    }
-                  } catch (err) {
-                    _iterator387.e(err);
-                  } finally {
-                    _iterator387.f();
-                  }
-                }
-                if (hasReactiveInput || hasReactiveControl) {
                   var _iterator388 = _createForOfIteratorHelper(
-                      eachInstructionValueOperand(value)
+                      eachInstructionLValue(instruction)
                     ),
                     _step388;
                   try {
@@ -61082,7 +61126,30 @@ PERFORMANCE OF THIS SOFTWARE.
                       !(_step388 = _iterator388.n()).done;
 
                     ) {
-                      var _operand26 = _step388.value;
+                      var lvalue = _step388.value;
+                      if (isStableType(lvalue.identifier)) {
+                        continue;
+                      }
+                      reactiveIdentifiers.markReactive(lvalue);
+                    }
+                  } catch (err) {
+                    _iterator388.e(err);
+                  } finally {
+                    _iterator388.f();
+                  }
+                }
+                if (hasReactiveInput || hasReactiveControl) {
+                  var _iterator389 = _createForOfIteratorHelper(
+                      eachInstructionValueOperand(value)
+                    ),
+                    _step389;
+                  try {
+                    for (
+                      _iterator389.s();
+                      !(_step389 = _iterator389.n()).done;
+
+                    ) {
+                      var _operand26 = _step389.value;
                       switch (_operand26.effect) {
                         case Effect.Capture:
                         case Effect.Store:
@@ -61117,36 +61184,36 @@ PERFORMANCE OF THIS SOFTWARE.
                       }
                     }
                   } catch (err) {
-                    _iterator388.e(err);
+                    _iterator389.e(err);
                   } finally {
-                    _iterator388.f();
+                    _iterator389.f();
                   }
                 }
-              }
-            } catch (err) {
-              _iterator382.e(err);
-            } finally {
-              _iterator382.f();
-            }
-            var _iterator383 = _createForOfIteratorHelper(
-                eachTerminalOperand(block.terminal)
-              ),
-              _step383;
-            try {
-              for (_iterator383.s(); !(_step383 = _iterator383.n()).done; ) {
-                var _operand28 = _step383.value;
-                reactiveIdentifiers.isReactive(_operand28);
               }
             } catch (err) {
               _iterator383.e(err);
             } finally {
               _iterator383.f();
             }
+            var _iterator384 = _createForOfIteratorHelper(
+                eachTerminalOperand(block.terminal)
+              ),
+              _step384;
+            try {
+              for (_iterator384.s(); !(_step384 = _iterator384.n()).done; ) {
+                var _operand28 = _step384.value;
+                reactiveIdentifiers.isReactive(_operand28);
+              }
+            } catch (err) {
+              _iterator384.e(err);
+            } finally {
+              _iterator384.f();
+            }
           }
         } catch (err) {
-          _iterator380.e(err);
+          _iterator381.e(err);
         } finally {
-          _iterator380.f();
+          _iterator381.f();
         }
       } while (reactiveIdentifiers.snapshot());
     }
@@ -61168,19 +61235,19 @@ PERFORMANCE OF THIS SOFTWARE.
         }
         visited.add(blockId);
         var block = fn.body.blocks.get(blockId);
-        var _iterator389 = _createForOfIteratorHelper(block.preds),
-          _step389;
+        var _iterator390 = _createForOfIteratorHelper(block.preds),
+          _step390;
         try {
-          for (_iterator389.s(); !(_step389 = _iterator389.n()).done; ) {
-            var pred = _step389.value;
+          for (_iterator390.s(); !(_step390 = _iterator390.n()).done; ) {
+            var pred = _step390.value;
             if (!targetPostDominators.has(pred)) {
               frontier.add(pred);
             }
           }
         } catch (err) {
-          _iterator389.e(err);
+          _iterator390.e(err);
         } finally {
-          _iterator389.f();
+          _iterator390.f();
         }
       }
       return frontier;
@@ -61197,11 +61264,11 @@ PERFORMANCE OF THIS SOFTWARE.
         }
         visited.add(currentId);
         var current = fn.body.blocks.get(currentId);
-        var _iterator390 = _createForOfIteratorHelper(current.preds),
-          _step390;
+        var _iterator391 = _createForOfIteratorHelper(current.preds),
+          _step391;
         try {
-          for (_iterator390.s(); !(_step390 = _iterator390.n()).done; ) {
-            var pred = _step390.value;
+          for (_iterator391.s(); !(_step391 = _iterator391.n()).done; ) {
+            var pred = _step391.value;
             var predPostDominator =
               (_a = postDominators.get(pred)) !== null && _a !== void 0
                 ? _a
@@ -61215,9 +61282,9 @@ PERFORMANCE OF THIS SOFTWARE.
             queue.push(pred);
           }
         } catch (err) {
-          _iterator390.e(err);
+          _iterator391.e(err);
         } finally {
-          _iterator390.f();
+          _iterator391.f();
         }
       }
       return result;
@@ -61325,61 +61392,61 @@ PERFORMANCE OF THIS SOFTWARE.
               var result = instr.lvalue;
               declareTemporary(fn.env, block, result);
               promoteTemporary(result.identifier);
-              var _iterator391 = _createForOfIteratorHelper(
-                  body.loweredFunc.func.body.blocks
-                ),
-                _step391;
-              try {
-                for (_iterator391.s(); !(_step391 = _iterator391.n()).done; ) {
-                  var _step391$value = _slicedToArray(_step391.value, 2),
-                    id = _step391$value[0],
-                    _block16 = _step391$value[1];
-                  _block16.preds.clear();
-                  rewriteBlock(fn.env, _block16, continuationBlockId, result);
-                  fn.body.blocks.set(id, _block16);
-                }
-              } catch (err) {
-                _iterator391.e(err);
-              } finally {
-                _iterator391.f();
-              }
-              queue.push(continuationBlock);
-              continue queue;
-            }
-            default: {
               var _iterator392 = _createForOfIteratorHelper(
-                  eachInstructionValueOperand(instr.value)
+                  body.loweredFunc.func.body.blocks
                 ),
                 _step392;
               try {
                 for (_iterator392.s(); !(_step392 = _iterator392.n()).done; ) {
-                  var place = _step392.value;
-                  functions["delete"](place.identifier.id);
+                  var _step392$value = _slicedToArray(_step392.value, 2),
+                    id = _step392$value[0],
+                    _block16 = _step392$value[1];
+                  _block16.preds.clear();
+                  rewriteBlock(fn.env, _block16, continuationBlockId, result);
+                  fn.body.blocks.set(id, _block16);
                 }
               } catch (err) {
                 _iterator392.e(err);
               } finally {
                 _iterator392.f();
               }
+              queue.push(continuationBlock);
+              continue queue;
+            }
+            default: {
+              var _iterator393 = _createForOfIteratorHelper(
+                  eachInstructionValueOperand(instr.value)
+                ),
+                _step393;
+              try {
+                for (_iterator393.s(); !(_step393 = _iterator393.n()).done; ) {
+                  var place = _step393.value;
+                  functions["delete"](place.identifier.id);
+                }
+              } catch (err) {
+                _iterator393.e(err);
+              } finally {
+                _iterator393.f();
+              }
             }
           }
         }
       }
       if (inlinedFunctions.size !== 0) {
-        var _iterator393 = _createForOfIteratorHelper(fn.body.blocks),
-          _step393;
+        var _iterator394 = _createForOfIteratorHelper(fn.body.blocks),
+          _step394;
         try {
-          for (_iterator393.s(); !(_step393 = _iterator393.n()).done; ) {
-            var _step393$value = _slicedToArray(_step393.value, 2),
-              _block17 = _step393$value[1];
+          for (_iterator394.s(); !(_step394 = _iterator394.n()).done; ) {
+            var _step394$value = _slicedToArray(_step394.value, 2),
+              _block17 = _step394$value[1];
             retainWhere(_block17.instructions, function (instr) {
               return !inlinedFunctions.has(instr.lvalue.identifier.id);
             });
           }
         } catch (err) {
-          _iterator393.e(err);
+          _iterator394.e(err);
         } finally {
-          _iterator393.f();
+          _iterator394.f();
         }
         reversePostorderBlocks(fn.body);
         markInstructionIds(fn.body);
@@ -61431,13 +61498,13 @@ PERFORMANCE OF THIS SOFTWARE.
       var hasRewrite = false;
       var fnExpressions = new Map();
       var autodepFnConfigs = new Map();
-      var _iterator394 = _createForOfIteratorHelper(
+      var _iterator395 = _createForOfIteratorHelper(
           fn.env.config.inferEffectDependencies
         ),
-        _step394;
+        _step395;
       try {
-        for (_iterator394.s(); !(_step394 = _iterator394.n()).done; ) {
-          var effectTarget = _step394.value;
+        for (_iterator395.s(); !(_step395 = _iterator395.n()).done; ) {
+          var effectTarget = _step395.value;
           var moduleTargets = getOrInsertWith(
             autodepFnConfigs,
             effectTarget["function"].source,
@@ -61451,21 +61518,21 @@ PERFORMANCE OF THIS SOFTWARE.
           );
         }
       } catch (err) {
-        _iterator394.e(err);
+        _iterator395.e(err);
       } finally {
-        _iterator394.f();
+        _iterator395.f();
       }
       var autodepFnLoads = new Map();
       var autodepModuleLoads = new Map();
       var scopeInfos = new Map();
       var loadGlobals = new Set();
       var reactiveIds = inferReactiveIdentifiers(fn);
-      var _iterator395 = _createForOfIteratorHelper(fn.body.blocks),
-        _step395;
+      var _iterator396 = _createForOfIteratorHelper(fn.body.blocks),
+        _step396;
       try {
-        for (_iterator395.s(); !(_step395 = _iterator395.n()).done; ) {
-          var _step395$value = _slicedToArray(_step395.value, 2),
-            block = _step395$value[1];
+        for (_iterator396.s(); !(_step396 = _iterator396.n()).done; ) {
+          var _step396$value = _slicedToArray(_step396.value, 2),
+            block = _step396$value[1];
           if (
             block.terminal.kind === "scope" ||
             block.terminal.kind === "pruned-scope"
@@ -61481,11 +61548,11 @@ PERFORMANCE OF THIS SOFTWARE.
             });
           }
           var rewriteInstrs = new Map();
-          var _iterator396 = _createForOfIteratorHelper(block.instructions),
-            _step396;
+          var _iterator397 = _createForOfIteratorHelper(block.instructions),
+            _step397;
           try {
-            for (_iterator396.s(); !(_step396 = _iterator396.n()).done; ) {
-              var _instr8 = _step396.value;
+            for (_iterator397.s(); !(_step397 = _iterator397.n()).done; ) {
+              var _instr8 = _step397.value;
               var value = _instr8.value,
                 lvalue = _instr8.lvalue;
               if (value.kind === "FunctionExpression") {
@@ -61578,17 +61645,17 @@ PERFORMANCE OF THIS SOFTWARE.
                         loc: fnExpr.loc
                       });
                     }
-                    var _iterator398 = _createForOfIteratorHelper(
+                    var _iterator399 = _createForOfIteratorHelper(
                         scopeInfo.deps
                       ),
-                      _step398;
+                      _step399;
                     try {
                       for (
-                        _iterator398.s();
-                        !(_step398 = _iterator398.n()).done;
+                        _iterator399.s();
+                        !(_step399 = _iterator399.n()).done;
 
                       ) {
-                        var dep = _step398.value;
+                        var dep = _step399.value;
                         if (
                           (isUseRefType(dep.identifier) ||
                             isSetStateType(dep.identifier)) &&
@@ -61612,9 +61679,9 @@ PERFORMANCE OF THIS SOFTWARE.
                         effectDeps.push(place);
                       }
                     } catch (err) {
-                      _iterator398.e(err);
+                      _iterator399.e(err);
                     } finally {
-                      _iterator398.f();
+                      _iterator399.f();
                     }
                     newInstructions.push({
                       id: makeInstructionId(0),
@@ -61650,18 +61717,18 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator396.e(err);
+            _iterator397.e(err);
           } finally {
-            _iterator396.f();
+            _iterator397.f();
           }
           if (rewriteInstrs.size > 0) {
             hasRewrite = true;
             var newInstrs = [];
-            var _iterator397 = _createForOfIteratorHelper(block.instructions),
-              _step397;
+            var _iterator398 = _createForOfIteratorHelper(block.instructions),
+              _step398;
             try {
-              for (_iterator397.s(); !(_step397 = _iterator397.n()).done; ) {
-                var instr = _step397.value;
+              for (_iterator398.s(); !(_step398 = _iterator398.n()).done; ) {
+                var instr = _step398.value;
                 var newInstr = rewriteInstrs.get(instr.id);
                 if (newInstr != null) {
                   newInstrs.push.apply(
@@ -61673,17 +61740,17 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator397.e(err);
+              _iterator398.e(err);
             } finally {
-              _iterator397.f();
+              _iterator398.f();
             }
             block.instructions = newInstrs;
           }
         }
       } catch (err) {
-        _iterator395.e(err);
+        _iterator396.e(err);
       } finally {
-        _iterator395.f();
+        _iterator396.f();
       }
       if (hasRewrite) {
         markInstructionIds(fn.body);
@@ -61712,11 +61779,11 @@ PERFORMANCE OF THIS SOFTWARE.
           loc: loc
         }
       });
-      var _iterator399 = _createForOfIteratorHelper(dep.path),
-        _step399;
+      var _iterator400 = _createForOfIteratorHelper(dep.path),
+        _step400;
       try {
-        for (_iterator399.s(); !(_step399 = _iterator399.n()).done; ) {
-          var path = _step399.value;
+        for (_iterator400.s(); !(_step400 = _iterator400.n()).done; ) {
+          var path = _step400.value;
           if (path.optional) {
             break;
           }
@@ -61743,57 +61810,41 @@ PERFORMANCE OF THIS SOFTWARE.
           currValue = nextValue;
         }
       } catch (err) {
-        _iterator399.e(err);
+        _iterator400.e(err);
       } finally {
-        _iterator399.f();
+        _iterator400.f();
       }
       currValue.effect = Effect.Freeze;
       return { place: currValue, instructions: instructions };
     }
     function inferReactiveIdentifiers(fn) {
       var reactiveIds = new Set();
-      var _iterator400 = _createForOfIteratorHelper(fn.body.blocks),
-        _step400;
+      var _iterator401 = _createForOfIteratorHelper(fn.body.blocks),
+        _step401;
       try {
-        for (_iterator400.s(); !(_step400 = _iterator400.n()).done; ) {
-          var _step400$value = _slicedToArray(_step400.value, 2),
-            block = _step400$value[1];
-          var _iterator401 = _createForOfIteratorHelper(block.instructions),
-            _step401;
+        for (_iterator401.s(); !(_step401 = _iterator401.n()).done; ) {
+          var _step401$value = _slicedToArray(_step401.value, 2),
+            block = _step401$value[1];
+          var _iterator402 = _createForOfIteratorHelper(block.instructions),
+            _step402;
           try {
-            for (_iterator401.s(); !(_step401 = _iterator401.n()).done; ) {
-              var instr = _step401.value;
-              var _iterator403 = _createForOfIteratorHelper(
+            for (_iterator402.s(); !(_step402 = _iterator402.n()).done; ) {
+              var instr = _step402.value;
+              var _iterator404 = _createForOfIteratorHelper(
                   eachInstructionOperand(instr)
                 ),
-                _step403;
+                _step404;
               try {
-                for (_iterator403.s(); !(_step403 = _iterator403.n()).done; ) {
-                  var place = _step403.value;
+                for (_iterator404.s(); !(_step404 = _iterator404.n()).done; ) {
+                  var place = _step404.value;
                   if (place.reactive) {
                     reactiveIds.add(place.identifier.id);
                   }
                 }
               } catch (err) {
-                _iterator403.e(err);
+                _iterator404.e(err);
               } finally {
-                _iterator403.f();
-              }
-            }
-          } catch (err) {
-            _iterator401.e(err);
-          } finally {
-            _iterator401.f();
-          }
-          var _iterator402 = _createForOfIteratorHelper(
-              eachTerminalOperand(block.terminal)
-            ),
-            _step402;
-          try {
-            for (_iterator402.s(); !(_step402 = _iterator402.n()).done; ) {
-              var _place28 = _step402.value;
-              if (_place28.reactive) {
-                reactiveIds.add(_place28.identifier.id);
+                _iterator404.f();
               }
             }
           } catch (err) {
@@ -61801,11 +61852,27 @@ PERFORMANCE OF THIS SOFTWARE.
           } finally {
             _iterator402.f();
           }
+          var _iterator403 = _createForOfIteratorHelper(
+              eachTerminalOperand(block.terminal)
+            ),
+            _step403;
+          try {
+            for (_iterator403.s(); !(_step403 = _iterator403.n()).done; ) {
+              var _place28 = _step403.value;
+              if (_place28.reactive) {
+                reactiveIds.add(_place28.identifier.id);
+              }
+            }
+          } catch (err) {
+            _iterator403.e(err);
+          } finally {
+            _iterator403.f();
+          }
         }
       } catch (err) {
-        _iterator400.e(err);
+        _iterator401.e(err);
       } finally {
-        _iterator400.f();
+        _iterator401.f();
       }
       return reactiveIds;
     }
@@ -61813,18 +61880,18 @@ PERFORMANCE OF THIS SOFTWARE.
       var _a;
       var shared = new Map();
       var references = findReferencedRangeOfTemporaries(fn);
-      var _iterator404 = _createForOfIteratorHelper(fn.body.blocks),
-        _step404;
+      var _iterator405 = _createForOfIteratorHelper(fn.body.blocks),
+        _step405;
       try {
-        for (_iterator404.s(); !(_step404 = _iterator404.n()).done; ) {
-          var _step404$value = _slicedToArray(_step404.value, 2),
-            block = _step404$value[1];
+        for (_iterator405.s(); !(_step405 = _iterator405.n()).done; ) {
+          var _step405$value = _slicedToArray(_step405.value, 2),
+            block = _step405$value[1];
           reorderBlock(fn.env, block, shared, references);
         }
       } catch (err) {
-        _iterator404.e(err);
+        _iterator405.e(err);
       } finally {
-        _iterator404.f();
+        _iterator405.f();
       }
       CompilerError.invariant(shared.size === 0, {
         reason:
@@ -61881,70 +61948,70 @@ PERFORMANCE OF THIS SOFTWARE.
           singleUseIdentifiers.set(place.identifier.id, previousCount + 1);
         }
       }
-      var _iterator405 = _createForOfIteratorHelper(fn.body.blocks),
-        _step405;
+      var _iterator406 = _createForOfIteratorHelper(fn.body.blocks),
+        _step406;
       try {
-        for (_iterator405.s(); !(_step405 = _iterator405.n()).done; ) {
-          var _step405$value = _slicedToArray(_step405.value, 2),
-            block = _step405$value[1];
-          var _iterator406 = _createForOfIteratorHelper(block.instructions),
-            _step406;
+        for (_iterator406.s(); !(_step406 = _iterator406.n()).done; ) {
+          var _step406$value = _slicedToArray(_step406.value, 2),
+            block = _step406$value[1];
+          var _iterator407 = _createForOfIteratorHelper(block.instructions),
+            _step407;
           try {
-            for (_iterator406.s(); !(_step406 = _iterator406.n()).done; ) {
-              var instr = _step406.value;
-              var _iterator408 = _createForOfIteratorHelper(
-                  eachInstructionValueLValue(instr.value)
-                ),
-                _step408;
-              try {
-                for (_iterator408.s(); !(_step408 = _iterator408.n()).done; ) {
-                  var operand = _step408.value;
-                  reference(instr.id, operand, ReferenceKind.Read);
-                }
-              } catch (err) {
-                _iterator408.e(err);
-              } finally {
-                _iterator408.f();
-              }
+            for (_iterator407.s(); !(_step407 = _iterator407.n()).done; ) {
+              var instr = _step407.value;
               var _iterator409 = _createForOfIteratorHelper(
-                  eachInstructionLValue(instr)
+                  eachInstructionValueLValue(instr.value)
                 ),
                 _step409;
               try {
                 for (_iterator409.s(); !(_step409 = _iterator409.n()).done; ) {
-                  var lvalue = _step409.value;
-                  reference(instr.id, lvalue, ReferenceKind.Write);
+                  var operand = _step409.value;
+                  reference(instr.id, operand, ReferenceKind.Read);
                 }
               } catch (err) {
                 _iterator409.e(err);
               } finally {
                 _iterator409.f();
               }
-            }
-          } catch (err) {
-            _iterator406.e(err);
-          } finally {
-            _iterator406.f();
-          }
-          var _iterator407 = _createForOfIteratorHelper(
-              eachTerminalOperand(block.terminal)
-            ),
-            _step407;
-          try {
-            for (_iterator407.s(); !(_step407 = _iterator407.n()).done; ) {
-              var _operand29 = _step407.value;
-              reference(block.terminal.id, _operand29, ReferenceKind.Read);
+              var _iterator410 = _createForOfIteratorHelper(
+                  eachInstructionLValue(instr)
+                ),
+                _step410;
+              try {
+                for (_iterator410.s(); !(_step410 = _iterator410.n()).done; ) {
+                  var lvalue = _step410.value;
+                  reference(instr.id, lvalue, ReferenceKind.Write);
+                }
+              } catch (err) {
+                _iterator410.e(err);
+              } finally {
+                _iterator410.f();
+              }
             }
           } catch (err) {
             _iterator407.e(err);
           } finally {
             _iterator407.f();
           }
+          var _iterator408 = _createForOfIteratorHelper(
+              eachTerminalOperand(block.terminal)
+            ),
+            _step408;
+          try {
+            for (_iterator408.s(); !(_step408 = _iterator408.n()).done; ) {
+              var _operand29 = _step408.value;
+              reference(block.terminal.id, _operand29, ReferenceKind.Read);
+            }
+          } catch (err) {
+            _iterator408.e(err);
+          } finally {
+            _iterator408.f();
+          }
         }
       } catch (err) {
-        _iterator405.e(err);
+        _iterator406.e(err);
       } finally {
-        _iterator405.f();
+        _iterator406.f();
       }
       return {
         singleUseIdentifiers: new Set(
@@ -61968,11 +62035,11 @@ PERFORMANCE OF THIS SOFTWARE.
       var locals = new Map();
       var named = new Map();
       var previous = null;
-      var _iterator410 = _createForOfIteratorHelper(block.instructions),
-        _step410;
+      var _iterator411 = _createForOfIteratorHelper(block.instructions),
+        _step411;
       try {
         var _loop10 = function _loop10() {
-          var instr = _step410.value;
+          var instr = _step411.value;
           var lvalue = instr.lvalue,
             value = instr.value;
           var reorderability = getReorderability(instr, references);
@@ -61990,13 +62057,13 @@ PERFORMANCE OF THIS SOFTWARE.
             }
             previous = lvalue.identifier.id;
           }
-          var _iterator415 = _createForOfIteratorHelper(
+          var _iterator416 = _createForOfIteratorHelper(
               eachInstructionValueOperand(value)
             ),
-            _step415;
+            _step416;
           try {
-            for (_iterator415.s(); !(_step415 = _iterator415.n()).done; ) {
-              var _operand31 = _step415.value;
+            for (_iterator416.s(); !(_step416 = _iterator416.n()).done; ) {
+              var _operand31 = _step416.value;
               var _operand31$identifier = _operand31.identifier,
                 _name11 = _operand31$identifier.name,
                 _id11 = _operand31$identifier.id;
@@ -62011,17 +62078,17 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator415.e(err);
+            _iterator416.e(err);
           } finally {
-            _iterator415.f();
+            _iterator416.f();
           }
-          var _iterator416 = _createForOfIteratorHelper(
+          var _iterator417 = _createForOfIteratorHelper(
               eachInstructionValueLValue(value)
             ),
-            _step416;
+            _step417;
           try {
-            for (_iterator416.s(); !(_step416 = _iterator416.n()).done; ) {
-              var lvalueOperand = _step416.value;
+            for (_iterator417.s(); !(_step417 = _iterator417.n()).done; ) {
+              var lvalueOperand = _step417.value;
               var lvalueNode = getOrInsertWith(
                 locals,
                 lvalueOperand.identifier.id,
@@ -62044,18 +62111,18 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator416.e(err);
+            _iterator417.e(err);
           } finally {
-            _iterator416.f();
+            _iterator417.f();
           }
         };
-        for (_iterator410.s(); !(_step410 = _iterator410.n()).done; ) {
+        for (_iterator411.s(); !(_step411 = _iterator411.n()).done; ) {
           _loop10();
         }
       } catch (err) {
-        _iterator410.e(err);
+        _iterator411.e(err);
       } finally {
-        _iterator410.f();
+        _iterator411.f();
       }
       var nextInstructions = [];
       if (isExpressionBlockKind(block.kind)) {
@@ -62071,27 +62138,27 @@ PERFORMANCE OF THIS SOFTWARE.
             block.instructions.at(-1).lvalue.identifier.id
           );
         }
-        var _iterator411 = _createForOfIteratorHelper(
+        var _iterator412 = _createForOfIteratorHelper(
             eachTerminalOperand(block.terminal)
           ),
-          _step411;
-        try {
-          for (_iterator411.s(); !(_step411 = _iterator411.n()).done; ) {
-            var operand = _step411.value;
-            emit(env, locals, shared, nextInstructions, operand.identifier.id);
-          }
-        } catch (err) {
-          _iterator411.e(err);
-        } finally {
-          _iterator411.f();
-        }
-        var _iterator412 = _createForOfIteratorHelper(locals),
           _step412;
         try {
           for (_iterator412.s(); !(_step412 = _iterator412.n()).done; ) {
-            var _step412$value = _slicedToArray(_step412.value, 2),
-              id = _step412$value[0],
-              _node13 = _step412$value[1];
+            var operand = _step412.value;
+            emit(env, locals, shared, nextInstructions, operand.identifier.id);
+          }
+        } catch (err) {
+          _iterator412.e(err);
+        } finally {
+          _iterator412.f();
+        }
+        var _iterator413 = _createForOfIteratorHelper(locals),
+          _step413;
+        try {
+          for (_iterator413.s(); !(_step413 = _iterator413.n()).done; ) {
+            var _step413$value = _slicedToArray(_step413.value, 2),
+              id = _step413$value[0],
+              _node13 = _step413$value[1];
             if (_node13.instruction == null) {
               continue;
             }
@@ -62121,18 +62188,18 @@ PERFORMANCE OF THIS SOFTWARE.
             shared.set(id, _node13);
           }
         } catch (err) {
-          _iterator412.e(err);
+          _iterator413.e(err);
         } finally {
-          _iterator412.f();
+          _iterator413.f();
         }
       } else {
-        var _iterator413 = _createForOfIteratorHelper(
+        var _iterator414 = _createForOfIteratorHelper(
             eachTerminalOperand(block.terminal)
           ),
-          _step413;
+          _step414;
         try {
-          for (_iterator413.s(); !(_step413 = _iterator413.n()).done; ) {
-            var _operand30 = _step413.value;
+          for (_iterator414.s(); !(_step414 = _iterator414.n()).done; ) {
+            var _operand30 = _step414.value;
             emit(
               env,
               locals,
@@ -62142,17 +62209,17 @@ PERFORMANCE OF THIS SOFTWARE.
             );
           }
         } catch (err) {
-          _iterator413.e(err);
+          _iterator414.e(err);
         } finally {
-          _iterator413.f();
+          _iterator414.f();
         }
-        var _iterator414 = _createForOfIteratorHelper(
+        var _iterator415 = _createForOfIteratorHelper(
             Array.from(locals.keys()).reverse()
           ),
-          _step414;
+          _step415;
         try {
-          for (_iterator414.s(); !(_step414 = _iterator414.n()).done; ) {
-            var _id10 = _step414.value;
+          for (_iterator415.s(); !(_step415 = _iterator415.n()).done; ) {
+            var _id10 = _step415.value;
             var _node14 = locals.get(_id10);
             if (_node14 === undefined) {
               continue;
@@ -62164,9 +62231,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator414.e(err);
+          _iterator415.e(err);
         } finally {
-          _iterator414.f();
+          _iterator415.f();
         }
       }
       block.instructions = nextInstructions;
@@ -62181,17 +62248,17 @@ PERFORMANCE OF THIS SOFTWARE.
       }
       node.depth = 0;
       var depth = node.reorderability === Reorderability.Reorderable ? 1 : 10;
-      var _iterator417 = _createForOfIteratorHelper(node.dependencies),
-        _step417;
+      var _iterator418 = _createForOfIteratorHelper(node.dependencies),
+        _step418;
       try {
-        for (_iterator417.s(); !(_step417 = _iterator417.n()).done; ) {
-          var dep = _step417.value;
+        for (_iterator418.s(); !(_step418 = _iterator418.n()).done; ) {
+          var dep = _step418.value;
           depth += getDepth(env, nodes, dep);
         }
       } catch (err) {
-        _iterator417.e(err);
+        _iterator418.e(err);
       } finally {
-        _iterator417.f();
+        _iterator418.f();
       }
       node.depth = depth;
       return depth;
@@ -62211,17 +62278,17 @@ PERFORMANCE OF THIS SOFTWARE.
         var bDepth = getDepth(env, locals, b);
         return bDepth - aDepth;
       });
-      var _iterator418 = _createForOfIteratorHelper(deps),
-        _step418;
+      var _iterator419 = _createForOfIteratorHelper(deps),
+        _step419;
       try {
-        for (_iterator418.s(); !(_step418 = _iterator418.n()).done; ) {
-          var dep = _step418.value;
+        for (_iterator419.s(); !(_step419 = _iterator419.n()).done; ) {
+          var dep = _step419.value;
           emit(env, locals, shared, instructions, dep);
         }
       } catch (err) {
-        _iterator418.e(err);
+        _iterator419.e(err);
       } finally {
-        _iterator418.f();
+        _iterator419.f();
       }
       if (node.instruction !== null) {
         instructions.push(node.instruction);
@@ -62266,17 +62333,17 @@ PERFORMANCE OF THIS SOFTWARE.
     function alignMethodCallScopes(fn) {
       var scopeMapping = new Map();
       var mergedScopes = new DisjointSet();
-      var _iterator419 = _createForOfIteratorHelper(fn.body.blocks),
-        _step419;
+      var _iterator420 = _createForOfIteratorHelper(fn.body.blocks),
+        _step420;
       try {
-        for (_iterator419.s(); !(_step419 = _iterator419.n()).done; ) {
-          var _step419$value = _slicedToArray(_step419.value, 2),
-            block = _step419$value[1];
-          var _iterator421 = _createForOfIteratorHelper(block.instructions),
-            _step421;
+        for (_iterator420.s(); !(_step420 = _iterator420.n()).done; ) {
+          var _step420$value = _slicedToArray(_step420.value, 2),
+            block = _step420$value[1];
+          var _iterator422 = _createForOfIteratorHelper(block.instructions),
+            _step422;
           try {
-            for (_iterator421.s(); !(_step421 = _iterator421.n()).done; ) {
-              var instr = _step421.value;
+            for (_iterator422.s(); !(_step422 = _iterator422.n()).done; ) {
+              var instr = _step422.value;
               var lvalue = instr.lvalue,
                 value = instr.value;
               if (value.kind === "MethodCall") {
@@ -62299,15 +62366,15 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator421.e(err);
+            _iterator422.e(err);
           } finally {
-            _iterator421.f();
+            _iterator422.f();
           }
         }
       } catch (err) {
-        _iterator419.e(err);
+        _iterator420.e(err);
       } finally {
-        _iterator419.f();
+        _iterator420.f();
       }
       mergedScopes.forEach(function (scope, root) {
         if (scope === root) {
@@ -62320,17 +62387,17 @@ PERFORMANCE OF THIS SOFTWARE.
           Math.max(scope.range.end, root.range.end)
         );
       });
-      var _iterator420 = _createForOfIteratorHelper(fn.body.blocks),
-        _step420;
+      var _iterator421 = _createForOfIteratorHelper(fn.body.blocks),
+        _step421;
       try {
-        for (_iterator420.s(); !(_step420 = _iterator420.n()).done; ) {
-          var _step420$value = _slicedToArray(_step420.value, 2),
-            _block18 = _step420$value[1];
-          var _iterator422 = _createForOfIteratorHelper(_block18.instructions),
-            _step422;
+        for (_iterator421.s(); !(_step421 = _iterator421.n()).done; ) {
+          var _step421$value = _slicedToArray(_step421.value, 2),
+            _block18 = _step421$value[1];
+          var _iterator423 = _createForOfIteratorHelper(_block18.instructions),
+            _step423;
           try {
-            for (_iterator422.s(); !(_step422 = _iterator422.n()).done; ) {
-              var _instr9 = _step422.value;
+            for (_iterator423.s(); !(_step423 = _iterator423.n()).done; ) {
+              var _instr9 = _step423.value;
               var mappedScope = scopeMapping.get(_instr9.lvalue.identifier.id);
               if (mappedScope !== undefined) {
                 _instr9.lvalue.identifier.scope = mappedScope;
@@ -62344,15 +62411,15 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator422.e(err);
+            _iterator423.e(err);
           } finally {
-            _iterator422.f();
+            _iterator423.f();
           }
         }
       } catch (err) {
-        _iterator420.e(err);
+        _iterator421.e(err);
       } finally {
-        _iterator420.f();
+        _iterator421.f();
       }
     }
     function alignReactiveScopesToBlockScopesHIR(fn) {
@@ -62387,12 +62454,12 @@ PERFORMANCE OF THIS SOFTWARE.
           );
         }
       }
-      var _iterator423 = _createForOfIteratorHelper(fn.body.blocks),
-        _step423;
+      var _iterator424 = _createForOfIteratorHelper(fn.body.blocks),
+        _step424;
       try {
         var _loop11 = function _loop11() {
-          var _step423$value = _slicedToArray(_step423.value, 2),
-            block = _step423$value[1];
+          var _step424$value = _slicedToArray(_step424.value, 2),
+            block = _step424$value[1];
           var startingId =
             (_b =
               (_a = block.instructions[0]) === null || _a === void 0
@@ -62409,19 +62476,19 @@ PERFORMANCE OF THIS SOFTWARE.
             block.id
           ) {
             activeBlockFallthroughRanges.pop();
-            var _iterator424 = _createForOfIteratorHelper(activeScopes),
-              _step424;
+            var _iterator425 = _createForOfIteratorHelper(activeScopes),
+              _step425;
             try {
-              for (_iterator424.s(); !(_step424 = _iterator424.n()).done; ) {
-                var scope = _step424.value;
+              for (_iterator425.s(); !(_step425 = _iterator425.n()).done; ) {
+                var scope = _step425.value;
                 scope.range.start = makeInstructionId(
                   Math.min(scope.range.start, top.range.start)
                 );
               }
             } catch (err) {
-              _iterator424.e(err);
+              _iterator425.e(err);
             } finally {
-              _iterator424.f();
+              _iterator425.f();
             }
           }
           var instructions = block.instructions,
@@ -62430,58 +62497,58 @@ PERFORMANCE OF THIS SOFTWARE.
             (_c = valueBlockNodes.get(block.id)) !== null && _c !== void 0
               ? _c
               : null;
-          var _iterator425 = _createForOfIteratorHelper(instructions),
-            _step425;
+          var _iterator426 = _createForOfIteratorHelper(instructions),
+            _step426;
           try {
-            for (_iterator425.s(); !(_step425 = _iterator425.n()).done; ) {
-              var instr = _step425.value;
-              var _iterator428 = _createForOfIteratorHelper(
-                  eachInstructionLValue(instr)
-                ),
-                _step428;
-              try {
-                for (_iterator428.s(); !(_step428 = _iterator428.n()).done; ) {
-                  var lvalue = _step428.value;
-                  recordPlace(instr.id, lvalue, node);
-                }
-              } catch (err) {
-                _iterator428.e(err);
-              } finally {
-                _iterator428.f();
-              }
+            for (_iterator426.s(); !(_step426 = _iterator426.n()).done; ) {
+              var instr = _step426.value;
               var _iterator429 = _createForOfIteratorHelper(
-                  eachInstructionValueOperand(instr.value)
+                  eachInstructionLValue(instr)
                 ),
                 _step429;
               try {
                 for (_iterator429.s(); !(_step429 = _iterator429.n()).done; ) {
-                  var operand = _step429.value;
-                  recordPlace(instr.id, operand, node);
+                  var lvalue = _step429.value;
+                  recordPlace(instr.id, lvalue, node);
                 }
               } catch (err) {
                 _iterator429.e(err);
               } finally {
                 _iterator429.f();
               }
-            }
-          } catch (err) {
-            _iterator425.e(err);
-          } finally {
-            _iterator425.f();
-          }
-          var _iterator426 = _createForOfIteratorHelper(
-              eachTerminalOperand(terminal)
-            ),
-            _step426;
-          try {
-            for (_iterator426.s(); !(_step426 = _iterator426.n()).done; ) {
-              var _operand32 = _step426.value;
-              recordPlace(terminal.id, _operand32, node);
+              var _iterator430 = _createForOfIteratorHelper(
+                  eachInstructionValueOperand(instr.value)
+                ),
+                _step430;
+              try {
+                for (_iterator430.s(); !(_step430 = _iterator430.n()).done; ) {
+                  var operand = _step430.value;
+                  recordPlace(instr.id, operand, node);
+                }
+              } catch (err) {
+                _iterator430.e(err);
+              } finally {
+                _iterator430.f();
+              }
             }
           } catch (err) {
             _iterator426.e(err);
           } finally {
             _iterator426.f();
+          }
+          var _iterator427 = _createForOfIteratorHelper(
+              eachTerminalOperand(terminal)
+            ),
+            _step427;
+          try {
+            for (_iterator427.s(); !(_step427 = _iterator427.n()).done; ) {
+              var _operand32 = _step427.value;
+              recordPlace(terminal.id, _operand32, node);
+            }
+          } catch (err) {
+            _iterator427.e(err);
+          } finally {
+            _iterator427.f();
           }
           var fallthrough = terminalFallthrough(terminal);
           if (fallthrough !== null && terminal.kind !== "branch") {
@@ -62494,11 +62561,11 @@ PERFORMANCE OF THIS SOFTWARE.
                   : _d.id) !== null && _e !== void 0
                 ? _e
                 : fallthroughBlock.terminal.id;
-            var _iterator427 = _createForOfIteratorHelper(activeScopes),
-              _step427;
+            var _iterator428 = _createForOfIteratorHelper(activeScopes),
+              _step428;
             try {
-              for (_iterator427.s(); !(_step427 = _iterator427.n()).done; ) {
-                var _scope = _step427.value;
+              for (_iterator428.s(); !(_step428 = _iterator428.n()).done; ) {
+                var _scope = _step428.value;
                 if (_scope.range.end > terminal.id) {
                   _scope.range.end = makeInstructionId(
                     Math.max(_scope.range.end, nextId)
@@ -62506,9 +62573,9 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator427.e(err);
+              _iterator428.e(err);
             } finally {
-              _iterator427.f();
+              _iterator428.f();
             }
             activeBlockFallthroughRanges.push({
               fallthrough: fallthrough,
@@ -62573,23 +62640,23 @@ PERFORMANCE OF THIS SOFTWARE.
             return successor;
           });
         };
-        for (_iterator423.s(); !(_step423 = _iterator423.n()).done; ) {
+        for (_iterator424.s(); !(_step424 = _iterator424.n()).done; ) {
           _loop11();
         }
       } catch (err) {
-        _iterator423.e(err);
+        _iterator424.e(err);
       } finally {
-        _iterator423.f();
+        _iterator424.f();
       }
     }
     function flattenReactiveLoopsHIR(fn) {
       var activeLoops = Array();
-      var _iterator430 = _createForOfIteratorHelper(fn.body.blocks),
-        _step430;
+      var _iterator431 = _createForOfIteratorHelper(fn.body.blocks),
+        _step431;
       try {
         var _loop12 = function _loop12() {
-          var _step430$value = _slicedToArray(_step430.value, 2),
-            block = _step430$value[1];
+          var _step431$value = _slicedToArray(_step431.value, 2),
+            block = _step431$value[1];
           retainWhere(activeLoops, function (id) {
             return id !== block.id;
           });
@@ -62642,32 +62709,32 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         };
-        for (_iterator430.s(); !(_step430 = _iterator430.n()).done; ) {
+        for (_iterator431.s(); !(_step431 = _iterator431.n()).done; ) {
           _loop12();
         }
       } catch (err) {
-        _iterator430.e(err);
+        _iterator431.e(err);
       } finally {
-        _iterator430.f();
+        _iterator431.f();
       }
     }
     function flattenScopesWithHooksOrUseHIR(fn) {
       var activeScopes = [];
       var prune = [];
-      var _iterator431 = _createForOfIteratorHelper(fn.body.blocks),
-        _step431;
+      var _iterator432 = _createForOfIteratorHelper(fn.body.blocks),
+        _step432;
       try {
         var _loop13 = function _loop13() {
-          var _step431$value = _slicedToArray(_step431.value, 2),
-            block = _step431$value[1];
+          var _step432$value = _slicedToArray(_step432.value, 2),
+            block = _step432$value[1];
           retainWhere(activeScopes, function (current) {
             return current.fallthrough !== block.id;
           });
-          var _iterator432 = _createForOfIteratorHelper(block.instructions),
-            _step432;
+          var _iterator433 = _createForOfIteratorHelper(block.instructions),
+            _step433;
           try {
-            for (_iterator432.s(); !(_step432 = _iterator432.n()).done; ) {
-              var instr = _step432.value;
+            for (_iterator433.s(); !(_step433 = _iterator433.n()).done; ) {
+              var instr = _step433.value;
               var value = instr.value;
               switch (value.kind) {
                 case "MethodCall":
@@ -62692,9 +62759,9 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator432.e(err);
+            _iterator433.e(err);
           } finally {
-            _iterator432.f();
+            _iterator433.f();
           }
           if (block.terminal.kind === "scope") {
             activeScopes.push({
@@ -62703,13 +62770,13 @@ PERFORMANCE OF THIS SOFTWARE.
             });
           }
         };
-        for (_iterator431.s(); !(_step431 = _iterator431.n()).done; ) {
+        for (_iterator432.s(); !(_step432 = _iterator432.n()).done; ) {
           _loop13();
         }
       } catch (err) {
-        _iterator431.e(err);
+        _iterator432.e(err);
       } finally {
-        _iterator431.f();
+        _iterator432.f();
       }
       for (var _i42 = 0, _prune = prune; _i42 < _prune.length; _i42++) {
         var id = _prune[_i42];
@@ -62816,38 +62883,16 @@ PERFORMANCE OF THIS SOFTWARE.
           key: "transformScope",
           value: function transformScope(scopeBlock, _withinScope) {
             this.visitScope(scopeBlock, true);
-            var _iterator433 = _createForOfIteratorHelper(
+            var _iterator434 = _createForOfIteratorHelper(
                 scopeBlock.scope.dependencies
               ),
-              _step433;
+              _step434;
             try {
-              for (_iterator433.s(); !(_step433 = _iterator433.n()).done; ) {
-                var dep = _step433.value;
+              for (_iterator434.s(); !(_step434 = _iterator434.n()).done; ) {
+                var dep = _step434.value;
                 if (this.unmemoizedValues.has(dep.identifier)) {
-                  var _iterator434 = _createForOfIteratorHelper(
-                      scopeBlock.scope.declarations
-                    ),
-                    _step434;
-                  try {
-                    for (
-                      _iterator434.s();
-                      !(_step434 = _iterator434.n()).done;
-
-                    ) {
-                      var _step434$value = _slicedToArray(_step434.value, 2),
-                        _ = _step434$value[0],
-                        decl = _step434$value[1];
-                      if (this.alwaysInvalidatingValues.has(decl.identifier)) {
-                        this.unmemoizedValues.add(decl.identifier);
-                      }
-                    }
-                  } catch (err) {
-                    _iterator434.e(err);
-                  } finally {
-                    _iterator434.f();
-                  }
                   var _iterator435 = _createForOfIteratorHelper(
-                      scopeBlock.scope.reassignments
+                      scopeBlock.scope.declarations
                     ),
                     _step435;
                   try {
@@ -62856,15 +62901,37 @@ PERFORMANCE OF THIS SOFTWARE.
                       !(_step435 = _iterator435.n()).done;
 
                     ) {
-                      var _identifier16 = _step435.value;
-                      if (this.alwaysInvalidatingValues.has(_identifier16)) {
-                        this.unmemoizedValues.add(_identifier16);
+                      var _step435$value = _slicedToArray(_step435.value, 2),
+                        _ = _step435$value[0],
+                        decl = _step435$value[1];
+                      if (this.alwaysInvalidatingValues.has(decl.identifier)) {
+                        this.unmemoizedValues.add(decl.identifier);
                       }
                     }
                   } catch (err) {
                     _iterator435.e(err);
                   } finally {
                     _iterator435.f();
+                  }
+                  var _iterator436 = _createForOfIteratorHelper(
+                      scopeBlock.scope.reassignments
+                    ),
+                    _step436;
+                  try {
+                    for (
+                      _iterator436.s();
+                      !(_step436 = _iterator436.n()).done;
+
+                    ) {
+                      var _identifier16 = _step436.value;
+                      if (this.alwaysInvalidatingValues.has(_identifier16)) {
+                        this.unmemoizedValues.add(_identifier16);
+                      }
+                    }
+                  } catch (err) {
+                    _iterator436.e(err);
+                  } finally {
+                    _iterator436.f();
                   }
                   return {
                     kind: "replace",
@@ -62877,9 +62944,9 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator433.e(err);
+              _iterator434.e(err);
             } finally {
-              _iterator433.f();
+              _iterator434.f();
             }
             return { kind: "keep" };
           }
@@ -63185,20 +63252,20 @@ PERFORMANCE OF THIS SOFTWARE.
       visitReactiveFunction(fn, visitor, null);
       var disjoint = visitor.scopeIdentifiers;
       var scopePaths = new Map();
-      var _iterator436 = _createForOfIteratorHelper(visitor.scopePaths),
-        _step436;
+      var _iterator437 = _createForOfIteratorHelper(visitor.scopePaths),
+        _step437;
       try {
-        for (_iterator436.s(); !(_step436 = _iterator436.n()).done; ) {
-          var _step436$value = _slicedToArray(_step436.value, 2),
-            _key39 = _step436$value[0],
-            value = _step436$value[1];
-          var _iterator437 = _createForOfIteratorHelper(value),
-            _step437;
+        for (_iterator437.s(); !(_step437 = _iterator437.n()).done; ) {
+          var _step437$value = _slicedToArray(_step437.value, 2),
+            _key39 = _step437$value[0],
+            value = _step437$value[1];
+          var _iterator438 = _createForOfIteratorHelper(value),
+            _step438;
           try {
-            for (_iterator437.s(); !(_step437 = _iterator437.n()).done; ) {
-              var _step437$value = _slicedToArray(_step437.value, 2),
-                path = _step437$value[0],
-                id = _step437$value[1];
+            for (_iterator438.s(); !(_step438 = _iterator438.n()).done; ) {
+              var _step438$value = _slicedToArray(_step438.value, 2),
+                path = _step438$value[0],
+                id = _step438$value[1];
               update(
                 scopePaths,
                 (_a = disjoint.find(_key39)) !== null && _a !== void 0
@@ -63209,15 +63276,15 @@ PERFORMANCE OF THIS SOFTWARE.
               );
             }
           } catch (err) {
-            _iterator437.e(err);
+            _iterator438.e(err);
           } finally {
-            _iterator437.f();
+            _iterator438.f();
           }
         }
       } catch (err) {
-        _iterator436.e(err);
+        _iterator437.e(err);
       } finally {
-        _iterator436.f();
+        _iterator437.f();
       }
       return [disjoint, scopePaths];
     }
@@ -63246,76 +63313,76 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function inferTypes(func) {
       var unifier = new Unifier(func.env);
-      var _iterator438 = _createForOfIteratorHelper(generate(func)),
-        _step438;
+      var _iterator439 = _createForOfIteratorHelper(generate(func)),
+        _step439;
       try {
-        for (_iterator438.s(); !(_step438 = _iterator438.n()).done; ) {
-          var e = _step438.value;
+        for (_iterator439.s(); !(_step439 = _iterator439.n()).done; ) {
+          var e = _step439.value;
           unifier.unify(e.left, e.right);
         }
       } catch (err) {
-        _iterator438.e(err);
+        _iterator439.e(err);
       } finally {
-        _iterator438.f();
+        _iterator439.f();
       }
       apply(func, unifier);
     }
     function apply(func, unifier) {
-      var _iterator439 = _createForOfIteratorHelper(func.body.blocks),
-        _step439;
+      var _iterator440 = _createForOfIteratorHelper(func.body.blocks),
+        _step440;
       try {
-        for (_iterator439.s(); !(_step439 = _iterator439.n()).done; ) {
-          var _step439$value = _slicedToArray(_step439.value, 2),
-            _ = _step439$value[0],
-            block = _step439$value[1];
-          var _iterator440 = _createForOfIteratorHelper(block.phis),
-            _step440;
+        for (_iterator440.s(); !(_step440 = _iterator440.n()).done; ) {
+          var _step440$value = _slicedToArray(_step440.value, 2),
+            _ = _step440$value[0],
+            block = _step440$value[1];
+          var _iterator441 = _createForOfIteratorHelper(block.phis),
+            _step441;
           try {
-            for (_iterator440.s(); !(_step440 = _iterator440.n()).done; ) {
-              var phi = _step440.value;
+            for (_iterator441.s(); !(_step441 = _iterator441.n()).done; ) {
+              var phi = _step441.value;
               phi.place.identifier.type = unifier.get(
                 phi.place.identifier.type
               );
             }
           } catch (err) {
-            _iterator440.e(err);
+            _iterator441.e(err);
           } finally {
-            _iterator440.f();
+            _iterator441.f();
           }
-          var _iterator441 = _createForOfIteratorHelper(block.instructions),
-            _step441;
+          var _iterator442 = _createForOfIteratorHelper(block.instructions),
+            _step442;
           try {
-            for (_iterator441.s(); !(_step441 = _iterator441.n()).done; ) {
-              var instr = _step441.value;
-              var _iterator442 = _createForOfIteratorHelper(
+            for (_iterator442.s(); !(_step442 = _iterator442.n()).done; ) {
+              var instr = _step442.value;
+              var _iterator443 = _createForOfIteratorHelper(
                   eachInstructionLValue(instr)
                 ),
-                _step442;
+                _step443;
               try {
-                for (_iterator442.s(); !(_step442 = _iterator442.n()).done; ) {
-                  var operand = _step442.value;
+                for (_iterator443.s(); !(_step443 = _iterator443.n()).done; ) {
+                  var operand = _step443.value;
                   operand.identifier.type = unifier.get(
                     operand.identifier.type
                   );
                 }
               } catch (err) {
-                _iterator442.e(err);
-              } finally {
-                _iterator442.f();
-              }
-              var _iterator443 = _createForOfIteratorHelper(
-                  eachInstructionOperand(instr)
-                ),
-                _step443;
-              try {
-                for (_iterator443.s(); !(_step443 = _iterator443.n()).done; ) {
-                  var place = _step443.value;
-                  place.identifier.type = unifier.get(place.identifier.type);
-                }
-              } catch (err) {
                 _iterator443.e(err);
               } finally {
                 _iterator443.f();
+              }
+              var _iterator444 = _createForOfIteratorHelper(
+                  eachInstructionOperand(instr)
+                ),
+                _step444;
+              try {
+                for (_iterator444.s(); !(_step444 = _iterator444.n()).done; ) {
+                  var place = _step444.value;
+                  place.identifier.type = unifier.get(place.identifier.type);
+                }
+              } catch (err) {
+                _iterator444.e(err);
+              } finally {
+                _iterator444.f();
               }
               var lvalue = instr.lvalue,
                 value = instr.value;
@@ -63328,15 +63395,15 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator441.e(err);
+            _iterator442.e(err);
           } finally {
-            _iterator441.f();
+            _iterator442.f();
           }
         }
       } catch (err) {
-        _iterator439.e(err);
+        _iterator440.e(err);
       } finally {
-        _iterator439.f();
+        _iterator440.f();
       }
       func.returnType = unifier.get(func.returnType);
     }
@@ -63349,16 +63416,16 @@ PERFORMANCE OF THIS SOFTWARE.
         ref,
         names,
         returnTypes,
-        _iterator444,
-        _step444,
-        _step444$value,
-        _,
-        block,
         _iterator445,
         _step445,
-        phi,
+        _step445$value,
+        _,
+        block,
         _iterator446,
         _step446,
+        phi,
+        _iterator447,
+        _step447,
         instr,
         terminal;
       return _regeneratorRuntime().wrap(
@@ -63395,26 +63462,26 @@ PERFORMANCE OF THIS SOFTWARE.
               case 8:
                 names = new Map();
                 returnTypes = [];
-                _iterator444 = _createForOfIteratorHelper(func.body.blocks);
+                _iterator445 = _createForOfIteratorHelper(func.body.blocks);
                 _context10.prev = 11;
-                _iterator444.s();
+                _iterator445.s();
               case 13:
-                if ((_step444 = _iterator444.n()).done) {
+                if ((_step445 = _iterator445.n()).done) {
                   _context10.next = 52;
                   break;
                 }
-                (_step444$value = _slicedToArray(_step444.value, 2)),
-                  (_ = _step444$value[0]),
-                  (block = _step444$value[1]);
-                _iterator445 = _createForOfIteratorHelper(block.phis);
+                (_step445$value = _slicedToArray(_step445.value, 2)),
+                  (_ = _step445$value[0]),
+                  (block = _step445$value[1]);
+                _iterator446 = _createForOfIteratorHelper(block.phis);
                 _context10.prev = 16;
-                _iterator445.s();
+                _iterator446.s();
               case 18:
-                if ((_step445 = _iterator445.n()).done) {
+                if ((_step446 = _iterator446.n()).done) {
                   _context10.next = 24;
                   break;
                 }
-                phi = _step445.value;
+                phi = _step446.value;
                 _context10.next = 22;
                 return equation(phi.place.identifier.type, {
                   kind: "Phi",
@@ -63433,21 +63500,21 @@ PERFORMANCE OF THIS SOFTWARE.
               case 26:
                 _context10.prev = 26;
                 _context10.t0 = _context10["catch"](16);
-                _iterator445.e(_context10.t0);
+                _iterator446.e(_context10.t0);
               case 29:
                 _context10.prev = 29;
-                _iterator445.f();
+                _iterator446.f();
                 return _context10.finish(29);
               case 32:
-                _iterator446 = _createForOfIteratorHelper(block.instructions);
+                _iterator447 = _createForOfIteratorHelper(block.instructions);
                 _context10.prev = 33;
-                _iterator446.s();
+                _iterator447.s();
               case 35:
-                if ((_step446 = _iterator446.n()).done) {
+                if ((_step447 = _iterator447.n()).done) {
                   _context10.next = 40;
                   break;
                 }
-                instr = _step446.value;
+                instr = _step447.value;
                 return _context10.delegateYield(
                   generateInstructionTypes(func.env, names, instr),
                   "t1",
@@ -63462,10 +63529,10 @@ PERFORMANCE OF THIS SOFTWARE.
               case 42:
                 _context10.prev = 42;
                 _context10.t2 = _context10["catch"](33);
-                _iterator446.e(_context10.t2);
+                _iterator447.e(_context10.t2);
               case 45:
                 _context10.prev = 45;
-                _iterator446.f();
+                _iterator447.f();
                 return _context10.finish(45);
               case 48:
                 terminal = block.terminal;
@@ -63481,10 +63548,10 @@ PERFORMANCE OF THIS SOFTWARE.
               case 54:
                 _context10.prev = 54;
                 _context10.t3 = _context10["catch"](11);
-                _iterator444.e(_context10.t3);
+                _iterator445.e(_context10.t3);
               case 57:
                 _context10.prev = 57;
-                _iterator444.f();
+                _iterator445.f();
                 return _context10.finish(57);
               case 60:
                 if (!(returnTypes.length > 1)) {
@@ -63541,16 +63608,16 @@ PERFORMANCE OF THIS SOFTWARE.
         globalType,
         returnType,
         _returnType,
-        _iterator447,
-        _step447,
+        _iterator448,
+        _step448,
         property,
         _returnType2,
         pattern,
         i,
         item,
         propertyName,
-        _iterator448,
-        _step448,
+        _iterator449,
+        _step449,
         _property10;
       return _regeneratorRuntime().wrap(
         function generateInstructionTypes$(_context11) {
@@ -63804,15 +63871,15 @@ PERFORMANCE OF THIS SOFTWARE.
               case 65:
                 return _context11.abrupt("break", 165);
               case 66:
-                _iterator447 = _createForOfIteratorHelper(value.properties);
+                _iterator448 = _createForOfIteratorHelper(value.properties);
                 _context11.prev = 67;
-                _iterator447.s();
+                _iterator448.s();
               case 69:
-                if ((_step447 = _iterator447.n()).done) {
+                if ((_step448 = _iterator448.n()).done) {
                   _context11.next = 76;
                   break;
                 }
-                property = _step447.value;
+                property = _step448.value;
                 if (
                   !(
                     property.kind === "ObjectProperty" &&
@@ -63835,10 +63902,10 @@ PERFORMANCE OF THIS SOFTWARE.
               case 78:
                 _context11.prev = 78;
                 _context11.t1 = _context11["catch"](67);
-                _iterator447.e(_context11.t1);
+                _iterator448.e(_context11.t1);
               case 81:
                 _context11.prev = 81;
-                _iterator447.f();
+                _iterator448.f();
                 return _context11.finish(81);
               case 84:
                 _context11.next = 86;
@@ -63917,15 +63984,15 @@ PERFORMANCE OF THIS SOFTWARE.
                 _context11.next = 135;
                 break;
               case 116:
-                _iterator448 = _createForOfIteratorHelper(pattern.properties);
+                _iterator449 = _createForOfIteratorHelper(pattern.properties);
                 _context11.prev = 117;
-                _iterator448.s();
+                _iterator449.s();
               case 119:
-                if ((_step448 = _iterator448.n()).done) {
+                if ((_step449 = _iterator449.n()).done) {
                   _context11.next = 127;
                   break;
                 }
-                _property10 = _step448.value;
+                _property10 = _step449.value;
                 if (!(_property10.kind === "ObjectProperty")) {
                   _context11.next = 125;
                   break;
@@ -63955,10 +64022,10 @@ PERFORMANCE OF THIS SOFTWARE.
               case 129:
                 _context11.prev = 129;
                 _context11.t2 = _context11["catch"](117);
-                _iterator448.e(_context11.t2);
+                _iterator449.e(_context11.t2);
               case 132:
                 _context11.prev = 132;
-                _iterator448.f();
+                _iterator449.f();
                 return _context11.finish(132);
               case 135:
                 return _context11.abrupt("break", 165);
@@ -64120,11 +64187,11 @@ PERFORMANCE OF THIS SOFTWARE.
                 suggestions: null
               });
               var candidateType = null;
-              var _iterator449 = _createForOfIteratorHelper(type.operands),
-                _step449;
+              var _iterator450 = _createForOfIteratorHelper(type.operands),
+                _step450;
               try {
-                for (_iterator449.s(); !(_step449 = _iterator449.n()).done; ) {
-                  var operand = _step449.value;
+                for (_iterator450.s(); !(_step450 = _iterator450.n()).done; ) {
+                  var operand = _step450.value;
                   var resolved = this.get(operand);
                   if (candidateType === null) {
                     candidateType = resolved;
@@ -64139,9 +64206,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   }
                 }
               } catch (err) {
-                _iterator449.e(err);
+                _iterator450.e(err);
               } finally {
-                _iterator449.f();
+                _iterator450.f();
               }
               if (candidateType !== null) {
                 this.unify(v, candidateType);
@@ -64165,15 +64232,15 @@ PERFORMANCE OF THIS SOFTWARE.
             switch (type.kind) {
               case "Phi": {
                 var operands = [];
-                var _iterator450 = _createForOfIteratorHelper(type.operands),
-                  _step450;
+                var _iterator451 = _createForOfIteratorHelper(type.operands),
+                  _step451;
                 try {
                   for (
-                    _iterator450.s();
-                    !(_step450 = _iterator450.n()).done;
+                    _iterator451.s();
+                    !(_step451 = _iterator451.n()).done;
 
                   ) {
-                    var operand = _step450.value;
+                    var operand = _step451.value;
                     if (operand.kind === "Type" && operand.id === v.id) {
                       continue;
                     }
@@ -64184,9 +64251,9 @@ PERFORMANCE OF THIS SOFTWARE.
                     operands.push(resolved);
                   }
                 } catch (err) {
-                  _iterator450.e(err);
+                  _iterator451.e(err);
                 } finally {
-                  _iterator450.f();
+                  _iterator451.f();
                 }
                 return { kind: "Phi", operands: operands };
               }
@@ -64320,17 +64387,17 @@ PERFORMANCE OF THIS SOFTWARE.
       validateContextVariableLValuesImpl(fn, identifierKinds);
     }
     function validateContextVariableLValuesImpl(fn, identifierKinds) {
-      var _iterator451 = _createForOfIteratorHelper(fn.body.blocks),
-        _step451;
+      var _iterator452 = _createForOfIteratorHelper(fn.body.blocks),
+        _step452;
       try {
-        for (_iterator451.s(); !(_step451 = _iterator451.n()).done; ) {
-          var _step451$value = _slicedToArray(_step451.value, 2),
-            block = _step451$value[1];
-          var _iterator452 = _createForOfIteratorHelper(block.instructions),
-            _step452;
+        for (_iterator452.s(); !(_step452 = _iterator452.n()).done; ) {
+          var _step452$value = _slicedToArray(_step452.value, 2),
+            block = _step452$value[1];
+          var _iterator453 = _createForOfIteratorHelper(block.instructions),
+            _step453;
           try {
-            for (_iterator452.s(); !(_step452 = _iterator452.n()).done; ) {
-              var instr = _step452.value;
+            for (_iterator453.s(); !(_step453 = _iterator453.n()).done; ) {
+              var instr = _step453.value;
               var value = instr.value;
               switch (value.kind) {
                 case "DeclareContext":
@@ -64357,23 +64424,23 @@ PERFORMANCE OF THIS SOFTWARE.
                   break;
                 }
                 case "Destructure": {
-                  var _iterator453 = _createForOfIteratorHelper(
+                  var _iterator454 = _createForOfIteratorHelper(
                       eachPatternOperand(value.lvalue.pattern)
                     ),
-                    _step453;
+                    _step454;
                   try {
                     for (
-                      _iterator453.s();
-                      !(_step453 = _iterator453.n()).done;
+                      _iterator454.s();
+                      !(_step454 = _iterator454.n()).done;
 
                     ) {
-                      var lvalue = _step453.value;
+                      var lvalue = _step454.value;
                       visit(identifierKinds, lvalue, "destructure");
                     }
                   } catch (err) {
-                    _iterator453.e(err);
+                    _iterator454.e(err);
                   } finally {
-                    _iterator453.f();
+                    _iterator454.f();
                   }
                   break;
                 }
@@ -64386,17 +64453,17 @@ PERFORMANCE OF THIS SOFTWARE.
                   break;
                 }
                 default: {
-                  var _iterator454 = _createForOfIteratorHelper(
+                  var _iterator455 = _createForOfIteratorHelper(
                       eachInstructionValueLValue(value)
                     ),
-                    _step454;
+                    _step455;
                   try {
                     for (
-                      _iterator454.s();
-                      !(_step454 = _iterator454.n()).done;
+                      _iterator455.s();
+                      !(_step455 = _iterator455.n()).done;
 
                     ) {
-                      var _ = _step454.value;
+                      var _ = _step455.value;
                       CompilerError.throwTodo({
                         reason:
                           "ValidateContextVariableLValues: unhandled instruction variant",
@@ -64406,23 +64473,23 @@ PERFORMANCE OF THIS SOFTWARE.
                       });
                     }
                   } catch (err) {
-                    _iterator454.e(err);
+                    _iterator455.e(err);
                   } finally {
-                    _iterator454.f();
+                    _iterator455.f();
                   }
                 }
               }
             }
           } catch (err) {
-            _iterator452.e(err);
+            _iterator453.e(err);
           } finally {
-            _iterator452.f();
+            _iterator453.f();
           }
         }
       } catch (err) {
-        _iterator451.e(err);
+        _iterator452.e(err);
       } finally {
-        _iterator451.f();
+        _iterator452.f();
       }
     }
     function visit(identifiers, place, kind) {
@@ -64589,64 +64656,64 @@ PERFORMANCE OF THIS SOFTWARE.
       function setKind(place, kind) {
         valueKinds.set(place.identifier.id, kind);
       }
-      var _iterator455 = _createForOfIteratorHelper(fn.params),
-        _step455;
+      var _iterator456 = _createForOfIteratorHelper(fn.params),
+        _step456;
       try {
-        for (_iterator455.s(); !(_step455 = _iterator455.n()).done; ) {
-          var param = _step455.value;
+        for (_iterator456.s(); !(_step456 = _iterator456.n()).done; ) {
+          var param = _step456.value;
           var place = param.kind === "Identifier" ? param : param.place;
           var kind = getKindForPlace(place);
           setKind(place, kind);
         }
       } catch (err) {
-        _iterator455.e(err);
+        _iterator456.e(err);
       } finally {
-        _iterator455.f();
+        _iterator456.f();
       }
-      var _iterator456 = _createForOfIteratorHelper(fn.body.blocks),
-        _step456;
+      var _iterator457 = _createForOfIteratorHelper(fn.body.blocks),
+        _step457;
       try {
-        for (_iterator456.s(); !(_step456 = _iterator456.n()).done; ) {
-          var _step456$value = _slicedToArray(_step456.value, 2),
-            block = _step456$value[1];
-          var _iterator458 = _createForOfIteratorHelper(block.phis),
-            _step458;
+        for (_iterator457.s(); !(_step457 = _iterator457.n()).done; ) {
+          var _step457$value = _slicedToArray(_step457.value, 2),
+            block = _step457$value[1];
+          var _iterator459 = _createForOfIteratorHelper(block.phis),
+            _step459;
           try {
-            for (_iterator458.s(); !(_step458 = _iterator458.n()).done; ) {
-              var phi = _step458.value;
+            for (_iterator459.s(); !(_step459 = _iterator459.n()).done; ) {
+              var phi = _step459.value;
               var _kind2 =
                 phi.place.identifier.name !== null &&
                 isHookName$2(phi.place.identifier.name.value)
                   ? Kind.PotentialHook
                   : Kind.Local;
-              var _iterator461 = _createForOfIteratorHelper(phi.operands),
-                _step461;
+              var _iterator462 = _createForOfIteratorHelper(phi.operands),
+                _step462;
               try {
-                for (_iterator461.s(); !(_step461 = _iterator461.n()).done; ) {
-                  var _step461$value = _slicedToArray(_step461.value, 2),
-                    operand = _step461$value[1];
+                for (_iterator462.s(); !(_step462 = _iterator462.n()).done; ) {
+                  var _step462$value = _slicedToArray(_step462.value, 2),
+                    operand = _step462$value[1];
                   var operandKind = valueKinds.get(operand.identifier.id);
                   if (operandKind !== undefined) {
                     _kind2 = joinKinds(_kind2, operandKind);
                   }
                 }
               } catch (err) {
-                _iterator461.e(err);
+                _iterator462.e(err);
               } finally {
-                _iterator461.f();
+                _iterator462.f();
               }
               valueKinds.set(phi.place.identifier.id, _kind2);
             }
           } catch (err) {
-            _iterator458.e(err);
+            _iterator459.e(err);
           } finally {
-            _iterator458.f();
+            _iterator459.f();
           }
-          var _iterator459 = _createForOfIteratorHelper(block.instructions),
-            _step459;
+          var _iterator460 = _createForOfIteratorHelper(block.instructions),
+            _step460;
           try {
-            for (_iterator459.s(); !(_step459 = _iterator459.n()).done; ) {
-              var instr = _step459.value;
+            for (_iterator460.s(); !(_step460 = _iterator460.n()).done; ) {
+              var instr = _step460.value;
               switch (instr.value.kind) {
                 case "LoadGlobal": {
                   if (getHookKind(fn.env, instr.lvalue.identifier) != null) {
@@ -64730,26 +64797,26 @@ PERFORMANCE OF THIS SOFTWARE.
                   } else if (calleeKind === Kind.PotentialHook) {
                     recordDynamicHookUsageError(instr.value.callee);
                   }
-                  var _iterator462 = _createForOfIteratorHelper(
+                  var _iterator463 = _createForOfIteratorHelper(
                       eachInstructionOperand(instr)
                     ),
-                    _step462;
+                    _step463;
                   try {
                     for (
-                      _iterator462.s();
-                      !(_step462 = _iterator462.n()).done;
+                      _iterator463.s();
+                      !(_step463 = _iterator463.n()).done;
 
                     ) {
-                      var _operand33 = _step462.value;
+                      var _operand33 = _step463.value;
                       if (_operand33 === instr.value.callee) {
                         continue;
                       }
                       visitPlace(_operand33);
                     }
                   } catch (err) {
-                    _iterator462.e(err);
+                    _iterator463.e(err);
                   } finally {
-                    _iterator462.f();
+                    _iterator463.f();
                   }
                   break;
                 }
@@ -64763,34 +64830,8 @@ PERFORMANCE OF THIS SOFTWARE.
                   } else if (_calleeKind === Kind.PotentialHook) {
                     recordDynamicHookUsageError(instr.value.property);
                   }
-                  var _iterator463 = _createForOfIteratorHelper(
-                      eachInstructionOperand(instr)
-                    ),
-                    _step463;
-                  try {
-                    for (
-                      _iterator463.s();
-                      !(_step463 = _iterator463.n()).done;
-
-                    ) {
-                      var _operand34 = _step463.value;
-                      if (_operand34 === instr.value.property) {
-                        continue;
-                      }
-                      visitPlace(_operand34);
-                    }
-                  } catch (err) {
-                    _iterator463.e(err);
-                  } finally {
-                    _iterator463.f();
-                  }
-                  break;
-                }
-                case "Destructure": {
-                  visitPlace(instr.value.value);
-                  var _objectKind = getKindForPlace(instr.value.value);
                   var _iterator464 = _createForOfIteratorHelper(
-                      eachInstructionLValue(instr)
+                      eachInstructionOperand(instr)
                     ),
                     _step464;
                   try {
@@ -64799,7 +64840,33 @@ PERFORMANCE OF THIS SOFTWARE.
                       !(_step464 = _iterator464.n()).done;
 
                     ) {
-                      var lvalue = _step464.value;
+                      var _operand34 = _step464.value;
+                      if (_operand34 === instr.value.property) {
+                        continue;
+                      }
+                      visitPlace(_operand34);
+                    }
+                  } catch (err) {
+                    _iterator464.e(err);
+                  } finally {
+                    _iterator464.f();
+                  }
+                  break;
+                }
+                case "Destructure": {
+                  visitPlace(instr.value.value);
+                  var _objectKind = getKindForPlace(instr.value.value);
+                  var _iterator465 = _createForOfIteratorHelper(
+                      eachInstructionLValue(instr)
+                    ),
+                    _step465;
+                  try {
+                    for (
+                      _iterator465.s();
+                      !(_step465 = _iterator465.n()).done;
+
+                    ) {
+                      var lvalue = _step465.value;
                       var _isHookProperty =
                         lvalue.identifier.name !== null &&
                         isHookName$2(lvalue.identifier.name.value);
@@ -64839,9 +64906,9 @@ PERFORMANCE OF THIS SOFTWARE.
                       setKind(lvalue, _kind7);
                     }
                   } catch (err) {
-                    _iterator464.e(err);
+                    _iterator465.e(err);
                   } finally {
-                    _iterator464.f();
+                    _iterator465.f();
                   }
                   break;
                 }
@@ -64851,26 +64918,8 @@ PERFORMANCE OF THIS SOFTWARE.
                   break;
                 }
                 default: {
-                  var _iterator465 = _createForOfIteratorHelper(
-                      eachInstructionOperand(instr)
-                    ),
-                    _step465;
-                  try {
-                    for (
-                      _iterator465.s();
-                      !(_step465 = _iterator465.n()).done;
-
-                    ) {
-                      var _operand35 = _step465.value;
-                      visitPlace(_operand35);
-                    }
-                  } catch (err) {
-                    _iterator465.e(err);
-                  } finally {
-                    _iterator465.f();
-                  }
                   var _iterator466 = _createForOfIteratorHelper(
-                      eachInstructionLValue(instr)
+                      eachInstructionOperand(instr)
                     ),
                     _step466;
                   try {
@@ -64879,72 +64928,90 @@ PERFORMANCE OF THIS SOFTWARE.
                       !(_step466 = _iterator466.n()).done;
 
                     ) {
-                      var _lvalue23 = _step466.value;
-                      var _kind8 = getKindForPlace(_lvalue23);
-                      setKind(_lvalue23, _kind8);
+                      var _operand35 = _step466.value;
+                      visitPlace(_operand35);
                     }
                   } catch (err) {
                     _iterator466.e(err);
                   } finally {
                     _iterator466.f();
                   }
+                  var _iterator467 = _createForOfIteratorHelper(
+                      eachInstructionLValue(instr)
+                    ),
+                    _step467;
+                  try {
+                    for (
+                      _iterator467.s();
+                      !(_step467 = _iterator467.n()).done;
+
+                    ) {
+                      var _lvalue23 = _step467.value;
+                      var _kind8 = getKindForPlace(_lvalue23);
+                      setKind(_lvalue23, _kind8);
+                    }
+                  } catch (err) {
+                    _iterator467.e(err);
+                  } finally {
+                    _iterator467.f();
+                  }
                 }
               }
-            }
-          } catch (err) {
-            _iterator459.e(err);
-          } finally {
-            _iterator459.f();
-          }
-          var _iterator460 = _createForOfIteratorHelper(
-              eachTerminalOperand(block.terminal)
-            ),
-            _step460;
-          try {
-            for (_iterator460.s(); !(_step460 = _iterator460.n()).done; ) {
-              var _operand36 = _step460.value;
-              visitPlace(_operand36);
             }
           } catch (err) {
             _iterator460.e(err);
           } finally {
             _iterator460.f();
           }
-        }
-      } catch (err) {
-        _iterator456.e(err);
-      } finally {
-        _iterator456.f();
-      }
-      var _iterator457 = _createForOfIteratorHelper(errorsByPlace),
-        _step457;
-      try {
-        for (_iterator457.s(); !(_step457 = _iterator457.n()).done; ) {
-          var _step457$value = _slicedToArray(_step457.value, 2),
-            error = _step457$value[1];
-          errors.push(error);
+          var _iterator461 = _createForOfIteratorHelper(
+              eachTerminalOperand(block.terminal)
+            ),
+            _step461;
+          try {
+            for (_iterator461.s(); !(_step461 = _iterator461.n()).done; ) {
+              var _operand36 = _step461.value;
+              visitPlace(_operand36);
+            }
+          } catch (err) {
+            _iterator461.e(err);
+          } finally {
+            _iterator461.f();
+          }
         }
       } catch (err) {
         _iterator457.e(err);
       } finally {
         _iterator457.f();
       }
+      var _iterator458 = _createForOfIteratorHelper(errorsByPlace),
+        _step458;
+      try {
+        for (_iterator458.s(); !(_step458 = _iterator458.n()).done; ) {
+          var _step458$value = _slicedToArray(_step458.value, 2),
+            error = _step458$value[1];
+          errors.push(error);
+        }
+      } catch (err) {
+        _iterator458.e(err);
+      } finally {
+        _iterator458.f();
+      }
       if (errors.hasErrors()) {
         throw errors;
       }
     }
     function visitFunctionExpression(errors, fn) {
-      var _iterator467 = _createForOfIteratorHelper(fn.body.blocks),
-        _step467;
+      var _iterator468 = _createForOfIteratorHelper(fn.body.blocks),
+        _step468;
       try {
-        for (_iterator467.s(); !(_step467 = _iterator467.n()).done; ) {
-          var _step467$value = _slicedToArray(_step467.value, 2),
-            block = _step467$value[1];
-          var _iterator468 = _createForOfIteratorHelper(block.instructions),
-            _step468;
+        for (_iterator468.s(); !(_step468 = _iterator468.n()).done; ) {
+          var _step468$value = _slicedToArray(_step468.value, 2),
+            block = _step468$value[1];
+          var _iterator469 = _createForOfIteratorHelper(block.instructions),
+            _step469;
           try {
-            for (_iterator468.s(); !(_step468 = _iterator468.n()).done; ) {
-              var instr = _step468.value;
+            for (_iterator469.s(); !(_step469 = _iterator469.n()).done; ) {
+              var instr = _step469.value;
               switch (instr.value.kind) {
                 case "ObjectMethod":
                 case "FunctionExpression": {
@@ -64978,15 +65045,15 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator468.e(err);
+            _iterator469.e(err);
           } finally {
-            _iterator468.f();
+            _iterator469.f();
           }
         }
       } catch (err) {
-        _iterator467.e(err);
+        _iterator468.e(err);
       } finally {
-        _iterator467.f();
+        _iterator468.f();
       }
     }
     function validateMemoizedEffectDependencies(fn) {
@@ -65011,38 +65078,38 @@ PERFORMANCE OF THIS SOFTWARE.
           value: function visitScope(scopeBlock, state) {
             this.traverseScope(scopeBlock, state);
             var areDependenciesMemoized = true;
-            var _iterator469 = _createForOfIteratorHelper(
+            var _iterator470 = _createForOfIteratorHelper(
                 scopeBlock.scope.dependencies
               ),
-              _step469;
+              _step470;
             try {
-              for (_iterator469.s(); !(_step469 = _iterator469.n()).done; ) {
-                var dep = _step469.value;
+              for (_iterator470.s(); !(_step470 = _iterator470.n()).done; ) {
+                var dep = _step470.value;
                 if (isUnmemoized$1(dep.identifier, this.scopes)) {
                   areDependenciesMemoized = false;
                   break;
                 }
               }
             } catch (err) {
-              _iterator469.e(err);
+              _iterator470.e(err);
             } finally {
-              _iterator469.f();
+              _iterator470.f();
             }
             if (areDependenciesMemoized) {
               this.scopes.add(scopeBlock.scope.id);
-              var _iterator470 = _createForOfIteratorHelper(
+              var _iterator471 = _createForOfIteratorHelper(
                   scopeBlock.scope.merged
                 ),
-                _step470;
+                _step471;
               try {
-                for (_iterator470.s(); !(_step470 = _iterator470.n()).done; ) {
-                  var id = _step470.value;
+                for (_iterator471.s(); !(_step471 = _iterator471.n()).done; ) {
+                  var id = _step471.value;
                   this.scopes.add(id);
                 }
               } catch (err) {
-                _iterator470.e(err);
+                _iterator471.e(err);
               } finally {
-                _iterator470.f();
+                _iterator471.f();
               }
             }
           }
@@ -65117,19 +65184,19 @@ PERFORMANCE OF THIS SOFTWARE.
       var capitalizedProperties = new Map();
       var reason =
         "Capitalized functions are reserved for components, which must be invoked with JSX. If this is a component, render it with JSX. Otherwise, ensure that it has no hook calls and rename it to begin with a lowercase letter. Alternatively, if you know for a fact that this function is not a component, you can allowlist it via the compiler config";
-      var _iterator471 = _createForOfIteratorHelper(fn.body.blocks),
-        _step471;
+      var _iterator472 = _createForOfIteratorHelper(fn.body.blocks),
+        _step472;
       try {
-        for (_iterator471.s(); !(_step471 = _iterator471.n()).done; ) {
-          var _step471$value = _slicedToArray(_step471.value, 2),
-            block = _step471$value[1];
-          var _iterator472 = _createForOfIteratorHelper(block.instructions),
-            _step472;
+        for (_iterator472.s(); !(_step472 = _iterator472.n()).done; ) {
+          var _step472$value = _slicedToArray(_step472.value, 2),
+            block = _step472$value[1];
+          var _iterator473 = _createForOfIteratorHelper(block.instructions),
+            _step473;
           try {
-            for (_iterator472.s(); !(_step472 = _iterator472.n()).done; ) {
-              var _step472$value = _step472.value,
-                lvalue = _step472$value.lvalue,
-                value = _step472$value.value;
+            for (_iterator473.s(); !(_step473 = _iterator473.n()).done; ) {
+              var _step473$value = _step473.value,
+                lvalue = _step473$value.lvalue,
+                value = _step473$value.value;
               switch (value.kind) {
                 case "LoadGlobal": {
                   if (
@@ -65195,15 +65262,15 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator472.e(err);
+            _iterator473.e(err);
           } finally {
-            _iterator472.f();
+            _iterator473.f();
           }
         }
       } catch (err) {
-        _iterator471.e(err);
+        _iterator472.e(err);
       } finally {
-        _iterator471.f();
+        _iterator472.f();
       }
     }
     var _Env_changed;
@@ -65405,11 +65472,11 @@ PERFORMANCE OF THIS SOFTWARE.
       var _a, _b, _c, _d, _e, _f, _g, _h, _j;
       var returnValues = [];
       var place;
-      var _iterator473 = _createForOfIteratorHelper(fn.params),
-        _step473;
+      var _iterator474 = _createForOfIteratorHelper(fn.params),
+        _step474;
       try {
-        for (_iterator473.s(); !(_step473 = _iterator473.n()).done; ) {
-          var param = _step473.value;
+        for (_iterator474.s(); !(_step474 = _iterator474.n()).done; ) {
+          var param = _step474.value;
           if (param.kind === "Identifier") {
             place = param;
           } else {
@@ -65419,26 +65486,26 @@ PERFORMANCE OF THIS SOFTWARE.
           env.set(place.identifier.id, type);
         }
       } catch (err) {
-        _iterator473.e(err);
+        _iterator474.e(err);
       } finally {
-        _iterator473.f();
+        _iterator474.f();
       }
       for (var i = 0; (i == 0 || env.hasChanged()) && i < 10; i++) {
         env.resetChanged();
         returnValues = [];
         var safeBlocks = new Map();
         var errors = new CompilerError();
-        var _iterator474 = _createForOfIteratorHelper(fn.body.blocks),
-          _step474;
+        var _iterator475 = _createForOfIteratorHelper(fn.body.blocks),
+          _step475;
         try {
-          for (_iterator474.s(); !(_step474 = _iterator474.n()).done; ) {
-            var _step474$value = _slicedToArray(_step474.value, 2),
-              block = _step474$value[1];
-            var _iterator475 = _createForOfIteratorHelper(block.phis),
-              _step475;
+          for (_iterator475.s(); !(_step475 = _iterator475.n()).done; ) {
+            var _step475$value = _slicedToArray(_step475.value, 2),
+              block = _step475$value[1];
+            var _iterator476 = _createForOfIteratorHelper(block.phis),
+              _step476;
             try {
-              for (_iterator475.s(); !(_step475 = _iterator475.n()).done; ) {
-                var phi = _step475.value;
+              for (_iterator476.s(); !(_step476 = _iterator476.n()).done; ) {
+                var phi = _step476.value;
                 env.set(
                   phi.place.identifier.id,
                   joinRefAccessTypes.apply(
@@ -65459,35 +65526,35 @@ PERFORMANCE OF THIS SOFTWARE.
                 );
               }
             } catch (err) {
-              _iterator475.e(err);
+              _iterator476.e(err);
             } finally {
-              _iterator475.f();
+              _iterator476.f();
             }
-            var _iterator476 = _createForOfIteratorHelper(block.instructions),
-              _step476;
+            var _iterator477 = _createForOfIteratorHelper(block.instructions),
+              _step477;
             try {
-              for (_iterator476.s(); !(_step476 = _iterator476.n()).done; ) {
-                var instr = _step476.value;
+              for (_iterator477.s(); !(_step477 = _iterator477.n()).done; ) {
+                var instr = _step477.value;
                 switch (instr.value.kind) {
                   case "JsxExpression":
                   case "JsxFragment": {
-                    var _iterator478 = _createForOfIteratorHelper(
+                    var _iterator479 = _createForOfIteratorHelper(
                         eachInstructionValueOperand(instr.value)
                       ),
-                      _step478;
+                      _step479;
                     try {
                       for (
-                        _iterator478.s();
-                        !(_step478 = _iterator478.n()).done;
+                        _iterator479.s();
+                        !(_step479 = _iterator479.n()).done;
 
                       ) {
-                        var operand = _step478.value;
+                        var operand = _step479.value;
                         validateNoDirectRefValueAccess(errors, operand, env);
                       }
                     } catch (err) {
-                      _iterator478.e(err);
+                      _iterator479.e(err);
                     } finally {
-                      _iterator478.f();
+                      _iterator479.f();
                     }
                     break;
                   }
@@ -65582,17 +65649,17 @@ PERFORMANCE OF THIS SOFTWARE.
                         ? _lookupType
                         : refTypeOfType(instr.lvalue)
                     );
-                    var _iterator479 = _createForOfIteratorHelper(
+                    var _iterator480 = _createForOfIteratorHelper(
                         eachPatternOperand(instr.value.lvalue.pattern)
                       ),
-                      _step479;
+                      _step480;
                     try {
                       for (
-                        _iterator479.s();
-                        !(_step479 = _iterator479.n()).done;
+                        _iterator480.s();
+                        !(_step480 = _iterator480.n()).done;
 
                       ) {
-                        var lval = _step479.value;
+                        var lval = _step480.value;
                         env.set(
                           lval.identifier.id,
                           _lookupType !== null && _lookupType !== void 0
@@ -65601,9 +65668,9 @@ PERFORMANCE OF THIS SOFTWARE.
                         );
                       }
                     } catch (err) {
-                      _iterator479.e(err);
+                      _iterator480.e(err);
                     } finally {
-                      _iterator479.f();
+                      _iterator480.f();
                     }
                     break;
                   }
@@ -65667,17 +65734,17 @@ PERFORMANCE OF THIS SOFTWARE.
                         });
                       }
                     }
-                    var _iterator480 = _createForOfIteratorHelper(
+                    var _iterator481 = _createForOfIteratorHelper(
                         eachInstructionValueOperand(instr.value)
                       ),
-                      _step480;
+                      _step481;
                     try {
                       for (
-                        _iterator480.s();
-                        !(_step480 = _iterator480.n()).done;
+                        _iterator481.s();
+                        !(_step481 = _iterator481.n()).done;
 
                       ) {
-                        var _operand37 = _step480.value;
+                        var _operand37 = _step481.value;
                         if (hookKind != null) {
                           validateNoDirectRefValueAccess(
                             errors,
@@ -65694,9 +65761,9 @@ PERFORMANCE OF THIS SOFTWARE.
                         }
                       }
                     } catch (err) {
-                      _iterator480.e(err);
+                      _iterator481.e(err);
                     } finally {
-                      _iterator480.f();
+                      _iterator481.f();
                     }
                     env.set(instr.lvalue.identifier.id, _returnType3);
                     break;
@@ -65704,17 +65771,17 @@ PERFORMANCE OF THIS SOFTWARE.
                   case "ObjectExpression":
                   case "ArrayExpression": {
                     var _types3 = [];
-                    var _iterator481 = _createForOfIteratorHelper(
+                    var _iterator482 = _createForOfIteratorHelper(
                         eachInstructionValueOperand(instr.value)
                       ),
-                      _step481;
+                      _step482;
                     try {
                       for (
-                        _iterator481.s();
-                        !(_step481 = _iterator481.n()).done;
+                        _iterator482.s();
+                        !(_step482 = _iterator482.n()).done;
 
                       ) {
-                        var _operand38 = _step481.value;
+                        var _operand38 = _step482.value;
                         validateNoDirectRefValueAccess(errors, _operand38, env);
                         _types3.push(
                           (_e = env.get(_operand38.identifier.id)) !== null &&
@@ -65724,9 +65791,9 @@ PERFORMANCE OF THIS SOFTWARE.
                         );
                       }
                     } catch (err) {
-                      _iterator481.e(err);
+                      _iterator482.e(err);
                     } finally {
-                      _iterator481.f();
+                      _iterator482.f();
                     }
                     var value = joinRefAccessTypes.apply(void 0, _types3);
                     if (
@@ -65767,26 +65834,26 @@ PERFORMANCE OF THIS SOFTWARE.
                         instr.loc
                       );
                     }
-                    var _iterator482 = _createForOfIteratorHelper(
+                    var _iterator483 = _createForOfIteratorHelper(
                         eachInstructionValueOperand(instr.value)
                       ),
-                      _step482;
+                      _step483;
                     try {
                       for (
-                        _iterator482.s();
-                        !(_step482 = _iterator482.n()).done;
+                        _iterator483.s();
+                        !(_step483 = _iterator483.n()).done;
 
                       ) {
-                        var _operand39 = _step482.value;
+                        var _operand39 = _step483.value;
                         if (_operand39 === instr.value.object) {
                           continue;
                         }
                         validateNoRefValueAccess(errors, env, _operand39);
                       }
                     } catch (err) {
-                      _iterator482.e(err);
+                      _iterator483.e(err);
                     } finally {
-                      _iterator482.f();
+                      _iterator483.f();
                     }
                     break;
                   }
@@ -65838,66 +65905,66 @@ PERFORMANCE OF THIS SOFTWARE.
                         refId: refId
                       });
                     } else {
-                      var _iterator483 = _createForOfIteratorHelper(
+                      var _iterator484 = _createForOfIteratorHelper(
                           eachInstructionValueOperand(instr.value)
                         ),
-                        _step483;
+                        _step484;
                       try {
                         for (
-                          _iterator483.s();
-                          !(_step483 = _iterator483.n()).done;
+                          _iterator484.s();
+                          !(_step484 = _iterator484.n()).done;
 
                         ) {
-                          var _operand40 = _step483.value;
+                          var _operand40 = _step484.value;
                           validateNoRefValueAccess(errors, env, _operand40);
                         }
                       } catch (err) {
-                        _iterator483.e(err);
+                        _iterator484.e(err);
                       } finally {
-                        _iterator483.f();
+                        _iterator484.f();
                       }
                     }
                     break;
                   }
                   default: {
-                    var _iterator484 = _createForOfIteratorHelper(
+                    var _iterator485 = _createForOfIteratorHelper(
                         eachInstructionValueOperand(instr.value)
                       ),
-                      _step484;
+                      _step485;
                     try {
                       for (
-                        _iterator484.s();
-                        !(_step484 = _iterator484.n()).done;
+                        _iterator485.s();
+                        !(_step485 = _iterator485.n()).done;
 
                       ) {
-                        var _operand41 = _step484.value;
+                        var _operand41 = _step485.value;
                         validateNoRefValueAccess(errors, env, _operand41);
                       }
                     } catch (err) {
-                      _iterator484.e(err);
+                      _iterator485.e(err);
                     } finally {
-                      _iterator484.f();
+                      _iterator485.f();
                     }
                     break;
                   }
                 }
-                var _iterator485 = _createForOfIteratorHelper(
+                var _iterator486 = _createForOfIteratorHelper(
                     eachInstructionOperand(instr)
                   ),
-                  _step485;
+                  _step486;
                 try {
                   for (
-                    _iterator485.s();
-                    !(_step485 = _iterator485.n()).done;
+                    _iterator486.s();
+                    !(_step486 = _iterator486.n()).done;
 
                   ) {
-                    var _operand42 = _step485.value;
+                    var _operand42 = _step486.value;
                     guardCheck(errors, _operand42, env);
                   }
                 } catch (err) {
-                  _iterator485.e(err);
+                  _iterator486.e(err);
                 } finally {
-                  _iterator485.f();
+                  _iterator486.f();
                 }
                 if (
                   isUseRefType(instr.lvalue.identifier) &&
@@ -65937,9 +66004,9 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator476.e(err);
+              _iterator477.e(err);
             } finally {
-              _iterator476.f();
+              _iterator477.f();
             }
             if (block.terminal.kind === "if") {
               var _test30 = env.get(block.terminal.test.identifier.id);
@@ -65951,13 +66018,13 @@ PERFORMANCE OF THIS SOFTWARE.
                 safeBlocks.set(block.terminal.consequent, _test30.refId);
               }
             }
-            var _iterator477 = _createForOfIteratorHelper(
+            var _iterator478 = _createForOfIteratorHelper(
                 eachTerminalOperand(block.terminal)
               ),
-              _step477;
+              _step478;
             try {
-              for (_iterator477.s(); !(_step477 = _iterator477.n()).done; ) {
-                var _operand43 = _step477.value;
+              for (_iterator478.s(); !(_step478 = _iterator478.n()).done; ) {
+                var _operand43 = _step478.value;
                 if (block.terminal.kind !== "return") {
                   validateNoRefValueAccess(errors, env, _operand43);
                   if (block.terminal.kind !== "if") {
@@ -65970,15 +66037,15 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator477.e(err);
+              _iterator478.e(err);
             } finally {
-              _iterator477.f();
+              _iterator478.f();
             }
           }
         } catch (err) {
-          _iterator474.e(err);
+          _iterator475.e(err);
         } finally {
-          _iterator474.f();
+          _iterator475.f();
         }
         if (errors.hasErrors()) {
           return Err(errors);
@@ -66129,17 +66196,17 @@ PERFORMANCE OF THIS SOFTWARE.
       var unconditionalBlocks = computeUnconditionalBlocks(fn);
       var activeManualMemoId = null;
       var errors = new CompilerError();
-      var _iterator486 = _createForOfIteratorHelper(fn.body.blocks),
-        _step486;
+      var _iterator487 = _createForOfIteratorHelper(fn.body.blocks),
+        _step487;
       try {
-        for (_iterator486.s(); !(_step486 = _iterator486.n()).done; ) {
-          var _step486$value = _slicedToArray(_step486.value, 2),
-            block = _step486$value[1];
-          var _iterator487 = _createForOfIteratorHelper(block.instructions),
-            _step487;
+        for (_iterator487.s(); !(_step487 = _iterator487.n()).done; ) {
+          var _step487$value = _slicedToArray(_step487.value, 2),
+            block = _step487$value[1];
+          var _iterator488 = _createForOfIteratorHelper(block.instructions),
+            _step488;
           try {
-            for (_iterator487.s(); !(_step487 = _iterator487.n()).done; ) {
-              var instr = _step487.value;
+            for (_iterator488.s(); !(_step488 = _iterator488.n()).done; ) {
+              var instr = _step488.value;
               switch (instr.value.kind) {
                 case "LoadLocal": {
                   if (
@@ -66243,15 +66310,15 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator487.e(err);
+            _iterator488.e(err);
           } finally {
-            _iterator487.f();
+            _iterator488.f();
           }
         }
       } catch (err) {
-        _iterator486.e(err);
+        _iterator487.e(err);
       } finally {
-        _iterator486.f();
+        _iterator487.f();
       }
       if (errors.hasErrors()) {
         return Err(errors);
@@ -66377,11 +66444,11 @@ PERFORMANCE OF THIS SOFTWARE.
           path: _toConsumableArray(dep.path)
         };
       }
-      var _iterator488 = _createForOfIteratorHelper(declsWithinMemoBlock),
-        _step488;
+      var _iterator489 = _createForOfIteratorHelper(declsWithinMemoBlock),
+        _step489;
       try {
-        for (_iterator488.s(); !(_step488 = _iterator488.n()).done; ) {
-          var decl = _step488.value;
+        for (_iterator489.s(); !(_step489 = _iterator489.n()).done; ) {
+          var decl = _step489.value;
           if (
             normalizedDep.root.kind === "NamedLocal" &&
             decl === normalizedDep.root.value.identifier.declarationId
@@ -66390,24 +66457,24 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator488.e(err);
+        _iterator489.e(err);
       } finally {
-        _iterator488.f();
+        _iterator489.f();
       }
-      var _iterator489 = _createForOfIteratorHelper(validDepsInMemoBlock),
-        _step489;
+      var _iterator490 = _createForOfIteratorHelper(validDepsInMemoBlock),
+        _step490;
       try {
-        for (_iterator489.s(); !(_step489 = _iterator489.n()).done; ) {
-          var originalDep = _step489.value;
+        for (_iterator490.s(); !(_step490 = _iterator490.n()).done; ) {
+          var originalDep = _step490.value;
           var compareResult = compareDeps(normalizedDep, originalDep);
           if (compareResult === CompareDependencyResult.Ok) {
             return;
           }
         }
       } catch (err) {
-        _iterator489.e(err);
+        _iterator490.e(err);
       } finally {
-        _iterator489.f();
+        _iterator490.f();
       }
       errorState.push({
         severity: ErrorSeverity.CannotPreserveMemoization,
@@ -66436,23 +66503,23 @@ PERFORMANCE OF THIS SOFTWARE.
             var _a, _b;
             switch (value.kind) {
               case "SequenceExpression": {
-                var _iterator490 = _createForOfIteratorHelper(
+                var _iterator491 = _createForOfIteratorHelper(
                     value.instructions
                   ),
-                  _step490;
+                  _step491;
                 try {
                   for (
-                    _iterator490.s();
-                    !(_step490 = _iterator490.n()).done;
+                    _iterator491.s();
+                    !(_step491 = _iterator491.n()).done;
 
                   ) {
-                    var instr = _step490.value;
+                    var instr = _step491.value;
                     this.visitInstruction(instr, state);
                   }
                 } catch (err) {
-                  _iterator490.e(err);
+                  _iterator491.e(err);
                 } finally {
-                  _iterator490.f();
+                  _iterator491.f();
                 }
                 var result = this.recordDepsInValue(value.value, state);
                 return result;
@@ -66557,13 +66624,13 @@ PERFORMANCE OF THIS SOFTWARE.
               state.manualMemoState != null &&
               state.manualMemoState.depsFromSource != null
             ) {
-              var _iterator491 = _createForOfIteratorHelper(
+              var _iterator492 = _createForOfIteratorHelper(
                   scopeBlock.scope.dependencies
                 ),
-                _step491;
+                _step492;
               try {
-                for (_iterator491.s(); !(_step491 = _iterator491.n()).done; ) {
-                  var dep = _step491.value;
+                for (_iterator492.s(); !(_step492 = _iterator492.n()).done; ) {
+                  var dep = _step492.value;
                   validateInferredDep(
                     dep,
                     this.temporaries,
@@ -66574,25 +66641,25 @@ PERFORMANCE OF THIS SOFTWARE.
                   );
                 }
               } catch (err) {
-                _iterator491.e(err);
+                _iterator492.e(err);
               } finally {
-                _iterator491.f();
+                _iterator492.f();
               }
             }
             this.scopes.add(scopeBlock.scope.id);
-            var _iterator492 = _createForOfIteratorHelper(
+            var _iterator493 = _createForOfIteratorHelper(
                 scopeBlock.scope.merged
               ),
-              _step492;
+              _step493;
             try {
-              for (_iterator492.s(); !(_step492 = _iterator492.n()).done; ) {
-                var id = _step492.value;
+              for (_iterator493.s(); !(_step493 = _iterator493.n()).done; ) {
+                var id = _step493.value;
                 this.scopes.add(id);
               }
             } catch (err) {
-              _iterator492.e(err);
+              _iterator493.e(err);
             } finally {
-              _iterator492.f();
+              _iterator493.f();
             }
           }
         },
@@ -66646,15 +66713,15 @@ PERFORMANCE OF THIS SOFTWARE.
                 manualMemoId: value.manualMemoId,
                 reassignments: new Map()
               };
-              var _iterator493 = _createForOfIteratorHelper(
+              var _iterator494 = _createForOfIteratorHelper(
                   eachInstructionValueOperand(value)
                 ),
-                _step493;
+                _step494;
               try {
-                for (_iterator493.s(); !(_step493 = _iterator493.n()).done; ) {
-                  var _step493$value = _step493.value,
-                    _identifier17 = _step493$value.identifier,
-                    loc = _step493$value.loc;
+                for (_iterator494.s(); !(_step494 = _iterator494.n()).done; ) {
+                  var _step494$value = _step494.value,
+                    _identifier17 = _step494$value.identifier,
+                    loc = _step494$value.loc;
                   if (
                     _identifier17.scope != null &&
                     !this.scopes.has(_identifier17.scope.id) &&
@@ -66671,9 +66738,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   }
                 }
               } catch (err) {
-                _iterator493.e(err);
+                _iterator494.e(err);
               } finally {
-                _iterator493.f();
+                _iterator494.f();
               }
             }
             if (value.kind === "FinishMemoize") {
@@ -66698,19 +66765,19 @@ PERFORMANCE OF THIS SOFTWARE.
               var reassignments = state.manualMemoState.reassignments;
               state.manualMemoState = null;
               if (!value.pruned) {
-                var _iterator494 = _createForOfIteratorHelper(
+                var _iterator495 = _createForOfIteratorHelper(
                     eachInstructionValueOperand(value)
                   ),
-                  _step494;
+                  _step495;
                 try {
                   for (
-                    _iterator494.s();
-                    !(_step494 = _iterator494.n()).done;
+                    _iterator495.s();
+                    !(_step495 = _iterator495.n()).done;
 
                   ) {
-                    var _step494$value = _step494.value,
-                      _identifier18 = _step494$value.identifier,
-                      _loc6 = _step494$value.loc;
+                    var _step495$value = _step495.value,
+                      _identifier18 = _step495$value.identifier,
+                      _loc6 = _step495$value.loc;
                     var decls = void 0;
                     if (_identifier18.scope == null) {
                       decls =
@@ -66722,15 +66789,15 @@ PERFORMANCE OF THIS SOFTWARE.
                     } else {
                       decls = [_identifier18];
                     }
-                    var _iterator495 = _createForOfIteratorHelper(decls),
-                      _step495;
+                    var _iterator496 = _createForOfIteratorHelper(decls),
+                      _step496;
                     try {
                       for (
-                        _iterator495.s();
-                        !(_step495 = _iterator495.n()).done;
+                        _iterator496.s();
+                        !(_step496 = _iterator496.n()).done;
 
                       ) {
-                        var _identifier19 = _step495.value;
+                        var _identifier19 = _step496.value;
                         if (isUnmemoized(_identifier19, this.scopes)) {
                           state.errors.push({
                             reason:
@@ -66743,15 +66810,15 @@ PERFORMANCE OF THIS SOFTWARE.
                         }
                       }
                     } catch (err) {
-                      _iterator495.e(err);
+                      _iterator496.e(err);
                     } finally {
-                      _iterator495.f();
+                      _iterator496.f();
                     }
                   }
                 } catch (err) {
-                  _iterator494.e(err);
+                  _iterator495.e(err);
                 } finally {
-                  _iterator494.f();
+                  _iterator495.f();
                 }
               }
             }
@@ -66766,19 +66833,19 @@ PERFORMANCE OF THIS SOFTWARE.
       var useMemos = new Set();
       var react = new Set();
       var functions = new Map();
-      var _iterator496 = _createForOfIteratorHelper(fn.body.blocks),
-        _step496;
+      var _iterator497 = _createForOfIteratorHelper(fn.body.blocks),
+        _step497;
       try {
-        for (_iterator496.s(); !(_step496 = _iterator496.n()).done; ) {
-          var _step496$value = _slicedToArray(_step496.value, 2),
-            block = _step496$value[1];
-          var _iterator497 = _createForOfIteratorHelper(block.instructions),
-            _step497;
+        for (_iterator497.s(); !(_step497 = _iterator497.n()).done; ) {
+          var _step497$value = _slicedToArray(_step497.value, 2),
+            block = _step497$value[1];
+          var _iterator498 = _createForOfIteratorHelper(block.instructions),
+            _step498;
           try {
-            for (_iterator497.s(); !(_step497 = _iterator497.n()).done; ) {
-              var _step497$value = _step497.value,
-                lvalue = _step497$value.lvalue,
-                value = _step497$value.value;
+            for (_iterator498.s(); !(_step498 = _iterator498.n()).done; ) {
+              var _step498$value = _step498.value,
+                lvalue = _step498$value.lvalue,
+                value = _step498$value.value;
               switch (value.kind) {
                 case "LoadGlobal": {
                   if (value.binding.name === "useMemo") {
@@ -66844,15 +66911,15 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator497.e(err);
+            _iterator498.e(err);
           } finally {
-            _iterator497.f();
+            _iterator498.f();
           }
         }
       } catch (err) {
-        _iterator496.e(err);
+        _iterator497.e(err);
       } finally {
-        _iterator496.f();
+        _iterator497.f();
       }
     }
     function validateLocalsNotReassignedAfterRender(fn) {
@@ -66886,17 +66953,17 @@ PERFORMANCE OF THIS SOFTWARE.
       isAsync
     ) {
       var reassigningFunctions = new Map();
-      var _iterator498 = _createForOfIteratorHelper(fn.body.blocks),
-        _step498;
+      var _iterator499 = _createForOfIteratorHelper(fn.body.blocks),
+        _step499;
       try {
-        for (_iterator498.s(); !(_step498 = _iterator498.n()).done; ) {
-          var _step498$value = _slicedToArray(_step498.value, 2),
-            block = _step498$value[1];
-          var _iterator499 = _createForOfIteratorHelper(block.instructions),
-            _step499;
+        for (_iterator499.s(); !(_step499 = _iterator499.n()).done; ) {
+          var _step499$value = _slicedToArray(_step499.value, 2),
+            block = _step499$value[1];
+          var _iterator500 = _createForOfIteratorHelper(block.instructions),
+            _step500;
           try {
-            for (_iterator499.s(); !(_step499 = _iterator499.n()).done; ) {
-              var instr = _step499.value;
+            for (_iterator500.s(); !(_step500 = _iterator500.n()).done; ) {
+              var instr = _step500.value;
               var lvalue = instr.lvalue,
                 value = instr.value;
               switch (value.kind) {
@@ -66909,17 +66976,17 @@ PERFORMANCE OF THIS SOFTWARE.
                     isAsync || value.loweredFunc.func.async
                   );
                   if (reassignment === null) {
-                    var _iterator501 = _createForOfIteratorHelper(
+                    var _iterator502 = _createForOfIteratorHelper(
                         eachInstructionValueOperand(value)
                       ),
-                      _step501;
+                      _step502;
                     try {
                       for (
-                        _iterator501.s();
-                        !(_step501 = _iterator501.n()).done;
+                        _iterator502.s();
+                        !(_step502 = _iterator502.n()).done;
 
                       ) {
-                        var operand = _step501.value;
+                        var operand = _step502.value;
                         var reassignmentFromOperand = reassigningFunctions.get(
                           operand.identifier.id
                         );
@@ -66929,9 +66996,9 @@ PERFORMANCE OF THIS SOFTWARE.
                         }
                       }
                     } catch (err) {
-                      _iterator501.e(err);
+                      _iterator502.e(err);
                     } finally {
-                      _iterator501.f();
+                      _iterator502.f();
                     }
                   }
                   if (reassignment !== null) {
@@ -67055,15 +67122,15 @@ PERFORMANCE OF THIS SOFTWARE.
                       operands = [value.tag];
                     }
                   }
-                  var _iterator502 = _createForOfIteratorHelper(operands),
-                    _step502;
+                  var _iterator503 = _createForOfIteratorHelper(operands),
+                    _step503;
                   try {
                     for (
-                      _iterator502.s();
-                      !(_step502 = _iterator502.n()).done;
+                      _iterator503.s();
+                      !(_step503 = _iterator503.n()).done;
 
                     ) {
-                      var _operand44 = _step502.value;
+                      var _operand44 = _step503.value;
                       CompilerError.invariant(
                         _operand44.effect !== Effect.Unknown,
                         {
@@ -67079,51 +67146,51 @@ PERFORMANCE OF THIS SOFTWARE.
                         if (_operand44.effect === Effect.Freeze) {
                           return _reassignment4;
                         } else {
-                          var _iterator503 = _createForOfIteratorHelper(
+                          var _iterator504 = _createForOfIteratorHelper(
                               eachInstructionLValue(instr)
                             ),
-                            _step503;
+                            _step504;
                           try {
                             for (
-                              _iterator503.s();
-                              !(_step503 = _iterator503.n()).done;
+                              _iterator504.s();
+                              !(_step504 = _iterator504.n()).done;
 
                             ) {
-                              var lval = _step503.value;
+                              var lval = _step504.value;
                               reassigningFunctions.set(
                                 lval.identifier.id,
                                 _reassignment4
                               );
                             }
                           } catch (err) {
-                            _iterator503.e(err);
+                            _iterator504.e(err);
                           } finally {
-                            _iterator503.f();
+                            _iterator504.f();
                           }
                         }
                       }
                     }
                   } catch (err) {
-                    _iterator502.e(err);
+                    _iterator503.e(err);
                   } finally {
-                    _iterator502.f();
+                    _iterator503.f();
                   }
                   break;
                 }
               }
             }
           } catch (err) {
-            _iterator499.e(err);
+            _iterator500.e(err);
           } finally {
-            _iterator499.f();
+            _iterator500.f();
           }
-          var _iterator500 = _createForOfIteratorHelper(
+          var _iterator501 = _createForOfIteratorHelper(
               eachTerminalOperand(block.terminal)
             ),
-            _step500;
+            _step501;
           try {
-            for (_iterator500.s(); !(_step500 = _iterator500.n()).done; ) {
-              var _operand45 = _step500.value;
+            for (_iterator501.s(); !(_step501 = _iterator501.n()).done; ) {
+              var _operand45 = _step501.value;
               var _reassignment5 = reassigningFunctions.get(
                 _operand45.identifier.id
               );
@@ -67132,30 +67199,30 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator500.e(err);
+            _iterator501.e(err);
           } finally {
-            _iterator500.f();
+            _iterator501.f();
           }
         }
       } catch (err) {
-        _iterator498.e(err);
+        _iterator499.e(err);
       } finally {
-        _iterator498.f();
+        _iterator499.f();
       }
       return null;
     }
     function outlineFunctions(fn, fbtOperands) {
-      var _iterator504 = _createForOfIteratorHelper(fn.body.blocks),
-        _step504;
+      var _iterator505 = _createForOfIteratorHelper(fn.body.blocks),
+        _step505;
       try {
-        for (_iterator504.s(); !(_step504 = _iterator504.n()).done; ) {
-          var _step504$value = _slicedToArray(_step504.value, 2),
-            block = _step504$value[1];
-          var _iterator505 = _createForOfIteratorHelper(block.instructions),
-            _step505;
+        for (_iterator505.s(); !(_step505 = _iterator505.n()).done; ) {
+          var _step505$value = _slicedToArray(_step505.value, 2),
+            block = _step505$value[1];
+          var _iterator506 = _createForOfIteratorHelper(block.instructions),
+            _step506;
           try {
-            for (_iterator505.s(); !(_step505 = _iterator505.n()).done; ) {
-              var instr = _step505.value;
+            for (_iterator506.s(); !(_step506 = _iterator506.n()).done; ) {
+              var instr = _step506.value;
               var value = instr.value,
                 lvalue = instr.lvalue;
               if (
@@ -67184,30 +67251,30 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator505.e(err);
+            _iterator506.e(err);
           } finally {
-            _iterator505.f();
+            _iterator506.f();
           }
         }
       } catch (err) {
-        _iterator504.e(err);
+        _iterator505.e(err);
       } finally {
-        _iterator504.f();
+        _iterator505.f();
       }
     }
     function propagatePhiTypes(fn) {
       var propagated = new Set();
-      var _iterator506 = _createForOfIteratorHelper(fn.body.blocks),
-        _step506;
+      var _iterator507 = _createForOfIteratorHelper(fn.body.blocks),
+        _step507;
       try {
-        for (_iterator506.s(); !(_step506 = _iterator506.n()).done; ) {
-          var _step506$value = _slicedToArray(_step506.value, 2),
-            block = _step506$value[1];
-          var _iterator507 = _createForOfIteratorHelper(block.phis),
-            _step507;
+        for (_iterator507.s(); !(_step507 = _iterator507.n()).done; ) {
+          var _step507$value = _slicedToArray(_step507.value, 2),
+            block = _step507$value[1];
+          var _iterator508 = _createForOfIteratorHelper(block.phis),
+            _step508;
           try {
-            for (_iterator507.s(); !(_step507 = _iterator507.n()).done; ) {
-              var phi = _step507.value;
+            for (_iterator508.s(); !(_step508 = _iterator508.n()).done; ) {
+              var phi = _step508.value;
               if (
                 phi.place.identifier.type.kind !== "Type" ||
                 phi.place.identifier.name !== null
@@ -67215,12 +67282,12 @@ PERFORMANCE OF THIS SOFTWARE.
                 continue;
               }
               var type = null;
-              var _iterator509 = _createForOfIteratorHelper(phi.operands),
-                _step509;
+              var _iterator510 = _createForOfIteratorHelper(phi.operands),
+                _step510;
               try {
-                for (_iterator509.s(); !(_step509 = _iterator509.n()).done; ) {
-                  var _step509$value = _slicedToArray(_step509.value, 2),
-                    operand = _step509$value[1];
+                for (_iterator510.s(); !(_step510 = _iterator510.n()).done; ) {
+                  var _step510$value = _slicedToArray(_step510.value, 2),
+                    operand = _step510$value[1];
                   if (type === null) {
                     type = operand.identifier.type;
                   } else if (!typeEquals(type, operand.identifier.type)) {
@@ -67229,9 +67296,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   }
                 }
               } catch (err) {
-                _iterator509.e(err);
+                _iterator510.e(err);
               } finally {
-                _iterator509.f();
+                _iterator510.f();
               }
               if (type !== null) {
                 phi.place.identifier.type = type;
@@ -67239,15 +67306,15 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator507.e(err);
+            _iterator508.e(err);
           } finally {
-            _iterator507.f();
+            _iterator508.f();
           }
-          var _iterator508 = _createForOfIteratorHelper(block.instructions),
-            _step508;
+          var _iterator509 = _createForOfIteratorHelper(block.instructions),
+            _step509;
           try {
-            for (_iterator508.s(); !(_step508 = _iterator508.n()).done; ) {
-              var instr = _step508.value;
+            for (_iterator509.s(); !(_step509 = _iterator509.n()).done; ) {
+              var instr = _step509.value;
               var value = instr.value;
               switch (value.kind) {
                 case "StoreLocal": {
@@ -67264,31 +67331,31 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator508.e(err);
+            _iterator509.e(err);
           } finally {
-            _iterator508.f();
+            _iterator509.f();
           }
         }
       } catch (err) {
-        _iterator506.e(err);
+        _iterator507.e(err);
       } finally {
-        _iterator506.f();
+        _iterator507.f();
       }
     }
     function lowerContextAccess(fn, loweredContextCallee) {
       var contextAccess = new Map();
       var contextKeys = new Map();
-      var _iterator510 = _createForOfIteratorHelper(fn.body.blocks),
-        _step510;
+      var _iterator511 = _createForOfIteratorHelper(fn.body.blocks),
+        _step511;
       try {
-        for (_iterator510.s(); !(_step510 = _iterator510.n()).done; ) {
-          var _step510$value = _slicedToArray(_step510.value, 2),
-            _block19 = _step510$value[1];
-          var _iterator512 = _createForOfIteratorHelper(_block19.instructions),
-            _step512;
+        for (_iterator511.s(); !(_step511 = _iterator511.n()).done; ) {
+          var _step511$value = _slicedToArray(_step511.value, 2),
+            _block19 = _step511$value[1];
+          var _iterator513 = _createForOfIteratorHelper(_block19.instructions),
+            _step513;
           try {
-            for (_iterator512.s(); !(_step512 = _iterator512.n()).done; ) {
-              var _instr10 = _step512.value;
+            for (_iterator513.s(); !(_step513 = _iterator513.n()).done; ) {
+              var _instr10 = _step513.value;
               var _value25 = _instr10.value,
                 _lvalue24 = _instr10.lvalue;
               if (
@@ -67316,23 +67383,23 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator512.e(err);
+            _iterator513.e(err);
           } finally {
-            _iterator512.f();
+            _iterator513.f();
           }
         }
       } catch (err) {
-        _iterator510.e(err);
+        _iterator511.e(err);
       } finally {
-        _iterator510.f();
+        _iterator511.f();
       }
       if (contextAccess.size > 0 && contextKeys.size > 0) {
-        var _iterator511 = _createForOfIteratorHelper(fn.body.blocks),
-          _step511;
+        var _iterator512 = _createForOfIteratorHelper(fn.body.blocks),
+          _step512;
         try {
-          for (_iterator511.s(); !(_step511 = _iterator511.n()).done; ) {
-            var _step511$value = _slicedToArray(_step511.value, 2),
-              block = _step511$value[1];
+          for (_iterator512.s(); !(_step512 = _iterator512.n()).done; ) {
+            var _step512$value = _slicedToArray(_step512.value, 2),
+              block = _step512$value[1];
             var nextInstructions = null;
             for (var i = 0; i < block.instructions.length; i++) {
               var instr = block.instructions[i];
@@ -67368,9 +67435,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator511.e(err);
+          _iterator512.e(err);
         } finally {
-          _iterator511.f();
+          _iterator512.f();
         }
         markInstructionIds(fn.body);
         inferTypes(fn);
@@ -67402,11 +67469,11 @@ PERFORMANCE OF THIS SOFTWARE.
           return null;
         }
         case "ObjectPattern": {
-          var _iterator513 = _createForOfIteratorHelper(pattern.properties),
-            _step513;
+          var _iterator514 = _createForOfIteratorHelper(pattern.properties),
+            _step514;
           try {
-            for (_iterator513.s(); !(_step513 = _iterator513.n()).done; ) {
-              var place = _step513.value;
+            for (_iterator514.s(); !(_step514 = _iterator514.n()).done; ) {
+              var place = _step514.value;
               if (
                 place.kind !== "ObjectProperty" ||
                 place.type !== "property" ||
@@ -67419,9 +67486,9 @@ PERFORMANCE OF THIS SOFTWARE.
               keys.push(place.key.name);
             }
           } catch (err) {
-            _iterator513.e(err);
+            _iterator514.e(err);
           } finally {
-            _iterator513.f();
+            _iterator514.f();
           }
           return keys;
         }
@@ -67459,11 +67526,11 @@ PERFORMANCE OF THIS SOFTWARE.
       promoteTemporary(obj.identifier);
       var instr = [];
       var elements = [];
-      var _iterator514 = _createForOfIteratorHelper(keys),
-        _step514;
+      var _iterator515 = _createForOfIteratorHelper(keys),
+        _step515;
       try {
-        for (_iterator514.s(); !(_step514 = _iterator514.n()).done; ) {
-          var _key41 = _step514.value;
+        for (_iterator515.s(); !(_step515 = _iterator515.n()).done; ) {
+          var _key41 = _step515.value;
           var _emitPropertyLoad = emitPropertyLoad(env, obj, _key41),
             instructions = _emitPropertyLoad.instructions,
             prop = _emitPropertyLoad.element;
@@ -67471,9 +67538,9 @@ PERFORMANCE OF THIS SOFTWARE.
           elements.push(prop);
         }
       } catch (err) {
-        _iterator514.e(err);
+        _iterator515.e(err);
       } finally {
-        _iterator514.f();
+        _iterator515.f();
       }
       var arrayInstr = emitArrayInstr(elements, env);
       instr.push(arrayInstr);
@@ -67541,17 +67608,17 @@ PERFORMANCE OF THIS SOFTWARE.
     function validateNoSetStateInPassiveEffects(fn) {
       var setStateFunctions = new Map();
       var errors = new CompilerError();
-      var _iterator515 = _createForOfIteratorHelper(fn.body.blocks),
-        _step515;
+      var _iterator516 = _createForOfIteratorHelper(fn.body.blocks),
+        _step516;
       try {
-        for (_iterator515.s(); !(_step515 = _iterator515.n()).done; ) {
-          var _step515$value = _slicedToArray(_step515.value, 2),
-            block = _step515$value[1];
-          var _iterator516 = _createForOfIteratorHelper(block.instructions),
-            _step516;
+        for (_iterator516.s(); !(_step516 = _iterator516.n()).done; ) {
+          var _step516$value = _slicedToArray(_step516.value, 2),
+            block = _step516$value[1];
+          var _iterator517 = _createForOfIteratorHelper(block.instructions),
+            _step517;
           try {
-            for (_iterator516.s(); !(_step516 = _iterator516.n()).done; ) {
-              var instr = _step516.value;
+            for (_iterator517.s(); !(_step517 = _iterator517.n()).done; ) {
+              var instr = _step517.value;
               switch (instr.value.kind) {
                 case "LoadLocal": {
                   if (setStateFunctions.has(instr.value.place.identifier.id)) {
@@ -67623,32 +67690,32 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator516.e(err);
+            _iterator517.e(err);
           } finally {
-            _iterator516.f();
+            _iterator517.f();
           }
         }
       } catch (err) {
-        _iterator515.e(err);
+        _iterator516.e(err);
       } finally {
-        _iterator515.f();
+        _iterator516.f();
       }
       if (errors.hasErrors()) {
         throw errors;
       }
     }
     function getSetStateCall(fn, setStateFunctions) {
-      var _iterator517 = _createForOfIteratorHelper(fn.body.blocks),
-        _step517;
+      var _iterator518 = _createForOfIteratorHelper(fn.body.blocks),
+        _step518;
       try {
-        for (_iterator517.s(); !(_step517 = _iterator517.n()).done; ) {
-          var _step517$value = _slicedToArray(_step517.value, 2),
-            block = _step517$value[1];
-          var _iterator518 = _createForOfIteratorHelper(block.instructions),
-            _step518;
+        for (_iterator518.s(); !(_step518 = _iterator518.n()).done; ) {
+          var _step518$value = _slicedToArray(_step518.value, 2),
+            block = _step518$value[1];
+          var _iterator519 = _createForOfIteratorHelper(block.instructions),
+            _step519;
           try {
-            for (_iterator518.s(); !(_step518 = _iterator518.n()).done; ) {
-              var instr = _step518.value;
+            for (_iterator519.s(); !(_step519 = _iterator519.n()).done; ) {
+              var instr = _step519.value;
               switch (instr.value.kind) {
                 case "LoadLocal": {
                   if (setStateFunctions.has(instr.value.place.identifier.id)) {
@@ -67684,36 +67751,36 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator518.e(err);
+            _iterator519.e(err);
           } finally {
-            _iterator518.f();
+            _iterator519.f();
           }
         }
       } catch (err) {
-        _iterator517.e(err);
+        _iterator518.e(err);
       } finally {
-        _iterator517.f();
+        _iterator518.f();
       }
       return null;
     }
     function validateNoJSXInTryStatement(fn) {
       var activeTryBlocks = [];
       var errors = new CompilerError();
-      var _iterator519 = _createForOfIteratorHelper(fn.body.blocks),
-        _step519;
+      var _iterator520 = _createForOfIteratorHelper(fn.body.blocks),
+        _step520;
       try {
         var _loop14 = function _loop14() {
-          var _step519$value = _slicedToArray(_step519.value, 2),
-            block = _step519$value[1];
+          var _step520$value = _slicedToArray(_step520.value, 2),
+            block = _step520$value[1];
           retainWhere(activeTryBlocks, function (id) {
             return id !== block.id;
           });
           if (activeTryBlocks.length !== 0) {
-            var _iterator520 = _createForOfIteratorHelper(block.instructions),
-              _step520;
+            var _iterator521 = _createForOfIteratorHelper(block.instructions),
+              _step521;
             try {
-              for (_iterator520.s(); !(_step520 = _iterator520.n()).done; ) {
-                var instr = _step520.value;
+              for (_iterator521.s(); !(_step521 = _iterator521.n()).done; ) {
+                var instr = _step521.value;
                 var value = instr.value;
                 switch (value.kind) {
                   case "JsxExpression":
@@ -67729,22 +67796,22 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator520.e(err);
+              _iterator521.e(err);
             } finally {
-              _iterator520.f();
+              _iterator521.f();
             }
           }
           if (block.terminal.kind === "try") {
             activeTryBlocks.push(block.terminal.handler);
           }
         };
-        for (_iterator519.s(); !(_step519 = _iterator519.n()).done; ) {
+        for (_iterator520.s(); !(_step520 = _iterator520.n()).done; ) {
           _loop14();
         }
       } catch (err) {
-        _iterator519.e(err);
+        _iterator520.e(err);
       } finally {
-        _iterator519.f();
+        _iterator520.f();
       }
       if (errors.hasErrors()) {
         throw errors;
@@ -67758,19 +67825,19 @@ PERFORMANCE OF THIS SOFTWARE.
       var registry = new PropertyPathRegistry();
       var knownImmutableIdentifiers = new Set();
       if (fn.fnType === "Component" || fn.fnType === "Hook") {
-        var _iterator521 = _createForOfIteratorHelper(fn.params),
-          _step521;
+        var _iterator522 = _createForOfIteratorHelper(fn.params),
+          _step522;
         try {
-          for (_iterator521.s(); !(_step521 = _iterator521.n()).done; ) {
-            var p = _step521.value;
+          for (_iterator522.s(); !(_step522 = _iterator522.n()).done; ) {
+            var p = _step522.value;
             if (p.kind === "Identifier") {
               knownImmutableIdentifiers.add(p.identifier.id);
             }
           }
         } catch (err) {
-          _iterator521.e(err);
+          _iterator522.e(err);
         } finally {
-          _iterator521.f();
+          _iterator522.f();
         }
       }
       return collectHoistablePropertyLoadsImpl(fn, {
@@ -67788,13 +67855,13 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function keyByScopeId(fn, source) {
       var keyedByScopeId = new Map();
-      var _iterator522 = _createForOfIteratorHelper(fn.body.blocks),
-        _step522;
+      var _iterator523 = _createForOfIteratorHelper(fn.body.blocks),
+        _step523;
       try {
-        for (_iterator522.s(); !(_step522 = _iterator522.n()).done; ) {
-          var _step522$value = _slicedToArray(_step522.value, 2),
-            _ = _step522$value[0],
-            block = _step522$value[1];
+        for (_iterator523.s(); !(_step523 = _iterator523.n()).done; ) {
+          var _step523$value = _slicedToArray(_step523.value, 2),
+            _ = _step523$value[0],
+            block = _step523$value[1];
           if (block.terminal.kind === "scope") {
             keyedByScopeId.set(
               block.terminal.scope.id,
@@ -67803,9 +67870,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator522.e(err);
+        _iterator523.e(err);
       } finally {
-        _iterator522.f();
+        _iterator523.f();
       }
       return keyedByScopeId;
     }
@@ -67934,13 +68001,13 @@ PERFORMANCE OF THIS SOFTWARE.
         );
       }
       var nodes = new Map();
-      var _iterator523 = _createForOfIteratorHelper(fn.body.blocks),
-        _step523;
+      var _iterator524 = _createForOfIteratorHelper(fn.body.blocks),
+        _step524;
       try {
-        for (_iterator523.s(); !(_step523 = _iterator523.n()).done; ) {
-          var _step523$value = _slicedToArray(_step523.value, 2),
-            _ = _step523$value[0],
-            block = _step523$value[1];
+        for (_iterator524.s(); !(_step524 = _iterator524.n()).done; ) {
+          var _step524$value = _slicedToArray(_step524.value, 2),
+            _ = _step524$value[0],
+            block = _step524$value[1];
           var assumedNonNullObjects = new Set(knownNonNullIdentifiers);
           var maybeOptionalChain = context.hoistableFromOptionals.get(block.id);
           if (maybeOptionalChain != null) {
@@ -67948,11 +68015,11 @@ PERFORMANCE OF THIS SOFTWARE.
               context.registry.getOrCreateProperty(maybeOptionalChain)
             );
           }
-          var _iterator524 = _createForOfIteratorHelper(block.instructions),
-            _step524;
+          var _iterator525 = _createForOfIteratorHelper(block.instructions),
+            _step525;
           try {
             var _loop15 = function _loop15() {
-              var instr = _step524.value;
+              var instr = _step525.value;
               var maybeNonNull = getMaybeNonNullInInstruction(
                 instr.value,
                 context
@@ -67998,33 +68065,33 @@ PERFORMANCE OF THIS SOFTWARE.
                 var innerHoistables = assertNonNull(
                   innerHoistableMap.get(innerFn.func.body.entry)
                 );
-                var _iterator525 = _createForOfIteratorHelper(
+                var _iterator526 = _createForOfIteratorHelper(
                     innerHoistables.assumedNonNullObjects
                   ),
-                  _step525;
+                  _step526;
                 try {
                   for (
-                    _iterator525.s();
-                    !(_step525 = _iterator525.n()).done;
+                    _iterator526.s();
+                    !(_step526 = _iterator526.n()).done;
 
                   ) {
-                    var entry = _step525.value;
+                    var entry = _step526.value;
                     assumedNonNullObjects.add(entry);
                   }
                 } catch (err) {
-                  _iterator525.e(err);
+                  _iterator526.e(err);
                 } finally {
-                  _iterator525.f();
+                  _iterator526.f();
                 }
               }
             };
-            for (_iterator524.s(); !(_step524 = _iterator524.n()).done; ) {
+            for (_iterator525.s(); !(_step525 = _iterator525.n()).done; ) {
               _loop15();
             }
           } catch (err) {
-            _iterator524.e(err);
+            _iterator525.e(err);
           } finally {
-            _iterator524.f();
+            _iterator525.f();
           }
           nodes.set(block.id, {
             block: block,
@@ -68032,35 +68099,35 @@ PERFORMANCE OF THIS SOFTWARE.
           });
         }
       } catch (err) {
-        _iterator523.e(err);
+        _iterator524.e(err);
       } finally {
-        _iterator523.f();
+        _iterator524.f();
       }
       return nodes;
     }
     function propagateNonNull(fn, nodes, registry) {
       var blockSuccessors = new Map();
       var terminalPreds = new Set();
-      var _iterator526 = _createForOfIteratorHelper(fn.body.blocks),
-        _step526;
+      var _iterator527 = _createForOfIteratorHelper(fn.body.blocks),
+        _step527;
       try {
-        for (_iterator526.s(); !(_step526 = _iterator526.n()).done; ) {
-          var _step526$value = _slicedToArray(_step526.value, 2),
-            _blockId3 = _step526$value[0],
-            block = _step526$value[1];
-          var _iterator529 = _createForOfIteratorHelper(block.preds),
-            _step529;
+        for (_iterator527.s(); !(_step527 = _iterator527.n()).done; ) {
+          var _step527$value = _slicedToArray(_step527.value, 2),
+            _blockId3 = _step527$value[0],
+            block = _step527$value[1];
+          var _iterator530 = _createForOfIteratorHelper(block.preds),
+            _step530;
           try {
-            for (_iterator529.s(); !(_step529 = _iterator529.n()).done; ) {
-              var pred = _step529.value;
+            for (_iterator530.s(); !(_step530 = _iterator530.n()).done; ) {
+              var pred = _step530.value;
               getOrInsertDefault(blockSuccessors, pred, new Set()).add(
                 _blockId3
               );
             }
           } catch (err) {
-            _iterator529.e(err);
+            _iterator530.e(err);
           } finally {
-            _iterator529.f();
+            _iterator530.f();
           }
           if (
             block.terminal.kind === "throw" ||
@@ -68070,9 +68137,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator526.e(err);
+        _iterator527.e(err);
       } finally {
-        _iterator526.f();
+        _iterator527.f();
       }
       function recursivelyPropagateNonNull(nodeId, direction, traversalState) {
         var _a;
@@ -68141,12 +68208,12 @@ PERFORMANCE OF THIS SOFTWARE.
           loc: GeneratedSource
         });
         changed = false;
-        var _iterator527 = _createForOfIteratorHelper(fn.body.blocks),
-          _step527;
+        var _iterator528 = _createForOfIteratorHelper(fn.body.blocks),
+          _step528;
         try {
-          for (_iterator527.s(); !(_step527 = _iterator527.n()).done; ) {
-            var _step527$value = _slicedToArray(_step527.value, 1),
-              blockId = _step527$value[0];
+          for (_iterator528.s(); !(_step528 = _iterator528.n()).done; ) {
+            var _step528$value = _slicedToArray(_step528.value, 1),
+              blockId = _step528$value[0];
             var forwardChanged = recursivelyPropagateNonNull(
               blockId,
               "forward",
@@ -68155,17 +68222,17 @@ PERFORMANCE OF THIS SOFTWARE.
             changed || (changed = forwardChanged);
           }
         } catch (err) {
-          _iterator527.e(err);
+          _iterator528.e(err);
         } finally {
-          _iterator527.f();
+          _iterator528.f();
         }
         traversalState.clear();
-        var _iterator528 = _createForOfIteratorHelper(reversedBlocks),
-          _step528;
+        var _iterator529 = _createForOfIteratorHelper(reversedBlocks),
+          _step529;
         try {
-          for (_iterator528.s(); !(_step528 = _iterator528.n()).done; ) {
-            var _step528$value = _slicedToArray(_step528.value, 1),
-              _blockId2 = _step528$value[0];
+          for (_iterator529.s(); !(_step529 = _iterator529.n()).done; ) {
+            var _step529$value = _slicedToArray(_step529.value, 1),
+              _blockId2 = _step529$value[0];
             var backwardChanged = recursivelyPropagateNonNull(
               _blockId2,
               "backward",
@@ -68174,9 +68241,9 @@ PERFORMANCE OF THIS SOFTWARE.
             changed || (changed = backwardChanged);
           }
         } catch (err) {
-          _iterator528.e(err);
+          _iterator529.e(err);
         } finally {
-          _iterator528.f();
+          _iterator529.f();
         }
         traversalState.clear();
       } while (changed);
@@ -68199,11 +68266,11 @@ PERFORMANCE OF THIS SOFTWARE.
       var changed;
       do {
         changed = false;
-        var _iterator530 = _createForOfIteratorHelper(optionalChainNodes),
-          _step530;
+        var _iterator531 = _createForOfIteratorHelper(optionalChainNodes),
+          _step531;
         try {
-          for (_iterator530.s(); !(_step530 = _iterator530.n()).done; ) {
-            var original = _step530.value;
+          for (_iterator531.s(); !(_step531 = _iterator531.n()).done; ) {
+            var original = _step531.value;
             var _original$fullPath = original.fullPath,
               _identifier21 = _original$fullPath.identifier,
               origPath = _original$fullPath.path;
@@ -68228,9 +68295,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator530.e(err);
+          _iterator531.e(err);
         } finally {
-          _iterator530.f();
+          _iterator531.f();
         }
       } while (changed);
     }
@@ -68367,13 +68434,13 @@ PERFORMANCE OF THIS SOFTWARE.
         var _b;
         _ReactiveScopeDependencyTreeHIR_hoistableObjects.set(this, new Map());
         _ReactiveScopeDependencyTreeHIR_deps.set(this, new Map());
-        var _iterator531 = _createForOfIteratorHelper(hoistableObjects),
-          _step531;
+        var _iterator532 = _createForOfIteratorHelper(hoistableObjects),
+          _step532;
         try {
-          for (_iterator531.s(); !(_step531 = _iterator531.n()).done; ) {
-            var _step531$value = _step531.value,
-              path = _step531$value.path,
-              _identifier22 = _step531$value.identifier;
+          for (_iterator532.s(); !(_step532 = _iterator532.n()).done; ) {
+            var _step532$value = _step532.value,
+              path = _step532$value.path,
+              _identifier22 = _step532$value.identifier;
             var currNode = __classPrivateFieldGet(
               _a,
               _a,
@@ -68412,9 +68479,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator531.e(err);
+          _iterator532.e(err);
         } finally {
-          _iterator531.f();
+          _iterator532.f();
         }
       }
       return _createClass(
@@ -68445,11 +68512,11 @@ PERFORMANCE OF THIS SOFTWARE.
                 _ReactiveScopeDependencyTreeHIR_hoistableObjects,
                 "f"
               ).get(identifier);
-              var _iterator532 = _createForOfIteratorHelper(path),
-                _step532;
+              var _iterator533 = _createForOfIteratorHelper(path),
+                _step533;
               try {
-                for (_iterator532.s(); !(_step532 = _iterator532.n()).done; ) {
-                  var entry = _step532.value;
+                for (_iterator533.s(); !(_step533 = _iterator533.n()).done; ) {
+                  var entry = _step533.value;
                   var nextHoistableCursor = void 0;
                   var nextDepCursor = void 0;
                   if (entry.optional) {
@@ -68492,9 +68559,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   hoistableCursor = nextHoistableCursor;
                 }
               } catch (err) {
-                _iterator532.e(err);
+                _iterator533.e(err);
               } finally {
-                _iterator532.f();
+                _iterator533.f();
               }
               depCursor.accessType = merge(
                 depCursor.accessType,
@@ -68506,38 +68573,6 @@ PERFORMANCE OF THIS SOFTWARE.
             key: "deriveMinimalDependencies",
             value: function deriveMinimalDependencies() {
               var results = new Set();
-              var _iterator533 = _createForOfIteratorHelper(
-                  __classPrivateFieldGet(
-                    this,
-                    _ReactiveScopeDependencyTreeHIR_deps,
-                    "f"
-                  ).entries()
-                ),
-                _step533;
-              try {
-                for (_iterator533.s(); !(_step533 = _iterator533.n()).done; ) {
-                  var _step533$value = _slicedToArray(_step533.value, 2),
-                    rootId = _step533$value[0],
-                    rootNode = _step533$value[1];
-                  collectMinimalDependenciesInSubtree(
-                    rootNode,
-                    rootId,
-                    [],
-                    results
-                  );
-                }
-              } catch (err) {
-                _iterator533.e(err);
-              } finally {
-                _iterator533.f();
-              }
-              return results;
-            }
-          },
-          {
-            key: "printDeps",
-            value: function printDeps(includeAccesses) {
-              var res = [];
               var _iterator534 = _createForOfIteratorHelper(
                   __classPrivateFieldGet(
                     this,
@@ -68547,10 +68582,42 @@ PERFORMANCE OF THIS SOFTWARE.
                 ),
                 _step534;
               try {
-                var _loop16 = function _loop16() {
+                for (_iterator534.s(); !(_step534 = _iterator534.n()).done; ) {
                   var _step534$value = _slicedToArray(_step534.value, 2),
                     rootId = _step534$value[0],
                     rootNode = _step534$value[1];
+                  collectMinimalDependenciesInSubtree(
+                    rootNode,
+                    rootId,
+                    [],
+                    results
+                  );
+                }
+              } catch (err) {
+                _iterator534.e(err);
+              } finally {
+                _iterator534.f();
+              }
+              return results;
+            }
+          },
+          {
+            key: "printDeps",
+            value: function printDeps(includeAccesses) {
+              var res = [];
+              var _iterator535 = _createForOfIteratorHelper(
+                  __classPrivateFieldGet(
+                    this,
+                    _ReactiveScopeDependencyTreeHIR_deps,
+                    "f"
+                  ).entries()
+                ),
+                _step535;
+              try {
+                var _loop16 = function _loop16() {
+                  var _step535$value = _slicedToArray(_step535.value, 2),
+                    rootId = _step535$value[0],
+                    rootNode = _step535$value[1];
                   var rootResults = printSubtree(rootNode, includeAccesses).map(
                     function (result) {
                       return ""
@@ -68560,13 +68627,13 @@ PERFORMANCE OF THIS SOFTWARE.
                   );
                   res.push(rootResults);
                 };
-                for (_iterator534.s(); !(_step534 = _iterator534.n()).done; ) {
+                for (_iterator535.s(); !(_step535 = _iterator535.n()).done; ) {
                   _loop16();
                 }
               } catch (err) {
-                _iterator534.e(err);
+                _iterator535.e(err);
               } finally {
-                _iterator534.f();
+                _iterator535.f();
               }
               return res.flat().join("\n");
             }
@@ -68577,13 +68644,13 @@ PERFORMANCE OF THIS SOFTWARE.
             key: "debug",
             value: function debug(roots) {
               var buf = ["tree() ["];
-              var _iterator535 = _createForOfIteratorHelper(roots),
-                _step535;
+              var _iterator536 = _createForOfIteratorHelper(roots),
+                _step536;
               try {
-                for (_iterator535.s(); !(_step535 = _iterator535.n()).done; ) {
-                  var _step535$value = _slicedToArray(_step535.value, 2),
-                    rootId = _step535$value[0],
-                    rootNode = _step535$value[1];
+                for (_iterator536.s(); !(_step536 = _iterator536.n()).done; ) {
+                  var _step536$value = _slicedToArray(_step536.value, 2),
+                    rootId = _step536$value[0],
+                    rootNode = _step536$value[1];
                   buf.push(
                     ""
                       .concat(printIdentifier(rootId), " (")
@@ -68597,9 +68664,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   ).call(this, buf, rootNode, 1);
                 }
               } catch (err) {
-                _iterator535.e(err);
+                _iterator536.e(err);
               } finally {
-                _iterator535.f();
+                _iterator536.f();
               }
               buf.push("]");
               return buf.length > 2 ? buf.join("\n") : buf.join("");
@@ -68630,13 +68697,13 @@ PERFORMANCE OF THIS SOFTWARE.
             arguments.length > 2 && arguments[2] !== undefined
               ? arguments[2]
               : 0;
-          var _iterator536 = _createForOfIteratorHelper(node.properties),
-            _step536;
+          var _iterator537 = _createForOfIteratorHelper(node.properties),
+            _step537;
           try {
-            for (_iterator536.s(); !(_step536 = _iterator536.n()).done; ) {
-              var _step536$value = _slicedToArray(_step536.value, 2),
-                property = _step536$value[0],
-                childNode = _step536$value[1];
+            for (_iterator537.s(); !(_step537 = _iterator537.n()).done; ) {
+              var _step537$value = _slicedToArray(_step537.value, 2),
+                property = _step537$value[0],
+                childNode = _step537$value[1];
               buf.push(
                 ""
                   .concat("  ".repeat(depth), ".")
@@ -68651,9 +68718,9 @@ PERFORMANCE OF THIS SOFTWARE.
               ).call(this, buf, childNode, depth + 1);
             }
           } catch (err) {
-            _iterator536.e(err);
+            _iterator537.e(err);
           } finally {
-            _iterator536.f();
+            _iterator537.f();
           }
         });
     var PropertyAccessType;
@@ -68701,13 +68768,13 @@ PERFORMANCE OF THIS SOFTWARE.
       if (isDependency(node.accessType)) {
         results.add({ identifier: rootIdentifier, path: path });
       } else {
-        var _iterator537 = _createForOfIteratorHelper(node.properties),
-          _step537;
+        var _iterator538 = _createForOfIteratorHelper(node.properties),
+          _step538;
         try {
-          for (_iterator537.s(); !(_step537 = _iterator537.n()).done; ) {
-            var _step537$value = _slicedToArray(_step537.value, 2),
-              childName = _step537$value[0],
-              childNode = _step537$value[1];
+          for (_iterator538.s(); !(_step538 = _iterator538.n()).done; ) {
+            var _step538$value = _slicedToArray(_step538.value, 2),
+              childName = _step538$value[0],
+              childNode = _step538$value[1];
             collectMinimalDependenciesInSubtree(
               childNode,
               rootIdentifier,
@@ -68721,21 +68788,21 @@ PERFORMANCE OF THIS SOFTWARE.
             );
           }
         } catch (err) {
-          _iterator537.e(err);
+          _iterator538.e(err);
         } finally {
-          _iterator537.f();
+          _iterator538.f();
         }
       }
     }
     function printSubtree(node, includeAccesses) {
       var results = [];
-      var _iterator538 = _createForOfIteratorHelper(node.properties),
-        _step538;
+      var _iterator539 = _createForOfIteratorHelper(node.properties),
+        _step539;
       try {
         var _loop17 = function _loop17() {
-          var _step538$value = _slicedToArray(_step538.value, 2),
-            propertyName = _step538$value[0],
-            propertyNode = _step538$value[1];
+          var _step539$value = _slicedToArray(_step539.value, 2),
+            propertyName = _step539$value[0],
+            propertyNode = _step539$value[1];
           if (includeAccesses || isDependency(propertyNode.accessType)) {
             results.push(
               "".concat(propertyName, " (").concat(propertyNode.accessType, ")")
@@ -68751,13 +68818,13 @@ PERFORMANCE OF THIS SOFTWARE.
             )
           );
         };
-        for (_iterator538.s(); !(_step538 = _iterator538.n()).done; ) {
+        for (_iterator539.s(); !(_step539 = _iterator539.n()).done; ) {
           _loop17();
         }
       } catch (err) {
-        _iterator538.e(err);
+        _iterator539.e(err);
       } finally {
-        _iterator538.f();
+        _iterator539.f();
       }
       return results;
     }
@@ -68788,18 +68855,18 @@ PERFORMANCE OF THIS SOFTWARE.
       };
     }
     function traverseFunction(fn, context) {
-      var _iterator539 = _createForOfIteratorHelper(fn.body.blocks),
-        _step539;
+      var _iterator540 = _createForOfIteratorHelper(fn.body.blocks),
+        _step540;
       try {
-        for (_iterator539.s(); !(_step539 = _iterator539.n()).done; ) {
-          var _step539$value = _slicedToArray(_step539.value, 2),
-            _ = _step539$value[0],
-            block = _step539$value[1];
-          var _iterator540 = _createForOfIteratorHelper(block.instructions),
-            _step540;
+        for (_iterator540.s(); !(_step540 = _iterator540.n()).done; ) {
+          var _step540$value = _slicedToArray(_step540.value, 2),
+            _ = _step540$value[0],
+            block = _step540$value[1];
+          var _iterator541 = _createForOfIteratorHelper(block.instructions),
+            _step541;
           try {
-            for (_iterator540.s(); !(_step540 = _iterator540.n()).done; ) {
-              var instr = _step540.value;
+            for (_iterator541.s(); !(_step541 = _iterator541.n()).done; ) {
+              var instr = _step541.value;
               if (
                 instr.value.kind === "FunctionExpression" ||
                 instr.value.kind === "ObjectMethod"
@@ -68814,9 +68881,9 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator540.e(err);
+            _iterator541.e(err);
           } finally {
-            _iterator540.f();
+            _iterator541.f();
           }
           if (
             block.terminal.kind === "optional" &&
@@ -68826,9 +68893,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator539.e(err);
+        _iterator540.e(err);
       } finally {
-        _iterator539.f();
+        _iterator540.f();
       }
     }
     function matchOptionalTestBlock(terminal, blocks) {
@@ -69047,13 +69114,13 @@ PERFORMANCE OF THIS SOFTWARE.
         ),
         processedInstrsInOptional
       );
-      var _iterator541 = _createForOfIteratorHelper(scopeDeps),
-        _step541;
+      var _iterator542 = _createForOfIteratorHelper(scopeDeps),
+        _step542;
       try {
-        for (_iterator541.s(); !(_step541 = _iterator541.n()).done; ) {
-          var _step541$value = _slicedToArray(_step541.value, 2),
-            scope = _step541$value[0],
-            deps = _step541$value[1];
+        for (_iterator542.s(); !(_step542 = _iterator542.n()).done; ) {
+          var _step542$value = _slicedToArray(_step542.value, 2),
+            scope = _step542$value[0],
+            deps = _step542$value[1];
           if (deps.length === 0) {
             continue;
           }
@@ -69070,24 +69137,24 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             )
           );
-          var _iterator542 = _createForOfIteratorHelper(deps),
-            _step542;
+          var _iterator543 = _createForOfIteratorHelper(deps),
+            _step543;
           try {
-            for (_iterator542.s(); !(_step542 = _iterator542.n()).done; ) {
-              var dep = _step542.value;
+            for (_iterator543.s(); !(_step543 = _iterator543.n()).done; ) {
+              var dep = _step543.value;
               tree.addDependency(Object.assign({}, dep));
             }
           } catch (err) {
-            _iterator542.e(err);
+            _iterator543.e(err);
           } finally {
-            _iterator542.f();
+            _iterator543.f();
           }
           var candidates = tree.deriveMinimalDependencies();
-          var _iterator543 = _createForOfIteratorHelper(candidates),
-            _step543;
+          var _iterator544 = _createForOfIteratorHelper(candidates),
+            _step544;
           try {
             var _loop18 = function _loop18() {
-              var candidateDep = _step543.value;
+              var candidateDep = _step544.value;
               if (
                 !Iterable_some(scope.dependencies, function (existingDep) {
                   return (
@@ -69099,19 +69166,19 @@ PERFORMANCE OF THIS SOFTWARE.
               )
                 scope.dependencies.add(candidateDep);
             };
-            for (_iterator543.s(); !(_step543 = _iterator543.n()).done; ) {
+            for (_iterator544.s(); !(_step544 = _iterator544.n()).done; ) {
               _loop18();
             }
           } catch (err) {
-            _iterator543.e(err);
+            _iterator544.e(err);
           } finally {
-            _iterator543.f();
+            _iterator544.f();
           }
         }
       } catch (err) {
-        _iterator541.e(err);
+        _iterator542.e(err);
       } finally {
-        _iterator541.f();
+        _iterator542.f();
       }
     }
     function findTemporariesUsedOutsideDeclaringScope(fn) {
@@ -69143,13 +69210,13 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       }
-      var _iterator544 = _createForOfIteratorHelper(fn.body.blocks),
-        _step544;
+      var _iterator545 = _createForOfIteratorHelper(fn.body.blocks),
+        _step545;
       try {
-        for (_iterator544.s(); !(_step544 = _iterator544.n()).done; ) {
-          var _step544$value = _slicedToArray(_step544.value, 2),
-            blockId = _step544$value[0],
-            block = _step544$value[1];
+        for (_iterator545.s(); !(_step545 = _iterator545.n()).done; ) {
+          var _step545$value = _slicedToArray(_step545.value, 2),
+            blockId = _step545$value[0],
+            block = _step545$value[1];
           scopeTraversal.recordScopes(block);
           var scopeStartInfo = scopeTraversal.blockInfos.get(blockId);
           if (
@@ -69160,51 +69227,51 @@ PERFORMANCE OF THIS SOFTWARE.
           ) {
             prunedScopes.add(scopeStartInfo.scope.id);
           }
-          var _iterator545 = _createForOfIteratorHelper(block.instructions),
-            _step545;
-          try {
-            for (_iterator545.s(); !(_step545 = _iterator545.n()).done; ) {
-              var instr = _step545.value;
-              var _iterator547 = _createForOfIteratorHelper(
-                  eachInstructionOperand(instr)
-                ),
-                _step547;
-              try {
-                for (_iterator547.s(); !(_step547 = _iterator547.n()).done; ) {
-                  var place = _step547.value;
-                  handlePlace(place);
-                }
-              } catch (err) {
-                _iterator547.e(err);
-              } finally {
-                _iterator547.f();
-              }
-              handleInstruction(instr);
-            }
-          } catch (err) {
-            _iterator545.e(err);
-          } finally {
-            _iterator545.f();
-          }
-          var _iterator546 = _createForOfIteratorHelper(
-              eachTerminalOperand(block.terminal)
-            ),
+          var _iterator546 = _createForOfIteratorHelper(block.instructions),
             _step546;
           try {
             for (_iterator546.s(); !(_step546 = _iterator546.n()).done; ) {
-              var _place29 = _step546.value;
-              handlePlace(_place29);
+              var instr = _step546.value;
+              var _iterator548 = _createForOfIteratorHelper(
+                  eachInstructionOperand(instr)
+                ),
+                _step548;
+              try {
+                for (_iterator548.s(); !(_step548 = _iterator548.n()).done; ) {
+                  var place = _step548.value;
+                  handlePlace(place);
+                }
+              } catch (err) {
+                _iterator548.e(err);
+              } finally {
+                _iterator548.f();
+              }
+              handleInstruction(instr);
             }
           } catch (err) {
             _iterator546.e(err);
           } finally {
             _iterator546.f();
           }
+          var _iterator547 = _createForOfIteratorHelper(
+              eachTerminalOperand(block.terminal)
+            ),
+            _step547;
+          try {
+            for (_iterator547.s(); !(_step547 = _iterator547.n()).done; ) {
+              var _place29 = _step547.value;
+              handlePlace(_place29);
+            }
+          } catch (err) {
+            _iterator547.e(err);
+          } finally {
+            _iterator547.f();
+          }
         }
       } catch (err) {
-        _iterator544.e(err);
+        _iterator545.e(err);
       } finally {
-        _iterator544.f();
+        _iterator545.f();
       }
       return usedOutsideDeclaringScope;
     }
@@ -69235,21 +69302,21 @@ PERFORMANCE OF THIS SOFTWARE.
       temporaries,
       innerFnContext
     ) {
-      var _iterator548 = _createForOfIteratorHelper(fn.body.blocks),
-        _step548;
+      var _iterator549 = _createForOfIteratorHelper(fn.body.blocks),
+        _step549;
       try {
-        for (_iterator548.s(); !(_step548 = _iterator548.n()).done; ) {
-          var _step548$value = _slicedToArray(_step548.value, 2),
-            _ = _step548$value[0],
-            block = _step548$value[1];
-          var _iterator549 = _createForOfIteratorHelper(block.instructions),
-            _step549;
+        for (_iterator549.s(); !(_step549 = _iterator549.n()).done; ) {
+          var _step549$value = _slicedToArray(_step549.value, 2),
+            _ = _step549$value[0],
+            block = _step549$value[1];
+          var _iterator550 = _createForOfIteratorHelper(block.instructions),
+            _step550;
           try {
             var _loop19 = function _loop19() {
-              var _step549$value = _step549.value,
-                value = _step549$value.value,
-                lvalue = _step549$value.lvalue,
-                origInstrId = _step549$value.id;
+              var _step550$value = _step550.value,
+                value = _step550$value.value,
+                lvalue = _step550$value.lvalue,
+                origInstrId = _step550$value.id;
               var instrId =
                 innerFnContext != null ? innerFnContext.instrId : origInstrId;
               var usedOutside = usedOutsideDeclaringScope.has(
@@ -69300,19 +69367,19 @@ PERFORMANCE OF THIS SOFTWARE.
                 );
               }
             };
-            for (_iterator549.s(); !(_step549 = _iterator549.n()).done; ) {
+            for (_iterator550.s(); !(_step550 = _iterator550.n()).done; ) {
               _loop19();
             }
           } catch (err) {
-            _iterator549.e(err);
+            _iterator550.e(err);
           } finally {
-            _iterator549.f();
+            _iterator550.f();
           }
         }
       } catch (err) {
-        _iterator548.e(err);
+        _iterator549.e(err);
       } finally {
-        _iterator548.f();
+        _iterator549.f();
       }
     }
     function getProperty(object, propertyName, optional, temporaries) {
@@ -69407,11 +69474,11 @@ PERFORMANCE OF THIS SOFTWARE.
               __classPrivateFieldGet(this, _Context_dependencies, "f").pop(),
               "f"
             );
-            var _iterator550 = _createForOfIteratorHelper(scopedDependencies),
-              _step550;
+            var _iterator551 = _createForOfIteratorHelper(scopedDependencies),
+              _step551;
             try {
-              for (_iterator550.s(); !(_step550 = _iterator550.n()).done; ) {
-                var dep = _step550.value;
+              for (_iterator551.s(); !(_step551 = _iterator551.n()).done; ) {
+                var dep = _step551.value;
                 if (
                   __classPrivateFieldGet(
                     this,
@@ -69430,9 +69497,9 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator550.e(err);
+              _iterator551.e(err);
             } finally {
-              _iterator550.f();
+              _iterator551.f();
             }
             if (!pruned) {
               this.deps.set(scope, scopedDependencies);
@@ -69724,13 +69791,13 @@ PERFORMANCE OF THIS SOFTWARE.
         });
       } else if (value.kind === "Destructure") {
         context.visitOperand(value.value);
-        var _iterator551 = _createForOfIteratorHelper(
+        var _iterator552 = _createForOfIteratorHelper(
             eachPatternOperand(value.lvalue.pattern)
           ),
-          _step551;
+          _step552;
         try {
-          for (_iterator551.s(); !(_step551 = _iterator551.n()).done; ) {
-            var place = _step551.value;
+          for (_iterator552.s(); !(_step552 = _iterator552.n()).done; ) {
+            var place = _step552.value;
             if (value.lvalue.kind === InstructionKind.Reassign) {
               context.visitReassignment(place);
             }
@@ -69740,24 +69807,24 @@ PERFORMANCE OF THIS SOFTWARE.
             });
           }
         } catch (err) {
-          _iterator551.e(err);
-        } finally {
-          _iterator551.f();
-        }
-      } else {
-        var _iterator552 = _createForOfIteratorHelper(
-            eachInstructionValueOperand(value)
-          ),
-          _step552;
-        try {
-          for (_iterator552.s(); !(_step552 = _iterator552.n()).done; ) {
-            var operand = _step552.value;
-            context.visitOperand(operand);
-          }
-        } catch (err) {
           _iterator552.e(err);
         } finally {
           _iterator552.f();
+        }
+      } else {
+        var _iterator553 = _createForOfIteratorHelper(
+            eachInstructionValueOperand(value)
+          ),
+          _step553;
+        try {
+          for (_iterator553.s(); !(_step553 = _iterator553.n()).done; ) {
+            var operand = _step553.value;
+            context.visitOperand(operand);
+          }
+        } catch (err) {
+          _iterator553.e(err);
+        } finally {
+          _iterator553.f();
         }
       }
     }
@@ -69772,11 +69839,11 @@ PERFORMANCE OF THIS SOFTWARE.
         temporaries,
         processedInstrsInOptional
       );
-      var _iterator553 = _createForOfIteratorHelper(fn.params),
-        _step553;
+      var _iterator554 = _createForOfIteratorHelper(fn.params),
+        _step554;
       try {
-        for (_iterator553.s(); !(_step553 = _iterator553.n()).done; ) {
-          var param = _step553.value;
+        for (_iterator554.s(); !(_step554 = _iterator554.n()).done; ) {
+          var param = _step554.value;
           if (param.kind === "Identifier") {
             context.declare(param.identifier, {
               id: makeInstructionId(0),
@@ -69790,19 +69857,19 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator553.e(err);
+        _iterator554.e(err);
       } finally {
-        _iterator553.f();
+        _iterator554.f();
       }
       var scopeTraversal = new ScopeBlockTraversal();
       var _handleFunction = function handleFunction(fn) {
-        var _iterator554 = _createForOfIteratorHelper(fn.body.blocks),
-          _step554;
+        var _iterator555 = _createForOfIteratorHelper(fn.body.blocks),
+          _step555;
         try {
-          for (_iterator554.s(); !(_step554 = _iterator554.n()).done; ) {
-            var _step554$value = _slicedToArray(_step554.value, 2),
-              blockId = _step554$value[0],
-              block = _step554$value[1];
+          for (_iterator555.s(); !(_step555 = _iterator555.n()).done; ) {
+            var _step555$value = _slicedToArray(_step555.value, 2),
+              blockId = _step555$value[0],
+              block = _step555$value[1];
             scopeTraversal.recordScopes(block);
             var scopeBlockInfo = scopeTraversal.blockInfos.get(blockId);
             if (
@@ -69818,20 +69885,20 @@ PERFORMANCE OF THIS SOFTWARE.
             ) {
               context.exitScope(scopeBlockInfo.scope, scopeBlockInfo.pruned);
             }
-            var _iterator555 = _createForOfIteratorHelper(block.phis),
-              _step555;
+            var _iterator556 = _createForOfIteratorHelper(block.phis),
+              _step556;
             try {
-              for (_iterator555.s(); !(_step555 = _iterator555.n()).done; ) {
-                var phi = _step555.value;
-                var _iterator558 = _createForOfIteratorHelper(phi.operands),
-                  _step558;
+              for (_iterator556.s(); !(_step556 = _iterator556.n()).done; ) {
+                var phi = _step556.value;
+                var _iterator559 = _createForOfIteratorHelper(phi.operands),
+                  _step559;
                 try {
                   for (
-                    _iterator558.s();
-                    !(_step558 = _iterator558.n()).done;
+                    _iterator559.s();
+                    !(_step559 = _iterator559.n()).done;
 
                   ) {
-                    var operand = _step558.value;
+                    var operand = _step559.value;
                     var maybeOptionalChain = temporaries.get(
                       operand[1].identifier.id
                     );
@@ -69840,21 +69907,21 @@ PERFORMANCE OF THIS SOFTWARE.
                     }
                   }
                 } catch (err) {
-                  _iterator558.e(err);
+                  _iterator559.e(err);
                 } finally {
-                  _iterator558.f();
+                  _iterator559.f();
                 }
               }
             } catch (err) {
-              _iterator555.e(err);
+              _iterator556.e(err);
             } finally {
-              _iterator555.f();
+              _iterator556.f();
             }
-            var _iterator556 = _createForOfIteratorHelper(block.instructions),
-              _step556;
+            var _iterator557 = _createForOfIteratorHelper(block.instructions),
+              _step557;
             try {
               var _loop20 = function _loop20() {
-                var instr = _step556.value;
+                var instr = _step557.value;
                 if (
                   instr.value.kind === "FunctionExpression" ||
                   instr.value.kind === "ObjectMethod"
@@ -69871,13 +69938,13 @@ PERFORMANCE OF THIS SOFTWARE.
                   handleInstruction(instr, context);
                 }
               };
-              for (_iterator556.s(); !(_step556 = _iterator556.n()).done; ) {
+              for (_iterator557.s(); !(_step557 = _iterator557.n()).done; ) {
                 _loop20();
               }
             } catch (err) {
-              _iterator556.e(err);
+              _iterator557.e(err);
             } finally {
-              _iterator556.f();
+              _iterator557.f();
             }
             if (
               !context.isDeferredDependency({
@@ -69885,26 +69952,26 @@ PERFORMANCE OF THIS SOFTWARE.
                 value: block.terminal
               })
             ) {
-              var _iterator557 = _createForOfIteratorHelper(
+              var _iterator558 = _createForOfIteratorHelper(
                   eachTerminalOperand(block.terminal)
                 ),
-                _step557;
+                _step558;
               try {
-                for (_iterator557.s(); !(_step557 = _iterator557.n()).done; ) {
-                  var place = _step557.value;
+                for (_iterator558.s(); !(_step558 = _iterator558.n()).done; ) {
+                  var place = _step558.value;
                   context.visitOperand(place);
                 }
               } catch (err) {
-                _iterator557.e(err);
+                _iterator558.e(err);
               } finally {
-                _iterator557.f();
+                _iterator558.f();
               }
             }
           }
         } catch (err) {
-          _iterator554.e(err);
+          _iterator555.e(err);
         } finally {
-          _iterator554.f();
+          _iterator555.f();
         }
       };
       _handleFunction(fn);
@@ -69940,12 +70007,12 @@ PERFORMANCE OF THIS SOFTWARE.
           rewriteInstr.set(state.jsx.at(0).id, result.instrs);
         }
       }
-      var _iterator559 = _createForOfIteratorHelper(fn.body.blocks),
-        _step559;
+      var _iterator560 = _createForOfIteratorHelper(fn.body.blocks),
+        _step560;
       try {
-        for (_iterator559.s(); !(_step559 = _iterator559.n()).done; ) {
-          var _step559$value = _slicedToArray(_step559.value, 2),
-            block = _step559$value[1];
+        for (_iterator560.s(); !(_step560 = _iterator560.n()).done; ) {
+          var _step560$value = _slicedToArray(_step560.value, 2),
+            block = _step560$value[1];
           var rewriteInstr = new Map();
           var state = { jsx: [], children: new Set() };
           for (var i = block.instructions.length - 1; i >= 0; i--) {
@@ -69968,21 +70035,21 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
                 state.jsx.push(instr);
                 if (value.children) {
-                  var _iterator560 = _createForOfIteratorHelper(value.children),
-                    _step560;
+                  var _iterator561 = _createForOfIteratorHelper(value.children),
+                    _step561;
                   try {
                     for (
-                      _iterator560.s();
-                      !(_step560 = _iterator560.n()).done;
+                      _iterator561.s();
+                      !(_step561 = _iterator561.n()).done;
 
                     ) {
-                      var child = _step560.value;
+                      var child = _step561.value;
                       state.children.add(child.identifier.id);
                     }
                   } catch (err) {
-                    _iterator560.e(err);
+                    _iterator561.e(err);
                   } finally {
-                    _iterator560.f();
+                    _iterator561.f();
                   }
                 }
                 break;
@@ -70054,9 +70121,9 @@ PERFORMANCE OF THIS SOFTWARE.
           deadCodeElimination(fn);
         }
       } catch (err) {
-        _iterator559.e(err);
+        _iterator560.e(err);
       } finally {
-        _iterator559.f();
+        _iterator560.f();
       }
     }
     function process$1(fn, jsx, globals) {
@@ -70090,17 +70157,17 @@ PERFORMANCE OF THIS SOFTWARE.
         })
       );
       var seen = new Set();
-      var _iterator561 = _createForOfIteratorHelper(instructions),
-        _step561;
+      var _iterator562 = _createForOfIteratorHelper(instructions),
+        _step562;
       try {
-        for (_iterator561.s(); !(_step561 = _iterator561.n()).done; ) {
-          var instr = _step561.value;
+        for (_iterator562.s(); !(_step562 = _iterator562.n()).done; ) {
+          var instr = _step562.value;
           var value = instr.value;
-          var _iterator562 = _createForOfIteratorHelper(value.props),
-            _step562;
+          var _iterator563 = _createForOfIteratorHelper(value.props),
+            _step563;
           try {
-            for (_iterator562.s(); !(_step562 = _iterator562.n()).done; ) {
-              var at = _step562.value;
+            for (_iterator563.s(); !(_step563 = _iterator563.n()).done; ) {
+              var at = _step563.value;
               if (at.kind === "JsxSpreadAttribute") {
                 return null;
               }
@@ -70114,16 +70181,16 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator562.e(err);
+            _iterator563.e(err);
           } finally {
-            _iterator562.f();
+            _iterator563.f();
           }
           if (value.children) {
-            var _iterator563 = _createForOfIteratorHelper(value.children),
-              _step563;
+            var _iterator564 = _createForOfIteratorHelper(value.children),
+              _step564;
             try {
-              for (_iterator563.s(); !(_step563 = _iterator563.n()).done; ) {
-                var child = _step563.value;
+              for (_iterator564.s(); !(_step564 = _iterator564.n()).done; ) {
+                var child = _step564.value;
                 if (jsxIds.has(child.identifier.id)) {
                   continue;
                 }
@@ -70136,16 +70203,16 @@ PERFORMANCE OF THIS SOFTWARE.
                 });
               }
             } catch (err) {
-              _iterator563.e(err);
+              _iterator564.e(err);
             } finally {
-              _iterator563.f();
+              _iterator564.f();
             }
           }
         }
       } catch (err) {
-        _iterator561.e(err);
+        _iterator562.e(err);
       } finally {
-        _iterator561.f();
+        _iterator562.f();
       }
       return attributes;
     }
@@ -70236,11 +70303,11 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function emitLoadGlobals(jsx, globals) {
       var instructions = [];
-      var _iterator564 = _createForOfIteratorHelper(jsx),
-        _step564;
+      var _iterator565 = _createForOfIteratorHelper(jsx),
+        _step565;
       try {
-        for (_iterator564.s(); !(_step564 = _iterator564.n()).done; ) {
-          var value = _step564.value.value;
+        for (_iterator565.s(); !(_step565 = _iterator565.n()).done; ) {
+          var value = _step565.value.value;
           if (value.tag.kind === "Identifier") {
             var loadGlobalInstr = globals.get(value.tag.identifier.id);
             if (!loadGlobalInstr) {
@@ -70250,9 +70317,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator564.e(err);
+        _iterator565.e(err);
       } finally {
-        _iterator564.f();
+        _iterator565.f();
       }
       return instructions;
     }
@@ -70263,18 +70330,18 @@ PERFORMANCE OF THIS SOFTWARE.
           return i.lvalue.identifier.id;
         })
       );
-      var _iterator565 = _createForOfIteratorHelper(jsx),
-        _step565;
+      var _iterator566 = _createForOfIteratorHelper(jsx),
+        _step566;
       try {
-        for (_iterator565.s(); !(_step565 = _iterator565.n()).done; ) {
-          var instr = _step565.value;
+        for (_iterator566.s(); !(_step566 = _iterator566.n()).done; ) {
+          var instr = _step566.value;
           var value = instr.value;
           var newProps = [];
-          var _iterator566 = _createForOfIteratorHelper(value.props),
-            _step566;
+          var _iterator567 = _createForOfIteratorHelper(value.props),
+            _step567;
           try {
-            for (_iterator566.s(); !(_step566 = _iterator566.n()).done; ) {
-              var prop = _step566.value;
+            for (_iterator567.s(); !(_step567 = _iterator567.n()).done; ) {
+              var prop = _step567.value;
               invariant_1(
                 prop.kind === "JsxAttribute",
                 "Expected only attributes but found ".concat(prop.kind)
@@ -70296,18 +70363,18 @@ PERFORMANCE OF THIS SOFTWARE.
               });
             }
           } catch (err) {
-            _iterator566.e(err);
+            _iterator567.e(err);
           } finally {
-            _iterator566.f();
+            _iterator567.f();
           }
           var newChildren = null;
           if (value.children) {
             newChildren = [];
-            var _iterator567 = _createForOfIteratorHelper(value.children),
-              _step567;
+            var _iterator568 = _createForOfIteratorHelper(value.children),
+              _step568;
             try {
-              for (_iterator567.s(); !(_step567 = _iterator567.n()).done; ) {
-                var child = _step567.value;
+              for (_iterator568.s(); !(_step568 = _iterator568.n()).done; ) {
+                var child = _step568.value;
                 if (jsxIds.has(child.identifier.id)) {
                   newChildren.push(Object.assign({}, child));
                   continue;
@@ -70322,9 +70389,9 @@ PERFORMANCE OF THIS SOFTWARE.
                 newChildren.push(Object.assign({}, newChild.place));
               }
             } catch (err) {
-              _iterator567.e(err);
+              _iterator568.e(err);
             } finally {
-              _iterator567.f();
+              _iterator568.f();
             }
           }
           newInstrs.push(
@@ -70337,19 +70404,19 @@ PERFORMANCE OF THIS SOFTWARE.
           );
         }
       } catch (err) {
-        _iterator565.e(err);
+        _iterator566.e(err);
       } finally {
-        _iterator565.f();
+        _iterator566.f();
       }
       return newInstrs;
     }
     function createOldToNewPropsMapping(env, oldProps) {
       var oldToNewProps = new Map();
-      var _iterator568 = _createForOfIteratorHelper(oldProps),
-        _step568;
+      var _iterator569 = _createForOfIteratorHelper(oldProps),
+        _step569;
       try {
-        for (_iterator568.s(); !(_step568 = _iterator568.n()).done; ) {
-          var oldProp = _step568.value;
+        for (_iterator569.s(); !(_step569 = _iterator569.n()).done; ) {
+          var oldProp = _step569.value;
           if (oldProp.originalName === "key") {
             continue;
           }
@@ -70360,21 +70427,21 @@ PERFORMANCE OF THIS SOFTWARE.
           oldToNewProps.set(oldProp.place.identifier.id, newProp);
         }
       } catch (err) {
-        _iterator568.e(err);
+        _iterator569.e(err);
       } finally {
-        _iterator568.f();
+        _iterator569.f();
       }
       return oldToNewProps;
     }
     function emitDestructureProps(env, propsObj, oldToNewProps) {
       var properties = [];
-      var _iterator569 = _createForOfIteratorHelper(oldToNewProps),
-        _step569;
+      var _iterator570 = _createForOfIteratorHelper(oldToNewProps),
+        _step570;
       try {
-        for (_iterator569.s(); !(_step569 = _iterator569.n()).done; ) {
-          var _step569$value = _slicedToArray(_step569.value, 2),
-            _ = _step569$value[0],
-            prop = _step569$value[1];
+        for (_iterator570.s(); !(_step570 = _iterator570.n()).done; ) {
+          var _step570$value = _slicedToArray(_step570.value, 2),
+            _ = _step570$value[0],
+            prop = _step570$value[1];
           properties.push({
             kind: "ObjectProperty",
             key: { kind: "string", name: prop.newName },
@@ -70383,9 +70450,9 @@ PERFORMANCE OF THIS SOFTWARE.
           });
         }
       } catch (err) {
-        _iterator569.e(err);
+        _iterator570.e(err);
       } finally {
-        _iterator569.f();
+        _iterator570.f();
       }
       var destructurePropsInstr = {
         id: makeInstructionId(0),
@@ -70404,12 +70471,12 @@ PERFORMANCE OF THIS SOFTWARE.
       return destructurePropsInstr;
     }
     function optimizePropsMethodCalls(fn) {
-      var _iterator570 = _createForOfIteratorHelper(fn.body.blocks),
-        _step570;
+      var _iterator571 = _createForOfIteratorHelper(fn.body.blocks),
+        _step571;
       try {
-        for (_iterator570.s(); !(_step570 = _iterator570.n()).done; ) {
-          var _step570$value = _slicedToArray(_step570.value, 2),
-            block = _step570$value[1];
+        for (_iterator571.s(); !(_step571 = _iterator571.n()).done; ) {
+          var _step571$value = _slicedToArray(_step571.value, 2),
+            block = _step571$value[1];
           for (var i = 0; i < block.instructions.length; i++) {
             var instr = block.instructions[i];
             if (
@@ -70426,9 +70493,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator570.e(err);
+        _iterator571.e(err);
       } finally {
-        _iterator570.f();
+        _iterator571.f();
       }
     }
     var _Context_env,
@@ -70453,19 +70520,19 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function replaceFireFunctions(fn, context) {
       var hasRewrite = false;
-      var _iterator571 = _createForOfIteratorHelper(fn.body.blocks),
-        _step571;
+      var _iterator572 = _createForOfIteratorHelper(fn.body.blocks),
+        _step572;
       try {
-        for (_iterator571.s(); !(_step571 = _iterator571.n()).done; ) {
-          var _step571$value = _slicedToArray(_step571.value, 2),
-            block = _step571$value[1];
+        for (_iterator572.s(); !(_step572 = _iterator572.n()).done; ) {
+          var _step572$value = _slicedToArray(_step572.value, 2),
+            block = _step572$value[1];
           var rewriteInstrs = new Map();
           var deleteInstrs = new Set();
-          var _iterator572 = _createForOfIteratorHelper(block.instructions),
-            _step572;
+          var _iterator573 = _createForOfIteratorHelper(block.instructions),
+            _step573;
           try {
-            for (_iterator572.s(); !(_step572 = _iterator572.n()).done; ) {
-              var instr = _step572.value;
+            for (_iterator573.s(); !(_step573 = _iterator573.n()).done; ) {
+              var instr = _step573.value;
               var value = instr.value,
                 lvalue = instr.lvalue;
               if (
@@ -70485,19 +70552,19 @@ PERFORMANCE OF THIS SOFTWARE.
                       true
                     );
                   var newInstrs = [];
-                  var _iterator573 = _createForOfIteratorHelper(
+                  var _iterator574 = _createForOfIteratorHelper(
                       capturedCallees.entries()
                     ),
-                    _step573;
+                    _step574;
                   try {
                     for (
-                      _iterator573.s();
-                      !(_step573 = _iterator573.n()).done;
+                      _iterator574.s();
+                      !(_step574 = _iterator574.n()).done;
 
                     ) {
-                      var _step573$value = _slicedToArray(_step573.value, 2),
-                        fireCalleePlace = _step573$value[0],
-                        fireCalleeInfo = _step573$value[1];
+                      var _step574$value = _slicedToArray(_step574.value, 2),
+                        fireCalleePlace = _step574$value[0],
+                        fireCalleeInfo = _step574$value[1];
                       if (!context.hasCalleeWithInsertedFire(fireCalleePlace)) {
                         context.addCalleeWithInsertedFire(fireCalleePlace);
                         var loadUseFireInstr = makeLoadUseFireInstruction(
@@ -70541,9 +70608,9 @@ PERFORMANCE OF THIS SOFTWARE.
                       }
                     }
                   } catch (err) {
-                    _iterator573.e(err);
+                    _iterator574.e(err);
                   } finally {
-                    _iterator573.f();
+                    _iterator574.f();
                   }
                   ensureNoRemainingCalleeCaptures(
                     lambda.loweredFunc.func,
@@ -70560,17 +70627,17 @@ PERFORMANCE OF THIS SOFTWARE.
                       depArray.identifier.id
                     );
                     if (depArrayExpression != null) {
-                      var _iterator574 = _createForOfIteratorHelper(
+                      var _iterator575 = _createForOfIteratorHelper(
                           depArrayExpression.elements
                         ),
-                        _step574;
+                        _step575;
                       try {
                         for (
-                          _iterator574.s();
-                          !(_step574 = _iterator574.n()).done;
+                          _iterator575.s();
+                          !(_step575 = _iterator575.n()).done;
 
                         ) {
-                          var dependency = _step574.value;
+                          var dependency = _step575.value;
                           if (dependency.kind === "Identifier") {
                             var loadOfDependency = context.getLoadLocalInstr(
                               dependency.identifier.id
@@ -70587,9 +70654,9 @@ PERFORMANCE OF THIS SOFTWARE.
                           }
                         }
                       } catch (err) {
-                        _iterator574.e(err);
+                        _iterator575.e(err);
                       } finally {
-                        _iterator574.f();
+                        _iterator575.f();
                       }
                     } else {
                       context.pushError({
@@ -70707,9 +70774,9 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator572.e(err);
+            _iterator573.e(err);
           } finally {
-            _iterator572.f();
+            _iterator573.f();
           }
           block.instructions = rewriteInstructions(
             rewriteInstrs,
@@ -70725,9 +70792,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator571.e(err);
+        _iterator572.e(err);
       } finally {
-        _iterator571.f();
+        _iterator572.f();
       }
       if (hasRewrite) {
         markInstructionIds(fn.body);
@@ -70764,37 +70831,37 @@ PERFORMANCE OF THIS SOFTWARE.
       return calleesCapturedByFnExpression;
     }
     function eachReachablePlace(fn) {
-      var _iterator575,
-        _step575,
-        _step575$value,
-        block,
-        _iterator576,
+      var _iterator576,
         _step576,
+        _step576$value,
+        block,
+        _iterator577,
+        _step577,
         instr;
       return _regeneratorRuntime().wrap(
         function eachReachablePlace$(_context12) {
           while (1)
             switch ((_context12.prev = _context12.next)) {
               case 0:
-                _iterator575 = _createForOfIteratorHelper(fn.body.blocks);
+                _iterator576 = _createForOfIteratorHelper(fn.body.blocks);
                 _context12.prev = 1;
-                _iterator575.s();
+                _iterator576.s();
               case 3:
-                if ((_step575 = _iterator575.n()).done) {
+                if ((_step576 = _iterator576.n()).done) {
                   _context12.next = 27;
                   break;
                 }
-                (_step575$value = _slicedToArray(_step575.value, 2)),
-                  (block = _step575$value[1]);
-                _iterator576 = _createForOfIteratorHelper(block.instructions);
+                (_step576$value = _slicedToArray(_step576.value, 2)),
+                  (block = _step576$value[1]);
+                _iterator577 = _createForOfIteratorHelper(block.instructions);
                 _context12.prev = 6;
-                _iterator576.s();
+                _iterator577.s();
               case 8:
-                if ((_step576 = _iterator576.n()).done) {
+                if ((_step577 = _iterator577.n()).done) {
                   _context12.next = 17;
                   break;
                 }
-                instr = _step576.value;
+                instr = _step577.value;
                 if (
                   !(
                     instr.value.kind === "FunctionExpression" ||
@@ -70827,10 +70894,10 @@ PERFORMANCE OF THIS SOFTWARE.
               case 19:
                 _context12.prev = 19;
                 _context12.t2 = _context12["catch"](6);
-                _iterator576.e(_context12.t2);
+                _iterator577.e(_context12.t2);
               case 22:
                 _context12.prev = 22;
-                _iterator576.f();
+                _iterator577.f();
                 return _context12.finish(22);
               case 25:
                 _context12.next = 3;
@@ -70841,10 +70908,10 @@ PERFORMANCE OF THIS SOFTWARE.
               case 29:
                 _context12.prev = 29;
                 _context12.t3 = _context12["catch"](1);
-                _iterator575.e(_context12.t3);
+                _iterator576.e(_context12.t3);
               case 32:
                 _context12.prev = 32;
-                _iterator575.f();
+                _iterator576.f();
                 return _context12.finish(32);
               case 35:
               case "end":
@@ -70861,11 +70928,11 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function ensureNoRemainingCalleeCaptures(fn, context, capturedCallees) {
       var _a;
-      var _iterator577 = _createForOfIteratorHelper(eachReachablePlace(fn)),
-        _step577;
+      var _iterator578 = _createForOfIteratorHelper(eachReachablePlace(fn)),
+        _step578;
       try {
-        for (_iterator577.s(); !(_step577 = _iterator577.n()).done; ) {
-          var place = _step577.value;
+        for (_iterator578.s(); !(_step578 = _iterator578.n()).done; ) {
+          var place = _step578.value;
           var calleeInfo = capturedCallees.get(place.identifier.id);
           if (calleeInfo != null) {
             var calleeName =
@@ -70894,17 +70961,17 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator577.e(err);
+        _iterator578.e(err);
       } finally {
-        _iterator577.f();
+        _iterator578.f();
       }
     }
     function ensureNoMoreFireUses(fn, context) {
-      var _iterator578 = _createForOfIteratorHelper(eachReachablePlace(fn)),
-        _step578;
+      var _iterator579 = _createForOfIteratorHelper(eachReachablePlace(fn)),
+        _step579;
       try {
-        for (_iterator578.s(); !(_step578 = _iterator578.n()).done; ) {
-          var place = _step578.value;
+        for (_iterator579.s(); !(_step579 = _iterator579.n()).done; ) {
+          var place = _step579.value;
           if (
             place.identifier.type.kind === "Function" &&
             place.identifier.type.shapeId === BuiltInFireId
@@ -70919,9 +70986,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator578.e(err);
+        _iterator579.e(err);
       } finally {
-        _iterator578.f();
+        _iterator579.f();
       }
     }
     function makeLoadUseFireInstruction(env) {
@@ -71146,15 +71213,15 @@ PERFORMANCE OF THIS SOFTWARE.
         {
           key: "mergeCalleesFromInnerScope",
           value: function mergeCalleesFromInnerScope(innerCallees) {
-            var _iterator579 = _createForOfIteratorHelper(
+            var _iterator580 = _createForOfIteratorHelper(
                 innerCallees.entries()
               ),
-              _step579;
+              _step580;
             try {
-              for (_iterator579.s(); !(_step579 = _iterator579.n()).done; ) {
-                var _step579$value = _slicedToArray(_step579.value, 2),
-                  id = _step579$value[0],
-                  calleeInfo = _step579$value[1];
+              for (_iterator580.s(); !(_step580 = _iterator580.n()).done; ) {
+                var _step580$value = _slicedToArray(_step580.value, 2),
+                  id = _step580$value[0],
+                  calleeInfo = _step580$value[1];
                 __classPrivateFieldGet(
                   this,
                   _Context_capturedCalleeIdentifierIds,
@@ -71162,9 +71229,9 @@ PERFORMANCE OF THIS SOFTWARE.
                 ).set(id, calleeInfo);
               }
             } catch (err) {
-              _iterator579.e(err);
+              _iterator580.e(err);
             } finally {
-              _iterator579.f();
+              _iterator580.f();
             }
           }
         },
@@ -71298,11 +71365,11 @@ PERFORMANCE OF THIS SOFTWARE.
     function rewriteInstructions(rewriteInstrs, instructions) {
       if (rewriteInstrs.size > 0) {
         var newInstrs = [];
-        var _iterator580 = _createForOfIteratorHelper(instructions),
-          _step580;
+        var _iterator581 = _createForOfIteratorHelper(instructions),
+          _step581;
         try {
-          for (_iterator580.s(); !(_step580 = _iterator580.n()).done; ) {
-            var instr = _step580.value;
+          for (_iterator581.s(); !(_step581 = _iterator581.n()).done; ) {
+            var instr = _step581.value;
             var newInstrsAtId = rewriteInstrs.get(instr.id);
             if (newInstrsAtId != null) {
               newInstrs.push.apply(
@@ -71314,9 +71381,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator580.e(err);
+          _iterator581.e(err);
         } finally {
-          _iterator580.f();
+          _iterator581.f();
         }
         return newInstrs;
       }
@@ -71324,17 +71391,17 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function validateNoImpureFunctionsInRender(fn) {
       var errors = new CompilerError();
-      var _iterator581 = _createForOfIteratorHelper(fn.body.blocks),
-        _step581;
+      var _iterator582 = _createForOfIteratorHelper(fn.body.blocks),
+        _step582;
       try {
-        for (_iterator581.s(); !(_step581 = _iterator581.n()).done; ) {
-          var _step581$value = _slicedToArray(_step581.value, 2),
-            block = _step581$value[1];
-          var _iterator582 = _createForOfIteratorHelper(block.instructions),
-            _step582;
+        for (_iterator582.s(); !(_step582 = _iterator582.n()).done; ) {
+          var _step582$value = _slicedToArray(_step582.value, 2),
+            block = _step582$value[1];
+          var _iterator583 = _createForOfIteratorHelper(block.instructions),
+            _step583;
           try {
-            for (_iterator582.s(); !(_step582 = _iterator582.n()).done; ) {
-              var instr = _step582.value;
+            for (_iterator583.s(); !(_step583 = _iterator583.n()).done; ) {
+              var instr = _step583.value;
               var value = instr.value;
               if (
                 value.kind === "MethodCall" ||
@@ -71365,15 +71432,15 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator582.e(err);
+            _iterator583.e(err);
           } finally {
-            _iterator582.f();
+            _iterator583.f();
           }
         }
       } catch (err) {
-        _iterator581.e(err);
+        _iterator582.e(err);
       } finally {
-        _iterator581.f();
+        _iterator582.f();
       }
       if (errors.hasErrors()) {
         throw errors;
@@ -71676,17 +71743,17 @@ PERFORMANCE OF THIS SOFTWARE.
         fbtOperands: fbtOperands
       }).unwrap();
       log({ kind: "ast", name: "Codegen", value: ast });
-      var _iterator583 = _createForOfIteratorHelper(ast.outlined),
-        _step583;
+      var _iterator584 = _createForOfIteratorHelper(ast.outlined),
+        _step584;
       try {
-        for (_iterator583.s(); !(_step583 = _iterator583.n()).done; ) {
-          var outlined = _step583.value;
+        for (_iterator584.s(); !(_step584 = _iterator584.n()).done; ) {
+          var outlined = _step584.value;
           log({ kind: "ast", name: "Codegen (outlined)", value: outlined.fn });
         }
       } catch (err) {
-        _iterator583.e(err);
+        _iterator584.e(err);
       } finally {
-        _iterator583.f();
+        _iterator584.f();
       }
       if (env.config.throwUnknownException__testonly) {
         throw new Error("unexpected error");
@@ -71724,11 +71791,11 @@ PERFORMANCE OF THIS SOFTWARE.
     function filterSuppressionsThatAffectFunction(suppressionRanges, fn) {
       var suppressionsInScope = [];
       var fnNode = fn.node;
-      var _iterator584 = _createForOfIteratorHelper(suppressionRanges),
-        _step584;
+      var _iterator585 = _createForOfIteratorHelper(suppressionRanges),
+        _step585;
       try {
-        for (_iterator584.s(); !(_step584 = _iterator584.n()).done; ) {
-          var suppressionRange = _step584.value;
+        for (_iterator585.s(); !(_step585 = _iterator585.n()).done; ) {
+          var suppressionRange = _step585.value;
           if (
             suppressionRange.disableComment.start == null ||
             fnNode.start == null ||
@@ -71754,9 +71821,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator584.e(err);
+        _iterator585.e(err);
       } finally {
-        _iterator584.f();
+        _iterator585.f();
       }
       return suppressionsInScope;
     }
@@ -71778,11 +71845,11 @@ PERFORMANCE OF THIS SOFTWARE.
       var flowSuppressionPattern = new RegExp(
         "\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule"
       );
-      var _iterator585 = _createForOfIteratorHelper(programComments),
-        _step585;
+      var _iterator586 = _createForOfIteratorHelper(programComments),
+        _step586;
       try {
-        for (_iterator585.s(); !(_step585 = _iterator585.n()).done; ) {
-          var comment = _step585.value;
+        for (_iterator586.s(); !(_step586 = _iterator586.n()).done; ) {
+          var comment = _step586.value;
           if (comment.start == null || comment.end == null) {
             continue;
           }
@@ -71822,9 +71889,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator585.e(err);
+        _iterator586.e(err);
       } finally {
-        _iterator585.f();
+        _iterator586.f();
       }
       return suppressionRanges;
     }
@@ -71835,11 +71902,11 @@ PERFORMANCE OF THIS SOFTWARE.
         loc: GeneratedSource
       });
       var error = new CompilerError();
-      var _iterator586 = _createForOfIteratorHelper(suppressionRanges),
-        _step586;
+      var _iterator587 = _createForOfIteratorHelper(suppressionRanges),
+        _step587;
       try {
-        for (_iterator586.s(); !(_step586 = _iterator586.n()).done; ) {
-          var suppressionRange = _step586.value;
+        for (_iterator587.s(); !(_step587 = _iterator587.n()).done; ) {
+          var suppressionRange = _step587.value;
           if (
             suppressionRange.disableComment.start == null ||
             suppressionRange.disableComment.end == null
@@ -71894,9 +71961,9 @@ PERFORMANCE OF THIS SOFTWARE.
           );
         }
       } catch (err) {
-        _iterator586.e(err);
+        _iterator587.e(err);
       } finally {
-        _iterator586.f();
+        _iterator587.f();
       }
       return error;
     }
@@ -71927,11 +71994,11 @@ PERFORMANCE OF THIS SOFTWARE.
       var _a, _b;
       if (pass.opts.logger) {
         if (err instanceof CompilerError) {
-          var _iterator587 = _createForOfIteratorHelper(err.details),
-            _step587;
+          var _iterator588 = _createForOfIteratorHelper(err.details),
+            _step588;
           try {
-            for (_iterator587.s(); !(_step587 = _iterator587.n()).done; ) {
-              var detail = _step587.value;
+            for (_iterator588.s(); !(_step588 = _iterator588.n()).done; ) {
+              var detail = _step588.value;
               pass.opts.logger.logEvent(pass.filename, {
                 kind: "CompileError",
                 fnLoc: fnLoc,
@@ -71939,9 +72006,9 @@ PERFORMANCE OF THIS SOFTWARE.
               });
             }
           } catch (err) {
-            _iterator587.e(err);
+            _iterator588.e(err);
           } finally {
-            _iterator587.f();
+            _iterator588.f();
           }
         } else {
           var stringifiedError;
@@ -72084,19 +72151,19 @@ PERFORMANCE OF THIS SOFTWARE.
       if (typeof sources === "function") {
         return sources(filename);
       }
-      var _iterator588 = _createForOfIteratorHelper(sources),
-        _step588;
+      var _iterator589 = _createForOfIteratorHelper(sources),
+        _step589;
       try {
-        for (_iterator588.s(); !(_step588 = _iterator588.n()).done; ) {
-          var prefix = _step588.value;
+        for (_iterator589.s(); !(_step589 = _iterator589.n()).done; ) {
+          var prefix = _step589.value;
           if (filename.indexOf(prefix) !== -1) {
             return true;
           }
         }
       } catch (err) {
-        _iterator588.e(err);
+        _iterator589.e(err);
       } finally {
-        _iterator588.f();
+        _iterator589.f();
       }
       return false;
     }
@@ -72256,11 +72323,11 @@ PERFORMANCE OF THIS SOFTWARE.
           pass.opts.ignoreUseNoForget === false &&
           optOutDirectives.length > 0
         ) {
-          var _iterator589 = _createForOfIteratorHelper(optOutDirectives),
-            _step589;
+          var _iterator590 = _createForOfIteratorHelper(optOutDirectives),
+            _step590;
           try {
-            for (_iterator589.s(); !(_step589 = _iterator589.n()).done; ) {
-              var _directive = _step589.value;
+            for (_iterator590.s(); !(_step590 = _iterator590.n()).done; ) {
+              var _directive = _step590.value;
               (_g = pass.opts.logger) === null || _g === void 0
                 ? void 0
                 : _g.logEvent(pass.filename, {
@@ -72280,9 +72347,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   });
             }
           } catch (err) {
-            _iterator589.e(err);
+            _iterator590.e(err);
           } finally {
-            _iterator589.f();
+            _iterator590.f();
           }
           return null;
         }
@@ -72297,11 +72364,11 @@ PERFORMANCE OF THIS SOFTWARE.
         if (compiled === null) {
           continue;
         }
-        var _iterator590 = _createForOfIteratorHelper(compiled.outlined),
-          _step590;
+        var _iterator591 = _createForOfIteratorHelper(compiled.outlined),
+          _step591;
         try {
-          for (_iterator590.s(); !(_step590 = _iterator590.n()).done; ) {
-            var outlined = _step590.value;
+          for (_iterator591.s(); !(_step591 = _iterator591.n()).done; ) {
+            var outlined = _step591.value;
             CompilerError.invariant(outlined.fn.outlined.length === 0, {
               reason: "Unexpected nested outlined functions",
               loc: outlined.fn.loc
@@ -72318,9 +72385,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator590.e(err);
+          _iterator591.e(err);
         } finally {
-          _iterator590.f();
+          _iterator591.f();
         }
         compiledFns.push({
           kind: current.kind,
@@ -72407,20 +72474,20 @@ PERFORMANCE OF THIS SOFTWARE.
       }
       if (compiledFns.length > 0) {
         var needsMemoCacheFunctionImport = false;
-        var _iterator591 = _createForOfIteratorHelper(compiledFns),
-          _step591;
+        var _iterator592 = _createForOfIteratorHelper(compiledFns),
+          _step592;
         try {
-          for (_iterator591.s(); !(_step591 = _iterator591.n()).done; ) {
-            var _fn5 = _step591.value;
+          for (_iterator592.s(); !(_step592 = _iterator592.n()).done; ) {
+            var _fn5 = _step592.value;
             if (_fn5.compiledFn.memoSlotsUsed > 0) {
               needsMemoCacheFunctionImport = true;
               break;
             }
           }
         } catch (err) {
-          _iterator591.e(err);
+          _iterator592.e(err);
         } finally {
-          _iterator591.f();
+          _iterator592.f();
         }
         if (needsMemoCacheFunctionImport) {
           updateMemoCacheFunctionImport(
@@ -72866,11 +72933,11 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function pipelineUsesReanimatedPlugin(plugins) {
       if (Array.isArray(plugins)) {
-        var _iterator592 = _createForOfIteratorHelper(plugins),
-          _step592;
+        var _iterator593 = _createForOfIteratorHelper(plugins),
+          _step593;
         try {
-          for (_iterator592.s(); !(_step592 = _iterator592.n()).done; ) {
-            var _plugin2 = _step592.value;
+          for (_iterator593.s(); !(_step593 = _iterator593.n()).done; ) {
+            var _plugin2 = _step593.value;
             if (hasOwnProperty$1(_plugin2, "key")) {
               var _key42 = _plugin2.key;
               if (
@@ -72882,9 +72949,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator592.e(err);
+          _iterator593.e(err);
         } finally {
-          _iterator592.f();
+          _iterator593.f();
         }
       }
       return hasModule("react-native-reanimated");
@@ -72991,11 +73058,11 @@ PERFORMANCE OF THIS SOFTWARE.
     function makeSuggestions(detail) {
       var suggest = [];
       if (Array.isArray(detail.suggestions)) {
-        var _iterator593 = _createForOfIteratorHelper(detail.suggestions),
-          _step593;
+        var _iterator594 = _createForOfIteratorHelper(detail.suggestions),
+          _step594;
         try {
           var _loop21 = function _loop21() {
-            var suggestion = _step593.value;
+            var suggestion = _step594.value;
             switch (suggestion.op) {
               case CompilerSuggestionOperation.InsertBefore:
                 suggest.push({
@@ -73042,13 +73109,13 @@ PERFORMANCE OF THIS SOFTWARE.
                 assertExhaustive(suggestion, "Unhandled suggestion operation");
             }
           };
-          for (_iterator593.s(); !(_step593 = _iterator593.n()).done; ) {
+          for (_iterator594.s(); !(_step594 = _iterator594.n()).done; ) {
             _loop21();
           }
         } catch (err) {
-          _iterator593.e(err);
+          _iterator594.e(err);
         } finally {
-          _iterator593.f();
+          _iterator594.f();
         }
       }
       return suggest;
@@ -73187,11 +73254,11 @@ PERFORMANCE OF THIS SOFTWARE.
           var flowSuppressionRegex = new RegExp(
             "\\$FlowFixMe\\[" + suppression + "\\]"
           );
-          var _iterator594 = _createForOfIteratorHelper(comments),
-            _step594;
+          var _iterator595 = _createForOfIteratorHelper(comments),
+            _step595;
           try {
-            for (_iterator594.s(); !(_step594 = _iterator594.n()).done; ) {
-              var commentNode = _step594.value;
+            for (_iterator595.s(); !(_step595 = _iterator595.n()).done; ) {
+              var commentNode = _step595.value;
               if (
                 flowSuppressionRegex.test(commentNode.value) &&
                 commentNode.loc.end.line === nodeLoc.start.line - 1
@@ -73200,9 +73267,9 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator594.e(err);
+            _iterator595.e(err);
           } finally {
-            _iterator594.f();
+            _iterator595.f();
           }
           return false;
         }
@@ -73268,51 +73335,51 @@ PERFORMANCE OF THIS SOFTWARE.
         if (shouldReportUnusedOptOutDirective) {
           return {
             FunctionDeclaration: function FunctionDeclaration(fnDecl) {
-              var _iterator595 = _createForOfIteratorHelper(fnDecl.body.body),
-                _step595;
+              var _iterator596 = _createForOfIteratorHelper(fnDecl.body.body),
+                _step596;
               try {
-                for (_iterator595.s(); !(_step595 = _iterator595.n()).done; ) {
-                  var stmt = _step595.value;
+                for (_iterator596.s(); !(_step596 = _iterator596.n()).done; ) {
+                  var stmt = _step596.value;
                   reportUnusedOptOutDirective(stmt);
                 }
               } catch (err) {
-                _iterator595.e(err);
+                _iterator596.e(err);
               } finally {
-                _iterator595.f();
+                _iterator596.f();
               }
             },
             ArrowFunctionExpression: function ArrowFunctionExpression(fnExpr) {
               if (fnExpr.body.type === "BlockStatement") {
-                var _iterator596 = _createForOfIteratorHelper(fnExpr.body.body),
-                  _step596;
+                var _iterator597 = _createForOfIteratorHelper(fnExpr.body.body),
+                  _step597;
                 try {
                   for (
-                    _iterator596.s();
-                    !(_step596 = _iterator596.n()).done;
+                    _iterator597.s();
+                    !(_step597 = _iterator597.n()).done;
 
                   ) {
-                    var stmt = _step596.value;
+                    var stmt = _step597.value;
                     reportUnusedOptOutDirective(stmt);
                   }
                 } catch (err) {
-                  _iterator596.e(err);
+                  _iterator597.e(err);
                 } finally {
-                  _iterator596.f();
+                  _iterator597.f();
                 }
               }
             },
             FunctionExpression: function FunctionExpression(fnExpr) {
-              var _iterator597 = _createForOfIteratorHelper(fnExpr.body.body),
-                _step597;
+              var _iterator598 = _createForOfIteratorHelper(fnExpr.body.body),
+                _step598;
               try {
-                for (_iterator597.s(); !(_step597 = _iterator597.n()).done; ) {
-                  var stmt = _step597.value;
+                for (_iterator598.s(); !(_step598 = _iterator598.n()).done; ) {
+                  var stmt = _step598.value;
                   reportUnusedOptOutDirective(stmt);
                 }
               } catch (err) {
-                _iterator597.e(err);
+                _iterator598.e(err);
               } finally {
-                _iterator597.f();
+                _iterator598.f();
               }
             }
           };
@@ -73417,11 +73484,11 @@ PERFORMANCE OF THIS SOFTWARE.
         var codePathSegmentStack = [];
         var useEffectEventFunctions = new WeakSet();
         function recordAllUseEffectEventFunctions(scope) {
-          var _iterator598 = _createForOfIteratorHelper(scope.references),
-            _step598;
+          var _iterator599 = _createForOfIteratorHelper(scope.references),
+            _step599;
           try {
-            for (_iterator598.s(); !(_step598 = _iterator598.n()).done; ) {
-              var reference = _step598.value;
+            for (_iterator599.s(); !(_step599 = _iterator599.n()).done; ) {
+              var reference = _step599.value;
               var parent = reference.identifier.parent;
               if (
                 (parent === null || parent === void 0
@@ -73435,32 +73502,32 @@ PERFORMANCE OF THIS SOFTWARE.
                 if (reference.resolved === null) {
                   throw new Error("Unexpected null reference.resolved");
                 }
-                var _iterator599 = _createForOfIteratorHelper(
+                var _iterator600 = _createForOfIteratorHelper(
                     reference.resolved.references
                   ),
-                  _step599;
+                  _step600;
                 try {
                   for (
-                    _iterator599.s();
-                    !(_step599 = _iterator599.n()).done;
+                    _iterator600.s();
+                    !(_step600 = _iterator600.n()).done;
 
                   ) {
-                    var ref = _step599.value;
+                    var ref = _step600.value;
                     if (ref !== reference) {
                       useEffectEventFunctions.add(ref.identifier);
                     }
                   }
                 } catch (err) {
-                  _iterator599.e(err);
+                  _iterator600.e(err);
                 } finally {
-                  _iterator599.f();
+                  _iterator600.f();
                 }
               }
             }
           } catch (err) {
-            _iterator598.e(err);
+            _iterator599.e(err);
           } finally {
-            _iterator598.f();
+            _iterator599.f();
           }
         }
         var getSourceCode =
@@ -73510,21 +73577,21 @@ PERFORMANCE OF THIS SOFTWARE.
                 var cyclicSegments = pathArray.slice(
                   pathArray.indexOf(segment.id) + 1
                 );
-                var _iterator600 = _createForOfIteratorHelper(cyclicSegments),
-                  _step600;
+                var _iterator601 = _createForOfIteratorHelper(cyclicSegments),
+                  _step601;
                 try {
                   for (
-                    _iterator600.s();
-                    !(_step600 = _iterator600.n()).done;
+                    _iterator601.s();
+                    !(_step601 = _iterator601.n()).done;
 
                   ) {
-                    var cyclicSegment = _step600.value;
+                    var cyclicSegment = _step601.value;
                     cyclic.add(cyclicSegment);
                   }
                 } catch (err) {
-                  _iterator600.e(err);
+                  _iterator601.e(err);
                 } finally {
-                  _iterator600.f();
+                  _iterator601.f();
                 }
                 return BigInt("0");
               }
@@ -73538,23 +73605,23 @@ PERFORMANCE OF THIS SOFTWARE.
                 paths = BigInt("1");
               } else {
                 paths = BigInt("0");
-                var _iterator601 = _createForOfIteratorHelper(
+                var _iterator602 = _createForOfIteratorHelper(
                     segment.prevSegments
                   ),
-                  _step601;
+                  _step602;
                 try {
                   for (
-                    _iterator601.s();
-                    !(_step601 = _iterator601.n()).done;
+                    _iterator602.s();
+                    !(_step602 = _iterator602.n()).done;
 
                   ) {
-                    var prevSegment = _step601.value;
+                    var prevSegment = _step602.value;
                     paths += countPathsFromStart(prevSegment, pathList);
                   }
                 } catch (err) {
-                  _iterator601.e(err);
+                  _iterator602.e(err);
                 } finally {
-                  _iterator601.f();
+                  _iterator602.f();
                 }
               }
               if (segment.reachable && paths === BigInt("0")) {
@@ -73573,21 +73640,21 @@ PERFORMANCE OF THIS SOFTWARE.
                 var cyclicSegments = pathArray.slice(
                   pathArray.indexOf(segment.id) + 1
                 );
-                var _iterator602 = _createForOfIteratorHelper(cyclicSegments),
-                  _step602;
+                var _iterator603 = _createForOfIteratorHelper(cyclicSegments),
+                  _step603;
                 try {
                   for (
-                    _iterator602.s();
-                    !(_step602 = _iterator602.n()).done;
+                    _iterator603.s();
+                    !(_step603 = _iterator603.n()).done;
 
                   ) {
-                    var cyclicSegment = _step602.value;
+                    var cyclicSegment = _step603.value;
                     cyclic.add(cyclicSegment);
                   }
                 } catch (err) {
-                  _iterator602.e(err);
+                  _iterator603.e(err);
                 } finally {
-                  _iterator602.f();
+                  _iterator603.f();
                 }
                 return BigInt("0");
               }
@@ -73601,23 +73668,23 @@ PERFORMANCE OF THIS SOFTWARE.
                 paths = BigInt("1");
               } else {
                 paths = BigInt("0");
-                var _iterator603 = _createForOfIteratorHelper(
+                var _iterator604 = _createForOfIteratorHelper(
                     segment.nextSegments
                   ),
-                  _step603;
+                  _step604;
                 try {
                   for (
-                    _iterator603.s();
-                    !(_step603 = _iterator603.n()).done;
+                    _iterator604.s();
+                    !(_step604 = _iterator604.n()).done;
 
                   ) {
-                    var nextSegment = _step603.value;
+                    var nextSegment = _step604.value;
                     paths += countPathsToEnd(nextSegment, pathList);
                   }
                 } catch (err) {
-                  _iterator603.e(err);
+                  _iterator604.e(err);
                 } finally {
-                  _iterator603.f();
+                  _iterator604.f();
                 }
               }
               cache.set(segment.id, paths);
@@ -73637,26 +73704,26 @@ PERFORMANCE OF THIS SOFTWARE.
                 length = 1;
               } else {
                 length = Infinity;
-                var _iterator604 = _createForOfIteratorHelper(
+                var _iterator605 = _createForOfIteratorHelper(
                     segment.prevSegments
                   ),
-                  _step604;
+                  _step605;
                 try {
                   for (
-                    _iterator604.s();
-                    !(_step604 = _iterator604.n()).done;
+                    _iterator605.s();
+                    !(_step605 = _iterator605.n()).done;
 
                   ) {
-                    var prevSegment = _step604.value;
+                    var prevSegment = _step605.value;
                     var prevLength = shortestPathLengthToStart(prevSegment);
                     if (prevLength < length) {
                       length = prevLength;
                     }
                   }
                 } catch (err) {
-                  _iterator604.e(err);
+                  _iterator605.e(err);
                 } finally {
-                  _iterator604.f();
+                  _iterator605.f();
                 }
                 length += 1;
               }
@@ -73678,13 +73745,13 @@ PERFORMANCE OF THIS SOFTWARE.
               : isForwardRefCallback(codePathNode) ||
                 isMemoCallback(codePathNode);
             var shortestFinalPathLength = Infinity;
-            var _iterator605 = _createForOfIteratorHelper(
+            var _iterator606 = _createForOfIteratorHelper(
                 codePath.finalSegments
               ),
-              _step605;
+              _step606;
             try {
-              for (_iterator605.s(); !(_step605 = _iterator605.n()).done; ) {
-                var finalSegment = _step605.value;
+              for (_iterator606.s(); !(_step606 = _iterator606.n()).done; ) {
+                var finalSegment = _step606.value;
                 if (!finalSegment.reachable) {
                   continue;
                 }
@@ -73694,17 +73761,17 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator605.e(err);
+              _iterator606.e(err);
             } finally {
-              _iterator605.f();
+              _iterator606.f();
             }
-            var _iterator606 = _createForOfIteratorHelper(reactHooksMap),
-              _step606;
+            var _iterator607 = _createForOfIteratorHelper(reactHooksMap),
+              _step607;
             try {
-              for (_iterator606.s(); !(_step606 = _iterator606.n()).done; ) {
-                var _step606$value = _slicedToArray(_step606.value, 2),
-                  segment = _step606$value[0],
-                  reactHooks = _step606$value[1];
+              for (_iterator607.s(); !(_step607 = _iterator607.n()).done; ) {
+                var _step607$value = _slicedToArray(_step607.value, 2),
+                  segment = _step607$value[0],
+                  reactHooks = _step607$value[1];
                 if (!segment.reachable) {
                   continue;
                 }
@@ -73717,15 +73784,15 @@ PERFORMANCE OF THIS SOFTWARE.
                 var pathsFromStartToEnd =
                   countPathsFromStart(segment) * countPathsToEnd(segment);
                 var cycled = cyclic.has(segment.id);
-                var _iterator607 = _createForOfIteratorHelper(reactHooks),
-                  _step607;
+                var _iterator608 = _createForOfIteratorHelper(reactHooks),
+                  _step608;
                 try {
                   for (
-                    _iterator607.s();
-                    !(_step607 = _iterator607.n()).done;
+                    _iterator608.s();
+                    !(_step608 = _iterator608.n()).done;
 
                   ) {
-                    var hook = _step607.value;
+                    var hook = _step608.value;
                     if (
                       (cycled || isInsideDoWhileLoop(hook)) &&
                       !isUseIdentifier(hook)
@@ -73829,15 +73896,15 @@ PERFORMANCE OF THIS SOFTWARE.
                     }
                   }
                 } catch (err) {
-                  _iterator607.e(err);
+                  _iterator608.e(err);
                 } finally {
-                  _iterator607.f();
+                  _iterator608.f();
                 }
               }
             } catch (err) {
-              _iterator606.e(err);
+              _iterator607.e(err);
             } finally {
-              _iterator606.f();
+              _iterator607.f();
             }
           },
           CallExpression: function CallExpression(node) {
