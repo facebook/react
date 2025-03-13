@@ -683,7 +683,7 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
       source: 'react-compiler-runtime',
       importSpecifierName: 'shouldInstrument',
     },
-    globalGating: '__DEV__',
+    globalGating: 'DEV',
   },
   enableEmitHookGuards: {
     source: 'react-compiler-runtime',
@@ -1149,9 +1149,32 @@ export class Environment {
   }
   static knownReactModules: ReadonlyArray<string> = ['react', 'react-dom'];
 
+  getFallthroughPropertyType(
+    receiver: Type,
+    _property: Type,
+  ): BuiltInType | PolyType | null {
+    let shapeId = null;
+    if (receiver.kind === 'Object' || receiver.kind === 'Function') {
+      shapeId = receiver.shapeId;
+    }
+
+    if (shapeId !== null) {
+      const shape = this.#shapes.get(shapeId);
+
+      CompilerError.invariant(shape !== undefined, {
+        reason: `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+      return shape.properties.get('*') ?? null;
+    }
+    return null;
+  }
+
   getPropertyType(
     receiver: Type,
-    property: string,
+    property: string | number,
   ): BuiltInType | PolyType | null {
     let shapeId = null;
     if (receiver.kind === 'Object' || receiver.kind === 'Function') {
@@ -1169,17 +1192,19 @@ export class Environment {
         loc: null,
         suggestions: null,
       });
-      let value =
-        shape.properties.get(property) ?? shape.properties.get('*') ?? null;
-      if (value === null && isHookName(property)) {
-        value = this.#getCustomHookType();
+      if (typeof property === 'string') {
+        return (
+          shape.properties.get(property) ??
+          shape.properties.get('*') ??
+          (isHookName(property) ? this.#getCustomHookType() : null)
+        );
+      } else {
+        return shape.properties.get('*') ?? null;
       }
-      return value;
-    } else if (isHookName(property)) {
+    } else if (typeof property === 'string' && isHookName(property)) {
       return this.#getCustomHookType();
-    } else {
-      return null;
     }
+    return null;
   }
 
   getFunctionSignature(type: FunctionType): FunctionSignature | null {

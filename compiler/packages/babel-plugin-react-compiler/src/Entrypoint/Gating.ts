@@ -8,6 +8,7 @@
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 import {PluginOptions} from './Options';
+import {CompilerError} from '../CompilerError';
 
 export function insertGatedFunctionDeclaration(
   fnPath: NodePath<
@@ -18,47 +19,104 @@ export function insertGatedFunctionDeclaration(
     | t.ArrowFunctionExpression
     | t.FunctionExpression,
   gating: NonNullable<PluginOptions['gating']>,
+  referencedBeforeDeclaration: boolean,
 ): void {
-  const gatingExpression = t.conditionalExpression(
-    t.callExpression(t.identifier(gating.importSpecifierName), []),
-    buildFunctionExpression(compiled),
-    buildFunctionExpression(fnPath.node),
-  );
+  if (referencedBeforeDeclaration && fnPath.isFunctionDeclaration()) {
+    CompilerError.invariant(compiled.type === 'FunctionDeclaration', {
+      reason: 'Expected compiled node type to match input type',
+      description: `Got ${compiled.type} but expected FunctionDeclaration`,
+      loc: fnPath.node.loc ?? null,
+    });
+    CompilerError.invariant(fnPath.node.id != null && compiled.id != null, {
+      reason:
+        'Function declarations that are referenced elsewhere must have an id',
+      loc: fnPath.node.loc ?? null,
+    });
 
-  /*
-   * Convert function declarations to named variables *unless* this is an
-   * `export default function ...` since `export default const ...` is
-   * not supported. For that case we fall through to replacing w the raw
-   * conditional expression
-   */
-  if (
-    fnPath.parentPath.node.type !== 'ExportDefaultDeclaration' &&
-    fnPath.node.type === 'FunctionDeclaration' &&
-    fnPath.node.id != null
-  ) {
-    fnPath.replaceWith(
-      t.variableDeclaration('const', [
-        t.variableDeclarator(fnPath.node.id, gatingExpression),
-      ]),
+    const gatingCondition = fnPath.scope.generateUidIdentifier(
+      `_${gating.importSpecifierName}_result`,
     );
-  } else if (
-    fnPath.parentPath.node.type === 'ExportDefaultDeclaration' &&
-    fnPath.node.type !== 'ArrowFunctionExpression' &&
-    fnPath.node.id != null
-  ) {
+    const originalFnName = fnPath.node.id;
+    const unoptimizedFnName = fnPath.scope.generateUidIdentifier(
+      `${fnPath.node.id.name}_unoptimized`,
+    );
+    const optimizedFnName = fnPath.scope.generateUidIdentifier(
+      `${fnPath.node.id.name}_optimized`,
+    );
+    compiled.id.name = optimizedFnName.name;
+    fnPath.get('id').replaceInline(unoptimizedFnName);
     fnPath.insertAfter(
-      t.exportDefaultDeclaration(t.identifier(fnPath.node.id.name)),
+      t.functionDeclaration(
+        originalFnName,
+        [t.restElement(t.identifier('args'))],
+        t.blockStatement([
+          t.ifStatement(
+            gatingCondition,
+            t.returnStatement(
+              t.callExpression(compiled.id, [
+                t.spreadElement(t.identifier('args')),
+              ]),
+            ),
+            t.returnStatement(
+              t.callExpression(unoptimizedFnName, [
+                t.spreadElement(t.identifier('args')),
+              ]),
+            ),
+          ),
+        ]),
+      ),
     );
-    fnPath.parentPath.replaceWith(
+    fnPath.insertBefore(
       t.variableDeclaration('const', [
         t.variableDeclarator(
-          t.identifier(fnPath.node.id.name),
-          gatingExpression,
+          gatingCondition,
+          t.callExpression(t.identifier(gating.importSpecifierName), []),
         ),
       ]),
     );
+    fnPath.insertBefore(compiled);
   } else {
-    fnPath.replaceWith(gatingExpression);
+    const gatingExpression = t.conditionalExpression(
+      t.callExpression(t.identifier(gating.importSpecifierName), []),
+      buildFunctionExpression(compiled),
+      buildFunctionExpression(fnPath.node),
+    );
+
+    /*
+     * Convert function declarations to named variables *unless* this is an
+     * `export default function ...` since `export default const ...` is
+     * not supported. For that case we fall through to replacing w the raw
+     * conditional expression
+     */
+    if (
+      fnPath.parentPath.node.type !== 'ExportDefaultDeclaration' &&
+      fnPath.node.type === 'FunctionDeclaration' &&
+      fnPath.node.id != null
+    ) {
+      fnPath.replaceWith(
+        t.variableDeclaration('const', [
+          t.variableDeclarator(fnPath.node.id, gatingExpression),
+        ]),
+      );
+    } else if (
+      fnPath.parentPath.node.type === 'ExportDefaultDeclaration' &&
+      fnPath.node.type !== 'ArrowFunctionExpression' &&
+      fnPath.node.id != null
+    ) {
+      fnPath.insertAfter(
+        t.exportDefaultDeclaration(t.identifier(fnPath.node.id.name)),
+      );
+      fnPath.parentPath.replaceWith(
+        t.variableDeclaration('const', [
+          t.variableDeclarator(
+            t.identifier(fnPath.node.id.name),
+            gatingExpression,
+          ),
+        ]),
+      );
+    } else {
+      fnPath.replaceWith(gatingExpression);
+    }
   }
 }
 

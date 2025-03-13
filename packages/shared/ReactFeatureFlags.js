@@ -160,8 +160,9 @@ export const enableInfiniteRenderLoopDetection = false;
 export const enableUseEffectCRUDOverload = false;
 
 export const enableFastAddPropertiesInDiffing = true;
-
 export const enableLazyPublicInstanceInFabric = false;
+
+export const enableFragmentRefs = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -193,7 +194,7 @@ export const disableLegacyContext = true;
 export const disableLegacyContextForFunctionComponents = true;
 
 // Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
-export const enableMoveBefore = false;
+export const enableMoveBefore = __EXPERIMENTAL__;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = true;

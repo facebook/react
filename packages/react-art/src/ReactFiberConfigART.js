@@ -318,6 +318,27 @@ export function cloneMutableTextInstance(textInstance) {
   return textInstance;
 }
 
+export type FragmentInstanceType = null;
+
+export function createFragmentInstance(fiber): null {
+  return null;
+}
+
+export function updateFragmentInstanceFiber(fiber, instance): void {
+  // Noop
+}
+
+export function commitNewChildToFragmentInstance(
+  child,
+  fragmentInstance,
+): void {
+  // Noop
+}
+
+export function deleteChildFromFragmentInstance(child, fragmentInstance): void {
+  // Noop
+}
+
 export function finalizeInitialChildren(domElement, type, props) {
   return false;
 }

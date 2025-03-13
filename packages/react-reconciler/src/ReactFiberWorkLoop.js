@@ -3511,6 +3511,7 @@ function commitRoot(
       flushAfterMutationEffects,
       flushSpawnedWork,
       flushPassiveEffects,
+      reportViewTransitionError,
     );
   if (!startedViewTransition) {
     // Flush synchronously.
@@ -3519,6 +3520,16 @@ function commitRoot(
     // Skip flushAfterMutationEffects
     flushSpawnedWork();
   }
+}
+
+function reportViewTransitionError(error: mixed) {
+  // Report errors that happens while preparing a View Transition.
+  if (pendingEffectsStatus === NO_PENDING_EFFECTS) {
+    return;
+  }
+  const root = pendingEffectsRoot;
+  const onRecoverableError = root.onRecoverableError;
+  onRecoverableError(error, makeErrorInfo(null));
 }
 
 function flushAfterMutationEffects(): void {
@@ -3911,6 +3922,7 @@ function commitGestureOnRoot(
     pendingTransitionTypes,
     flushGestureMutations,
     flushGestureAnimations,
+    reportViewTransitionError,
   );
 }
 

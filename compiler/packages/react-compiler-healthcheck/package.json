@@ -6,9 +6,9 @@
     "react-compiler-healthcheck": "dist/index.js"
   },
   "scripts": {
-    "build": "rimraf dist && scripts/build.js",
+    "build": "rimraf dist && tsup",
     "test": "echo 'no tests'",
-    "watch": "scripts/build.js --watch"
+    "watch": "yarn build --watch"
   },
   "dependencies": {
     "@babel/core": "^7.24.4",

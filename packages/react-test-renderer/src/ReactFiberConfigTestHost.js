@@ -417,6 +417,7 @@ export function startViewTransition(
   afterMutationCallback: () => void,
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
+  errorCallback: mixed => void,
 ): boolean {
   return false;
 }
@@ -431,6 +432,7 @@ export function startGestureTransition(
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   animateCallback: () => void,
+  errorCallback: mixed => void,
 ): RunningGestureTransition {
   mutationCallback();
   animateCallback();
@@ -445,6 +447,35 @@ export function createViewTransitionInstance(
   name: string,
 ): ViewTransitionInstance {
   return null;
+}
+
+export type FragmentInstanceType = null;
+
+export function createFragmentInstance(
+  fragmentFiber: Object,
+): FragmentInstanceType {
+  return null;
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Object,
+  instance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function commitNewChildToFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // noop
+}
+
+export function deleteChildFromFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
 }
 
 export function getInstanceFromNode(mockNode: Object): Object | null {

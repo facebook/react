@@ -96,4 +96,4 @@ jobs:
       - run: xvfb-run -a yarn workspace ${{ matrix.workspace_name }} test
         if: runner.os == 'Linux' && matrix.workspace_name == 'react-forgive'
       - run: yarn workspace ${{ matrix.workspace_name }} test
-        if: runner.os != 'Linux' && matrix.workspace_name != 'react-forgive'
+        if: matrix.workspace_name != 'react-forgive'

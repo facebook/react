@@ -535,6 +535,30 @@ addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
   ['*', {kind: 'Object', shapeId: BuiltInRefValueId}],
 ]);
 
+/**
+ * MixedReadOnly =
+ *   | primitive
+ *   | simple objects (Record<string, MixedReadOnly>)
+ *   | Array<MixedReadOnly>
+ *
+ * APIs such as Relay — but also Flux and other data stores — often return a
+ * union of types with some interesting properties in terms of analysis.
+ *
+ * Given this constraint, if data came from Relay, then we should be able to
+ * infer things like `data.items.map(): Array`. That may seem like a leap at
+ * first but remember, we assume you're not patching builtins. Thus the only way
+ * data.items.map can exist and be a function, given the above set of data types
+ * and builtin JS methods, is if `data.items` was an Array, and `data.items.map`
+ * is therefore calling Array.prototype.map. Then we know that function returns
+ * an Array as well. This relies on the fact that map() is being called, so if
+ * data.items was some other type it would error at runtime - so it's sound.
+ *
+ * Note that this shape is currently only used for hook return values, which
+ * means that it's safe to type aliasing method-call return kinds as `Frozen`.
+ *
+ * Also note that all newly created arrays from method-calls (e.g. `.map`)
+ * have the appropriate mutable `BuiltInArray` shape
+ */
 addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
   [
     'toString',
@@ -544,6 +568,36 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
       returnType: PRIMITIVE_TYPE,
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'indexOf',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'includes',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'at',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInMixedReadonlyId},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Frozen,
     }),
   ],
   [
@@ -644,7 +698,7 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
       restParam: Effect.ConditionallyMutate,
       returnType: {kind: 'Poly'},
       calleeEffect: Effect.ConditionallyMutate,
-      returnValueKind: ValueKind.Mutable,
+      returnValueKind: ValueKind.Frozen,
       noAlias: true,
       mutableOnlyIfOperandsAreMutable: true,
     }),

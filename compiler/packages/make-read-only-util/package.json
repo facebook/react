@@ -6,9 +6,9 @@
     "src"
   ],
   "scripts": {
-    "build": "rimraf dist && scripts/build.js",
+    "build": "rimraf dist && tsup",
     "test": "jest src",
-    "watch": "scripts/build.js --watch"
+    "watch": "yarn build --watch"
   },
   "dependencies": {
     "invariant": "^2.2.4",

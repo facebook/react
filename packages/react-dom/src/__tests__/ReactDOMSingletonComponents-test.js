@@ -547,32 +547,30 @@ describe('ReactDOM HostSingleton', () => {
     );
     expect(hydrationErrors).toEqual([]);
     await waitForAll([]);
-    assertConsoleErrorDev(
-      [
-        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
-          "This won't be patched up. This can happen if a SSR-ed Client Component used:\n" +
-          '\n' +
-          "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
-          "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
-          "- Date formatting in a user's locale which doesn't match the server.\n" +
-          '- External changing data without sending a snapshot of it along with the HTML.\n' +
-          '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed ' +
-          'which messes with the HTML before React loaded.\n' +
-          '\n' +
-          'https://react.dev/link/hydration-mismatch\n' +
-          '\n' +
-          '  <html\n' +
-          '+   data-client-foo="foo"\n' +
-          '-   data-client-foo={null}\n' +
-          '  >\n' +
-          '    <head>\n' +
-          '    <body\n' +
-          '+     data-client-baz="baz"\n' +
-          '-     data-client-baz={null}\n' +
-          '    >\n',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
+        "This won't be patched up. This can happen if a SSR-ed Client Component used:\n" +
+        '\n' +
+        "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+        "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+        "- Date formatting in a user's locale which doesn't match the server.\n" +
+        '- External changing data without sending a snapshot of it along with the HTML.\n' +
+        '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed ' +
+        'which messes with the HTML before React loaded.\n' +
+        '\n' +
+        'https://react.dev/link/hydration-mismatch\n' +
+        '\n' +
+        '  <html\n' +
+        '+   data-client-foo="foo"\n' +
+        '-   data-client-foo={null}\n' +
+        '  >\n' +
+        '    <head>\n' +
+        '    <body\n' +
+        '+     data-client-baz="baz"\n' +
+        '-     data-client-baz={null}\n' +
+        '    >\n' +
+        '\n    in body (at **)',
+    ]);
     expect(persistentElements).toEqual([
       document.documentElement,
       document.head,

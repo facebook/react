@@ -591,6 +591,35 @@ export function waitForCommitToBeReady(): null {
   return null;
 }
 
+export type FragmentInstanceType = null;
+
+export function createFragmentInstance(
+  fragmentFiber: Fiber,
+): FragmentInstanceType {
+  return null;
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Fiber,
+  instance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function commitNewChildToFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function deleteChildFromFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
 export const NotPendingTransition: TransitionStatus = null;
 export const HostTransitionContext: ReactContext<TransitionStatus> = {
   $$typeof: REACT_CONTEXT_TYPE,
