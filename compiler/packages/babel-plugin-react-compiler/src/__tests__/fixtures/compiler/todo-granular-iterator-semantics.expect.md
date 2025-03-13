@@ -68,21 +68,29 @@ function Validate({ x, input }) {
 }
 function useFoo(input) {
   "use memo";
-  const $ = _c(3);
+  const $ = _c(5);
 
   const x = Array.from([{}]);
   useIdentity();
-  x.push([input]);
   let t0;
-  if ($[0] !== input || $[1] !== x) {
-    t0 = <Validate x={x} input={input} />;
+  if ($[0] !== input) {
+    t0 = [input];
     $[0] = input;
-    $[1] = x;
-    $[2] = t0;
+    $[1] = t0;
   } else {
-    t0 = $[2];
+    t0 = $[1];
   }
-  return t0;
+  x.push(t0);
+  let t1;
+  if ($[2] !== input || $[3] !== x) {
+    t1 = <Validate x={x} input={input} />;
+    $[2] = input;
+    $[3] = x;
+    $[4] = t1;
+  } else {
+    t1 = $[4];
+  }
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {
