@@ -19595,67 +19595,6 @@ if (process.env.NODE_ENV !== "production") {
       return lib$3;
     }
     var libExports = requireLib();
-    function insertGatedFunctionDeclaration(fnPath, compiled, gating) {
-      var gatingExpression = libExports.conditionalExpression(
-        libExports.callExpression(
-          libExports.identifier(gating.importSpecifierName),
-          []
-        ),
-        buildFunctionExpression(compiled),
-        buildFunctionExpression(fnPath.node)
-      );
-      if (
-        fnPath.parentPath.node.type !== "ExportDefaultDeclaration" &&
-        fnPath.node.type === "FunctionDeclaration" &&
-        fnPath.node.id != null
-      ) {
-        fnPath.replaceWith(
-          libExports.variableDeclaration("const", [
-            libExports.variableDeclarator(fnPath.node.id, gatingExpression)
-          ])
-        );
-      } else if (
-        fnPath.parentPath.node.type === "ExportDefaultDeclaration" &&
-        fnPath.node.type !== "ArrowFunctionExpression" &&
-        fnPath.node.id != null
-      ) {
-        fnPath.insertAfter(
-          libExports.exportDefaultDeclaration(
-            libExports.identifier(fnPath.node.id.name)
-          )
-        );
-        fnPath.parentPath.replaceWith(
-          libExports.variableDeclaration("const", [
-            libExports.variableDeclarator(
-              libExports.identifier(fnPath.node.id.name),
-              gatingExpression
-            )
-          ])
-        );
-      } else {
-        fnPath.replaceWith(gatingExpression);
-      }
-    }
-    function buildFunctionExpression(node) {
-      var _a, _b;
-      if (
-        node.type === "ArrowFunctionExpression" ||
-        node.type === "FunctionExpression"
-      ) {
-        return node;
-      } else {
-        var fn = {
-          type: "FunctionExpression",
-          async: node.async,
-          generator: node.generator,
-          loc: (_a = node.loc) !== null && _a !== void 0 ? _a : null,
-          id: (_b = node.id) !== null && _b !== void 0 ? _b : null,
-          params: node.params,
-          body: node.body
-        };
-        return fn;
-      }
-    }
     function assertExhaustive$1(_, errorMsg) {
       throw new Error(errorMsg);
     }
@@ -20073,6 +20012,175 @@ if (process.env.NODE_ENV !== "production") {
         ]
       );
     })(/*#__PURE__*/ _wrapNativeSuper(Error));
+    function insertAdditionalFunctionDeclaration(fnPath, compiled, gating) {
+      var _a, _b;
+      var originalFnName = fnPath.node.id;
+      var originalFnParams = fnPath.node.params;
+      var compiledParams = fnPath.node.params;
+      CompilerError.invariant(originalFnName != null && compiled.id != null, {
+        reason:
+          "Expected function declarations that are referenced elsewhere to have a named identifier",
+        loc: (_a = fnPath.node.loc) !== null && _a !== void 0 ? _a : null
+      });
+      CompilerError.invariant(
+        originalFnParams.length === compiledParams.length,
+        {
+          reason:
+            "Expected React Compiler optimized function declarations to have the same number of parameters as source",
+          loc: (_b = fnPath.node.loc) !== null && _b !== void 0 ? _b : null
+        }
+      );
+      var gatingCondition = fnPath.scope.generateUidIdentifier(
+        "".concat(gating.importSpecifierName, "_result")
+      );
+      var unoptimizedFnName = fnPath.scope.generateUidIdentifier(
+        "".concat(originalFnName.name, "_unoptimized")
+      );
+      var optimizedFnName = fnPath.scope.generateUidIdentifier(
+        "".concat(originalFnName.name, "_optimized")
+      );
+      compiled.id.name = optimizedFnName.name;
+      fnPath.get("id").replaceInline(unoptimizedFnName);
+      var newParams = [];
+      var genNewArgs = [];
+      var _loop = function _loop() {
+        var argName = "arg".concat(i);
+        if (originalFnParams[i].type === "RestElement") {
+          newParams.push(
+            libExports.restElement(libExports.identifier(argName))
+          );
+          genNewArgs.push(function () {
+            return libExports.spreadElement(libExports.identifier(argName));
+          });
+        } else {
+          newParams.push(libExports.identifier(argName));
+          genNewArgs.push(function () {
+            return libExports.identifier(argName);
+          });
+        }
+      };
+      for (var i = 0; i < originalFnParams.length; i++) {
+        _loop();
+      }
+      fnPath.insertAfter(
+        libExports.functionDeclaration(
+          originalFnName,
+          newParams,
+          libExports.blockStatement([
+            libExports.ifStatement(
+              gatingCondition,
+              libExports.returnStatement(
+                libExports.callExpression(
+                  compiled.id,
+                  genNewArgs.map(function (fn) {
+                    return fn();
+                  })
+                )
+              ),
+              libExports.returnStatement(
+                libExports.callExpression(
+                  unoptimizedFnName,
+                  genNewArgs.map(function (fn) {
+                    return fn();
+                  })
+                )
+              )
+            )
+          ])
+        )
+      );
+      fnPath.insertBefore(
+        libExports.variableDeclaration("const", [
+          libExports.variableDeclarator(
+            gatingCondition,
+            libExports.callExpression(
+              libExports.identifier(gating.importSpecifierName),
+              []
+            )
+          )
+        ])
+      );
+      fnPath.insertBefore(compiled);
+    }
+    function insertGatedFunctionDeclaration(
+      fnPath,
+      compiled,
+      gating,
+      referencedBeforeDeclaration
+    ) {
+      var _a;
+      if (referencedBeforeDeclaration && fnPath.isFunctionDeclaration()) {
+        CompilerError.invariant(compiled.type === "FunctionDeclaration", {
+          reason: "Expected compiled node type to match input type",
+          description: "Got ".concat(
+            compiled.type,
+            " but expected FunctionDeclaration"
+          ),
+          loc: (_a = fnPath.node.loc) !== null && _a !== void 0 ? _a : null
+        });
+        insertAdditionalFunctionDeclaration(fnPath, compiled, gating);
+      } else {
+        var gatingExpression = libExports.conditionalExpression(
+          libExports.callExpression(
+            libExports.identifier(gating.importSpecifierName),
+            []
+          ),
+          buildFunctionExpression(compiled),
+          buildFunctionExpression(fnPath.node)
+        );
+        if (
+          fnPath.parentPath.node.type !== "ExportDefaultDeclaration" &&
+          fnPath.node.type === "FunctionDeclaration" &&
+          fnPath.node.id != null
+        ) {
+          fnPath.replaceWith(
+            libExports.variableDeclaration("const", [
+              libExports.variableDeclarator(fnPath.node.id, gatingExpression)
+            ])
+          );
+        } else if (
+          fnPath.parentPath.node.type === "ExportDefaultDeclaration" &&
+          fnPath.node.type !== "ArrowFunctionExpression" &&
+          fnPath.node.id != null
+        ) {
+          fnPath.insertAfter(
+            libExports.exportDefaultDeclaration(
+              libExports.identifier(fnPath.node.id.name)
+            )
+          );
+          fnPath.parentPath.replaceWith(
+            libExports.variableDeclaration("const", [
+              libExports.variableDeclarator(
+                libExports.identifier(fnPath.node.id.name),
+                gatingExpression
+              )
+            ])
+          );
+        } else {
+          fnPath.replaceWith(gatingExpression);
+        }
+      }
+    }
+    function buildFunctionExpression(node) {
+      var _a, _b;
+      if (
+        node.type === "ArrowFunctionExpression" ||
+        node.type === "FunctionExpression"
+      ) {
+        return node;
+      } else {
+        var fn = {
+          type: "FunctionExpression",
+          async: node.async,
+          generator: node.generator,
+          loc: (_a = node.loc) !== null && _a !== void 0 ? _a : null,
+          id: (_b = node.id) !== null && _b !== void 0 ? _b : null,
+          params: node.params,
+          body: node.body
+        };
+        return fn;
+      }
+    }
     function makeTypeId(id) {
       CompilerError.invariant(id >= 0 && Number.isInteger(id), {
         reason: "Expected instruction id to be a non-negative integer",
@@ -31352,13 +31460,13 @@ PERFORMANCE OF THIS SOFTWARE.
         }
         case "while": {
           var _test5 = fn(terminal.test);
-          var _loop = fn(terminal.loop);
+          var _loop2 = fn(terminal.loop);
           var _fallthrough7 = fn(terminal.fallthrough);
           return {
             kind: "while",
             loc: terminal.loc,
             test: _test5,
-            loop: _loop,
+            loop: _loop2,
             fallthrough: _fallthrough7,
             id: makeInstructionId(0)
           };
@@ -31367,7 +31475,7 @@ PERFORMANCE OF THIS SOFTWARE.
           var init = fn(terminal.init);
           var _test6 = fn(terminal.test);
           var _update = terminal.update !== null ? fn(terminal.update) : null;
-          var _loop2 = fn(terminal.loop);
+          var _loop3 = fn(terminal.loop);
           var _fallthrough8 = fn(terminal.fallthrough);
           return {
             kind: "for",
@@ -31375,14 +31483,14 @@ PERFORMANCE OF THIS SOFTWARE.
             init: init,
             test: _test6,
             update: _update,
-            loop: _loop2,
+            loop: _loop3,
             fallthrough: _fallthrough8,
             id: makeInstructionId(0)
           };
         }
         case "for-of": {
           var _init = fn(terminal.init);
-          var _loop3 = fn(terminal.loop);
+          var _loop4 = fn(terminal.loop);
           var _test7 = fn(terminal.test);
           var _fallthrough9 = fn(terminal.fallthrough);
           return {
@@ -31390,20 +31498,20 @@ PERFORMANCE OF THIS SOFTWARE.
             loc: terminal.loc,
             init: _init,
             test: _test7,
-            loop: _loop3,
+            loop: _loop4,
             fallthrough: _fallthrough9,
             id: makeInstructionId(0)
           };
         }
         case "for-in": {
           var _init2 = fn(terminal.init);
-          var _loop4 = fn(terminal.loop);
+          var _loop5 = fn(terminal.loop);
           var _fallthrough10 = fn(terminal.fallthrough);
           return {
             kind: "for-in",
             loc: terminal.loc,
             init: _init2,
-            loop: _loop4,
+            loop: _loop5,
             fallthrough: _fallthrough10,
             id: makeInstructionId(0)
           };
@@ -32157,7 +32265,7 @@ PERFORMANCE OF THIS SOFTWARE.
       var _iterator79 = _createForOfIteratorHelper(fn.body.blocks),
         _step79;
       try {
-        var _loop5 = function _loop5() {
+        var _loop6 = function _loop6() {
           var _step79$value = _slicedToArray(_step79.value, 2),
             block = _step79$value[1];
           mapTerminalSuccessors(block.terminal, function (successor) {
@@ -32177,7 +32285,7 @@ PERFORMANCE OF THIS SOFTWARE.
           });
         };
         for (_iterator79.s(); !(_step79 = _iterator79.n()).done; ) {
-          _loop5();
+          _loop6();
         }
       } catch (err) {
         _iterator79.e(err);
@@ -34602,7 +34710,7 @@ PERFORMANCE OF THIS SOFTWARE.
           var _iterator108 = _createForOfIteratorHelper(_statements2),
             _step108;
           try {
-            var _loop6 = function _loop6() {
+            var _loop7 = function _loop7() {
               var s = _step108.value;
               var willHoist = new Set();
               var fnDepth = s.isFunctionDeclaration() ? 1 : 0;
@@ -34739,7 +34847,7 @@ PERFORMANCE OF THIS SOFTWARE.
               lowerStatement(builder, s);
             };
             for (_iterator108.s(); !(_step108 = _iterator108.n()).done; ) {
-              _loop6();
+              _loop7();
             }
           } catch (err) {
             _iterator108.e(err);
@@ -35042,7 +35150,7 @@ PERFORMANCE OF THIS SOFTWARE.
           var fallthrough = _continuationBlock4.id;
           var cases = [];
           var hasDefault = false;
-          var _loop7 = function _loop7() {
+          var _loop8 = function _loop8() {
             var case_ = _stmt9.get("cases")[ii];
             var testExpr = case_.get("test");
             if (testExpr.node == null) {
@@ -35089,7 +35197,7 @@ PERFORMANCE OF THIS SOFTWARE.
             fallthrough = block;
           };
           for (var ii = _stmt9.get("cases").length - 1; ii >= 0; ii--) {
-            if (_loop7()) break;
+            if (_loop8()) break;
           }
           cases.reverse();
           if (!hasDefault) {
@@ -45530,6 +45638,14 @@ PERFORMANCE OF THIS SOFTWARE.
               parsedOptions[_key31] = parseTargetConfig(value);
               break;
             }
+            case "gating": {
+              if (value == null) {
+                parsedOptions[_key31] = null;
+              } else {
+                parsedOptions[_key31] = tryParseExternalFunction(value);
+              }
+              break;
+            }
             default: {
               parsedOptions[_key31] = value;
             }
@@ -46350,7 +46466,7 @@ PERFORMANCE OF THIS SOFTWARE.
           var _iterator185 = _createForOfIteratorHelper(block.instructions),
             _step185;
           try {
-            var _loop8 = function _loop8() {
+            var _loop9 = function _loop9() {
               var instr = _step185.value;
               mapInstructionOperands(instr, function (place) {
                 return builder.getPlace(place);
@@ -46390,7 +46506,7 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             };
             for (_iterator185.s(); !(_step185 = _iterator185.n()).done; ) {
-              _loop8();
+              _loop9();
             }
           } catch (err) {
             _iterator185.e(err);
@@ -48052,7 +48168,7 @@ PERFORMANCE OF THIS SOFTWARE.
       var _iterator214 = _createForOfIteratorHelper(fn.body.blocks),
         _step214;
       try {
-        var _loop9 = function _loop9() {
+        var _loop10 = function _loop10() {
           var _step214$value = _slicedToArray(_step214.value, 2),
             blockId = _step214$value[0],
             block = _step214$value[1];
@@ -48119,7 +48235,7 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         };
         for (_iterator214.s(); !(_step214 = _iterator214.n()).done; ) {
-          _loop9();
+          _loop10();
         }
       } catch (err) {
         _iterator214.e(err);
@@ -62101,7 +62217,7 @@ PERFORMANCE OF THIS SOFTWARE.
       var _iterator411 = _createForOfIteratorHelper(block.instructions),
         _step411;
       try {
-        var _loop10 = function _loop10() {
+        var _loop11 = function _loop11() {
           var instr = _step411.value;
           var lvalue = instr.lvalue,
             value = instr.value;
@@ -62180,7 +62296,7 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         };
         for (_iterator411.s(); !(_step411 = _iterator411.n()).done; ) {
-          _loop10();
+          _loop11();
         }
       } catch (err) {
         _iterator411.e(err);
@@ -62520,7 +62636,7 @@ PERFORMANCE OF THIS SOFTWARE.
       var _iterator424 = _createForOfIteratorHelper(fn.body.blocks),
         _step424;
       try {
-        var _loop11 = function _loop11() {
+        var _loop12 = function _loop12() {
           var _step424$value = _slicedToArray(_step424.value, 2),
             block = _step424$value[1];
           var startingId =
@@ -62704,7 +62820,7 @@ PERFORMANCE OF THIS SOFTWARE.
           });
         };
         for (_iterator424.s(); !(_step424 = _iterator424.n()).done; ) {
-          _loop11();
+          _loop12();
         }
       } catch (err) {
         _iterator424.e(err);
@@ -62717,7 +62833,7 @@ PERFORMANCE OF THIS SOFTWARE.
       var _iterator431 = _createForOfIteratorHelper(fn.body.blocks),
         _step431;
       try {
-        var _loop12 = function _loop12() {
+        var _loop13 = function _loop13() {
           var _step431$value = _slicedToArray(_step431.value, 2),
             block = _step431$value[1];
           retainWhere(activeLoops, function (id) {
@@ -62773,7 +62889,7 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         };
         for (_iterator431.s(); !(_step431 = _iterator431.n()).done; ) {
-          _loop12();
+          _loop13();
         }
       } catch (err) {
         _iterator431.e(err);
@@ -62787,7 +62903,7 @@ PERFORMANCE OF THIS SOFTWARE.
       var _iterator432 = _createForOfIteratorHelper(fn.body.blocks),
         _step432;
       try {
-        var _loop13 = function _loop13() {
+        var _loop14 = function _loop14() {
           var _step432$value = _slicedToArray(_step432.value, 2),
             block = _step432$value[1];
           retainWhere(activeScopes, function (current) {
@@ -62834,7 +62950,7 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         };
         for (_iterator432.s(); !(_step432 = _iterator432.n()).done; ) {
-          _loop13();
+          _loop14();
         }
       } catch (err) {
         _iterator432.e(err);
@@ -67853,7 +67969,7 @@ PERFORMANCE OF THIS SOFTWARE.
       var _iterator520 = _createForOfIteratorHelper(fn.body.blocks),
         _step520;
       try {
-        var _loop14 = function _loop14() {
+        var _loop15 = function _loop15() {
           var _step520$value = _slicedToArray(_step520.value, 2),
             block = _step520$value[1];
           retainWhere(activeTryBlocks, function (id) {
@@ -67890,7 +68006,7 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         };
         for (_iterator520.s(); !(_step520 = _iterator520.n()).done; ) {
-          _loop14();
+          _loop15();
         }
       } catch (err) {
         _iterator520.e(err);
@@ -68102,7 +68218,7 @@ PERFORMANCE OF THIS SOFTWARE.
           var _iterator525 = _createForOfIteratorHelper(block.instructions),
             _step525;
           try {
-            var _loop15 = function _loop15() {
+            var _loop16 = function _loop16() {
               var instr = _step525.value;
               var maybeNonNull = getMaybeNonNullInInstruction(
                 instr.value,
@@ -68170,7 +68286,7 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             };
             for (_iterator525.s(); !(_step525 = _iterator525.n()).done; ) {
-              _loop15();
+              _loop16();
             }
           } catch (err) {
             _iterator525.e(err);
@@ -68698,7 +68814,7 @@ PERFORMANCE OF THIS SOFTWARE.
                 ),
                 _step535;
               try {
-                var _loop16 = function _loop16() {
+                var _loop17 = function _loop17() {
                   var _step535$value = _slicedToArray(_step535.value, 2),
                     rootId = _step535$value[0],
                     rootNode = _step535$value[1];
@@ -68712,7 +68828,7 @@ PERFORMANCE OF THIS SOFTWARE.
                   res.push(rootResults);
                 };
                 for (_iterator535.s(); !(_step535 = _iterator535.n()).done; ) {
-                  _loop16();
+                  _loop17();
                 }
               } catch (err) {
                 _iterator535.e(err);
@@ -68883,7 +68999,7 @@ PERFORMANCE OF THIS SOFTWARE.
       var _iterator539 = _createForOfIteratorHelper(node.properties),
         _step539;
       try {
-        var _loop17 = function _loop17() {
+        var _loop18 = function _loop18() {
           var _step539$value = _slicedToArray(_step539.value, 2),
             propertyName = _step539$value[0],
             propertyNode = _step539$value[1];
@@ -68903,7 +69019,7 @@ PERFORMANCE OF THIS SOFTWARE.
           );
         };
         for (_iterator539.s(); !(_step539 = _iterator539.n()).done; ) {
-          _loop17();
+          _loop18();
         }
       } catch (err) {
         _iterator539.e(err);
@@ -69237,7 +69353,7 @@ PERFORMANCE OF THIS SOFTWARE.
           var _iterator544 = _createForOfIteratorHelper(candidates),
             _step544;
           try {
-            var _loop18 = function _loop18() {
+            var _loop19 = function _loop19() {
               var candidateDep = _step544.value;
               if (
                 !Iterable_some(scope.dependencies, function (existingDep) {
@@ -69251,7 +69367,7 @@ PERFORMANCE OF THIS SOFTWARE.
                 scope.dependencies.add(candidateDep);
             };
             for (_iterator544.s(); !(_step544 = _iterator544.n()).done; ) {
-              _loop18();
+              _loop19();
             }
           } catch (err) {
             _iterator544.e(err);
@@ -69396,7 +69512,7 @@ PERFORMANCE OF THIS SOFTWARE.
           var _iterator550 = _createForOfIteratorHelper(block.instructions),
             _step550;
           try {
-            var _loop19 = function _loop19() {
+            var _loop20 = function _loop20() {
               var _step550$value = _step550.value,
                 value = _step550$value.value,
                 lvalue = _step550$value.lvalue,
@@ -69452,7 +69568,7 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             };
             for (_iterator550.s(); !(_step550 = _iterator550.n()).done; ) {
-              _loop19();
+              _loop20();
             }
           } catch (err) {
             _iterator550.e(err);
@@ -70004,7 +70120,7 @@ PERFORMANCE OF THIS SOFTWARE.
             var _iterator557 = _createForOfIteratorHelper(block.instructions),
               _step557;
             try {
-              var _loop20 = function _loop20() {
+              var _loop21 = function _loop21() {
                 var instr = _step557.value;
                 if (
                   instr.value.kind === "FunctionExpression" ||
@@ -70023,7 +70139,7 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               };
               for (_iterator557.s(); !(_step557 = _iterator557.n()).done; ) {
-                _loop20();
+                _loop21();
               }
             } catch (err) {
               _iterator557.e(err);
@@ -72485,27 +72601,24 @@ PERFORMANCE OF THIS SOFTWARE.
       if (moduleScopeOptOutDirectives.length > 0) {
         return;
       }
+      var gating = null;
       if (pass.opts.gating != null) {
-        var error = checkFunctionReferencedBeforeDeclarationAtTopLevel(
-          program,
-          compiledFns.map(function (result) {
-            return result.originalFn;
-          })
-        );
-        if (error) {
-          handleError(error, pass, null);
-          return;
-        }
+        gating = {
+          gatingFn: pass.opts.gating,
+          referencedBeforeDeclared:
+            getFunctionReferencedBeforeDeclarationAtTopLevel(
+              program,
+              compiledFns
+            )
+        };
       }
       var hasLoweredContextAccess = compiledFns.some(function (c) {
         return c.compiledFn.hasLoweredContextAccess;
       });
       var externalFunctions = [];
-      var gating = null;
       try {
-        if (pass.opts.gating != null) {
-          gating = tryParseExternalFunction(pass.opts.gating);
-          externalFunctions.push(gating);
+        if (gating != null) {
+          externalFunctions.push(gating.gatingFn);
         }
         var _lowerContextAccess = environment.lowerContextAccess;
         if (_lowerContextAccess && hasLoweredContextAccess) {
@@ -72551,7 +72664,12 @@ PERFORMANCE OF THIS SOFTWARE.
           compiledFn = result.compiledFn;
         var transformedFn = createNewFunctionNode(originalFn, compiledFn);
         if (gating != null && kind === "original") {
-          insertGatedFunctionDeclaration(originalFn, transformedFn, gating);
+          insertGatedFunctionDeclaration(
+            originalFn,
+            transformedFn,
+            gating.gatingFn,
+            gating.referencedBeforeDeclared.has(result)
+          );
         } else {
           originalFn.replaceWith(transformedFn);
         }
@@ -72916,25 +73034,20 @@ PERFORMANCE OF THIS SOFTWARE.
         return null;
       }
     }
-    function checkFunctionReferencedBeforeDeclarationAtTopLevel(program, fns) {
-      var fnIds = new Set(
+    function getFunctionReferencedBeforeDeclarationAtTopLevel(program, fns) {
+      var fnNames = new Map(
         fns
           .map(function (fn) {
-            return getFunctionName$1(fn);
+            return [getFunctionName$1(fn.originalFn), fn];
           })
-          .filter(function (name) {
-            return !!name && name.isIdentifier();
+          .filter(function (entry) {
+            return !!entry[0] && entry[0].isIdentifier();
           })
-          .map(function (name) {
-            return name.node;
+          .map(function (entry) {
+            return [entry[0].node.name, { id: entry[0].node, fn: entry[1] }];
           })
       );
-      var fnNames = new Map(
-        _toConsumableArray(fnIds).map(function (id) {
-          return [id.name, id];
-        })
-      );
-      var errors = new CompilerError();
+      var referencedBeforeDeclaration = new Set();
       program.traverse({
         TypeAnnotation: function TypeAnnotation(path) {
           path.skip();
@@ -72949,35 +73062,21 @@ PERFORMANCE OF THIS SOFTWARE.
           path.skip();
         },
         Identifier: function Identifier(id) {
-          var _a;
           var fn = fnNames.get(id.node.name);
           if (!fn) {
             return;
           }
-          if (fnIds.has(id.node)) {
-            fnIds["delete"](id.node);
+          if (id.node === fn.id) {
             fnNames["delete"](id.node.name);
             return;
           }
           var scope = id.scope.getFunctionParent();
           if (scope === null && id.isReferencedIdentifier()) {
-            errors.pushErrorDetail(
-              new CompilerErrorDetail({
-                reason:
-                  "Encountered a function used before its declaration, which breaks Forget's gating codegen due to hoisting",
-                description: "Rewrite the reference to ".concat(
-                  fn.name,
-                  " to not rely on hoisting to fix this issue"
-                ),
-                loc: (_a = fn.loc) !== null && _a !== void 0 ? _a : null,
-                suggestions: null,
-                severity: ErrorSeverity.Invariant
-              })
-            );
+            referencedBeforeDeclaration.add(fn.fn);
           }
         }
       });
-      return errors.details.length > 0 ? errors : null;
+      return referencedBeforeDeclaration;
     }
     function getReactCompilerRuntimeModule(opts) {
       if (opts.target === "19") {
@@ -73145,7 +73244,7 @@ PERFORMANCE OF THIS SOFTWARE.
         var _iterator594 = _createForOfIteratorHelper(detail.suggestions),
           _step594;
         try {
-          var _loop21 = function _loop21() {
+          var _loop22 = function _loop22() {
             var suggestion = _step594.value;
             switch (suggestion.op) {
               case CompilerSuggestionOperation.InsertBefore:
@@ -73194,7 +73293,7 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           };
           for (_iterator594.s(); !(_step594 = _iterator594.n()).done; ) {
-            _loop21();
+            _loop22();
           }
         } catch (err) {
           _iterator594.e(err);
