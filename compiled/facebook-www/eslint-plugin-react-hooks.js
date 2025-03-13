@@ -2620,8 +2620,8 @@ if (process.env.NODE_ENV !== "production") {
         return _result;
       } else if (node.type === "OptionalMemberExpression" && !node.computed) {
         var _object = analyzePropertyChain(node.object, optionalChains);
-        var _property = analyzePropertyChain(node.property, null);
-        var _result2 = "".concat(_object, ".").concat(_property);
+        var _property2 = analyzePropertyChain(node.property, null);
+        var _result2 = "".concat(_object, ".").concat(_property2);
         markNode(node, optionalChains, _result2);
         return _result2;
       } else if (
@@ -2633,8 +2633,8 @@ if (process.env.NODE_ENV !== "production") {
           throw new Error("Unsupported node type: ".concat(expression.type));
         }
         var _object2 = analyzePropertyChain(expression.object, optionalChains);
-        var _property2 = analyzePropertyChain(expression.property, null);
-        var _result3 = "".concat(_object2, ".").concat(_property2);
+        var _property3 = analyzePropertyChain(expression.property, null);
+        var _result3 = "".concat(_object2, ".").concat(_property3);
         markNode(expression, optionalChains, _result3);
         return _result3;
       } else {
@@ -36954,22 +36954,22 @@ PERFORMANCE OF THIS SOFTWARE.
                   _argument
                 ),
                 _object3 = _lowerMemberExpressio3.object,
-                _property3 = _lowerMemberExpressio3.property;
+                _property4 = _lowerMemberExpressio3.property;
               if (
-                typeof _property3 === "string" ||
-                typeof _property3 === "number"
+                typeof _property4 === "string" ||
+                typeof _property4 === "number"
               ) {
                 return {
                   kind: "PropertyDelete",
                   object: _object3,
-                  property: makePropertyLiteral(_property3),
+                  property: makePropertyLiteral(_property4),
                   loc: exprLoc
                 };
               } else {
                 return {
                   kind: "ComputedDelete",
                   object: _object3,
-                  property: _property3,
+                  property: _property4,
                   loc: exprLoc
                 };
               }
@@ -37077,7 +37077,7 @@ PERFORMANCE OF THIS SOFTWARE.
                 _leftExpr2
               ),
               _object4 = _lowerMemberExpressio4.object,
-              _property4 = _lowerMemberExpressio4.property,
+              _property5 = _lowerMemberExpressio4.property,
               _value12 = _lowerMemberExpressio4.value;
             var _previousValuePlace = lowerValueToTemporary(builder, _value12);
             var updatedValue = lowerValueToTemporary(builder, {
@@ -37096,13 +37096,13 @@ PERFORMANCE OF THIS SOFTWARE.
             });
             var _newValuePlace;
             if (
-              typeof _property4 === "string" ||
-              typeof _property4 === "number"
+              typeof _property5 === "string" ||
+              typeof _property5 === "number"
             ) {
               _newValuePlace = lowerValueToTemporary(builder, {
                 kind: "PropertyStore",
                 object: Object.assign({}, _object4),
-                property: makePropertyLiteral(_property4),
+                property: makePropertyLiteral(_property5),
                 value: Object.assign({}, updatedValue),
                 loc:
                   (_16 = _leftExpr2.node.loc) !== null && _16 !== void 0
@@ -37113,7 +37113,7 @@ PERFORMANCE OF THIS SOFTWARE.
               _newValuePlace = lowerValueToTemporary(builder, {
                 kind: "ComputedStore",
                 object: Object.assign({}, _object4),
-                property: Object.assign({}, _property4),
+                property: Object.assign({}, _property5),
                 value: Object.assign({}, updatedValue),
                 loc:
                   (_17 = _leftExpr2.node.loc) !== null && _17 !== void 0
@@ -37778,14 +37778,14 @@ PERFORMANCE OF THIS SOFTWARE.
             value: { kind: "UnsupportedNode", node: exprNode, loc: exprLoc }
           };
         }
-        var _property5 = lowerExpressionToTemporary(builder, propertyNode);
+        var _property6 = lowerExpressionToTemporary(builder, propertyNode);
         var _value16 = {
           kind: "ComputedLoad",
           object: Object.assign({}, object),
-          property: Object.assign({}, _property5),
+          property: Object.assign({}, _property6),
           loc: exprLoc
         };
-        return { object: object, property: _property5, value: _value16 };
+        return { object: object, property: _property6, value: _value16 };
       }
     }
     function lowerJsxElementName(builder, exprPath) {
@@ -38486,9 +38486,9 @@ PERFORMANCE OF THIS SOFTWARE.
               );
             });
           for (var _i24 = 0; _i24 < propertiesPaths.length; _i24++) {
-            var _property6 = propertiesPaths[_i24];
-            if (_property6.isRestElement()) {
-              var _argument3 = _property6.get("argument");
+            var _property7 = propertiesPaths[_i24];
+            if (_property7.isRestElement()) {
+              var _argument3 = _property7.get("argument");
               if (!_argument3.isIdentifier()) {
                 builder.errors.push({
                   reason: "(BuildHIR::lowerAssignment) Handle ".concat(
@@ -38510,7 +38510,7 @@ PERFORMANCE OF THIS SOFTWARE.
               ) {
                 var _temp2 = buildTemporaryPlace(
                   builder,
-                  (_p = _property6.node.loc) !== null && _p !== void 0
+                  (_p = _property7.node.loc) !== null && _p !== void 0
                     ? _p
                     : GeneratedSource
                 );
@@ -38523,7 +38523,7 @@ PERFORMANCE OF THIS SOFTWARE.
               } else {
                 var _identifier8 = lowerIdentifierForAssignment(
                   builder,
-                  (_q = _property6.node.loc) !== null && _q !== void 0
+                  (_q = _property7.node.loc) !== null && _q !== void 0
                     ? _q
                     : GeneratedSource,
                   kind,
@@ -38537,7 +38537,7 @@ PERFORMANCE OF THIS SOFTWARE.
                     reason:
                       "Expected reassignment of globals to enable forceTemporaries",
                     loc:
-                      (_r = _property6.node.loc) !== null && _r !== void 0
+                      (_r = _property7.node.loc) !== null && _r !== void 0
                         ? _r
                         : GeneratedSource
                   });
@@ -38546,39 +38546,39 @@ PERFORMANCE OF THIS SOFTWARE.
                 properties.push({ kind: "Spread", place: _identifier8 });
               }
             } else {
-              if (!_property6.isObjectProperty()) {
+              if (!_property7.isObjectProperty()) {
                 builder.errors.push({
                   reason: "(BuildHIR::lowerAssignment) Handle ".concat(
-                    _property6.type,
+                    _property7.type,
                     " properties in ObjectPattern"
                   ),
                   severity: ErrorSeverity.Todo,
                   loc:
-                    (_s = _property6.node.loc) !== null && _s !== void 0
+                    (_s = _property7.node.loc) !== null && _s !== void 0
                       ? _s
                       : null,
                   suggestions: null
                 });
                 continue;
               }
-              if (_property6.node.computed) {
+              if (_property7.node.computed) {
                 builder.errors.push({
                   reason:
                     "(BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern",
                   severity: ErrorSeverity.Todo,
                   loc:
-                    (_t = _property6.node.loc) !== null && _t !== void 0
+                    (_t = _property7.node.loc) !== null && _t !== void 0
                       ? _t
                       : null,
                   suggestions: null
                 });
                 continue;
               }
-              var loweredKey = lowerObjectPropertyKey(builder, _property6);
+              var loweredKey = lowerObjectPropertyKey(builder, _property7);
               if (!loweredKey) {
                 continue;
               }
-              var _element = _property6.get("value");
+              var _element = _property7.get("value");
               if (!_element.isLVal()) {
                 builder.errors.push({
                   reason:
@@ -42531,6 +42531,20 @@ PERFORMANCE OF THIS SOFTWARE.
             })
           ],
           [
+            "from",
+            addFunction(DEFAULT_SHAPES, [], {
+              positionalParams: [
+                Effect.ConditionallyMutate,
+                Effect.ConditionallyMutate,
+                Effect.ConditionallyMutate
+              ],
+              restParam: Effect.Read,
+              returnType: { kind: "Object", shapeId: BuiltInArrayId },
+              calleeEffect: Effect.Read,
+              returnValueKind: ValueKind.Mutable
+            })
+          ],
+          [
             "of",
             addFunction(DEFAULT_SHAPES, [], {
               positionalParams: [],
@@ -43847,9 +43861,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         },
         {
-          key: "getPropertyType",
-          value: function getPropertyType(receiver, property) {
-            var _a, _b;
+          key: "getFallthroughPropertyType",
+          value: function getFallthroughPropertyType(receiver, _property) {
+            var _a;
             var shapeId = null;
             if (receiver.kind === "Object" || receiver.kind === "Function") {
               shapeId = receiver.shapeId;
@@ -43869,33 +43883,66 @@ PERFORMANCE OF THIS SOFTWARE.
                 loc: null,
                 suggestions: null
               });
-              var value =
-                (_b =
+              return (_a = shape.properties.get("*")) !== null && _a !== void 0
+                ? _a
+                : null;
+            }
+            return null;
+          }
+        },
+        {
+          key: "getPropertyType",
+          value: function getPropertyType(receiver, property) {
+            var _a, _b, _c;
+            var shapeId = null;
+            if (receiver.kind === "Object" || receiver.kind === "Function") {
+              shapeId = receiver.shapeId;
+            }
+            if (shapeId !== null) {
+              var shape = __classPrivateFieldGet(
+                this,
+                _Environment_shapes,
+                "f"
+              ).get(shapeId);
+              CompilerError.invariant(shape !== undefined, {
+                reason:
+                  "[HIR] Forget internal error: cannot resolve shape ".concat(
+                    shapeId
+                  ),
+                description: null,
+                loc: null,
+                suggestions: null
+              });
+              if (typeof property === "string") {
+                return (_b =
                   (_a = shape.properties.get(property)) !== null &&
                   _a !== void 0
                     ? _a
                     : shape.properties.get("*")) !== null && _b !== void 0
                   ? _b
+                  : isHookName$2(property)
+                    ? __classPrivateFieldGet(
+                        this,
+                        _Environment_instances,
+                        "m",
+                        _Environment_getCustomHookType
+                      ).call(this)
+                    : null;
+              } else {
+                return (_c = shape.properties.get("*")) !== null &&
+                  _c !== void 0
+                  ? _c
                   : null;
-              if (value === null && isHookName$2(property)) {
-                value = __classPrivateFieldGet(
-                  this,
-                  _Environment_instances,
-                  "m",
-                  _Environment_getCustomHookType
-                ).call(this);
               }
-              return value;
-            } else if (isHookName$2(property)) {
+            } else if (typeof property === "string" && isHookName$2(property)) {
               return __classPrivateFieldGet(
                 this,
                 _Environment_instances,
                 "m",
                 _Environment_getCustomHookType
               ).call(this);
-            } else {
-              return null;
             }
+            return null;
           }
         },
         {
@@ -46794,18 +46841,18 @@ PERFORMANCE OF THIS SOFTWARE.
           return null;
         }
         case "ComputedStore": {
-          var _property7 = read(constants, value.property);
+          var _property8 = read(constants, value.property);
           if (
-            _property7 !== null &&
-            _property7.kind === "Primitive" &&
-            ((typeof _property7.value === "string" &&
-              libExports.isValidIdentifier(_property7.value)) ||
-              typeof _property7.value === "number")
+            _property8 !== null &&
+            _property8.kind === "Primitive" &&
+            ((typeof _property8.value === "string" &&
+              libExports.isValidIdentifier(_property8.value)) ||
+              typeof _property8.value === "number")
           ) {
             var _nextValue = {
               kind: "PropertyStore",
               loc: value.loc,
-              property: makePropertyLiteral(_property7.value),
+              property: makePropertyLiteral(_property8.value),
               object: value.object,
               value: value.value
             };
@@ -53228,20 +53275,20 @@ PERFORMANCE OF THIS SOFTWARE.
             _step259;
           try {
             for (_iterator259.s(); !(_step259 = _iterator259.n()).done; ) {
-              var _property8 = _step259.value;
-              if (_property8.kind === "ObjectProperty") {
-                var _key34 = codegenObjectPropertyKey(cx, _property8.key);
-                switch (_property8.type) {
+              var _property9 = _step259.value;
+              if (_property9.kind === "ObjectProperty") {
+                var _key34 = codegenObjectPropertyKey(cx, _property9.key);
+                switch (_property9.type) {
                   case "property": {
                     var _value22 = codegenPlaceToExpression(
                       cx,
-                      _property8.place
+                      _property9.place
                     );
                     properties.push(
                       libExports.objectProperty(
                         _key34,
                         _value22,
-                        _property8.key.kind === "computed",
+                        _property9.key.kind === "computed",
                         _key34.type === "Identifier" &&
                           _value22.type === "Identifier" &&
                           _value22.name === _key34.name
@@ -53251,7 +53298,7 @@ PERFORMANCE OF THIS SOFTWARE.
                   }
                   case "method": {
                     var method = cx.objectMethods.get(
-                      _property8.place.identifier.id
+                      _property9.place.identifier.id
                     );
                     CompilerError.invariant(method, {
                       reason: "Expected ObjectMethod instruction",
@@ -53290,14 +53337,14 @@ PERFORMANCE OF THIS SOFTWARE.
                   }
                   default:
                     assertExhaustive$1(
-                      _property8.type,
-                      "Unexpected property type: ".concat(_property8.type)
+                      _property9.type,
+                      "Unexpected property type: ".concat(_property9.type)
                     );
                 }
               } else {
                 properties.push(
                   libExports.spreadElement(
-                    codegenPlaceToExpression(cx, _property8.place)
+                    codegenPlaceToExpression(cx, _property9.place)
                   )
                 );
               }
@@ -53464,8 +53511,8 @@ PERFORMANCE OF THIS SOFTWARE.
         }
         case "ComputedLoad": {
           var object = codegenPlaceToExpression(cx, instrValue.object);
-          var _property9 = codegenPlaceToExpression(cx, instrValue.property);
-          value = libExports.memberExpression(object, _property9, true);
+          var _property10 = codegenPlaceToExpression(cx, instrValue.property);
+          value = libExports.memberExpression(object, _property10, true);
           break;
         }
         case "ComputedDelete": {
@@ -63604,7 +63651,7 @@ PERFORMANCE OF THIS SOFTWARE.
         propertyName,
         _iterator449,
         _step449,
-        _property10;
+        _property11;
       return _regeneratorRuntime().wrap(
         function generateInstructionTypes$(_context11) {
           while (1)
@@ -63658,97 +63705,97 @@ PERFORMANCE OF THIS SOFTWARE.
                                                           "PropertyLoad"
                                                         ? 90
                                                         : _context11.t0 ===
-                                                            "MethodCall"
+                                                            "ComputedLoad"
                                                           ? 93
                                                           : _context11.t0 ===
-                                                              "Destructure"
-                                                            ? 99
+                                                              "MethodCall"
+                                                            ? 96
                                                             : _context11.t0 ===
-                                                                "TypeCastExpression"
-                                                              ? 136
+                                                                "Destructure"
+                                                              ? 102
                                                               : _context11.t0 ===
-                                                                  "PropertyDelete"
-                                                                ? 146
+                                                                  "TypeCastExpression"
+                                                                ? 139
                                                                 : _context11.t0 ===
-                                                                    "ComputedDelete"
-                                                                  ? 146
+                                                                    "PropertyDelete"
+                                                                  ? 149
                                                                   : _context11.t0 ===
-                                                                      "FunctionExpression"
+                                                                      "ComputedDelete"
                                                                     ? 149
                                                                     : _context11.t0 ===
-                                                                        "NextPropertyOf"
-                                                                      ? 153
+                                                                        "FunctionExpression"
+                                                                      ? 152
                                                                       : _context11.t0 ===
-                                                                          "ObjectMethod"
+                                                                          "NextPropertyOf"
                                                                         ? 156
                                                                         : _context11.t0 ===
-                                                                            "JsxExpression"
-                                                                          ? 160
+                                                                            "ObjectMethod"
+                                                                          ? 159
                                                                           : _context11.t0 ===
-                                                                              "JsxFragment"
-                                                                            ? 160
+                                                                              "JsxExpression"
+                                                                            ? 163
                                                                             : _context11.t0 ===
-                                                                                "PropertyStore"
+                                                                                "JsxFragment"
                                                                               ? 163
                                                                               : _context11.t0 ===
-                                                                                  "DeclareLocal"
-                                                                                ? 163
+                                                                                  "PropertyStore"
+                                                                                ? 166
                                                                                 : _context11.t0 ===
-                                                                                    "NewExpression"
-                                                                                  ? 163
+                                                                                    "DeclareLocal"
+                                                                                  ? 166
                                                                                   : _context11.t0 ===
-                                                                                      "RegExpLiteral"
-                                                                                    ? 163
+                                                                                      "NewExpression"
+                                                                                    ? 166
                                                                                     : _context11.t0 ===
-                                                                                        "MetaProperty"
-                                                                                      ? 163
+                                                                                        "RegExpLiteral"
+                                                                                      ? 166
                                                                                       : _context11.t0 ===
-                                                                                          "ComputedStore"
-                                                                                        ? 163
+                                                                                          "MetaProperty"
+                                                                                        ? 166
                                                                                         : _context11.t0 ===
-                                                                                            "ComputedLoad"
-                                                                                          ? 163
+                                                                                            "ComputedStore"
+                                                                                          ? 166
                                                                                           : _context11.t0 ===
                                                                                               "Await"
-                                                                                            ? 163
+                                                                                            ? 166
                                                                                             : _context11.t0 ===
                                                                                                 "GetIterator"
-                                                                                              ? 163
+                                                                                              ? 166
                                                                                               : _context11.t0 ===
                                                                                                   "IteratorNext"
-                                                                                                ? 163
+                                                                                                ? 166
                                                                                                 : _context11.t0 ===
                                                                                                     "UnsupportedNode"
-                                                                                                  ? 163
+                                                                                                  ? 166
                                                                                                   : _context11.t0 ===
                                                                                                       "Debugger"
-                                                                                                    ? 163
+                                                                                                    ? 166
                                                                                                     : _context11.t0 ===
                                                                                                         "FinishMemoize"
-                                                                                                      ? 163
+                                                                                                      ? 166
                                                                                                       : _context11.t0 ===
                                                                                                           "StartMemoize"
-                                                                                                        ? 163
-                                                                                                        : 164;
+                                                                                                        ? 166
+                                                                                                        : 167;
                 break;
               case 5:
                 _context11.next = 7;
                 return equation(left, { kind: "Primitive" });
               case 7:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 8:
                 _context11.next = 10;
                 return equation(left, { kind: "Primitive" });
               case 10:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 11:
                 setName(names, lvalue.identifier.id, value.place.identifier);
                 _context11.next = 14;
                 return equation(left, value.place.identifier.type);
               case 14:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 15:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 16:
                 if (!env.config.enableUseTypeAnnotations) {
                   _context11.next = 26;
@@ -63780,12 +63827,12 @@ PERFORMANCE OF THIS SOFTWARE.
                   value.value.identifier.type
                 );
               case 30:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 31:
                 _context11.next = 33;
                 return equation(left, value.value.identifier.type);
               case 33:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 34:
                 if (!isPrimitiveBinaryOp(value.operator)) {
                   _context11.next = 39;
@@ -63804,7 +63851,7 @@ PERFORMANCE OF THIS SOFTWARE.
                 _context11.next = 41;
                 return equation(left, { kind: "Primitive" });
               case 41:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 42:
                 _context11.next = 44;
                 return equation(value.value.identifier.type, {
@@ -63819,7 +63866,7 @@ PERFORMANCE OF THIS SOFTWARE.
                 _context11.next = 48;
                 return equation(left, { kind: "Primitive" });
               case 48:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 49:
                 globalType = env.getGlobalDeclaration(value.binding, value.loc);
                 if (!globalType) {
@@ -63829,7 +63876,7 @@ PERFORMANCE OF THIS SOFTWARE.
                 _context11.next = 53;
                 return equation(left, globalType);
               case 53:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 54:
                 returnType = makeType();
                 _context11.next = 57;
@@ -63842,7 +63889,7 @@ PERFORMANCE OF THIS SOFTWARE.
                 _context11.next = 59;
                 return equation(left, returnType);
               case 59:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 60:
                 _returnType = makeType();
                 _context11.next = 63;
@@ -63855,7 +63902,7 @@ PERFORMANCE OF THIS SOFTWARE.
                 _context11.next = 65;
                 return equation(left, _returnType);
               case 65:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 66:
                 _iterator448 = _createForOfIteratorHelper(value.properties);
                 _context11.prev = 67;
@@ -63900,7 +63947,7 @@ PERFORMANCE OF THIS SOFTWARE.
                   shapeId: BuiltInObjectId
                 });
               case 86:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 87:
                 _context11.next = 89;
                 return equation(left, {
@@ -63908,183 +63955,202 @@ PERFORMANCE OF THIS SOFTWARE.
                   shapeId: BuiltInArrayId
                 });
               case 89:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 90:
                 _context11.next = 92;
                 return equation(left, {
                   kind: "Property",
                   objectType: value.object.identifier.type,
                   objectName: getName(names, value.object.identifier.id),
-                  propertyName: value.property
+                  propertyName: { kind: "literal", value: value.property }
                 });
               case 92:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 93:
+                _context11.next = 95;
+                return equation(left, {
+                  kind: "Property",
+                  objectType: value.object.identifier.type,
+                  objectName: getName(names, value.object.identifier.id),
+                  propertyName: {
+                    kind: "computed",
+                    value: value.property.identifier.type
+                  }
+                });
+              case 95:
+                return _context11.abrupt("break", 168);
+              case 96:
                 _returnType2 = makeType();
-                _context11.next = 96;
+                _context11.next = 99;
                 return equation(value.property.identifier.type, {
                   kind: "Function",
                   return: _returnType2,
                   shapeId: null
                 });
-              case 96:
-                _context11.next = 98;
-                return equation(left, _returnType2);
-              case 98:
-                return _context11.abrupt("break", 165);
               case 99:
+                _context11.next = 101;
+                return equation(left, _returnType2);
+              case 101:
+                return _context11.abrupt("break", 168);
+              case 102:
                 pattern = value.lvalue.pattern;
                 if (!(pattern.kind === "ArrayPattern")) {
-                  _context11.next = 116;
+                  _context11.next = 119;
                   break;
                 }
                 i = 0;
-              case 102:
+              case 105:
                 if (!(i < pattern.items.length)) {
-                  _context11.next = 114;
+                  _context11.next = 117;
                   break;
                 }
                 item = pattern.items[i];
                 if (!(item.kind === "Identifier")) {
-                  _context11.next = 110;
+                  _context11.next = 113;
                   break;
                 }
                 propertyName = String(i);
-                _context11.next = 108;
+                _context11.next = 111;
                 return equation(item.identifier.type, {
                   kind: "Property",
                   objectType: value.value.identifier.type,
                   objectName: getName(names, value.value.identifier.id),
-                  propertyName: makePropertyLiteral(propertyName)
+                  propertyName: {
+                    kind: "literal",
+                    value: makePropertyLiteral(propertyName)
+                  }
                 });
-              case 108:
-                _context11.next = 111;
-                break;
-              case 110:
-                return _context11.abrupt("break", 114);
               case 111:
-                i++;
-                _context11.next = 102;
+                _context11.next = 114;
                 break;
+              case 113:
+                return _context11.abrupt("break", 117);
               case 114:
-                _context11.next = 135;
+                i++;
+                _context11.next = 105;
                 break;
-              case 116:
-                _iterator449 = _createForOfIteratorHelper(pattern.properties);
-                _context11.prev = 117;
-                _iterator449.s();
+              case 117:
+                _context11.next = 138;
+                break;
               case 119:
+                _iterator449 = _createForOfIteratorHelper(pattern.properties);
+                _context11.prev = 120;
+                _iterator449.s();
+              case 122:
                 if ((_step449 = _iterator449.n()).done) {
-                  _context11.next = 127;
+                  _context11.next = 130;
                   break;
                 }
-                _property10 = _step449.value;
-                if (!(_property10.kind === "ObjectProperty")) {
-                  _context11.next = 125;
+                _property11 = _step449.value;
+                if (!(_property11.kind === "ObjectProperty")) {
+                  _context11.next = 128;
                   break;
                 }
                 if (
                   !(
-                    _property10.key.kind === "identifier" ||
-                    _property10.key.kind === "string"
+                    _property11.key.kind === "identifier" ||
+                    _property11.key.kind === "string"
                   )
                 ) {
-                  _context11.next = 125;
+                  _context11.next = 128;
                   break;
                 }
-                _context11.next = 125;
-                return equation(_property10.place.identifier.type, {
+                _context11.next = 128;
+                return equation(_property11.place.identifier.type, {
                   kind: "Property",
                   objectType: value.value.identifier.type,
                   objectName: getName(names, value.value.identifier.id),
-                  propertyName: makePropertyLiteral(_property10.key.name)
+                  propertyName: {
+                    kind: "literal",
+                    value: makePropertyLiteral(_property11.key.name)
+                  }
                 });
-              case 125:
-                _context11.next = 119;
+              case 128:
+                _context11.next = 122;
                 break;
-              case 127:
-                _context11.next = 132;
+              case 130:
+                _context11.next = 135;
                 break;
-              case 129:
-                _context11.prev = 129;
-                _context11.t2 = _context11["catch"](117);
-                _iterator449.e(_context11.t2);
               case 132:
                 _context11.prev = 132;
-                _iterator449.f();
-                return _context11.finish(132);
+                _context11.t2 = _context11["catch"](120);
+                _iterator449.e(_context11.t2);
               case 135:
-                return _context11.abrupt("break", 165);
-              case 136:
+                _context11.prev = 135;
+                _iterator449.f();
+                return _context11.finish(135);
+              case 138:
+                return _context11.abrupt("break", 168);
+              case 139:
                 if (!env.config.enableUseTypeAnnotations) {
-                  _context11.next = 143;
+                  _context11.next = 146;
                   break;
                 }
-                _context11.next = 139;
+                _context11.next = 142;
                 return equation(value.type, value.value.identifier.type);
-              case 139:
-                _context11.next = 141;
+              case 142:
+                _context11.next = 144;
                 return equation(left, value.type);
-              case 141:
-                _context11.next = 145;
+              case 144:
+                _context11.next = 148;
                 break;
-              case 143:
-                _context11.next = 145;
-                return equation(left, value.value.identifier.type);
-              case 145:
-                return _context11.abrupt("break", 165);
               case 146:
                 _context11.next = 148;
-                return equation(left, { kind: "Primitive" });
+                return equation(left, value.value.identifier.type);
               case 148:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 149:
+                _context11.next = 151;
+                return equation(left, { kind: "Primitive" });
+              case 151:
+                return _context11.abrupt("break", 168);
+              case 152:
                 return _context11.delegateYield(
                   generate(value.loweredFunc.func),
                   "t3",
-                  150
+                  153
                 );
-              case 150:
-                _context11.next = 152;
+              case 153:
+                _context11.next = 155;
                 return equation(left, {
                   kind: "Function",
                   shapeId: BuiltInFunctionId,
                   return: value.loweredFunc.func.returnType
                 });
-              case 152:
-                return _context11.abrupt("break", 165);
-              case 153:
-                _context11.next = 155;
-                return equation(left, { kind: "Primitive" });
               case 155:
-                return _context11.abrupt("break", 165);
+                return _context11.abrupt("break", 168);
               case 156:
+                _context11.next = 158;
+                return equation(left, { kind: "Primitive" });
+              case 158:
+                return _context11.abrupt("break", 168);
+              case 159:
                 return _context11.delegateYield(
                   generate(value.loweredFunc.func),
                   "t4",
-                  157
+                  160
                 );
-              case 157:
-                _context11.next = 159;
-                return equation(left, { kind: "ObjectMethod" });
-              case 159:
-                return _context11.abrupt("break", 165);
               case 160:
                 _context11.next = 162;
+                return equation(left, { kind: "ObjectMethod" });
+              case 162:
+                return _context11.abrupt("break", 168);
+              case 163:
+                _context11.next = 165;
                 return equation(left, {
                   kind: "Object",
                   shapeId: BuiltInJsxId
                 });
-              case 162:
-                return _context11.abrupt("break", 165);
-              case 163:
-                return _context11.abrupt("break", 165);
-              case 164:
+              case 165:
+                return _context11.abrupt("break", 168);
+              case 166:
+                return _context11.abrupt("break", 168);
+              case 167:
                 assertExhaustive$1(
                   value,
                   "Unhandled instruction value kind: ".concat(value.kind)
                 );
-              case 165:
+              case 168:
               case "end":
                 return _context11.stop();
             }
@@ -64093,7 +64159,7 @@ PERFORMANCE OF THIS SOFTWARE.
         null,
         [
           [67, 78, 81, 84],
-          [117, 129, 132, 135]
+          [120, 132, 135, 138]
         ]
       );
     }
@@ -64120,15 +64186,13 @@ PERFORMANCE OF THIS SOFTWARE.
                 return;
               }
               var objectType = this.get(tB.objectType);
-              var propertyType;
-              if (typeof tB.propertyName === "number") {
-                propertyType = null;
-              } else {
-                propertyType = this.env.getPropertyType(
-                  objectType,
-                  tB.propertyName
-                );
-              }
+              var propertyType =
+                tB.propertyName.kind === "literal"
+                  ? this.env.getPropertyType(objectType, tB.propertyName.value)
+                  : this.env.getFallthroughPropertyType(
+                      objectType,
+                      tB.propertyName.value
+                    );
               if (propertyType !== null) {
                 this.unify(tA, propertyType);
               }
@@ -64341,7 +64405,11 @@ PERFORMANCE OF THIS SOFTWARE.
     })();
     var RefLikeNameRE = /^(?:[a-zA-Z$_][a-zA-Z$_0-9]*)Ref$|^ref$/;
     function isRefLikeName(t) {
-      return RefLikeNameRE.test(t.objectName) && t.propertyName === "current";
+      return (
+        t.propertyName.kind === "literal" &&
+        RefLikeNameRE.test(t.objectName) &&
+        t.propertyName.value === "current"
+      );
     }
     function tryUnionTypes(ty1, ty2) {
       var readonlyType;
