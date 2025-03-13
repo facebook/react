@@ -42531,20 +42531,6 @@ PERFORMANCE OF THIS SOFTWARE.
             })
           ],
           [
-            "from",
-            addFunction(DEFAULT_SHAPES, [], {
-              positionalParams: [
-                Effect.ConditionallyMutate,
-                Effect.ConditionallyMutate,
-                Effect.ConditionallyMutate
-              ],
-              restParam: Effect.Read,
-              returnType: { kind: "Object", shapeId: BuiltInArrayId },
-              calleeEffect: Effect.Read,
-              returnValueKind: ValueKind.Mutable
-            })
-          ],
-          [
             "of",
             addFunction(DEFAULT_SHAPES, [], {
               positionalParams: [],
