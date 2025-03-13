@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError} from '../CompilerError';
+import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
 import {Environment} from '../HIR';
 import {
   AbstractValue,
@@ -49,7 +49,7 @@ import {assertExhaustive} from '../Utils/utils';
 import {
   inferTerminalFunctionEffects,
   inferInstructionFunctionEffects,
-  raiseFunctionEffectErrors,
+  transformFunctionEffectErrors,
 } from './InferFunctionEffects';
 
 const UndefinedValue: InstructionValue = {
@@ -103,7 +103,9 @@ const UndefinedValue: InstructionValue = {
 export default function inferReferenceEffects(
   fn: HIRFunction,
   options: {isFunctionExpression: boolean} = {isFunctionExpression: false},
-): void {
+): {
+  fnEffectErrors: Array<CompilerErrorDetailOptions>;
+} {
   /*
    * Initial state contains function params
    * TODO: include module declarations here as well
@@ -241,8 +243,13 @@ export default function inferReferenceEffects(
 
   if (options.isFunctionExpression) {
     fn.effects = functionEffects;
-  } else if (!fn.env.config.enableMinimalTransformsForRetry) {
-    raiseFunctionEffectErrors(functionEffects);
+    return {
+      fnEffectErrors: [],
+    };
+  } else {
+    return {
+      fnEffectErrors: transformFunctionEffectErrors(functionEffects),
+    };
   }
 }
 

@@ -5,7 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity, ValueKind} from '..';
+import {
+  CompilerError,
+  CompilerErrorDetailOptions,
+  ErrorSeverity,
+  ValueKind,
+} from '..';
 import {
   AbstractValue,
   BasicBlock,
@@ -290,21 +295,21 @@ export function inferTerminalFunctionEffects(
   return functionEffects;
 }
 
-export function raiseFunctionEffectErrors(
+export function transformFunctionEffectErrors(
   functionEffects: Array<FunctionEffect>,
-): void {
-  functionEffects.forEach(eff => {
+): Array<CompilerErrorDetailOptions> {
+  return functionEffects.map(eff => {
     switch (eff.kind) {
       case 'ReactMutation':
       case 'GlobalMutation': {
-        CompilerError.throw(eff.error);
+        return eff.error;
       }
       case 'ContextMutation': {
-        CompilerError.throw({
+        return {
           severity: ErrorSeverity.Invariant,
           reason: `Unexpected ContextMutation in top-level function effects`,
           loc: eff.loc,
-        });
+        };
       }
       default:
         assertExhaustive(
