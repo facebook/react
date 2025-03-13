@@ -6,6 +6,10 @@
 
 set -eo pipefail
 
+if [[ "$REACT_CLASS_EQUIVALENCE_TEST" == "true" ]]; then
+  exit 0
+fi
+
 HERE=$(pwd)
 
 cd compiler/packages/babel-plugin-react-compiler && yarn --silent link && cd $HERE
