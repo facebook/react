@@ -50,7 +50,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -74,7 +74,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -100,7 +100,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -153,7 +153,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -183,7 +183,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -261,7 +261,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -293,7 +293,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -340,7 +340,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -375,7 +375,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -407,7 +407,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -447,7 +447,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       # Fixture copies some built packages from the workroot after install.
       # That means dependencies of the built packages are not installed.
       # We need to install dependencies of the workroot to fulfill all dependency constraints
@@ -512,7 +512,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -563,7 +563,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -600,7 +600,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: '**/yarn.lock'
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
