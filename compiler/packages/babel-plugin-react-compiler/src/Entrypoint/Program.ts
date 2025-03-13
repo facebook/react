@@ -271,6 +271,9 @@ function isFilePartOfSources(
   return false;
 }
 
+type CompileProgramResult = {
+  retryErrors: Array<{fn: BabelFn; error: CompilerError}>;
+};
 /**
  * `compileProgram` is directly invoked by the react-compiler babel plugin, so
  * exceptions thrown by this function will fail the babel build.
@@ -285,16 +288,16 @@ function isFilePartOfSources(
 export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass,
-): void {
+): CompileProgramResult | null {
   if (shouldSkipCompilation(program, pass)) {
-    return;
+    return null;
   }
 
   const environment = pass.opts.environment;
   const restrictedImportsErr = validateRestrictedImports(program, environment);
   if (restrictedImportsErr) {
     handleError(restrictedImportsErr, pass, null);
-    return;
+    return null;
   }
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
 
@@ -365,7 +368,7 @@ export function compileProgram(
       filename: pass.filename ?? null,
     },
   );
-
+  const retryErrors: Array<{fn: BabelFn; error: CompilerError}> = [];
   const processFn = (
     fn: BabelFn,
     fnType: ReactFunctionType,
@@ -448,6 +451,9 @@ export function compileProgram(
         };
       } catch (err) {
         // TODO: we might want to log error here, but this will also result in duplicate logging
+        if (err instanceof CompilerError) {
+          retryErrors.push({fn, error: err});
+        }
         return null;
       }
     }
@@ -538,7 +544,7 @@ export function compileProgram(
     program.node.directives,
   );
   if (moduleScopeOptOutDirectives.length > 0) {
-    return;
+    return null;
   }
   let gating: null | {
     gatingFn: ExternalFunction;
@@ -596,7 +602,7 @@ export function compileProgram(
     }
   } catch (err) {
     handleError(err, pass, null);
-    return;
+    return null;
   }
 
   /*
@@ -638,6 +644,7 @@ export function compileProgram(
     }
     addImportsToProgram(program, externalFunctions);
   }
+  return {retryErrors};
 }
 
 function shouldSkipCompilation(
