@@ -55,26 +55,20 @@ import { c as _c } from "react/compiler-runtime"; /**
 
 function useBar(t0) {
   "use memo";
-  const $ = _c(3);
+  const $ = _c(2);
   const { arg } = t0;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] !== arg) {
     const s = new Set([1, 5, 4]);
-    t1 = s.values();
-    $[0] = t1;
+    const mutableIterator = s.values();
+
+    t1 = [arg, ...mutableIterator];
+    $[0] = arg;
+    $[1] = t1;
   } else {
-    t1 = $[0];
+    t1 = $[1];
   }
-  const mutableIterator = t1;
-  let t2;
-  if ($[1] !== arg) {
-    t2 = [arg, ...mutableIterator];
-    $[1] = arg;
-    $[2] = t2;
-  } else {
-    t2 = $[2];
-  }
-  return t2;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -85,3 +79,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) [3,1,5,4]
+[3,1,5,4]
+[4,1,5,4]
