@@ -72960,7 +72960,7 @@ PERFORMANCE OF THIS SOFTWARE.
             return;
           }
           var scope = id.scope.getFunctionParent();
-          if (scope === null) {
+          if (scope === null && id.isReferencedIdentifier()) {
             errors.pushErrorDetail(
               new CompilerErrorDetail({
                 reason:
