@@ -1143,7 +1143,7 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
        * A null scope means there's no function scope, which means we're at the
        * top level scope.
        */
-      if (scope === null) {
+      if (scope === null && id.isReferencedIdentifier()) {
         errors.pushErrorDetail(
           new CompilerErrorDetail({
             reason: `Encountered a function used before its declaration, which breaks Forget's gating codegen due to hoisting`,
