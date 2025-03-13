@@ -25,6 +25,7 @@ import {
   removeRootViewTransitionClone,
   cancelRootViewTransitionName,
   restoreRootViewTransitionName,
+  applyViewTransitionName,
   appendChild,
   commitUpdate,
   commitTextUpdate,
@@ -92,7 +93,18 @@ function applyViewTransitionToClones(
   // created by the insertion side. If the insertion side if found before the deletion side
   // then this is called by the deletion. If the deletion is visited first then this is called
   // later by the insertion when the clone has been created.
-  // TODO: Actually apply names to clones.
+  // TODO: Should we measure if this in the viewport first?
+  for (let i = 0; i < clones.length; i++) {
+    applyViewTransitionName(
+      clones[i],
+      i === 0
+        ? name
+        : // If we have multiple Host Instances below, we add a suffix to the name to give
+          // each one a unique name.
+          name + '_' + i,
+      className,
+    );
+  }
 }
 
 function trackDeletedPairViewTransitions(deletion: Fiber): void {
@@ -130,7 +142,6 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
               props.share,
             );
             if (className !== 'none') {
-              // TODO: Should we measure if this in the viewport first?
               // The "old" instance is actually the one we're inserting.
               const oldInstance: ViewTransitionState = pair;
               // The "new" instance is the already mounted one we're deleting.
@@ -169,7 +180,6 @@ function trackEnterViewTransitions(deletion: Fiber): void {
       pair !== undefined ? props.share : props.enter,
     );
     if (className !== 'none') {
-      // TODO: Should we measure if this in the viewport first?
       if (pair !== undefined) {
         // Delete the entry so that we know when we've found all of them
         // and can stop searching (size reaches zero).
@@ -226,7 +236,6 @@ function applyAppearingPairViewTransition(child: Fiber): void {
         props.share,
       );
       if (className !== 'none') {
-        // TODO: Should we measure if this in the viewport first?
         const clones = state.clones;
         // If there are no clones at this point, that should mean that there are no
         // HostComponent children in this ViewTransition.
@@ -253,7 +262,6 @@ function applyExitViewTransition(placement: Fiber): void {
     state.paired ? props.share : props.exit,
   );
   if (className !== 'none') {
-    // TODO: Should we measure if this in the viewport first?
     const clones = state.clones;
     // If there are no clones at this point, that should mean that there are no
     // HostComponent children in this ViewTransition.
