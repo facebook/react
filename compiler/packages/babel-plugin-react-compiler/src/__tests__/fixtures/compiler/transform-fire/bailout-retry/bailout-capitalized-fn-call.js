@@ -1,4 +1,4 @@
-// @validateNoCapitalizedCalls @enableFire
+// @validateNoCapitalizedCalls @enableFire @panicThreshold(none)
 import {fire} from 'react';
 const CapitalizedCall = require('shared-runtime').sum;
 

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @flow @enableFire
+// @flow @enableFire @panicThreshold(none)
 import {fire} from 'react';
 import {print} from 'shared-runtime';
 

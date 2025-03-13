@@ -16,7 +16,6 @@ import {
   EnvironmentConfig,
   ExternalFunction,
   ReactFunctionType,
-  MINIMAL_RETRY_CONFIG,
 } from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
 import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
@@ -407,6 +406,7 @@ export function compileProgram(
             fn,
             environment,
             fnType,
+            'all_features',
             useMemoCacheIdentifier.name,
             pass.opts.logger,
             pass.filename,
@@ -417,28 +417,7 @@ export function compileProgram(
         compileResult = {kind: 'error', error: err};
       }
     }
-    // If non-memoization features are enabled, retry regardless of error kind
-    if (compileResult.kind === 'error' && environment.enableFire) {
-      try {
-        compileResult = {
-          kind: 'compile',
-          compiledFn: compileFn(
-            fn,
-            {
-              ...environment,
-              ...MINIMAL_RETRY_CONFIG,
-            },
-            fnType,
-            useMemoCacheIdentifier.name,
-            pass.opts.logger,
-            pass.filename,
-            pass.code,
-          ),
-        };
-      } catch (err) {
-        compileResult = {kind: 'error', error: err};
-      }
-    }
+
     if (compileResult.kind === 'error') {
       /**
        * If an opt out directive is present, log only instead of throwing and don't mark as
@@ -449,7 +428,28 @@ export function compileProgram(
       } else {
         handleError(compileResult.error, pass, fn.node.loc ?? null);
       }
-      return null;
+      // If non-memoization features are enabled, retry regardless of error kind
+      if (!environment.enableFire) {
+        return null;
+      }
+      try {
+        compileResult = {
+          kind: 'compile',
+          compiledFn: compileFn(
+            fn,
+            environment,
+            fnType,
+            'no_inferred_memo',
+            useMemoCacheIdentifier.name,
+            pass.opts.logger,
+            pass.filename,
+            pass.code,
+          ),
+        };
+      } catch (err) {
+        // TODO: we might want to log error here, but this will also result in duplicate logging
+        return null;
+      }
     }
 
     pass.opts.logger?.logEvent(pass.filename, {
