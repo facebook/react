@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7040e78e54a5d41d756b1f0ca5671d60>>
+ * @generated SignedSource<<011fd80c72676cc0bb6a6b43271942c2>>
  */
 
 "use strict";
@@ -20,12 +20,32 @@ function _defineProperties(target, props) {
     descriptor.enumerable = descriptor.enumerable || !1;
     descriptor.configurable = !0;
     "value" in descriptor && (descriptor.writable = !0);
-    Object.defineProperty(target, descriptor.key, descriptor);
+    var JSCompiler_temp_const = Object,
+      JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const.defineProperty;
+    a: {
+      var i$jscomp$0 = descriptor.key;
+      if ("object" == typeof i$jscomp$0 && i$jscomp$0) {
+        var e = i$jscomp$0[Symbol.toPrimitive];
+        if (void 0 !== e) {
+          i$jscomp$0 = e.call(i$jscomp$0, "string");
+          if ("object" != typeof i$jscomp$0) break a;
+          throw new TypeError("@@toPrimitive must return a primitive value.");
+        }
+        i$jscomp$0 = String(i$jscomp$0);
+      }
+    }
+    JSCompiler_temp_const$jscomp$0.call(
+      JSCompiler_temp_const,
+      target,
+      "symbol" == typeof i$jscomp$0 ? i$jscomp$0 : i$jscomp$0 + "",
+      descriptor
+    );
   }
 }
 function _createClass(Constructor, protoProps, staticProps) {
   protoProps && _defineProperties(Constructor.prototype, protoProps);
   staticProps && _defineProperties(Constructor, staticProps);
+  Object.defineProperty(Constructor, "prototype", { writable: !1 });
   return Constructor;
 }
 var assign = Object.assign;
@@ -9556,23 +9576,20 @@ function toJSON(inst) {
       var excluded = ["children"];
       if (null == _inst$props) _inst$props = {};
       else {
-        var target = {},
-          sourceKeys = Object.keys(_inst$props),
-          i;
-        for (i = 0; i < sourceKeys.length; i++) {
-          var key = sourceKeys[i];
-          0 <= excluded.indexOf(key) || (target[key] = _inst$props[key]);
-        }
+        var target = {};
+        for (key in _inst$props)
+          !Object.prototype.hasOwnProperty.call(_inst$props, key) ||
+            0 <= excluded.indexOf(key) ||
+            (target[key] = _inst$props[key]);
         _inst$props = target;
       }
       excluded = null;
       if (inst.children && inst.children.length)
-        for (target = 0; target < inst.children.length; target++)
-          (sourceKeys = toJSON(inst.children[target])),
-            null !== sourceKeys &&
-              (null === excluded
-                ? (excluded = [sourceKeys])
-                : excluded.push(sourceKeys));
+        for (target = 0; target < inst.children.length; target++) {
+          var key = toJSON(inst.children[target]);
+          null !== key &&
+            (null === excluded ? (excluded = [key]) : excluded.push(key));
+        }
       inst = { type: inst.type, props: _inst$props, children: excluded };
       Object.defineProperty(inst, "$$typeof", {
         value: Symbol.for("react.test.json")
@@ -9835,24 +9852,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1417 = {
+var internals$jscomp$inline_1426 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-f695f952-20250312",
+  version: "19.1.0-native-fb-5ccfcd17-20250312",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-f695f952-20250312"
+  reconcilerVersion: "19.1.0-native-fb-5ccfcd17-20250312"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1418 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1427 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1418.isDisabled &&
-    hook$jscomp$inline_1418.supportsFiber
+    !hook$jscomp$inline_1427.isDisabled &&
+    hook$jscomp$inline_1427.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1418.inject(
-        internals$jscomp$inline_1417
+      (rendererID = hook$jscomp$inline_1427.inject(
+        internals$jscomp$inline_1426
       )),
-        (injectedHook = hook$jscomp$inline_1418);
+        (injectedHook = hook$jscomp$inline_1427);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9976,4 +9993,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-f695f952-20250312";
+exports.version = "19.1.0-native-fb-5ccfcd17-20250312";
