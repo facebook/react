@@ -202,13 +202,6 @@ function recursivelyInsertNewFiber(
       // For insertions we don't need to clone. It's already new state node.
       if (visitPhase !== INSERT_APPEARING_PAIR) {
         appendChild(hostParentClone, instance);
-        if (parentViewTransition !== null) {
-          if (parentViewTransition.clones === null) {
-            parentViewTransition.clones = [instance];
-          } else {
-            parentViewTransition.clones.push(instance);
-          }
-        }
         recursivelyInsertNew(
           finishedWork,
           instance,
@@ -217,6 +210,13 @@ function recursivelyInsertNewFiber(
         );
       } else {
         recursivelyInsertNew(finishedWork, instance, null, visitPhase);
+      }
+      if (parentViewTransition !== null) {
+        if (parentViewTransition.clones === null) {
+          parentViewTransition.clones = [instance];
+        } else {
+          parentViewTransition.clones.push(instance);
+        }
       }
       break;
     }
