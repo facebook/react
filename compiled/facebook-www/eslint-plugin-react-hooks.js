@@ -34041,6 +34041,36 @@ PERFORMANCE OF THIS SOFTWARE.
         })
       ],
       [
+        "indexOf",
+        addFunction(BUILTIN_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: { kind: "Primitive" },
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive
+        })
+      ],
+      [
+        "includes",
+        addFunction(BUILTIN_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: { kind: "Primitive" },
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive
+        })
+      ],
+      [
+        "at",
+        addFunction(BUILTIN_SHAPES, [], {
+          positionalParams: [Effect.Read],
+          restParam: null,
+          returnType: { kind: "Object", shapeId: BuiltInMixedReadonlyId },
+          calleeEffect: Effect.Capture,
+          returnValueKind: ValueKind.Frozen
+        })
+      ],
+      [
         "map",
         addFunction(BUILTIN_SHAPES, [], {
           positionalParams: [],
@@ -34122,9 +34152,9 @@ PERFORMANCE OF THIS SOFTWARE.
         addFunction(BUILTIN_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.ConditionallyMutate,
-          returnType: { kind: "Poly" },
+          returnType: { kind: "Object", shapeId: BuiltInMixedReadonlyId },
           calleeEffect: Effect.ConditionallyMutate,
-          returnValueKind: ValueKind.Mutable,
+          returnValueKind: ValueKind.Frozen,
           noAlias: true,
           mutableOnlyIfOperandsAreMutable: true
         })
