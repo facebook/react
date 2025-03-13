@@ -93,7 +93,6 @@ function applyViewTransitionToClones(
   // created by the insertion side. If the insertion side if found before the deletion side
   // then this is called by the deletion. If the deletion is visited first then this is called
   // later by the insertion when the clone has been created.
-  // TODO: Should we measure if this in the viewport first?
   for (let i = 0; i < clones.length; i++) {
     applyViewTransitionName(
       clones[i],
@@ -142,6 +141,12 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
               props.share,
             );
             if (className !== 'none') {
+              // TODO: Since the deleted instance already has layout we could
+              // check if it's in the viewport and if not skip the pairing.
+              // It would currently cause layout thrash though so if we did that
+              // we need to avoid inserting the root of the cloned trees until
+              // the end.
+
               // The "old" instance is actually the one we're inserting.
               const oldInstance: ViewTransitionState = pair;
               // The "new" instance is the already mounted one we're deleting.
@@ -181,6 +186,12 @@ function trackEnterViewTransitions(deletion: Fiber): void {
     );
     if (className !== 'none') {
       if (pair !== undefined) {
+        // TODO: Since the deleted instance already has layout we could
+        // check if it's in the viewport and if not skip the pairing.
+        // It would currently cause layout thrash though so if we did that
+        // we need to avoid inserting the root of the cloned trees until
+        // the end.
+
         // Delete the entry so that we know when we've found all of them
         // and can stop searching (size reaches zero).
         // $FlowFixMe[incompatible-use]: Refined by the pair.
@@ -262,6 +273,10 @@ function applyExitViewTransition(placement: Fiber): void {
     state.paired ? props.share : props.exit,
   );
   if (className !== 'none') {
+    // TODO: Ideally we could determine if this exit is in the viewport and
+    // exclude it otherwise but that would require waiting until we insert
+    // and layout the clones first. Currently wait until the view transition
+    // starts before reading the layout.
     const clones = state.clones;
     // If there are no clones at this point, that should mean that there are no
     // HostComponent children in this ViewTransition.
