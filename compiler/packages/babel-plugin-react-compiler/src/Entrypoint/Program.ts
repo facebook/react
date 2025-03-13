@@ -16,7 +16,6 @@ import {
   EnvironmentConfig,
   ExternalFunction,
   ReactFunctionType,
-  MINIMAL_RETRY_CONFIG,
 } from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
 import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
@@ -272,6 +271,9 @@ function isFilePartOfSources(
   return false;
 }
 
+type CompileProgramResult = {
+  retryErrors: Array<{fn: BabelFn; error: CompilerError}>;
+};
 /**
  * `compileProgram` is directly invoked by the react-compiler babel plugin, so
  * exceptions thrown by this function will fail the babel build.
@@ -286,16 +288,16 @@ function isFilePartOfSources(
 export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass,
-): void {
+): CompileProgramResult | null {
   if (shouldSkipCompilation(program, pass)) {
-    return;
+    return null;
   }
 
   const environment = pass.opts.environment;
   const restrictedImportsErr = validateRestrictedImports(program, environment);
   if (restrictedImportsErr) {
     handleError(restrictedImportsErr, pass, null);
-    return;
+    return null;
   }
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
 
@@ -366,7 +368,7 @@ export function compileProgram(
       filename: pass.filename ?? null,
     },
   );
-
+  const retryErrors: Array<{fn: BabelFn; error: CompilerError}> = [];
   const processFn = (
     fn: BabelFn,
     fnType: ReactFunctionType,
@@ -407,6 +409,7 @@ export function compileProgram(
             fn,
             environment,
             fnType,
+            'all_features',
             useMemoCacheIdentifier.name,
             pass.opts.logger,
             pass.filename,
@@ -417,28 +420,7 @@ export function compileProgram(
         compileResult = {kind: 'error', error: err};
       }
     }
-    // If non-memoization features are enabled, retry regardless of error kind
-    if (compileResult.kind === 'error' && environment.enableFire) {
-      try {
-        compileResult = {
-          kind: 'compile',
-          compiledFn: compileFn(
-            fn,
-            {
-              ...environment,
-              ...MINIMAL_RETRY_CONFIG,
-            },
-            fnType,
-            useMemoCacheIdentifier.name,
-            pass.opts.logger,
-            pass.filename,
-            pass.code,
-          ),
-        };
-      } catch (err) {
-        compileResult = {kind: 'error', error: err};
-      }
-    }
+
     if (compileResult.kind === 'error') {
       /**
        * If an opt out directive is present, log only instead of throwing and don't mark as
@@ -449,7 +431,31 @@ export function compileProgram(
       } else {
         handleError(compileResult.error, pass, fn.node.loc ?? null);
       }
-      return null;
+      // If non-memoization features are enabled, retry regardless of error kind
+      if (!environment.enableFire) {
+        return null;
+      }
+      try {
+        compileResult = {
+          kind: 'compile',
+          compiledFn: compileFn(
+            fn,
+            environment,
+            fnType,
+            'no_inferred_memo',
+            useMemoCacheIdentifier.name,
+            pass.opts.logger,
+            pass.filename,
+            pass.code,
+          ),
+        };
+      } catch (err) {
+        // TODO: we might want to log error here, but this will also result in duplicate logging
+        if (err instanceof CompilerError) {
+          retryErrors.push({fn, error: err});
+        }
+        return null;
+      }
     }
 
     pass.opts.logger?.logEvent(pass.filename, {
@@ -538,7 +544,7 @@ export function compileProgram(
     program.node.directives,
   );
   if (moduleScopeOptOutDirectives.length > 0) {
-    return;
+    return null;
   }
   let gating: null | {
     gatingFn: ExternalFunction;
@@ -596,7 +602,7 @@ export function compileProgram(
     }
   } catch (err) {
     handleError(err, pass, null);
-    return;
+    return null;
   }
 
   /*
@@ -638,6 +644,7 @@ export function compileProgram(
     }
     addImportsToProgram(program, externalFunctions);
   }
+  return {retryErrors};
 }
 
 function shouldSkipCompilation(
