@@ -24,6 +24,7 @@ import {
   pruneUnusedLabelsHIR,
 } from '../HIR';
 import {
+  CompilerMode,
   Environment,
   EnvironmentConfig,
   ReactFunctionType,
@@ -100,6 +101,7 @@ import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
 import {transformFire} from '../Transform';
 import {validateNoImpureFunctionsInRender} from '../Validation/ValiateNoImpureFunctionsInRender';
+import {CompilerError} from '..';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -113,6 +115,7 @@ function run(
   >,
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
+  mode: CompilerMode,
   useMemoCacheIdentifier: string,
   logger: Logger | null,
   filename: string | null,
@@ -122,6 +125,7 @@ function run(
   const env = new Environment(
     func.scope,
     fnType,
+    mode,
     config,
     contextIdentifiers,
     logger,
@@ -160,10 +164,10 @@ function runWithEnvironment(
   validateUseMemo(hir);
 
   if (
+    env.isInferredMemoEnabled &&
     !env.config.enablePreserveExistingManualUseMemo &&
     !env.config.disableMemoizationForDebugging &&
-    !env.config.enableChangeDetectionForDebugging &&
-    !env.config.enableMinimalTransformsForRetry
+    !env.config.enableChangeDetectionForDebugging
   ) {
     dropManualMemoization(hir);
     log({kind: 'hir', name: 'DropManualMemoization', value: hir});
@@ -196,17 +200,18 @@ function runWithEnvironment(
   inferTypes(hir);
   log({kind: 'hir', name: 'InferTypes', value: hir});
 
-  if (env.config.validateHooksUsage) {
-    validateHooksUsage(hir);
+  if (env.isInferredMemoEnabled) {
+    if (env.config.validateHooksUsage) {
+      validateHooksUsage(hir);
+    }
+    if (env.config.validateNoCapitalizedCalls) {
+      validateNoCapitalizedCalls(hir);
+    }
   }
 
   if (env.config.enableFire) {
     transformFire(hir);
     log({kind: 'hir', name: 'TransformFire', value: hir});
-  }
-
-  if (env.config.validateNoCapitalizedCalls) {
-    validateNoCapitalizedCalls(hir);
   }
 
   if (env.config.lowerContextAccess) {
@@ -219,7 +224,12 @@ function runWithEnvironment(
   analyseFunctions(hir);
   log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
 
-  inferReferenceEffects(hir);
+  const referenceEffectsResult = inferReferenceEffects(hir);
+  if (env.isInferredMemoEnabled) {
+    if (referenceEffectsResult.fnEffectErrors.length > 0) {
+      CompilerError.throw(referenceEffectsResult.fnEffectErrors[0]);
+    }
+  }
   log({kind: 'hir', name: 'InferReferenceEffects', value: hir});
 
   validateLocalsNotReassignedAfterRender(hir);
@@ -239,28 +249,30 @@ function runWithEnvironment(
   inferMutableRanges(hir);
   log({kind: 'hir', name: 'InferMutableRanges', value: hir});
 
-  if (env.config.assertValidMutableRanges) {
-    assertValidMutableRanges(hir);
-  }
+  if (env.isInferredMemoEnabled) {
+    if (env.config.assertValidMutableRanges) {
+      assertValidMutableRanges(hir);
+    }
 
-  if (env.config.validateRefAccessDuringRender) {
-    validateNoRefAccessInRender(hir);
-  }
+    if (env.config.validateRefAccessDuringRender) {
+      validateNoRefAccessInRender(hir);
+    }
 
-  if (env.config.validateNoSetStateInRender) {
-    validateNoSetStateInRender(hir);
-  }
+    if (env.config.validateNoSetStateInRender) {
+      validateNoSetStateInRender(hir);
+    }
 
-  if (env.config.validateNoSetStateInPassiveEffects) {
-    validateNoSetStateInPassiveEffects(hir);
-  }
+    if (env.config.validateNoSetStateInPassiveEffects) {
+      validateNoSetStateInPassiveEffects(hir);
+    }
 
-  if (env.config.validateNoJSXInTryStatements) {
-    validateNoJSXInTryStatement(hir);
-  }
+    if (env.config.validateNoJSXInTryStatements) {
+      validateNoJSXInTryStatement(hir);
+    }
 
-  if (env.config.validateNoImpureFunctionsInRender) {
-    validateNoImpureFunctionsInRender(hir);
+    if (env.config.validateNoImpureFunctionsInRender) {
+      validateNoImpureFunctionsInRender(hir);
+    }
   }
 
   inferReactivePlaces(hir);
@@ -280,7 +292,12 @@ function runWithEnvironment(
     value: hir,
   });
 
-  if (!env.config.enableMinimalTransformsForRetry) {
+  if (env.isInferredMemoEnabled) {
+    /**
+     * Only create reactive scopes (which directly map to generated memo blocks)
+     * if inferred memoization is enabled. This makes all later passes which
+     * transform reactive-scope labeled instructions no-ops.
+     */
     inferReactiveScopeVariables(hir);
     log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
   }
@@ -529,6 +546,7 @@ export function compileFn(
   >,
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
+  mode: CompilerMode,
   useMemoCacheIdentifier: string,
   logger: Logger | null,
   filename: string | null,
@@ -538,6 +556,7 @@ export function compileFn(
     func,
     config,
     fnType,
+    mode,
     useMemoCacheIdentifier,
     logger,
     filename,
