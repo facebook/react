@@ -107,9 +107,10 @@ jobs:
           mkdir ./compiled/facebook-www/__test_utils__
           mv build/__test_utils__/ReactAllWarnings.js ./compiled/facebook-www/__test_utils__/ReactAllWarnings.js
 
-          # Move eslint-plugin-react-hooks into facebook-www
+          # Move eslint-plugin-react-hooks into eslint-plugin-react-hooks
+          mkdir ./compiled/eslint-plugin-react-hooks
           mv build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
-            ./compiled/facebook-www/eslint-plugin-react-hooks.js
+            ./compiled/eslint-plugin-react-hooks/index.js
 
           # Move unstable_server-external-runtime.js into facebook-www
           mv build/oss-experimental/react-dom/unstable_server-external-runtime.js \
