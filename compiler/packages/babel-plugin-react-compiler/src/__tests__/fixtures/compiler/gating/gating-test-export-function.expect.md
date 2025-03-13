@@ -17,6 +17,11 @@ export function Foo(props) {
   return <Foo>{props.bar}</Foo>;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: eval('Bar'),
+  params: [{bar: 2}],
+};
+
 ```
 
 ## Code
@@ -66,5 +71,12 @@ export const Foo = isForgetEnabled_Fixtures()
       return <Foo>{props.bar}</Foo>;
     };
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: eval("Bar"),
+  params: [{ bar: 2 }],
+};
+
 ```
       
+### Eval output
+(kind: ok) <div>2</div>

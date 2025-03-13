@@ -11,5 +11,18 @@ function NoForget(props) {
 
 function Foo(props) {
   'use forget';
-  return <Foo>{props.bar}</Foo>;
+  if (props.bar < 0) {
+    return props.children;
+  }
+  return (
+    <Foo bar={props.bar - 1}>
+      <NoForget />
+    </Foo>
+  );
 }
+
+global.DEV = true;
+export const FIXTURE_ENTRYPOINT = {
+  fn: eval('Foo'),
+  params: [{bar: 2}],
+};

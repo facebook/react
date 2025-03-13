@@ -222,7 +222,6 @@ const skipFilter = new Set([
   'array-at-mutate-after-capture',
   'array-join',
   'array-push-effect',
-  'arrow-function-expr-gating-test',
   'assignment-in-nested-if',
   'await-side-effecting-promise',
   'await',
@@ -335,16 +334,10 @@ const skipFilter = new Set([
   'babel-existing-react-import',
   'babel-existing-react-kitchensink-import',
   'call',
-  'codegen-instrument-forget-gating-test',
   'codegen-instrument-forget-test',
   'conditional-on-mutable',
   'constructor',
   'frozen-after-alias',
-  'gating-test-export-default-function',
-  'gating-test-export-function-and-default',
-  'gating-test-export-function',
-  'gating-test',
-  'gating-with-hoisted-type-reference.flow',
   'hook-call',
   'hooks-freeze-arguments',
   'hooks-freeze-possibly-mutable-arguments',
@@ -352,8 +345,6 @@ const skipFilter = new Set([
   'independent',
   'interdependent-across-if',
   'interdependent',
-  'multi-arrow-expr-export-gating-test',
-  'multi-arrow-expr-gating-test',
   'mutable-liverange-loop',
   'sequence-expression',
   'ssa-call-jsx-2',
@@ -361,7 +352,6 @@ const skipFilter = new Set([
   'ssa-newexpression',
   'ssa-shadowing',
   'template-literal',
-  'multi-arrow-expr-export-default-gating-test',
 
   // works, but appears differently when printing
   // due to optional function argument
@@ -407,7 +397,6 @@ const skipFilter = new Set([
   'infer-functions-hook-with-hook-call',
   'infer-functions-hook-with-jsx',
   'infer-function-expression-component',
-  'infer-function-expression-React-memo-gating',
   'infer-skip-components-without-hooks-or-jsx',
   'class-component-with-render-helper',
   'fbt/fbtparam-with-jsx-element-content',
@@ -422,7 +411,7 @@ const skipFilter = new Set([
   'transitive-freeze-function-expressions',
 
   // nothing to compile/run
-  'repro-no-gating-import-without-compiled-functions',
+  'gating/repro-no-gating-import-without-compiled-functions',
 
   // TODOs
   'rules-of-hooks/todo.bail.rules-of-hooks-279ac76f53af',
