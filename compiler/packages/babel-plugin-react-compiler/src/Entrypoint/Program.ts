@@ -17,7 +17,6 @@ import {
   ExternalFunction,
   ReactFunctionType,
   MINIMAL_RETRY_CONFIG,
-  tryParseExternalFunction,
 } from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
 import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
@@ -541,30 +540,26 @@ export function compileProgram(
   if (moduleScopeOptOutDirectives.length > 0) {
     return;
   }
-
+  let gating: null | {
+    gatingFn: ExternalFunction;
+    referencedBeforeDeclared: Set<CompileResult>;
+  } = null;
   if (pass.opts.gating != null) {
-    const error = checkFunctionReferencedBeforeDeclarationAtTopLevel(
-      program,
-      compiledFns.map(result => {
-        return result.originalFn;
-      }),
-    );
-    if (error) {
-      handleError(error, pass, null);
-      return;
-    }
+    gating = {
+      gatingFn: pass.opts.gating,
+      referencedBeforeDeclared:
+        getFunctionReferencedBeforeDeclarationAtTopLevel(program, compiledFns),
+    };
   }
 
   const hasLoweredContextAccess = compiledFns.some(
     c => c.compiledFn.hasLoweredContextAccess,
   );
   const externalFunctions: Array<ExternalFunction> = [];
-  let gating: null | ExternalFunction = null;
   try {
     // TODO: check for duplicate import specifiers
-    if (pass.opts.gating != null) {
-      gating = tryParseExternalFunction(pass.opts.gating);
-      externalFunctions.push(gating);
+    if (gating != null) {
+      externalFunctions.push(gating.gatingFn);
     }
 
     const lowerContextAccess = environment.lowerContextAccess;
@@ -613,7 +608,12 @@ export function compileProgram(
     const transformedFn = createNewFunctionNode(originalFn, compiledFn);
 
     if (gating != null && kind === 'original') {
-      insertGatedFunctionDeclaration(originalFn, transformedFn, gating);
+      insertGatedFunctionDeclaration(
+        originalFn,
+        transformedFn,
+        gating.gatingFn,
+        gating.referencedBeforeDeclared.has(result),
+      );
     } else {
       originalFn.replaceWith(transformedFn);
     }
@@ -1093,20 +1093,23 @@ function getFunctionName(
   }
 }
 
-function checkFunctionReferencedBeforeDeclarationAtTopLevel(
+function getFunctionReferencedBeforeDeclarationAtTopLevel(
   program: NodePath<t.Program>,
-  fns: Array<BabelFn>,
-): CompilerError | null {
-  const fnIds = new Set(
+  fns: Array<CompileResult>,
+): Set<CompileResult> {
+  const fnNames = new Map<string, {id: t.Identifier; fn: CompileResult}>(
     fns
-      .map(fn => getFunctionName(fn))
+      .map<[NodePath<t.Expression> | null, CompileResult]>(fn => [
+        getFunctionName(fn.originalFn),
+        fn,
+      ])
       .filter(
-        (name): name is NodePath<t.Identifier> => !!name && name.isIdentifier(),
+        (entry): entry is [NodePath<t.Identifier>, CompileResult] =>
+          !!entry[0] && entry[0].isIdentifier(),
       )
-      .map(name => name.node),
+      .map(entry => [entry[0].node.name, {id: entry[0].node, fn: entry[1]}]),
   );
-  const fnNames = new Map([...fnIds].map(id => [id.name, id]));
-  const errors = new CompilerError();
+  const referencedBeforeDeclaration = new Set<CompileResult>();
 
   program.traverse({
     TypeAnnotation(path) {
@@ -1132,8 +1135,7 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
        * We've reached the declaration, hoisting is no longer possible, stop
        * checking for this component name.
        */
-      if (fnIds.has(id.node)) {
-        fnIds.delete(id.node);
+      if (id.node === fn.id) {
         fnNames.delete(id.node.name);
         return;
       }
@@ -1144,20 +1146,12 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
        * top level scope.
        */
       if (scope === null && id.isReferencedIdentifier()) {
-        errors.pushErrorDetail(
-          new CompilerErrorDetail({
-            reason: `Encountered a function used before its declaration, which breaks Forget's gating codegen due to hoisting`,
-            description: `Rewrite the reference to ${fn.name} to not rely on hoisting to fix this issue`,
-            loc: fn.loc ?? null,
-            suggestions: null,
-            severity: ErrorSeverity.Invariant,
-          }),
-        );
+        referencedBeforeDeclaration.add(fn.fn);
       }
     },
   });
 
-  return errors.details.length > 0 ? errors : null;
+  return referencedBeforeDeclaration;
 }
 
 function getReactCompilerRuntimeModule(opts: PluginOptions): string {
