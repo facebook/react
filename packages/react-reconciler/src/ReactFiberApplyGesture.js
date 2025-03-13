@@ -271,6 +271,59 @@ function applyExitViewTransition(placement: Fiber): void {
   }
 }
 
+function applyNestedViewTransition(child: Fiber): void {
+  const state: ViewTransitionState = child.stateNode;
+  const props: ViewTransitionProps = child.memoizedProps;
+  const name = getViewTransitionName(props, state);
+  const className: ?string = getViewTransitionClassName(
+    props.className,
+    props.layout,
+  );
+  if (className !== 'none') {
+    const clones = state.clones;
+    // If there are no clones at this point, that should mean that there are no
+    // HostComponent children in this ViewTransition.
+    if (clones !== null) {
+      applyViewTransitionToClones(name, className, clones);
+    }
+  }
+}
+
+function applyUpdateViewTransition(current: Fiber, finishedWork: Fiber): void {
+  const state: ViewTransitionState = finishedWork.stateNode;
+  // Updates can have conflicting names and classNames.
+  // Since we're doing a reverse animation the "new" state is actually the current
+  // and the "old" state is the finishedWork.
+  const newProps: ViewTransitionProps = current.memoizedProps;
+  const oldProps: ViewTransitionProps = finishedWork.memoizedProps;
+  const oldName = getViewTransitionName(oldProps, state);
+  // This className applies only if there are fewer child DOM nodes than
+  // before or if this update should've been cancelled but we ended up with
+  // a parent animating so we need to animate the child too. Otherwise
+  // the "new" state wins. Since "new" normally wins, that's usually what
+  // we would use. However, since this animation is going in reverse we actually
+  // want the props from "current" since that's the class that would've won if
+  // it was the normal direction. To preserve the same effect in either direction.
+  let className: ?string = getViewTransitionClassName(
+    newProps.className,
+    newProps.update,
+  );
+  if (className === 'none') {
+    className = getViewTransitionClassName(newProps.className, newProps.layout);
+    if (className === 'none') {
+      // If both update and layout are both "none" then we don't have to
+      // apply a name. Since we won't animate this boundary.
+      return;
+    }
+  }
+  const clones = state.clones;
+  // If there are no clones at this point, that should mean that there are no
+  // HostComponent children in this ViewTransition.
+  if (clones !== null) {
+    applyViewTransitionToClones(oldName, className, clones);
+  }
+}
+
 function recursivelyInsertNew(
   parentFiber: Fiber,
   hostParentClone: Instance,
@@ -577,6 +630,8 @@ function recursivelyInsertClonesFromExistingTree(
           visitPhase === CLONE_UNHIDE
         ) {
           applyAppearingPairViewTransition(child);
+        } else if (visitPhase === CLONE_UPDATE) {
+          applyNestedViewTransition(child);
         }
         popMutationContext(prevMutationContext);
         break;
@@ -848,6 +903,8 @@ function insertDestinationClonesOfFiber(
         visitPhase === CLONE_UNHIDE
       ) {
         applyAppearingPairViewTransition(finishedWork);
+      } else if (visitPhase === CLONE_UPDATE) {
+        applyUpdateViewTransition(current, finishedWork);
       }
       popMutationContext(prevMutationContext);
       break;
