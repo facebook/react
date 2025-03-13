@@ -28,7 +28,7 @@ import { c as _c } from "react/compiler-runtime"; // @enableEmitInstrumentForget
 
 function Bar(props) {
   "use forget";
-  if (__DEV__ && shouldInstrument)
+  if (DEV && shouldInstrument)
     useRenderCounter("Bar", "/codegen-instrument-forget-test.ts");
   const $ = _c(2);
   let t0;
@@ -48,7 +48,7 @@ function NoForget(props) {
 
 function Foo(props) {
   "use forget";
-  if (__DEV__ && shouldInstrument)
+  if (DEV && shouldInstrument)
     useRenderCounter("Foo", "/codegen-instrument-forget-test.ts");
   const $ = _c(2);
   let t0;

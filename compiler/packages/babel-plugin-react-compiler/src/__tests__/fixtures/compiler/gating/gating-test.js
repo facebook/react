@@ -1,5 +1,5 @@
 // @gating @compilationMode(annotation)
-export default function Bar(props) {
+function Bar(props) {
   'use forget';
   return <div>{props.bar}</div>;
 }
@@ -12,3 +12,8 @@ function Foo(props) {
   'use forget';
   return <Foo>{props.bar}</Foo>;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: eval('Bar'),
+  params: [{bar: 2}],
+};
