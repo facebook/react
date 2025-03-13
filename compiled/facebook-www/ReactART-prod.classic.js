@@ -17,24 +17,33 @@ var React = require("react"),
   Scheduler = require("scheduler"),
   FastNoSideEffects = require("art/modes/fast-noSideEffects");
 function _extends() {
-  _extends =
-    Object.assign ||
-    function (target) {
-      for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i],
-          key;
-        for (key in source)
-          Object.prototype.hasOwnProperty.call(source, key) &&
-            (target[key] = source[key]);
-      }
-      return target;
-    };
+  _extends = Object.assign
+    ? Object.assign.bind()
+    : function (target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i],
+            key;
+          for (key in source)
+            Object.prototype.hasOwnProperty.call(source, key) &&
+              (target[key] = source[key]);
+        }
+        return target;
+      };
   return _extends.apply(this, arguments);
 }
 function _inheritsLoose(subClass, superClass) {
   subClass.prototype = Object.create(superClass.prototype);
   subClass.prototype.constructor = subClass;
-  subClass.__proto__ = superClass;
+  _setPrototypeOf(subClass, superClass);
+}
+function _setPrototypeOf(o, p) {
+  _setPrototypeOf = Object.setPrototypeOf
+    ? Object.setPrototypeOf.bind()
+    : function (o, p) {
+        o.__proto__ = p;
+        return o;
+      };
+  return _setPrototypeOf(o, p);
 }
 var assign = Object.assign;
 function formatProdErrorMessage(code) {
@@ -11332,10 +11341,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1587 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-f695f952-20250312",
+  version: "19.1.0-www-classic-5ccfcd17-20250312",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-f695f952-20250312"
+  reconcilerVersion: "19.1.0-www-classic-5ccfcd17-20250312"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1588 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11361,4 +11370,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-f695f952-20250312";
+exports.version = "19.1.0-www-classic-5ccfcd17-20250312";

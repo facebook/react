@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1139() {
+    function JSCompiler_object_inline_createNodeMock_1143() {
       return null;
     }
     function findHook(fiber, id) {
@@ -123,12 +123,34 @@ __DEV__ &&
         descriptor.enumerable = descriptor.enumerable || !1;
         descriptor.configurable = !0;
         "value" in descriptor && (descriptor.writable = !0);
-        Object.defineProperty(target, descriptor.key, descriptor);
+        var JSCompiler_temp_const = Object,
+          JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const.defineProperty;
+        a: {
+          var i$jscomp$0 = descriptor.key;
+          if ("object" == typeof i$jscomp$0 && i$jscomp$0) {
+            var e = i$jscomp$0[Symbol.toPrimitive];
+            if (void 0 !== e) {
+              i$jscomp$0 = e.call(i$jscomp$0, "string");
+              if ("object" != typeof i$jscomp$0) break a;
+              throw new TypeError(
+                "@@toPrimitive must return a primitive value."
+              );
+            }
+            i$jscomp$0 = String(i$jscomp$0);
+          }
+        }
+        JSCompiler_temp_const$jscomp$0.call(
+          JSCompiler_temp_const,
+          target,
+          "symbol" == typeof i$jscomp$0 ? i$jscomp$0 : i$jscomp$0 + "",
+          descriptor
+        );
       }
     }
     function _createClass(Constructor, protoProps, staticProps) {
       protoProps && _defineProperties(Constructor.prototype, protoProps);
       staticProps && _defineProperties(Constructor, staticProps);
+      Object.defineProperty(Constructor, "prototype", { writable: !1 });
       return Constructor;
     }
     function getNearestMountedFiber(fiber) {
@@ -12884,23 +12906,20 @@ __DEV__ &&
           var excluded = ["children"];
           if (null == props) props = {};
           else {
-            var target = {},
-              sourceKeys = Object.keys(props),
-              i;
-            for (i = 0; i < sourceKeys.length; i++) {
-              var key = sourceKeys[i];
-              0 <= excluded.indexOf(key) || (target[key] = props[key]);
-            }
+            var target = {};
+            for (key in props)
+              !Object.prototype.hasOwnProperty.call(props, key) ||
+                0 <= excluded.indexOf(key) ||
+                (target[key] = props[key]);
             props = target;
           }
           excluded = null;
           if (inst.children && inst.children.length)
-            for (target = 0; target < inst.children.length; target++)
-              (sourceKeys = toJSON(inst.children[target])),
-                null !== sourceKeys &&
-                  (null === excluded
-                    ? (excluded = [sourceKeys])
-                    : excluded.push(sourceKeys));
+            for (target = 0; target < inst.children.length; target++) {
+              var key = toJSON(inst.children[target]);
+              null !== key &&
+                (null === excluded ? (excluded = [key]) : excluded.push(key));
+            }
           inst = { type: inst.type, props: props, children: excluded };
           Object.defineProperty(inst, "$$typeof", {
             value: Symbol.for("react.test.json")
@@ -15057,10 +15076,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-f695f952-20250312",
+        version: "19.1.0-www-classic-5ccfcd17-20250312",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-f695f952-20250312"
+        reconcilerVersion: "19.1.0-www-classic-5ccfcd17-20250312"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15080,7 +15099,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1139,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1143,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15195,5 +15214,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-classic-f695f952-20250312";
+    exports.version = "19.1.0-www-classic-5ccfcd17-20250312";
   })();
