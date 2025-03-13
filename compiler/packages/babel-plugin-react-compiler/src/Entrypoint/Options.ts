@@ -12,6 +12,7 @@ import {
   EnvironmentConfig,
   ExternalFunction,
   parseEnvironmentConfig,
+  tryParseExternalFunction,
 } from '../HIR/Environment';
 import {hasOwnProperty} from '../Utils/utils';
 import {fromZodError} from 'zod-validation-error';
@@ -269,6 +270,14 @@ export function parsePluginOptions(obj: unknown): PluginOptions {
         }
         case 'target': {
           parsedOptions[key] = parseTargetConfig(value);
+          break;
+        }
+        case 'gating': {
+          if (value == null) {
+            parsedOptions[key] = null;
+          } else {
+            parsedOptions[key] = tryParseExternalFunction(value);
+          }
           break;
         }
         default: {
