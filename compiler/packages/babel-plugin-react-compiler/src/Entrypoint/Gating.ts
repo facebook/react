@@ -22,12 +22,59 @@ export function insertGatedFunctionDeclaration(
   referencedBeforeDeclaration: boolean,
 ): void {
   if (referencedBeforeDeclaration && fnPath.isFunctionDeclaration()) {
-    CompilerError.throwTodo({
-      reason: `Encountered a function used before its declaration, which breaks Forget's gating codegen due to hoisting`,
-      description: `Rewrite the reference to ${fnPath.node.id?.name ?? 'this function'} to not rely on hoisting to fix this issue`,
+    CompilerError.invariant(compiled.type === 'FunctionDeclaration', {
+      reason: 'Expected compiled node type to match input type',
+      description: `Got ${compiled.type} but expected FunctionDeclaration`,
       loc: fnPath.node.loc ?? null,
-      suggestions: null,
     });
+    CompilerError.invariant(fnPath.node.id != null && compiled.id != null, {
+      reason:
+        'Function declarations that are referenced elsewhere must have an id',
+      loc: fnPath.node.loc ?? null,
+    });
+
+    const gatingCondition = fnPath.scope.generateUidIdentifier(
+      `_${gating.importSpecifierName}_result`,
+    );
+    const originalFnName = fnPath.node.id;
+    const unoptimizedFnName = fnPath.scope.generateUidIdentifier(
+      `${fnPath.node.id.name}_unoptimized`,
+    );
+    const optimizedFnName = fnPath.scope.generateUidIdentifier(
+      `${fnPath.node.id.name}_optimized`,
+    );
+    compiled.id.name = optimizedFnName.name;
+    fnPath.get('id').replaceInline(unoptimizedFnName);
+    fnPath.insertAfter(
+      t.functionDeclaration(
+        originalFnName,
+        [t.restElement(t.identifier('args'))],
+        t.blockStatement([
+          t.ifStatement(
+            gatingCondition,
+            t.returnStatement(
+              t.callExpression(compiled.id, [
+                t.spreadElement(t.identifier('args')),
+              ]),
+            ),
+            t.returnStatement(
+              t.callExpression(unoptimizedFnName, [
+                t.spreadElement(t.identifier('args')),
+              ]),
+            ),
+          ),
+        ]),
+      ),
+    );
+    fnPath.insertBefore(
+      t.variableDeclaration('const', [
+        t.variableDeclarator(
+          gatingCondition,
+          t.callExpression(t.identifier(gating.importSpecifierName), []),
+        ),
+      ]),
+    );
+    fnPath.insertBefore(compiled);
   } else {
     const gatingExpression = t.conditionalExpression(
       t.callExpression(t.identifier(gating.importSpecifierName), []),
