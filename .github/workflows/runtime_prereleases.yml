@@ -34,13 +34,13 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: '**/yarn.lock'
+          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
         with:
           path: "**/node_modules"
-          key: runtime-release-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: runtime-release-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
