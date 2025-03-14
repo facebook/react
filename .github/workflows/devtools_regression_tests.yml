@@ -29,8 +29,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-release-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-release-node_modules-v4-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -63,8 +64,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v4-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -120,8 +122,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v4-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
@@ -154,8 +157,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v4-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
