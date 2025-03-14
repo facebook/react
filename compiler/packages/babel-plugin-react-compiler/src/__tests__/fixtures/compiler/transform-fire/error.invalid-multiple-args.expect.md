@@ -10,7 +10,7 @@ function Component({bar, baz}) {
     console.log(bar, baz);
   };
   useEffect(() => {
-    fire(foo(bar), baz);
+    fire(foo(bar), baz)();
   });
 
   return null;
@@ -24,8 +24,8 @@ function Component({bar, baz}) {
 ```
    7 |   };
    8 |   useEffect(() => {
->  9 |     fire(foo(bar), baz);
-     |     ^^^^^^^^^^^^^^^^^^^ InvalidReact: Cannot compile `fire`. fire() can only take in a single call expression as an argument but received multiple arguments (9:9)
+>  9 |     fire(foo(bar), baz)();
+     |     ^^^^^^^^^^^^^^^^^^^ InvalidReact: Cannot compile `fire`. fire() can only take in a single identifier as an argument but received multiple arguments (9:9)
   10 |   });
   11 |
   12 |   return null;

@@ -6,7 +6,7 @@ function Component({prop1}) {
     console.log(prop1);
   };
   useEffect(() => {
-    fire(foo(prop1));
+    fire(foo)(prop1);
   });
   prop1.value += 1;
 }

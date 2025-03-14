@@ -5,10 +5,10 @@ function Component({props, bar}) {
   const foo = () => {
     console.log(props);
   };
-  fire(foo(props));
+  fire(foo)(props);
 
   useCallback(() => {
-    fire(foo(props));
+    fire(foo)(props);
   }, [foo, props]);
 
   return null;
