@@ -45,6 +45,12 @@ function drawNative(nodeToData: Map<HostInstance, Data>, agent: Agent) {
 function drawWeb(nodeToData: Map<HostInstance, Data>) {
   if (canvas === null) {
     initialize();
+  } else {
+    try {
+      if (canvas.hasAttribute('popover') && !canvas.matches(':popover-open')) {
+        canvas.showPopover();
+      }
+    } catch (e) {}
   }
 
   const dpr = window.devicePixelRatio || 1;
@@ -191,6 +197,12 @@ function destroyNative(agent: Agent) {
 
 function destroyWeb() {
   if (canvas !== null) {
+    try {
+      if (canvas.hasAttribute('popover')) {
+        canvas.hidePopover();
+      }
+    } catch (e) {}
+
     if (canvas.parentNode != null) {
       canvas.parentNode.removeChild(canvas);
     }
@@ -204,6 +216,7 @@ export function destroy(agent: Agent): void {
 
 function initialize(): void {
   canvas = window.document.createElement('canvas');
+  canvas.setAttribute('popover', 'auto');
   canvas.style.cssText = `
     xx-background-color: red;
     xx-opacity: 0.5;
@@ -214,8 +227,13 @@ function initialize(): void {
     right: 0;
     top: 0;
     z-index: 1000000000;
+    background-color: transparent;
   `;
 
   const root = window.document.documentElement;
   root.insertBefore(canvas, root.firstChild);
+
+  try {
+    canvas.showPopover();
+  } catch (e) {}
 }
