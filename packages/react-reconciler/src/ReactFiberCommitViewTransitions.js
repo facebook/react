@@ -257,7 +257,10 @@ function commitAppearingPairViewTransitions(placement: Fiber): void {
   }
 }
 
-export function commitEnterViewTransitions(placement: Fiber): void {
+export function commitEnterViewTransitions(
+  placement: Fiber,
+  gesture: boolean,
+): void {
   if (placement.tag === ViewTransitionComponent) {
     const state: ViewTransitionState = placement.stateNode;
     const props: ViewTransitionProps = placement.memoizedProps;
@@ -284,7 +287,11 @@ export function commitEnterViewTransitions(placement: Fiber): void {
         commitAppearingPairViewTransitions(placement);
 
         if (!state.paired) {
-          scheduleViewTransitionEvent(placement, props.onEnter);
+          if (gesture) {
+            // TODO: Schedule gesture events.
+          } else {
+            scheduleViewTransitionEvent(placement, props.onEnter);
+          }
         }
       }
     } else {
@@ -293,7 +300,7 @@ export function commitEnterViewTransitions(placement: Fiber): void {
   } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = placement.child;
     while (child !== null) {
-      commitEnterViewTransitions(child);
+      commitEnterViewTransitions(child, gesture);
       child = child.sibling;
     }
   } else {
