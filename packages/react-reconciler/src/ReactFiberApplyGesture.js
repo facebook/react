@@ -767,7 +767,7 @@ function applyEnterViewTransitions(deletion: Fiber): void {
   }
 }
 
-function measureEnterViewTransitions(placement: Fiber): void {
+function measureExitViewTransitions(placement: Fiber): void {
   if (placement.tag === ViewTransitionComponent) {
     // const state: ViewTransitionState = placement.stateNode;
     const props: ViewTransitionProps = placement.memoizedProps;
@@ -779,7 +779,7 @@ function measureEnterViewTransitions(placement: Fiber): void {
     // TODO: Check if this is a hidden Offscreen or a Portal.
     let child = placement.child;
     while (child !== null) {
-      measureEnterViewTransitions(child);
+      measureExitViewTransitions(child);
       child = child.sibling;
     }
   } else {
@@ -804,6 +804,13 @@ function measureNestedViewTransitions(changedParent: Fiber): void {
     }
     child = child.sibling;
   }
+}
+
+function measureUpdateViewTransition(
+  current: Fiber,
+  finishedWork: Fiber,
+): void {
+  // TODO
 }
 
 function recursivelyApplyViewTransitions(parentFiber: Fiber) {
@@ -836,7 +843,7 @@ function recursivelyApplyViewTransitions(parentFiber: Fiber) {
 function applyViewTransitionsOnFiber(finishedWork: Fiber) {
   const current = finishedWork.alternate;
   if (current === null) {
-    measureEnterViewTransitions(finishedWork);
+    measureExitViewTransitions(finishedWork);
     return;
   }
 
@@ -863,7 +870,7 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber) {
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
         if (!isHidden) {
-          measureEnterViewTransitions(finishedWork);
+          measureExitViewTransitions(finishedWork);
         } else if (current !== null && current.memoizedState === null) {
           // Was previously mounted as visible but is now hidden.
           applyEnterViewTransitions(current);
@@ -872,6 +879,7 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber) {
       break;
     }
     case ViewTransitionComponent:
+      measureUpdateViewTransition(current, finishedWork);
       const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
       viewTransitionState.clones = null; // Reset
       recursivelyApplyViewTransitions(finishedWork);
