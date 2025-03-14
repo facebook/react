@@ -11,5 +11,4 @@ if [[ "$REACT_CLASS_EQUIVALENCE_TEST" == "true" ]]; then
 fi
 
 echo "Building babel-plugin-react-compiler..."
-yarn --cwd compiler install --frozen-lockfile
 yarn --cwd compiler workspace babel-plugin-react-compiler build --dts
