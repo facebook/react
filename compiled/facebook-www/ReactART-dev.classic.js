@@ -10673,7 +10673,9 @@ __DEV__ &&
                         null,
                         !1
                       ) &&
-                      ((pair.paired = deletion.stateNode),
+                      ((className = deletion.stateNode),
+                      (pair.paired = className),
+                      (className.paired = pair),
                       scheduleViewTransitionEvent(deletion, props.onShare));
                     pairs.delete(name);
                     if (0 === pairs.size) break;
@@ -10707,7 +10709,9 @@ __DEV__ &&
             !1
           ) &&
           (void 0 !== pair
-            ? ((pair.paired = deletion.stateNode),
+            ? ((className = deletion.stateNode),
+              (pair.paired = className),
+              (className.paired = pair),
               appearingViewTransitions.delete(name),
               scheduleViewTransitionEvent(deletion, props.onShare))
             : scheduleViewTransitionEvent(deletion, props.onExit));
@@ -18503,10 +18507,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-c4a3b92e-20250314",
+        version: "19.1.0-www-classic-2e385738-20250314",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-c4a3b92e-20250314"
+        reconcilerVersion: "19.1.0-www-classic-2e385738-20250314"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18540,7 +18544,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-classic-c4a3b92e-20250314";
+    exports.version = "19.1.0-www-classic-2e385738-20250314";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

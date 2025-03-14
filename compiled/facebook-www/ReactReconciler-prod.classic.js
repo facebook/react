@@ -8027,7 +8027,9 @@ module.exports = function ($$$config) {
                       null,
                       !1
                     )
-                      ? ((pair.paired = deletion.stateNode),
+                      ? ((className = deletion.stateNode),
+                        (pair.paired = className),
+                        (className.paired = pair),
                         scheduleViewTransitionEvent(deletion, props.onShare))
                       : restoreViewTransitionOnHostInstances(
                           deletion.child,
@@ -8065,7 +8067,9 @@ module.exports = function ($$$config) {
           !1
         )
           ? void 0 !== pair
-            ? ((pair.paired = deletion.stateNode),
+            ? ((className = deletion.stateNode),
+              (pair.paired = className),
+              (className.paired = pair),
               appearingViewTransitions.delete(name),
               scheduleViewTransitionEvent(deletion, props.onShare))
             : scheduleViewTransitionEvent(deletion, props.onExit)
@@ -13901,7 +13905,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-c4a3b92e-20250314"
+      reconcilerVersion: "19.1.0-www-classic-2e385738-20250314"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

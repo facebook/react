@@ -9687,7 +9687,9 @@ function commitDeletedPairViewTransitions(deletion) {
                     null,
                     !1
                   )
-                    ? ((pair.paired = deletion.stateNode),
+                    ? ((className = deletion.stateNode),
+                      (pair.paired = className),
+                      (className.paired = pair),
                       scheduleViewTransitionEvent(deletion, props.onShare))
                     : restoreViewTransitionOnHostInstances(deletion.child, !1));
                 pairs.delete(name);
@@ -9722,7 +9724,9 @@ function commitExitViewTransitions(deletion) {
         !1
       )
         ? void 0 !== pair
-          ? ((pair.paired = deletion.stateNode),
+          ? ((className = deletion.stateNode),
+            (pair.paired = className),
+            (className.paired = pair),
             appearingViewTransitions.delete(name),
             scheduleViewTransitionEvent(deletion, props.onShare))
           : scheduleViewTransitionEvent(deletion, props.onExit)
@@ -20417,14 +20421,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2047 = React.version;
 if (
-  "19.1.0-www-modern-c4a3b92e-20250314" !==
+  "19.1.0-www-modern-2e385738-20250314" !==
   isomorphicReactPackageVersion$jscomp$inline_2047
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2047,
-      "19.1.0-www-modern-c4a3b92e-20250314"
+      "19.1.0-www-modern-2e385738-20250314"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20442,10 +20446,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2049 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-c4a3b92e-20250314",
+  version: "19.1.0-www-modern-2e385738-20250314",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-c4a3b92e-20250314"
+  reconcilerVersion: "19.1.0-www-modern-2e385738-20250314"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2049.getLaneLabelMap = getLaneLabelMap),
@@ -20812,7 +20816,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-c4a3b92e-20250314";
+exports.version = "19.1.0-www-modern-2e385738-20250314";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

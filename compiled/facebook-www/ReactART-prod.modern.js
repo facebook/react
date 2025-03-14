@@ -7150,7 +7150,9 @@ function commitDeletedPairViewTransitions(deletion) {
                     null,
                     !1
                   ) &&
-                  ((pair.paired = deletion.stateNode),
+                  ((className = deletion.stateNode),
+                  (pair.paired = className),
+                  (className.paired = pair),
                   scheduleViewTransitionEvent(deletion, props.onShare));
                 pairs.delete(name);
                 if (0 === pairs.size) break;
@@ -7184,7 +7186,9 @@ function commitExitViewTransitions(deletion) {
         !1
       ) &&
       (void 0 !== pair
-        ? ((pair.paired = deletion.stateNode),
+        ? ((className = deletion.stateNode),
+          (pair.paired = className),
+          (className.paired = pair),
           appearingViewTransitions.delete(name),
           scheduleViewTransitionEvent(deletion, props.onShare))
         : scheduleViewTransitionEvent(deletion, props.onExit));
@@ -11017,10 +11021,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1535 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-c4a3b92e-20250314",
+  version: "19.1.0-www-modern-2e385738-20250314",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-c4a3b92e-20250314"
+  reconcilerVersion: "19.1.0-www-modern-2e385738-20250314"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1536 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11046,4 +11050,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-c4a3b92e-20250314";
+exports.version = "19.1.0-www-modern-2e385738-20250314";
