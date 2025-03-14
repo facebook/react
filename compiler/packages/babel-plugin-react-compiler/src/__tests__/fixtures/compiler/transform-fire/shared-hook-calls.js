@@ -6,12 +6,12 @@ function Component({bar, baz}) {
     console.log(bar);
   };
   useEffect(() => {
-    fire(foo(bar));
-    fire(baz(bar));
+    fire(foo)(bar);
+    fire(baz)(bar);
   });
 
   useEffect(() => {
-    fire(foo(bar));
+    fire(foo)(bar);
   });
 
   return null;

@@ -6,11 +6,11 @@ function Component(props) {
     console.log(props);
   };
   useEffect(() => {
-    fire(foo(props));
+    fire(foo)(props);
     function nested() {
-      fire(foo(props));
+      fire(foo)(props);
       function innerNested() {
-        fire(foo(props));
+        fire(foo)(props);
       }
     }
 

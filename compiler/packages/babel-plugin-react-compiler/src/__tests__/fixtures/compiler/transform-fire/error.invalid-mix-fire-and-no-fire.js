@@ -7,7 +7,7 @@ function Component(props) {
   };
   useEffect(() => {
     function nested() {
-      fire(foo(props));
+      fire(foo)(props);
       foo(props);
     }
 

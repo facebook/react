@@ -15,6 +15,6 @@ function Component({prop1}) {
     }
   };
   useEffect(() => {
-    fire(foo());
+    fire(foo)();
   });
 }
