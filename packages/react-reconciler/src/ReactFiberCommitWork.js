@@ -2528,7 +2528,11 @@ function commitAfterMutationEffectsOnFiber(
         finishedWork.flags |= Update;
       }
 
-      const inViewport = measureUpdateViewTransition(current, finishedWork);
+      const inViewport = measureUpdateViewTransition(
+        current,
+        finishedWork,
+        false,
+      );
 
       if ((finishedWork.flags & Update) === NoFlags || !inViewport) {
         // If this boundary didn't update, then we may be able to cancel its children.
