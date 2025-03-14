@@ -36,7 +36,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: npx playwright install --with-deps chromium

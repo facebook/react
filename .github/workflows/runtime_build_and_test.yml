@@ -55,7 +55,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -79,7 +80,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -107,7 +109,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -162,7 +165,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -198,7 +202,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -274,7 +279,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -308,7 +314,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -357,7 +364,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -394,7 +402,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -428,7 +437,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: fixtures_dom-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('fixtures/dom/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -471,7 +481,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: fixtures_flight-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -535,7 +546,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -588,7 +600,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -627,7 +640,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build

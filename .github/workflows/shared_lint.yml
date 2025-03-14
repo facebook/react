@@ -28,7 +28,8 @@ jobs:
       - name: Restore cached node_modules
         uses: actions/cache@v4
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -48,7 +49,8 @@ jobs:
       - name: Restore cached node_modules
         uses: actions/cache@v4
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -68,7 +70,8 @@ jobs:
       - name: Restore cached node_modules
         uses: actions/cache@v4
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
@@ -88,7 +91,8 @@ jobs:
       - name: Restore cached node_modules
         uses: actions/cache@v4
         with:
-          path: "**/node_modules"
+          path: |
+            **/node_modules
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
