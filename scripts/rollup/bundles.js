@@ -1191,7 +1191,7 @@ const bundles = [
     name: 'eslint-plugin-react-hooks',
     bundleTypes: [NODE_DEV, NODE_PROD, CJS_DTS],
     moduleType: ISOMORPHIC,
-    entry: 'eslint-plugin-react-hooks/src/index.ts',
+    entry: './compiler/packages/eslint-plugin-react-hooks/src/index.ts',
     global: 'ESLintPluginReactHooks',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
