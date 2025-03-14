@@ -13585,7 +13585,7 @@ __DEV__ &&
           placement = placement.sibling;
         }
     }
-    function commitEnterViewTransitions(placement) {
+    function commitEnterViewTransitions(placement, gesture) {
       if (30 === placement.tag) {
         var state = placement.stateNode,
           props = placement.memoizedProps,
@@ -13604,12 +13604,13 @@ __DEV__ &&
             )
             ? (commitAppearingPairViewTransitions(placement),
               state.paired ||
+                gesture ||
                 scheduleViewTransitionEvent(placement, props.onEnter))
             : restoreViewTransitionOnHostInstances(placement.child, !1)
           : commitAppearingPairViewTransitions(placement);
       } else if (0 !== (placement.subtreeFlags & 33554432))
         for (placement = placement.child; null !== placement; )
-          commitEnterViewTransitions(placement),
+          commitEnterViewTransitions(placement, gesture),
             (placement = placement.sibling);
       else commitAppearingPairViewTransitions(placement);
     }
@@ -13859,22 +13860,27 @@ __DEV__ &&
       }
       return inViewport;
     }
-    function measureNestedViewTransitions(changedParent) {
+    function measureNestedViewTransitions(changedParent, gesture) {
       for (changedParent = changedParent.child; null !== changedParent; ) {
         if (30 === changedParent.tag) {
           var props = changedParent.memoizedProps,
-            name = getViewTransitionName(props, changedParent.stateNode),
+            state = changedParent.stateNode,
+            name = getViewTransitionName(props, state),
             className = getViewTransitionClassName(
               props.className,
               props.layout
             );
-          var inViewport = changedParent;
+          if (gesture) {
+            state = state.clones;
+            var previousMeasurements =
+              null === state ? null : state.map(measureInstance);
+          } else previousMeasurements = changedParent.memoizedState;
+          state = changedParent;
           var child = changedParent.child,
-            newName = name,
-            previousMeasurements = changedParent.memoizedState;
+            newName = name;
           viewTransitionHostInstanceIdx = 0;
-          inViewport = measureViewTransitionHostInstancesRecursive(
-            inViewport,
+          className = measureViewTransitionHostInstancesRecursive(
+            state,
             child,
             newName,
             name,
@@ -13883,11 +13889,12 @@ __DEV__ &&
             !1
           );
           0 !== (changedParent.flags & 4) &&
-            inViewport &&
-            scheduleViewTransitionEvent(changedParent, props.onLayout);
+            className &&
+            (gesture ||
+              scheduleViewTransitionEvent(changedParent, props.onLayout));
         } else
           0 !== (changedParent.subtreeFlags & 33554432) &&
-            measureNestedViewTransitions(changedParent);
+            measureNestedViewTransitions(changedParent, gesture);
         changedParent = changedParent.sibling;
       }
     }
@@ -15503,11 +15510,11 @@ __DEV__ &&
         for (parentFiber = parentFiber.child; null !== parentFiber; )
           commitAfterMutationEffectsOnFiber(parentFiber, root),
             (parentFiber = parentFiber.sibling);
-      else measureNestedViewTransitions(parentFiber);
+      else measureNestedViewTransitions(parentFiber, !1);
     }
     function commitAfterMutationEffectsOnFiber(finishedWork, root) {
       var current = finishedWork.alternate;
-      if (null === current) commitEnterViewTransitions(finishedWork);
+      if (null === current) commitEnterViewTransitions(finishedWork, !1);
       else
         switch (finishedWork.tag) {
           case 3:
@@ -15566,7 +15573,7 @@ __DEV__ &&
           case 22:
             null === finishedWork.memoizedState &&
               (null !== current.memoizedState
-                ? commitEnterViewTransitions(finishedWork)
+                ? commitEnterViewTransitions(finishedWork, !1)
                 : recursivelyTraverseAfterMutationEffects(root, finishedWork));
             break;
           case 30:
@@ -30148,11 +30155,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-classic-2e385738-20250314" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-classic-2c560374-20250314" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-classic-2e385738-20250314\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-classic-2c560374-20250314\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30195,10 +30202,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-classic-2e385738-20250314",
+          version: "19.1.0-www-classic-2c560374-20250314",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-classic-2e385738-20250314"
+          reconcilerVersion: "19.1.0-www-classic-2c560374-20250314"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30796,7 +30803,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-classic-2e385738-20250314";
+    exports.version = "19.1.0-www-classic-2c560374-20250314";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

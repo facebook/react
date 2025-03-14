@@ -9634,7 +9634,7 @@ function commitAppearingPairViewTransitions(placement) {
       placement = placement.sibling;
     }
 }
-function commitEnterViewTransitions(placement) {
+function commitEnterViewTransitions(placement, gesture) {
   if (30 === placement.tag) {
     var state = placement.stateNode,
       props = placement.memoizedProps,
@@ -9652,12 +9652,15 @@ function commitEnterViewTransitions(placement) {
           !1
         )
         ? (commitAppearingPairViewTransitions(placement),
-          state.paired || scheduleViewTransitionEvent(placement, props.onEnter))
+          state.paired ||
+            gesture ||
+            scheduleViewTransitionEvent(placement, props.onEnter))
         : restoreViewTransitionOnHostInstances(placement.child, !1)
       : commitAppearingPairViewTransitions(placement);
   } else if (0 !== (placement.subtreeFlags & 33554432))
     for (placement = placement.child; null !== placement; )
-      commitEnterViewTransitions(placement), (placement = placement.sibling);
+      commitEnterViewTransitions(placement, gesture),
+        (placement = placement.sibling);
   else commitAppearingPairViewTransitions(placement);
 }
 function commitDeletedPairViewTransitions(deletion) {
@@ -9901,18 +9904,23 @@ function measureViewTransitionHostInstancesRecursive(
   }
   return inViewport;
 }
-function measureNestedViewTransitions(changedParent) {
+function measureNestedViewTransitions(changedParent, gesture) {
   for (changedParent = changedParent.child; null !== changedParent; ) {
     if (30 === changedParent.tag) {
       var props = changedParent.memoizedProps,
-        name = getViewTransitionName(props, changedParent.stateNode),
-        className = getViewTransitionClassName(props.className, props.layout),
-        parentViewTransition = changedParent,
-        child = changedParent.child,
-        previousMeasurements = changedParent.memoizedState;
+        state = changedParent.stateNode,
+        name = getViewTransitionName(props, state),
+        className = getViewTransitionClassName(props.className, props.layout);
+      if (gesture) {
+        state = state.clones;
+        var previousMeasurements =
+          null === state ? null : state.map(measureInstance);
+      } else previousMeasurements = changedParent.memoizedState;
+      state = changedParent;
+      var child = changedParent.child;
       viewTransitionHostInstanceIdx = 0;
       name = measureViewTransitionHostInstancesRecursive(
-        parentViewTransition,
+        state,
         child,
         name,
         name,
@@ -9922,10 +9930,10 @@ function measureNestedViewTransitions(changedParent) {
       );
       0 !== (changedParent.flags & 4) &&
         name &&
-        scheduleViewTransitionEvent(changedParent, props.onLayout);
+        (gesture || scheduleViewTransitionEvent(changedParent, props.onLayout));
     } else
       0 !== (changedParent.subtreeFlags & 33554432) &&
-        measureNestedViewTransitions(changedParent);
+        measureNestedViewTransitions(changedParent, gesture);
     changedParent = changedParent.sibling;
   }
 }
@@ -11470,11 +11478,11 @@ function recursivelyTraverseAfterMutationEffects(root, parentFiber) {
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitAfterMutationEffectsOnFiber(parentFiber, root),
         (parentFiber = parentFiber.sibling);
-  else measureNestedViewTransitions(parentFiber);
+  else measureNestedViewTransitions(parentFiber, !1);
 }
 function commitAfterMutationEffectsOnFiber(finishedWork, root) {
   var current = finishedWork.alternate;
-  if (null === current) commitEnterViewTransitions(finishedWork);
+  if (null === current) commitEnterViewTransitions(finishedWork, !1);
   else
     switch (finishedWork.tag) {
       case 3:
@@ -11532,7 +11540,7 @@ function commitAfterMutationEffectsOnFiber(finishedWork, root) {
       case 22:
         null === finishedWork.memoizedState &&
           (null !== current.memoizedState
-            ? commitEnterViewTransitions(finishedWork)
+            ? commitEnterViewTransitions(finishedWork, !1)
             : recursivelyTraverseAfterMutationEffects(root, finishedWork));
         break;
       case 30:
@@ -20421,14 +20429,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2047 = React.version;
 if (
-  "19.1.0-www-modern-2e385738-20250314" !==
+  "19.1.0-www-modern-2c560374-20250314" !==
   isomorphicReactPackageVersion$jscomp$inline_2047
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2047,
-      "19.1.0-www-modern-2e385738-20250314"
+      "19.1.0-www-modern-2c560374-20250314"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20446,10 +20454,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2049 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-2e385738-20250314",
+  version: "19.1.0-www-modern-2c560374-20250314",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-2e385738-20250314"
+  reconcilerVersion: "19.1.0-www-modern-2c560374-20250314"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2049.getLaneLabelMap = getLaneLabelMap),
@@ -20816,7 +20824,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-2e385738-20250314";
+exports.version = "19.1.0-www-modern-2c560374-20250314";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
