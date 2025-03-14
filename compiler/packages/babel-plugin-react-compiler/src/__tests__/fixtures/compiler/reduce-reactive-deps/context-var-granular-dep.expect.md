@@ -82,9 +82,9 @@ function Component(t0) {
     contextVar = $[2];
   }
   let t1;
-  if ($[3] !== contextVar.val) {
+  if ($[3] !== contextVar) {
     t1 = { cb: () => contextVar.val * 4 };
-    $[3] = contextVar.val;
+    $[3] = contextVar;
     $[4] = t1;
   } else {
     t1 = $[4];

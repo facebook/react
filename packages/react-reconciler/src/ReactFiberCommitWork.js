@@ -246,8 +246,7 @@ import {
   commitExitViewTransitions,
   commitBeforeUpdateViewTransition,
   commitNestedViewTransitions,
-  restoreEnterViewTransitions,
-  restoreExitViewTransitions,
+  restoreEnterOrExitViewTransitions,
   restoreUpdateViewTransition,
   restoreNestedViewTransitions,
   measureUpdateViewTransition,
@@ -255,7 +254,8 @@ import {
   resetAppearingViewTransitions,
   trackAppearingViewTransition,
   viewTransitionCancelableChildren,
-  setViewTransitionCancelableChildren,
+  pushViewTransitionCancelableScope,
+  popViewTransitionCancelableScope,
 } from './ReactFiberCommitViewTransitions';
 import {
   viewTransitionMutationContext,
@@ -2475,14 +2475,14 @@ function commitAfterMutationEffectsOnFiber(
   switch (finishedWork.tag) {
     case HostRoot: {
       viewTransitionContextChanged = false;
-      setViewTransitionCancelableChildren(null);
+      pushViewTransitionCancelableScope();
       recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
       if (!viewTransitionContextChanged) {
         // If we didn't leak any resizing out to the root, we don't have to transition
         // the root itself. This means that we can now safely cancel any cancellations
         // that bubbled all the way up.
         const cancelableChildren = viewTransitionCancelableChildren;
-        setViewTransitionCancelableChildren(null);
+        popViewTransitionCancelableScope(null);
         if (cancelableChildren !== null) {
           for (let i = 0; i < cancelableChildren.length; i += 3) {
             cancelViewTransitionName(
@@ -2533,9 +2533,8 @@ function commitAfterMutationEffectsOnFiber(
         const wasMutated = (finishedWork.flags & Update) !== NoFlags;
 
         const prevContextChanged = viewTransitionContextChanged;
-        const prevCancelableChildren = viewTransitionCancelableChildren;
+        const prevCancelableChildren = pushViewTransitionCancelableScope();
         viewTransitionContextChanged = false;
-        setViewTransitionCancelableChildren(null);
         recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
 
         if (viewTransitionContextChanged) {
@@ -2558,7 +2557,7 @@ function commitAfterMutationEffectsOnFiber(
               prevCancelableChildren,
               viewTransitionCancelableChildren,
             );
-            setViewTransitionCancelableChildren(prevCancelableChildren);
+            popViewTransitionCancelableScope(prevCancelableChildren);
           }
           // TODO: If this doesn't end up canceled, because a parent animates,
           // then we should probably issue an event since this instance is part of it.
@@ -2572,7 +2571,7 @@ function commitAfterMutationEffectsOnFiber(
           );
 
           // If this boundary did update, we cannot cancel its children so those are dropped.
-          setViewTransitionCancelableChildren(prevCancelableChildren);
+          popViewTransitionCancelableScope(prevCancelableChildren);
         }
 
         if ((finishedWork.flags & AffectedParentLayout) !== NoFlags) {
@@ -3228,7 +3227,7 @@ function commitPassiveMountOnFiber(
     // This was a new mount. This means we could've triggered an enter animation on
     // the content. Restore the view transitions if there were any assigned in the
     // snapshot phase.
-    restoreEnterViewTransitions(finishedWork);
+    restoreEnterOrExitViewTransitions(finishedWork);
   }
 
   // When updating this function, also update reconnectPassiveEffects, which does
@@ -3529,7 +3528,7 @@ function commitPassiveMountOnFiber(
           // Content is now hidden but wasn't before. This means we could've
           // triggered an exit animation on the content. Restore the view
           // transitions if there were any assigned in the snapshot phase.
-          restoreExitViewTransitions(current);
+          restoreEnterOrExitViewTransitions(current);
         }
         if (instance._visibility & OffscreenPassiveEffectsConnected) {
           // The effects are currently connected. Update them.
@@ -3576,7 +3575,7 @@ function commitPassiveMountOnFiber(
           // Content is now visible but wasn't before. This means we could've
           // triggered an enter animation on the content. Restore the view
           // transitions if there were any assigned in the snapshot phase.
-          restoreEnterViewTransitions(finishedWork);
+          restoreEnterOrExitViewTransitions(finishedWork);
         }
         if (instance._visibility & OffscreenPassiveEffectsConnected) {
           // The effects are currently connected. Update them.

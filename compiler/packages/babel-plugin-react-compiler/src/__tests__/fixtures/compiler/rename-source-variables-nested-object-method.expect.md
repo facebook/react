@@ -43,7 +43,7 @@ const t0 = "module_t0";
 const c_0 = "module_c_0";
 function useFoo(props) {
   const $0 = _c(2);
-  const c_00 = $0[0] !== props.value;
+  const c_00 = $0[0] !== props;
   let t1;
   if (c_00) {
     const a = {
@@ -61,7 +61,7 @@ function useFoo(props) {
     };
 
     t1 = a.foo().bar();
-    $0[0] = props.value;
+    $0[0] = props;
     $0[1] = t1;
   } else {
     t1 = $0[1];
