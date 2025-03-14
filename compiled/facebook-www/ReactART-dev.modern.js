@@ -10599,7 +10599,7 @@ __DEV__ &&
       root =
         enableViewTransition && (committedLanes & 335544064) === committedLanes;
       nextEffect = firstChild;
-      for (firstChild = root ? 9238 : 9236; null !== nextEffect; ) {
+      for (firstChild = root ? 9270 : 9236; null !== nextEffect; ) {
         committedLanes = nextEffect;
         var deletions = committedLanes.deletions;
         if (null !== deletions)
@@ -10710,11 +10710,7 @@ __DEV__ &&
             break;
           case 30:
             if (enableViewTransition) {
-              if (
-                isViewTransitionEligible &&
-                null !== current &&
-                0 !== (finishedWork.subtreeFlags & 8246)
-              )
+              if (isViewTransitionEligible && null !== current)
                 a: {
                   isViewTransitionEligible = current;
                   current = finishedWork;
@@ -18279,10 +18275,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-6b5d9fd3-20250314",
+        version: "19.1.0-www-modern-17d274dc-20250314",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-6b5d9fd3-20250314"
+        reconcilerVersion: "19.1.0-www-modern-17d274dc-20250314"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18316,7 +18312,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-modern-6b5d9fd3-20250314";
+    exports.version = "19.1.0-www-modern-17d274dc-20250314";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

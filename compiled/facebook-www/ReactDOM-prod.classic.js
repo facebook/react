@@ -9416,7 +9416,7 @@ function commitBeforeMutationEffects(root, firstChild, committedLanes) {
   committedLanes =
     enableViewTransition && (committedLanes & 335544064) === committedLanes;
   nextEffect = firstChild;
-  for (firstChild = committedLanes ? 9238 : 9236; null !== nextEffect; ) {
+  for (firstChild = committedLanes ? 9270 : 9236; null !== nextEffect; ) {
     root = nextEffect;
     JSCompiler_temp = root.deletions;
     if (null !== JSCompiler_temp)
@@ -9564,11 +9564,7 @@ function commitBeforeMutationEffects_complete(
         break;
       case 30:
         if (enableViewTransition) {
-          if (
-            isViewTransitionEligible &&
-            null !== current &&
-            0 !== (fiber.subtreeFlags & 8246)
-          )
+          if (isViewTransitionEligible && null !== current)
             a: {
               isViewTransitionEligible = getViewTransitionName(
                 current.memoizedProps,
@@ -10780,7 +10776,7 @@ function recursivelyResetForms(parentFiber) {
     }
 }
 function recursivelyTraverseAfterMutationEffects(root, parentFiber) {
-  if (parentFiber.subtreeFlags & 9238)
+  if (parentFiber.subtreeFlags & 9270)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitAfterMutationEffectsOnFiber(parentFiber, root),
         (parentFiber = parentFiber.sibling);
@@ -10850,73 +10846,69 @@ function commitAfterMutationEffectsOnFiber(finishedWork, root) {
             : recursivelyTraverseAfterMutationEffects(root, finishedWork));
         break;
       case 30:
-        if (0 !== (finishedWork.subtreeFlags & 8246)) {
-          i = 0 !== (finishedWork.flags & 4);
-          oldName = viewTransitionContextChanged;
-          instance = pushViewTransitionCancelableScope();
-          viewTransitionContextChanged = !1;
-          recursivelyTraverseAfterMutationEffects(root, finishedWork);
-          viewTransitionContextChanged && (finishedWork.flags |= 4);
-          a: {
-            var props = finishedWork.memoizedProps,
-              newName = getViewTransitionName(props, finishedWork.stateNode);
-            root = getViewTransitionName(
-              current.memoizedProps,
-              current.stateNode
-            );
-            var updateClassName = getViewTransitionClassName(
-              props.className,
-              props.update
-            );
-            props = getViewTransitionClassName(props.className, props.layout);
-            if ("none" === updateClassName) {
-              if ("none" === props) {
-                root = !1;
-                break a;
-              }
-              finishedWork.flags &= -5;
-              updateClassName = props;
-            } else if (0 === (finishedWork.flags & 4)) {
-              if ("none" === props) {
-                newName = finishedWork.child;
-                viewTransitionHostInstanceIdx = 0;
-                cancelViewTransitionHostInstancesRecursive(newName, root, !0);
-                root = !1;
-                break a;
-              }
-              updateClassName = props;
+        i = 0 !== (finishedWork.flags & 4);
+        oldName = viewTransitionContextChanged;
+        instance = pushViewTransitionCancelableScope();
+        viewTransitionContextChanged = !1;
+        recursivelyTraverseAfterMutationEffects(root, finishedWork);
+        viewTransitionContextChanged && (finishedWork.flags |= 4);
+        a: {
+          var props = finishedWork.memoizedProps,
+            newName = getViewTransitionName(props, finishedWork.stateNode);
+          root = getViewTransitionName(
+            current.memoizedProps,
+            current.stateNode
+          );
+          var updateClassName = getViewTransitionClassName(
+            props.className,
+            props.update
+          );
+          props = getViewTransitionClassName(props.className, props.layout);
+          if ("none" === updateClassName) {
+            if ("none" === props) {
+              root = !1;
+              break a;
             }
-            current = current.memoizedState;
-            props = finishedWork.child;
-            viewTransitionHostInstanceIdx = 0;
-            root = measureViewTransitionHostInstancesRecursive(
-              finishedWork,
-              props,
-              newName,
-              root,
-              updateClassName,
-              current,
-              !0
-            );
-            viewTransitionHostInstanceIdx !==
-              (null === current ? 0 : current.length) &&
-              (finishedWork.flags |= 32);
+            finishedWork.flags &= -5;
+            updateClassName = props;
+          } else if (0 === (finishedWork.flags & 4)) {
+            if ("none" === props) {
+              newName = finishedWork.child;
+              viewTransitionHostInstanceIdx = 0;
+              cancelViewTransitionHostInstancesRecursive(newName, root, !0);
+              root = !1;
+              break a;
+            }
+            updateClassName = props;
           }
-          0 !== (finishedWork.flags & 4) && root
-            ? ((root = finishedWork.memoizedProps),
-              scheduleViewTransitionEvent(
-                finishedWork,
-                i || viewTransitionContextChanged
-                  ? root.onUpdate
-                  : root.onLayout
-              ),
-              (viewTransitionCancelableChildren = instance))
-            : null !== instance &&
-              (instance.push.apply(instance, viewTransitionCancelableChildren),
-              (viewTransitionCancelableChildren = instance));
-          viewTransitionContextChanged =
-            0 !== (finishedWork.flags & 32) ? !0 : oldName;
+          current = current.memoizedState;
+          props = finishedWork.child;
+          viewTransitionHostInstanceIdx = 0;
+          root = measureViewTransitionHostInstancesRecursive(
+            finishedWork,
+            props,
+            newName,
+            root,
+            updateClassName,
+            current,
+            !0
+          );
+          viewTransitionHostInstanceIdx !==
+            (null === current ? 0 : current.length) &&
+            (finishedWork.flags |= 32);
         }
+        0 !== (finishedWork.flags & 4) && root
+          ? ((root = finishedWork.memoizedProps),
+            scheduleViewTransitionEvent(
+              finishedWork,
+              i || viewTransitionContextChanged ? root.onUpdate : root.onLayout
+            ),
+            (viewTransitionCancelableChildren = instance))
+          : null !== instance &&
+            (instance.push.apply(instance, viewTransitionCancelableChildren),
+            (viewTransitionCancelableChildren = instance));
+        viewTransitionContextChanged =
+          0 !== (finishedWork.flags & 32) ? !0 : oldName;
         break;
       default:
         recursivelyTraverseAfterMutationEffects(root, finishedWork);
@@ -18875,14 +18867,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1897 = React.version;
 if (
-  "19.1.0-www-classic-6b5d9fd3-20250314" !==
+  "19.1.0-www-classic-17d274dc-20250314" !==
   isomorphicReactPackageVersion$jscomp$inline_1897
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1897,
-      "19.1.0-www-classic-6b5d9fd3-20250314"
+      "19.1.0-www-classic-17d274dc-20250314"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18898,24 +18890,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2487 = {
+var internals$jscomp$inline_2486 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-6b5d9fd3-20250314",
+  version: "19.1.0-www-classic-17d274dc-20250314",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-6b5d9fd3-20250314"
+  reconcilerVersion: "19.1.0-www-classic-17d274dc-20250314"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2488 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2487 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2488.isDisabled &&
-    hook$jscomp$inline_2488.supportsFiber
+    !hook$jscomp$inline_2487.isDisabled &&
+    hook$jscomp$inline_2487.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2488.inject(
-        internals$jscomp$inline_2487
+      (rendererID = hook$jscomp$inline_2487.inject(
+        internals$jscomp$inline_2486
       )),
-        (injectedHook = hook$jscomp$inline_2488);
+        (injectedHook = hook$jscomp$inline_2487);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -19267,4 +19259,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-6b5d9fd3-20250314";
+exports.version = "19.1.0-www-classic-17d274dc-20250314";

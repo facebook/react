@@ -7510,7 +7510,7 @@ function commitBeforeMutationEffects(root, firstChild, committedLanes) {
   root =
     enableViewTransition && (committedLanes & 335544064) === committedLanes;
   nextEffect = firstChild;
-  for (firstChild = root ? 9238 : 9236; null !== nextEffect; ) {
+  for (firstChild = root ? 9270 : 9236; null !== nextEffect; ) {
     committedLanes = nextEffect;
     var deletions = committedLanes.deletions;
     if (null !== deletions)
@@ -7632,11 +7632,7 @@ function commitBeforeMutationEffects_complete(
         break;
       case 30:
         if (enableViewTransition) {
-          if (
-            isViewTransitionEligible &&
-            null !== current &&
-            0 !== (fiber.subtreeFlags & 8246)
-          )
+          if (isViewTransitionEligible && null !== current)
             a: {
               isViewTransitionEligible = getViewTransitionName(
                 current.memoizedProps,
@@ -11304,24 +11300,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1562 = {
+var internals$jscomp$inline_1561 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-6b5d9fd3-20250314",
+  version: "19.1.0-www-classic-17d274dc-20250314",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-6b5d9fd3-20250314"
+  reconcilerVersion: "19.1.0-www-classic-17d274dc-20250314"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1563 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1562 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1563.isDisabled &&
-    hook$jscomp$inline_1563.supportsFiber
+    !hook$jscomp$inline_1562.isDisabled &&
+    hook$jscomp$inline_1562.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1563.inject(
-        internals$jscomp$inline_1562
+      (rendererID = hook$jscomp$inline_1562.inject(
+        internals$jscomp$inline_1561
       )),
-        (injectedHook = hook$jscomp$inline_1563);
+        (injectedHook = hook$jscomp$inline_1562);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11335,4 +11331,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-6b5d9fd3-20250314";
+exports.version = "19.1.0-www-classic-17d274dc-20250314";
