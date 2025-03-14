@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d440651aaf54c45ca95bc8d21f67f146>>
+ * @generated SignedSource<<34d88a8a43b86fa831279e06044e2b00>>
  */
 
 "use strict";
@@ -17421,10 +17421,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-3e956805-20250314",
+        version: "19.1.0-native-fb-c4a3b92e-20250314",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-3e956805-20250314"
+        reconcilerVersion: "19.1.0-native-fb-c4a3b92e-20250314"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
