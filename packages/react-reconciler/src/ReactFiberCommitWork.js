@@ -100,7 +100,7 @@ import {
   Hydrating,
   Passive,
   BeforeMutationMask,
-  BeforeMutationTransitionMask,
+  BeforeAndAfterMutationTransitionMask,
   MutationMask,
   LayoutMask,
   PassiveMask,
@@ -311,7 +311,7 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
   // If this commit is eligible for a View Transition we look into all mutated subtrees.
   // TODO: We could optimize this by marking these with the Snapshot subtree flag in the render phase.
   const subtreeMask = isViewTransitionEligible
-    ? BeforeMutationTransitionMask
+    ? BeforeAndAfterMutationTransitionMask
     : BeforeMutationMask;
   while (nextEffect !== null) {
     const fiber = nextEffect;
@@ -487,16 +487,8 @@ function commitBeforeMutationEffectsOnFiber(
           if (current === null) {
             // This is a new mount. We should have handled this as part of the
             // Placement effect or it is deeper inside a entering transition.
-          } else if (
-            (finishedWork.subtreeFlags &
-              (Placement |
-                Update |
-                ChildDeletion |
-                ContentReset |
-                Visibility)) !==
-            NoFlags
-          ) {
-            // Something mutated within this subtree. This might need to cause
+          } else {
+            // Something may have mutated within this subtree. This might need to cause
             // a cross-fade of this parent. We first assign old names to the
             // previous tree in the before mutation phase in case we need to.
             // TODO: This walks the tree that we might continue walking anyway.
@@ -2440,7 +2432,7 @@ function recursivelyTraverseAfterMutationEffects(
   lanes: Lanes,
 ) {
   // We need to visit the same nodes that we visited in the before mutation phase.
-  if (parentFiber.subtreeFlags & BeforeMutationTransitionMask) {
+  if (parentFiber.subtreeFlags & BeforeAndAfterMutationTransitionMask) {
     let child = parentFiber.child;
     while (child !== null) {
       commitAfterMutationEffectsOnFiber(child, root, lanes);
@@ -2525,63 +2517,57 @@ function commitAfterMutationEffectsOnFiber(
       break;
     }
     case ViewTransitionComponent: {
-      if (
-        (finishedWork.subtreeFlags &
-          (Placement | Update | ChildDeletion | ContentReset | Visibility)) !==
-        NoFlags
-      ) {
-        const wasMutated = (finishedWork.flags & Update) !== NoFlags;
+      const wasMutated = (finishedWork.flags & Update) !== NoFlags;
 
-        const prevContextChanged = viewTransitionContextChanged;
-        const prevCancelableChildren = pushViewTransitionCancelableScope();
-        viewTransitionContextChanged = false;
-        recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
+      const prevContextChanged = viewTransitionContextChanged;
+      const prevCancelableChildren = pushViewTransitionCancelableScope();
+      viewTransitionContextChanged = false;
+      recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
 
-        if (viewTransitionContextChanged) {
-          finishedWork.flags |= Update;
-        }
+      if (viewTransitionContextChanged) {
+        finishedWork.flags |= Update;
+      }
 
-        const inViewport = measureUpdateViewTransition(current, finishedWork);
+      const inViewport = measureUpdateViewTransition(current, finishedWork);
 
-        if ((finishedWork.flags & Update) === NoFlags || !inViewport) {
-          // If this boundary didn't update, then we may be able to cancel its children.
-          // We bubble them up to the parent set to be determined later if we can cancel.
-          // Similarly, if old and new state was outside the viewport, we can skip it
-          // even if it did update.
-          if (prevCancelableChildren === null) {
-            // Bubbling up this whole set to the parent.
-          } else {
-            // Merge with parent set.
-            // $FlowFixMe[method-unbinding]
-            prevCancelableChildren.push.apply(
-              prevCancelableChildren,
-              viewTransitionCancelableChildren,
-            );
-            popViewTransitionCancelableScope(prevCancelableChildren);
-          }
-          // TODO: If this doesn't end up canceled, because a parent animates,
-          // then we should probably issue an event since this instance is part of it.
+      if ((finishedWork.flags & Update) === NoFlags || !inViewport) {
+        // If this boundary didn't update, then we may be able to cancel its children.
+        // We bubble them up to the parent set to be determined later if we can cancel.
+        // Similarly, if old and new state was outside the viewport, we can skip it
+        // even if it did update.
+        if (prevCancelableChildren === null) {
+          // Bubbling up this whole set to the parent.
         } else {
-          const props: ViewTransitionProps = finishedWork.memoizedProps;
-          scheduleViewTransitionEvent(
-            finishedWork,
-            wasMutated || viewTransitionContextChanged
-              ? props.onUpdate
-              : props.onLayout,
+          // Merge with parent set.
+          // $FlowFixMe[method-unbinding]
+          prevCancelableChildren.push.apply(
+            prevCancelableChildren,
+            viewTransitionCancelableChildren,
           );
-
-          // If this boundary did update, we cannot cancel its children so those are dropped.
           popViewTransitionCancelableScope(prevCancelableChildren);
         }
+        // TODO: If this doesn't end up canceled, because a parent animates,
+        // then we should probably issue an event since this instance is part of it.
+      } else {
+        const props: ViewTransitionProps = finishedWork.memoizedProps;
+        scheduleViewTransitionEvent(
+          finishedWork,
+          wasMutated || viewTransitionContextChanged
+            ? props.onUpdate
+            : props.onLayout,
+        );
 
-        if ((finishedWork.flags & AffectedParentLayout) !== NoFlags) {
-          // This boundary changed size in a way that may have caused its parent to
-          // relayout. We need to bubble this information up to the parent.
-          viewTransitionContextChanged = true;
-        } else {
-          // Otherwise, we restore it to whatever the parent had found so far.
-          viewTransitionContextChanged = prevContextChanged;
-        }
+        // If this boundary did update, we cannot cancel its children so those are dropped.
+        popViewTransitionCancelableScope(prevCancelableChildren);
+      }
+
+      if ((finishedWork.flags & AffectedParentLayout) !== NoFlags) {
+        // This boundary changed size in a way that may have caused its parent to
+        // relayout. We need to bubble this information up to the parent.
+        viewTransitionContextChanged = true;
+      } else {
+        // Otherwise, we restore it to whatever the parent had found so far.
+        viewTransitionContextChanged = prevContextChanged;
       }
       break;
     }
