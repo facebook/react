@@ -43544,7 +43544,6 @@ PERFORMANCE OF THIS SOFTWARE.
       enableTreatFunctionDepsAsConditional:
         zod.z["boolean"]()["default"](false),
       disableMemoizationForDebugging: zod.z["boolean"]()["default"](false),
-      enableMinimalTransformsForRetry: zod.z["boolean"]()["default"](false),
       enableChangeDetectionForDebugging:
         ExternalFunctionSchema.nullable()["default"](null),
       enableCustomTypeDefinitionForReanimated:
@@ -43553,21 +43552,11 @@ PERFORMANCE OF THIS SOFTWARE.
       enableTreatRefLikeIdentifiersAsRefs: zod.z["boolean"]()["default"](false),
       lowerContextAccess: ExternalFunctionSchema.nullable()["default"](null)
     });
-    var MINIMAL_RETRY_CONFIG = {
-      validateHooksUsage: false,
-      validateRefAccessDuringRender: false,
-      validateNoSetStateInRender: false,
-      validateNoSetStateInPassiveEffects: false,
-      validateNoJSXInTryStatements: false,
-      validateMemoizedEffectDependencies: false,
-      validateNoCapitalizedCalls: null,
-      validateBlocklistedImports: null,
-      enableMinimalTransformsForRetry: true
-    };
     var Environment = /*#__PURE__*/ (function () {
       function Environment(
         scope,
         fnType,
+        compilerMode,
         config,
         contextIdentifiers,
         logger,
@@ -43589,6 +43578,7 @@ PERFORMANCE OF THIS SOFTWARE.
         _Environment_hoistedIdentifiers.set(this, void 0);
         __classPrivateFieldSet(this, _Environment_scope, scope, "f");
         this.fnType = fnType;
+        this.compilerMode = compilerMode;
         this.config = config;
         this.filename = filename;
         this.code = code;
@@ -43684,6 +43674,12 @@ PERFORMANCE OF THIS SOFTWARE.
         );
       }
       return _createClass(Environment, [
+        {
+          key: "isInferredMemoEnabled",
+          get: function get() {
+            return this.compilerMode !== "no_inferred_memo";
+          }
+        },
         {
           key: "nextIdentifierId",
           get: function get() {
@@ -56116,20 +56112,20 @@ PERFORMANCE OF THIS SOFTWARE.
       }
       return functionEffects;
     }
-    function raiseFunctionEffectErrors(functionEffects) {
-      functionEffects.forEach(function (eff) {
+    function transformFunctionEffectErrors(functionEffects) {
+      return functionEffects.map(function (eff) {
         switch (eff.kind) {
           case "ReactMutation":
           case "GlobalMutation": {
-            CompilerError["throw"](eff.error);
+            return eff.error;
           }
           case "ContextMutation": {
-            CompilerError["throw"]({
+            return {
               severity: ErrorSeverity.Invariant,
               reason:
                 "Unexpected ContextMutation in top-level function effects",
               loc: eff.loc
-            });
+            };
           }
           default:
             assertExhaustive$1(
@@ -56329,8 +56325,9 @@ PERFORMANCE OF THIS SOFTWARE.
       }
       if (options.isFunctionExpression) {
         fn.effects = functionEffects;
-      } else if (!fn.env.config.enableMinimalTransformsForRetry) {
-        raiseFunctionEffectErrors(functionEffects);
+        return [];
+      } else {
+        return transformFunctionEffectErrors(functionEffects);
       }
     }
     var InferenceState = /*#__PURE__*/ (function () {
@@ -71650,6 +71647,7 @@ PERFORMANCE OF THIS SOFTWARE.
       func,
       config,
       fnType,
+      mode,
       useMemoCacheIdentifier,
       logger,
       filename,
@@ -71660,6 +71658,7 @@ PERFORMANCE OF THIS SOFTWARE.
       var env = new Environment(
         func.scope,
         fnType,
+        mode,
         config,
         contextIdentifiers,
         logger,
@@ -71696,10 +71695,10 @@ PERFORMANCE OF THIS SOFTWARE.
       validateContextVariableLValues(hir);
       validateUseMemo(hir);
       if (
+        env.isInferredMemoEnabled &&
         !env.config.enablePreserveExistingManualUseMemo &&
         !env.config.disableMemoizationForDebugging &&
-        !env.config.enableChangeDetectionForDebugging &&
-        !env.config.enableMinimalTransformsForRetry
+        !env.config.enableChangeDetectionForDebugging
       ) {
         dropManualMemoization(hir);
         log({ kind: "hir", name: "DropManualMemoization", value: hir });
@@ -71723,15 +71722,17 @@ PERFORMANCE OF THIS SOFTWARE.
       log({ kind: "hir", name: "ConstantPropagation", value: hir });
       inferTypes(hir);
       log({ kind: "hir", name: "InferTypes", value: hir });
-      if (env.config.validateHooksUsage) {
-        validateHooksUsage(hir);
+      if (env.isInferredMemoEnabled) {
+        if (env.config.validateHooksUsage) {
+          validateHooksUsage(hir);
+        }
+        if (env.config.validateNoCapitalizedCalls) {
+          validateNoCapitalizedCalls(hir);
+        }
       }
       if (env.config.enableFire) {
         transformFire(hir);
         log({ kind: "hir", name: "TransformFire", value: hir });
-      }
-      if (env.config.validateNoCapitalizedCalls) {
-        validateNoCapitalizedCalls(hir);
       }
       if (env.config.lowerContextAccess) {
         lowerContextAccess(hir, env.config.lowerContextAccess);
@@ -71740,7 +71741,12 @@ PERFORMANCE OF THIS SOFTWARE.
       log({ kind: "hir", name: "OptimizePropsMethodCalls", value: hir });
       analyseFunctions(hir);
       log({ kind: "hir", name: "AnalyseFunctions", value: hir });
-      inferReferenceEffects(hir);
+      var fnEffectErrors = inferReferenceEffects(hir);
+      if (env.isInferredMemoEnabled) {
+        if (fnEffectErrors.length > 0) {
+          CompilerError["throw"](fnEffectErrors[0]);
+        }
+      }
       log({ kind: "hir", name: "InferReferenceEffects", value: hir });
       validateLocalsNotReassignedAfterRender(hir);
       deadCodeElimination(hir);
@@ -71753,23 +71759,25 @@ PERFORMANCE OF THIS SOFTWARE.
       log({ kind: "hir", name: "PruneMaybeThrows", value: hir });
       inferMutableRanges(hir);
       log({ kind: "hir", name: "InferMutableRanges", value: hir });
-      if (env.config.assertValidMutableRanges) {
-        assertValidMutableRanges(hir);
-      }
-      if (env.config.validateRefAccessDuringRender) {
-        validateNoRefAccessInRender(hir);
-      }
-      if (env.config.validateNoSetStateInRender) {
-        validateNoSetStateInRender(hir);
-      }
-      if (env.config.validateNoSetStateInPassiveEffects) {
-        validateNoSetStateInPassiveEffects(hir);
-      }
-      if (env.config.validateNoJSXInTryStatements) {
-        validateNoJSXInTryStatement(hir);
-      }
-      if (env.config.validateNoImpureFunctionsInRender) {
-        validateNoImpureFunctionsInRender(hir);
+      if (env.isInferredMemoEnabled) {
+        if (env.config.assertValidMutableRanges) {
+          assertValidMutableRanges(hir);
+        }
+        if (env.config.validateRefAccessDuringRender) {
+          validateNoRefAccessInRender(hir);
+        }
+        if (env.config.validateNoSetStateInRender) {
+          validateNoSetStateInRender(hir);
+        }
+        if (env.config.validateNoSetStateInPassiveEffects) {
+          validateNoSetStateInPassiveEffects(hir);
+        }
+        if (env.config.validateNoJSXInTryStatements) {
+          validateNoJSXInTryStatement(hir);
+        }
+        if (env.config.validateNoImpureFunctionsInRender) {
+          validateNoImpureFunctionsInRender(hir);
+        }
       }
       inferReactivePlaces(hir);
       log({ kind: "hir", name: "InferReactivePlaces", value: hir });
@@ -71781,7 +71789,7 @@ PERFORMANCE OF THIS SOFTWARE.
       });
       propagatePhiTypes(hir);
       log({ kind: "hir", name: "PropagatePhiTypes", value: hir });
-      if (!env.config.enableMinimalTransformsForRetry) {
+      if (env.isInferredMemoEnabled) {
         inferReactiveScopeVariables(hir);
         log({ kind: "hir", name: "InferReactiveScopeVariables", value: hir });
       }
@@ -71964,6 +71972,7 @@ PERFORMANCE OF THIS SOFTWARE.
       func,
       config,
       fnType,
+      mode,
       useMemoCacheIdentifier,
       logger,
       filename,
@@ -71973,6 +71982,7 @@ PERFORMANCE OF THIS SOFTWARE.
         func,
         config,
         fnType,
+        mode,
         useMemoCacheIdentifier,
         logger,
         filename,
@@ -72449,27 +72459,7 @@ PERFORMANCE OF THIS SOFTWARE.
                 fn,
                 environment,
                 fnType,
-                useMemoCacheIdentifier.name,
-                pass.opts.logger,
-                pass.filename,
-                pass.code
-              )
-            };
-          } catch (err) {
-            compileResult = { kind: "error", error: err };
-          }
-        }
-        if (compileResult.kind === "error" && environment.enableFire) {
-          try {
-            compileResult = {
-              kind: "compile",
-              compiledFn: compileFn(
-                fn,
-                Object.assign(
-                  Object.assign({}, environment),
-                  MINIMAL_RETRY_CONFIG
-                ),
-                fnType,
+                "all_features",
                 useMemoCacheIdentifier.name,
                 pass.opts.logger,
                 pass.filename,
@@ -72494,7 +72484,26 @@ PERFORMANCE OF THIS SOFTWARE.
               (_b = fn.node.loc) !== null && _b !== void 0 ? _b : null
             );
           }
-          return null;
+          if (!environment.enableFire) {
+            return null;
+          }
+          try {
+            compileResult = {
+              kind: "compile",
+              compiledFn: compileFn(
+                fn,
+                environment,
+                fnType,
+                "no_inferred_memo",
+                useMemoCacheIdentifier.name,
+                pass.opts.logger,
+                pass.filename,
+                pass.code
+              )
+            };
+          } catch (err) {
+            return null;
+          }
         }
         (_c = pass.opts.logger) === null || _c === void 0
           ? void 0
