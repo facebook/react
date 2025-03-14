@@ -34,7 +34,6 @@ import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostCo
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
-import {OffscreenComponent} from 'react-reconciler/src/ReactWorkTags';
 
 export {
   setCurrentUpdatePriority,
@@ -54,6 +53,8 @@ import {
   markNodeAsHoistable,
   isOwnedInstance,
 } from './ReactDOMComponentTree';
+import {traverseFragmentInstance} from 'react-reconciler/src/ReactFiberTreeReflection';
+
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
 import {
@@ -2221,9 +2222,8 @@ FragmentInstance.prototype.addEventListener = function (
     indexOfEventListener(listeners, type, listener, optionsOrUseCapture) === -1;
   if (isNewEventListener) {
     listeners.push({type, listener, optionsOrUseCapture});
-    traverseFragmentInstanceChildren(
-      this,
-      this._fragmentFiber.child,
+    traverseFragmentInstance(
+      this._fragmentFiber,
       addEventListenerToChild,
       type,
       listener,
@@ -2253,9 +2253,8 @@ FragmentInstance.prototype.removeEventListener = function (
     return;
   }
   if (typeof listeners !== 'undefined' && listeners.length > 0) {
-    traverseFragmentInstanceChildren(
-      this,
-      this._fragmentFiber.child,
+    traverseFragmentInstance(
+      this._fragmentFiber,
       removeEventListenerFromChild,
       type,
       listener,
@@ -2283,44 +2282,8 @@ function removeEventListenerFromChild(
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.focus = function (this: FragmentInstanceType) {
-  traverseFragmentInstanceChildren(
-    this,
-    this._fragmentFiber.child,
-    setFocusIfFocusable,
-  );
+  traverseFragmentInstance(this._fragmentFiber, setFocusIfFocusable);
 };
-
-function traverseFragmentInstanceChildren<A, B, C>(
-  fragmentInstance: FragmentInstanceType,
-  child: Fiber | null,
-  fn: (Instance, A, B, C) => boolean,
-  a: A,
-  b: B,
-  c: C,
-): void {
-  while (child !== null) {
-    if (child.tag === HostComponent) {
-      if (fn(child.stateNode, a, b, c)) {
-        return;
-      }
-    } else if (
-      child.tag === OffscreenComponent &&
-      child.memoizedState !== null
-    ) {
-      // Skip hidden subtrees
-    } else {
-      traverseFragmentInstanceChildren(
-        fragmentInstance,
-        child.child,
-        fn,
-        a,
-        b,
-        c,
-      );
-    }
-    child = child.sibling;
-  }
-}
 
 function normalizeListenerOptions(
   opts: ?EventListenerOptionsOrUseCapture,
