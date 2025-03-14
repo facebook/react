@@ -71,10 +71,18 @@ export let viewTransitionCancelableChildren: null | Array<
   Instance | string | Props,
 > = null; // tupled array where each entry is [instance: Instance, oldName: string, props: Props]
 
-export function setViewTransitionCancelableChildren(
-  children: null | Array<Instance | string | Props>,
+export function pushViewTransitionCancelableScope(): null | Array<
+  Instance | string | Props,
+> {
+  const prevChildren = viewTransitionCancelableChildren;
+  viewTransitionCancelableChildren = null;
+  return prevChildren;
+}
+
+export function popViewTransitionCancelableScope(
+  prevChildren: null | Array<Instance | string | Props>,
 ): void {
-  viewTransitionCancelableChildren = children;
+  viewTransitionCancelableChildren = prevChildren;
 }
 
 let viewTransitionHostInstanceIdx = 0;
