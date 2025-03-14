@@ -699,7 +699,11 @@ describe('FragmentRefs', () => {
       const observer = new IntersectionObserver(() => {});
       const observer2 = new IntersectionObserver(() => {});
       function Test() {
-        return <React.Fragment ref={fragmentRef}></React.Fragment>;
+        return (
+          <React.Fragment ref={fragmentRef}>
+            <div />
+          </React.Fragment>
+        );
       }
 
       const root = ReactDOMClient.createRoot(container);
@@ -717,13 +721,17 @@ describe('FragmentRefs', () => {
       );
     });
 
-    // @gate enableFragmentRefs && __DEV__
+    // @gate enableFragmentRefs
     it('warns when unobserveUsing() is called with an observer that was not observed', async () => {
       const fragmentRef = React.createRef();
       const observer = new IntersectionObserver(() => {});
       const observer2 = new IntersectionObserver(() => {});
       function Test() {
-        return <React.Fragment ref={fragmentRef}></React.Fragment>;
+        return (
+          <React.Fragment ref={fragmentRef}>
+            <div />
+          </React.Fragment>
+        );
       }
 
       const root = ReactDOMClient.createRoot(container);
