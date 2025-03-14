@@ -55,8 +55,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -79,8 +80,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -105,8 +107,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -160,8 +163,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-and-compiler-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-and-compiler-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -198,8 +202,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-and-compiler-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-and-compiler-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -276,8 +281,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-and-compiler-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-and-compiler-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -310,8 +316,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -357,8 +364,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -392,8 +400,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -424,8 +433,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: fixtures_dom-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: fixtures_dom-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -467,8 +477,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: fixtures_flight-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: fixtures_flight-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -529,8 +540,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -580,8 +592,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -617,8 +630,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
