@@ -878,6 +878,7 @@ export function createFiberFromViewTransition(
   const instance: ViewTransitionState = {
     autoName: null,
     paired: null,
+    clones: null,
     ref: null,
   };
   fiber.stateNode = instance;
