@@ -2450,7 +2450,7 @@ function recursivelyTraverseAfterMutationEffects(
     // Nothing has changed in this subtree, but the parent may have still affected
     // its size and position. We need to measure this and if not, restore it to
     // not animate.
-    measureNestedViewTransitions(parentFiber);
+    measureNestedViewTransitions(parentFiber, false);
   }
 }
 
@@ -2468,7 +2468,7 @@ function commitAfterMutationEffectsOnFiber(
     // we can just bail after we're done with the first one.
     // The first ViewTransition inside a newly mounted tree runs an enter transition
     // but other nested ones don't unless they have a named pair.
-    commitEnterViewTransitions(finishedWork);
+    commitEnterViewTransitions(finishedWork, false);
     return;
   }
 
@@ -2512,7 +2512,7 @@ function commitAfterMutationEffectsOnFiber(
           // The Offscreen tree is visible.
           const wasHidden = current.memoizedState !== null;
           if (wasHidden) {
-            commitEnterViewTransitions(finishedWork);
+            commitEnterViewTransitions(finishedWork, false);
             // If it was previous hidden then the children are treated as enter
             // not updates so we don't need to visit these children.
           } else {

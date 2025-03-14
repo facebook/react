@@ -62,6 +62,8 @@ import {
   restoreEnterOrExitViewTransitions,
   restoreNestedViewTransitions,
   appearingViewTransitions,
+  commitEnterViewTransitions,
+  measureNestedViewTransitions,
 } from './ReactFiberCommitViewTransitions';
 import {
   getViewTransitionName,
@@ -968,53 +970,6 @@ export function insertDestinationClones(
   }
 }
 
-function applyDeletedPairViewTransitions(deletion: Fiber): void {
-  if ((deletion.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
-    // This has no named view transitions in its subtree.
-    return;
-  }
-  let child = deletion.child;
-  while (child !== null) {
-    if (child.tag === OffscreenComponent && child.memoizedState === null) {
-      // This tree was already hidden so we skip it.
-    } else {
-      if (
-        child.tag === ViewTransitionComponent &&
-        (child.flags & ViewTransitionNamedStatic) !== NoFlags
-      ) {
-        const props: ViewTransitionProps = child.memoizedProps;
-        const name = props.name;
-        if (name != null && name !== 'auto') {
-          // TODO: Find a pair
-        }
-      }
-      applyDeletedPairViewTransitions(child);
-    }
-    child = child.sibling;
-  }
-}
-
-function applyEnterViewTransitions(deletion: Fiber): void {
-  if (deletion.tag === ViewTransitionComponent) {
-    const props: ViewTransitionProps = deletion.memoizedProps;
-    const name = props.name;
-    if (name != null && name !== 'auto') {
-      // TODO: Find a pair
-    }
-    // Look for more pairs deeper in the tree.
-    applyDeletedPairViewTransitions(deletion);
-  } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-    // TODO: Check if this is a hidden Offscreen or a Portal.
-    let child = deletion.child;
-    while (child !== null) {
-      applyEnterViewTransitions(child);
-      child = child.sibling;
-    }
-  } else {
-    applyDeletedPairViewTransitions(deletion);
-  }
-}
-
 function measureExitViewTransitions(placement: Fiber): void {
   if (placement.tag === ViewTransitionComponent) {
     // const state: ViewTransitionState = placement.stateNode;
@@ -1036,24 +991,6 @@ function measureExitViewTransitions(placement: Fiber): void {
   }
 }
 
-function measureNestedViewTransitions(changedParent: Fiber): void {
-  let child = changedParent.child;
-  while (child !== null) {
-    if (child.tag === ViewTransitionComponent) {
-      const current = child.alternate;
-      if (current !== null) {
-        // const props: ViewTransitionProps = child.memoizedProps;
-        // const name = getViewTransitionName(props, child.stateNode);
-        // TODO: Measure both the old and new state and see if they're different.
-      }
-    } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-      // TODO: Check if this is a hidden Offscreen or a Portal.
-      measureNestedViewTransitions(child);
-    }
-    child = child.sibling;
-  }
-}
-
 function measureUpdateViewTransition(
   current: Fiber,
   finishedWork: Fiber,
@@ -1066,7 +1003,7 @@ function recursivelyApplyViewTransitions(parentFiber: Fiber) {
   if (deletions !== null) {
     for (let i = 0; i < deletions.length; i++) {
       const childToDelete = deletions[i];
-      applyEnterViewTransitions(childToDelete);
+      commitEnterViewTransitions(childToDelete, true);
     }
   }
 
@@ -1084,7 +1021,7 @@ function recursivelyApplyViewTransitions(parentFiber: Fiber) {
     // Nothing has changed in this subtree, but the parent may have still affected
     // its size and position. We need to measure the old and new state to see if
     // we should animate its size and position.
-    measureNestedViewTransitions(parentFiber);
+    measureNestedViewTransitions(parentFiber, true);
   }
 }
 
@@ -1121,7 +1058,7 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber) {
           measureExitViewTransitions(finishedWork);
         } else if (current !== null && current.memoizedState === null) {
           // Was previously mounted as visible but is now hidden.
-          applyEnterViewTransitions(current);
+          commitEnterViewTransitions(current, true);
         }
       }
       break;
