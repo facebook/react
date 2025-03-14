@@ -29,7 +29,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: "**/node_modules"
-          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: shared-lint-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -49,7 +49,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: "**/node_modules"
-          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: shared-lint-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -69,7 +69,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: "**/node_modules"
-          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: shared-lint-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -89,7 +89,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: "**/node_modules"
-          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: shared-lint-node_modules-v3-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
