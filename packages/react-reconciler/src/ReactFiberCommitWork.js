@@ -100,7 +100,7 @@ import {
   Hydrating,
   Passive,
   BeforeMutationMask,
-  BeforeMutationTransitionMask,
+  BeforeAndAfterMutationTransitionMask,
   MutationMask,
   LayoutMask,
   PassiveMask,
@@ -311,7 +311,7 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
   // If this commit is eligible for a View Transition we look into all mutated subtrees.
   // TODO: We could optimize this by marking these with the Snapshot subtree flag in the render phase.
   const subtreeMask = isViewTransitionEligible
-    ? BeforeMutationTransitionMask
+    ? BeforeAndAfterMutationTransitionMask
     : BeforeMutationMask;
   while (nextEffect !== null) {
     const fiber = nextEffect;
@@ -2440,7 +2440,7 @@ function recursivelyTraverseAfterMutationEffects(
   lanes: Lanes,
 ) {
   // We need to visit the same nodes that we visited in the before mutation phase.
-  if (parentFiber.subtreeFlags & BeforeMutationTransitionMask) {
+  if (parentFiber.subtreeFlags & BeforeAndAfterMutationTransitionMask) {
     let child = parentFiber.child;
     while (child !== null) {
       commitAfterMutationEffectsOnFiber(child, root, lanes);
