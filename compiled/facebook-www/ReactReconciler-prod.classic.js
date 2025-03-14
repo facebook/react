@@ -7865,7 +7865,28 @@ module.exports = function ($$$config) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
   }
+  function pushViewTransitionCancelableScope() {
+    var prevChildren = viewTransitionCancelableChildren;
+    viewTransitionCancelableChildren = null;
+    return prevChildren;
+  }
   function applyViewTransitionToHostInstances(
+    child,
+    name,
+    className,
+    collectMeasurements,
+    stopAtNestedViewTransitions
+  ) {
+    viewTransitionHostInstanceIdx = 0;
+    return applyViewTransitionToHostInstancesRecursive(
+      child,
+      name,
+      className,
+      collectMeasurements,
+      stopAtNestedViewTransitions
+    );
+  }
+  function applyViewTransitionToHostInstancesRecursive(
     child,
     name,
     className,
@@ -7895,7 +7916,7 @@ module.exports = function ($$$config) {
         viewTransitionHostInstanceIdx++;
       } else if (22 !== child.tag || null === child.memoizedState)
         (30 === child.tag && stopAtNestedViewTransitions) ||
-          (applyViewTransitionToHostInstances(
+          (applyViewTransitionToHostInstancesRecursive(
             child.child,
             name,
             className,
@@ -7940,14 +7961,14 @@ module.exports = function ($$$config) {
             var name = props.name;
             props = getViewTransitionClassName(props.className, props.share);
             "none" !== props &&
-              ((viewTransitionHostInstanceIdx = 0),
-              applyViewTransitionToHostInstances(
+              (applyViewTransitionToHostInstances(
                 placement.child,
                 name,
                 props,
                 null,
                 !1
-              ) || restoreViewTransitionOnHostInstances(placement.child, !1));
+              ) ||
+                restoreViewTransitionOnHostInstances(placement.child, !1));
           }
         placement = placement.sibling;
       }
@@ -7962,18 +7983,17 @@ module.exports = function ($$$config) {
           state.paired ? props.share : props.enter
         );
       "none" !== className
-        ? ((viewTransitionHostInstanceIdx = 0),
-          applyViewTransitionToHostInstances(
+        ? applyViewTransitionToHostInstances(
             placement.child,
             name,
             className,
             null,
             !1
           )
-            ? (commitAppearingPairViewTransitions(placement),
-              state.paired ||
-                scheduleViewTransitionEvent(placement, props.onEnter))
-            : restoreViewTransitionOnHostInstances(placement.child, !1))
+          ? (commitAppearingPairViewTransitions(placement),
+            state.paired ||
+              scheduleViewTransitionEvent(placement, props.onEnter))
+          : restoreViewTransitionOnHostInstances(placement.child, !1)
         : commitAppearingPairViewTransitions(placement);
     } else if (0 !== (placement.subtreeFlags & 33554432))
       for (placement = placement.child; null !== placement; )
@@ -8000,8 +8020,7 @@ module.exports = function ($$$config) {
                     props.share
                   );
                   "none" !== className &&
-                    ((viewTransitionHostInstanceIdx = 0),
-                    applyViewTransitionToHostInstances(
+                    (applyViewTransitionToHostInstances(
                       deletion.child,
                       name,
                       className,
@@ -8038,8 +8057,7 @@ module.exports = function ($$$config) {
           void 0 !== pair ? props.share : props.exit
         );
       "none" !== className &&
-        ((viewTransitionHostInstanceIdx = 0),
-        applyViewTransitionToHostInstances(
+        (applyViewTransitionToHostInstances(
           deletion.child,
           name,
           className,
@@ -8068,14 +8086,13 @@ module.exports = function ($$$config) {
           name = getViewTransitionName(props, changedParent.stateNode);
         props = getViewTransitionClassName(props.className, props.layout);
         "none" !== props &&
-          ((viewTransitionHostInstanceIdx = 0),
           applyViewTransitionToHostInstances(
             changedParent.child,
             name,
             props,
             (changedParent.memoizedState = []),
             !1
-          ));
+          );
       } else
         0 !== (changedParent.subtreeFlags & 33554432) &&
           commitNestedViewTransitions(changedParent);
@@ -8121,19 +8138,15 @@ module.exports = function ($$$config) {
           restoreNestedViewTransitions(changedParent),
         (changedParent = changedParent.sibling);
   }
-  function cancelViewTransitionHostInstances(
-    currentViewTransition,
+  function cancelViewTransitionHostInstancesRecursive(
     child,
+    oldName,
     stopAtNestedViewTransitions
   ) {
     if (supportsMutation)
       for (; null !== child; ) {
         if (5 === child.tag) {
-          var instance = child.stateNode,
-            oldName = getViewTransitionName(
-              currentViewTransition.memoizedProps,
-              currentViewTransition.stateNode
-            );
+          var instance = child.stateNode;
           null === viewTransitionCancelableChildren &&
             (viewTransitionCancelableChildren = []);
           viewTransitionCancelableChildren.push(
@@ -8144,19 +8157,19 @@ module.exports = function ($$$config) {
           viewTransitionHostInstanceIdx++;
         } else if (22 !== child.tag || null === child.memoizedState)
           (30 === child.tag && stopAtNestedViewTransitions) ||
-            cancelViewTransitionHostInstances(
-              currentViewTransition,
+            cancelViewTransitionHostInstancesRecursive(
               child.child,
+              oldName,
               stopAtNestedViewTransitions
             );
         child = child.sibling;
       }
   }
-  function measureViewTransitionHostInstances(
-    currentViewTransition,
+  function measureViewTransitionHostInstancesRecursive(
     parentViewTransition,
     child,
-    name,
+    newName,
+    oldName,
     className,
     previousMeasurements,
     stopAtNestedViewTransitions
@@ -8187,31 +8200,27 @@ module.exports = function ($$$config) {
           applyViewTransitionName(
             instance,
             0 === viewTransitionHostInstanceIdx
-              ? name
-              : name + "_" + viewTransitionHostInstanceIdx,
+              ? newName
+              : newName + "_" + viewTransitionHostInstanceIdx,
             className
           );
         (inViewport && 0 !== (parentViewTransition.flags & 4)) ||
-          ((previousMeasurement = getViewTransitionName(
-            currentViewTransition.memoizedProps,
-            currentViewTransition.stateNode
-          )),
-          null === viewTransitionCancelableChildren &&
+          (null === viewTransitionCancelableChildren &&
             (viewTransitionCancelableChildren = []),
           viewTransitionCancelableChildren.push(
             instance,
-            previousMeasurement,
+            oldName,
             child.memoizedProps
           ));
         viewTransitionHostInstanceIdx++;
       } else if (22 !== child.tag || null === child.memoizedState)
         30 === child.tag && stopAtNestedViewTransitions
           ? (parentViewTransition.flags |= child.flags & 32)
-          : measureViewTransitionHostInstances(
-              currentViewTransition,
+          : measureViewTransitionHostInstancesRecursive(
               parentViewTransition,
               child.child,
-              name,
+              newName,
+              oldName,
               className,
               previousMeasurements,
               stopAtNestedViewTransitions
@@ -8223,28 +8232,25 @@ module.exports = function ($$$config) {
   function measureNestedViewTransitions(changedParent) {
     for (changedParent = changedParent.child; null !== changedParent; ) {
       if (30 === changedParent.tag) {
-        var current = changedParent.alternate;
-        if (null !== current) {
-          var props = changedParent.memoizedProps,
-            name = getViewTransitionName(props, changedParent.stateNode),
-            className = getViewTransitionClassName(
-              props.className,
-              props.layout
-            );
-          viewTransitionHostInstanceIdx = 0;
-          current = measureViewTransitionHostInstances(
-            current,
-            changedParent,
-            changedParent.child,
-            name,
-            className,
-            changedParent.memoizedState,
-            !1
-          );
-          0 !== (changedParent.flags & 4) &&
-            current &&
-            scheduleViewTransitionEvent(changedParent, props.onLayout);
-        }
+        var props = changedParent.memoizedProps,
+          name = getViewTransitionName(props, changedParent.stateNode),
+          className = getViewTransitionClassName(props.className, props.layout),
+          parentViewTransition = changedParent,
+          child = changedParent.child,
+          previousMeasurements = changedParent.memoizedState;
+        viewTransitionHostInstanceIdx = 0;
+        name = measureViewTransitionHostInstancesRecursive(
+          parentViewTransition,
+          child,
+          name,
+          name,
+          className,
+          previousMeasurements,
+          !1
+        );
+        0 !== (changedParent.flags & 4) &&
+          name &&
+          scheduleViewTransitionEvent(changedParent, props.onLayout);
       } else
         0 !== (changedParent.subtreeFlags & 33554432) &&
           measureNestedViewTransitions(changedParent);
@@ -8413,7 +8419,6 @@ module.exports = function ($$$config) {
                   "none" === JSCompiler_temp)
                 )
                   break a;
-                viewTransitionHostInstanceIdx = 0;
                 applyViewTransitionToHostInstances(
                   current.child,
                   isViewTransitionEligible,
@@ -9583,7 +9588,7 @@ module.exports = function ($$$config) {
       switch (finishedWork.tag) {
         case 3:
           viewTransitionContextChanged = !1;
-          viewTransitionCancelableChildren = null;
+          pushViewTransitionCancelableScope();
           recursivelyTraverseAfterMutationEffects(root, finishedWork);
           if (!viewTransitionContextChanged) {
             finishedWork = viewTransitionCancelableChildren;
@@ -9611,66 +9616,62 @@ module.exports = function ($$$config) {
           if (0 !== (finishedWork.subtreeFlags & 8246)) {
             i = 0 !== (finishedWork.flags & 4);
             var prevContextChanged = viewTransitionContextChanged,
-              prevCancelableChildren = viewTransitionCancelableChildren;
+              prevCancelableChildren = pushViewTransitionCancelableScope();
             viewTransitionContextChanged = !1;
-            viewTransitionCancelableChildren = null;
             recursivelyTraverseAfterMutationEffects(root, finishedWork);
             viewTransitionContextChanged && (finishedWork.flags |= 4);
             a: {
-              root = finishedWork.memoizedProps;
+              var props = finishedWork.memoizedProps,
+                newName = getViewTransitionName(props, finishedWork.stateNode);
+              root = getViewTransitionName(
+                current.memoizedProps,
+                current.stateNode
+              );
               var updateClassName = getViewTransitionClassName(
-                  root.className,
-                  root.update
-                ),
-                layoutClassName = getViewTransitionClassName(
-                  root.className,
-                  root.layout
-                );
+                props.className,
+                props.update
+              );
+              props = getViewTransitionClassName(props.className, props.layout);
               if ("none" === updateClassName) {
-                if ("none" === layoutClassName) {
-                  current = !1;
+                if ("none" === props) {
+                  root = !1;
                   break a;
                 }
                 finishedWork.flags &= -5;
-                updateClassName = layoutClassName;
+                updateClassName = props;
               } else if (0 === (finishedWork.flags & 4)) {
-                if ("none" === layoutClassName) {
+                if ("none" === props) {
+                  newName = finishedWork.child;
                   viewTransitionHostInstanceIdx = 0;
-                  cancelViewTransitionHostInstances(
-                    current,
-                    finishedWork.child,
-                    !0
-                  );
-                  current = !1;
+                  cancelViewTransitionHostInstancesRecursive(newName, root, !0);
+                  root = !1;
                   break a;
                 }
-                updateClassName = layoutClassName;
+                updateClassName = props;
               }
-              layoutClassName = getViewTransitionName(
-                root,
-                finishedWork.stateNode
-              );
+              current = current.memoizedState;
+              props = finishedWork.child;
               viewTransitionHostInstanceIdx = 0;
-              root = current.memoizedState;
-              current = measureViewTransitionHostInstances(
-                current,
+              root = measureViewTransitionHostInstancesRecursive(
                 finishedWork,
-                finishedWork.child,
-                layoutClassName,
-                updateClassName,
+                props,
+                newName,
                 root,
+                updateClassName,
+                current,
                 !0
               );
               viewTransitionHostInstanceIdx !==
-                (null === root ? 0 : root.length) && (finishedWork.flags |= 32);
+                (null === current ? 0 : current.length) &&
+                (finishedWork.flags |= 32);
             }
-            0 !== (finishedWork.flags & 4) && current
-              ? ((current = finishedWork.memoizedProps),
+            0 !== (finishedWork.flags & 4) && root
+              ? ((root = finishedWork.memoizedProps),
                 scheduleViewTransitionEvent(
                   finishedWork,
                   i || viewTransitionContextChanged
-                    ? current.onUpdate
-                    : current.onLayout
+                    ? root.onUpdate
+                    : root.onLayout
                 ),
                 (viewTransitionCancelableChildren = prevCancelableChildren))
               : null !== prevCancelableChildren &&
@@ -12387,7 +12388,12 @@ module.exports = function ($$$config) {
               (type = createFiber(30, pendingProps, key, mode)),
               (type.elementType = REACT_VIEW_TRANSITION_TYPE),
               (type.lanes = lanes),
-              (type.stateNode = { autoName: null, paired: null, ref: null }),
+              (type.stateNode = {
+                autoName: null,
+                paired: null,
+                clones: null,
+                ref: null
+              }),
               type
             );
         case REACT_SCOPE_TYPE:
@@ -13895,7 +13901,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-3e956805-20250314"
+      reconcilerVersion: "19.1.0-www-classic-c4a3b92e-20250314"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

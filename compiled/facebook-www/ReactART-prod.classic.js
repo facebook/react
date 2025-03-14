@@ -7343,7 +7343,7 @@ function insertOrAppendPlacementNode(node, before, parent) {
       insertOrAppendPlacementNode(node, before, parent), (node = node.sibling);
 }
 var appearingViewTransitions = null;
-function applyViewTransitionToHostInstances(
+function applyViewTransitionToHostInstancesRecursive(
   child,
   name,
   className,
@@ -7357,7 +7357,7 @@ function applyViewTransitionToHostInstances(
         : inViewport || (inViewport = !0);
     else if (22 !== child.tag || null === child.memoizedState)
       (30 === child.tag && stopAtNestedViewTransitions) ||
-        (applyViewTransitionToHostInstances(
+        (applyViewTransitionToHostInstancesRecursive(
           child.child,
           name,
           className,
@@ -7389,7 +7389,7 @@ function commitDeletedPairViewTransitions(deletion) {
                   props.share
                 );
                 "none" !== className &&
-                  applyViewTransitionToHostInstances(
+                  applyViewTransitionToHostInstancesRecursive(
                     deletion.child,
                     name,
                     className,
@@ -7422,7 +7422,7 @@ function commitExitViewTransitions(deletion) {
         void 0 !== pair ? props.share : props.exit
       );
     "none" !== className &&
-      applyViewTransitionToHostInstances(
+      applyViewTransitionToHostInstancesRecursive(
         deletion.child,
         name,
         className,
@@ -7449,14 +7449,16 @@ function commitNestedViewTransitions(changedParent) {
       var props = changedParent.memoizedProps,
         name = getViewTransitionName(props, changedParent.stateNode);
       props = getViewTransitionClassName(props.className, props.layout);
-      "none" !== props &&
-        applyViewTransitionToHostInstances(
+      if ("none" !== props) {
+        var collectMeasurements = (changedParent.memoizedState = []);
+        applyViewTransitionToHostInstancesRecursive(
           changedParent.child,
           name,
           props,
-          (changedParent.memoizedState = []),
+          collectMeasurements,
           !1
         );
+      }
     } else
       0 !== (changedParent.subtreeFlags & 33554432) &&
         commitNestedViewTransitions(changedParent);
@@ -7636,25 +7638,26 @@ function commitBeforeMutationEffects_complete(
                 current.memoizedProps,
                 current.stateNode
               );
-              flags = fiber.memoizedProps;
-              JSCompiler_temp = getViewTransitionClassName(
-                flags.className,
-                flags.update
+              JSCompiler_temp = fiber.memoizedProps;
+              flags = getViewTransitionClassName(
+                JSCompiler_temp.className,
+                JSCompiler_temp.update
               );
               if (
-                "none" === JSCompiler_temp &&
-                ((JSCompiler_temp = getViewTransitionClassName(
-                  flags.className,
-                  flags.layout
+                "none" === flags &&
+                ((flags = getViewTransitionClassName(
+                  JSCompiler_temp.className,
+                  JSCompiler_temp.layout
                 )),
-                "none" === JSCompiler_temp)
+                "none" === flags)
               )
                 break a;
-              applyViewTransitionToHostInstances(
+              JSCompiler_temp = current.memoizedState = [];
+              applyViewTransitionToHostInstancesRecursive(
                 current.child,
                 isViewTransitionEligible,
+                flags,
                 JSCompiler_temp,
-                (current.memoizedState = []),
                 !0
               );
             }
@@ -10929,7 +10932,12 @@ function createFiberFromTypeAndProps(
             (type = createFiber(30, pendingProps, key, mode)),
             (type.elementType = REACT_VIEW_TRANSITION_TYPE),
             (type.lanes = lanes),
-            (type.stateNode = { autoName: null, paired: null, ref: null }),
+            (type.stateNode = {
+              autoName: null,
+              paired: null,
+              clones: null,
+              ref: null
+            }),
             type
           );
       case REACT_SCOPE_TYPE:
@@ -11294,10 +11302,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1562 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-3e956805-20250314",
+  version: "19.1.0-www-classic-c4a3b92e-20250314",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-3e956805-20250314"
+  reconcilerVersion: "19.1.0-www-classic-c4a3b92e-20250314"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1563 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11323,4 +11331,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-3e956805-20250314";
+exports.version = "19.1.0-www-classic-c4a3b92e-20250314";

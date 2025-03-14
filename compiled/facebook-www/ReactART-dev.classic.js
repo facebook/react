@@ -10620,7 +10620,7 @@ __DEV__ &&
           );
       }
     }
-    function applyViewTransitionToHostInstances(
+    function applyViewTransitionToHostInstancesRecursive(
       child,
       name,
       className,
@@ -10634,7 +10634,7 @@ __DEV__ &&
             : inViewport || (inViewport = !0);
         else if (22 !== child.tag || null === child.memoizedState)
           (30 === child.tag && stopAtNestedViewTransitions) ||
-            (applyViewTransitionToHostInstances(
+            (applyViewTransitionToHostInstancesRecursive(
               child.child,
               name,
               className,
@@ -10666,7 +10666,7 @@ __DEV__ &&
                       props.share
                     );
                     "none" !== className &&
-                      applyViewTransitionToHostInstances(
+                      applyViewTransitionToHostInstancesRecursive(
                         deletion.child,
                         name,
                         className,
@@ -10699,7 +10699,7 @@ __DEV__ &&
             void 0 !== pair ? props.share : props.exit
           );
         "none" !== className &&
-          applyViewTransitionToHostInstances(
+          applyViewTransitionToHostInstancesRecursive(
             deletion.child,
             name,
             className,
@@ -10726,14 +10726,16 @@ __DEV__ &&
           var props = changedParent.memoizedProps,
             name = getViewTransitionName(props, changedParent.stateNode);
           props = getViewTransitionClassName(props.className, props.layout);
-          "none" !== props &&
-            applyViewTransitionToHostInstances(
+          if ("none" !== props) {
+            var collectMeasurements = (changedParent.memoizedState = []);
+            applyViewTransitionToHostInstancesRecursive(
               changedParent.child,
               name,
               props,
-              (changedParent.memoizedState = []),
+              collectMeasurements,
               !1
             );
+          }
         } else
           0 !== (changedParent.subtreeFlags & 33554432) &&
             commitNestedViewTransitions(changedParent);
@@ -10898,25 +10900,26 @@ __DEV__ &&
                     isViewTransitionEligible.memoizedProps,
                     isViewTransitionEligible.stateNode
                   );
-                  current = current.memoizedProps;
-                  flags = getViewTransitionClassName(
-                    current.className,
-                    current.update
+                  flags = current.memoizedProps;
+                  current = getViewTransitionClassName(
+                    flags.className,
+                    flags.update
                   );
                   if (
-                    "none" === flags &&
-                    ((flags = getViewTransitionClassName(
-                      current.className,
-                      current.layout
+                    "none" === current &&
+                    ((current = getViewTransitionClassName(
+                      flags.className,
+                      flags.layout
                     )),
-                    "none" === flags)
+                    "none" === current)
                   )
                     break a;
-                  applyViewTransitionToHostInstances(
+                  flags = isViewTransitionEligible.memoizedState = [];
+                  applyViewTransitionToHostInstancesRecursive(
                     isViewTransitionEligible.child,
                     finishedWork,
+                    current,
                     flags,
-                    (isViewTransitionEligible.memoizedState = []),
                     !0
                   );
                 }
@@ -15818,7 +15821,12 @@ __DEV__ &&
                 (key = createFiber(30, pendingProps, key, mode)),
                 (key.elementType = REACT_VIEW_TRANSITION_TYPE),
                 (key.lanes = lanes),
-                (key.stateNode = { autoName: null, paired: null, ref: null }),
+                (key.stateNode = {
+                  autoName: null,
+                  paired: null,
+                  clones: null,
+                  ref: null
+                }),
                 key
               );
           case REACT_SCOPE_TYPE:
@@ -18495,10 +18503,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-3e956805-20250314",
+        version: "19.1.0-www-classic-c4a3b92e-20250314",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-3e956805-20250314"
+        reconcilerVersion: "19.1.0-www-classic-c4a3b92e-20250314"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18532,7 +18540,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-classic-3e956805-20250314";
+    exports.version = "19.1.0-www-classic-c4a3b92e-20250314";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
