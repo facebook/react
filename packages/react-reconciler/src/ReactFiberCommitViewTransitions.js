@@ -514,37 +514,20 @@ function restorePairedViewTransitions(parent: Fiber): void {
   }
 }
 
-export function restoreEnterViewTransitions(placement: Fiber): void {
-  if (placement.tag === ViewTransitionComponent) {
-    const instance: ViewTransitionState = placement.stateNode;
+export function restoreEnterOrExitViewTransitions(fiber: Fiber): void {
+  if (fiber.tag === ViewTransitionComponent) {
+    const instance: ViewTransitionState = fiber.stateNode;
     instance.paired = null;
-    restoreViewTransitionOnHostInstances(placement.child, false);
-    restorePairedViewTransitions(placement);
-  } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-    let child = placement.child;
+    restoreViewTransitionOnHostInstances(fiber.child, false);
+    restorePairedViewTransitions(fiber);
+  } else if ((fiber.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+    let child = fiber.child;
     while (child !== null) {
-      restoreEnterViewTransitions(child);
+      restoreEnterOrExitViewTransitions(child);
       child = child.sibling;
     }
   } else {
-    restorePairedViewTransitions(placement);
-  }
-}
-
-export function restoreExitViewTransitions(deletion: Fiber): void {
-  if (deletion.tag === ViewTransitionComponent) {
-    const instance: ViewTransitionState = deletion.stateNode;
-    instance.paired = null;
-    restoreViewTransitionOnHostInstances(deletion.child, false);
-    restorePairedViewTransitions(deletion);
-  } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-    let child = deletion.child;
-    while (child !== null) {
-      restoreExitViewTransitions(child);
-      child = child.sibling;
-    }
-  } else {
-    restorePairedViewTransitions(deletion);
+    restorePairedViewTransitions(fiber);
   }
 }
 
