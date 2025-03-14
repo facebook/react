@@ -190,6 +190,16 @@ function doesFiberContain(parentFiber, childFiber) {
   }
   return !1;
 }
+function traverseFragmentInstanceChildren(child, fn, a, b, c) {
+  for (; null !== child; ) {
+    if (5 === child.tag) {
+      if (fn(child.stateNode, a, b, c)) break;
+    } else
+      (22 === child.tag && null !== child.memoizedState) ||
+        traverseFragmentInstanceChildren(child.child, fn, a, b, c);
+    child = child.sibling;
+  }
+}
 var currentReplayingEvent = null,
   ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
@@ -17085,7 +17095,6 @@ FragmentInstance.prototype.addEventListener = function (
       optionsOrUseCapture: optionsOrUseCapture
     }),
     traverseFragmentInstanceChildren(
-      this,
       this._fragmentFiber.child,
       addEventListenerToChild,
       type,
@@ -17108,7 +17117,6 @@ FragmentInstance.prototype.removeEventListener = function (
     "undefined" !== typeof listeners &&
     0 < listeners.length &&
     (traverseFragmentInstanceChildren(
-      this,
       this._fragmentFiber.child,
       removeEventListenerFromChild,
       type,
@@ -17134,35 +17142,13 @@ function removeEventListenerFromChild(
 }
 FragmentInstance.prototype.focus = function () {
   traverseFragmentInstanceChildren(
-    this,
     this._fragmentFiber.child,
-    setFocusIfFocusable
+    setFocusIfFocusable,
+    void 0,
+    void 0,
+    void 0
   );
 };
-function traverseFragmentInstanceChildren(
-  fragmentInstance,
-  child,
-  fn,
-  a,
-  b,
-  c
-) {
-  for (; null !== child; ) {
-    if (5 === child.tag) {
-      if (fn(child.stateNode, a, b, c)) break;
-    } else
-      (22 === child.tag && null !== child.memoizedState) ||
-        traverseFragmentInstanceChildren(
-          fragmentInstance,
-          child.child,
-          fn,
-          a,
-          b,
-          c
-        );
-    child = child.sibling;
-  }
-}
 function normalizeListenerOptions(opts) {
   return null == opts
     ? "0"
@@ -18889,14 +18875,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1897 = React.version;
 if (
-  "19.1.0-www-classic-2c560374-20250314" !==
+  "19.1.0-www-classic-6b5d9fd3-20250314" !==
   isomorphicReactPackageVersion$jscomp$inline_1897
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1897,
-      "19.1.0-www-classic-2c560374-20250314"
+      "19.1.0-www-classic-6b5d9fd3-20250314"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18914,10 +18900,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2487 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-2c560374-20250314",
+  version: "19.1.0-www-classic-6b5d9fd3-20250314",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-2c560374-20250314"
+  reconcilerVersion: "19.1.0-www-classic-6b5d9fd3-20250314"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2488 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -19281,4 +19267,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-2c560374-20250314";
+exports.version = "19.1.0-www-classic-6b5d9fd3-20250314";

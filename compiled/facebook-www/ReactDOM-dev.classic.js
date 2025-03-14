@@ -253,6 +253,16 @@ __DEV__ &&
       }
       return !1;
     }
+    function traverseFragmentInstanceChildren(child, fn, a, b, c) {
+      for (; null !== child; ) {
+        if (5 === child.tag) {
+          if (fn(child.stateNode, a, b, c)) break;
+        } else
+          (22 === child.tag && null !== child.memoizedState) ||
+            traverseFragmentInstanceChildren(child.child, fn, a, b, c);
+        child = child.sibling;
+      }
+    }
     function injectInternals(internals) {
       if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) return !1;
       var hook = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -24312,30 +24322,6 @@ __DEV__ &&
       child.removeEventListener(type, listener, optionsOrUseCapture);
       return !1;
     }
-    function traverseFragmentInstanceChildren(
-      fragmentInstance,
-      child,
-      fn,
-      a,
-      b,
-      c
-    ) {
-      for (; null !== child; ) {
-        if (5 === child.tag) {
-          if (fn(child.stateNode, a, b, c)) break;
-        } else
-          (22 === child.tag && null !== child.memoizedState) ||
-            traverseFragmentInstanceChildren(
-              fragmentInstance,
-              child.child,
-              fn,
-              a,
-              b,
-              c
-            );
-        child = child.sibling;
-      }
-    }
     function normalizeListenerOptions(opts) {
       return null == opts
         ? "0"
@@ -29825,7 +29811,6 @@ __DEV__ &&
           optionsOrUseCapture: optionsOrUseCapture
         }),
         traverseFragmentInstanceChildren(
-          this,
           this._fragmentFiber.child,
           addEventListenerToChild,
           type,
@@ -29844,7 +29829,6 @@ __DEV__ &&
         "undefined" !== typeof listeners &&
         0 < listeners.length &&
         (traverseFragmentInstanceChildren(
-          this,
           this._fragmentFiber.child,
           removeEventListenerFromChild,
           type,
@@ -29861,9 +29845,11 @@ __DEV__ &&
     };
     FragmentInstance.prototype.focus = function () {
       traverseFragmentInstanceChildren(
-        this,
         this._fragmentFiber.child,
-        setFocusIfFocusable
+        setFocusIfFocusable,
+        void 0,
+        void 0,
+        void 0
       );
     };
     var previousHydratableOnEnteringScopedSingleton = null,
@@ -30155,11 +30141,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-classic-2c560374-20250314" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-classic-6b5d9fd3-20250314" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-classic-2c560374-20250314\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-classic-6b5d9fd3-20250314\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30202,10 +30188,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-classic-2c560374-20250314",
+          version: "19.1.0-www-classic-6b5d9fd3-20250314",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-classic-2c560374-20250314"
+          reconcilerVersion: "19.1.0-www-classic-6b5d9fd3-20250314"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30803,7 +30789,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-classic-2c560374-20250314";
+    exports.version = "19.1.0-www-classic-6b5d9fd3-20250314";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
