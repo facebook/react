@@ -5,7 +5,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
-    "directory": "packages/eslint-plugin-react-hooks"
+    "directory": "compiler/packages/eslint-plugin-react-hooks"
   },
   "files": [
     "LICENSE",
@@ -21,7 +21,7 @@
     "react"
   ],
   "scripts": {
-    "build:compiler": "cd ../../compiler && yarn workspace babel-plugin-react-compiler build",
+    "build:compiler": "yarn workspace babel-plugin-react-compiler build",
     "test": "yarn build:compiler && jest",
     "typecheck": "tsc --noEmit"
   },
