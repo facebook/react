@@ -44188,6 +44188,7 @@ PERFORMANCE OF THIS SOFTWARE.
             return DefaultMutatingHook;
           }
         });
+    Environment.knownReactModules = ["react", "react-dom"];
     var REANIMATED_MODULE_NAME = "react-native-reanimated";
     function isHookName$2(name) {
       return /^use[A-Z0-9]/.test(name);
@@ -72380,7 +72381,7 @@ PERFORMANCE OF THIS SOFTWARE.
     function compileProgram(program, pass) {
       var _a, _b;
       if (shouldSkipCompilation(program, pass)) {
-        return;
+        return null;
       }
       var environment = pass.opts.environment;
       var restrictedImportsErr = validateRestrictedImports(
@@ -72389,7 +72390,7 @@ PERFORMANCE OF THIS SOFTWARE.
       );
       if (restrictedImportsErr) {
         handleError(restrictedImportsErr, pass, null);
-        return;
+        return null;
       }
       var useMemoCacheIdentifier = program.scope.generateUidIdentifier("c");
       var suppressions = findProgramSuppressions(
@@ -72429,6 +72430,7 @@ PERFORMANCE OF THIS SOFTWARE.
           filename: (_b = pass.filename) !== null && _b !== void 0 ? _b : null
         })
       );
+      var retryErrors = [];
       var processFn = function processFn(fn, fnType) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         var optInDirectives = [];
@@ -72484,7 +72486,12 @@ PERFORMANCE OF THIS SOFTWARE.
               (_b = fn.node.loc) !== null && _b !== void 0 ? _b : null
             );
           }
-          if (!environment.enableFire) {
+          if (
+            !(
+              environment.enableFire ||
+              environment.inferEffectDependencies != null
+            )
+          ) {
             return null;
           }
           try {
@@ -72502,6 +72509,9 @@ PERFORMANCE OF THIS SOFTWARE.
               )
             };
           } catch (err) {
+            if (err instanceof CompilerError) {
+              retryErrors.push({ fn: fn, error: err });
+            }
             return null;
           }
         }
@@ -72608,7 +72618,7 @@ PERFORMANCE OF THIS SOFTWARE.
         program.node.directives
       );
       if (moduleScopeOptOutDirectives.length > 0) {
-        return;
+        return null;
       }
       var gating = null;
       if (pass.opts.gating != null) {
@@ -72660,7 +72670,7 @@ PERFORMANCE OF THIS SOFTWARE.
         }
       } catch (err) {
         handleError(err, pass, null);
-        return;
+        return null;
       }
       for (
         var _i46 = 0, _compiledFns = compiledFns;
@@ -72709,6 +72719,7 @@ PERFORMANCE OF THIS SOFTWARE.
         }
         addImportsToProgram(program, externalFunctions);
       }
+      return { retryErrors: retryErrors };
     }
     function shouldSkipCompilation(program, pass) {
       if (pass.opts.sources) {
@@ -73155,6 +73166,303 @@ PERFORMANCE OF THIS SOFTWARE.
         })
       });
     }
+    function throwInvalidReact(options, _ref46) {
+      var logger = _ref46.logger,
+        filename = _ref46.filename;
+      var detail = Object.assign(Object.assign({}, options), {
+        severity: ErrorSeverity.InvalidReact
+      });
+      logger === null || logger === void 0
+        ? void 0
+        : logger.logEvent(filename, {
+            kind: "CompileError",
+            fnLoc: null,
+            detail: detail
+          });
+      CompilerError["throw"](detail);
+    }
+    function assertValidEffectImportReference(numArgs, paths, context) {
+      var _a;
+      var _iterator594 = _createForOfIteratorHelper(paths),
+        _step594;
+      try {
+        for (_iterator594.s(); !(_step594 = _iterator594.n()).done; ) {
+          var path = _step594.value;
+          var parent = path.parentPath;
+          if (parent != null && parent.isCallExpression()) {
+            var args = parent.get("arguments");
+            if (args.length === numArgs) {
+              var maybeErrorDiagnostic = matchCompilerDiagnostic(
+                path,
+                context.transformErrors
+              );
+              throwInvalidReact(
+                {
+                  reason:
+                    "[InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. " +
+                    "This will break your build! " +
+                    "To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics.",
+                  description: maybeErrorDiagnostic
+                    ? "(Bailout reason: ".concat(maybeErrorDiagnostic, ")")
+                    : null,
+                  loc:
+                    (_a = parent.node.loc) !== null && _a !== void 0 ? _a : null
+                },
+                context
+              );
+            }
+          }
+        }
+      } catch (err) {
+        _iterator594.e(err);
+      } finally {
+        _iterator594.f();
+      }
+    }
+    function assertValidFireImportReference(paths, context) {
+      var _a;
+      if (paths.length > 0) {
+        var maybeErrorDiagnostic = matchCompilerDiagnostic(
+          paths[0],
+          context.transformErrors
+        );
+        throwInvalidReact(
+          {
+            reason:
+              "[Fire] Untransformed reference to compiler-required feature. " +
+              "Either remove this `fire` call or ensure it is successfully transformed by the compiler",
+            description: maybeErrorDiagnostic
+              ? "(Bailout reason: ".concat(maybeErrorDiagnostic, ")")
+              : null,
+            loc: (_a = paths[0].node.loc) !== null && _a !== void 0 ? _a : null
+          },
+          context
+        );
+      }
+    }
+    function validateNoUntransformedReferences(
+      path,
+      filename,
+      logger,
+      env,
+      transformErrors
+    ) {
+      var moduleLoadChecks = new Map();
+      if (env.enableFire) {
+        var _iterator595 = _createForOfIteratorHelper(
+            Environment.knownReactModules
+          ),
+          _step595;
+        try {
+          for (_iterator595.s(); !(_step595 = _iterator595.n()).done; ) {
+            var module = _step595.value;
+            var react = getOrInsertWith(moduleLoadChecks, module, function () {
+              return new Map();
+            });
+            react.set("fire", assertValidFireImportReference);
+          }
+        } catch (err) {
+          _iterator595.e(err);
+        } finally {
+          _iterator595.f();
+        }
+      }
+      if (env.inferEffectDependencies) {
+        var _iterator596 = _createForOfIteratorHelper(
+            env.inferEffectDependencies
+          ),
+          _step596;
+        try {
+          for (_iterator596.s(); !(_step596 = _iterator596.n()).done; ) {
+            var _step596$value = _step596.value,
+              _step596$value$functi = _step596$value["function"],
+              source = _step596$value$functi.source,
+              importSpecifierName = _step596$value$functi.importSpecifierName,
+              numRequiredArgs = _step596$value.numRequiredArgs;
+            var _module = getOrInsertWith(
+              moduleLoadChecks,
+              source,
+              function () {
+                return new Map();
+              }
+            );
+            _module.set(
+              importSpecifierName,
+              assertValidEffectImportReference.bind(null, numRequiredArgs)
+            );
+          }
+        } catch (err) {
+          _iterator596.e(err);
+        } finally {
+          _iterator596.f();
+        }
+      }
+      if (moduleLoadChecks.size > 0) {
+        transformProgram(
+          path,
+          moduleLoadChecks,
+          filename,
+          logger,
+          transformErrors
+        );
+      }
+    }
+    function validateImportSpecifier(specifier, importSpecifierChecks, state) {
+      var _a;
+      var imported = specifier.get("imported");
+      var specifierName =
+        imported.node.type === "Identifier"
+          ? imported.node.name
+          : imported.node.value;
+      var checkFn = importSpecifierChecks.get(specifierName);
+      if (checkFn == null) {
+        return;
+      }
+      if (state.shouldInvalidateScopes) {
+        state.shouldInvalidateScopes = false;
+        state.program.scope.crawl();
+      }
+      var local = specifier.get("local");
+      var binding = local.scope.getBinding(local.node.name);
+      CompilerError.invariant(binding != null, {
+        reason: "Expected binding to be found for import specifier",
+        loc: (_a = local.node.loc) !== null && _a !== void 0 ? _a : null
+      });
+      checkFn(binding.referencePaths, state);
+    }
+    function validateNamespacedImport(specifier, importSpecifierChecks, state) {
+      var _a;
+      if (state.shouldInvalidateScopes) {
+        state.shouldInvalidateScopes = false;
+        state.program.scope.crawl();
+      }
+      var local = specifier.get("local");
+      var binding = local.scope.getBinding(local.node.name);
+      var defaultCheckFn = importSpecifierChecks.get(DEFAULT_EXPORT);
+      CompilerError.invariant(binding != null, {
+        reason: "Expected binding to be found for import specifier",
+        loc: (_a = local.node.loc) !== null && _a !== void 0 ? _a : null
+      });
+      var filteredReferences = new Map();
+      var _iterator597 = _createForOfIteratorHelper(binding.referencePaths),
+        _step597;
+      try {
+        for (_iterator597.s(); !(_step597 = _iterator597.n()).done; ) {
+          var reference = _step597.value;
+          if (defaultCheckFn != null) {
+            getOrInsertWith(filteredReferences, defaultCheckFn, function () {
+              return [];
+            }).push(reference);
+          }
+          var parent = reference.parentPath;
+          if (
+            parent != null &&
+            parent.isMemberExpression() &&
+            parent.get("object") === reference
+          ) {
+            if (
+              parent.node.computed ||
+              parent.node.property.type !== "Identifier"
+            ) {
+              continue;
+            }
+            var checkFn = importSpecifierChecks.get(parent.node.property.name);
+            if (checkFn != null) {
+              getOrInsertWith(filteredReferences, checkFn, function () {
+                return [];
+              }).push(parent);
+            }
+          }
+        }
+      } catch (err) {
+        _iterator597.e(err);
+      } finally {
+        _iterator597.f();
+      }
+      var _iterator598 = _createForOfIteratorHelper(filteredReferences),
+        _step598;
+      try {
+        for (_iterator598.s(); !(_step598 = _iterator598.n()).done; ) {
+          var _step598$value = _slicedToArray(_step598.value, 2),
+            _checkFn = _step598$value[0],
+            references = _step598$value[1];
+          _checkFn(references, state);
+        }
+      } catch (err) {
+        _iterator598.e(err);
+      } finally {
+        _iterator598.f();
+      }
+    }
+    function transformProgram(
+      path,
+      moduleLoadChecks,
+      filename,
+      logger,
+      transformErrors
+    ) {
+      var traversalState = {
+        shouldInvalidateScopes: true,
+        program: path,
+        filename: filename,
+        logger: logger,
+        transformErrors: transformErrors
+      };
+      path.traverse({
+        ImportDeclaration: function ImportDeclaration(path) {
+          var importSpecifierChecks = moduleLoadChecks.get(
+            path.node.source.value
+          );
+          if (importSpecifierChecks == null) {
+            return;
+          }
+          var specifiers = path.get("specifiers");
+          var _iterator599 = _createForOfIteratorHelper(specifiers),
+            _step599;
+          try {
+            for (_iterator599.s(); !(_step599 = _iterator599.n()).done; ) {
+              var specifier = _step599.value;
+              if (specifier.isImportSpecifier()) {
+                validateImportSpecifier(
+                  specifier,
+                  importSpecifierChecks,
+                  traversalState
+                );
+              } else {
+                validateNamespacedImport(
+                  specifier,
+                  importSpecifierChecks,
+                  traversalState
+                );
+              }
+            }
+          } catch (err) {
+            _iterator599.e(err);
+          } finally {
+            _iterator599.f();
+          }
+        }
+      });
+    }
+    function matchCompilerDiagnostic(badReference, transformErrors) {
+      var _iterator600 = _createForOfIteratorHelper(transformErrors),
+        _step600;
+      try {
+        for (_iterator600.s(); !(_step600 = _iterator600.n()).done; ) {
+          var _step600$value = _step600.value,
+            fn = _step600$value.fn,
+            error = _step600$value.error;
+          if (fn.isAncestor(badReference)) {
+            return error.toString();
+          }
+        }
+      } catch (err) {
+        _iterator600.e(err);
+      } finally {
+        _iterator600.f();
+      }
+      return null;
+    }
     var ENABLE_REACT_COMPILER_TIMINGS =
       process.env["ENABLE_REACT_COMPILER_TIMINGS"] === "1";
     function BabelPluginReactCompiler(_babel) {
@@ -73163,7 +73471,7 @@ PERFORMANCE OF THIS SOFTWARE.
         visitor: {
           Program: {
             enter: function enter(prog, pass) {
-              var _a, _b, _c;
+              var _a, _b, _c, _d, _e;
               var filename =
                 (_a = pass.filename) !== null && _a !== void 0 ? _a : "unknown";
               if (ENABLE_REACT_COMPILER_TIMINGS === true) {
@@ -73191,7 +73499,7 @@ PERFORMANCE OF THIS SOFTWARE.
                   )
                 });
               }
-              compileProgram(prog, {
+              var result = compileProgram(prog, {
                 opts: opts,
                 filename:
                   (_b = pass.filename) !== null && _b !== void 0 ? _b : null,
@@ -73201,6 +73509,18 @@ PERFORMANCE OF THIS SOFTWARE.
                     : [],
                 code: pass.file.code
               });
+              validateNoUntransformedReferences(
+                prog,
+                (_d = pass.filename) !== null && _d !== void 0 ? _d : null,
+                opts.logger,
+                opts.environment,
+                (_e =
+                  result === null || result === void 0
+                    ? void 0
+                    : result.retryErrors) !== null && _e !== void 0
+                  ? _e
+                  : []
+              );
               if (ENABLE_REACT_COMPILER_TIMINGS === true) {
                 performance.mark("".concat(filename, ":end"), {
                   detail: "BabelPlugin:Program:end"
@@ -73250,11 +73570,11 @@ PERFORMANCE OF THIS SOFTWARE.
     function makeSuggestions(detail) {
       var suggest = [];
       if (Array.isArray(detail.suggestions)) {
-        var _iterator594 = _createForOfIteratorHelper(detail.suggestions),
-          _step594;
+        var _iterator601 = _createForOfIteratorHelper(detail.suggestions),
+          _step601;
         try {
           var _loop22 = function _loop22() {
-            var suggestion = _step594.value;
+            var suggestion = _step601.value;
             switch (suggestion.op) {
               case CompilerSuggestionOperation.InsertBefore:
                 suggest.push({
@@ -73301,13 +73621,13 @@ PERFORMANCE OF THIS SOFTWARE.
                 assertExhaustive(suggestion, "Unhandled suggestion operation");
             }
           };
-          for (_iterator594.s(); !(_step594 = _iterator594.n()).done; ) {
+          for (_iterator601.s(); !(_step601 = _iterator601.n()).done; ) {
             _loop22();
           }
         } catch (err) {
-          _iterator594.e(err);
+          _iterator601.e(err);
         } finally {
-          _iterator594.f();
+          _iterator601.f();
         }
       }
       return suggest;
@@ -73446,11 +73766,11 @@ PERFORMANCE OF THIS SOFTWARE.
           var flowSuppressionRegex = new RegExp(
             "\\$FlowFixMe\\[" + suppression + "\\]"
           );
-          var _iterator595 = _createForOfIteratorHelper(comments),
-            _step595;
+          var _iterator602 = _createForOfIteratorHelper(comments),
+            _step602;
           try {
-            for (_iterator595.s(); !(_step595 = _iterator595.n()).done; ) {
-              var commentNode = _step595.value;
+            for (_iterator602.s(); !(_step602 = _iterator602.n()).done; ) {
+              var commentNode = _step602.value;
               if (
                 flowSuppressionRegex.test(commentNode.value) &&
                 commentNode.loc.end.line === nodeLoc.start.line - 1
@@ -73459,9 +73779,9 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator595.e(err);
+            _iterator602.e(err);
           } finally {
-            _iterator595.f();
+            _iterator602.f();
           }
           return false;
         }
@@ -73527,51 +73847,51 @@ PERFORMANCE OF THIS SOFTWARE.
         if (shouldReportUnusedOptOutDirective) {
           return {
             FunctionDeclaration: function FunctionDeclaration(fnDecl) {
-              var _iterator596 = _createForOfIteratorHelper(fnDecl.body.body),
-                _step596;
+              var _iterator603 = _createForOfIteratorHelper(fnDecl.body.body),
+                _step603;
               try {
-                for (_iterator596.s(); !(_step596 = _iterator596.n()).done; ) {
-                  var stmt = _step596.value;
+                for (_iterator603.s(); !(_step603 = _iterator603.n()).done; ) {
+                  var stmt = _step603.value;
                   reportUnusedOptOutDirective(stmt);
                 }
               } catch (err) {
-                _iterator596.e(err);
+                _iterator603.e(err);
               } finally {
-                _iterator596.f();
+                _iterator603.f();
               }
             },
             ArrowFunctionExpression: function ArrowFunctionExpression(fnExpr) {
               if (fnExpr.body.type === "BlockStatement") {
-                var _iterator597 = _createForOfIteratorHelper(fnExpr.body.body),
-                  _step597;
+                var _iterator604 = _createForOfIteratorHelper(fnExpr.body.body),
+                  _step604;
                 try {
                   for (
-                    _iterator597.s();
-                    !(_step597 = _iterator597.n()).done;
+                    _iterator604.s();
+                    !(_step604 = _iterator604.n()).done;
 
                   ) {
-                    var stmt = _step597.value;
+                    var stmt = _step604.value;
                     reportUnusedOptOutDirective(stmt);
                   }
                 } catch (err) {
-                  _iterator597.e(err);
+                  _iterator604.e(err);
                 } finally {
-                  _iterator597.f();
+                  _iterator604.f();
                 }
               }
             },
             FunctionExpression: function FunctionExpression(fnExpr) {
-              var _iterator598 = _createForOfIteratorHelper(fnExpr.body.body),
-                _step598;
+              var _iterator605 = _createForOfIteratorHelper(fnExpr.body.body),
+                _step605;
               try {
-                for (_iterator598.s(); !(_step598 = _iterator598.n()).done; ) {
-                  var stmt = _step598.value;
+                for (_iterator605.s(); !(_step605 = _iterator605.n()).done; ) {
+                  var stmt = _step605.value;
                   reportUnusedOptOutDirective(stmt);
                 }
               } catch (err) {
-                _iterator598.e(err);
+                _iterator605.e(err);
               } finally {
-                _iterator598.f();
+                _iterator605.f();
               }
             }
           };
@@ -73676,11 +73996,11 @@ PERFORMANCE OF THIS SOFTWARE.
         var codePathSegmentStack = [];
         var useEffectEventFunctions = new WeakSet();
         function recordAllUseEffectEventFunctions(scope) {
-          var _iterator599 = _createForOfIteratorHelper(scope.references),
-            _step599;
+          var _iterator606 = _createForOfIteratorHelper(scope.references),
+            _step606;
           try {
-            for (_iterator599.s(); !(_step599 = _iterator599.n()).done; ) {
-              var reference = _step599.value;
+            for (_iterator606.s(); !(_step606 = _iterator606.n()).done; ) {
+              var reference = _step606.value;
               var parent = reference.identifier.parent;
               if (
                 (parent === null || parent === void 0
@@ -73694,32 +74014,32 @@ PERFORMANCE OF THIS SOFTWARE.
                 if (reference.resolved === null) {
                   throw new Error("Unexpected null reference.resolved");
                 }
-                var _iterator600 = _createForOfIteratorHelper(
+                var _iterator607 = _createForOfIteratorHelper(
                     reference.resolved.references
                   ),
-                  _step600;
+                  _step607;
                 try {
                   for (
-                    _iterator600.s();
-                    !(_step600 = _iterator600.n()).done;
+                    _iterator607.s();
+                    !(_step607 = _iterator607.n()).done;
 
                   ) {
-                    var ref = _step600.value;
+                    var ref = _step607.value;
                     if (ref !== reference) {
                       useEffectEventFunctions.add(ref.identifier);
                     }
                   }
                 } catch (err) {
-                  _iterator600.e(err);
+                  _iterator607.e(err);
                 } finally {
-                  _iterator600.f();
+                  _iterator607.f();
                 }
               }
             }
           } catch (err) {
-            _iterator599.e(err);
+            _iterator606.e(err);
           } finally {
-            _iterator599.f();
+            _iterator606.f();
           }
         }
         var getSourceCode =
@@ -73769,21 +74089,21 @@ PERFORMANCE OF THIS SOFTWARE.
                 var cyclicSegments = pathArray.slice(
                   pathArray.indexOf(segment.id) + 1
                 );
-                var _iterator601 = _createForOfIteratorHelper(cyclicSegments),
-                  _step601;
+                var _iterator608 = _createForOfIteratorHelper(cyclicSegments),
+                  _step608;
                 try {
                   for (
-                    _iterator601.s();
-                    !(_step601 = _iterator601.n()).done;
+                    _iterator608.s();
+                    !(_step608 = _iterator608.n()).done;
 
                   ) {
-                    var cyclicSegment = _step601.value;
+                    var cyclicSegment = _step608.value;
                     cyclic.add(cyclicSegment);
                   }
                 } catch (err) {
-                  _iterator601.e(err);
+                  _iterator608.e(err);
                 } finally {
-                  _iterator601.f();
+                  _iterator608.f();
                 }
                 return BigInt("0");
               }
@@ -73797,23 +74117,23 @@ PERFORMANCE OF THIS SOFTWARE.
                 paths = BigInt("1");
               } else {
                 paths = BigInt("0");
-                var _iterator602 = _createForOfIteratorHelper(
+                var _iterator609 = _createForOfIteratorHelper(
                     segment.prevSegments
                   ),
-                  _step602;
+                  _step609;
                 try {
                   for (
-                    _iterator602.s();
-                    !(_step602 = _iterator602.n()).done;
+                    _iterator609.s();
+                    !(_step609 = _iterator609.n()).done;
 
                   ) {
-                    var prevSegment = _step602.value;
+                    var prevSegment = _step609.value;
                     paths += countPathsFromStart(prevSegment, pathList);
                   }
                 } catch (err) {
-                  _iterator602.e(err);
+                  _iterator609.e(err);
                 } finally {
-                  _iterator602.f();
+                  _iterator609.f();
                 }
               }
               if (segment.reachable && paths === BigInt("0")) {
@@ -73832,21 +74152,21 @@ PERFORMANCE OF THIS SOFTWARE.
                 var cyclicSegments = pathArray.slice(
                   pathArray.indexOf(segment.id) + 1
                 );
-                var _iterator603 = _createForOfIteratorHelper(cyclicSegments),
-                  _step603;
+                var _iterator610 = _createForOfIteratorHelper(cyclicSegments),
+                  _step610;
                 try {
                   for (
-                    _iterator603.s();
-                    !(_step603 = _iterator603.n()).done;
+                    _iterator610.s();
+                    !(_step610 = _iterator610.n()).done;
 
                   ) {
-                    var cyclicSegment = _step603.value;
+                    var cyclicSegment = _step610.value;
                     cyclic.add(cyclicSegment);
                   }
                 } catch (err) {
-                  _iterator603.e(err);
+                  _iterator610.e(err);
                 } finally {
-                  _iterator603.f();
+                  _iterator610.f();
                 }
                 return BigInt("0");
               }
@@ -73860,23 +74180,23 @@ PERFORMANCE OF THIS SOFTWARE.
                 paths = BigInt("1");
               } else {
                 paths = BigInt("0");
-                var _iterator604 = _createForOfIteratorHelper(
+                var _iterator611 = _createForOfIteratorHelper(
                     segment.nextSegments
                   ),
-                  _step604;
+                  _step611;
                 try {
                   for (
-                    _iterator604.s();
-                    !(_step604 = _iterator604.n()).done;
+                    _iterator611.s();
+                    !(_step611 = _iterator611.n()).done;
 
                   ) {
-                    var nextSegment = _step604.value;
+                    var nextSegment = _step611.value;
                     paths += countPathsToEnd(nextSegment, pathList);
                   }
                 } catch (err) {
-                  _iterator604.e(err);
+                  _iterator611.e(err);
                 } finally {
-                  _iterator604.f();
+                  _iterator611.f();
                 }
               }
               cache.set(segment.id, paths);
@@ -73896,26 +74216,26 @@ PERFORMANCE OF THIS SOFTWARE.
                 length = 1;
               } else {
                 length = Infinity;
-                var _iterator605 = _createForOfIteratorHelper(
+                var _iterator612 = _createForOfIteratorHelper(
                     segment.prevSegments
                   ),
-                  _step605;
+                  _step612;
                 try {
                   for (
-                    _iterator605.s();
-                    !(_step605 = _iterator605.n()).done;
+                    _iterator612.s();
+                    !(_step612 = _iterator612.n()).done;
 
                   ) {
-                    var prevSegment = _step605.value;
+                    var prevSegment = _step612.value;
                     var prevLength = shortestPathLengthToStart(prevSegment);
                     if (prevLength < length) {
                       length = prevLength;
                     }
                   }
                 } catch (err) {
-                  _iterator605.e(err);
+                  _iterator612.e(err);
                 } finally {
-                  _iterator605.f();
+                  _iterator612.f();
                 }
                 length += 1;
               }
@@ -73937,13 +74257,13 @@ PERFORMANCE OF THIS SOFTWARE.
               : isForwardRefCallback(codePathNode) ||
                 isMemoCallback(codePathNode);
             var shortestFinalPathLength = Infinity;
-            var _iterator606 = _createForOfIteratorHelper(
+            var _iterator613 = _createForOfIteratorHelper(
                 codePath.finalSegments
               ),
-              _step606;
+              _step613;
             try {
-              for (_iterator606.s(); !(_step606 = _iterator606.n()).done; ) {
-                var finalSegment = _step606.value;
+              for (_iterator613.s(); !(_step613 = _iterator613.n()).done; ) {
+                var finalSegment = _step613.value;
                 if (!finalSegment.reachable) {
                   continue;
                 }
@@ -73953,17 +74273,17 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator606.e(err);
+              _iterator613.e(err);
             } finally {
-              _iterator606.f();
+              _iterator613.f();
             }
-            var _iterator607 = _createForOfIteratorHelper(reactHooksMap),
-              _step607;
+            var _iterator614 = _createForOfIteratorHelper(reactHooksMap),
+              _step614;
             try {
-              for (_iterator607.s(); !(_step607 = _iterator607.n()).done; ) {
-                var _step607$value = _slicedToArray(_step607.value, 2),
-                  segment = _step607$value[0],
-                  reactHooks = _step607$value[1];
+              for (_iterator614.s(); !(_step614 = _iterator614.n()).done; ) {
+                var _step614$value = _slicedToArray(_step614.value, 2),
+                  segment = _step614$value[0],
+                  reactHooks = _step614$value[1];
                 if (!segment.reachable) {
                   continue;
                 }
@@ -73976,15 +74296,15 @@ PERFORMANCE OF THIS SOFTWARE.
                 var pathsFromStartToEnd =
                   countPathsFromStart(segment) * countPathsToEnd(segment);
                 var cycled = cyclic.has(segment.id);
-                var _iterator608 = _createForOfIteratorHelper(reactHooks),
-                  _step608;
+                var _iterator615 = _createForOfIteratorHelper(reactHooks),
+                  _step615;
                 try {
                   for (
-                    _iterator608.s();
-                    !(_step608 = _iterator608.n()).done;
+                    _iterator615.s();
+                    !(_step615 = _iterator615.n()).done;
 
                   ) {
-                    var hook = _step608.value;
+                    var hook = _step615.value;
                     if (
                       (cycled || isInsideDoWhileLoop(hook)) &&
                       !isUseIdentifier(hook)
@@ -74088,15 +74408,15 @@ PERFORMANCE OF THIS SOFTWARE.
                     }
                   }
                 } catch (err) {
-                  _iterator608.e(err);
+                  _iterator615.e(err);
                 } finally {
-                  _iterator608.f();
+                  _iterator615.f();
                 }
               }
             } catch (err) {
-              _iterator607.e(err);
+              _iterator614.e(err);
             } finally {
-              _iterator607.f();
+              _iterator614.f();
             }
           },
           CallExpression: function CallExpression(node) {
