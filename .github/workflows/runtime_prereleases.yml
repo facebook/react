@@ -39,9 +39,8 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: |
-            **/node_modules
-          key: runtime-release-node_modules-v2-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          path: "**/node_modules"
+          key: runtime-release-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
