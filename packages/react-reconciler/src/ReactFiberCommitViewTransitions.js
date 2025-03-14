@@ -582,21 +582,21 @@ export function restoreNestedViewTransitions(changedParent: Fiber): void {
 }
 
 export function cancelViewTransitionHostInstances(
-  currentViewTransition: Fiber,
   child: null | Fiber,
+  oldName: string,
   stopAtNestedViewTransitions: boolean,
 ): void {
   viewTransitionHostInstanceIdx = 0;
   cancelViewTransitionHostInstancesRecursive(
-    currentViewTransition,
     child,
+    oldName,
     stopAtNestedViewTransitions,
   );
 }
 
 function cancelViewTransitionHostInstancesRecursive(
-  currentViewTransition: Fiber,
   child: null | Fiber,
+  oldName: string,
   stopAtNestedViewTransitions: boolean,
 ): void {
   if (!supportsMutation) {
@@ -605,10 +605,6 @@ function cancelViewTransitionHostInstancesRecursive(
   while (child !== null) {
     if (child.tag === HostComponent) {
       const instance: Instance = child.stateNode;
-      const oldName = getViewTransitionName(
-        currentViewTransition.memoizedProps,
-        currentViewTransition.stateNode,
-      );
       if (viewTransitionCancelableChildren === null) {
         viewTransitionCancelableChildren = [];
       }
@@ -631,8 +627,8 @@ function cancelViewTransitionHostInstancesRecursive(
       // inner most one is the one that handles the update.
     } else {
       cancelViewTransitionHostInstancesRecursive(
-        currentViewTransition,
         child.child,
+        oldName,
         stopAtNestedViewTransitions,
       );
     }
@@ -641,20 +637,20 @@ function cancelViewTransitionHostInstancesRecursive(
 }
 
 export function measureViewTransitionHostInstances(
-  currentViewTransition: Fiber,
   parentViewTransition: Fiber,
   child: null | Fiber,
-  name: string,
+  newName: string,
+  oldName: string,
   className: ?string,
   previousMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
 ): boolean {
   viewTransitionHostInstanceIdx = 0;
   return measureViewTransitionHostInstancesRecursive(
-    currentViewTransition,
     parentViewTransition,
     child,
-    name,
+    newName,
+    oldName,
     className,
     previousMeasurements,
     stopAtNestedViewTransitions,
@@ -662,10 +658,10 @@ export function measureViewTransitionHostInstances(
 }
 
 function measureViewTransitionHostInstancesRecursive(
-  currentViewTransition: Fiber,
   parentViewTransition: Fiber,
   child: null | Fiber,
-  name: string,
+  newName: string,
+  oldName: string,
   className: ?string,
   previousMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
@@ -716,10 +712,10 @@ function measureViewTransitionHostInstancesRecursive(
         applyViewTransitionName(
           instance,
           viewTransitionHostInstanceIdx === 0
-            ? name
+            ? newName
             : // If we have multiple Host Instances below, we add a suffix to the name to give
               // each one a unique name.
-              name + '_' + viewTransitionHostInstanceIdx,
+              newName + '_' + viewTransitionHostInstanceIdx,
           className,
         );
       }
@@ -729,10 +725,6 @@ function measureViewTransitionHostInstancesRecursive(
         // animating it. However, in the current model this only works if the parent also
         // doesn't animate. So we have to queue these and wait until we complete the parent
         // to cancel them.
-        const oldName = getViewTransitionName(
-          currentViewTransition.memoizedProps,
-          currentViewTransition.stateNode,
-        );
         if (viewTransitionCancelableChildren === null) {
           viewTransitionCancelableChildren = [];
         }
@@ -759,10 +751,10 @@ function measureViewTransitionHostInstancesRecursive(
     } else {
       if (
         measureViewTransitionHostInstancesRecursive(
-          currentViewTransition,
           parentViewTransition,
           child.child,
-          name,
+          newName,
+          oldName,
           className,
           previousMeasurements,
           stopAtNestedViewTransitions,
@@ -781,6 +773,11 @@ export function measureUpdateViewTransition(
   finishedWork: Fiber,
 ): boolean {
   const props: ViewTransitionProps = finishedWork.memoizedProps;
+  const newName = getViewTransitionName(props, finishedWork.stateNode);
+  const oldName = getViewTransitionName(
+    current.memoizedProps,
+    current.stateNode,
+  );
   const updateClassName: ?string = getViewTransitionClassName(
     props.className,
     props.update,
@@ -807,22 +804,21 @@ export function measureUpdateViewTransition(
     if (layoutClassName === 'none') {
       // If we did not update, then all changes are considered a layout. We'll
       // attempt to cancel.
-      cancelViewTransitionHostInstances(current, finishedWork.child, true);
+      cancelViewTransitionHostInstances(finishedWork.child, oldName, true);
       return false;
     }
     // We didn't update but we might still apply layout so we measure each
     // instance to see if it moved or resized.
     className = layoutClassName;
   }
-  const name = getViewTransitionName(props, finishedWork.stateNode);
   // If nothing changed due to a mutation, or children changing size
   // and the measurements end up unchanged, we should restore it to not animate.
   const previousMeasurements = current.memoizedState;
   const inViewport = measureViewTransitionHostInstances(
-    current,
     finishedWork,
     finishedWork.child,
-    name,
+    newName,
+    oldName,
     className,
     previousMeasurements,
     true,
@@ -842,28 +838,25 @@ export function measureNestedViewTransitions(changedParent: Fiber): void {
   let child = changedParent.child;
   while (child !== null) {
     if (child.tag === ViewTransitionComponent) {
-      const current = child.alternate;
-      if (current !== null) {
-        const props: ViewTransitionProps = child.memoizedProps;
-        const name = getViewTransitionName(props, child.stateNode);
-        const className: ?string = getViewTransitionClassName(
-          props.className,
-          props.layout,
-        );
-        const inViewport = measureViewTransitionHostInstances(
-          current,
-          child,
-          child.child,
-          name,
-          className,
-          child.memoizedState,
-          false,
-        );
-        if ((child.flags & Update) === NoFlags || !inViewport) {
-          // Nothing changed.
-        } else {
-          scheduleViewTransitionEvent(child, props.onLayout);
-        }
+      const props: ViewTransitionProps = child.memoizedProps;
+      const name = getViewTransitionName(props, child.stateNode);
+      const className: ?string = getViewTransitionClassName(
+        props.className,
+        props.layout,
+      );
+      const inViewport = measureViewTransitionHostInstances(
+        child,
+        child.child,
+        name,
+        name, // Since this is unchanged, new and old name is the same.
+        className,
+        child.memoizedState,
+        false,
+      );
+      if ((child.flags & Update) === NoFlags || !inViewport) {
+        // Nothing changed.
+      } else {
+        scheduleViewTransitionEvent(child, props.onLayout);
       }
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
       measureNestedViewTransitions(child);
