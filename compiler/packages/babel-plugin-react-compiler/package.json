@@ -16,7 +16,7 @@
     "snap:build": "yarn workspace snap run build",
     "snap:ci": "yarn snap:build && yarn snap",
     "ts:analyze-trace": "scripts/ts-analyze-trace.sh",
-    "lint": "yarn eslint src",
+    "lint": "../../node_modules/eslint-v8/bin/eslint.js src",
     "watch": "yarn build --watch"
   },
   "dependencies": {
