@@ -49,7 +49,8 @@ export function resetShouldStartViewTransition(): void {
 
 // This tracks named ViewTransition components found in the accumulateSuspenseyCommit
 // phase that might need to find deleted pairs in the beforeMutation phase.
-let appearingViewTransitions: Map<string, ViewTransitionState> | null = null;
+export let appearingViewTransitions: Map<string, ViewTransitionState> | null =
+  null;
 
 export function resetAppearingViewTransitions(): void {
   appearingViewTransitions = null;
@@ -347,9 +348,10 @@ function commitDeletedPairViewTransitions(deletion: Fiber): void {
                 restoreViewTransitionOnHostInstances(child.child, false);
               } else {
                 // We'll transition between them.
-                const oldinstance: ViewTransitionState = child.stateNode;
+                const oldInstance: ViewTransitionState = child.stateNode;
                 const newInstance: ViewTransitionState = pair;
-                newInstance.paired = oldinstance;
+                newInstance.paired = oldInstance;
+                oldInstance.paired = newInstance;
                 // Note: If the other side ends up outside the viewport, we'll still run this.
                 // Therefore it's possible for onShare to be called with only an old snapshot.
                 scheduleViewTransitionEvent(child, props.onShare);
@@ -398,9 +400,10 @@ export function commitExitViewTransitions(deletion: Fiber): void {
       } else if (pair !== undefined) {
         // We found a new appearing view transition with the same name as this deletion.
         // We'll transition between them instead of running the normal exit.
-        const oldinstance: ViewTransitionState = deletion.stateNode;
+        const oldInstance: ViewTransitionState = deletion.stateNode;
         const newInstance: ViewTransitionState = pair;
-        newInstance.paired = oldinstance;
+        newInstance.paired = oldInstance;
+        oldInstance.paired = newInstance;
         // Delete the entry so that we know when we've found all of them
         // and can stop searching (size reaches zero).
         // $FlowFixMe[incompatible-use]: Refined by the pair.
