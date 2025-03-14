@@ -6078,385 +6078,372 @@ if (process.env.NODE_ENV !== "production") {
       return (0, _helperValidatorIdentifier$1.isIdentifierName)(name);
     }
     var lib$1 = {};
-    var hasRequiredLib$1;
-    function requireLib$1() {
-      if (hasRequiredLib$1) return lib$1;
-      hasRequiredLib$1 = 1;
-      Object.defineProperty(lib$1, "__esModule", { value: true });
-      lib$1.readCodePoint = readCodePoint;
-      lib$1.readInt = readInt;
-      lib$1.readStringContents = readStringContents;
-      var _isDigit = function isDigit(code) {
-        return code >= 48 && code <= 57;
-      };
-      var forbiddenNumericSeparatorSiblings = {
-        decBinOct: new Set([46, 66, 69, 79, 95, 98, 101, 111]),
-        hex: new Set([46, 88, 95, 120])
-      };
-      var isAllowedNumericSeparatorSibling = {
-        bin: function bin(ch) {
-          return ch === 48 || ch === 49;
-        },
-        oct: function oct(ch) {
-          return ch >= 48 && ch <= 55;
-        },
-        dec: function dec(ch) {
-          return ch >= 48 && ch <= 57;
-        },
-        hex: function hex(ch) {
-          return (
-            (ch >= 48 && ch <= 57) ||
-            (ch >= 65 && ch <= 70) ||
-            (ch >= 97 && ch <= 102)
-          );
-        }
-      };
-      function readStringContents(
-        type,
-        input,
-        pos,
-        lineStart,
-        curLine,
-        errors
-      ) {
-        var initialPos = pos;
-        var initialLineStart = lineStart;
-        var initialCurLine = curLine;
-        var out = "";
-        var firstInvalidLoc = null;
-        var chunkStart = pos;
-        var length = input.length;
-        for (;;) {
-          if (pos >= length) {
-            errors.unterminated(initialPos, initialLineStart, initialCurLine);
-            out += input.slice(chunkStart, pos);
-            break;
-          }
-          var ch = input.charCodeAt(pos);
-          if (isStringEnd(type, ch, input, pos)) {
-            out += input.slice(chunkStart, pos);
-            break;
-          }
-          if (ch === 92) {
-            out += input.slice(chunkStart, pos);
-            var res = readEscapedChar(
-              input,
-              pos,
-              lineStart,
-              curLine,
-              type === "template",
-              errors
-            );
-            if (res.ch === null && !firstInvalidLoc) {
-              firstInvalidLoc = {
-                pos: pos,
-                lineStart: lineStart,
-                curLine: curLine
-              };
-            } else {
-              out += res.ch;
-            }
-            pos = res.pos;
-            lineStart = res.lineStart;
-            curLine = res.curLine;
-            chunkStart = pos;
-          } else if (ch === 8232 || ch === 8233) {
-            ++pos;
-            ++curLine;
-            lineStart = pos;
-          } else if (ch === 10 || ch === 13) {
-            if (type === "template") {
-              out += input.slice(chunkStart, pos) + "\n";
-              ++pos;
-              if (ch === 13 && input.charCodeAt(pos) === 10) {
-                ++pos;
-              }
-              ++curLine;
-              chunkStart = lineStart = pos;
-            } else {
-              errors.unterminated(initialPos, initialLineStart, initialCurLine);
-            }
-          } else {
-            ++pos;
-          }
-        }
-        return {
-          pos: pos,
-          str: out,
-          firstInvalidLoc: firstInvalidLoc,
-          lineStart: lineStart,
-          curLine: curLine,
-          containsInvalid: !!firstInvalidLoc
-        };
-      }
-      function isStringEnd(type, ch, input, pos) {
-        if (type === "template") {
-          return ch === 96 || (ch === 36 && input.charCodeAt(pos + 1) === 123);
-        }
-        return ch === (type === "double" ? 34 : 39);
-      }
-      function readEscapedChar(
-        input,
-        pos,
-        lineStart,
-        curLine,
-        inTemplate,
-        errors
-      ) {
-        var throwOnInvalid = !inTemplate;
-        pos++;
-        var res = function res(ch) {
-          return { pos: pos, ch: ch, lineStart: lineStart, curLine: curLine };
-        };
-        var ch = input.charCodeAt(pos++);
-        switch (ch) {
-          case 110:
-            return res("\n");
-          case 114:
-            return res("\r");
-          case 120: {
-            var code;
-            var _readHexChar = readHexChar(
-              input,
-              pos,
-              lineStart,
-              curLine,
-              2,
-              false,
-              throwOnInvalid,
-              errors
-            );
-            code = _readHexChar.code;
-            pos = _readHexChar.pos;
-            return res(code === null ? null : String.fromCharCode(code));
-          }
-          case 117: {
-            var _code;
-            var _readCodePoint = readCodePoint(
-              input,
-              pos,
-              lineStart,
-              curLine,
-              throwOnInvalid,
-              errors
-            );
-            _code = _readCodePoint.code;
-            pos = _readCodePoint.pos;
-            return res(_code === null ? null : String.fromCodePoint(_code));
-          }
-          case 116:
-            return res("\t");
-          case 98:
-            return res("\b");
-          case 118:
-            return res("\x0B");
-          case 102:
-            return res("\f");
-          case 13:
-            if (input.charCodeAt(pos) === 10) {
-              ++pos;
-            }
-          case 10:
-            lineStart = pos;
-            ++curLine;
-          case 8232:
-          case 8233:
-            return res("");
-          case 56:
-          case 57:
-            if (inTemplate) {
-              return res(null);
-            } else {
-              errors.strictNumericEscape(pos - 1, lineStart, curLine);
-            }
-          default:
-            if (ch >= 48 && ch <= 55) {
-              var startPos = pos - 1;
-              var match = /^[0-7]+/.exec(input.slice(startPos, pos + 2));
-              var octalStr = match[0];
-              var octal = parseInt(octalStr, 8);
-              if (octal > 255) {
-                octalStr = octalStr.slice(0, -1);
-                octal = parseInt(octalStr, 8);
-              }
-              pos += octalStr.length - 1;
-              var next = input.charCodeAt(pos);
-              if (octalStr !== "0" || next === 56 || next === 57) {
-                if (inTemplate) {
-                  return res(null);
-                } else {
-                  errors.strictNumericEscape(startPos, lineStart, curLine);
-                }
-              }
-              return res(String.fromCharCode(octal));
-            }
-            return res(String.fromCharCode(ch));
-        }
-      }
-      function readHexChar(
-        input,
-        pos,
-        lineStart,
-        curLine,
-        len,
-        forceLen,
-        throwOnInvalid,
-        errors
-      ) {
-        var initialPos = pos;
-        var n;
-        var _readInt = readInt(
-          input,
-          pos,
-          lineStart,
-          curLine,
-          16,
-          len,
-          forceLen,
-          false,
-          errors,
-          !throwOnInvalid
+    Object.defineProperty(lib$1, "__esModule", { value: true });
+    lib$1.readCodePoint = readCodePoint;
+    lib$1.readInt = readInt;
+    lib$1.readStringContents = readStringContents;
+    var _isDigit = function isDigit(code) {
+      return code >= 48 && code <= 57;
+    };
+    var forbiddenNumericSeparatorSiblings = {
+      decBinOct: new Set([46, 66, 69, 79, 95, 98, 101, 111]),
+      hex: new Set([46, 88, 95, 120])
+    };
+    var isAllowedNumericSeparatorSibling = {
+      bin: function bin(ch) {
+        return ch === 48 || ch === 49;
+      },
+      oct: function oct(ch) {
+        return ch >= 48 && ch <= 55;
+      },
+      dec: function dec(ch) {
+        return ch >= 48 && ch <= 57;
+      },
+      hex: function hex(ch) {
+        return (
+          (ch >= 48 && ch <= 57) ||
+          (ch >= 65 && ch <= 70) ||
+          (ch >= 97 && ch <= 102)
         );
-        n = _readInt.n;
-        pos = _readInt.pos;
-        if (n === null) {
-          if (throwOnInvalid) {
-            errors.invalidEscapeSequence(initialPos, lineStart, curLine);
-          } else {
-            pos = initialPos - 1;
-          }
-        }
-        return { code: n, pos: pos };
       }
-      function readInt(
-        input,
-        pos,
-        lineStart,
-        curLine,
-        radix,
-        len,
-        forceLen,
-        allowNumSeparator,
-        errors,
-        bailOnError
-      ) {
-        var start = pos;
-        var forbiddenSiblings =
-          radix === 16
-            ? forbiddenNumericSeparatorSiblings.hex
-            : forbiddenNumericSeparatorSiblings.decBinOct;
-        var isAllowedSibling =
-          radix === 16
-            ? isAllowedNumericSeparatorSibling.hex
-            : radix === 10
-              ? isAllowedNumericSeparatorSibling.dec
-              : radix === 8
-                ? isAllowedNumericSeparatorSibling.oct
-                : isAllowedNumericSeparatorSibling.bin;
-        var invalid = false;
-        var total = 0;
-        for (var i = 0, e = len == null ? Infinity : len; i < e; ++i) {
-          var code = input.charCodeAt(pos);
-          var val = void 0;
-          if (code === 95 && allowNumSeparator !== "bail") {
-            var prev = input.charCodeAt(pos - 1);
-            var next = input.charCodeAt(pos + 1);
-            if (!allowNumSeparator) {
-              if (bailOnError) return { n: null, pos: pos };
-              errors.numericSeparatorInEscapeSequence(pos, lineStart, curLine);
-            } else if (
-              Number.isNaN(next) ||
-              !isAllowedSibling(next) ||
-              forbiddenSiblings.has(prev) ||
-              forbiddenSiblings.has(next)
-            ) {
-              if (bailOnError) return { n: null, pos: pos };
-              errors.unexpectedNumericSeparator(pos, lineStart, curLine);
-            }
-            ++pos;
-            continue;
-          }
-          if (code >= 97) {
-            val = code - 97 + 10;
-          } else if (code >= 65) {
-            val = code - 65 + 10;
-          } else if (_isDigit(code)) {
-            val = code - 48;
-          } else {
-            val = Infinity;
-          }
-          if (val >= radix) {
-            if (val <= 9 && bailOnError) {
-              return { n: null, pos: pos };
-            } else if (
-              val <= 9 &&
-              errors.invalidDigit(pos, lineStart, curLine, radix)
-            ) {
-              val = 0;
-            } else if (forceLen) {
-              val = 0;
-              invalid = true;
-            } else {
-              break;
-            }
-          }
-          ++pos;
-          total = total * radix + val;
+    };
+    function readStringContents(type, input, pos, lineStart, curLine, errors) {
+      var initialPos = pos;
+      var initialLineStart = lineStart;
+      var initialCurLine = curLine;
+      var out = "";
+      var firstInvalidLoc = null;
+      var chunkStart = pos;
+      var length = input.length;
+      for (;;) {
+        if (pos >= length) {
+          errors.unterminated(initialPos, initialLineStart, initialCurLine);
+          out += input.slice(chunkStart, pos);
+          break;
         }
-        if (pos === start || (len != null && pos - start !== len) || invalid) {
-          return { n: null, pos: pos };
-        }
-        return { n: total, pos: pos };
-      }
-      function readCodePoint(
-        input,
-        pos,
-        lineStart,
-        curLine,
-        throwOnInvalid,
-        errors
-      ) {
         var ch = input.charCodeAt(pos);
-        var code;
-        if (ch === 123) {
-          ++pos;
-          var _readHexChar2 = readHexChar(
+        if (isStringEnd(type, ch, input, pos)) {
+          out += input.slice(chunkStart, pos);
+          break;
+        }
+        if (ch === 92) {
+          out += input.slice(chunkStart, pos);
+          var res = readEscapedChar(
             input,
             pos,
             lineStart,
             curLine,
-            input.indexOf("}", pos) - pos,
-            true,
-            throwOnInvalid,
+            type === "template",
             errors
           );
-          code = _readHexChar2.code;
-          pos = _readHexChar2.pos;
+          if (res.ch === null && !firstInvalidLoc) {
+            firstInvalidLoc = {
+              pos: pos,
+              lineStart: lineStart,
+              curLine: curLine
+            };
+          } else {
+            out += res.ch;
+          }
+          pos = res.pos;
+          lineStart = res.lineStart;
+          curLine = res.curLine;
+          chunkStart = pos;
+        } else if (ch === 8232 || ch === 8233) {
           ++pos;
-          if (code !== null && code > 0x10ffff) {
-            if (throwOnInvalid) {
-              errors.invalidCodePoint(pos, lineStart, curLine);
-            } else {
-              return { code: null, pos: pos };
+          ++curLine;
+          lineStart = pos;
+        } else if (ch === 10 || ch === 13) {
+          if (type === "template") {
+            out += input.slice(chunkStart, pos) + "\n";
+            ++pos;
+            if (ch === 13 && input.charCodeAt(pos) === 10) {
+              ++pos;
             }
+            ++curLine;
+            chunkStart = lineStart = pos;
+          } else {
+            errors.unterminated(initialPos, initialLineStart, initialCurLine);
           }
         } else {
-          var _readHexChar3 = readHexChar(
+          ++pos;
+        }
+      }
+      return {
+        pos: pos,
+        str: out,
+        firstInvalidLoc: firstInvalidLoc,
+        lineStart: lineStart,
+        curLine: curLine,
+        containsInvalid: !!firstInvalidLoc
+      };
+    }
+    function isStringEnd(type, ch, input, pos) {
+      if (type === "template") {
+        return ch === 96 || (ch === 36 && input.charCodeAt(pos + 1) === 123);
+      }
+      return ch === (type === "double" ? 34 : 39);
+    }
+    function readEscapedChar(
+      input,
+      pos,
+      lineStart,
+      curLine,
+      inTemplate,
+      errors
+    ) {
+      var throwOnInvalid = !inTemplate;
+      pos++;
+      var res = function res(ch) {
+        return { pos: pos, ch: ch, lineStart: lineStart, curLine: curLine };
+      };
+      var ch = input.charCodeAt(pos++);
+      switch (ch) {
+        case 110:
+          return res("\n");
+        case 114:
+          return res("\r");
+        case 120: {
+          var code;
+          var _readHexChar = readHexChar(
             input,
             pos,
             lineStart,
             curLine,
-            4,
+            2,
             false,
             throwOnInvalid,
             errors
           );
-          code = _readHexChar3.code;
-          pos = _readHexChar3.pos;
+          code = _readHexChar.code;
+          pos = _readHexChar.pos;
+          return res(code === null ? null : String.fromCharCode(code));
         }
-        return { code: code, pos: pos };
+        case 117: {
+          var _code;
+          var _readCodePoint = readCodePoint(
+            input,
+            pos,
+            lineStart,
+            curLine,
+            throwOnInvalid,
+            errors
+          );
+          _code = _readCodePoint.code;
+          pos = _readCodePoint.pos;
+          return res(_code === null ? null : String.fromCodePoint(_code));
+        }
+        case 116:
+          return res("\t");
+        case 98:
+          return res("\b");
+        case 118:
+          return res("\x0B");
+        case 102:
+          return res("\f");
+        case 13:
+          if (input.charCodeAt(pos) === 10) {
+            ++pos;
+          }
+        case 10:
+          lineStart = pos;
+          ++curLine;
+        case 8232:
+        case 8233:
+          return res("");
+        case 56:
+        case 57:
+          if (inTemplate) {
+            return res(null);
+          } else {
+            errors.strictNumericEscape(pos - 1, lineStart, curLine);
+          }
+        default:
+          if (ch >= 48 && ch <= 55) {
+            var startPos = pos - 1;
+            var match = /^[0-7]+/.exec(input.slice(startPos, pos + 2));
+            var octalStr = match[0];
+            var octal = parseInt(octalStr, 8);
+            if (octal > 255) {
+              octalStr = octalStr.slice(0, -1);
+              octal = parseInt(octalStr, 8);
+            }
+            pos += octalStr.length - 1;
+            var next = input.charCodeAt(pos);
+            if (octalStr !== "0" || next === 56 || next === 57) {
+              if (inTemplate) {
+                return res(null);
+              } else {
+                errors.strictNumericEscape(startPos, lineStart, curLine);
+              }
+            }
+            return res(String.fromCharCode(octal));
+          }
+          return res(String.fromCharCode(ch));
       }
-      return lib$1;
+    }
+    function readHexChar(
+      input,
+      pos,
+      lineStart,
+      curLine,
+      len,
+      forceLen,
+      throwOnInvalid,
+      errors
+    ) {
+      var initialPos = pos;
+      var n;
+      var _readInt = readInt(
+        input,
+        pos,
+        lineStart,
+        curLine,
+        16,
+        len,
+        forceLen,
+        false,
+        errors,
+        !throwOnInvalid
+      );
+      n = _readInt.n;
+      pos = _readInt.pos;
+      if (n === null) {
+        if (throwOnInvalid) {
+          errors.invalidEscapeSequence(initialPos, lineStart, curLine);
+        } else {
+          pos = initialPos - 1;
+        }
+      }
+      return { code: n, pos: pos };
+    }
+    function readInt(
+      input,
+      pos,
+      lineStart,
+      curLine,
+      radix,
+      len,
+      forceLen,
+      allowNumSeparator,
+      errors,
+      bailOnError
+    ) {
+      var start = pos;
+      var forbiddenSiblings =
+        radix === 16
+          ? forbiddenNumericSeparatorSiblings.hex
+          : forbiddenNumericSeparatorSiblings.decBinOct;
+      var isAllowedSibling =
+        radix === 16
+          ? isAllowedNumericSeparatorSibling.hex
+          : radix === 10
+            ? isAllowedNumericSeparatorSibling.dec
+            : radix === 8
+              ? isAllowedNumericSeparatorSibling.oct
+              : isAllowedNumericSeparatorSibling.bin;
+      var invalid = false;
+      var total = 0;
+      for (var i = 0, e = len == null ? Infinity : len; i < e; ++i) {
+        var code = input.charCodeAt(pos);
+        var val = void 0;
+        if (code === 95 && allowNumSeparator !== "bail") {
+          var prev = input.charCodeAt(pos - 1);
+          var next = input.charCodeAt(pos + 1);
+          if (!allowNumSeparator) {
+            if (bailOnError) return { n: null, pos: pos };
+            errors.numericSeparatorInEscapeSequence(pos, lineStart, curLine);
+          } else if (
+            Number.isNaN(next) ||
+            !isAllowedSibling(next) ||
+            forbiddenSiblings.has(prev) ||
+            forbiddenSiblings.has(next)
+          ) {
+            if (bailOnError) return { n: null, pos: pos };
+            errors.unexpectedNumericSeparator(pos, lineStart, curLine);
+          }
+          ++pos;
+          continue;
+        }
+        if (code >= 97) {
+          val = code - 97 + 10;
+        } else if (code >= 65) {
+          val = code - 65 + 10;
+        } else if (_isDigit(code)) {
+          val = code - 48;
+        } else {
+          val = Infinity;
+        }
+        if (val >= radix) {
+          if (val <= 9 && bailOnError) {
+            return { n: null, pos: pos };
+          } else if (
+            val <= 9 &&
+            errors.invalidDigit(pos, lineStart, curLine, radix)
+          ) {
+            val = 0;
+          } else if (forceLen) {
+            val = 0;
+            invalid = true;
+          } else {
+            break;
+          }
+        }
+        ++pos;
+        total = total * radix + val;
+      }
+      if (pos === start || (len != null && pos - start !== len) || invalid) {
+        return { n: null, pos: pos };
+      }
+      return { n: total, pos: pos };
+    }
+    function readCodePoint(
+      input,
+      pos,
+      lineStart,
+      curLine,
+      throwOnInvalid,
+      errors
+    ) {
+      var ch = input.charCodeAt(pos);
+      var code;
+      if (ch === 123) {
+        ++pos;
+        var _readHexChar2 = readHexChar(
+          input,
+          pos,
+          lineStart,
+          curLine,
+          input.indexOf("}", pos) - pos,
+          true,
+          throwOnInvalid,
+          errors
+        );
+        code = _readHexChar2.code;
+        pos = _readHexChar2.pos;
+        ++pos;
+        if (code !== null && code > 0x10ffff) {
+          if (throwOnInvalid) {
+            errors.invalidCodePoint(pos, lineStart, curLine);
+          } else {
+            return { code: null, pos: pos };
+          }
+        }
+      } else {
+        var _readHexChar3 = readHexChar(
+          input,
+          pos,
+          lineStart,
+          curLine,
+          4,
+          false,
+          throwOnInvalid,
+          errors
+        );
+        code = _readHexChar3.code;
+        pos = _readHexChar3.pos;
+      }
+      return { code: code, pos: pos };
     }
     var constants = {};
     Object.defineProperty(constants, "__esModule", { value: true });
@@ -7043,7 +7030,7 @@ if (process.env.NODE_ENV !== "production") {
       var _is = requireIs();
       var _isValidIdentifier = isValidIdentifier$1;
       var _helperValidatorIdentifier = lib$2;
-      var _helperStringParser = requireLib$1();
+      var _helperStringParser = lib$1;
       var _index = constants;
       var _utils = requireUtils();
       var defineType = (0, _utils.defineAliasedType)("Standardized");
