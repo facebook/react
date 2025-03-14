@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2f2b1d801c9ff368bf8f820da7bcb665>>
+ * @generated SignedSource<<b074c0c7d3dfac0164ff3042e9eca413>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1137() {
+    function JSCompiler_object_inline_createNodeMock_1119() {
       return null;
     }
     function findHook(fiber, id) {
@@ -12308,26 +12308,6 @@ __DEV__ &&
         markCommitStopped();
       }
     }
-    function flushGestureMutations() {
-      if (pendingEffectsStatus === PENDING_GESTURE_MUTATION_PHASE) {
-        pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var root = pendingEffectsRoot,
-          prevTransition = ReactSharedInternals.T;
-        ReactSharedInternals.T = null;
-        var previousPriority = currentUpdatePriority;
-        currentUpdatePriority = DiscreteEventPriority;
-        var prevExecutionContext = executionContext;
-        executionContext |= CommitContext;
-        try {
-          null !== root.gestureClone && (root.gestureClone = null);
-        } finally {
-          (executionContext = prevExecutionContext),
-            (currentUpdatePriority = previousPriority),
-            (ReactSharedInternals.T = prevTransition);
-        }
-        pendingEffectsStatus = PENDING_GESTURE_ANIMATION_PHASE;
-      }
-    }
     function makeErrorInfo(componentStack) {
       componentStack = { componentStack: componentStack };
       Object.defineProperty(componentStack, "digest", {
@@ -12346,23 +12326,6 @@ __DEV__ &&
           ((root.pooledCache = null), releaseCache(remainingLanes)));
     }
     function flushPendingEffects(wasDelayedCommit) {
-      flushGestureMutations();
-      flushGestureMutations();
-      if (pendingEffectsStatus === PENDING_GESTURE_ANIMATION_PHASE) {
-        pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var root = pendingEffectsRoot;
-        pendingFinishedWork = pendingEffectsRoot = null;
-        pendingEffectsLanes = 0;
-        var prevTransition = ReactSharedInternals.T,
-          previousPriority = currentUpdatePriority;
-        currentUpdatePriority = DiscreteEventPriority;
-        var prevExecutionContext = executionContext;
-        executionContext |= CommitContext;
-        executionContext = prevExecutionContext;
-        currentUpdatePriority = previousPriority;
-        ReactSharedInternals.T = prevTransition;
-        ensureRootIsScheduled(root);
-      }
       flushMutationEffects();
       flushLayoutEffects();
       flushSpawnedWork();
@@ -15415,8 +15378,6 @@ __DEV__ &&
       PENDING_AFTER_MUTATION_PHASE = 3,
       PENDING_SPAWNED_WORK = 4,
       PENDING_PASSIVE_PHASE = 5,
-      PENDING_GESTURE_MUTATION_PHASE = 6,
-      PENDING_GESTURE_ANIMATION_PHASE = 7,
       pendingEffectsStatus = 0,
       pendingEffectsRoot = null,
       pendingFinishedWork = null,
@@ -15649,10 +15610,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-5ccfcd17-20250312",
+        version: "19.1.0-native-fb-3e956805-20250314",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-5ccfcd17-20250312"
+        reconcilerVersion: "19.1.0-native-fb-3e956805-20250314"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15674,7 +15635,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1137,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1119,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15797,5 +15758,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-5ccfcd17-20250312";
+    exports.version = "19.1.0-native-fb-3e956805-20250314";
   })();

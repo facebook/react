@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<10de043efadde2f505dc7f937c33c00d>>
+ * @generated SignedSource<<06ae5d576284b628ed1ab298eeebae89>>
  */
 
 "use strict";
@@ -10588,27 +10588,6 @@ function flushSpawnedWork() {
     flushSyncWorkAcrossRoots_impl(0, !1);
   }
 }
-function flushGestureMutations() {
-  if (6 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot,
-      prevTransition = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      if (null !== root.gestureClone)
-        throw ((root.gestureClone = null), Error("Not implemented."));
-    } finally {
-      (executionContext = prevExecutionContext),
-        (currentUpdatePriority = previousPriority),
-        (ReactSharedInternals.T = prevTransition);
-    }
-    pendingEffectsStatus = 7;
-  }
-}
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
     ((remainingLanes = root.pooledCache),
@@ -10616,23 +10595,6 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
-  flushGestureMutations();
-  flushGestureMutations();
-  if (7 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot;
-    pendingFinishedWork = pendingEffectsRoot = null;
-    pendingEffectsLanes = 0;
-    var prevTransition = ReactSharedInternals.T,
-      previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    executionContext = prevExecutionContext;
-    currentUpdatePriority = previousPriority;
-    ReactSharedInternals.T = prevTransition;
-    ensureRootIsScheduled(root);
-  }
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -11198,11 +11160,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-5ccfcd17-20250312" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-3e956805-20250314" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-5ccfcd17-20250312\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-3e956805-20250314\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11249,26 +11211,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1292 = {
+  internals$jscomp$inline_1274 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-5ccfcd17-20250312",
+    version: "19.1.0-native-fb-3e956805-20250314",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-5ccfcd17-20250312"
+    reconcilerVersion: "19.1.0-native-fb-3e956805-20250314"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1292.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1274.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1634 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1609 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1634.isDisabled &&
-    hook$jscomp$inline_1634.supportsFiber
+    !hook$jscomp$inline_1609.isDisabled &&
+    hook$jscomp$inline_1609.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1634.inject(
-        internals$jscomp$inline_1292
+      (rendererID = hook$jscomp$inline_1609.inject(
+        internals$jscomp$inline_1274
       )),
-        (injectedHook = hook$jscomp$inline_1634);
+        (injectedHook = hook$jscomp$inline_1609);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

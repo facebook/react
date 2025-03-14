@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<068faa3e9586fc28a7007300c1198f5f>>
+ * @generated SignedSource<<3967525b1a15c0878c873dd5f0dddac1>>
  */
 
 "use strict";
@@ -9520,26 +9520,6 @@ function flushSpawnedWork() {
     markCommitStopped();
   }
 }
-function flushGestureMutations() {
-  if (6 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot,
-      prevTransition = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      null !== root.gestureClone && (root.gestureClone = null);
-    } finally {
-      (executionContext = prevExecutionContext),
-        (currentUpdatePriority = previousPriority),
-        (ReactSharedInternals.T = prevTransition);
-    }
-    pendingEffectsStatus = 7;
-  }
-}
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
     ((remainingLanes = root.pooledCache),
@@ -9547,23 +9527,6 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
-  flushGestureMutations();
-  flushGestureMutations();
-  if (7 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot;
-    pendingFinishedWork = pendingEffectsRoot = null;
-    pendingEffectsLanes = 0;
-    var prevTransition = ReactSharedInternals.T,
-      previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    executionContext = prevExecutionContext;
-    currentUpdatePriority = previousPriority;
-    ReactSharedInternals.T = prevTransition;
-    ensureRootIsScheduled(root);
-  }
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -10423,12 +10386,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1231 = {
+var internals$jscomp$inline_1213 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-5ccfcd17-20250312",
+  version: "19.1.0-native-fb-3e956805-20250314",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-5ccfcd17-20250312",
+  reconcilerVersion: "19.1.0-native-fb-3e956805-20250314",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$147 = 0;
@@ -10446,16 +10409,16 @@ var internals$jscomp$inline_1231 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1484 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1460 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1484.isDisabled &&
-    hook$jscomp$inline_1484.supportsFiber
+    !hook$jscomp$inline_1460.isDisabled &&
+    hook$jscomp$inline_1460.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1484.inject(
-        internals$jscomp$inline_1231
+      (rendererID = hook$jscomp$inline_1460.inject(
+        internals$jscomp$inline_1213
       )),
-        (injectedHook = hook$jscomp$inline_1484);
+        (injectedHook = hook$jscomp$inline_1460);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10579,4 +10542,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-5ccfcd17-20250312";
+exports.version = "19.1.0-native-fb-3e956805-20250314";

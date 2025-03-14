@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<542d412e7aa856f7c4f0c6bd5cadbe1b>>
+ * @generated SignedSource<<a68c6e6ba48e5c540e0915659012d07f>>
  */
 
 "use strict";
@@ -8114,11 +8114,10 @@ function safelyCallDestroy(current, nearestMountedAncestor, destroy, resource) {
   }
 }
 function commitHostMount(finishedWork) {
-  var type = finishedWork.type,
-    props = finishedWork.memoizedProps,
-    instance = finishedWork.stateNode;
   try {
-    shim$2(instance, type, props, finishedWork);
+    throw Error(
+      "The current renderer does not support mutation. This error is likely caused by a bug in React. Please file an issue."
+    );
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -10312,26 +10311,6 @@ function flushSpawnedWork() {
     flushSyncWorkAcrossRoots_impl(0, !1);
   }
 }
-function flushGestureMutations() {
-  if (6 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot,
-      prevTransition = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      null !== root.gestureClone && ((root.gestureClone = null), shim$2());
-    } finally {
-      (executionContext = prevExecutionContext),
-        (currentUpdatePriority = previousPriority),
-        (ReactSharedInternals.T = prevTransition);
-    }
-    pendingEffectsStatus = 7;
-  }
-}
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
     ((remainingLanes = root.pooledCache),
@@ -10339,28 +10318,6 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
-  flushGestureMutations();
-  flushGestureMutations();
-  if (7 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot;
-    pendingFinishedWork = pendingEffectsRoot = null;
-    pendingEffectsLanes = 0;
-    var prevTransition = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      shim$2();
-    } finally {
-      (executionContext = prevExecutionContext),
-        (currentUpdatePriority = previousPriority),
-        (ReactSharedInternals.T = prevTransition);
-    }
-    ensureRootIsScheduled(root);
-  }
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -10925,11 +10882,6 @@ function updateContainer(element, container, parentComponent, callback) {
     entangleTransitions(element, current, lane));
   return lane;
 }
-function shim$2() {
-  throw Error(
-    "The current renderer does not support mutation. This error is likely caused by a bug in React. Please file an issue."
-  );
-}
 function shim$1() {
   throw Error(
     "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
@@ -11118,26 +11070,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1245 = {
+  internals$jscomp$inline_1224 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-5ccfcd17-20250312",
+    version: "19.1.0-native-fb-3e956805-20250314",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-5ccfcd17-20250312"
+    reconcilerVersion: "19.1.0-native-fb-3e956805-20250314"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1245.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1224.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1560 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1537 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1560.isDisabled &&
-    hook$jscomp$inline_1560.supportsFiber
+    !hook$jscomp$inline_1537.isDisabled &&
+    hook$jscomp$inline_1537.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1560.inject(
-        internals$jscomp$inline_1245
+      (rendererID = hook$jscomp$inline_1537.inject(
+        internals$jscomp$inline_1224
       )),
-        (injectedHook = hook$jscomp$inline_1560);
+        (injectedHook = hook$jscomp$inline_1537);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

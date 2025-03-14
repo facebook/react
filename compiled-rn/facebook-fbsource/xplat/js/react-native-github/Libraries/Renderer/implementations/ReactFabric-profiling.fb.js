@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f28b80496ecac8ebd1460546defd0bd3>>
+ * @generated SignedSource<<ff046e525c7eabb415145be794f2771f>>
  */
 
 "use strict";
@@ -8523,11 +8523,10 @@ function commitProfilerUpdate(
   }
 }
 function commitHostMount(finishedWork) {
-  var type = finishedWork.type,
-    props = finishedWork.memoizedProps,
-    instance = finishedWork.stateNode;
   try {
-    shim$2(instance, type, props, finishedWork);
+    throw Error(
+      "The current renderer does not support mutation. This error is likely caused by a bug in React. Please file an issue."
+    );
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -10926,26 +10925,6 @@ function flushSpawnedWork() {
     markCommitStopped();
   }
 }
-function flushGestureMutations() {
-  if (6 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot,
-      prevTransition = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      null !== root.gestureClone && ((root.gestureClone = null), shim$2());
-    } finally {
-      (executionContext = prevExecutionContext),
-        (currentUpdatePriority = previousPriority),
-        (ReactSharedInternals.T = prevTransition);
-    }
-    pendingEffectsStatus = 7;
-  }
-}
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
     ((remainingLanes = root.pooledCache),
@@ -10953,28 +10932,6 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
-  flushGestureMutations();
-  flushGestureMutations();
-  if (7 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot;
-    pendingFinishedWork = pendingEffectsRoot = null;
-    pendingEffectsLanes = 0;
-    var prevTransition = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      shim$2();
-    } finally {
-      (executionContext = prevExecutionContext),
-        (currentUpdatePriority = previousPriority),
-        (ReactSharedInternals.T = prevTransition);
-    }
-    ensureRootIsScheduled(root);
-  }
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -11578,11 +11535,6 @@ function updateContainer(element, container, parentComponent, callback) {
     entangleTransitions(element, current, lane));
   return lane;
 }
-function shim$2() {
-  throw Error(
-    "The current renderer does not support mutation. This error is likely caused by a bug in React. Please file an issue."
-  );
-}
 function shim$1() {
   throw Error(
     "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
@@ -11771,16 +11723,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1338 = {
+  internals$jscomp$inline_1317 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-5ccfcd17-20250312",
+    version: "19.1.0-native-fb-3e956805-20250314",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-5ccfcd17-20250312"
+    reconcilerVersion: "19.1.0-native-fb-3e956805-20250314"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1338.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1338.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1317.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1317.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$156 = 0;
     31 > index$156;
@@ -11792,20 +11744,20 @@ internals$jscomp$inline_1338.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1338.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1317.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1619 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1596 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1619.isDisabled &&
-    hook$jscomp$inline_1619.supportsFiber
+    !hook$jscomp$inline_1596.isDisabled &&
+    hook$jscomp$inline_1596.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1619.inject(
-        internals$jscomp$inline_1338
+      (rendererID = hook$jscomp$inline_1596.inject(
+        internals$jscomp$inline_1317
       )),
-        (injectedHook = hook$jscomp$inline_1619);
+        (injectedHook = hook$jscomp$inline_1596);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

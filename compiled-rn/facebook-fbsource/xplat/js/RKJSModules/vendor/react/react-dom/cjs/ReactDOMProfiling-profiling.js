@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<49dabe2ff44f531383d63d89957eaf23>>
+ * @generated SignedSource<<2cb79cf6aa1febc4e9b82a465614922b>>
  */
 
 /*
@@ -12639,40 +12639,6 @@ function flushSpawnedWork() {
     markCommitStopped();
   }
 }
-function flushGestureMutations() {
-  if (6 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot,
-      prevTransition = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = ReactDOMSharedInternals.p;
-    ReactDOMSharedInternals.p = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      var rootClone = root.gestureClone;
-      if (null !== rootClone) {
-        root.gestureClone = null;
-        var rootContainer = root.containerInfo;
-        var containerInstance =
-          9 === rootContainer.nodeType
-            ? rootContainer.body
-            : "HTML" === rootContainer.nodeName
-              ? rootContainer.ownerDocument.body
-              : rootContainer;
-        var containerParent = containerInstance.parentNode;
-        if (null === containerParent) throw Error(formatProdErrorMessage(552));
-        containerParent.removeChild(rootClone);
-        containerInstance.style.viewTransitionName = "root";
-      }
-    } finally {
-      (executionContext = prevExecutionContext),
-        (ReactDOMSharedInternals.p = previousPriority),
-        (ReactSharedInternals.T = prevTransition);
-    }
-    pendingEffectsStatus = 7;
-  }
-}
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
     ((remainingLanes = root.pooledCache),
@@ -12680,40 +12646,6 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
-  flushGestureMutations();
-  flushGestureMutations();
-  if (7 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot;
-    pendingFinishedWork = pendingEffectsRoot = null;
-    pendingEffectsLanes = 0;
-    var prevTransition = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = ReactDOMSharedInternals.p;
-    ReactDOMSharedInternals.p = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      var rootContainer = root.containerInfo;
-      var containerInstance =
-        9 === rootContainer.nodeType
-          ? rootContainer.body
-          : "HTML" === rootContainer.nodeName
-            ? rootContainer.ownerDocument.body
-            : rootContainer;
-      "root" === containerInstance.style.viewTransitionName &&
-        (containerInstance.style.viewTransitionName = "");
-      var documentElement = containerInstance.ownerDocument.documentElement;
-      null !== documentElement &&
-        "none" === documentElement.style.viewTransitionName &&
-        (documentElement.style.viewTransitionName = "");
-    } finally {
-      (executionContext = prevExecutionContext),
-        (ReactDOMSharedInternals.p = previousPriority),
-        (ReactSharedInternals.T = prevTransition);
-    }
-    ensureRootIsScheduled(root);
-  }
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -13230,20 +13162,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1662 = 0;
-  i$jscomp$inline_1662 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1662++
+  var i$jscomp$inline_1637 = 0;
+  i$jscomp$inline_1637 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1637++
 ) {
-  var eventName$jscomp$inline_1663 =
-      simpleEventPluginEvents[i$jscomp$inline_1662],
-    domEventName$jscomp$inline_1664 =
-      eventName$jscomp$inline_1663.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1665 =
-      eventName$jscomp$inline_1663[0].toUpperCase() +
-      eventName$jscomp$inline_1663.slice(1);
+  var eventName$jscomp$inline_1638 =
+      simpleEventPluginEvents[i$jscomp$inline_1637],
+    domEventName$jscomp$inline_1639 =
+      eventName$jscomp$inline_1638.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1640 =
+      eventName$jscomp$inline_1638[0].toUpperCase() +
+      eventName$jscomp$inline_1638.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1664,
-    "on" + capitalizedEvent$jscomp$inline_1665
+    domEventName$jscomp$inline_1639,
+    "on" + capitalizedEvent$jscomp$inline_1640
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16852,16 +16784,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1913 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1888 = React.version;
 if (
-  "19.1.0-native-fb-5ccfcd17-20250312" !==
-  isomorphicReactPackageVersion$jscomp$inline_1913
+  "19.1.0-native-fb-3e956805-20250314" !==
+  isomorphicReactPackageVersion$jscomp$inline_1888
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1913,
-      "19.1.0-native-fb-5ccfcd17-20250312"
+      isomorphicReactPackageVersion$jscomp$inline_1888,
+      "19.1.0-native-fb-3e956805-20250314"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16881,12 +16813,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1920 = {
+var internals$jscomp$inline_1895 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-5ccfcd17-20250312",
+  version: "19.1.0-native-fb-3e956805-20250314",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-5ccfcd17-20250312",
+  reconcilerVersion: "19.1.0-native-fb-3e956805-20250314",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$294 = 0;
@@ -16904,16 +16836,16 @@ var internals$jscomp$inline_1920 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2354 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2317 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2354.isDisabled &&
-    hook$jscomp$inline_2354.supportsFiber
+    !hook$jscomp$inline_2317.isDisabled &&
+    hook$jscomp$inline_2317.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2354.inject(
-        internals$jscomp$inline_1920
+      (rendererID = hook$jscomp$inline_2317.inject(
+        internals$jscomp$inline_1895
       )),
-        (injectedHook = hook$jscomp$inline_2354);
+        (injectedHook = hook$jscomp$inline_2317);
     } catch (err) {}
 }
 function noop() {}
@@ -17159,7 +17091,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-5ccfcd17-20250312";
+exports.version = "19.1.0-native-fb-3e956805-20250314";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
