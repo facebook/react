@@ -2186,6 +2186,7 @@ type StoredEventListener = {
 export type FragmentInstanceType = {
   _fragmentFiber: Fiber,
   _eventListeners: null | Array<StoredEventListener>,
+  _observer: null | IntersectionObserver | ResizeObserver,
   addEventListener(
     type: string,
     listener: EventListener,
@@ -2197,11 +2198,14 @@ export type FragmentInstanceType = {
     optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
   ): void,
   focus(): void,
+  observeUsing(observer: IntersectionObserver | ResizeObserver): void,
+  unobserveUsing(observer: IntersectionObserver | ResizeObserver): void,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
   this._fragmentFiber = fragmentFiber;
   this._eventListeners = null;
+  this._observer = null;
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.addEventListener = function (
@@ -2284,6 +2288,62 @@ function removeEventListenerFromChild(
 FragmentInstance.prototype.focus = function (this: FragmentInstanceType) {
   traverseFragmentInstance(this._fragmentFiber, setFocusIfFocusable);
 };
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.observeUsing = function (
+  this: FragmentInstanceType,
+  observer: IntersectionObserver | ResizeObserver,
+): void {
+  if (this._observer !== null && this._observer !== observer) {
+    throw new Error(
+      'You are attaching an observer to a fragment instance that already has one. Fragment instances ' +
+        'can only have one observer. Use multiple fragment instances or first call unobserveUsing() to ' +
+        'remove the previous observer.',
+    );
+  }
+  this._observer = observer;
+  traverseFragmentInstanceChildren(
+    this,
+    this._fragmentFiber.child,
+    observeChild,
+    observer,
+  );
+};
+function observeChild(
+  child: Instance,
+  observer: IntersectionObserver | ResizeObserver,
+) {
+  observer.observe(child);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.unobserveUsing = function (
+  this: FragmentInstanceType,
+  observer: IntersectionObserver | ResizeObserver,
+): void {
+  if (this._observer === null || this._observer !== observer) {
+    if (__DEV__) {
+      console.error(
+        'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
+          'instance. First attach the observer with observeUsing()',
+      );
+    }
+  } else {
+    traverseFragmentInstanceChildren(
+      this,
+      this._fragmentFiber.child,
+      unobserveChild,
+      observer,
+    );
+    this._observer = null;
+  }
+};
+function unobserveChild(
+  child: Instance,
+  observer: IntersectionObserver | ResizeObserver,
+) {
+  observer.unobserve(child);
+  return false;
+}
 
 function normalizeListenerOptions(
   opts: ?EventListenerOptionsOrUseCapture,
@@ -2342,6 +2402,9 @@ export function commitNewChildToFragmentInstance(
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
       childElement.addEventListener(type, listener, optionsOrUseCapture);
     }
+  }
+  if (fragmentInstance._observer !== null) {
+    fragmentInstance._observer.observe(childElement);
   }
 }
 

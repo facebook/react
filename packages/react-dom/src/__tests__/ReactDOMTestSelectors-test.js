@@ -23,6 +23,9 @@ describe('ReactDOMTestSelectors', () => {
   let focusWithin;
   let getFindAllNodesFailureDescription;
   let observeVisibleRects;
+  let mockIntersectionObserver;
+  let simulateIntersection;
+  let setBoundingClientRect;
 
   let container;
 
@@ -51,6 +54,10 @@ describe('ReactDOMTestSelectors', () => {
 
     container = document.createElement('div');
     document.body.appendChild(container);
+    const IntersectionMocks = require('./utils/IntersectionMocks');
+    mockIntersectionObserver = IntersectionMocks.mockIntersectionObserver;
+    simulateIntersection = IntersectionMocks.simulateIntersection;
+    setBoundingClientRect = IntersectionMocks.setBoundingClientRect;
   });
 
   afterEach(() => {
@@ -608,21 +615,6 @@ No matching component was found for:
   });
 
   describe('findBoundingRects', () => {
-    // Stub out getBoundingClientRect for the specified target.
-    // This API is required by the test selectors but it isn't implemented by jsdom.
-    function setBoundingClientRect(target, {x, y, width, height}) {
-      target.getBoundingClientRect = function () {
-        return {
-          width,
-          height,
-          left: x,
-          right: x + width,
-          top: y,
-          bottom: y + height,
-        };
-      };
-    }
-
     // @gate www || experimental
     it('should return a single rect for a component that returns a single root host element', async () => {
       const ref = React.createRef();
@@ -1223,69 +1215,10 @@ No matching component was found for:
   });
 
   describe('observeVisibleRects', () => {
-    // Stub out getBoundingClientRect for the specified target.
-    // This API is required by the test selectors but it isn't implemented by jsdom.
-    function setBoundingClientRect(target, {x, y, width, height}) {
-      target.getBoundingClientRect = function () {
-        return {
-          width,
-          height,
-          left: x,
-          right: x + width,
-          top: y,
-          bottom: y + height,
-        };
-      };
-    }
-
-    function simulateIntersection(...entries) {
-      callback(
-        entries.map(([target, rect, ratio]) => ({
-          boundingClientRect: {
-            top: rect.y,
-            left: rect.x,
-            width: rect.width,
-            height: rect.height,
-          },
-          intersectionRatio: ratio,
-          target,
-        })),
-      );
-    }
-
-    let callback;
-    let observedTargets;
+    let observerMock;
 
     beforeEach(() => {
-      callback = null;
-      observedTargets = [];
-
-      class IntersectionObserver {
-        constructor() {
-          callback = arguments[0];
-        }
-
-        disconnect() {
-          callback = null;
-          observedTargets.splice(0);
-        }
-
-        observe(target) {
-          observedTargets.push(target);
-        }
-
-        unobserve(target) {
-          const index = observedTargets.indexOf(target);
-          if (index >= 0) {
-            observedTargets.splice(index, 1);
-          }
-        }
-      }
-
-      // This is a broken polyfill.
-      // It is only intended to provide bare minimum test coverage.
-      // More meaningful tests will require the use of fixtures.
-      window.IntersectionObserver = IntersectionObserver;
+      observerMock = mockIntersectionObserver();
     });
 
     // @gate www || experimental
@@ -1317,8 +1250,8 @@ No matching component was found for:
         handleVisibilityChange,
       );
 
-      expect(callback).not.toBeNull();
-      expect(observedTargets).toHaveLength(1);
+      expect(observerMock.callback).not.toBeNull();
+      expect(observerMock.observedTargets).toHaveLength(1);
       expect(handleVisibilityChange).not.toHaveBeenCalled();
 
       // Simulate IntersectionObserver notification.
@@ -1370,8 +1303,8 @@ No matching component was found for:
         handleVisibilityChange,
       );
 
-      expect(callback).not.toBeNull();
-      expect(observedTargets).toHaveLength(2);
+      expect(observerMock.callback).not.toBeNull();
+      expect(observerMock.observedTargets).toHaveLength(2);
       expect(handleVisibilityChange).not.toHaveBeenCalled();
 
       // Simulate IntersectionObserver notification.
@@ -1437,12 +1370,12 @@ No matching component was found for:
         handleVisibilityChange,
       );
 
-      expect(callback).not.toBeNull();
-      expect(observedTargets).toHaveLength(1);
+      expect(observerMock.callback).not.toBeNull();
+      expect(observerMock.observedTargets).toHaveLength(1);
       expect(handleVisibilityChange).not.toHaveBeenCalled();
 
       disconnect();
-      expect(callback).toBeNull();
+      expect(observerMock.callback).toBeNull();
     });
 
     // This test reuires gating because it relies on the __DEV__ only commit hook to work.
@@ -1570,9 +1503,9 @@ No matching component was found for:
         handleVisibilityChange,
       );
 
-      expect(callback).not.toBeNull();
-      expect(observedTargets).toHaveLength(1);
-      expect(observedTargets[0]).toBe(ref1.current);
+      expect(observerMock.callback).not.toBeNull();
+      expect(observerMock.observedTargets).toHaveLength(1);
+      expect(observerMock.observedTargets[0]).toBe(ref1.current);
     });
   });
 });
