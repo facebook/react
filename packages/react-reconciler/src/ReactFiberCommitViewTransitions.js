@@ -710,6 +710,8 @@ function measureViewTransitionHostInstancesRecursive(
       }
       if ((parentViewTransition.flags & Update) !== NoFlags) {
         // We might update this node so we need to apply its new name for the new state.
+        // Additionally in the ApplyGesture case we also need to do this because the clone
+        // will have the name but this one won't.
         applyViewTransitionName(
           instance,
           viewTransitionHostInstanceIdx === 0
@@ -835,32 +837,51 @@ export function measureUpdateViewTransition(
   return inViewport;
 }
 
-export function measureNestedViewTransitions(changedParent: Fiber): void {
+export function measureNestedViewTransitions(
+  changedParent: Fiber,
+  gesture: boolean,
+): void {
   let child = changedParent.child;
   while (child !== null) {
     if (child.tag === ViewTransitionComponent) {
       const props: ViewTransitionProps = child.memoizedProps;
-      const name = getViewTransitionName(props, child.stateNode);
+      const state: ViewTransitionState = child.stateNode;
+      const name = getViewTransitionName(props, state);
       const className: ?string = getViewTransitionClassName(
         props.className,
         props.layout,
       );
+      let previousMeasurements: null | Array<InstanceMeasurement>;
+      if (gesture) {
+        const clones = state.clones;
+        if (clones === null) {
+          previousMeasurements = null;
+        } else {
+          previousMeasurements = clones.map(measureInstance);
+        }
+      } else {
+        previousMeasurements = child.memoizedState;
+      }
       const inViewport = measureViewTransitionHostInstances(
         child,
         child.child,
         name,
         name, // Since this is unchanged, new and old name is the same.
         className,
-        child.memoizedState,
+        previousMeasurements,
         false,
       );
       if ((child.flags & Update) === NoFlags || !inViewport) {
         // Nothing changed.
       } else {
-        scheduleViewTransitionEvent(child, props.onLayout);
+        if (gesture) {
+          // TODO: Schedule gesture events.
+        } else {
+          scheduleViewTransitionEvent(child, props.onLayout);
+        }
       }
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-      measureNestedViewTransitions(child);
+      measureNestedViewTransitions(child, gesture);
     }
     child = child.sibling;
   }

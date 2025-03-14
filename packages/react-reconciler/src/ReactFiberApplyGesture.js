@@ -63,6 +63,7 @@ import {
   restoreNestedViewTransitions,
   appearingViewTransitions,
   commitEnterViewTransitions,
+  measureNestedViewTransitions,
 } from './ReactFiberCommitViewTransitions';
 import {
   getViewTransitionName,
@@ -990,24 +991,6 @@ function measureExitViewTransitions(placement: Fiber): void {
   }
 }
 
-function measureNestedViewTransitions(changedParent: Fiber): void {
-  let child = changedParent.child;
-  while (child !== null) {
-    if (child.tag === ViewTransitionComponent) {
-      const current = child.alternate;
-      if (current !== null) {
-        // const props: ViewTransitionProps = child.memoizedProps;
-        // const name = getViewTransitionName(props, child.stateNode);
-        // TODO: Measure both the old and new state and see if they're different.
-      }
-    } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-      // TODO: Check if this is a hidden Offscreen or a Portal.
-      measureNestedViewTransitions(child);
-    }
-    child = child.sibling;
-  }
-}
-
 function measureUpdateViewTransition(
   current: Fiber,
   finishedWork: Fiber,
@@ -1038,7 +1021,7 @@ function recursivelyApplyViewTransitions(parentFiber: Fiber) {
     // Nothing has changed in this subtree, but the parent may have still affected
     // its size and position. We need to measure the old and new state to see if
     // we should animate its size and position.
-    measureNestedViewTransitions(parentFiber);
+    measureNestedViewTransitions(parentFiber, true);
   }
 }
 

@@ -2450,7 +2450,7 @@ function recursivelyTraverseAfterMutationEffects(
     // Nothing has changed in this subtree, but the parent may have still affected
     // its size and position. We need to measure this and if not, restore it to
     // not animate.
-    measureNestedViewTransitions(parentFiber);
+    measureNestedViewTransitions(parentFiber, false);
   }
 }
 
