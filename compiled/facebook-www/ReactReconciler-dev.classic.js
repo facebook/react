@@ -17119,29 +17119,6 @@ __DEV__ &&
         }
       }
     }
-    function flushGestureMutations() {
-      if (pendingEffectsStatus === PENDING_GESTURE_MUTATION_PHASE) {
-        pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var root = pendingEffectsRoot,
-          prevTransition = ReactSharedInternals.T;
-        ReactSharedInternals.T = null;
-        var previousPriority = getCurrentUpdatePriority();
-        setCurrentUpdatePriority(2);
-        var prevExecutionContext = executionContext;
-        executionContext |= CommitContext;
-        try {
-          var rootClone = root.gestureClone;
-          null !== rootClone &&
-            ((root.gestureClone = null),
-            removeRootViewTransitionClone(root.containerInfo, rootClone));
-        } finally {
-          (executionContext = prevExecutionContext),
-            setCurrentUpdatePriority(previousPriority),
-            (ReactSharedInternals.T = prevTransition);
-        }
-        pendingEffectsStatus = PENDING_GESTURE_ANIMATION_PHASE;
-      }
-    }
     function makeErrorInfo(componentStack) {
       componentStack = { componentStack: componentStack };
       Object.defineProperty(componentStack, "digest", {
@@ -17160,28 +17137,6 @@ __DEV__ &&
           ((root.pooledCache = null), releaseCache(remainingLanes)));
     }
     function flushPendingEffects(wasDelayedCommit) {
-      flushGestureMutations();
-      flushGestureMutations();
-      if (pendingEffectsStatus === PENDING_GESTURE_ANIMATION_PHASE) {
-        pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var root = pendingEffectsRoot;
-        pendingFinishedWork = pendingEffectsRoot = null;
-        pendingEffectsLanes = 0;
-        var prevTransition = ReactSharedInternals.T;
-        ReactSharedInternals.T = null;
-        var previousPriority = getCurrentUpdatePriority();
-        setCurrentUpdatePriority(2);
-        var prevExecutionContext = executionContext;
-        executionContext |= CommitContext;
-        try {
-          restoreRootViewTransitionName(root.containerInfo);
-        } finally {
-          (executionContext = prevExecutionContext),
-            setCurrentUpdatePriority(previousPriority),
-            (ReactSharedInternals.T = prevTransition);
-        }
-        ensureRootIsScheduled(root);
-      }
       flushMutationEffects();
       flushLayoutEffects();
       flushSpawnedWork();
@@ -18536,8 +18491,8 @@ __DEV__ &&
       cancelRootViewTransitionName = $$$config.cancelRootViewTransitionName,
       restoreRootViewTransitionName = $$$config.restoreRootViewTransitionName;
     $$$config.cloneRootViewTransitionContainer;
-    var removeRootViewTransitionClone = $$$config.removeRootViewTransitionClone,
-      measureInstance = $$$config.measureInstance,
+    $$$config.removeRootViewTransitionClone;
+    var measureInstance = $$$config.measureInstance,
       wasInstanceInViewport = $$$config.wasInstanceInViewport,
       hasInstanceChanged = $$$config.hasInstanceChanged,
       hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent,
@@ -20698,8 +20653,6 @@ __DEV__ &&
       PENDING_AFTER_MUTATION_PHASE = 3,
       PENDING_SPAWNED_WORK = 4,
       PENDING_PASSIVE_PHASE = 5,
-      PENDING_GESTURE_MUTATION_PHASE = 6,
-      PENDING_GESTURE_ANIMATION_PHASE = 7,
       pendingEffectsStatus = 0,
       pendingEffectsRoot = null,
       pendingFinishedWork = null,
@@ -21250,7 +21203,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-1b6e3dd9-20250314"
+        reconcilerVersion: "19.1.0-www-classic-3e956805-20250314"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

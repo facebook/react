@@ -11724,29 +11724,6 @@ module.exports = function ($$$config) {
       }
     }
   }
-  function flushGestureMutations() {
-    if (6 === pendingEffectsStatus) {
-      pendingEffectsStatus = 0;
-      var root = pendingEffectsRoot,
-        prevTransition = ReactSharedInternals.T;
-      ReactSharedInternals.T = null;
-      var previousPriority = getCurrentUpdatePriority();
-      setCurrentUpdatePriority(2);
-      var prevExecutionContext = executionContext;
-      executionContext |= 4;
-      try {
-        var rootClone = root.gestureClone;
-        null !== rootClone &&
-          ((root.gestureClone = null),
-          removeRootViewTransitionClone(root.containerInfo, rootClone));
-      } finally {
-        (executionContext = prevExecutionContext),
-          setCurrentUpdatePriority(previousPriority),
-          (ReactSharedInternals.T = prevTransition);
-      }
-      pendingEffectsStatus = 7;
-    }
-  }
   function releaseRootPooledCache(root, remainingLanes) {
     0 === (root.pooledCacheLanes &= remainingLanes) &&
       ((remainingLanes = root.pooledCache),
@@ -11754,28 +11731,6 @@ module.exports = function ($$$config) {
         ((root.pooledCache = null), releaseCache(remainingLanes)));
   }
   function flushPendingEffects(wasDelayedCommit) {
-    flushGestureMutations();
-    flushGestureMutations();
-    if (7 === pendingEffectsStatus) {
-      pendingEffectsStatus = 0;
-      var root = pendingEffectsRoot;
-      pendingFinishedWork = pendingEffectsRoot = null;
-      pendingEffectsLanes = 0;
-      var prevTransition = ReactSharedInternals.T;
-      ReactSharedInternals.T = null;
-      var previousPriority = getCurrentUpdatePriority();
-      setCurrentUpdatePriority(2);
-      var prevExecutionContext = executionContext;
-      executionContext |= 4;
-      try {
-        restoreRootViewTransitionName(root.containerInfo);
-      } finally {
-        (executionContext = prevExecutionContext),
-          setCurrentUpdatePriority(previousPriority),
-          (ReactSharedInternals.T = prevTransition);
-      }
-      ensureRootIsScheduled(root);
-    }
     flushMutationEffects();
     flushLayoutEffects();
     flushSpawnedWork();
@@ -12605,8 +12560,8 @@ module.exports = function ($$$config) {
     cancelRootViewTransitionName = $$$config.cancelRootViewTransitionName,
     restoreRootViewTransitionName = $$$config.restoreRootViewTransitionName;
   $$$config.cloneRootViewTransitionContainer;
-  var removeRootViewTransitionClone = $$$config.removeRootViewTransitionClone,
-    measureInstance = $$$config.measureInstance,
+  $$$config.removeRootViewTransitionClone;
+  var measureInstance = $$$config.measureInstance,
     wasInstanceInViewport = $$$config.wasInstanceInViewport,
     hasInstanceChanged = $$$config.hasInstanceChanged,
     hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent,
@@ -13659,7 +13614,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-1b6e3dd9-20250314"
+      reconcilerVersion: "19.1.0-www-modern-3e956805-20250314"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

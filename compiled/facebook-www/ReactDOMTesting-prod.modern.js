@@ -13185,40 +13185,6 @@ function flushSpawnedWork() {
     }
   }
 }
-function flushGestureMutations() {
-  if (6 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot,
-      prevTransition = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = Internals.p;
-    Internals.p = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      var rootClone = root.gestureClone;
-      if (null !== rootClone) {
-        root.gestureClone = null;
-        var rootContainer = root.containerInfo;
-        var containerInstance =
-          9 === rootContainer.nodeType
-            ? rootContainer.body
-            : "HTML" === rootContainer.nodeName
-              ? rootContainer.ownerDocument.body
-              : rootContainer;
-        var containerParent = containerInstance.parentNode;
-        if (null === containerParent) throw Error(formatProdErrorMessage(552));
-        containerParent.removeChild(rootClone);
-        containerInstance.style.viewTransitionName = "root";
-      }
-    } finally {
-      (executionContext = prevExecutionContext),
-        (Internals.p = previousPriority),
-        (ReactSharedInternals.T = prevTransition);
-    }
-    pendingEffectsStatus = 7;
-  }
-}
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
     ((remainingLanes = root.pooledCache),
@@ -13226,28 +13192,6 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
-  flushGestureMutations();
-  flushGestureMutations();
-  if (7 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot;
-    pendingFinishedWork = pendingEffectsRoot = null;
-    pendingEffectsLanes = 0;
-    var prevTransition = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = Internals.p;
-    Internals.p = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      restoreRootViewTransitionName(root.containerInfo);
-    } finally {
-      (executionContext = prevExecutionContext),
-        (Internals.p = previousPriority),
-        (ReactSharedInternals.T = prevTransition);
-    }
-    ensureRootIsScheduled(root);
-  }
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -14863,20 +14807,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1755 = 0;
-  i$jscomp$inline_1755 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1755++
+  var i$jscomp$inline_1730 = 0;
+  i$jscomp$inline_1730 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1730++
 ) {
-  var eventName$jscomp$inline_1756 =
-      simpleEventPluginEvents[i$jscomp$inline_1755],
-    domEventName$jscomp$inline_1757 =
-      eventName$jscomp$inline_1756.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1758 =
-      eventName$jscomp$inline_1756[0].toUpperCase() +
-      eventName$jscomp$inline_1756.slice(1);
+  var eventName$jscomp$inline_1731 =
+      simpleEventPluginEvents[i$jscomp$inline_1730],
+    domEventName$jscomp$inline_1732 =
+      eventName$jscomp$inline_1731.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1733 =
+      eventName$jscomp$inline_1731[0].toUpperCase() +
+      eventName$jscomp$inline_1731.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1757,
-    "on" + capitalizedEvent$jscomp$inline_1758
+    domEventName$jscomp$inline_1732,
+    "on" + capitalizedEvent$jscomp$inline_1733
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -18970,16 +18914,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1944 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1919 = React.version;
 if (
-  "19.1.0-www-modern-1b6e3dd9-20250314" !==
-  isomorphicReactPackageVersion$jscomp$inline_1944
+  "19.1.0-www-modern-3e956805-20250314" !==
+  isomorphicReactPackageVersion$jscomp$inline_1919
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1944,
-      "19.1.0-www-modern-1b6e3dd9-20250314"
+      isomorphicReactPackageVersion$jscomp$inline_1919,
+      "19.1.0-www-modern-3e956805-20250314"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18995,24 +18939,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2521 = {
+var internals$jscomp$inline_2484 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-1b6e3dd9-20250314",
+  version: "19.1.0-www-modern-3e956805-20250314",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-1b6e3dd9-20250314"
+  reconcilerVersion: "19.1.0-www-modern-3e956805-20250314"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2522 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2485 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2522.isDisabled &&
-    hook$jscomp$inline_2522.supportsFiber
+    !hook$jscomp$inline_2485.isDisabled &&
+    hook$jscomp$inline_2485.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2522.inject(
-        internals$jscomp$inline_2521
+      (rendererID = hook$jscomp$inline_2485.inject(
+        internals$jscomp$inline_2484
       )),
-        (injectedHook = hook$jscomp$inline_2522);
+        (injectedHook = hook$jscomp$inline_2485);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -19515,4 +19459,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-1b6e3dd9-20250314";
+exports.version = "19.1.0-www-modern-3e956805-20250314";

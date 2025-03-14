@@ -10542,27 +10542,6 @@ function flushSpawnedWork() {
     flushSyncWorkAcrossRoots_impl(0, !1);
   }
 }
-function flushGestureMutations() {
-  if (6 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot,
-      prevTransition = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      if (null !== root.gestureClone)
-        throw ((root.gestureClone = null), Error(formatProdErrorMessage(248)));
-    } finally {
-      (executionContext = prevExecutionContext),
-        (currentUpdatePriority = previousPriority),
-        (ReactSharedInternals.T = prevTransition);
-    }
-    pendingEffectsStatus = 7;
-  }
-}
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
     ((remainingLanes = root.pooledCache),
@@ -10570,23 +10549,6 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
-  flushGestureMutations();
-  flushGestureMutations();
-  if (7 === pendingEffectsStatus) {
-    pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot;
-    pendingFinishedWork = pendingEffectsRoot = null;
-    pendingEffectsLanes = 0;
-    var prevTransition = ReactSharedInternals.T,
-      previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    executionContext = prevExecutionContext;
-    currentUpdatePriority = previousPriority;
-    ReactSharedInternals.T = prevTransition;
-    ensureRootIsScheduled(root);
-  }
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -11330,24 +11292,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1587 = {
+var internals$jscomp$inline_1562 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-1b6e3dd9-20250314",
+  version: "19.1.0-www-classic-3e956805-20250314",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-1b6e3dd9-20250314"
+  reconcilerVersion: "19.1.0-www-classic-3e956805-20250314"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1588 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1563 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1588.isDisabled &&
-    hook$jscomp$inline_1588.supportsFiber
+    !hook$jscomp$inline_1563.isDisabled &&
+    hook$jscomp$inline_1563.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1588.inject(
-        internals$jscomp$inline_1587
+      (rendererID = hook$jscomp$inline_1563.inject(
+        internals$jscomp$inline_1562
       )),
-        (injectedHook = hook$jscomp$inline_1588);
+        (injectedHook = hook$jscomp$inline_1563);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11361,4 +11323,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-1b6e3dd9-20250314";
+exports.version = "19.1.0-www-classic-3e956805-20250314";

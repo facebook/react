@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1143() {
+    function JSCompiler_object_inline_createNodeMock_1125() {
       return null;
     }
     function findHook(fiber, id) {
@@ -11858,26 +11858,6 @@ __DEV__ &&
         flushSyncWorkAcrossRoots_impl(0, !1);
       }
     }
-    function flushGestureMutations() {
-      if (pendingEffectsStatus === PENDING_GESTURE_MUTATION_PHASE) {
-        pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var root = pendingEffectsRoot,
-          prevTransition = ReactSharedInternals.T;
-        ReactSharedInternals.T = null;
-        var previousPriority = currentUpdatePriority;
-        currentUpdatePriority = DiscreteEventPriority;
-        var prevExecutionContext = executionContext;
-        executionContext |= CommitContext;
-        try {
-          null !== root.gestureClone && (root.gestureClone = null);
-        } finally {
-          (executionContext = prevExecutionContext),
-            (currentUpdatePriority = previousPriority),
-            (ReactSharedInternals.T = prevTransition);
-        }
-        pendingEffectsStatus = PENDING_GESTURE_ANIMATION_PHASE;
-      }
-    }
     function makeErrorInfo(componentStack) {
       componentStack = { componentStack: componentStack };
       Object.defineProperty(componentStack, "digest", {
@@ -11896,23 +11876,6 @@ __DEV__ &&
           ((root.pooledCache = null), releaseCache(remainingLanes)));
     }
     function flushPendingEffects(wasDelayedCommit) {
-      flushGestureMutations();
-      flushGestureMutations();
-      if (pendingEffectsStatus === PENDING_GESTURE_ANIMATION_PHASE) {
-        pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var root = pendingEffectsRoot;
-        pendingFinishedWork = pendingEffectsRoot = null;
-        pendingEffectsLanes = 0;
-        var prevTransition = ReactSharedInternals.T,
-          previousPriority = currentUpdatePriority;
-        currentUpdatePriority = DiscreteEventPriority;
-        var prevExecutionContext = executionContext;
-        executionContext |= CommitContext;
-        executionContext = prevExecutionContext;
-        currentUpdatePriority = previousPriority;
-        ReactSharedInternals.T = prevTransition;
-        ensureRootIsScheduled(root);
-      }
       flushMutationEffects();
       flushLayoutEffects();
       flushSpawnedWork();
@@ -14842,8 +14805,6 @@ __DEV__ &&
       PENDING_AFTER_MUTATION_PHASE = 3,
       PENDING_SPAWNED_WORK = 4,
       PENDING_PASSIVE_PHASE = 5,
-      PENDING_GESTURE_MUTATION_PHASE = 6,
-      PENDING_GESTURE_ANIMATION_PHASE = 7,
       pendingEffectsStatus = 0,
       pendingEffectsRoot = null,
       pendingFinishedWork = null,
@@ -15076,10 +15037,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-1b6e3dd9-20250314",
+        version: "19.1.0-www-classic-3e956805-20250314",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-1b6e3dd9-20250314"
+        reconcilerVersion: "19.1.0-www-classic-3e956805-20250314"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15099,7 +15060,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1143,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1125,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15214,5 +15175,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-classic-1b6e3dd9-20250314";
+    exports.version = "19.1.0-www-classic-3e956805-20250314";
   })();
