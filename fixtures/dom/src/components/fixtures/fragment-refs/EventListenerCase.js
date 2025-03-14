@@ -49,7 +49,7 @@ export default function EventListenerCase() {
       </TestCase.ExpectedResult>
 
       <Fixture>
-        <div className="control-box">
+        <Fixture.Controls>
           <div>Target count: {extraChildCount + 3}</div>
           <button
             onClick={() => {
@@ -69,26 +69,26 @@ export default function EventListenerCase() {
             }}>
             Remove click event listeners
           </button>
-          <div class="card-container">
-            <Fragment ref={fragmentRef}>
-              <div className="card" id="child-a">
-                Child A
+        </Fixture.Controls>
+        <div class="card-container">
+          <Fragment ref={fragmentRef}>
+            <div className="card" id="child-a">
+              Child A
+            </div>
+            <div className="card" id="child-b">
+              Child B
+            </div>
+            <WrapperComponent>
+              <div className="card" id="child-c">
+                Child C
               </div>
-              <div className="card" id="child-b">
-                Child B
-              </div>
-              <WrapperComponent>
-                <div className="card" id="child-c">
-                  Child C
+              {Array.from({length: extraChildCount}).map((_, index) => (
+                <div className="card" id={'extra-child-' + index} key={index}>
+                  Extra Child {index}
                 </div>
-                {Array.from({length: extraChildCount}).map((_, index) => (
-                  <div className="card" id={'extra-child-' + index} key={index}>
-                    Extra Child {index}
-                  </div>
-                ))}
-              </WrapperComponent>
-            </Fragment>
-          </div>
+              ))}
+            </WrapperComponent>
+          </Fragment>
         </div>
       </Fixture>
     </TestCase>

@@ -90,53 +90,55 @@ export default function IntersectionObserverCase() {
         </p>
       </TestCase.ExpectedResult>
       <Fixture>
-        <button
-          onClick={() => {
-            setItems(prev => [
-              ...prev,
-              [`Extra child: ${prev.length + 1}`, false],
-            ]);
-          }}>
-          Add Child
-        </button>
-        <button
-          onClick={() => {
-            setItems(prev => {
-              if (prev.length === 3) {
-                return prev;
-              }
-              return prev.slice(0, prev.length - 1);
-            });
-          }}>
-          Remove Child
-        </button>
-        <button
-          onClick={() => {
-            fragmentRef.current.observeUsing(observerRef.current);
-          }}>
-          Observe
-        </button>
-        <button
-          onClick={() => {
-            fragmentRef.current.unobserveUsing(observerRef.current);
-            setItems(prev => {
-              return prev.map(item => [item[0], false]);
-            });
-          }}>
-          Unobserve
-        </button>
-        {anyOnScreen && (
-          <div className="fixed-sidebar card-container">
-            <p>
-              <strong>Children on screen:</strong>
-            </p>
-            {items.map(item => (
-              <div className={`card ${item[1] ? 'onscreen' : null}`}>
-                {item[0]}
-              </div>
-            ))}
-          </div>
-        )}
+        <Fixture.Controls>
+          <button
+            onClick={() => {
+              setItems(prev => [
+                ...prev,
+                [`Extra child: ${prev.length + 1}`, false],
+              ]);
+            }}>
+            Add Child
+          </button>
+          <button
+            onClick={() => {
+              setItems(prev => {
+                if (prev.length === 3) {
+                  return prev;
+                }
+                return prev.slice(0, prev.length - 1);
+              });
+            }}>
+            Remove Child
+          </button>
+          <button
+            onClick={() => {
+              fragmentRef.current.observeUsing(observerRef.current);
+            }}>
+            Observe
+          </button>
+          <button
+            onClick={() => {
+              fragmentRef.current.unobserveUsing(observerRef.current);
+              setItems(prev => {
+                return prev.map(item => [item[0], false]);
+              });
+            }}>
+            Unobserve
+          </button>
+          {anyOnScreen && (
+            <div className="fixed-sidebar card-container">
+              <p>
+                <strong>Children on screen:</strong>
+              </p>
+              {items.map(item => (
+                <div className={`card ${item[1] ? 'onscreen' : null}`}>
+                  {item[0]}
+                </div>
+              ))}
+            </div>
+          )}
+        </Fixture.Controls>
         <Fragment ref={fragmentRef}>
           <ObservedChild id="A" />
           <WrapperComponent>

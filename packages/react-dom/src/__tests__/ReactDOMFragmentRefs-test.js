@@ -17,6 +17,7 @@ let Fragment;
 let Activity;
 let mockIntersectionObserver;
 let simulateIntersection;
+let setClientRects;
 let assertConsoleErrorDev;
 
 function Wrapper({children}) {
@@ -34,6 +35,7 @@ describe('FragmentRefs', () => {
     const IntersectionMocks = require('./utils/IntersectionMocks');
     mockIntersectionObserver = IntersectionMocks.mockIntersectionObserver;
     simulateIntersection = IntersectionMocks.simulateIntersection;
+    setClientRects = IntersectionMocks.setClientRects;
     assertConsoleErrorDev =
       require('internal-test-utils').assertConsoleErrorDev;
 
@@ -839,6 +841,49 @@ describe('FragmentRefs', () => {
         ],
         {withoutStack: true},
       );
+    });
+  });
+
+  describe('getClientRects', () => {
+    // @gate enableFragmentRefs
+    it('returns the bounding client recs of all children', async () => {
+      const fragmentRef = React.createRef();
+      const childARef = React.createRef();
+      const childBRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test() {
+        return (
+          <React.Fragment ref={fragmentRef}>
+            <div ref={childARef} />
+            <div ref={childBRef} />
+          </React.Fragment>
+        );
+      }
+
+      await act(() => root.render(<Test />));
+      setClientRects(childARef.current, [
+        {
+          x: 1,
+          y: 2,
+          width: 3,
+          height: 4,
+        },
+        {
+          x: 5,
+          y: 6,
+          width: 7,
+          height: 8,
+        },
+      ]);
+      setClientRects(childBRef.current, [{x: 9, y: 10, width: 11, height: 12}]);
+      const clientRects = fragmentRef.current.getClientRects();
+      const [childARects, childBRects] = clientRects;
+      expect(childARects.length).toBe(2);
+      expect(childBRects.length).toBe(1);
+      expect(childARects[0].left).toBe(1);
+      expect(childARects[1].left).toBe(5);
+      expect(childBRects[0].left).toBe(9);
     });
   });
 });
