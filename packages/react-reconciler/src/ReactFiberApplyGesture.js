@@ -152,6 +152,7 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
               // The "new" instance is the already mounted one we're deleting.
               const newInstance: ViewTransitionState = child.stateNode;
               oldInstance.paired = newInstance;
+              newInstance.paired = oldInstance;
               const clones = oldInstance.clones;
               if (clones !== null) {
                 // If we have clones that means that we've already visited this
@@ -201,6 +202,7 @@ function trackEnterViewTransitions(deletion: Fiber): void {
         // The "new" instance is the already mounted one we're deleting.
         const newInstance: ViewTransitionState = deletion.stateNode;
         oldInstance.paired = newInstance;
+        newInstance.paired = oldInstance;
         const clones = oldInstance.clones;
         if (clones !== null) {
           // If we have clones that means that we've already visited this
