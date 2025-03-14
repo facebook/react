@@ -7476,22 +7476,13 @@ function restorePairedViewTransitions(parent) {
       parent = parent.sibling;
     }
 }
-function restoreEnterViewTransitions(placement) {
-  if (30 === placement.tag)
-    (placement.stateNode.paired = null),
-      restorePairedViewTransitions(placement);
-  else if (0 !== (placement.subtreeFlags & 33554432))
-    for (placement = placement.child; null !== placement; )
-      restoreEnterViewTransitions(placement), (placement = placement.sibling);
-  else restorePairedViewTransitions(placement);
-}
-function restoreExitViewTransitions(deletion) {
-  if (30 === deletion.tag)
-    (deletion.stateNode.paired = null), restorePairedViewTransitions(deletion);
-  else if (0 !== (deletion.subtreeFlags & 33554432))
-    for (deletion = deletion.child; null !== deletion; )
-      restoreExitViewTransitions(deletion), (deletion = deletion.sibling);
-  else restorePairedViewTransitions(deletion);
+function restoreEnterOrExitViewTransitions(fiber) {
+  if (30 === fiber.tag)
+    (fiber.stateNode.paired = null), restorePairedViewTransitions(fiber);
+  else if (0 !== (fiber.subtreeFlags & 33554432))
+    for (fiber = fiber.child; null !== fiber; )
+      restoreEnterOrExitViewTransitions(fiber), (fiber = fiber.sibling);
+  else restorePairedViewTransitions(fiber);
 }
 function restoreNestedViewTransitions(changedParent) {
   for (changedParent = changedParent.child; null !== changedParent; )
@@ -8798,7 +8789,7 @@ function commitPassiveMountOnFiber(
     null === finishedWork.alternate &&
     null !== finishedWork.return &&
     null !== finishedWork.return.alternate &&
-    restoreEnterViewTransitions(finishedWork);
+    restoreEnterOrExitViewTransitions(finishedWork);
   var flags = finishedWork.flags;
   switch (finishedWork.tag) {
     case 0:
@@ -8935,7 +8926,7 @@ function commitPassiveMountOnFiber(
         ? (isViewTransitionEligible &&
             null !== current$124 &&
             null === current$124.memoizedState &&
-            restoreExitViewTransitions(current$124),
+            restoreEnterOrExitViewTransitions(current$124),
           instance$123._visibility & 4
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
@@ -8950,7 +8941,7 @@ function commitPassiveMountOnFiber(
         : (isViewTransitionEligible &&
             null !== current$124 &&
             null !== current$124.memoizedState &&
-            restoreEnterViewTransitions(finishedWork),
+            restoreEnterOrExitViewTransitions(finishedWork),
           instance$123._visibility & 4
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
@@ -11341,10 +11332,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1587 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-5398b711-20250314",
+  version: "19.1.0-www-classic-1b6e3dd9-20250314",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-5398b711-20250314"
+  reconcilerVersion: "19.1.0-www-classic-1b6e3dd9-20250314"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1588 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11370,4 +11361,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-5398b711-20250314";
+exports.version = "19.1.0-www-classic-1b6e3dd9-20250314";

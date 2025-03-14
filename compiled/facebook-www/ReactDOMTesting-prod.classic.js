@@ -9222,25 +9222,15 @@ function restorePairedViewTransitions(parent) {
       parent = parent.sibling;
     }
 }
-function restoreEnterViewTransitions(placement) {
-  if (30 === placement.tag)
-    (placement.stateNode.paired = null),
-      restoreViewTransitionOnHostInstances(placement.child, !1),
-      restorePairedViewTransitions(placement);
-  else if (0 !== (placement.subtreeFlags & 33554432))
-    for (placement = placement.child; null !== placement; )
-      restoreEnterViewTransitions(placement), (placement = placement.sibling);
-  else restorePairedViewTransitions(placement);
-}
-function restoreExitViewTransitions(deletion) {
-  if (30 === deletion.tag)
-    (deletion.stateNode.paired = null),
-      restoreViewTransitionOnHostInstances(deletion.child, !1),
-      restorePairedViewTransitions(deletion);
-  else if (0 !== (deletion.subtreeFlags & 33554432))
-    for (deletion = deletion.child; null !== deletion; )
-      restoreExitViewTransitions(deletion), (deletion = deletion.sibling);
-  else restorePairedViewTransitions(deletion);
+function restoreEnterOrExitViewTransitions(fiber) {
+  if (30 === fiber.tag)
+    (fiber.stateNode.paired = null),
+      restoreViewTransitionOnHostInstances(fiber.child, !1),
+      restorePairedViewTransitions(fiber);
+  else if (0 !== (fiber.subtreeFlags & 33554432))
+    for (fiber = fiber.child; null !== fiber; )
+      restoreEnterOrExitViewTransitions(fiber), (fiber = fiber.sibling);
+  else restorePairedViewTransitions(fiber);
 }
 function restoreUpdateViewTransition(current, finishedWork) {
   finishedWork.memoizedState = null;
@@ -11286,7 +11276,7 @@ function commitPassiveMountOnFiber(
     null === finishedWork.alternate &&
     null !== finishedWork.return &&
     null !== finishedWork.return.alternate &&
-    restoreEnterViewTransitions(finishedWork);
+    restoreEnterOrExitViewTransitions(finishedWork);
   var flags = finishedWork.flags;
   switch (finishedWork.tag) {
     case 0:
@@ -11425,7 +11415,7 @@ function commitPassiveMountOnFiber(
         ? (isViewTransitionEligible &&
             null !== current$179 &&
             null === current$179.memoizedState &&
-            restoreExitViewTransitions(current$179),
+            restoreEnterOrExitViewTransitions(current$179),
           instance$178._visibility & 4
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
@@ -11440,7 +11430,7 @@ function commitPassiveMountOnFiber(
         : (isViewTransitionEligible &&
             null !== current$179 &&
             null !== current$179.memoizedState &&
-            restoreEnterViewTransitions(finishedWork),
+            restoreEnterOrExitViewTransitions(finishedWork),
           instance$178._visibility & 4
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
@@ -19251,14 +19241,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1954 = React.version;
 if (
-  "19.1.0-www-classic-5398b711-20250314" !==
+  "19.1.0-www-classic-1b6e3dd9-20250314" !==
   isomorphicReactPackageVersion$jscomp$inline_1954
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1954,
-      "19.1.0-www-classic-5398b711-20250314"
+      "19.1.0-www-classic-1b6e3dd9-20250314"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19276,10 +19266,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2539 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-5398b711-20250314",
+  version: "19.1.0-www-classic-1b6e3dd9-20250314",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-5398b711-20250314"
+  reconcilerVersion: "19.1.0-www-classic-1b6e3dd9-20250314"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2540 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -19794,4 +19784,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-5398b711-20250314";
+exports.version = "19.1.0-www-classic-1b6e3dd9-20250314";
