@@ -7,21 +7,27 @@ import {
   Set_intersect,
   Set_union,
   getOrInsertDefault,
+  getOrInsertWith,
 } from '../Utils/utils';
 import {
   BasicBlock,
   BlockId,
   DependencyPathEntry,
   GeneratedSource,
+  getHookKind,
   HIRFunction,
   Identifier,
   IdentifierId,
   InstructionId,
   InstructionValue,
+  LoweredFunction,
+  Place,
   PropertyLiteral,
   ReactiveScopeDependency,
   ScopeId,
+  ValidatedIdentifier,
 } from './HIR';
+import {eachInstructionOperand, eachInstructionValueOperand} from './visitors';
 
 const DEBUG_PRINT = false;
 
@@ -112,6 +118,9 @@ export function collectHoistablePropertyLoads(
     hoistableFromOptionals,
     registry,
     nestedFnImmutableContext: null,
+    fnUsages: fn.env.config.enableTreatFunctionDepsAsConditional
+      ? new Map()
+      : mapFunctionExpressionsToEscapingBlocks(fn),
   });
 }
 
@@ -127,6 +136,11 @@ type CollectHoistablePropertyLoadsContext = {
    * but are currently kept separate for readability.
    */
   nestedFnImmutableContext: ReadonlySet<IdentifierId> | null;
+  /**
+   * Mapping of functions declared within a traversal context to their
+   * (valid) usage sites, which will have hoistable property loads added
+   */
+  fnUsages: ReadonlyMap<LoweredFunction, Set<BlockId>>;
 };
 function collectHoistablePropertyLoadsImpl(
   fn: HIRFunction,
@@ -338,7 +352,13 @@ function collectNonNullsInBlocks(
       context.registry.getOrCreateIdentifier(identifier),
     );
   }
-  const nodes = new Map<BlockId, BlockInfo>();
+  const nodes = new Map<
+    BlockId,
+    {
+      block: BasicBlock;
+      assumedNonNullObjects: Set<PropertyPathNode>;
+    }
+  >();
   for (const [_, block] of fn.body.blocks) {
     const assumedNonNullObjects = new Set<PropertyPathNode>(
       knownNonNullIdentifiers,
@@ -358,40 +378,68 @@ function collectNonNullsInBlocks(
       ) {
         assumedNonNullObjects.add(maybeNonNull);
       }
-      if (
-        (instr.value.kind === 'FunctionExpression' ||
-          instr.value.kind === 'ObjectMethod') &&
-        !fn.env.config.enableTreatFunctionDepsAsConditional
-      ) {
+      if (instr.value.kind === 'FunctionExpression') {
+        /**
+         * What are reasonable semantics here?
+         * Risky
+         * - only treat named fns as unconditionally hoistable
+         *
+         * Conservative
+         */
         const innerFn = instr.value.loweredFunc;
-        const innerHoistableMap = collectHoistablePropertyLoadsImpl(
-          innerFn.func,
-          {
-            ...context,
-            nestedFnImmutableContext:
-              context.nestedFnImmutableContext ??
-              new Set(
-                innerFn.func.context
-                  .filter(place =>
-                    isImmutableAtInstr(place.identifier, instr.id, context),
-                  )
-                  .map(place => place.identifier.id),
-              ),
-          },
-        );
-        const innerHoistables = assertNonNull(
-          innerHoistableMap.get(innerFn.func.body.entry),
-        );
-        for (const entry of innerHoistables.assumedNonNullObjects) {
-          assumedNonNullObjects.add(entry);
+        const resultBlocks = context.fnUsages.get(innerFn);
+        if (resultBlocks != null) {
+          const innerHoistableMap = collectHoistablePropertyLoadsImpl(
+            innerFn.func,
+            {
+              ...context,
+              nestedFnImmutableContext:
+                context.nestedFnImmutableContext ??
+                new Set(
+                  innerFn.func.context
+                    .filter(place =>
+                      isImmutableAtInstr(place.identifier, instr.id, context),
+                    )
+                    .map(place => place.identifier.id),
+                ),
+              fnUsages: fn.env.config.enableTreatFunctionDepsAsConditional
+                ? new Map()
+                : mapFunctionExpressionsToEscapingBlocks(innerFn.func),
+            },
+          );
+          const innerHoistables = assertNonNull(
+            innerHoistableMap.get(innerFn.func.body.entry),
+          );
+          for (const innerBlock of resultBlocks) {
+            let innerNonNulls;
+            if (innerBlock === block.id) {
+              innerNonNulls = assumedNonNullObjects;
+            } else {
+              innerNonNulls = getOrInsertWith(nodes, innerBlock, () => ({
+                block: assertNonNull(fn.body.blocks.get(innerBlock)),
+                assumedNonNullObjects: new Set(),
+              })).assumedNonNullObjects;
+            }
+            for (const entry of innerHoistables.assumedNonNullObjects) {
+              innerNonNulls.add(entry);
+            }
+          }
         }
       }
     }
 
-    nodes.set(block.id, {
-      block,
-      assumedNonNullObjects,
-    });
+    const maybeNode = nodes.get(block.id);
+    if (maybeNode != null) {
+      // merge
+      for (const entry of assumedNonNullObjects) {
+        maybeNode.assumedNonNullObjects.add(entry);
+      }
+    } else {
+      nodes.set(block.id, {
+        block,
+        assumedNonNullObjects,
+      });
+    }
   }
   return nodes;
 }
@@ -590,4 +638,124 @@ function reduceMaybeOptionalChains(
       }
     }
   } while (changed);
+}
+
+/**
+ *
+ * const foo = function() { ... } // this matches
+ * arr.map(function() { ... }) // this does not match
+ *
+ * What about function expressions that just escape to other functions?
+ *
+ * For both below examples, cb1 should be hoistable only to if-cond block
+ * ```js
+ * function useFoo(...) {
+ *   const cb1 = function() { ... };
+ *   const cb2 = function() { if (cond) cb1() };
+ *   return cb2;
+ * }
+ * ```
+ * ```js
+ * function useFoo(...) {
+ *   const cb1 = function() { ... };
+ *   const cb2 = function() { if (cond) return cb1; };
+ *   return cb2;
+ * }
+ * ```
+ */
+function mapFunctionExpressionsToEscapingBlocks(
+  fn: HIRFunction,
+): ReadonlyMap<LoweredFunction, Set<BlockId>> {
+  /**
+   * Step 1: gather all function expressions and known ssa'd aliases
+   */
+  const temporaries = new Map<
+    IdentifierId,
+    {fn: LoweredFunction; usage: Set<BlockId>}
+  >();
+  const validUsages = new Set<Place>();
+
+  for (const block of fn.body.blocks.values()) {
+    for (const {lvalue, value} of block.instructions) {
+      /**
+       * Only match function expressions which can have guaranteed ssa.
+       */
+      if (value.kind === 'FunctionExpression') {
+        temporaries.set(lvalue.identifier.id, {
+          fn: value.loweredFunc,
+          usage: new Set(),
+        });
+      } else if (value.kind === 'StoreLocal') {
+        const lvalue = value.lvalue.place.identifier;
+        const maybeLoweredFunc = temporaries.get(value.value.identifier.id);
+        if (
+          lvalue.name != null &&
+          lvalue.name.kind === 'named' &&
+          maybeLoweredFunc != null
+        ) {
+          temporaries.set(lvalue.id, maybeLoweredFunc);
+          validUsages.add(value.value);
+        }
+      } else if (value.kind === 'LoadLocal') {
+        const maybeLoweredFunc = temporaries.get(value.place.identifier.id);
+        if (maybeLoweredFunc != null) {
+          temporaries.set(lvalue.identifier.id, maybeLoweredFunc);
+          validUsages.add(value.place);
+        }
+      }
+    }
+  }
+  /**
+   * Step 2: Forward pass to do best-effort "escape analysis"
+   */
+  for (const block of fn.body.blocks.values()) {
+    for (const {value} of block.instructions) {
+      if (value.kind === 'CallExpression') {
+        const callee = value.callee;
+        const maybeHook = getHookKind(fn.env, callee.identifier);
+        const maybeLoweredFunc = temporaries.get(callee.identifier.id);
+        if (maybeLoweredFunc != null) {
+          // Direct calls
+          maybeLoweredFunc.usage.add(block.id);
+        } else if (maybeHook != null) {
+          // Arguments to hooks
+          for (const arg of value.args.filter(
+            arg => arg.kind === 'Identifier',
+          ) as Array<Place>) {
+            const maybeLoweredFunc = temporaries.get(arg.identifier.id);
+            if (maybeLoweredFunc != null) {
+              maybeLoweredFunc.usage.add(block.id);
+            }
+          }
+        }
+      } else if (value.kind === 'JsxExpression') {
+        /* Match jsx attributes */
+        for (const attr of value.props) {
+          if (attr.kind === 'JsxSpreadAttribute') {
+            continue;
+          }
+          const maybeLoweredFunc = temporaries.get(attr.place.identifier.id);
+          if (maybeLoweredFunc != null) {
+            maybeLoweredFunc.usage.add(block.id);
+          }
+        }
+      }
+      if (block.terminal.kind === 'return') {
+        const maybeLoweredFunc = temporaries.get(
+          block.terminal.value.identifier.id,
+        );
+        if (maybeLoweredFunc != null) {
+          maybeLoweredFunc.usage.add(block.id);
+        }
+      }
+    }
+  }
+
+  const map = new Map<LoweredFunction, Set<BlockId>>();
+  for (const {fn, usage} of temporaries.values()) {
+    if (!map.has(fn)) {
+      map.set(fn, usage);
+    }
+  }
+  return map;
 }
