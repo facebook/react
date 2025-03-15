@@ -77,6 +77,7 @@ import {
   TracingMarkerComponent,
   Throw,
   ViewTransitionComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -866,6 +867,46 @@ function deferHiddenOffscreenComponent(
 // ourselves to this constraint, though. If the behavior diverges, we should
 // fork the function.
 const updateLegacyHiddenComponent = updateOffscreenComponent;
+
+function updateActivityComponent(
+  current: null | Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  const nextProps = workInProgress.pendingProps;
+  const nextChildren = nextProps.children;
+  const nextMode = nextProps.mode;
+  const mode = workInProgress.mode;
+  const offscreenChildProps: OffscreenProps = {
+    mode: nextMode,
+    children: nextChildren,
+  };
+
+  if (current === null) {
+    const primaryChildFragment = mountWorkInProgressOffscreenFiber(
+      offscreenChildProps,
+      mode,
+      renderLanes,
+    );
+    primaryChildFragment.ref = workInProgress.ref;
+    workInProgress.child = primaryChildFragment;
+    primaryChildFragment.return = workInProgress;
+
+    return primaryChildFragment;
+  } else {
+    const currentChild: Fiber = (current.child: any);
+
+    const primaryChildFragment = updateWorkInProgressOffscreenFiber(
+      currentChild,
+      offscreenChildProps,
+    );
+
+    primaryChildFragment.ref = workInProgress.ref;
+    workInProgress.child = primaryChildFragment;
+    primaryChildFragment.return = workInProgress;
+    return primaryChildFragment;
+  }
+}
 
 function updateCacheComponent(
   current: Fiber | null,
@@ -4024,6 +4065,9 @@ function beginWork(
         return updateScopeComponent(current, workInProgress, renderLanes);
       }
       break;
+    }
+    case ActivityComponent: {
+      return updateActivityComponent(current, workInProgress, renderLanes);
     }
     case OffscreenComponent: {
       return updateOffscreenComponent(current, workInProgress, renderLanes);

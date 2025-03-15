@@ -47,6 +47,7 @@ import {
   TracingMarkerComponent,
   Throw,
   ViewTransitionComponent,
+  ActivityComponent,
 } from 'react-reconciler/src/ReactWorkTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
@@ -85,6 +86,8 @@ export function getComponentNameFromOwner(
 export default function getComponentNameFromFiber(fiber: Fiber): string | null {
   const {tag, type} = fiber;
   switch (tag) {
+    case ActivityComponent:
+      return 'Activity';
     case CacheComponent:
       return 'Cache';
     case ContextConsumer:
