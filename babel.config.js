@@ -4,8 +4,7 @@ module.exports = {
   plugins: [
     '@babel/plugin-syntax-jsx',
     '@babel/plugin-transform-flow-strip-types',
-    ['@babel/plugin-transform-class-properties', {loose: true}],
-    '@babel/plugin-transform-classes',
+    ['@babel/plugin-proposal-class-properties', {loose: true}],
     'syntax-trailing-function-commas',
     [
       '@babel/plugin-proposal-object-rest-spread',
