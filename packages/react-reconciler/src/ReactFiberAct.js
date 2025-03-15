@@ -45,10 +45,7 @@ export function isConcurrentActEnvironment(): void | boolean {
           IS_REACT_ACT_ENVIRONMENT
         : undefined;
 
-    if (
-      !isReactActEnvironmentGlobal &&
-      ReactSharedInternals.actQueue !== null
-    ) {
+    if (!isReactActEnvironmentGlobal && ReactSharedInternals.actQueue) {
       // TODO: Include link to relevant documentation page.
       console.error(
         'The current testing environment is not configured to support ' +
