@@ -189,24 +189,24 @@ describe('Store component filters', () => {
     `);
   });
 
-  // TODO: How to gate by experimental?
-  it.skip('should filter Activity', async () => {
+  it('should filter Activity', async () => {
     const Activity = React.unstable_Activity;
 
-    await actAsync(async () =>
-      render(
-        <React.Fragment>
-          <Activity mode="visible">
-            <div>Visible</div>
-          </Activity>
-          <Activity mode="hidden">
-            <div>Hidden</div>
-          </Activity>
-        </React.Fragment>,
-      ),
-    );
+    if (Activity != null) {
+      await actAsync(async () =>
+        render(
+          <React.Fragment>
+            <Activity mode="visible">
+              <div>Visible</div>
+            </Activity>
+            <Activity mode="hidden">
+              <div>Hidden</div>
+            </Activity>
+          </React.Fragment>,
+        ),
+      );
 
-    expect(store).toMatchInlineSnapshot(`
+      expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Activity>
             <div>
@@ -214,53 +214,54 @@ describe('Store component filters', () => {
             <div>
     `);
 
-    await actAsync(
-      async () =>
-        (store.componentFilters = [
-          utils.createElementTypeFilter(Types.ElementTypeActivity),
-        ]),
-    );
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity),
+          ]),
+      );
 
-    expect(store).toMatchInlineSnapshot(`
+      expect(store).toMatchInlineSnapshot(`
       [root]
           <div>
           <div>
     `);
 
-    await actAsync(
-      async () =>
-        (store.componentFilters = [
-          utils.createElementTypeFilter(Types.ElementTypeActivity, false),
-        ]),
-    );
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity, false),
+          ]),
+      );
 
-    expect(store).toMatchInlineSnapshot(`
+      expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Activity>
             <div>
         ▾ <Activity>
             <div>
     `);
+    }
   });
 
-  // TODO: How to gate by experimental?
-  it.skip('should filter ViewTransition', async () => {
+  it('should filter ViewTransition', async () => {
     const ViewTransition = React.unstable_ViewTransition;
 
-    await actAsync(async () =>
-      render(
-        <React.Fragment>
-          <ViewTransition>
-            <div>Visible</div>
-          </ViewTransition>
-          <ViewTransition>
-            <div>Hidden</div>
-          </ViewTransition>
-        </React.Fragment>,
-      ),
-    );
+    if (ViewTransition != null) {
+      await actAsync(async () =>
+        render(
+          <React.Fragment>
+            <ViewTransition>
+              <div>Visible</div>
+            </ViewTransition>
+            <ViewTransition>
+              <div>Hidden</div>
+            </ViewTransition>
+          </React.Fragment>,
+        ),
+      );
 
-    expect(store).toMatchInlineSnapshot(`
+      expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <ViewTransition>
             <div>
@@ -268,14 +269,14 @@ describe('Store component filters', () => {
             <div>
     `);
 
-    await actAsync(
-      async () =>
-        (store.componentFilters = [
-          utils.createElementTypeFilter(Types.ElementTypeActivity),
-        ]),
-    );
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity),
+          ]),
+      );
 
-    expect(store).toMatchInlineSnapshot(`
+      expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <ViewTransition>
             <div>
@@ -283,20 +284,21 @@ describe('Store component filters', () => {
             <div>
     `);
 
-    await actAsync(
-      async () =>
-        (store.componentFilters = [
-          utils.createElementTypeFilter(Types.ElementTypeActivity, false),
-        ]),
-    );
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity, false),
+          ]),
+      );
 
-    expect(store).toMatchInlineSnapshot(`
+      expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <ViewTransition>
             <div>
         ▾ <ViewTransition>
             <div>
     `);
+    }
   });
 
   it('should ignore invalid ElementTypeRoot filter', async () => {
