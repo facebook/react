@@ -28,6 +28,7 @@ import {
   ElementTypeSuspenseList,
   ElementTypeTracingMarker,
   ElementTypeViewTransition,
+  ElementTypeActivity,
   ElementTypeVirtual,
   StrictMode,
 } from 'react-devtools-shared/src/frontend/types';
@@ -146,7 +147,6 @@ import type {
 import type {Source} from 'react-devtools-shared/src/shared/types';
 import {getSourceLocationByFiber} from './DevToolsFiberComponentStack';
 import {formatOwnerStack} from '../shared/DevToolsOwnerStack';
-import {ActivityComponent} from 'react-reconciler/src/ReactWorkTags';
 
 // Kinds
 const FIBER_INSTANCE = 0;
@@ -578,6 +578,7 @@ export function getInternalReactConstants(version: string): {
     TracingMarkerComponent,
     Throw,
     ViewTransitionComponent,
+    ActivityComponent,
   } = ReactTypeOfWork;
 
   function resolveFiberType(type: any): $FlowFixMe {
@@ -900,6 +901,7 @@ export function attach(
     StrictModeBits,
   } = getInternalReactConstants(version);
   const {
+    ActivityComponent,
     CacheComponent,
     ClassComponent,
     ContextConsumer,
@@ -1488,7 +1490,6 @@ export function attach(
         return true;
       case HostPortal:
       case HostText:
-      case ActivityComponent:
       case LegacyHiddenComponent:
       case OffscreenComponent:
       case Throw:
@@ -1574,6 +1575,8 @@ export function attach(
     const {type, tag} = fiber;
 
     switch (tag) {
+      case ActivityComponent:
+        return ElementTypeActivity;
       case ClassComponent:
       case IncompleteClassComponent:
         return ElementTypeClass;

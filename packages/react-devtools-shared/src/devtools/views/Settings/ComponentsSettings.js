@@ -472,6 +472,8 @@ export default function ComponentsSettings({
                         ((parseInt(currentTarget.value, 10): any): ElementType),
                       )
                     }>
+                    {/* TODO: currently only experimental, only list this if it's available */}
+                    {/*<option value={ElementTypeActivity}>activity</option>*/}
                     <option value={ElementTypeClass}>class</option>
                     <option value={ElementTypeContext}>context</option>
                     <option value={ElementTypeFunction}>function</option>
@@ -485,6 +487,10 @@ export default function ComponentsSettings({
                     <option value={ElementTypeOtherOrUnknown}>other</option>
                     <option value={ElementTypeProfiler}>profiler</option>
                     <option value={ElementTypeSuspense}>suspense</option>
+                    {/* TODO: currently only experimental, only list this if it's available */}
+                    {/*<option value={ElementTypeViewTransition}>*/}
+                    {/*  view transition*/}
+                    {/*</option>*/}
                   </select>
                 )}
                 {(componentFilter.type === ComponentFilterLocation ||
