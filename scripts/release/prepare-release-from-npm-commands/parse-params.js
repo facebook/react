@@ -39,6 +39,17 @@ const paramDefinitions = [
     description:
       'Version of published "next" release (e.g. 0.0.0-0e526bcec-20210202)',
   },
+  {
+    name: 'publishVersion',
+    type: String,
+    description: 'Version to publish',
+  },
+  {
+    name: 'ci',
+    type: Boolean,
+    description: 'Run in automated environment, without interactive prompts.',
+    defaultValue: false,
+  },
 ];
 
 module.exports = () => {

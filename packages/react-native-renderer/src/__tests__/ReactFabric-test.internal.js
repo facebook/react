@@ -875,10 +875,7 @@ describe('ReactFabric', () => {
     });
     assertConsoleErrorDev([
       'Text strings must be rendered within a <Text> component.\n' +
-        '    in RCTScrollView (at **)' +
-        (gate(flags => !flags.enableOwnerStacks)
-          ? '\n    in RCTText (at **)'
-          : ''),
+        '    in RCTScrollView (at **)',
     ]);
   });
 

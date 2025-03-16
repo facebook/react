@@ -4,9 +4,10 @@
 ```javascript
 import {makeArray} from 'shared-runtime';
 
-function Component(props) {
+const other = [0, 1];
+function Component({}) {
   const items = makeArray(0, 1, 2, null, 4, false, 6);
-  const max = Math.max(...items.filter(Boolean));
+  const max = Math.max(2, items.push(5), ...other);
   return max;
 }
 
@@ -21,13 +22,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-  3 | function Component(props) {
-  4 |   const items = makeArray(0, 1, 2, null, 4, false, 6);
-> 5 |   const max = Math.max(...items.filter(Boolean));
-    |               ^^^^^^^^ Invariant: [Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. Got a `Identifier` (5:5)
-  6 |   return max;
-  7 | }
-  8 |
+  4 | function Component({}) {
+  5 |   const items = makeArray(0, 1, 2, null, 4, false, 6);
+> 6 |   const max = Math.max(2, items.push(5), ...other);
+    |               ^^^^^^^^ Invariant: [Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. Got a `Identifier` (6:6)
+  7 |   return max;
+  8 | }
+  9 |
 ```
           
       

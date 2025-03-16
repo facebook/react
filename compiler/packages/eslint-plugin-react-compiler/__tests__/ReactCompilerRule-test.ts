@@ -274,6 +274,38 @@ const tests: CompilerTestCases = {
         },
       ],
     },
+    {
+      name: 'Pipeline errors are reported',
+      code: normalizeIndent`
+        import useMyEffect from 'useMyEffect';
+        function Component({a}) {
+          'use no memo';
+          useMyEffect(() => console.log(a.b));
+          return <div>Hello world</div>;
+        }
+      `,
+      options: [
+        {
+          environment: {
+            inferEffectDependencies: [
+              {
+                function: {
+                  source: 'useMyEffect',
+                  importSpecifierName: 'default',
+                },
+                numRequiredArgs: 1,
+              },
+            ],
+          },
+        },
+      ],
+      errors: [
+        {
+          message:
+            '[InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics.',
+        },
+      ],
+    },
   ],
 };
 

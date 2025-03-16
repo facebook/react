@@ -26,6 +26,7 @@
     "react-is": "0.0.0-experimental-4beb1fd8-20241118"
   },
   "devDependencies": {
+    "@babel/types": "^7.26.0",
     "@tsconfig/strictest": "^2.0.5",
     "concurrently": "^7.4.0",
     "esbuild": "^0.25.0",
@@ -37,12 +38,15 @@
     "prettier-plugin-hermes-parser": "^0.26.0",
     "prompt-promise": "^1.0.3",
     "rimraf": "^5.0.10",
+    "to-fast-properties": "^2.0.0",
+    "tsup": "^8.4.0",
     "typescript": "^5.4.3",
     "wait-on": "^7.2.0",
     "yargs": "^17.7.2"
   },
   "resolutions": {
-    "rimraf": "5.0.10"
+    "rimraf": "5.0.10",
+    "@babel/types": "7.26.3"
   },
   "packageManager": "yarn@1.22.22"
 }

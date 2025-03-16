@@ -302,12 +302,41 @@ export function createInstance(type, props, internalInstanceHandle) {
   return instance;
 }
 
+export function cloneMutableInstance(instance, keepChildren) {
+  return instance;
+}
+
 export function createTextInstance(
   text,
   rootContainerInstance,
   internalInstanceHandle,
 ) {
   return text;
+}
+
+export function cloneMutableTextInstance(textInstance) {
+  return textInstance;
+}
+
+export type FragmentInstanceType = null;
+
+export function createFragmentInstance(fiber): null {
+  return null;
+}
+
+export function updateFragmentInstanceFiber(fiber, instance): void {
+  // Noop
+}
+
+export function commitNewChildToFragmentInstance(
+  child,
+  fragmentInstance,
+): void {
+  // Noop
+}
+
+export function deleteChildFromFragmentInstance(child, fragmentInstance): void {
+  // Noop
 }
 
 export function finalizeInitialChildren(domElement, type, props) {
@@ -475,6 +504,14 @@ export function restoreRootViewTransitionName(rootContainer) {
   // Noop
 }
 
+export function cloneRootViewTransitionContainer(rootContainer) {
+  throw new Error('Not implemented.');
+}
+
+export function removeRootViewTransitionClone(rootContainer, clone) {
+  throw new Error('Not implemented.');
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance) {
@@ -499,6 +536,12 @@ export function hasInstanceAffectedParent(
 export function startViewTransition() {
   return false;
 }
+
+export type RunningGestureTransition = null;
+
+export function startGestureTransition() {}
+
+export function stopGestureTransition(transition: RunningGestureTransition) {}
 
 export type ViewTransitionInstance = null | {name: string, ...};
 

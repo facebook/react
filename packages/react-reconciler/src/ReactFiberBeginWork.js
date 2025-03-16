@@ -114,9 +114,9 @@ import {
   enableRenderableContext,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
-  enableOwnerStacks,
   enableHydrationLaneScheduling,
   enableViewTransition,
+  enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -988,6 +988,9 @@ function updateFragment(
   renderLanes: Lanes,
 ) {
   const nextChildren = workInProgress.pendingProps;
+  if (enableFragmentRefs) {
+    markRef(current, workInProgress);
+  }
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
@@ -3782,10 +3785,8 @@ function beginWork(
         workInProgress.mode,
         workInProgress.lanes,
       );
-      if (enableOwnerStacks) {
-        copiedFiber._debugStack = workInProgress._debugStack;
-        copiedFiber._debugTask = workInProgress._debugTask;
-      }
+      copiedFiber._debugStack = workInProgress._debugStack;
+      copiedFiber._debugTask = workInProgress._debugTask;
       return remountFiber(current, workInProgress, copiedFiber);
     }
   }

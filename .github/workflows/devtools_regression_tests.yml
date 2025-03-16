@@ -29,8 +29,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-release-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-release-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -63,8 +64,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -100,6 +102,7 @@ jobs:
     needs: build_devtools_and_process_artifacts
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         version:
           - "16.0"
@@ -108,7 +111,6 @@ jobs:
           - "17.0"
           - "18.0"
           - "18.2" # compiler polyfill
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -120,8 +122,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
@@ -135,6 +138,7 @@ jobs:
     needs: build_devtools_and_process_artifacts
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         version:
           - "16.0"
@@ -142,7 +146,6 @@ jobs:
           - "16.8" # hooks
           - "17.0"
           - "18.0"
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -154,8 +157,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4

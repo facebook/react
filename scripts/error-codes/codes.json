@@ -536,5 +536,6 @@
   "548": "Finished rendering the gesture lane but there were no pending gestures. React should not have started a render in this case. This is a bug in React.",
   "549": "Cannot start a gesture with a disconnected AnimationTimeline.",
   "550": "useSwipeTransition is not yet supported in react-art.",
-  "551": "useSwipeTransition is not yet supported in React Native."
+  "551": "useSwipeTransition is not yet supported in React Native.",
+  "552": "Cannot use a useSwipeTransition() in a detached root."
 }

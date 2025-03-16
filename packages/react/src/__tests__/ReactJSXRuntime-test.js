@@ -215,11 +215,7 @@ describe('ReactJSXRuntime', () => {
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
         'prop. (https://react.dev/link/special-props)\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? '    in Parent (at **)'
-          : '    in Child (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Parent (at **)'),
+        '    in Parent (at **)',
     ]);
   });
 
@@ -279,9 +275,6 @@ describe('ReactJSXRuntime', () => {
     assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.\n\n' +
         'Check the render method of `Parent`. See https://react.dev/link/warning-keys for more information.\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? ''
-          : '    in Child (at **)\n') +
         '    in Parent (at **)',
     ]);
   });

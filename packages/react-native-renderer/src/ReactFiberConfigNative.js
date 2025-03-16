@@ -165,6 +165,13 @@ export function createInstance(
   return ((component: any): Instance);
 }
 
+export function cloneMutableInstance(
+  instance: Instance,
+  keepChildren: boolean,
+): Instance {
+  throw new Error('Not yet implemented.');
+}
+
 export function createTextInstance(
   text: string,
   rootContainerInstance: Container,
@@ -187,6 +194,41 @@ export function createTextInstance(
   precacheFiberNode(internalInstanceHandle, tag);
 
   return tag;
+}
+
+export function cloneMutableTextInstance(
+  textInstance: TextInstance,
+): TextInstance {
+  throw new Error('Not yet implemented.');
+}
+
+export type FragmentInstanceType = null;
+
+export function createFragmentInstance(
+  fragmentFiber: Fiber,
+): FragmentInstanceType {
+  return null;
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Fiber,
+  instance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function commitNewChildToFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function deleteChildFromFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
 }
 
 export function finalizeInitialChildren(
@@ -558,6 +600,19 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
   // Not yet implemented
 }
 
+export function cloneRootViewTransitionContainer(
+  rootContainer: Container,
+): Instance {
+  throw new Error('Not implemented.');
+}
+
+export function removeRootViewTransitionClone(
+  rootContainer: Container,
+  clone: Instance,
+): void {
+  throw new Error('Not implemented.');
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
@@ -593,9 +648,29 @@ export function startViewTransition(
   afterMutationCallback: () => void,
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
+  errorCallback: mixed => void,
 ): boolean {
   return false;
 }
+
+export type RunningGestureTransition = null;
+
+export function startGestureTransition(
+  rootContainer: Container,
+  timeline: GestureTimeline,
+  rangeStart: number,
+  rangeEnd: number,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  animateCallback: () => void,
+  errorCallback: mixed => void,
+): RunningGestureTransition {
+  mutationCallback();
+  animateCallback();
+  return null;
+}
+
+export function stopGestureTransition(transition: RunningGestureTransition) {}
 
 export type ViewTransitionInstance = null | {name: string, ...};
 

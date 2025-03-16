@@ -23,7 +23,7 @@
     "@babel/code-frame": "^7.22.5",
     "@babel/plugin-syntax-jsx": "^7.18.6",
     "@babel/preset-flow": "^7.7.4",
-    "@babel/preset-typescript": "^7.18.6",
+    "@babel/preset-typescript": "^7.26.0",
     "@parcel/watcher": "^2.1.0",
     "@testing-library/react": "^13.4.0",
     "babel-plugin-idx": "^3.0.3",

@@ -1,4 +1,4 @@
-// @enableFire
+// @enableFire @panicThreshold(none)
 import {fire} from 'react';
 
 function Component({prop1}) {

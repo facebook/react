@@ -26,6 +26,7 @@ import type {Lane, Lanes, LaneMap} from './ReactFiberLane';
 import type {RootTag} from './ReactRootTags';
 import type {
   Container,
+  Instance,
   TimeoutHandle,
   NoTimeout,
   SuspenseInstance,
@@ -284,7 +285,9 @@ type BaseFiberRootProperties = {
   formState: ReactFormState<any, any> | null,
 
   // enableSwipeTransition only
-  gestures: null | ScheduledGesture,
+  pendingGestures: null | ScheduledGesture,
+  stoppingGestures: null | ScheduledGesture,
+  gestureClone: null | Instance,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.

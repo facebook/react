@@ -12,7 +12,7 @@
     "vercel-build": "yarn build",
     "start": "next start",
     "lint": "next lint",
-    "test": "playwright test"
+    "test": "playwright test --workers=4"
   },
   "dependencies": {
     "@babel/core": "^7.18.9",
@@ -22,9 +22,9 @@
     "@babel/plugin-transform-block-scoping": "^7.18.9",
     "@babel/plugin-transform-modules-commonjs": "^7.18.9",
     "@babel/preset-react": "^7.18.9",
-    "@babel/preset-typescript": "^7.18.9",
+    "@babel/preset-typescript": "^7.26.0",
     "@babel/traverse": "^7.18.9",
-    "@babel/types": "7.18.9",
+    "@babel/types": "7.26.3",
     "@heroicons/react": "^1.0.6",
     "@monaco-editor/react": "^4.4.6",
     "@playwright/test": "^1.42.1",
@@ -39,13 +39,13 @@
     "prettier": "^3.3.3",
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
-    "react": "19.0.0-rc-77b637d6-20241016",
-    "react-dom": "19.0.0-rc-77b637d6-20241016"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "18.11.9",
-    "@types/react": "npm:types-react@19.0.0-rc.1",
-    "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.13",
     "clsx": "^1.2.1",
     "concurrently": "^7.4.0",
@@ -55,9 +55,5 @@
     "postcss": "^8.4.31",
     "tailwindcss": "^3.2.4",
     "wait-on": "^7.2.0"
-  },
-  "resolutions": {
-    "@types/react": "npm:types-react@19.0.0-rc.1",
-    "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1"
   }
 }

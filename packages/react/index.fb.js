@@ -7,8 +7,8 @@
  * @flow
  */
 
-import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 import {captureOwnerStack as captureOwnerStackImpl} from './src/ReactClient';
+
 export {
   __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   __COMPILER_RUNTIME,
@@ -72,7 +72,7 @@ export {useMemoCache as c} from './src/ReactHooks';
 
 // Only export captureOwnerStack in development.
 let captureOwnerStack: ?() => null | string;
-if (__DEV__ && enableOwnerStacks) {
+if (__DEV__) {
   captureOwnerStack = captureOwnerStackImpl;
 }
 

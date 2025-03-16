@@ -257,9 +257,6 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. Creating ' +
         'promises inside a Client Component or hook is not yet ' +
         'supported, except via a Suspense-compatible library or framework.\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Async (at **)\n' + '    in Suspense (at **)\n') +
         '    in App (at **)',
     ]);
     assertLog(['ABC']);
@@ -430,20 +427,10 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. Creating ' +
         'promises inside a Client Component or hook is not yet ' +
         'supported, except via a Suspense-compatible library or framework.\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Async (at **)\n' +
-            '    in ErrorBoundary (at **)\n' +
-            '    in Suspense (at **)\n') +
         '    in App (at **)',
       'A component was suspended by an uncached promise. Creating ' +
         'promises inside a Client Component or hook is not yet ' +
         'supported, except via a Suspense-compatible library or framework.\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Async (at **)\n' +
-            '    in ErrorBoundary (at **)\n' +
-            '    in Suspense (at **)\n') +
         '    in App (at **)',
     ]);
     assertLog([
@@ -617,8 +604,7 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        '     in App (at **)\n' +
-        '     in Suspense (at **)',
+        '     in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Async');
   });
@@ -667,8 +653,7 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        '     in App (at **)\n' +
-        '     in Suspense (at **)',
+        '     in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Async');
   });
@@ -1216,8 +1201,7 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        '    in AsyncText (at **)\n' +
-        '    in Suspense (at **)',
+        '    in AsyncText (at **)',
     ]);
     expect(root).toMatchRenderedOutput('A(Loading B...)');
 
@@ -1243,9 +1227,7 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        '    in AsyncText (at **)\n' +
-        '    in Suspense (at **)\n' +
-        '    in Suspense (at **)',
+        '    in AsyncText (at **)',
     ]);
     expect(root).toMatchRenderedOutput('AB(Loading C...)');
 
@@ -1263,10 +1245,7 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        '    in AsyncText (at **)\n' +
-        '    in Suspense (at **)\n' +
-        '    in Suspense (at **)\n' +
-        '    in Suspense (at **)',
+        '    in AsyncText (at **)',
     ]);
     expect(root).toMatchRenderedOutput('ABC');
   });
@@ -1301,16 +1280,10 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Async (at **)\n' + '    in Suspense (at **)\n') +
         '    in App (at **)',
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Async (at **)\n' + '    in Suspense (at **)\n') +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('A1');
@@ -1685,10 +1658,6 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in **/ReactUse-test.js:**:** (at **)\n' +
-            '    in Suspense (at **)\n') +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Async');
@@ -1723,10 +1692,6 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in **/ReactUse-test.js:**:** (at **)\n' +
-            '    in Suspense (at **)\n') +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Async');
@@ -1752,10 +1717,6 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in **/ReactUse-test.js:**:** (at **)\n' +
-            '    in Suspense (at **)\n') +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Async!');
@@ -1810,36 +1771,17 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'ContextProvider uses the legacy childContextTypes API which will soon be removed. ' +
         'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
-        (gate('enableOwnerStacks') ? '' : '    in ContextProvider (at **)\n') +
         '    in App (at **)',
       'Async uses the legacy contextTypes API which will be removed soon. ' +
         'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Async (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in ContextProvider (at **)\n') +
         '    in App (at **)',
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Async (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in ContextProvider (at **)\n') +
         '    in App (at **)',
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in Async (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in ContextProvider (at **)\n') +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput(
@@ -1921,8 +1863,7 @@ describe('ReactUse', () => {
         'Only Server Components can be async at the moment. ' +
         "This error is often caused by accidentally adding `'use client'` " +
         'to a module that was originally written for the server.\n' +
-        '    in AsyncClientComponent (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in ErrorBoundary (at **)'),
+        '    in AsyncClientComponent (at **)',
     ]);
     assertLog([
       'An unknown Component is an async Client Component. ' +
@@ -1977,8 +1918,7 @@ describe('ReactUse', () => {
         'Only Server Components can be async at the moment. ' +
         "This error is often caused by accidentally adding `'use client'` " +
         'to a module that was originally written for the server.\n' +
-        '    in AsyncClientComponent (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in ErrorBoundary (at **)'),
+        '    in AsyncClientComponent (at **)',
     ]);
     assertLog([
       'An unknown Component is an async Client Component. ' +

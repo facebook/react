@@ -22,7 +22,7 @@ if (typeof File === 'undefined' || typeof FormData === 'undefined') {
   global.FormData = require('undici').FormData;
 }
 
-// let serverExports;
+let serverExports;
 let webpackServerMap;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
@@ -36,7 +36,7 @@ describe('ReactFlightDOMReplyEdge', () => {
       require('react-server-dom-webpack/server.edge'),
     );
     const WebpackMock = require('./utils/WebpackMock');
-    // serverExports = WebpackMock.serverExports;
+    serverExports = WebpackMock.serverExports;
     webpackServerMap = WebpackMock.webpackServerMap;
     ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
     jest.resetModules();
@@ -307,5 +307,30 @@ describe('ReactFlightDOMReplyEdge', () => {
 
     expect(await decoded.a).toBe('hello');
     expect(Array.from(await decoded.b)).toEqual(Array.from(buffer));
+  });
+
+  it('can pass a registered server reference', async () => {
+    function greet(name) {
+      return 'hi, ' + name;
+    }
+    const ServerModule = serverExports({
+      greet,
+    });
+
+    ReactServerDOMClient.registerServerReference(
+      ServerModule.greet,
+      ServerModule.greet.$$id,
+    );
+
+    const body = await ReactServerDOMClient.encodeReply({
+      method: ServerModule.greet,
+      boundMethod: ServerModule.greet.bind(null, 'there'),
+    });
+    const replyResult = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+    expect(replyResult.method).toBe(greet);
+    expect(replyResult.boundMethod()).toBe('hi, there');
   });
 });
