@@ -151,7 +151,6 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_CONSUMER_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_OFFSCREEN_TYPE,
   REACT_POSTPONE_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
   REACT_ACTIVITY_TYPE,
@@ -2254,8 +2253,7 @@ function renderElement(
       task.keyPath = prevKeyPath;
       return;
     }
-    case REACT_ACTIVITY_TYPE:
-    case REACT_OFFSCREEN_TYPE: {
+    case REACT_ACTIVITY_TYPE: {
       renderOffscreen(request, task, keyPath, props);
       return;
     }
