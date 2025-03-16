@@ -74,8 +74,6 @@ export default function getComponentNameFromType(type: mixed): string | null {
   switch (type) {
     case REACT_FRAGMENT_TYPE:
       return 'Fragment';
-    case REACT_PORTAL_TYPE:
-      return 'Portal';
     case REACT_PROFILER_TYPE:
       return 'Profiler';
     case REACT_STRICT_MODE_TYPE:
@@ -106,6 +104,8 @@ export default function getComponentNameFromType(type: mixed): string | null {
       }
     }
     switch (type.$$typeof) {
+      case REACT_PORTAL_TYPE:
+        return 'Portal';
       case REACT_PROVIDER_TYPE:
         if (enableRenderableContext) {
           return null;
