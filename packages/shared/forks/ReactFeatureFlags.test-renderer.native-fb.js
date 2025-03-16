@@ -35,7 +35,6 @@ export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
 export const enableNoCloningMemoCache = false;
 export const enableObjectFiber = false;
-export const enableOwnerStacks = true;
 export const enablePersistedModeClonedFlag = false;
 export const enablePostpone = false;
 export const enableProfilerCommitHooks = __PROFILE__;
@@ -71,6 +70,8 @@ export const enableViewTransition = false;
 export const enableSwipeTransition = false;
 export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
+export const enableScrollEndPolyfill = true;
+export const enableFragmentRefs = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

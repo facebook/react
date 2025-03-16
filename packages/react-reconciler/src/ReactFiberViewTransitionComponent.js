@@ -9,7 +9,7 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {ViewTransitionInstance} from './ReactFiberConfig';
+import type {ViewTransitionInstance, Instance} from './ReactFiberConfig';
 
 import {
   getWorkInProgressRoot,
@@ -45,6 +45,7 @@ export type ViewTransitionProps = {
 export type ViewTransitionState = {
   autoName: null | string, // the view-transition-name to use when an explicit one is not specified
   paired: null | ViewTransitionState, // a temporary state during the commit phase if we have paired this with another instance
+  clones: null | Array<Instance>, // a temporary state during the apply gesture phase if we cloned this boundary
   ref: null | ViewTransitionInstance, // the current ref instance. This can change through the lifetime of the instance.
 };
 

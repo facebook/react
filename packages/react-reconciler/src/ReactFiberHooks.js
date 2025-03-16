@@ -4126,7 +4126,7 @@ function updateSwipeTransition<T>(
         );
       }
       // We assume that the currently rendering gesture is the one first in the queue.
-      const rootRenderGesture = root.gestures;
+      const rootRenderGesture = root.pendingGestures;
       if (rootRenderGesture !== null) {
         let update = queue.pending;
         while (update !== null) {

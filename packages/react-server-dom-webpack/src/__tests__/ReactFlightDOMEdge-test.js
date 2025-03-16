@@ -301,6 +301,55 @@ describe('ReactFlightDOMEdge', () => {
     expect(result.boundMethod()).toBe('hi, there');
   });
 
+  it('should load a server reference on a consuming server and pass it back', async () => {
+    function greet(name) {
+      return 'hi, ' + name;
+    }
+    const ServerModule = serverExports({
+      greet,
+    });
+
+    // Registering the server reference also with the client must not break
+    // subsequent `.bind` calls.
+    ReactServerDOMClient.registerServerReference(
+      ServerModule.greet,
+      ServerModule.greet.$$id,
+    );
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {
+          method: ServerModule.greet,
+          boundMethod: ServerModule.greet.bind(null, 'there'),
+        },
+        webpackMap,
+      ),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: webpackMap,
+        serverModuleMap: webpackServerMap,
+        moduleLoading: webpackModuleLoading,
+      },
+    });
+
+    const result = await response;
+
+    expect(result.method).toBe(greet);
+    expect(result.boundMethod()).toBe('hi, there');
+
+    const body = await ReactServerDOMClient.encodeReply({
+      method: result.method,
+      boundMethod: result.boundMethod,
+    });
+    const replyResult = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+    expect(replyResult.method).toBe(greet);
+    expect(replyResult.boundMethod()).toBe('hi, there');
+  });
+
   it('should encode long string in a compact format', async () => {
     const testString = '"\n\t'.repeat(500) + '🙃';
     const testString2 = 'hello'.repeat(400);
@@ -1020,7 +1069,7 @@ describe('ReactFlightDOMEdge', () => {
     }
   });
 
-  // @gate __DEV__ && enableOwnerStacks
+  // @gate __DEV__
   it('can get the component owner stacks asynchronously', async () => {
     let stack;
 

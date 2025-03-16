@@ -16,8 +16,6 @@ import {
   EnvironmentConfig,
   ExternalFunction,
   ReactFunctionType,
-  MINIMAL_RETRY_CONFIG,
-  tryParseExternalFunction,
 } from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
 import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
@@ -273,6 +271,9 @@ function isFilePartOfSources(
   return false;
 }
 
+type CompileProgramResult = {
+  retryErrors: Array<{fn: BabelFn; error: CompilerError}>;
+};
 /**
  * `compileProgram` is directly invoked by the react-compiler babel plugin, so
  * exceptions thrown by this function will fail the babel build.
@@ -287,16 +288,16 @@ function isFilePartOfSources(
 export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass,
-): void {
+): CompileProgramResult | null {
   if (shouldSkipCompilation(program, pass)) {
-    return;
+    return null;
   }
 
   const environment = pass.opts.environment;
   const restrictedImportsErr = validateRestrictedImports(program, environment);
   if (restrictedImportsErr) {
     handleError(restrictedImportsErr, pass, null);
-    return;
+    return null;
   }
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
 
@@ -367,7 +368,7 @@ export function compileProgram(
       filename: pass.filename ?? null,
     },
   );
-
+  const retryErrors: Array<{fn: BabelFn; error: CompilerError}> = [];
   const processFn = (
     fn: BabelFn,
     fnType: ReactFunctionType,
@@ -408,6 +409,7 @@ export function compileProgram(
             fn,
             environment,
             fnType,
+            'all_features',
             useMemoCacheIdentifier.name,
             pass.opts.logger,
             pass.filename,
@@ -418,28 +420,7 @@ export function compileProgram(
         compileResult = {kind: 'error', error: err};
       }
     }
-    // If non-memoization features are enabled, retry regardless of error kind
-    if (compileResult.kind === 'error' && environment.enableFire) {
-      try {
-        compileResult = {
-          kind: 'compile',
-          compiledFn: compileFn(
-            fn,
-            {
-              ...environment,
-              ...MINIMAL_RETRY_CONFIG,
-            },
-            fnType,
-            useMemoCacheIdentifier.name,
-            pass.opts.logger,
-            pass.filename,
-            pass.code,
-          ),
-        };
-      } catch (err) {
-        compileResult = {kind: 'error', error: err};
-      }
-    }
+
     if (compileResult.kind === 'error') {
       /**
        * If an opt out directive is present, log only instead of throwing and don't mark as
@@ -450,7 +431,33 @@ export function compileProgram(
       } else {
         handleError(compileResult.error, pass, fn.node.loc ?? null);
       }
-      return null;
+      // If non-memoization features are enabled, retry regardless of error kind
+      if (
+        !(environment.enableFire || environment.inferEffectDependencies != null)
+      ) {
+        return null;
+      }
+      try {
+        compileResult = {
+          kind: 'compile',
+          compiledFn: compileFn(
+            fn,
+            environment,
+            fnType,
+            'no_inferred_memo',
+            useMemoCacheIdentifier.name,
+            pass.opts.logger,
+            pass.filename,
+            pass.code,
+          ),
+        };
+      } catch (err) {
+        // TODO: we might want to log error here, but this will also result in duplicate logging
+        if (err instanceof CompilerError) {
+          retryErrors.push({fn, error: err});
+        }
+        return null;
+      }
     }
 
     pass.opts.logger?.logEvent(pass.filename, {
@@ -539,32 +546,28 @@ export function compileProgram(
     program.node.directives,
   );
   if (moduleScopeOptOutDirectives.length > 0) {
-    return;
+    return null;
   }
-
+  let gating: null | {
+    gatingFn: ExternalFunction;
+    referencedBeforeDeclared: Set<CompileResult>;
+  } = null;
   if (pass.opts.gating != null) {
-    const error = checkFunctionReferencedBeforeDeclarationAtTopLevel(
-      program,
-      compiledFns.map(result => {
-        return result.originalFn;
-      }),
-    );
-    if (error) {
-      handleError(error, pass, null);
-      return;
-    }
+    gating = {
+      gatingFn: pass.opts.gating,
+      referencedBeforeDeclared:
+        getFunctionReferencedBeforeDeclarationAtTopLevel(program, compiledFns),
+    };
   }
 
   const hasLoweredContextAccess = compiledFns.some(
     c => c.compiledFn.hasLoweredContextAccess,
   );
   const externalFunctions: Array<ExternalFunction> = [];
-  let gating: null | ExternalFunction = null;
   try {
     // TODO: check for duplicate import specifiers
-    if (pass.opts.gating != null) {
-      gating = tryParseExternalFunction(pass.opts.gating);
-      externalFunctions.push(gating);
+    if (gating != null) {
+      externalFunctions.push(gating.gatingFn);
     }
 
     const lowerContextAccess = environment.lowerContextAccess;
@@ -601,7 +604,7 @@ export function compileProgram(
     }
   } catch (err) {
     handleError(err, pass, null);
-    return;
+    return null;
   }
 
   /*
@@ -613,7 +616,12 @@ export function compileProgram(
     const transformedFn = createNewFunctionNode(originalFn, compiledFn);
 
     if (gating != null && kind === 'original') {
-      insertGatedFunctionDeclaration(originalFn, transformedFn, gating);
+      insertGatedFunctionDeclaration(
+        originalFn,
+        transformedFn,
+        gating.gatingFn,
+        gating.referencedBeforeDeclared.has(result),
+      );
     } else {
       originalFn.replaceWith(transformedFn);
     }
@@ -638,6 +646,7 @@ export function compileProgram(
     }
     addImportsToProgram(program, externalFunctions);
   }
+  return {retryErrors};
 }
 
 function shouldSkipCompilation(
@@ -1101,20 +1110,23 @@ function getFunctionName(
   }
 }
 
-function checkFunctionReferencedBeforeDeclarationAtTopLevel(
+function getFunctionReferencedBeforeDeclarationAtTopLevel(
   program: NodePath<t.Program>,
-  fns: Array<BabelFn>,
-): CompilerError | null {
-  const fnIds = new Set(
+  fns: Array<CompileResult>,
+): Set<CompileResult> {
+  const fnNames = new Map<string, {id: t.Identifier; fn: CompileResult}>(
     fns
-      .map(fn => getFunctionName(fn))
+      .map<[NodePath<t.Expression> | null, CompileResult]>(fn => [
+        getFunctionName(fn.originalFn),
+        fn,
+      ])
       .filter(
-        (name): name is NodePath<t.Identifier> => !!name && name.isIdentifier(),
+        (entry): entry is [NodePath<t.Identifier>, CompileResult] =>
+          !!entry[0] && entry[0].isIdentifier(),
       )
-      .map(name => name.node),
+      .map(entry => [entry[0].node.name, {id: entry[0].node, fn: entry[1]}]),
   );
-  const fnNames = new Map([...fnIds].map(id => [id.name, id]));
-  const errors = new CompilerError();
+  const referencedBeforeDeclaration = new Set<CompileResult>();
 
   program.traverse({
     TypeAnnotation(path) {
@@ -1140,8 +1152,7 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
        * We've reached the declaration, hoisting is no longer possible, stop
        * checking for this component name.
        */
-      if (fnIds.has(id.node)) {
-        fnIds.delete(id.node);
+      if (id.node === fn.id) {
         fnNames.delete(id.node.name);
         return;
       }
@@ -1151,21 +1162,13 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
        * A null scope means there's no function scope, which means we're at the
        * top level scope.
        */
-      if (scope === null) {
-        errors.pushErrorDetail(
-          new CompilerErrorDetail({
-            reason: `Encountered a function used before its declaration, which breaks Forget's gating codegen due to hoisting`,
-            description: `Rewrite the reference to ${fn.name} to not rely on hoisting to fix this issue`,
-            loc: fn.loc ?? null,
-            suggestions: null,
-            severity: ErrorSeverity.Invariant,
-          }),
-        );
+      if (scope === null && id.isReferencedIdentifier()) {
+        referencedBeforeDeclaration.add(fn.fn);
       }
     },
   });
 
-  return errors.details.length > 0 ? errors : null;
+  return referencedBeforeDeclaration;
 }
 
 function getReactCompilerRuntimeModule(opts: PluginOptions): string {

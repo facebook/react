@@ -61,6 +61,7 @@ import {
   disableLegacyMode,
   enableComponentPerformanceTrack,
   enableViewTransition,
+  enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -85,6 +86,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   ViewTransitionComponent,
+  Fragment,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -98,7 +100,7 @@ import {
   Hydrating,
   Passive,
   BeforeMutationMask,
-  BeforeMutationTransitionMask,
+  BeforeAndAfterMutationTransitionMask,
   MutationMask,
   LayoutMask,
   PassiveMask,
@@ -164,6 +166,7 @@ import {
   cancelRootViewTransitionName,
   restoreRootViewTransitionName,
   isSingletonScope,
+  updateFragmentInstanceFiber,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -235,23 +238,24 @@ import {
   commitHostRemoveChild,
   commitHostSingletonAcquisition,
   commitHostSingletonRelease,
+  commitFragmentInstanceDeletionEffects,
+  commitFragmentInstanceInsertionEffects,
 } from './ReactFiberCommitHostEffects';
 import {
   commitEnterViewTransitions,
   commitExitViewTransitions,
   commitBeforeUpdateViewTransition,
   commitNestedViewTransitions,
-  restoreEnterViewTransitions,
-  restoreExitViewTransitions,
+  restoreEnterOrExitViewTransitions,
   restoreUpdateViewTransition,
   restoreNestedViewTransitions,
   measureUpdateViewTransition,
   measureNestedViewTransitions,
-  resetShouldStartViewTransition,
   resetAppearingViewTransitions,
   trackAppearingViewTransition,
   viewTransitionCancelableChildren,
-  setViewTransitionCancelableChildren,
+  pushViewTransitionCancelableScope,
+  popViewTransitionCancelableScope,
 } from './ReactFiberCommitViewTransitions';
 import {
   viewTransitionMutationContext,
@@ -290,8 +294,6 @@ export function commitBeforeMutationEffects(
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
   shouldFireAfterActiveInstanceBlur = false;
 
-  resetShouldStartViewTransition();
-
   const isViewTransitionEligible =
     enableViewTransition &&
     includesOnlyViewTransitionEligibleLanes(committedLanes);
@@ -309,7 +311,7 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
   // If this commit is eligible for a View Transition we look into all mutated subtrees.
   // TODO: We could optimize this by marking these with the Snapshot subtree flag in the render phase.
   const subtreeMask = isViewTransitionEligible
-    ? BeforeMutationTransitionMask
+    ? BeforeAndAfterMutationTransitionMask
     : BeforeMutationMask;
   while (nextEffect !== null) {
     const fiber = nextEffect;
@@ -485,16 +487,8 @@ function commitBeforeMutationEffectsOnFiber(
           if (current === null) {
             // This is a new mount. We should have handled this as part of the
             // Placement effect or it is deeper inside a entering transition.
-          } else if (
-            (finishedWork.subtreeFlags &
-              (Placement |
-                Update |
-                ChildDeletion |
-                ContentReset |
-                Visibility)) !==
-            NoFlags
-          ) {
-            // Something mutated within this subtree. This might need to cause
+          } else {
+            // Something may have mutated within this subtree. This might need to cause
             // a cross-fade of this parent. We first assign old names to the
             // previous tree in the before mutation phase in case we need to.
             // TODO: This walks the tree that we might continue walking anyway.
@@ -770,8 +764,15 @@ function commitLayoutEffectOnFiber(
         }
         break;
       }
-      // Fallthrough
+      break;
     }
+    case Fragment:
+      if (enableFragmentRefs) {
+        if (flags & Ref) {
+          safelyAttachRef(finishedWork, finishedWork.return);
+        }
+      }
+    // Fallthrough
     default: {
       recursivelyTraverseLayoutEffects(
         finishedRoot,
@@ -1356,6 +1357,9 @@ function commitDeletionEffectsOnFiber(
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
       }
+      if (enableFragmentRefs && deletedFiber.tag === HostComponent) {
+        commitFragmentInstanceDeletionEffects(deletedFiber);
+      }
       // Intentional fallthrough to next branch
     }
     case HostText: {
@@ -1565,6 +1569,14 @@ function commitDeletionEffectsOnFiber(
         );
       }
       break;
+    }
+    case Fragment: {
+      if (enableFragmentRefs) {
+        if (!offscreenSubtreeWasHidden) {
+          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        }
+      }
+      // Fallthrough
     }
     default: {
       recursivelyTraverseDeletionEffects(
@@ -1950,6 +1962,7 @@ function commitMutationEffectsOnFiber(
     }
     case HostComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+
       commitReconciliationEffects(finishedWork, lanes);
 
       if (flags & Ref) {
@@ -2273,7 +2286,7 @@ function commitMutationEffectsOnFiber(
       }
       break;
     }
-    case ViewTransitionComponent:
+    case ViewTransitionComponent: {
       if (enableViewTransition) {
         if (flags & Ref) {
           if (!offscreenSubtreeWasHidden && current !== null) {
@@ -2301,7 +2314,8 @@ function commitMutationEffectsOnFiber(
         popMutationContext(prevMutationContext);
         break;
       }
-    // Fallthrough
+      break;
+    }
     case ScopeComponent: {
       if (enableScopeAPI) {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -2324,6 +2338,13 @@ function commitMutationEffectsOnFiber(
       }
       break;
     }
+    case Fragment:
+      if (enableFragmentRefs) {
+        if (current && current.stateNode !== null) {
+          updateFragmentInstanceFiber(finishedWork, current.stateNode);
+        }
+      }
+    // Fallthrough
     default: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork, lanes);
@@ -2411,7 +2432,7 @@ function recursivelyTraverseAfterMutationEffects(
   lanes: Lanes,
 ) {
   // We need to visit the same nodes that we visited in the before mutation phase.
-  if (parentFiber.subtreeFlags & BeforeMutationTransitionMask) {
+  if (parentFiber.subtreeFlags & BeforeAndAfterMutationTransitionMask) {
     let child = parentFiber.child;
     while (child !== null) {
       commitAfterMutationEffectsOnFiber(child, root, lanes);
@@ -2421,7 +2442,7 @@ function recursivelyTraverseAfterMutationEffects(
     // Nothing has changed in this subtree, but the parent may have still affected
     // its size and position. We need to measure this and if not, restore it to
     // not animate.
-    measureNestedViewTransitions(parentFiber);
+    measureNestedViewTransitions(parentFiber, false);
   }
 }
 
@@ -2439,21 +2460,21 @@ function commitAfterMutationEffectsOnFiber(
     // we can just bail after we're done with the first one.
     // The first ViewTransition inside a newly mounted tree runs an enter transition
     // but other nested ones don't unless they have a named pair.
-    commitEnterViewTransitions(finishedWork);
+    commitEnterViewTransitions(finishedWork, false);
     return;
   }
 
   switch (finishedWork.tag) {
     case HostRoot: {
       viewTransitionContextChanged = false;
-      setViewTransitionCancelableChildren(null);
+      pushViewTransitionCancelableScope();
       recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
       if (!viewTransitionContextChanged) {
         // If we didn't leak any resizing out to the root, we don't have to transition
         // the root itself. This means that we can now safely cancel any cancellations
         // that bubbled all the way up.
         const cancelableChildren = viewTransitionCancelableChildren;
-        setViewTransitionCancelableChildren(null);
+        popViewTransitionCancelableScope(null);
         if (cancelableChildren !== null) {
           for (let i = 0; i < cancelableChildren.length; i += 3) {
             cancelViewTransitionName(
@@ -2483,7 +2504,7 @@ function commitAfterMutationEffectsOnFiber(
           // The Offscreen tree is visible.
           const wasHidden = current.memoizedState !== null;
           if (wasHidden) {
-            commitEnterViewTransitions(finishedWork);
+            commitEnterViewTransitions(finishedWork, false);
             // If it was previous hidden then the children are treated as enter
             // not updates so we don't need to visit these children.
           } else {
@@ -2496,64 +2517,57 @@ function commitAfterMutationEffectsOnFiber(
       break;
     }
     case ViewTransitionComponent: {
-      if (
-        (finishedWork.subtreeFlags &
-          (Placement | Update | ChildDeletion | ContentReset | Visibility)) !==
-        NoFlags
-      ) {
-        const wasMutated = (finishedWork.flags & Update) !== NoFlags;
+      const wasMutated = (finishedWork.flags & Update) !== NoFlags;
 
-        const prevContextChanged = viewTransitionContextChanged;
-        const prevCancelableChildren = viewTransitionCancelableChildren;
-        viewTransitionContextChanged = false;
-        setViewTransitionCancelableChildren(null);
-        recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
+      const prevContextChanged = viewTransitionContextChanged;
+      const prevCancelableChildren = pushViewTransitionCancelableScope();
+      viewTransitionContextChanged = false;
+      recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
 
-        if (viewTransitionContextChanged) {
-          finishedWork.flags |= Update;
-        }
+      if (viewTransitionContextChanged) {
+        finishedWork.flags |= Update;
+      }
 
-        const inViewport = measureUpdateViewTransition(current, finishedWork);
+      const inViewport = measureUpdateViewTransition(current, finishedWork);
 
-        if ((finishedWork.flags & Update) === NoFlags || !inViewport) {
-          // If this boundary didn't update, then we may be able to cancel its children.
-          // We bubble them up to the parent set to be determined later if we can cancel.
-          // Similarly, if old and new state was outside the viewport, we can skip it
-          // even if it did update.
-          if (prevCancelableChildren === null) {
-            // Bubbling up this whole set to the parent.
-          } else {
-            // Merge with parent set.
-            // $FlowFixMe[method-unbinding]
-            prevCancelableChildren.push.apply(
-              prevCancelableChildren,
-              viewTransitionCancelableChildren,
-            );
-            setViewTransitionCancelableChildren(prevCancelableChildren);
-          }
-          // TODO: If this doesn't end up canceled, because a parent animates,
-          // then we should probably issue an event since this instance is part of it.
+      if ((finishedWork.flags & Update) === NoFlags || !inViewport) {
+        // If this boundary didn't update, then we may be able to cancel its children.
+        // We bubble them up to the parent set to be determined later if we can cancel.
+        // Similarly, if old and new state was outside the viewport, we can skip it
+        // even if it did update.
+        if (prevCancelableChildren === null) {
+          // Bubbling up this whole set to the parent.
         } else {
-          const props: ViewTransitionProps = finishedWork.memoizedProps;
-          scheduleViewTransitionEvent(
-            finishedWork,
-            wasMutated || viewTransitionContextChanged
-              ? props.onUpdate
-              : props.onLayout,
+          // Merge with parent set.
+          // $FlowFixMe[method-unbinding]
+          prevCancelableChildren.push.apply(
+            prevCancelableChildren,
+            viewTransitionCancelableChildren,
           );
-
-          // If this boundary did update, we cannot cancel its children so those are dropped.
-          setViewTransitionCancelableChildren(prevCancelableChildren);
+          popViewTransitionCancelableScope(prevCancelableChildren);
         }
+        // TODO: If this doesn't end up canceled, because a parent animates,
+        // then we should probably issue an event since this instance is part of it.
+      } else {
+        const props: ViewTransitionProps = finishedWork.memoizedProps;
+        scheduleViewTransitionEvent(
+          finishedWork,
+          wasMutated || viewTransitionContextChanged
+            ? props.onUpdate
+            : props.onLayout,
+        );
 
-        if ((finishedWork.flags & AffectedParentLayout) !== NoFlags) {
-          // This boundary changed size in a way that may have caused its parent to
-          // relayout. We need to bubble this information up to the parent.
-          viewTransitionContextChanged = true;
-        } else {
-          // Otherwise, we restore it to whatever the parent had found so far.
-          viewTransitionContextChanged = prevContextChanged;
-        }
+        // If this boundary did update, we cannot cancel its children so those are dropped.
+        popViewTransitionCancelableScope(prevCancelableChildren);
+      }
+
+      if ((finishedWork.flags & AffectedParentLayout) !== NoFlags) {
+        // This boundary changed size in a way that may have caused its parent to
+        // relayout. We need to bubble this information up to the parent.
+        viewTransitionContextChanged = true;
+      } else {
+        // Otherwise, we restore it to whatever the parent had found so far.
+        viewTransitionContextChanged = prevContextChanged;
       }
       break;
     }
@@ -2641,6 +2655,10 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
 
+      if (enableFragmentRefs && finishedWork.tag === HostComponent) {
+        commitFragmentInstanceDeletionEffects(finishedWork);
+      }
+
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
       break;
     }
@@ -2659,6 +2677,13 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
     }
     case ViewTransitionComponent: {
       if (enableViewTransition) {
+        safelyDetachRef(finishedWork, finishedWork.return);
+      }
+      recursivelyTraverseDisappearLayoutEffects(finishedWork);
+      break;
+    }
+    case Fragment: {
+      if (enableFragmentRefs) {
         safelyDetachRef(finishedWork, finishedWork.return);
       }
       // Fallthrough
@@ -2768,6 +2793,10 @@ export function reappearLayoutEffects(
     }
     case HostHoistable:
     case HostComponent: {
+      // TODO: Enable HostText for RN
+      if (enableFragmentRefs && finishedWork.tag === HostComponent) {
+        commitFragmentInstanceInsertionEffects(finishedWork);
+      }
       recursivelyTraverseReappearLayoutEffects(
         finishedRoot,
         finishedWork,
@@ -2859,6 +2888,12 @@ export function reappearLayoutEffects(
         );
         safelyAttachRef(finishedWork, finishedWork.return);
         break;
+      }
+      break;
+    }
+    case Fragment: {
+      if (enableFragmentRefs) {
+        safelyAttachRef(finishedWork, finishedWork.return);
       }
       // Fallthrough
     }
@@ -3178,7 +3213,7 @@ function commitPassiveMountOnFiber(
     // This was a new mount. This means we could've triggered an enter animation on
     // the content. Restore the view transitions if there were any assigned in the
     // snapshot phase.
-    restoreEnterViewTransitions(finishedWork);
+    restoreEnterOrExitViewTransitions(finishedWork);
   }
 
   // When updating this function, also update reconnectPassiveEffects, which does
@@ -3479,7 +3514,7 @@ function commitPassiveMountOnFiber(
           // Content is now hidden but wasn't before. This means we could've
           // triggered an exit animation on the content. Restore the view
           // transitions if there were any assigned in the snapshot phase.
-          restoreExitViewTransitions(current);
+          restoreEnterOrExitViewTransitions(current);
         }
         if (instance._visibility & OffscreenPassiveEffectsConnected) {
           // The effects are currently connected. Update them.
@@ -3526,7 +3561,7 @@ function commitPassiveMountOnFiber(
           // Content is now visible but wasn't before. This means we could've
           // triggered an enter animation on the content. Restore the view
           // transitions if there were any assigned in the snapshot phase.
-          restoreEnterViewTransitions(finishedWork);
+          restoreEnterOrExitViewTransitions(finishedWork);
         }
         if (instance._visibility & OffscreenPassiveEffectsConnected) {
           // The effects are currently connected. Update them.

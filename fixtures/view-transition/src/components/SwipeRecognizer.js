@@ -33,11 +33,6 @@ export default function SwipeRecognizer({
     });
   }
   function onScrollEnd() {
-    if (activeGesture.current !== null) {
-      const cancelGesture = activeGesture.current;
-      activeGesture.current = null;
-      cancelGesture();
-    }
     let changed;
     const scrollElement = scrollRef.current;
     if (axis === 'x') {
@@ -59,6 +54,11 @@ export default function SwipeRecognizer({
     if (changed) {
       // Trigger side-effects
       startTransition(action);
+    }
+    if (activeGesture.current !== null) {
+      const cancelGesture = activeGesture.current;
+      activeGesture.current = null;
+      cancelGesture();
     }
   }
 

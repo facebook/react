@@ -34,13 +34,6 @@ function Component({foo, bar}) {
     console.log(bar.qux);
   });
 
-  function f() {
-    console.log(foo);
-  }
-
-  // No inferred dep array, the argument is not a lambda
-  useEffect(f);
-
   useEffectWrapper(() => {
     console.log(foo);
   });
@@ -58,7 +51,7 @@ import useEffectWrapper from "useEffectWrapper";
 const moduleNonReactive = 0;
 
 function Component(t0) {
-  const $ = _c(14);
+  const $ = _c(12);
   const { foo, bar } = t0;
 
   const ref = useRef(0);
@@ -101,7 +94,6 @@ function Component(t0) {
   useEffect(t3, [
     foo,
     bar,
-    ref,
     localNonPrimitiveReactive,
     localNonPrimitiveNonreactive,
   ]);
@@ -120,7 +112,7 @@ function Component(t0) {
   useEffect(t4, [bar.baz, bar.qux]);
   let t5;
   if ($[10] !== foo) {
-    t5 = function f() {
+    t5 = () => {
       console.log(foo);
     };
     $[10] = foo;
@@ -128,20 +120,7 @@ function Component(t0) {
   } else {
     t5 = $[11];
   }
-  const f = t5;
-
-  useEffect(f);
-  let t6;
-  if ($[12] !== foo) {
-    t6 = () => {
-      console.log(foo);
-    };
-    $[12] = foo;
-    $[13] = t6;
-  } else {
-    t6 = $[13];
-  }
-  useEffectWrapper(t6, [foo]);
+  useEffectWrapper(t5, [foo]);
 }
 
 ```

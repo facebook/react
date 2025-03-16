@@ -93,6 +93,8 @@ export type TransitionStatus = mixed;
 
 export type FormInstance = Instance;
 
+export type RunningGestureTransition = null;
+
 export type ViewTransitionInstance = null | {name: string, ...};
 
 export type GestureTimeline = null;
@@ -451,6 +453,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return inst;
     },
 
+    cloneMutableInstance(instance: Instance, keepChildren: boolean): Instance {
+      throw new Error('Not yet implemented.');
+    },
+
     appendInitialChild(
       parentInstance: Instance,
       child: Instance | TextInstance,
@@ -500,6 +506,22 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         enumerable: false,
       });
       return inst;
+    },
+
+    cloneMutableTextInstance(textInstance: TextInstance): TextInstance {
+      throw new Error('Not yet implemented.');
+    },
+
+    createFragmentInstance(parentInstance) {
+      return null;
+    },
+
+    commitNewChildToFragmentInstance(child, fragmentInstance) {
+      // Noop
+    },
+
+    deleteChildFromFragmentInstance(child, fragmentInstance) {
+      // Noop
     },
 
     scheduleTimeout: setTimeout,
@@ -759,6 +781,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         restoreRootViewTransitionName(rootContainer: Container): void {},
 
+        cloneRootViewTransitionContainer(rootContainer: Container): Instance {
+          throw new Error('Not yet implemented.');
+        },
+
+        removeRootViewTransitionClone(
+          rootContainer: Container,
+          clone: Instance,
+        ): void {
+          throw new Error('Not implemented.');
+        },
+
         measureInstance(instance: Instance): InstanceMeasurement {
           return null;
         },
@@ -788,9 +821,27 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           afterMutationCallback: () => void,
           layoutCallback: () => void,
           passiveCallback: () => mixed,
+          errorCallback: mixed => void,
         ): boolean {
           return false;
         },
+
+        startGestureTransition(
+          rootContainer: Container,
+          timeline: GestureTimeline,
+          rangeStart: number,
+          rangeEnd: number,
+          transitionTypes: null | TransitionTypes,
+          mutationCallback: () => void,
+          animateCallback: () => void,
+          errorCallback: mixed => void,
+        ): RunningGestureTransition {
+          mutationCallback();
+          animateCallback();
+          return null;
+        },
+
+        stopGestureTransition(transition: RunningGestureTransition) {},
 
         createViewTransitionInstance(name: string): ViewTransitionInstance {
           return null;

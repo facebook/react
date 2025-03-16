@@ -28,8 +28,9 @@ jobs:
       - name: Restore cached node_modules
         uses: actions/cache@v4
         with:
-          path: "**/node_modules"
-          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: shared-lint-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -48,8 +49,9 @@ jobs:
       - name: Restore cached node_modules
         uses: actions/cache@v4
         with:
-          path: "**/node_modules"
-          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: shared-lint-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -68,8 +70,9 @@ jobs:
       - name: Restore cached node_modules
         uses: actions/cache@v4
         with:
-          path: "**/node_modules"
-          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: shared-lint-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -88,8 +91,9 @@ jobs:
       - name: Restore cached node_modules
         uses: actions/cache@v4
         with:
-          path: "**/node_modules"
-          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: shared-lint-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile

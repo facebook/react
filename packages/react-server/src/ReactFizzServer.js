@@ -165,7 +165,6 @@ import {
   enableRenderableContext,
   disableDefaultPropsExceptForClasses,
   enableAsyncIterableChildren,
-  enableOwnerStacks,
   enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 
@@ -787,7 +786,7 @@ function createRenderTask(
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
   }
-  if (__DEV__ && enableOwnerStacks) {
+  if (__DEV__) {
     task.debugTask = debugTask;
   }
   abortSet.add(task);
@@ -840,7 +839,7 @@ function createReplayTask(
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
   }
-  if (__DEV__ && enableOwnerStacks) {
+  if (__DEV__) {
     task.debugTask = debugTask;
   }
   abortSet.add(task);
@@ -875,12 +874,9 @@ function getCurrentStackInDEV(): string {
     if (currentTaskInDEV === null || currentTaskInDEV.componentStack === null) {
       return '';
     }
-    if (enableOwnerStacks) {
-      return getOwnerStackByComponentStackNodeInDev(
-        currentTaskInDEV.componentStack,
-      );
-    }
-    return getStackByComponentStackNode(currentTaskInDEV.componentStack);
+    return getOwnerStackByComponentStackNodeInDev(
+      currentTaskInDEV.componentStack,
+    );
   }
   return '';
 }
@@ -907,18 +903,16 @@ function pushServerComponentStack(
       if (typeof componentInfo.name !== 'string') {
         continue;
       }
-      if (enableOwnerStacks && componentInfo.debugStack === undefined) {
+      if (componentInfo.debugStack === undefined) {
         continue;
       }
       task.componentStack = {
         parent: task.componentStack,
         type: componentInfo,
         owner: componentInfo.owner,
-        stack: enableOwnerStacks ? componentInfo.debugStack : null,
+        stack: componentInfo.debugStack,
       };
-      if (enableOwnerStacks) {
-        task.debugTask = (componentInfo.debugTask: any);
-      }
+      task.debugTask = (componentInfo.debugTask: any);
     }
   }
 }
@@ -934,12 +928,10 @@ function pushComponentStack(task: Task): void {
         const element: any = node;
         const type = element.type;
         const owner = __DEV__ ? element._owner : null;
-        const stack = __DEV__ && enableOwnerStacks ? element._debugStack : null;
+        const stack = __DEV__ ? element._debugStack : null;
         if (__DEV__) {
           pushServerComponentStack(task, element._debugInfo);
-          if (enableOwnerStacks) {
-            task.debugTask = element._debugTask;
-          }
+          task.debugTask = element._debugTask;
         }
         task.componentStack = createComponentStackFromType(
           task.componentStack,
@@ -1056,7 +1048,7 @@ function logPostpone(
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
   const onPostpone = request.onPostpone;
-  if (__DEV__ && enableOwnerStacks && debugTask) {
+  if (__DEV__ && debugTask) {
     debugTask.run(onPostpone.bind(null, reason, postponeInfo));
   } else {
     onPostpone(reason, postponeInfo);
@@ -1073,7 +1065,7 @@ function logRecoverableError(
   // so that someone fixes the error reporting instead of hiding it.
   const onError = request.onError;
   const errorDigest =
-    __DEV__ && enableOwnerStacks && debugTask
+    __DEV__ && debugTask
       ? debugTask.run(onError.bind(null, error, errorInfo))
       : onError(error, errorInfo);
   if (errorDigest != null && typeof errorDigest !== 'string') {
@@ -1101,7 +1093,7 @@ function fatalError(
   // It's also called if React itself or its host configs errors.
   const onShellError = request.onShellError;
   const onFatalError = request.onFatalError;
-  if (__DEV__ && enableOwnerStacks && debugTask) {
+  if (__DEV__ && debugTask) {
     debugTask.run(onShellError.bind(null, error));
     debugTask.run(onFatalError.bind(null, error));
   } else {
@@ -1261,7 +1253,7 @@ function renderSuspenseBoundary(
       task.componentStack,
       task.isFallback,
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
-      __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      __DEV__ ? task.debugTask : null,
     );
     pushComponentStack(suspendedPrimaryTask);
     request.pingedTasks.push(suspendedPrimaryTask);
@@ -1334,7 +1326,7 @@ function renderSuspenseBoundary(
           request,
           postponeInstance.message,
           thrownInfo,
-          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+          __DEV__ ? task.debugTask : null,
         );
         // TODO: Figure out a better signal than a magic digest value.
         errorDigest = 'POSTPONE';
@@ -1343,7 +1335,7 @@ function renderSuspenseBoundary(
           request,
           error,
           thrownInfo,
-          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+          __DEV__ ? task.debugTask : null,
         );
       }
       encodeErrorForBoundary(
@@ -1387,7 +1379,7 @@ function renderSuspenseBoundary(
       task.componentStack,
       true,
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
-      __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      __DEV__ ? task.debugTask : null,
     );
     pushComponentStack(suspendedFallbackTask);
     // TODO: This should be queued at a separate lower priority queue so that we only work
@@ -1485,7 +1477,7 @@ function replaySuspenseBoundary(
         request,
         postponeInstance.message,
         thrownInfo,
-        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+        __DEV__ ? task.debugTask : null,
       );
       // TODO: Figure out a better signal than a magic digest value.
       errorDigest = 'POSTPONE';
@@ -1494,7 +1486,7 @@ function replaySuspenseBoundary(
         request,
         error,
         thrownInfo,
-        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+        __DEV__ ? task.debugTask : null,
       );
     }
     encodeErrorForBoundary(
@@ -1545,7 +1537,7 @@ function replaySuspenseBoundary(
     task.componentStack,
     true,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
-    __DEV__ && enableOwnerStacks ? task.debugTask : null,
+    __DEV__ ? task.debugTask : null,
   );
 
   pushComponentStack(suspendedFallbackTask);
@@ -1587,7 +1579,7 @@ function renderPreamble(
     task.componentStack,
     task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
-    __DEV__ && enableOwnerStacks ? task.debugTask : null,
+    __DEV__ ? task.debugTask : null,
   );
   pushComponentStack(preambleTask);
   request.pingedTasks.push(preambleTask);
@@ -2489,7 +2481,7 @@ function replayElement(
           thrownInfo,
           childNodes,
           childSlots,
-          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+          __DEV__ ? task.debugTask : null,
         );
       }
       task.replay = replay;
@@ -2654,15 +2646,14 @@ function renderNodeDestructive(
   task.childIndex = childIndex;
 
   const previousComponentStack = task.componentStack;
-  const previousDebugTask =
-    __DEV__ && enableOwnerStacks ? task.debugTask : null;
+  const previousDebugTask = __DEV__ ? task.debugTask : null;
 
   pushComponentStack(task);
 
   retryNode(request, task);
 
   task.componentStack = previousComponentStack;
-  if (__DEV__ && enableOwnerStacks) {
+  if (__DEV__) {
     task.debugTask = previousDebugTask;
   }
 }
@@ -2689,8 +2680,7 @@ function retryNode(request: Request, task: Task): void {
         const refProp = props.ref;
         const ref = refProp !== undefined ? refProp : null;
 
-        const debugTask: null | ConsoleTask =
-          __DEV__ && enableOwnerStacks ? task.debugTask : null;
+        const debugTask: null | ConsoleTask = __DEV__ ? task.debugTask : null;
 
         const name = getComponentNameFromType(type);
         const keyOrIndex =
@@ -3002,7 +2992,7 @@ function replayFragment(
         thrownInfo,
         childNodes,
         childSlots,
-        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+        __DEV__ ? task.debugTask : null,
       );
     }
     task.replay = replay;
@@ -3094,7 +3084,7 @@ function warnForMissingKey(request: Request, task: Task, child: mixed): void {
       task.componentStack,
       (child: any).type,
       (child: any)._owner,
-      enableOwnerStacks ? (child: any)._debugStack : null,
+      (child: any)._debugStack,
     );
     task.componentStack = stackFrame;
     console.error(
@@ -3117,9 +3107,7 @@ function renderChildrenArray(
   const previousComponentStack = task.componentStack;
   let previousDebugTask = null;
   if (__DEV__) {
-    if (enableOwnerStacks) {
-      previousDebugTask = task.debugTask;
-    }
+    previousDebugTask = task.debugTask;
     // We read debugInfo from task.node instead of children because it might have been an
     // unwrapped iterable so we read from the original node.
     pushServerComponentStack(task, (task.node: any)._debugInfo);
@@ -3137,9 +3125,7 @@ function renderChildrenArray(
       task.keyPath = prevKeyPath;
       if (__DEV__) {
         task.componentStack = previousComponentStack;
-        if (enableOwnerStacks) {
-          task.debugTask = previousDebugTask;
-        }
+        task.debugTask = previousDebugTask;
       }
       return;
     }
@@ -3173,9 +3159,7 @@ function renderChildrenArray(
       task.keyPath = prevKeyPath;
       if (__DEV__) {
         task.componentStack = previousComponentStack;
-        if (enableOwnerStacks) {
-          task.debugTask = previousDebugTask;
-        }
+        task.debugTask = previousDebugTask;
       }
       return;
     }
@@ -3198,9 +3182,7 @@ function renderChildrenArray(
   task.keyPath = prevKeyPath;
   if (__DEV__) {
     task.componentStack = previousComponentStack;
-    if (enableOwnerStacks) {
-      task.debugTask = previousDebugTask;
-    }
+    task.debugTask = previousDebugTask;
   }
 }
 
@@ -3394,12 +3376,7 @@ function injectPostponedHole(
   reason: string,
   thrownInfo: ThrownInfo,
 ): Segment {
-  logPostpone(
-    request,
-    reason,
-    thrownInfo,
-    __DEV__ && enableOwnerStacks ? task.debugTask : null,
-  );
+  logPostpone(request, reason, thrownInfo, __DEV__ ? task.debugTask : null);
   // Something suspended, we'll need to create a new segment and resolve it later.
   const segment = task.blockedSegment;
   const insertionIndex = segment.chunks.length;
@@ -3440,7 +3417,7 @@ function spawnNewSuspendedReplayTask(
     task.componentStack,
     task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
-    __DEV__ && enableOwnerStacks ? task.debugTask : null,
+    __DEV__ ? task.debugTask : null,
   );
 }
 
@@ -3482,7 +3459,7 @@ function spawnNewSuspendedRenderTask(
     task.componentStack,
     task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
-    __DEV__ && enableOwnerStacks ? task.debugTask : null,
+    __DEV__ ? task.debugTask : null,
   );
 }
 
@@ -3504,8 +3481,7 @@ function renderNode(
   const previousKeyPath = task.keyPath;
   const previousTreeContext = task.treeContext;
   const previousComponentStack = task.componentStack;
-  const previousDebugTask =
-    __DEV__ && enableOwnerStacks ? task.debugTask : null;
+  const previousDebugTask = __DEV__ ? task.debugTask : null;
   let x;
   // Store how much we've pushed at this point so we can reset it in case something
   // suspended partially through writing something.
@@ -3551,7 +3527,7 @@ function renderNode(
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
           task.componentStack = previousComponentStack;
-          if (__DEV__ && enableOwnerStacks) {
+          if (__DEV__) {
             task.debugTask = previousDebugTask;
           }
           // Restore all active ReactContexts to what they were before.
@@ -3584,7 +3560,7 @@ function renderNode(
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
           task.componentStack = previousComponentStack;
-          if (__DEV__ && enableOwnerStacks) {
+          if (__DEV__) {
             task.debugTask = previousDebugTask;
           }
           // Restore all active ReactContexts to what they were before.
@@ -3642,7 +3618,7 @@ function renderNode(
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
           task.componentStack = previousComponentStack;
-          if (__DEV__ && enableOwnerStacks) {
+          if (__DEV__) {
             task.debugTask = previousDebugTask;
           }
           // Restore all active ReactContexts to what they were before.
@@ -3681,7 +3657,7 @@ function renderNode(
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
           task.componentStack = previousComponentStack;
-          if (__DEV__ && enableOwnerStacks) {
+          if (__DEV__) {
             task.debugTask = previousDebugTask;
           }
           // Restore all active ReactContexts to what they were before.
@@ -3714,7 +3690,7 @@ function renderNode(
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
           task.componentStack = previousComponentStack;
-          if (__DEV__ && enableOwnerStacks) {
+          if (__DEV__) {
             task.debugTask = previousDebugTask;
           }
           // Restore all active ReactContexts to what they were before.
@@ -4421,14 +4397,14 @@ function retryRenderTask(
           request,
           postponeInstance.message,
           thrownInfo,
-          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+          __DEV__ ? task.debugTask : null,
         );
       } else {
         logRecoverableError(
           request,
           x,
           thrownInfo,
-          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+          __DEV__ ? task.debugTask : null,
         );
       }
 
@@ -4464,7 +4440,7 @@ function retryRenderTask(
           request,
           postponeInstance.message,
           postponeInfo,
-          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+          __DEV__ ? task.debugTask : null,
         );
         trackPostpone(request, trackedPostpones, task, segment);
         finishedTask(request, task.blockedBoundary, segment);
@@ -4481,7 +4457,7 @@ function retryRenderTask(
       task.blockedBoundary,
       x,
       errorInfo,
-      __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      __DEV__ ? task.debugTask : null,
     );
     return;
   } finally {
@@ -4560,7 +4536,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
       errorInfo,
       task.replay.nodes,
       task.replay.slots,
-      __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      __DEV__ ? task.debugTask : null,
     );
     request.pendingRootTasks--;
     if (request.pendingRootTasks === 0) {

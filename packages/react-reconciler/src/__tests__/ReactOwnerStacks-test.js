@@ -41,7 +41,7 @@ describe('ReactOwnerStacks', () => {
     }
   });
 
-  // @gate __DEV__ && enableOwnerStacks
+  // @gate __DEV__
   it('can get the component owner stacks during rendering in dev', async () => {
     let stack;
 
@@ -75,7 +75,7 @@ describe('ReactOwnerStacks', () => {
 
   it('returns null outside of render', async () => {
     // Awkward to gate since some builds will have `captureOwnerStack` return null in prod
-    if (__DEV__ && gate('enableOwnerStacks')) {
+    if (__DEV__) {
       expect(React.captureOwnerStack()).toBe(null);
 
       await act(() => {

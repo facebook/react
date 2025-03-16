@@ -1302,6 +1302,38 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
+    it('onBeforeToggle Dialog API', async () => {
+      await testEmulatedBubblingEvent({
+        type: 'dialog',
+        reactEvent: 'onBeforeToggle',
+        reactEventType: 'beforetoggle',
+        nativeEvent: 'beforetoggle',
+        dispatch(node) {
+          const e = new Event('beforetoggle', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onToggle Dialog API', async () => {
+      await testEmulatedBubblingEvent({
+        type: 'dialog',
+        reactEvent: 'onToggle',
+        reactEventType: 'toggle',
+        nativeEvent: 'toggle',
+        dispatch(node) {
+          const e = new Event('toggle', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
     it('onVolumeChange', async () => {
       await testEmulatedBubblingEvent({
         type: 'video',

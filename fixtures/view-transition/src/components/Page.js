@@ -2,6 +2,8 @@ import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
   unstable_useSwipeTransition as useSwipeTransition,
+  useEffect,
+  useState,
 } from 'react';
 
 import SwipeRecognizer from './SwipeRecognizer';
@@ -53,6 +55,13 @@ export default function Page({url, navigate}) {
     navigate(show ? '/?a' : '/?b');
   }
 
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCounter(c => c + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const exclamation = (
     <ViewTransition name="exclamation" onShare={onTransition}>
       <span>!</span>
@@ -76,7 +85,7 @@ export default function Page({url, navigate}) {
               'navigation-back': transitions['slide-right'],
               'navigation-forward': transitions['slide-left'],
             }}>
-            <h1>{!show ? 'A' : 'B'}</h1>
+            <h1>{!show ? 'A' + counter : 'B' + counter}</h1>
           </ViewTransition>
           {show ? (
             <div>
