@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Discord Webhook Action
-        uses: tsickert/discord-webhook@v6.0.0
+        uses: tsickert/discord-webhook@86dc739f3f165f16dadc5666051c367efa1692f4
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           embed-author-name: ${{ github.event.pull_request.user.login }}
