@@ -1,5 +1,4 @@
 let React;
-let ReactDOM;
 let ReactTestRenderer;
 let Scheduler;
 let Suspense;
@@ -26,7 +25,6 @@ describe('ReactLazy', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
     Suspense = React.Suspense;
     lazy = React.lazy;
     ReactTestRenderer = require('react-test-renderer');
@@ -819,7 +817,9 @@ describe('ReactLazy', () => {
     );
   });
 
+  // @gate !fb
   it('throws with a useful error when wrapping createPortal with lazy()', async () => {
+    const ReactDOM = require('react-dom');
     const container = document.createElement('div');
     const portal = ReactDOM.createPortal(<div />, container);
     const BadLazy = lazy(() => fakeImport(portal));
