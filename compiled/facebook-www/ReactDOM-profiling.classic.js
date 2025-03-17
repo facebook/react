@@ -8251,20 +8251,21 @@ function beginWork(current, workInProgress, renderLanes) {
           (init = workInProgress.stateNode),
           null != props.name && "auto" !== props.name
             ? (workInProgress.flags |= null === current ? 18882560 : 18874368)
-            : null === init.autoName &&
-              ((prevState = workInProgressRoot.identifierPrefix),
-              isHydrating
-                ? ((nextState = getTreeId()),
-                  (prevState =
-                    "\u00ab" + prevState + "T" + nextState + "\u00bb"))
-                : ((nextState = globalClientIdCounter$1++),
-                  (prevState =
-                    "\u00ab" +
-                    prevState +
-                    "t" +
-                    nextState.toString(32) +
-                    "\u00bb")),
-              (init.autoName = prevState)),
+            : (null === init.autoName &&
+                ((prevState = workInProgressRoot.identifierPrefix),
+                isHydrating
+                  ? ((nextState = getTreeId()),
+                    (prevState =
+                      "\u00ab" + prevState + "T" + nextState + "\u00bb"))
+                  : ((nextState = globalClientIdCounter$1++),
+                    (prevState =
+                      "\u00ab" +
+                      prevState +
+                      "t" +
+                      nextState.toString(32) +
+                      "\u00bb")),
+                (init.autoName = prevState)),
+              isHydrating && pushMaterializedTreeId(workInProgress)),
           null !== current && current.memoizedProps.name !== props.name
             ? (workInProgress.flags |= 4194816)
             : markRef(current, workInProgress),
@@ -20710,16 +20711,16 @@ enableSchedulingProfiler &&
   ((internals$jscomp$inline_2080.getLaneLabelMap = getLaneLabelMap),
   (internals$jscomp$inline_2080.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2646 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2645 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2646.isDisabled &&
-    hook$jscomp$inline_2646.supportsFiber
+    !hook$jscomp$inline_2645.isDisabled &&
+    hook$jscomp$inline_2645.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2646.inject(
+      (rendererID = hook$jscomp$inline_2645.inject(
         internals$jscomp$inline_2080
       )),
-        (injectedHook = hook$jscomp$inline_2646);
+        (injectedHook = hook$jscomp$inline_2645);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {

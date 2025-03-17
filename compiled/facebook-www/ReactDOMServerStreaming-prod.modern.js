@@ -3971,20 +3971,20 @@ function renderElement(request, task, keyPath, type, props, ref) {
             newProps.state = defaultProps;
           }
         else defaultProps.queue = null;
-      type = newProps.render();
+      props = newProps.render();
       if (12 === request.status) throw null;
-      props = task.keyPath;
+      type = task.keyPath;
       task.keyPath = keyPath;
-      renderNodeDestructive(request, task, type, -1);
-      task.keyPath = props;
+      renderNodeDestructive(request, task, props, -1);
+      task.keyPath = type;
     } else {
-      type = renderWithHooks(request, task, keyPath, type, props, void 0);
+      props = renderWithHooks(request, task, keyPath, type, props, void 0);
       if (12 === request.status) throw null;
       finishFunctionComponent(
         request,
         task,
         keyPath,
-        type,
+        props,
         0 !== localIdCounter,
         actionStateCounter,
         actionStateMatchingIndex
@@ -4121,7 +4121,12 @@ function renderElement(request, task, keyPath, type, props, ref) {
         if (enableViewTransition) {
           type = task.keyPath;
           task.keyPath = keyPath;
-          renderNodeDestructive(request, task, props.children, -1);
+          null != props.name && "auto" !== props.name
+            ? renderNodeDestructive(request, task, props.children, -1)
+            : ((keyPath = task.treeContext),
+              (task.treeContext = pushTreeContext(keyPath, 1, 0)),
+              renderNode(request, task, props.children, -1),
+              (task.treeContext = keyPath));
           task.keyPath = type;
           return;
         }
@@ -4300,7 +4305,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
               "ref" !== newBoundary &&
                 (newProps[newBoundary] = props[newBoundary]);
           else newProps = props;
-          type = renderWithHooks(
+          props = renderWithHooks(
             request,
             task,
             keyPath,
@@ -4312,7 +4317,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
             request,
             task,
             keyPath,
-            type,
+            props,
             0 !== localIdCounter,
             actionStateCounter,
             actionStateMatchingIndex
@@ -4832,15 +4837,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$52) {
+    } catch (thrownValue$51) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$52 === SuspenseException
+          thrownValue$51 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$52),
+            : thrownValue$51),
         "object" === typeof node && null !== node)
       ) {
         if ("function" === typeof node.then) {
@@ -5617,11 +5622,11 @@ function flushCompletedQueues(request, destination) {
       completedBoundaries.splice(0, i);
       var partialBoundaries = request.partialBoundaries;
       for (i = 0; i < partialBoundaries.length; i++) {
-        var boundary$55 = partialBoundaries[i];
+        var boundary$54 = partialBoundaries[i];
         a: {
           clientRenderedBoundaries = request;
           boundary = destination;
-          var completedSegments = boundary$55.completedSegments;
+          var completedSegments = boundary$54.completedSegments;
           for (
             JSCompiler_inline_result = 0;
             JSCompiler_inline_result < completedSegments.length;
@@ -5631,7 +5636,7 @@ function flushCompletedQueues(request, destination) {
               !flushPartiallyCompletedSegment(
                 clientRenderedBoundaries,
                 boundary,
-                boundary$55,
+                boundary$54,
                 completedSegments[JSCompiler_inline_result]
               )
             ) {
@@ -5643,7 +5648,7 @@ function flushCompletedQueues(request, destination) {
           completedSegments.splice(0, JSCompiler_inline_result);
           JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
             boundary,
-            boundary$55.contentState,
+            boundary$54.contentState,
             clientRenderedBoundaries.renderState
           );
         }
@@ -5706,8 +5711,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$57) {
-    logRecoverableError(request, error$57, {}), fatalError(request, error$57);
+  } catch (error$56) {
+    logRecoverableError(request, error$56, {}), fatalError(request, error$56);
   }
 }
 exports.abortStream = function (stream, reason) {

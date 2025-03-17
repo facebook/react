@@ -6438,20 +6438,21 @@ module.exports = function ($$$config) {
             (init = workInProgress.stateNode),
             null != props.name && "auto" !== props.name
               ? (workInProgress.flags |= null === current ? 18882560 : 18874368)
-              : null === init.autoName &&
-                ((nextProps = workInProgressRoot.identifierPrefix),
-                isHydrating
-                  ? ((nextState = getTreeId()),
-                    (nextProps =
-                      "\u00ab" + nextProps + "T" + nextState + "\u00bb"))
-                  : ((nextState = globalClientIdCounter$1++),
-                    (nextProps =
-                      "\u00ab" +
-                      nextProps +
-                      "t" +
-                      nextState.toString(32) +
-                      "\u00bb")),
-                (init.autoName = nextProps)),
+              : (null === init.autoName &&
+                  ((nextProps = workInProgressRoot.identifierPrefix),
+                  isHydrating
+                    ? ((nextState = getTreeId()),
+                      (nextProps =
+                        "\u00ab" + nextProps + "T" + nextState + "\u00bb"))
+                    : ((nextState = globalClientIdCounter$1++),
+                      (nextProps =
+                        "\u00ab" +
+                        nextProps +
+                        "t" +
+                        nextState.toString(32) +
+                        "\u00bb")),
+                  (init.autoName = nextProps)),
+                isHydrating && pushMaterializedTreeId(workInProgress)),
             null !== current && current.memoizedProps.name !== props.name
               ? (workInProgress.flags |= 4194816)
               : markRef(current, workInProgress),

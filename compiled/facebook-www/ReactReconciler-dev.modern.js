@@ -9659,22 +9659,25 @@ __DEV__ &&
               instance$jscomp$2 = workInProgress.stateNode;
             if (null != pendingProps.name && "auto" !== pendingProps.name)
               workInProgress.flags |= null === current ? 18882560 : 18874368;
-            else if (null === instance$jscomp$2.autoName) {
-              var identifierPrefix = workInProgressRoot.identifierPrefix;
-              if (isHydrating) {
-                var treeId = getTreeId();
-                var name =
-                  "\u00ab" + identifierPrefix + "T" + treeId + "\u00bb";
-              } else {
-                var globalClientId = globalClientIdCounter$1++;
-                name =
-                  "\u00ab" +
-                  identifierPrefix +
-                  "t" +
-                  globalClientId.toString(32) +
-                  "\u00bb";
+            else {
+              if (null === instance$jscomp$2.autoName) {
+                var identifierPrefix = workInProgressRoot.identifierPrefix;
+                if (isHydrating) {
+                  var treeId = getTreeId();
+                  var name =
+                    "\u00ab" + identifierPrefix + "T" + treeId + "\u00bb";
+                } else {
+                  var globalClientId = globalClientIdCounter$1++;
+                  name =
+                    "\u00ab" +
+                    identifierPrefix +
+                    "t" +
+                    globalClientId.toString(32) +
+                    "\u00bb";
+                }
+                instance$jscomp$2.autoName = name;
               }
-              instance$jscomp$2.autoName = name;
+              isHydrating && pushMaterializedTreeId(workInProgress);
             }
             null !== current && current.memoizedProps.name !== pendingProps.name
               ? (workInProgress.flags |= 4194816)

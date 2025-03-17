@@ -7531,20 +7531,21 @@ function beginWork(current, workInProgress, renderLanes) {
           (init = workInProgress.stateNode),
           null != props.name && "auto" !== props.name
             ? (workInProgress.flags |= null === current ? 18882560 : 18874368)
-            : null === init.autoName &&
-              ((prevState = workInProgressRoot.identifierPrefix),
-              isHydrating
-                ? ((nextState = getTreeId()),
-                  (prevState =
-                    "\u00ab" + prevState + "T" + nextState + "\u00bb"))
-                : ((nextState = globalClientIdCounter$1++),
-                  (prevState =
-                    "\u00ab" +
-                    prevState +
-                    "t" +
-                    nextState.toString(32) +
-                    "\u00bb")),
-              (init.autoName = prevState)),
+            : (null === init.autoName &&
+                ((prevState = workInProgressRoot.identifierPrefix),
+                isHydrating
+                  ? ((nextState = getTreeId()),
+                    (prevState =
+                      "\u00ab" + prevState + "T" + nextState + "\u00bb"))
+                  : ((nextState = globalClientIdCounter$1++),
+                    (prevState =
+                      "\u00ab" +
+                      prevState +
+                      "t" +
+                      nextState.toString(32) +
+                      "\u00bb")),
+                (init.autoName = prevState)),
+              isHydrating && pushMaterializedTreeId(workInProgress)),
           null !== current && current.memoizedProps.name !== props.name
             ? (workInProgress.flags |= 4194816)
             : markRef(current, workInProgress),
@@ -19002,7 +19003,7 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2523 = {
+var internals$jscomp$inline_2522 = {
   bundleType: 0,
   version: "19.1.0-www-modern-9320a013-20250317",
   rendererPackageName: "react-dom",
@@ -19010,16 +19011,16 @@ var internals$jscomp$inline_2523 = {
   reconcilerVersion: "19.1.0-www-modern-9320a013-20250317"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2524 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2523 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2524.isDisabled &&
-    hook$jscomp$inline_2524.supportsFiber
+    !hook$jscomp$inline_2523.isDisabled &&
+    hook$jscomp$inline_2523.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2524.inject(
-        internals$jscomp$inline_2523
+      (rendererID = hook$jscomp$inline_2523.inject(
+        internals$jscomp$inline_2522
       )),
-        (injectedHook = hook$jscomp$inline_2524);
+        (injectedHook = hook$jscomp$inline_2523);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {

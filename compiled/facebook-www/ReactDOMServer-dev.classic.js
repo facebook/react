@@ -5606,17 +5606,24 @@ __DEV__ &&
             return;
           case REACT_VIEW_TRANSITION_TYPE:
             if (enableViewTransition) {
-              var _prevKeyPath4 = task.keyPath;
+              var prevKeyPath$jscomp$3 = task.keyPath;
               task.keyPath = keyPath;
-              renderNodeDestructive(request, task, props.children, -1);
-              task.keyPath = _prevKeyPath4;
+              if (null != props.name && "auto" !== props.name)
+                renderNodeDestructive(request, task, props.children, -1);
+              else {
+                var prevTreeContext = task.treeContext;
+                task.treeContext = pushTreeContext(prevTreeContext, 1, 0);
+                renderNode(request, task, props.children, -1);
+                task.treeContext = prevTreeContext;
+              }
+              task.keyPath = prevKeyPath$jscomp$3;
               return;
             }
           case REACT_SCOPE_TYPE:
-            var _prevKeyPath5 = task.keyPath;
+            var _prevKeyPath4 = task.keyPath;
             task.keyPath = keyPath;
             renderNodeDestructive(request, task, props.children, -1);
-            task.keyPath = _prevKeyPath5;
+            task.keyPath = _prevKeyPath4;
             return;
           case REACT_SUSPENSE_TYPE:
             a: if (null !== task.replay) {
@@ -5629,7 +5636,7 @@ __DEV__ &&
                 task.keyPath = _prevKeyPath;
               }
             } else {
-              var prevKeyPath$jscomp$3 = task.keyPath,
+              var prevKeyPath$jscomp$4 = task.keyPath,
                 parentBoundary = task.blockedBoundary,
                 parentPreamble = task.blockedPreamble,
                 parentHoistableState = task.hoistableState,
@@ -5710,7 +5717,7 @@ __DEV__ &&
                 } finally {
                   (task.blockedSegment = parentSegment),
                     (task.blockedPreamble = parentPreamble),
-                    (task.keyPath = prevKeyPath$jscomp$3);
+                    (task.keyPath = prevKeyPath$jscomp$4);
                 }
                 var suspendedPrimaryTask = createRenderTask(
                   request,
@@ -5787,7 +5794,7 @@ __DEV__ &&
                     (task.blockedPreamble = parentPreamble),
                     (task.hoistableState = parentHoistableState),
                     (task.blockedSegment = parentSegment),
-                    (task.keyPath = prevKeyPath$jscomp$3);
+                    (task.keyPath = prevKeyPath$jscomp$4);
                 }
                 var suspendedFallbackTask = createRenderTask(
                   request,
