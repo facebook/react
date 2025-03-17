@@ -564,7 +564,6 @@ export function restoreUpdateViewTransition(
   current: Fiber,
   finishedWork: Fiber,
 ): void {
-  current.memoizedState = null;
   restoreViewTransitionOnHostInstances(current.child, true);
   restoreViewTransitionOnHostInstances(finishedWork.child, true);
 }
@@ -582,7 +581,6 @@ export function restoreNestedViewTransitions(changedParent: Fiber): void {
   let child = changedParent.child;
   while (child !== null) {
     if (child.tag === ViewTransitionComponent) {
-      child.memoizedState = null;
       restoreViewTransitionOnHostInstances(child.child, false);
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
       restoreNestedViewTransitions(child);
@@ -840,6 +838,7 @@ export function measureUpdateViewTransition(
     }
   } else {
     previousMeasurements = oldFiber.memoizedState;
+    oldFiber.memoizedState = null; // Clear it. We won't need it anymore.
   }
   const inViewport = measureViewTransitionHostInstances(
     finishedWork, // This is always finishedWork since it's used to assign flags.
@@ -885,6 +884,7 @@ export function measureNestedViewTransitions(
         }
       } else {
         previousMeasurements = child.memoizedState;
+        child.memoizedState = null; // Clear it. We won't need it anymore.
       }
       const inViewport = measureViewTransitionHostInstances(
         child,
