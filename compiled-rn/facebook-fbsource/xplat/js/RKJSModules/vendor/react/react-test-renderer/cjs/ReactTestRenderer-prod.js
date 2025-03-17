@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<26e135ffbea0137cd4c8aaa7929556cb>>
+ * @generated SignedSource<<48e0cb470f913300af98b19286106218>>
  */
 
 "use strict";
@@ -157,8 +157,7 @@ var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy");
 Symbol.for("react.scope");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
+var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
 Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
 var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
@@ -9329,8 +9328,6 @@ function createFiberFromTypeAndProps(
           (type.lanes = lanes),
           type
         );
-      case REACT_OFFSCREEN_TYPE:
-        return createFiberFromOffscreen(pendingProps, mode, lanes, key);
       default:
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
@@ -9372,7 +9369,6 @@ function createFiberFromFragment(elements, mode, lanes, key) {
 }
 function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
   pendingProps = createFiberImplClass(22, pendingProps, key, mode);
-  pendingProps.elementType = REACT_OFFSCREEN_TYPE;
   pendingProps.lanes = lanes;
   var primaryChildInstance = {
     _visibility: 1,
@@ -9853,10 +9849,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1429 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-1a191701-20250317",
+  version: "19.1.0-native-fb-df319522-20250317",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-1a191701-20250317"
+  reconcilerVersion: "19.1.0-native-fb-df319522-20250317"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1430 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9992,4 +9988,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-1a191701-20250317";
+exports.version = "19.1.0-native-fb-df319522-20250317";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<54ca39895f65b394e29954c9a6af3157>>
+ * @generated SignedSource<<4484b1173dab2414aaf2ef4830fe9df2>>
  */
 
 "use strict";
@@ -686,8 +686,7 @@ __DEV__ &&
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy");
     dynamicFlags = Symbol.for("react.scope");
-    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-      REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
+    var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
     REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.legacy_hidden");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
@@ -1230,7 +1229,6 @@ __DEV__ &&
         type === REACT_SUSPENSE_TYPE ||
         type === REACT_SUSPENSE_LIST_TYPE ||
         type === REACT_ACTIVITY_TYPE ||
-        type === REACT_OFFSCREEN_TYPE ||
         ("object" === typeof type &&
           null !== type &&
           (type.$$typeof === REACT_LAZY_TYPE ||
@@ -1422,7 +1420,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-1a191701-20250317";
+    exports.version = "19.1.0-native-fb-df319522-20250317";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

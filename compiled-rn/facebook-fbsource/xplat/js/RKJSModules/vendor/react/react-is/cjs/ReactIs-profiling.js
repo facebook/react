@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f5f8bdd6d99f9c44613496d9b78626e3>>
+ * @generated SignedSource<<f1b569fa41ad5cc63217af4bba3727de>>
  */
 
 "use strict";
@@ -29,7 +29,6 @@ var REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
-  REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
   REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
   REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
@@ -125,7 +124,6 @@ exports.isValidElementType = function (type) {
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
     type === REACT_ACTIVITY_TYPE ||
-    type === REACT_OFFSCREEN_TYPE ||
     ("object" === typeof type &&
       null !== type &&
       (type.$$typeof === REACT_LAZY_TYPE ||

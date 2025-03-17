@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<10e603dd7388df950cb2f6723e4f6081>>
+ * @generated SignedSource<<25f77f31b2c97160ee7774786c8d5ee6>>
  */
 
 "use strict";
@@ -62,7 +62,6 @@ __DEV__ &&
       REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy"),
-      REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
       REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
@@ -127,7 +126,6 @@ __DEV__ &&
         type === REACT_SUSPENSE_TYPE ||
         type === REACT_SUSPENSE_LIST_TYPE ||
         type === REACT_ACTIVITY_TYPE ||
-        type === REACT_OFFSCREEN_TYPE ||
         ("object" === typeof type &&
           null !== type &&
           (type.$$typeof === REACT_LAZY_TYPE ||

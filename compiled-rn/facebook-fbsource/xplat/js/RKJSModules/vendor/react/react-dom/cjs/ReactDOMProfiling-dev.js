@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b0677faeaebb9e68e83cd052f5bc852b>>
+ * @generated SignedSource<<880766a0a78549f55208b9d2e4f3f20b>>
  */
 
 /*
@@ -13999,8 +13999,6 @@ __DEV__ &&
               (key.lanes = lanes),
               key
             );
-          case REACT_OFFSCREEN_TYPE:
-            return createFiberFromOffscreen(pendingProps, mode, lanes, key);
           default:
             if ("object" === typeof type && null !== type)
               switch (type.$$typeof) {
@@ -14082,7 +14080,6 @@ __DEV__ &&
     }
     function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
       pendingProps = createFiber(22, pendingProps, key, mode);
-      pendingProps.elementType = REACT_OFFSCREEN_TYPE;
       pendingProps.lanes = lanes;
       var primaryChildInstance = {
         _visibility: OffscreenVisible,
@@ -22423,8 +22420,7 @@ __DEV__ &&
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy");
     Symbol.for("react.scope");
-    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-      REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
+    var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
     Symbol.for("react.legacy_hidden");
     Symbol.for("react.tracing_marker");
     var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
@@ -26117,11 +26113,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-native-fb-1a191701-20250317" !== isomorphicReactPackageVersion)
+      if ("19.1.0-native-fb-df319522-20250317" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-native-fb-1a191701-20250317\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-native-fb-df319522-20250317\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26158,10 +26154,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-native-fb-1a191701-20250317",
+          version: "19.1.0-native-fb-df319522-20250317",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-native-fb-1a191701-20250317"
+          reconcilerVersion: "19.1.0-native-fb-df319522-20250317"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26621,7 +26617,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-native-fb-1a191701-20250317";
+    exports.version = "19.1.0-native-fb-df319522-20250317";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

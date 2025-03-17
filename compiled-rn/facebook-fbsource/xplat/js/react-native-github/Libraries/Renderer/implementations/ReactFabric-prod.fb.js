@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d5bb4bb3ed4ed1c0589dc1ab12c4a513>>
+ * @generated SignedSource<<d8499d7e8ec93b6f41a94ac8284d8e8c>>
  */
 
 "use strict";
@@ -244,8 +244,7 @@ var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy");
 Symbol.for("react.scope");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
+var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
 Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
 var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
@@ -10695,8 +10694,6 @@ function createFiberFromTypeAndProps(
           (type.lanes = lanes),
           type
         );
-      case REACT_OFFSCREEN_TYPE:
-        return createFiberFromOffscreen(pendingProps, mode, lanes, key);
       default:
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
@@ -10738,7 +10735,6 @@ function createFiberFromFragment(elements, mode, lanes, key) {
 }
 function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
   pendingProps = createFiber(22, pendingProps, key, mode);
-  pendingProps.elementType = REACT_OFFSCREEN_TYPE;
   pendingProps.lanes = lanes;
   var primaryChildInstance = {
     _visibility: 1,
@@ -11108,10 +11104,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1238 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-1a191701-20250317",
+    version: "19.1.0-native-fb-df319522-20250317",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-1a191701-20250317"
+    reconcilerVersion: "19.1.0-native-fb-df319522-20250317"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1238.rendererConfig = extraDevToolsConfig);
