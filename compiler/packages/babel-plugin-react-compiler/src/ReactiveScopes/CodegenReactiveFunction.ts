@@ -2429,6 +2429,9 @@ function codegenObjectPropertyKey(
       });
       return expr;
     }
+    case 'number': {
+      return t.numericLiteral(key.name);
+    }
   }
 }
 
