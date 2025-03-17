@@ -2186,7 +2186,7 @@ type StoredEventListener = {
 export type FragmentInstanceType = {
   _fragmentFiber: Fiber,
   _eventListeners: null | Array<StoredEventListener>,
-  _observer: null | IntersectionObserver | ResizeObserver,
+  _observers: null | Set<IntersectionObserver | ResizeObserver>,
   addEventListener(
     type: string,
     listener: EventListener,
@@ -2205,7 +2205,7 @@ export type FragmentInstanceType = {
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
   this._fragmentFiber = fragmentFiber;
   this._eventListeners = null;
-  this._observer = null;
+  this._observers = null;
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.addEventListener = function (
@@ -2293,14 +2293,10 @@ FragmentInstance.prototype.observeUsing = function (
   this: FragmentInstanceType,
   observer: IntersectionObserver | ResizeObserver,
 ): void {
-  if (this._observer !== null && this._observer !== observer) {
-    throw new Error(
-      'You are attaching an observer to a fragment instance that already has one. Fragment instances ' +
-        'can only have one observer. Use multiple fragment instances or first call unobserveUsing() to ' +
-        'remove the previous observer.',
-    );
+  if (this._observers === null) {
+    this._observers = new Set();
   }
-  this._observer = observer;
+  this._observers.add(observer);
   traverseFragmentInstanceChildren(
     this,
     this._fragmentFiber.child,
@@ -2320,7 +2316,7 @@ FragmentInstance.prototype.unobserveUsing = function (
   this: FragmentInstanceType,
   observer: IntersectionObserver | ResizeObserver,
 ): void {
-  if (this._observer === null || this._observer !== observer) {
+  if (this._observers === null || !this._observers.has(observer)) {
     if (__DEV__) {
       console.error(
         'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
@@ -2328,13 +2324,13 @@ FragmentInstance.prototype.unobserveUsing = function (
       );
     }
   } else {
+    this._observers.delete(observer);
     traverseFragmentInstanceChildren(
       this,
       this._fragmentFiber.child,
       unobserveChild,
       observer,
     );
-    this._observer = null;
   }
 };
 function unobserveChild(
@@ -2403,8 +2399,10 @@ export function commitNewChildToFragmentInstance(
       childElement.addEventListener(type, listener, optionsOrUseCapture);
     }
   }
-  if (fragmentInstance._observer !== null) {
-    fragmentInstance._observer.observe(childElement);
+  if (fragmentInstance._observers !== null) {
+    fragmentInstance._observers.forEach(observer => {
+      observer.observe(childElement);
+    });
   }
 }
 

@@ -694,34 +694,6 @@ describe('FragmentRefs', () => {
     });
 
     // @gate enableFragmentRefs
-    it('errors when observeUsing() is called with multiple observers', async () => {
-      const fragmentRef = React.createRef();
-      const observer = new IntersectionObserver(() => {});
-      const observer2 = new IntersectionObserver(() => {});
-      function Test() {
-        return (
-          <React.Fragment ref={fragmentRef}>
-            <div />
-          </React.Fragment>
-        );
-      }
-
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => root.render(<Test />));
-      fragmentRef.current.observeUsing(observer);
-      // Same observer doesn't throw
-      fragmentRef.current.observeUsing(observer);
-      // Different observer throws
-      expect(() => {
-        fragmentRef.current.observeUsing(observer2);
-      }).toThrowError(
-        'You are attaching an observer to a fragment instance that already has one. Fragment instances ' +
-          'can only have one observer. Use multiple fragment instances or first call unobserveUsing() to ' +
-          'remove the previous observer.',
-      );
-    });
-
-    // @gate enableFragmentRefs
     it('warns when unobserveUsing() is called with an observer that was not observed', async () => {
       const fragmentRef = React.createRef();
       const observer = new IntersectionObserver(() => {});

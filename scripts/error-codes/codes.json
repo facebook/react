@@ -537,6 +537,5 @@
   "549": "Cannot start a gesture with a disconnected AnimationTimeline.",
   "550": "useSwipeTransition is not yet supported in react-art.",
   "551": "useSwipeTransition is not yet supported in React Native.",
-  "552": "Cannot use a useSwipeTransition() in a detached root.",
-  "553": "You are attaching an observer to a fragment instance that already has one. Fragment instances can only have one observer. Use multiple fragment instances or first call unobserveUsing() to remove the previous observer."
+  "552": "Cannot use a useSwipeTransition() in a detached root."
 }

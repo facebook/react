@@ -54,6 +54,7 @@ export default function IntersectionObserverCase() {
     const lastFragmentRefValue = fragmentRef.current;
     return () => {
       lastFragmentRefValue.unobserveUsing(observerRef.current);
+      observerRef.current = null;
     };
   }, []);
 
