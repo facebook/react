@@ -273,8 +273,6 @@ __DEV__ &&
       switch (type) {
         case REACT_FRAGMENT_TYPE:
           return "Fragment";
-        case REACT_PORTAL_TYPE:
-          return "Portal";
         case REACT_PROFILER_TYPE:
           return "Profiler";
         case REACT_STRICT_MODE_TYPE:
@@ -294,6 +292,8 @@ __DEV__ &&
             ),
           type.$$typeof)
         ) {
+          case REACT_PORTAL_TYPE:
+            return "Portal";
           case REACT_PROVIDER_TYPE:
             return (type._context.displayName || "Context") + ".Provider";
           case REACT_CONTEXT_TYPE:
@@ -15075,10 +15075,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-df319522-20250317",
+        version: "19.1.0-www-modern-8243f3f0-20250317",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-df319522-20250317"
+        reconcilerVersion: "19.1.0-www-modern-8243f3f0-20250317"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15213,5 +15213,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-modern-df319522-20250317";
+    exports.version = "19.1.0-www-modern-8243f3f0-20250317";
   })();

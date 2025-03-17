@@ -3384,8 +3384,6 @@ __DEV__ &&
       switch (type) {
         case REACT_FRAGMENT_TYPE:
           return "Fragment";
-        case REACT_PORTAL_TYPE:
-          return "Portal";
         case REACT_PROFILER_TYPE:
           return "Profiler";
         case REACT_STRICT_MODE_TYPE:
@@ -3409,6 +3407,8 @@ __DEV__ &&
             ),
           type.$$typeof)
         ) {
+          case REACT_PORTAL_TYPE:
+            return "Portal";
           case REACT_PROVIDER_TYPE:
             if (enableRenderableContext) break;
             else return (type._context.displayName || "Context") + ".Provider";

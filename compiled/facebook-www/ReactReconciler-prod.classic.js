@@ -175,8 +175,6 @@ module.exports = function ($$$config) {
     switch (type) {
       case REACT_FRAGMENT_TYPE:
         return "Fragment";
-      case REACT_PORTAL_TYPE:
-        return "Portal";
       case REACT_PROFILER_TYPE:
         return "Profiler";
       case REACT_STRICT_MODE_TYPE:
@@ -194,6 +192,8 @@ module.exports = function ($$$config) {
     }
     if ("object" === typeof type)
       switch (type.$$typeof) {
+        case REACT_PORTAL_TYPE:
+          return "Portal";
         case REACT_PROVIDER_TYPE:
           if (enableRenderableContext) break;
           else return (type._context.displayName || "Context") + ".Provider";
@@ -13939,7 +13939,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-df319522-20250317"
+      reconcilerVersion: "19.1.0-www-classic-8243f3f0-20250317"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

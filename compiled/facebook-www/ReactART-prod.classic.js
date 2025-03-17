@@ -149,8 +149,6 @@ function getComponentNameFromType(type) {
   switch (type) {
     case REACT_FRAGMENT_TYPE:
       return "Fragment";
-    case REACT_PORTAL_TYPE:
-      return "Portal";
     case REACT_PROFILER_TYPE:
       return "Profiler";
     case REACT_STRICT_MODE_TYPE:
@@ -168,6 +166,8 @@ function getComponentNameFromType(type) {
   }
   if ("object" === typeof type)
     switch (type.$$typeof) {
+      case REACT_PORTAL_TYPE:
+        return "Portal";
       case REACT_PROVIDER_TYPE:
         if (enableRenderableContext) break;
         else return (type._context.displayName || "Context") + ".Provider";
@@ -11334,10 +11334,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1582 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-df319522-20250317",
+  version: "19.1.0-www-classic-8243f3f0-20250317",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-df319522-20250317"
+  reconcilerVersion: "19.1.0-www-classic-8243f3f0-20250317"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1583 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11363,4 +11363,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-df319522-20250317";
+exports.version = "19.1.0-www-classic-8243f3f0-20250317";

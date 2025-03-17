@@ -3605,8 +3605,6 @@ __DEV__ &&
       switch (type) {
         case REACT_FRAGMENT_TYPE:
           return "Fragment";
-        case REACT_PORTAL_TYPE:
-          return "Portal";
         case REACT_PROFILER_TYPE:
           return "Profiler";
         case REACT_STRICT_MODE_TYPE:
@@ -3630,6 +3628,8 @@ __DEV__ &&
             ),
           type.$$typeof)
         ) {
+          case REACT_PORTAL_TYPE:
+            return "Portal";
           case REACT_PROVIDER_TYPE:
             if (enableRenderableContext) break;
             else return (type._context.displayName || "Context") + ".Provider";
@@ -9414,5 +9414,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.1.0-www-classic-df319522-20250317";
+    exports.version = "19.1.0-www-classic-8243f3f0-20250317";
   })();

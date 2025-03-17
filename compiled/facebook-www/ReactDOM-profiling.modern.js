@@ -1096,8 +1096,6 @@ function getComponentNameFromType(type) {
   switch (type) {
     case REACT_FRAGMENT_TYPE:
       return "Fragment";
-    case REACT_PORTAL_TYPE:
-      return "Portal";
     case REACT_PROFILER_TYPE:
       return "Profiler";
     case REACT_STRICT_MODE_TYPE:
@@ -1115,6 +1113,8 @@ function getComponentNameFromType(type) {
   }
   if ("object" === typeof type)
     switch (type.$$typeof) {
+      case REACT_PORTAL_TYPE:
+        return "Portal";
       case REACT_PROVIDER_TYPE:
         if (enableRenderableContext) break;
         else return (type._context.displayName || "Context") + ".Provider";
@@ -20439,14 +20439,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2068 = React.version;
 if (
-  "19.1.0-www-modern-df319522-20250317" !==
+  "19.1.0-www-modern-8243f3f0-20250317" !==
   isomorphicReactPackageVersion$jscomp$inline_2068
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2068,
-      "19.1.0-www-modern-df319522-20250317"
+      "19.1.0-www-modern-8243f3f0-20250317"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20464,10 +20464,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2070 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-df319522-20250317",
+  version: "19.1.0-www-modern-8243f3f0-20250317",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-df319522-20250317"
+  reconcilerVersion: "19.1.0-www-modern-8243f3f0-20250317"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2070.getLaneLabelMap = getLaneLabelMap),
@@ -20834,7 +20834,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-df319522-20250317";
+exports.version = "19.1.0-www-modern-8243f3f0-20250317";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
