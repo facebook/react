@@ -77,8 +77,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
-        working-directory: scripts/release
+      - run: yarn --cwd scripts/release install --frozen-lockfile
       - run: cp ./scripts/release/ci-npmrc ~/.npmrc
       - if: '${{ inputs.only_packages }}'
         name: 'Prepare ${{ inputs.only_packages }} from NPM'

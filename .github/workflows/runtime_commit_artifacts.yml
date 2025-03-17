@@ -84,10 +84,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
-        name: yarn install (react)
-      - run: yarn install --frozen-lockfile
-        name: yarn install (scripts/release)
-        working-directory: scripts/release
+      - run: yarn --cwd scripts/release install --frozen-lockfile
       - name: Download artifacts for base revision
         run: |
           GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.event.workflow_run.head_sha || github.sha }}
