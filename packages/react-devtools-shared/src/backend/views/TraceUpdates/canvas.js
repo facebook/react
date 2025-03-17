@@ -48,6 +48,8 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
     if (canvas !== null) {
       try {
         if (canvas.matches(':popover-open')) {
+          // $FlowFixMe[prop-missing]
+          // $FlowFixMe[incompatible-use]
           canvas.hidePopover();
         }
       } catch (e) {}
@@ -60,6 +62,8 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
   } else {
     try {
       if (!canvas.matches(':popover-open')) {
+        // $FlowFixMe[prop-missing]
+        // $FlowFixMe[incompatible-use]
         canvas.showPopover();
       }
     } catch (e) {}
@@ -209,9 +213,15 @@ function destroyNative(agent: Agent) {
 
 function destroyWeb() {
   if (canvas !== null) {
-    canvas.hidePopover();
+    try {
+      // $FlowFixMe[prop-missing]
+      // $FlowFixMe[incompatible-use]
+      canvas.hidePopover();
+    } catch (e) {}
 
+    // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API and loses canvas nullability tracking
     if (canvas.parentNode != null) {
+      // $FlowFixMe[incompatible-call]: Flow doesn't track that canvas is non-null here
       canvas.parentNode.removeChild(canvas);
     }
     canvas = null;
@@ -224,8 +234,9 @@ export function destroy(agent: Agent): void {
 
 function initialize(): void {
   canvas = window.document.createElement('canvas');
-  canvas.setAttribute('popover', 'manual');
+  // canvas.setAttribute('popover', 'manual');
 
+  // $FlowFixMe[incompatible-use]
   canvas.style.cssText = `
     xx-background-color: red;
     xx-opacity: 0.5;
@@ -236,15 +247,17 @@ function initialize(): void {
     right: 0;
     top: 0;
     background-color: transparent;
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
+    outline: none;
+    box-shadow: none;
+    border: none;
   `;
 
   const root = window.document.documentElement;
   root.insertBefore(canvas, root.firstChild);
 
   try {
+    // $FlowFixMe[prop-missing]
+    // $FlowFixMe[incompatible-use]
     canvas.showPopover();
   } catch (e) {}
 }
