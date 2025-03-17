@@ -34,7 +34,6 @@ import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostCo
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
-import {OffscreenComponent} from 'react-reconciler/src/ReactWorkTags';
 
 export {
   setCurrentUpdatePriority,
@@ -54,6 +53,8 @@ import {
   markNodeAsHoistable,
   isOwnedInstance,
 } from './ReactDOMComponentTree';
+import {traverseFragmentInstance} from 'react-reconciler/src/ReactFiberTreeReflection';
+
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
 import {
@@ -2185,6 +2186,7 @@ type StoredEventListener = {
 export type FragmentInstanceType = {
   _fragmentFiber: Fiber,
   _eventListeners: null | Array<StoredEventListener>,
+  _observers: null | Set<IntersectionObserver | ResizeObserver>,
   addEventListener(
     type: string,
     listener: EventListener,
@@ -2196,11 +2198,14 @@ export type FragmentInstanceType = {
     optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
   ): void,
   focus(): void,
+  observeUsing(observer: IntersectionObserver | ResizeObserver): void,
+  unobserveUsing(observer: IntersectionObserver | ResizeObserver): void,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
   this._fragmentFiber = fragmentFiber;
   this._eventListeners = null;
+  this._observers = null;
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.addEventListener = function (
@@ -2221,9 +2226,8 @@ FragmentInstance.prototype.addEventListener = function (
     indexOfEventListener(listeners, type, listener, optionsOrUseCapture) === -1;
   if (isNewEventListener) {
     listeners.push({type, listener, optionsOrUseCapture});
-    traverseFragmentInstanceChildren(
-      this,
-      this._fragmentFiber.child,
+    traverseFragmentInstance(
+      this._fragmentFiber,
       addEventListenerToChild,
       type,
       listener,
@@ -2253,9 +2257,8 @@ FragmentInstance.prototype.removeEventListener = function (
     return;
   }
   if (typeof listeners !== 'undefined' && listeners.length > 0) {
-    traverseFragmentInstanceChildren(
-      this,
-      this._fragmentFiber.child,
+    traverseFragmentInstance(
+      this._fragmentFiber,
       removeEventListenerFromChild,
       type,
       listener,
@@ -2283,43 +2286,49 @@ function removeEventListenerFromChild(
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.focus = function (this: FragmentInstanceType) {
-  traverseFragmentInstanceChildren(
-    this,
-    this._fragmentFiber.child,
-    setFocusIfFocusable,
-  );
+  traverseFragmentInstance(this._fragmentFiber, setFocusIfFocusable);
 };
-
-function traverseFragmentInstanceChildren<A, B, C>(
-  fragmentInstance: FragmentInstanceType,
-  child: Fiber | null,
-  fn: (Instance, A, B, C) => boolean,
-  a: A,
-  b: B,
-  c: C,
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.observeUsing = function (
+  this: FragmentInstanceType,
+  observer: IntersectionObserver | ResizeObserver,
 ): void {
-  while (child !== null) {
-    if (child.tag === HostComponent) {
-      if (fn(child.stateNode, a, b, c)) {
-        return;
-      }
-    } else if (
-      child.tag === OffscreenComponent &&
-      child.memoizedState !== null
-    ) {
-      // Skip hidden subtrees
-    } else {
-      traverseFragmentInstanceChildren(
-        fragmentInstance,
-        child.child,
-        fn,
-        a,
-        b,
-        c,
+  if (this._observers === null) {
+    this._observers = new Set();
+  }
+  this._observers.add(observer);
+  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
+};
+function observeChild(
+  child: Instance,
+  observer: IntersectionObserver | ResizeObserver,
+) {
+  observer.observe(child);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.unobserveUsing = function (
+  this: FragmentInstanceType,
+  observer: IntersectionObserver | ResizeObserver,
+): void {
+  if (this._observers === null || !this._observers.has(observer)) {
+    if (__DEV__) {
+      console.error(
+        'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
+          'instance. First attach the observer with observeUsing()',
       );
     }
-    child = child.sibling;
+  } else {
+    this._observers.delete(observer);
+    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
   }
+};
+function unobserveChild(
+  child: Instance,
+  observer: IntersectionObserver | ResizeObserver,
+) {
+  observer.unobserve(child);
+  return false;
 }
 
 function normalizeListenerOptions(
@@ -2379,6 +2388,11 @@ export function commitNewChildToFragmentInstance(
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
       childElement.addEventListener(type, listener, optionsOrUseCapture);
     }
+  }
+  if (fragmentInstance._observers !== null) {
+    fragmentInstance._observers.forEach(observer => {
+      observer.observe(childElement);
+    });
   }
 }
 

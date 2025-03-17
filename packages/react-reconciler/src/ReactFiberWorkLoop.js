@@ -3927,6 +3927,9 @@ function commitGestureOnRoot(
 }
 
 function flushGestureMutations(): void {
+  if (!enableSwipeTransition) {
+    return;
+  }
   if (pendingEffectsStatus !== PENDING_GESTURE_MUTATION_PHASE) {
     return;
   }
@@ -3953,6 +3956,9 @@ function flushGestureMutations(): void {
 }
 
 function flushGestureAnimations(): void {
+  if (!enableSwipeTransition) {
+    return;
+  }
   // If we get canceled before we start we might not have applied
   // mutations yet. We need to apply them first.
   flushGestureMutations();

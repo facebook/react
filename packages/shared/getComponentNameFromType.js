@@ -25,6 +25,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_TRACING_MARKER_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
+  REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -73,8 +74,6 @@ export default function getComponentNameFromType(type: mixed): string | null {
   switch (type) {
     case REACT_FRAGMENT_TYPE:
       return 'Fragment';
-    case REACT_PORTAL_TYPE:
-      return 'Portal';
     case REACT_PROFILER_TYPE:
       return 'Profiler';
     case REACT_STRICT_MODE_TYPE:
@@ -83,7 +82,8 @@ export default function getComponentNameFromType(type: mixed): string | null {
       return 'Suspense';
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
-    // Fall through
+    case REACT_ACTIVITY_TYPE:
+      return 'Activity';
     case REACT_VIEW_TRANSITION_TYPE:
       if (enableViewTransition) {
         return 'ViewTransition';
@@ -104,6 +104,8 @@ export default function getComponentNameFromType(type: mixed): string | null {
       }
     }
     switch (type.$$typeof) {
+      case REACT_PORTAL_TYPE:
+        return 'Portal';
       case REACT_PROVIDER_TYPE:
         if (enableRenderableContext) {
           return null;
