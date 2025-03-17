@@ -224,6 +224,7 @@ describe('FragmentRefs', () => {
     });
 
     describe('blur()', () => {
+      // @gate enableFragmentRefs
       it('removes focus from an element inside of the Fragment', async () => {
         const fragmentRef = React.createRef();
         const root = ReactDOMClient.createRoot(container);
@@ -253,6 +254,7 @@ describe('FragmentRefs', () => {
         expect(document.activeElement).toEqual(document.body);
       });
 
+      // @gate enableFragmentRefs
       it('does not remove focus from elements outside of the Fragment', async () => {
         const fragmentRefA = React.createRef();
         const fragmentRefB = React.createRef();
