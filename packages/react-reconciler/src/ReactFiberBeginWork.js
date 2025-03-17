@@ -3298,6 +3298,9 @@ function updateViewTransition(
     // to client rendered content. If we don't end up using that we could just assign an incremeting
     // counter in the commit phase instead.
     assignViewTransitionAutoName(pendingProps, instance);
+    if (getIsHydrating()) {
+      pushMaterializedTreeId(workInProgress);
+    }
   }
   if (current !== null && current.memoizedProps.name !== pendingProps.name) {
     // If the name changes, we schedule a ref effect to create a new ref instance.
