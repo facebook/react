@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d9c8a187017d2dd4f2de54572d123f4d>>
+ * @generated SignedSource<<f657f28379f43fc4e0b3a5e6fec6d419>>
  */
 
 "use strict";
@@ -30,7 +30,7 @@ var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
   REACT_SCOPE_TYPE = Symbol.for("react.scope"),
-  REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
+  REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
@@ -510,7 +510,7 @@ exports.startTransition = function (scope) {
     ReactSharedInternals.T = prevTransition;
   }
 };
-exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
+exports.unstable_Activity = REACT_ACTIVITY_TYPE;
 exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
 exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
@@ -607,4 +607,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.1.0-native-fb-c4a3b92e-20250314";
+exports.version = "19.1.0-native-fb-1a191701-20250317";

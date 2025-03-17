@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<720cae6e180874c8223fc1b37c40df0a>>
+ * @generated SignedSource<<2756dfae582228f9c7872823dd0d03aa>>
  */
 
 "use strict";
@@ -33,6 +33,8 @@ __DEV__ &&
           return "Suspense";
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
+        case REACT_ACTIVITY_TYPE:
+          return "Activity";
       }
       if ("object" === typeof type)
         switch (
@@ -300,6 +302,7 @@ __DEV__ &&
       REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy"),
+      REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
       REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,

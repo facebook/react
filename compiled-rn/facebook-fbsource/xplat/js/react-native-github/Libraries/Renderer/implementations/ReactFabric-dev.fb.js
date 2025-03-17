@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<34d88a8a43b86fa831279e06044e2b00>>
+ * @generated SignedSource<<b48c4dcd303c54b77dca2532149434f2>>
  */
 
 "use strict";
@@ -435,6 +435,8 @@ __DEV__ &&
           return describeNativeComponentFrame(fiber.type.render, !1);
         case 1:
           return describeNativeComponentFrame(fiber.type, !0);
+        case 31:
+          return describeBuiltInComponentFrame("Activity");
         default:
           return "";
       }
@@ -497,6 +499,8 @@ __DEV__ &&
           return "Suspense";
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
+        case REACT_ACTIVITY_TYPE:
+          return "Activity";
       }
       if ("object" === typeof type)
         switch (
@@ -536,6 +540,8 @@ __DEV__ &&
     function getComponentNameFromFiber(fiber) {
       var type = fiber.type;
       switch (fiber.tag) {
+        case 31:
+          return "Activity";
         case 24:
           return "Cache";
         case 9:
@@ -617,6 +623,9 @@ __DEV__ &&
             break;
           case 19:
             info += describeBuiltInComponentFrame("SuspenseList");
+            break;
+          case 31:
+            info += describeBuiltInComponentFrame("Activity");
             break;
           case 30:
           case 0:
@@ -8069,11 +8078,9 @@ __DEV__ &&
               : (reuseSuspenseHandlerOnStack(workInProgress),
                 (nextPrimaryChildren = nextProps.fallback),
                 (showFallback = workInProgress.mode),
-                (nextProps = createFiberFromOffscreen(
+                (nextProps = mountWorkInProgressOffscreenFiber(
                   { mode: "visible", children: nextProps.children },
-                  showFallback,
-                  0,
-                  null
+                  showFallback
                 )),
                 (nextPrimaryChildren = createFiberFromFragment(
                   nextPrimaryChildren,
@@ -8302,11 +8309,9 @@ __DEV__ &&
       return JSCompiler_temp;
     }
     function mountSuspensePrimaryChildren(workInProgress, primaryChildren) {
-      primaryChildren = createFiberFromOffscreen(
+      primaryChildren = mountWorkInProgressOffscreenFiber(
         { mode: "visible", children: primaryChildren },
-        workInProgress.mode,
-        0,
-        null
+        workInProgress.mode
       );
       primaryChildren.return = workInProgress;
       return (workInProgress.child = primaryChildren);
@@ -8328,11 +8333,9 @@ __DEV__ &&
             (progressedPrimaryFragment.actualStartTime = -1.1),
             (progressedPrimaryFragment.selfBaseDuration = -0),
             (progressedPrimaryFragment.treeBaseDuration = -0)))
-        : (progressedPrimaryFragment = createFiberFromOffscreen(
+        : (progressedPrimaryFragment = mountWorkInProgressOffscreenFiber(
             primaryChildren,
-            mode,
-            0,
-            null
+            mode
           ));
       fallbackChildren = createFiberFromFragment(
         fallbackChildren,
@@ -8345,6 +8348,9 @@ __DEV__ &&
       progressedPrimaryFragment.sibling = fallbackChildren;
       workInProgress.child = progressedPrimaryFragment;
       return fallbackChildren;
+    }
+    function mountWorkInProgressOffscreenFiber(offscreenProps, mode) {
+      return createFiberFromOffscreen(offscreenProps, mode, 0, null);
     }
     function retrySuspenseComponentWithoutHydrating(
       current,
@@ -8875,10 +8881,10 @@ __DEV__ &&
               current.$$typeof === REACT_LAZY_TYPE &&
               (workInProgress =
                 " Did you wrap a component in React.lazy() more than once?");
-            renderLanes = getComponentNameFromType(current) || current;
+            current = getComponentNameFromType(current) || current;
             throw Error(
               "Element type is invalid. Received a promise that resolves to: " +
-                renderLanes +
+                current +
                 ". Lazy element type must resolve to a class or function." +
                 workInProgress
             );
@@ -9149,6 +9155,30 @@ __DEV__ &&
             current,
             workInProgress,
             renderLanes
+          );
+        case 31:
+          return (
+            (returnFiber = workInProgress.pendingProps),
+            (renderLanes = workInProgress.mode),
+            (returnFiber = {
+              mode: returnFiber.mode,
+              children: returnFiber.children
+            }),
+            null === current
+              ? ((current = mountWorkInProgressOffscreenFiber(
+                  returnFiber,
+                  renderLanes
+                )),
+                (current.ref = workInProgress.ref),
+                (workInProgress.child = current),
+                (current.return = workInProgress),
+                (workInProgress = current))
+              : ((current = createWorkInProgress(current.child, returnFiber)),
+                (current.ref = workInProgress.ref),
+                (workInProgress.child = current),
+                (current.return = workInProgress),
+                (workInProgress = current)),
+            workInProgress
           );
         case 22:
           return updateOffscreenComponent(current, workInProgress, renderLanes);
@@ -9439,6 +9469,7 @@ __DEV__ &&
       var newProps = workInProgress.pendingProps;
       switch (workInProgress.tag) {
         case 28:
+        case 31:
         case 16:
         case 15:
         case 0:
@@ -13934,6 +13965,13 @@ __DEV__ &&
       else if ("string" === typeof type) fiberTag = 5;
       else
         a: switch (type) {
+          case REACT_ACTIVITY_TYPE:
+            return (
+              (key = createFiber(31, pendingProps, key, mode)),
+              (key.elementType = REACT_ACTIVITY_TYPE),
+              (key.lanes = lanes),
+              key
+            );
           case REACT_FRAGMENT_TYPE:
             return createFiberFromFragment(
               pendingProps.children,
@@ -14604,7 +14642,8 @@ __DEV__ &&
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy");
     Symbol.for("react.scope");
-    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
+      REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
     Symbol.for("react.legacy_hidden");
     Symbol.for("react.tracing_marker");
     var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
@@ -17421,10 +17460,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-c4a3b92e-20250314",
+        version: "19.1.0-native-fb-1a191701-20250317",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-c4a3b92e-20250314"
+        reconcilerVersion: "19.1.0-native-fb-1a191701-20250317"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

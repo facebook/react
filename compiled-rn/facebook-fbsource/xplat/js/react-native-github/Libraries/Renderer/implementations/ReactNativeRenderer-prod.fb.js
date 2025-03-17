@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3950b6b09a4b4c6e6b3d41a97218ad83>>
+ * @generated SignedSource<<210a353ccad8207c675aaa567b8ecc9d>>
  */
 
 "use strict";
@@ -200,6 +200,8 @@ function describeFiber(fiber) {
       return describeNativeComponentFrame(fiber.type.render, !1);
     case 1:
       return describeNativeComponentFrame(fiber.type, !0);
+    case 31:
+      return describeBuiltInComponentFrame("Activity");
     default:
       return "";
   }
@@ -233,7 +235,8 @@ var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy");
 Symbol.for("react.scope");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
+  REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
 Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
 var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
@@ -267,6 +270,8 @@ function getComponentNameFromType(type) {
       return "Suspense";
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
+    case REACT_ACTIVITY_TYPE:
+      return "Activity";
   }
   if ("object" === typeof type)
     switch (type.$$typeof) {
@@ -300,6 +305,8 @@ function getComponentNameFromType(type) {
 function getComponentNameFromFiber(fiber) {
   var type = fiber.type;
   switch (fiber.tag) {
+    case 31:
+      return "Activity";
     case 24:
       return "Cache";
     case 9:
@@ -1231,7 +1238,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_284 = {
+var injectedNamesToPlugins$jscomp$inline_287 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1277,32 +1284,32 @@ var injectedNamesToPlugins$jscomp$inline_284 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_285 = !1,
-  pluginName$jscomp$inline_286;
-for (pluginName$jscomp$inline_286 in injectedNamesToPlugins$jscomp$inline_284)
+  isOrderingDirty$jscomp$inline_288 = !1,
+  pluginName$jscomp$inline_289;
+for (pluginName$jscomp$inline_289 in injectedNamesToPlugins$jscomp$inline_287)
   if (
-    injectedNamesToPlugins$jscomp$inline_284.hasOwnProperty(
-      pluginName$jscomp$inline_286
+    injectedNamesToPlugins$jscomp$inline_287.hasOwnProperty(
+      pluginName$jscomp$inline_289
     )
   ) {
-    var pluginModule$jscomp$inline_287 =
-      injectedNamesToPlugins$jscomp$inline_284[pluginName$jscomp$inline_286];
+    var pluginModule$jscomp$inline_290 =
+      injectedNamesToPlugins$jscomp$inline_287[pluginName$jscomp$inline_289];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_286) ||
-      namesToPlugins[pluginName$jscomp$inline_286] !==
-        pluginModule$jscomp$inline_287
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_289) ||
+      namesToPlugins[pluginName$jscomp$inline_289] !==
+        pluginModule$jscomp$inline_290
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_286])
+      if (namesToPlugins[pluginName$jscomp$inline_289])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_286 + "`.")
+            (pluginName$jscomp$inline_289 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_286] =
-        pluginModule$jscomp$inline_287;
-      isOrderingDirty$jscomp$inline_285 = !0;
+      namesToPlugins[pluginName$jscomp$inline_289] =
+        pluginModule$jscomp$inline_290;
+      isOrderingDirty$jscomp$inline_288 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_285 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_288 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -6531,11 +6538,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           : (reuseSuspenseHandlerOnStack(workInProgress),
             (nextPrimaryChildren = nextProps.fallback),
             (showFallback = workInProgress.mode),
-            (nextProps = createFiberFromOffscreen(
+            (nextProps = mountWorkInProgressOffscreenFiber(
               { mode: "visible", children: nextProps.children },
-              showFallback,
-              0,
-              null
+              showFallback
             )),
             (nextPrimaryChildren = createFiberFromFragment(
               nextPrimaryChildren,
@@ -6737,11 +6742,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
   return JSCompiler_temp;
 }
 function mountSuspensePrimaryChildren(workInProgress, primaryChildren) {
-  primaryChildren = createFiberFromOffscreen(
+  primaryChildren = mountWorkInProgressOffscreenFiber(
     { mode: "visible", children: primaryChildren },
-    workInProgress.mode,
-    0,
-    null
+    workInProgress.mode
   );
   primaryChildren.return = workInProgress;
   return (workInProgress.child = primaryChildren);
@@ -6758,11 +6761,9 @@ function mountSuspenseFallbackChildren(
   0 === (mode & 1) && null !== progressedPrimaryFragment
     ? ((progressedPrimaryFragment.childLanes = 0),
       (progressedPrimaryFragment.pendingProps = primaryChildren))
-    : (progressedPrimaryFragment = createFiberFromOffscreen(
+    : (progressedPrimaryFragment = mountWorkInProgressOffscreenFiber(
         primaryChildren,
-        mode,
-        0,
-        null
+        mode
       ));
   fallbackChildren = createFiberFromFragment(
     fallbackChildren,
@@ -6775,6 +6776,9 @@ function mountSuspenseFallbackChildren(
   progressedPrimaryFragment.sibling = fallbackChildren;
   workInProgress.child = progressedPrimaryFragment;
   return fallbackChildren;
+}
+function mountWorkInProgressOffscreenFiber(offscreenProps, mode) {
+  return createFiberFromOffscreen(offscreenProps, mode, 0, null);
 }
 function retrySuspenseComponentWithoutHydrating(
   current,
@@ -7343,6 +7347,30 @@ function beginWork(current, workInProgress, renderLanes) {
       );
     case 19:
       return updateSuspenseListComponent(current, workInProgress, renderLanes);
+    case 31:
+      return (
+        (elementType = workInProgress.pendingProps),
+        (renderLanes = workInProgress.mode),
+        (elementType = {
+          mode: elementType.mode,
+          children: elementType.children
+        }),
+        null === current
+          ? ((renderLanes = mountWorkInProgressOffscreenFiber(
+              elementType,
+              renderLanes
+            )),
+            (renderLanes.ref = workInProgress.ref),
+            (workInProgress.child = renderLanes),
+            (renderLanes.return = workInProgress),
+            (workInProgress = renderLanes))
+          : ((renderLanes = createWorkInProgress(current.child, elementType)),
+            (renderLanes.ref = workInProgress.ref),
+            (workInProgress.child = renderLanes),
+            (renderLanes.return = workInProgress),
+            (workInProgress = renderLanes)),
+        workInProgress
+      );
     case 22:
       return updateOffscreenComponent(current, workInProgress, renderLanes);
     case 24:
@@ -7427,14 +7455,14 @@ function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       break;
     case "collapsed":
       lastTailNode = renderState.tail;
-      for (var lastTailNode$94 = null; null !== lastTailNode; )
-        null !== lastTailNode.alternate && (lastTailNode$94 = lastTailNode),
+      for (var lastTailNode$95 = null; null !== lastTailNode; )
+        null !== lastTailNode.alternate && (lastTailNode$95 = lastTailNode),
           (lastTailNode = lastTailNode.sibling);
-      null === lastTailNode$94
+      null === lastTailNode$95
         ? hasRenderedATailFallback || null === renderState.tail
           ? (renderState.tail = null)
           : (renderState.tail.sibling = null)
-        : (lastTailNode$94.sibling = null);
+        : (lastTailNode$95.sibling = null);
   }
 }
 function bubbleProperties(completedWork) {
@@ -7444,19 +7472,19 @@ function bubbleProperties(completedWork) {
     newChildLanes = 0,
     subtreeFlags = 0;
   if (didBailout)
-    for (var child$95 = completedWork.child; null !== child$95; )
-      (newChildLanes |= child$95.lanes | child$95.childLanes),
-        (subtreeFlags |= child$95.subtreeFlags & 65011712),
-        (subtreeFlags |= child$95.flags & 65011712),
-        (child$95.return = completedWork),
-        (child$95 = child$95.sibling);
+    for (var child$96 = completedWork.child; null !== child$96; )
+      (newChildLanes |= child$96.lanes | child$96.childLanes),
+        (subtreeFlags |= child$96.subtreeFlags & 65011712),
+        (subtreeFlags |= child$96.flags & 65011712),
+        (child$96.return = completedWork),
+        (child$96 = child$96.sibling);
   else
-    for (child$95 = completedWork.child; null !== child$95; )
-      (newChildLanes |= child$95.lanes | child$95.childLanes),
-        (subtreeFlags |= child$95.subtreeFlags),
-        (subtreeFlags |= child$95.flags),
-        (child$95.return = completedWork),
-        (child$95 = child$95.sibling);
+    for (child$96 = completedWork.child; null !== child$96; )
+      (newChildLanes |= child$96.lanes | child$96.childLanes),
+        (subtreeFlags |= child$96.subtreeFlags),
+        (subtreeFlags |= child$96.flags),
+        (child$96.return = completedWork),
+        (child$96 = child$96.sibling);
   completedWork.subtreeFlags |= subtreeFlags;
   completedWork.childLanes = newChildLanes;
   return didBailout;
@@ -7465,6 +7493,7 @@ function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   switch (workInProgress.tag) {
     case 28:
+    case 31:
     case 16:
     case 15:
     case 0:
@@ -7932,16 +7961,16 @@ function commitHookEffectListMount(flags, finishedWork) {
             enableUseEffectCRUDOverload)
           ) {
             if (null == updateQueue.resourceKind) {
-              var create$118 = updateQueue.create,
+              var create$119 = updateQueue.create,
                 inst = updateQueue.inst;
-              lastEffect = create$118();
+              lastEffect = create$119();
               inst.destroy = lastEffect;
             }
           } else {
-            var create$119 = updateQueue.create,
-              inst$120 = updateQueue.inst;
-            lastEffect = create$119();
-            inst$120.destroy = lastEffect;
+            var create$120 = updateQueue.create,
+              inst$121 = updateQueue.inst;
+            lastEffect = create$120();
+            inst$121.destroy = lastEffect;
           }
         updateQueue = updateQueue.next;
       } while (updateQueue !== firstEffect);
@@ -8068,8 +8097,8 @@ function safelyDetachRef(current, nearestMountedAncestor) {
     else if ("function" === typeof ref)
       try {
         ref(null);
-      } catch (error$122) {
-        captureCommitPhaseError(current, nearestMountedAncestor, error$122);
+      } catch (error$123) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error$123);
       }
     else ref.current = null;
 }
@@ -8287,11 +8316,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
               current,
               finishedRoot.__reactInternalSnapshotBeforeUpdate
             );
-          } catch (error$121) {
+          } catch (error$122) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$121
+              error$122
             );
           }
         }
@@ -8932,12 +8961,12 @@ function commitReconciliationEffects(finishedWork) {
           break;
         case 3:
         case 4:
-          var parent$123 = hostParentFiber.stateNode.containerInfo,
-            before$124 = getHostSibling(finishedWork);
+          var parent$124 = hostParentFiber.stateNode.containerInfo,
+            before$125 = getHostSibling(finishedWork);
           insertOrAppendPlacementNodeIntoContainer(
             finishedWork,
-            before$124,
-            parent$123
+            before$125,
+            parent$124
           );
           break;
         default:
@@ -10112,8 +10141,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$138) {
-      handleThrow(root, thrownValue$138);
+    } catch (thrownValue$139) {
+      handleThrow(root, thrownValue$139);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -10228,8 +10257,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrentByScheduler();
       break;
-    } catch (thrownValue$140) {
-      handleThrow(root, thrownValue$140);
+    } catch (thrownValue$141) {
+      handleThrow(root, thrownValue$141);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -10908,6 +10937,13 @@ function createFiberFromTypeAndProps(
   else if ("string" === typeof type) fiberTag = 5;
   else
     a: switch (type) {
+      case REACT_ACTIVITY_TYPE:
+        return (
+          (type = createFiber(31, pendingProps, key, mode)),
+          (type.elementType = REACT_ACTIVITY_TYPE),
+          (type.lanes = lanes),
+          type
+        );
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children, mode, lanes, key);
       case REACT_STRICT_MODE_TYPE:
@@ -11160,11 +11196,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-c4a3b92e-20250314" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-1a191701-20250317" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-c4a3b92e-20250314\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-1a191701-20250317\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11211,26 +11247,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1280 = {
+  internals$jscomp$inline_1301 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-c4a3b92e-20250314",
+    version: "19.1.0-native-fb-1a191701-20250317",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-c4a3b92e-20250314"
+    reconcilerVersion: "19.1.0-native-fb-1a191701-20250317"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1280.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1301.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1615 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1636 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1615.isDisabled &&
-    hook$jscomp$inline_1615.supportsFiber
+    !hook$jscomp$inline_1636.isDisabled &&
+    hook$jscomp$inline_1636.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1615.inject(
-        internals$jscomp$inline_1280
+      (rendererID = hook$jscomp$inline_1636.inject(
+        internals$jscomp$inline_1301
       )),
-        (injectedHook = hook$jscomp$inline_1615);
+        (injectedHook = hook$jscomp$inline_1636);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

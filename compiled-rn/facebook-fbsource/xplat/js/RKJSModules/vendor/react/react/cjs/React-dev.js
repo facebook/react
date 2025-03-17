@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e72954085a387e4908a06bccce729ea4>>
+ * @generated SignedSource<<54ca39895f65b394e29954c9a6af3157>>
  */
 
 "use strict";
@@ -106,6 +106,8 @@ __DEV__ &&
           return "Suspense";
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
+        case REACT_ACTIVITY_TYPE:
+          return "Activity";
       }
       if ("object" === typeof type)
         switch (
@@ -684,7 +686,8 @@ __DEV__ &&
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy");
     dynamicFlags = Symbol.for("react.scope");
-    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
+      REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
     REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.legacy_hidden");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
@@ -1226,6 +1229,7 @@ __DEV__ &&
         type === REACT_STRICT_MODE_TYPE ||
         type === REACT_SUSPENSE_TYPE ||
         type === REACT_SUSPENSE_LIST_TYPE ||
+        type === REACT_ACTIVITY_TYPE ||
         type === REACT_OFFSCREEN_TYPE ||
         ("object" === typeof type &&
           null !== type &&
@@ -1290,7 +1294,7 @@ __DEV__ &&
           (ReactSharedInternals.T = prevTransition);
       }
     };
-    exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
+    exports.unstable_Activity = REACT_ACTIVITY_TYPE;
     exports.unstable_LegacyHidden = REACT_LEGACY_ELEMENT_TYPE;
     exports.unstable_Scope = dynamicFlags;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
@@ -1418,7 +1422,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-c4a3b92e-20250314";
+    exports.version = "19.1.0-native-fb-1a191701-20250317";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
