@@ -4,6 +4,7 @@ import React, {
   unstable_useSwipeTransition as useSwipeTransition,
   useEffect,
   useState,
+  useId,
 } from 'react';
 
 import SwipeRecognizer from './SwipeRecognizer';
@@ -37,6 +38,11 @@ function Component() {
       <p className="roboto-font">Slide In from Left, Slide Out to Right</p>
     </ViewTransition>
   );
+}
+
+function Id() {
+  // This is just testing that Id inside a ViewTransition can hydrate correctly.
+  return <span id={useId()} />;
 }
 
 export default function Page({url, navigate}) {
@@ -77,8 +83,12 @@ export default function Page({url, navigate}) {
       </button>
       <ViewTransition className="none">
         <div>
-          <ViewTransition className={transitions['slide-on-nav']}>
-            <h1>{!show ? 'A' : 'B'}</h1>
+          <ViewTransition>
+            <div>
+              <ViewTransition className={transitions['slide-on-nav']}>
+                <h1>{!show ? 'A' : 'B'}</h1>
+              </ViewTransition>
+            </div>
           </ViewTransition>
           <ViewTransition
             className={{
@@ -102,7 +112,9 @@ export default function Page({url, navigate}) {
             {show ? <div>hello{exclamation}</div> : <section>Loading</section>}
           </ViewTransition>
           <p>scroll me</p>
-          <p></p>
+          <p>
+            <Id />
+          </p>
           <p></p>
           <p></p>
           <p></p>
