@@ -46,13 +46,11 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
   // if there are no nodes to draw, detach from top layer
   if (nodeToData.size === 0) {
     if (canvas !== null) {
-      try {
-        if (canvas.matches(':popover-open')) {
-          // $FlowFixMe[prop-missing]
-          // $FlowFixMe[incompatible-use]
-          canvas.hidePopover();
-        }
-      } catch (e) {}
+      if (canvas.matches(':popover-open')) {
+        // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+        // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+        canvas.hidePopover();
+      }
     }
     return;
   }
@@ -62,8 +60,8 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
   } else {
     try {
       if (!canvas.matches(':popover-open')) {
-        // $FlowFixMe[prop-missing]
-        // $FlowFixMe[incompatible-use]
+        // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+        // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
         canvas.showPopover();
       }
     } catch (e) {}
@@ -214,8 +212,8 @@ function destroyNative(agent: Agent) {
 function destroyWeb() {
   if (canvas !== null) {
     try {
-      // $FlowFixMe[prop-missing]
-      // $FlowFixMe[incompatible-use]
+      // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+      // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
       canvas.hidePopover();
     } catch (e) {}
 
@@ -234,9 +232,9 @@ export function destroy(agent: Agent): void {
 
 function initialize(): void {
   canvas = window.document.createElement('canvas');
-  // canvas.setAttribute('popover', 'manual');
+  canvas.setAttribute('popover', 'manual');
 
-  // $FlowFixMe[incompatible-use]
+  // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
   canvas.style.cssText = `
     xx-background-color: red;
     xx-opacity: 0.5;
@@ -256,8 +254,8 @@ function initialize(): void {
   root.insertBefore(canvas, root.firstChild);
 
   try {
-    // $FlowFixMe[prop-missing]
-    // $FlowFixMe[incompatible-use]
+    // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+    // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
     canvas.showPopover();
   } catch (e) {}
 }
