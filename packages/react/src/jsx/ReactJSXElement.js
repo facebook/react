@@ -60,6 +60,17 @@ function getOwner() {
   return null;
 }
 
+/** @noinline */
+function UnknownOwner() {
+  /** @noinline */
+  return (() => Error('react-stack-top-frame'))();
+}
+const createFakeCallStack = {
+  'react-stack-bottom-frame': function (callStackForError) {
+    return callStackForError();
+  },
+};
+
 let specialPropKeyWarningShown;
 let didWarnAboutElementRef;
 let didWarnAboutOldJSXRuntime;
@@ -68,15 +79,13 @@ let unknownOwnerDebugTask;
 
 if (__DEV__) {
   didWarnAboutElementRef = {};
-  const unknownOwnerElement = {
-    'react-stack-bottom-frame': () => {
-      return (function UnknownOwner() {
-        return jsxDEV(() => null, {}, null);
-      })();
-    },
-  }['react-stack-bottom-frame']();
-  unknownOwnerDebugStack = unknownOwnerElement._debugStack;
-  unknownOwnerDebugTask = unknownOwnerElement._debugTask;
+
+  // We use this technique to trick minifiers to preserve the function name.
+  unknownOwnerDebugStack = createFakeCallStack['react-stack-bottom-frame'].bind(
+    createFakeCallStack,
+    UnknownOwner,
+  )();
+  unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
 }
 
 function hasValidRef(config) {
@@ -388,6 +397,7 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
   if (__DEV__) {
     const isStaticChildren = false;
     const trackActualOwner =
+      __DEV__ &&
       ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
     return jsxDEVImpl(
       type,
@@ -418,6 +428,7 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
   if (__DEV__) {
     const isStaticChildren = true;
     const trackActualOwner =
+      __DEV__ &&
       ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
     return jsxDEVImpl(
       type,
@@ -448,6 +459,7 @@ const didWarnAboutKeySpread = {};
  */
 export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
   const trackActualOwner =
+    __DEV__ &&
     ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
   return jsxDEVImpl(
     type,
@@ -731,6 +743,7 @@ export function createElement(type, config, children) {
     }
   }
   const trackActualOwner =
+    __DEV__ &&
     ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
   return ReactElement(
     type,
