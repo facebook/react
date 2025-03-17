@@ -43,11 +43,23 @@ function drawNative(nodeToData: Map<HostInstance, Data>, agent: Agent) {
 }
 
 function drawWeb(nodeToData: Map<HostInstance, Data>) {
+  // if there are no nodes to draw, detach from top layer
+  if (nodeToData.size === 0) {
+    if (canvas !== null) {
+      try {
+        if (canvas.matches(':popover-open')) {
+          canvas.hidePopover();
+        }
+      } catch (e) {}
+    }
+    return;
+  }
+
   if (canvas === null) {
     initialize();
   } else {
     try {
-      if (canvas.hasAttribute('popover') && !canvas.matches(':popover-open')) {
+      if (!canvas.matches(':popover-open')) {
         canvas.showPopover();
       }
     } catch (e) {}
@@ -197,11 +209,7 @@ function destroyNative(agent: Agent) {
 
 function destroyWeb() {
   if (canvas !== null) {
-    try {
-      if (canvas.hasAttribute('popover')) {
-        canvas.hidePopover();
-      }
-    } catch (e) {}
+    canvas.hidePopover();
 
     if (canvas.parentNode != null) {
       canvas.parentNode.removeChild(canvas);
@@ -216,7 +224,8 @@ export function destroy(agent: Agent): void {
 
 function initialize(): void {
   canvas = window.document.createElement('canvas');
-  canvas.setAttribute('popover', 'auto');
+  canvas.setAttribute('popover', 'manual');
+
   canvas.style.cssText = `
     xx-background-color: red;
     xx-opacity: 0.5;
@@ -226,8 +235,10 @@ function initialize(): void {
     position: fixed;
     right: 0;
     top: 0;
-    z-index: 1000000000;
     background-color: transparent;
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
   `;
 
   const root = window.document.documentElement;
