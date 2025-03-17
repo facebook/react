@@ -12,6 +12,7 @@ import {useContext, useMemo} from 'react';
 import {SettingsContext} from './SettingsContext';
 import {StoreContext} from '../context';
 import {CHANGE_LOG_URL} from 'react-devtools-shared/src/devtools/constants';
+import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 
 import styles from './SettingsShared.css';
 
@@ -34,8 +35,10 @@ export default function GeneralSettings(_: {}): React.Node {
     setDisplayDensity,
     setTheme,
     setTraceUpdatesEnabled,
+    setFbInternalFeaturesEnabled,
     theme,
     traceUpdatesEnabled,
+    fbInternalFeaturesEnabled,
   } = useContext(SettingsContext);
 
   const {backendVersion, supportsTraceUpdates} = useContext(StoreContext);
@@ -82,6 +85,21 @@ export default function GeneralSettings(_: {}): React.Node {
               }
             />{' '}
             Highlight updates when components render.
+          </label>
+        </div>
+      )}
+
+      {isInternalFacebookBuild && (
+        <div className={styles.Setting}>
+          <label>
+            <input
+              type="checkbox"
+              checked={fbInternalFeaturesEnabled}
+              onChange={({currentTarget}) =>
+                setFbInternalFeaturesEnabled(currentTarget.checked)
+              }
+            />{' '}
+            Enable fb internal features
           </label>
         </div>
       )}
