@@ -3618,15 +3618,7 @@ function commitPassiveMountOnFiber(
           if (current === null) {
             // This is a new mount. We should have handled this as part of the
             // Placement effect or it is deeper inside a entering transition.
-          } else if (
-            (finishedWork.subtreeFlags &
-              (Placement |
-                Update |
-                ChildDeletion |
-                ContentReset |
-                Visibility)) !==
-            NoFlags
-          ) {
+          } else {
             // Something mutated within this subtree. This might have caused
             // something to cross-fade if we didn't already cancel it.
             // If not, restore it.

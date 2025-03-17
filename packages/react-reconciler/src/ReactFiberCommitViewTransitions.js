@@ -564,7 +564,7 @@ export function restoreUpdateViewTransition(
   current: Fiber,
   finishedWork: Fiber,
 ): void {
-  finishedWork.memoizedState = null;
+  current.memoizedState = null;
   restoreViewTransitionOnHostInstances(current.child, true);
   restoreViewTransitionOnHostInstances(finishedWork.child, true);
 }
@@ -807,7 +807,7 @@ export function measureUpdateViewTransition(
     if (layoutClassName === 'none') {
       // If we did not update, then all changes are considered a layout. We'll
       // attempt to cancel.
-      cancelViewTransitionHostInstances(finishedWork.child, oldName, true);
+      cancelViewTransitionHostInstances(current.child, oldName, true);
       return false;
     }
     // We didn't update but we might still apply layout so we measure each
