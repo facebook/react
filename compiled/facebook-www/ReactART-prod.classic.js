@@ -126,6 +126,7 @@ var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
   REACT_SCOPE_TYPE = Symbol.for("react.scope"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
+  REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
@@ -159,6 +160,8 @@ function getComponentNameFromType(type) {
       return "Suspense";
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
+    case REACT_ACTIVITY_TYPE:
+      return "Activity";
     case REACT_VIEW_TRANSITION_TYPE:
       if (enableViewTransition) return "ViewTransition";
     case REACT_TRACING_MARKER_TYPE:
@@ -203,6 +206,8 @@ function getComponentNameFromType(type) {
 function getComponentNameFromFiber(fiber) {
   var type = fiber.type;
   switch (fiber.tag) {
+    case 31:
+      return "Activity";
     case 24:
       return "Cache";
     case 9:
@@ -1024,6 +1029,8 @@ function describeFiber(fiber) {
       return describeNativeComponentFrame(fiber.type.render, !1);
     case 1:
       return describeNativeComponentFrame(fiber.type, !0);
+    case 31:
+      return describeBuiltInComponentFrame("Activity");
     case 30:
       if (enableViewTransition)
         return describeBuiltInComponentFrame("ViewTransition");
@@ -6296,6 +6303,27 @@ function beginWork(current, workInProgress, renderLanes) {
         reconcileChildren(current, workInProgress, props, renderLanes),
         workInProgress.child
       );
+    case 31:
+      return (
+        (props = workInProgress.pendingProps),
+        (renderLanes = workInProgress.mode),
+        (props = { mode: props.mode, children: props.children }),
+        null === current
+          ? ((renderLanes = mountWorkInProgressOffscreenFiber(
+              props,
+              renderLanes
+            )),
+            (renderLanes.ref = workInProgress.ref),
+            (workInProgress.child = renderLanes),
+            (renderLanes.return = workInProgress),
+            (workInProgress = renderLanes))
+          : ((renderLanes = createWorkInProgress(current.child, props)),
+            (renderLanes.ref = workInProgress.ref),
+            (workInProgress.child = renderLanes),
+            (renderLanes.return = workInProgress),
+            (workInProgress = renderLanes)),
+        workInProgress
+      );
     case 22:
       return updateOffscreenComponent(current, workInProgress, renderLanes);
     case 23:
@@ -6536,14 +6564,14 @@ function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       break;
     case "collapsed":
       lastTailNode = renderState.tail;
-      for (var lastTailNode$88 = null; null !== lastTailNode; )
-        null !== lastTailNode.alternate && (lastTailNode$88 = lastTailNode),
+      for (var lastTailNode$89 = null; null !== lastTailNode; )
+        null !== lastTailNode.alternate && (lastTailNode$89 = lastTailNode),
           (lastTailNode = lastTailNode.sibling);
-      null === lastTailNode$88
+      null === lastTailNode$89
         ? hasRenderedATailFallback || null === renderState.tail
           ? (renderState.tail = null)
           : (renderState.tail.sibling = null)
-        : (lastTailNode$88.sibling = null);
+        : (lastTailNode$89.sibling = null);
   }
 }
 function bubbleProperties(completedWork) {
@@ -6553,19 +6581,19 @@ function bubbleProperties(completedWork) {
     newChildLanes = 0,
     subtreeFlags = 0;
   if (didBailout)
-    for (var child$89 = completedWork.child; null !== child$89; )
-      (newChildLanes |= child$89.lanes | child$89.childLanes),
-        (subtreeFlags |= child$89.subtreeFlags & 65011712),
-        (subtreeFlags |= child$89.flags & 65011712),
-        (child$89.return = completedWork),
-        (child$89 = child$89.sibling);
+    for (var child$90 = completedWork.child; null !== child$90; )
+      (newChildLanes |= child$90.lanes | child$90.childLanes),
+        (subtreeFlags |= child$90.subtreeFlags & 65011712),
+        (subtreeFlags |= child$90.flags & 65011712),
+        (child$90.return = completedWork),
+        (child$90 = child$90.sibling);
   else
-    for (child$89 = completedWork.child; null !== child$89; )
-      (newChildLanes |= child$89.lanes | child$89.childLanes),
-        (subtreeFlags |= child$89.subtreeFlags),
-        (subtreeFlags |= child$89.flags),
-        (child$89.return = completedWork),
-        (child$89 = child$89.sibling);
+    for (child$90 = completedWork.child; null !== child$90; )
+      (newChildLanes |= child$90.lanes | child$90.childLanes),
+        (subtreeFlags |= child$90.subtreeFlags),
+        (subtreeFlags |= child$90.flags),
+        (child$90.return = completedWork),
+        (child$90 = child$90.sibling);
   completedWork.subtreeFlags |= subtreeFlags;
   completedWork.childLanes = newChildLanes;
   return didBailout;
@@ -6573,6 +6601,7 @@ function bubbleProperties(completedWork) {
 function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   switch (workInProgress.tag) {
+    case 31:
     case 16:
     case 15:
     case 0:
@@ -6745,11 +6774,11 @@ function completeWork(current, workInProgress, renderLanes) {
           null !== newProps.alternate.memoizedState &&
           null !== newProps.alternate.memoizedState.cachePool &&
           (instance = newProps.alternate.memoizedState.cachePool.pool);
-        var cache$94 = null;
+        var cache$95 = null;
         null !== newProps.memoizedState &&
           null !== newProps.memoizedState.cachePool &&
-          (cache$94 = newProps.memoizedState.cachePool.pool);
-        cache$94 !== instance && (newProps.flags |= 2048);
+          (cache$95 = newProps.memoizedState.cachePool.pool);
+        cache$95 !== instance && (newProps.flags |= 2048);
       }
       renderLanes !== current &&
         (enableTransitionTracing && (workInProgress.child.flags |= 2048),
@@ -6777,8 +6806,8 @@ function completeWork(current, workInProgress, renderLanes) {
       instance = workInProgress.memoizedState;
       if (null === instance) return bubbleProperties(workInProgress), null;
       newProps = 0 !== (workInProgress.flags & 128);
-      cache$94 = instance.rendering;
-      if (null === cache$94)
+      cache$95 = instance.rendering;
+      if (null === cache$95)
         if (newProps) cutOffTailIfNeeded(instance, !1);
         else {
           if (
@@ -6786,11 +6815,11 @@ function completeWork(current, workInProgress, renderLanes) {
             (null !== current && 0 !== (current.flags & 128))
           )
             for (current = workInProgress.child; null !== current; ) {
-              cache$94 = findFirstSuspended(current);
-              if (null !== cache$94) {
+              cache$95 = findFirstSuspended(current);
+              if (null !== cache$95) {
                 workInProgress.flags |= 128;
                 cutOffTailIfNeeded(instance, !1);
-                current = cache$94.updateQueue;
+                current = cache$95.updateQueue;
                 workInProgress.updateQueue = current;
                 scheduleRetryEffect(workInProgress, current);
                 workInProgress.subtreeFlags = 0;
@@ -6815,7 +6844,7 @@ function completeWork(current, workInProgress, renderLanes) {
         }
       else {
         if (!newProps)
-          if (((current = findFirstSuspended(cache$94)), null !== current)) {
+          if (((current = findFirstSuspended(cache$95)), null !== current)) {
             if (
               ((workInProgress.flags |= 128),
               (newProps = !0),
@@ -6825,7 +6854,7 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(instance, !0),
               null === instance.tail &&
                 "hidden" === instance.tailMode &&
-                !cache$94.alternate)
+                !cache$95.alternate)
             )
               return bubbleProperties(workInProgress), null;
           } else
@@ -6837,13 +6866,13 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(instance, !1),
               (workInProgress.lanes = 4194304));
         instance.isBackwards
-          ? ((cache$94.sibling = workInProgress.child),
-            (workInProgress.child = cache$94))
+          ? ((cache$95.sibling = workInProgress.child),
+            (workInProgress.child = cache$95))
           : ((current = instance.last),
             null !== current
-              ? (current.sibling = cache$94)
-              : (workInProgress.child = cache$94),
-            (instance.last = cache$94));
+              ? (current.sibling = cache$95)
+              : (workInProgress.child = cache$95),
+            (instance.last = cache$95));
       }
       if (null !== instance.tail)
         return (
@@ -7101,10 +7130,10 @@ function commitHookEffectListMount(flags, finishedWork) {
               inst.destroy = lastEffect;
             }
           } else {
-            var create$111 = updateQueue.create,
-              inst$112 = updateQueue.inst;
-            lastEffect = create$111();
-            inst$112.destroy = lastEffect;
+            var create$112 = updateQueue.create,
+              inst$113 = updateQueue.inst;
+            lastEffect = create$112();
+            inst$113.destroy = lastEffect;
           }
         updateQueue = updateQueue.next;
       } while (updateQueue !== firstEffect);
@@ -7246,8 +7275,8 @@ function safelyDetachRef(current, nearestMountedAncestor) {
     else if ("function" === typeof ref)
       try {
         ref(null);
-      } catch (error$115) {
-        captureCommitPhaseError(current, nearestMountedAncestor, error$115);
+      } catch (error$116) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error$116);
       }
     else ref.current = null;
 }
@@ -7706,11 +7735,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
               current,
               finishedRoot.__reactInternalSnapshotBeforeUpdate
             );
-          } catch (error$113) {
+          } catch (error$114) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$113
+              error$114
             );
           }
         }
@@ -8506,12 +8535,12 @@ function commitReconciliationEffects(finishedWork) {
           break;
         case 3:
         case 4:
-          var parent$116 = hostParentFiber.stateNode.containerInfo,
-            before$117 = getHostSibling(finishedWork);
+          var parent$117 = hostParentFiber.stateNode.containerInfo,
+            before$118 = getHostSibling(finishedWork);
           insertOrAppendPlacementNodeIntoContainer(
             finishedWork,
-            before$117,
-            parent$116
+            before$118,
+            parent$117
           );
           break;
         default:
@@ -8923,14 +8952,14 @@ function commitPassiveMountOnFiber(
         );
       break;
     case 22:
-      var instance$123 = finishedWork.stateNode,
-        current$124 = finishedWork.alternate;
+      var instance$124 = finishedWork.stateNode,
+        current$125 = finishedWork.alternate;
       null !== finishedWork.memoizedState
         ? (isViewTransitionEligible &&
-            null !== current$124 &&
-            null === current$124.memoizedState &&
-            restoreEnterOrExitViewTransitions(current$124),
-          instance$123._visibility & 4
+            null !== current$125 &&
+            null === current$125.memoizedState &&
+            restoreEnterOrExitViewTransitions(current$125),
+          instance$124._visibility & 4
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
                 finishedWork,
@@ -8942,17 +8971,17 @@ function commitPassiveMountOnFiber(
                 finishedWork
               ))
         : (isViewTransitionEligible &&
-            null !== current$124 &&
-            null !== current$124.memoizedState &&
+            null !== current$125 &&
+            null !== current$125.memoizedState &&
             restoreEnterOrExitViewTransitions(finishedWork),
-          instance$123._visibility & 4
+          instance$124._visibility & 4
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
                 finishedWork,
                 committedLanes,
                 committedTransitions
               )
-            : ((instance$123._visibility |= 4),
+            : ((instance$124._visibility |= 4),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -8962,9 +8991,9 @@ function commitPassiveMountOnFiber(
               )));
       flags & 2048 &&
         commitOffscreenPassiveMountEffects(
-          current$124,
+          current$125,
           finishedWork,
-          instance$123
+          instance$124
         );
       break;
     case 24:
@@ -9056,9 +9085,9 @@ function recursivelyTraverseReconnectPassiveEffects(
           );
         break;
       case 22:
-        var instance$127 = finishedWork.stateNode;
+        var instance$128 = finishedWork.stateNode;
         null !== finishedWork.memoizedState
-          ? instance$127._visibility & 4
+          ? instance$128._visibility & 4
             ? recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -9070,7 +9099,7 @@ function recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork
               )
-          : ((instance$127._visibility |= 4),
+          : ((instance$128._visibility |= 4),
             recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
               finishedWork,
@@ -9083,7 +9112,7 @@ function recursivelyTraverseReconnectPassiveEffects(
           commitOffscreenPassiveMountEffects(
             finishedWork.alternate,
             finishedWork,
-            instance$127
+            instance$128
           );
         break;
       case 24:
@@ -10032,8 +10061,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$139) {
-      handleThrow(root, thrownValue$139);
+    } catch (thrownValue$140) {
+      handleThrow(root, thrownValue$140);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -10148,8 +10177,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrentByScheduler();
       break;
-    } catch (thrownValue$141) {
-      handleThrow(root, thrownValue$141);
+    } catch (thrownValue$142) {
+      handleThrow(root, thrownValue$142);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -10892,6 +10921,13 @@ function createFiberFromTypeAndProps(
   else if ("string" === typeof type) fiberTag = 5;
   else
     a: switch (type) {
+      case REACT_ACTIVITY_TYPE:
+        return (
+          (type = createFiber(31, pendingProps, key, mode)),
+          (type.elementType = REACT_ACTIVITY_TYPE),
+          (type.lanes = lanes),
+          type
+        );
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children, mode, lanes, key);
       case REACT_STRICT_MODE_TYPE:
@@ -11300,24 +11336,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1561 = {
+var internals$jscomp$inline_1582 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-17d274dc-20250314",
+  version: "19.1.0-www-classic-1a191701-20250317",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-17d274dc-20250314"
+  reconcilerVersion: "19.1.0-www-classic-1a191701-20250317"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1562 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1583 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1562.isDisabled &&
-    hook$jscomp$inline_1562.supportsFiber
+    !hook$jscomp$inline_1583.isDisabled &&
+    hook$jscomp$inline_1583.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1562.inject(
-        internals$jscomp$inline_1561
+      (rendererID = hook$jscomp$inline_1583.inject(
+        internals$jscomp$inline_1582
       )),
-        (injectedHook = hook$jscomp$inline_1562);
+        (injectedHook = hook$jscomp$inline_1583);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11331,4 +11367,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-17d274dc-20250314";
+exports.version = "19.1.0-www-classic-1a191701-20250317";

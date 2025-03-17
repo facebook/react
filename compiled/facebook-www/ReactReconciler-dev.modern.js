@@ -280,6 +280,8 @@ __DEV__ &&
           return "Suspense";
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
+        case REACT_ACTIVITY_TYPE:
+          return "Activity";
         case REACT_VIEW_TRANSITION_TYPE:
           if (enableViewTransition) return "ViewTransition";
         case REACT_TRACING_MARKER_TYPE:
@@ -330,6 +332,8 @@ __DEV__ &&
     function getComponentNameFromFiber(fiber) {
       var type = fiber.type;
       switch (fiber.tag) {
+        case 31:
+          return "Activity";
         case 24:
           return "Cache";
         case 9:
@@ -1157,6 +1161,8 @@ __DEV__ &&
           return describeNativeComponentFrame(fiber.type.render, !1);
         case 1:
           return describeNativeComponentFrame(fiber.type, !0);
+        case 31:
+          return describeBuiltInComponentFrame("Activity");
         case 30:
           if (enableViewTransition)
             return describeBuiltInComponentFrame("ViewTransition");
@@ -1796,9 +1802,12 @@ __DEV__ &&
           case 19:
             info += describeBuiltInComponentFrame("SuspenseList");
             break;
+          case 31:
+            info += describeBuiltInComponentFrame("Activity");
+            break;
           case 30:
             if (enableViewTransition) {
-              info += describeBuiltInComponentFrame("SuspenseList");
+              info += describeBuiltInComponentFrame("ViewTransition");
               break;
             }
           case 0:
@@ -8869,7 +8878,7 @@ __DEV__ &&
     }
     function beginWork(current, workInProgress, renderLanes) {
       if (workInProgress._debugNeedsRemount && null !== current) {
-        renderLanes = createFiberFromTypeAndProps(
+        var copiedFiber = createFiberFromTypeAndProps(
           workInProgress.type,
           workInProgress.key,
           workInProgress.pendingProps,
@@ -8877,19 +8886,19 @@ __DEV__ &&
           workInProgress.mode,
           workInProgress.lanes
         );
-        renderLanes._debugStack = workInProgress._debugStack;
-        renderLanes._debugTask = workInProgress._debugTask;
+        copiedFiber._debugStack = workInProgress._debugStack;
+        copiedFiber._debugTask = workInProgress._debugTask;
         var returnFiber = workInProgress.return;
         if (null === returnFiber) throw Error("Cannot swap the root fiber.");
         current.alternate = null;
         workInProgress.alternate = null;
-        renderLanes.index = workInProgress.index;
-        renderLanes.sibling = workInProgress.sibling;
-        renderLanes.return = workInProgress.return;
-        renderLanes.ref = workInProgress.ref;
-        renderLanes._debugInfo = workInProgress._debugInfo;
+        copiedFiber.index = workInProgress.index;
+        copiedFiber.sibling = workInProgress.sibling;
+        copiedFiber.return = workInProgress.return;
+        copiedFiber.ref = workInProgress.ref;
+        copiedFiber._debugInfo = workInProgress._debugInfo;
         if (workInProgress === returnFiber.child)
-          returnFiber.child = renderLanes;
+          returnFiber.child = copiedFiber;
         else {
           var prevSibling = returnFiber.child;
           if (null === prevSibling)
@@ -8897,14 +8906,14 @@ __DEV__ &&
           for (; prevSibling.sibling !== workInProgress; )
             if (((prevSibling = prevSibling.sibling), null === prevSibling))
               throw Error("Expected to find the previous sibling.");
-          prevSibling.sibling = renderLanes;
+          prevSibling.sibling = copiedFiber;
         }
-        workInProgress = returnFiber.deletions;
-        null === workInProgress
+        var deletions = returnFiber.deletions;
+        null === deletions
           ? ((returnFiber.deletions = [current]), (returnFiber.flags |= 16))
-          : workInProgress.push(current);
-        renderLanes.flags |= 2;
-        return renderLanes;
+          : deletions.push(current);
+        copiedFiber.flags |= 2;
+        return copiedFiber;
       }
       if (null !== current)
         if (
@@ -8929,151 +8938,142 @@ __DEV__ &&
         }
       else {
         didReceiveUpdate = !1;
-        if ((returnFiber = isHydrating))
+        var JSCompiler_temp;
+        if ((JSCompiler_temp = isHydrating))
           warnIfNotHydrating(),
-            (returnFiber = 0 !== (workInProgress.flags & 1048576));
-        returnFiber &&
-          ((returnFiber = workInProgress.index),
-          warnIfNotHydrating(),
-          pushTreeId(workInProgress, treeForkCount, returnFiber));
+            (JSCompiler_temp = 0 !== (workInProgress.flags & 1048576));
+        if (JSCompiler_temp) {
+          var slotIndex = workInProgress.index;
+          warnIfNotHydrating();
+          pushTreeId(workInProgress, treeForkCount, slotIndex);
+        }
       }
       workInProgress.lanes = 0;
       switch (workInProgress.tag) {
         case 16:
-          a: if (
-            ((returnFiber = workInProgress.pendingProps),
-            (current = callLazyInitInDEV(workInProgress.elementType)),
-            (workInProgress.type = current),
-            "function" === typeof current)
-          )
-            shouldConstruct(current)
-              ? ((returnFiber = resolveClassComponentProps(
-                  current,
-                  returnFiber,
+          a: {
+            var props = workInProgress.pendingProps;
+            var Component = callLazyInitInDEV(workInProgress.elementType);
+            workInProgress.type = Component;
+            if ("function" === typeof Component)
+              if (shouldConstruct(Component)) {
+                var resolvedProps = resolveClassComponentProps(
+                  Component,
+                  props,
                   !1
-                )),
-                (workInProgress.tag = 1),
-                (workInProgress.type = current =
-                  resolveFunctionForHotReloading(current)),
-                (workInProgress = updateClassComponent(
+                );
+                workInProgress.tag = 1;
+                workInProgress.type = Component =
+                  resolveFunctionForHotReloading(Component);
+                var JSCompiler_inline_result = updateClassComponent(
                   null,
                   workInProgress,
-                  current,
-                  returnFiber,
-                  renderLanes
-                )))
-              : ((returnFiber = disableDefaultPropsExceptForClasses
-                  ? returnFiber
-                  : resolveDefaultPropsOnNonClassComponent(
-                      current,
-                      returnFiber
-                    )),
-                (workInProgress.tag = 0),
-                validateFunctionComponentInDev(workInProgress, current),
-                (workInProgress.type = current =
-                  resolveFunctionForHotReloading(current)),
-                (workInProgress = updateFunctionComponent(
-                  null,
-                  workInProgress,
-                  current,
-                  returnFiber,
-                  renderLanes
-                )));
-          else {
-            if (void 0 !== current && null !== current)
-              if (
-                ((prevSibling = current.$$typeof),
-                prevSibling === REACT_FORWARD_REF_TYPE)
-              ) {
-                returnFiber = disableDefaultPropsExceptForClasses
-                  ? returnFiber
-                  : resolveDefaultPropsOnNonClassComponent(
-                      current,
-                      returnFiber
-                    );
-                workInProgress.tag = 11;
-                workInProgress.type = current =
-                  resolveForwardRefForHotReloading(current);
-                workInProgress = updateForwardRef(
-                  null,
-                  workInProgress,
-                  current,
-                  returnFiber,
+                  Component,
+                  resolvedProps,
                   renderLanes
                 );
-                break a;
-              } else if (prevSibling === REACT_MEMO_TYPE) {
-                returnFiber = disableDefaultPropsExceptForClasses
-                  ? returnFiber
-                  : resolveDefaultPropsOnNonClassComponent(
-                      current,
-                      returnFiber
-                    );
-                workInProgress.tag = 14;
-                workInProgress = updateMemoComponent(
+              } else {
+                var _resolvedProps = disableDefaultPropsExceptForClasses
+                  ? props
+                  : resolveDefaultPropsOnNonClassComponent(Component, props);
+                workInProgress.tag = 0;
+                validateFunctionComponentInDev(workInProgress, Component);
+                workInProgress.type = Component =
+                  resolveFunctionForHotReloading(Component);
+                JSCompiler_inline_result = updateFunctionComponent(
                   null,
                   workInProgress,
-                  current,
-                  disableDefaultPropsExceptForClasses
-                    ? returnFiber
-                    : resolveDefaultPropsOnNonClassComponent(
-                        current.type,
-                        returnFiber
-                      ),
+                  Component,
+                  _resolvedProps,
                   renderLanes
                 );
-                break a;
               }
-            workInProgress = "";
-            null !== current &&
-              "object" === typeof current &&
-              current.$$typeof === REACT_LAZY_TYPE &&
-              (workInProgress =
-                " Did you wrap a component in React.lazy() more than once?");
-            renderLanes = getComponentNameFromType(current) || current;
-            throw Error(
-              "Element type is invalid. Received a promise that resolves to: " +
-                renderLanes +
-                ". Lazy element type must resolve to a class or function." +
-                workInProgress
-            );
+            else {
+              if (void 0 !== Component && null !== Component) {
+                var $$typeof = Component.$$typeof;
+                if ($$typeof === REACT_FORWARD_REF_TYPE) {
+                  var _resolvedProps2 = disableDefaultPropsExceptForClasses
+                    ? props
+                    : resolveDefaultPropsOnNonClassComponent(Component, props);
+                  workInProgress.tag = 11;
+                  workInProgress.type = Component =
+                    resolveForwardRefForHotReloading(Component);
+                  JSCompiler_inline_result = updateForwardRef(
+                    null,
+                    workInProgress,
+                    Component,
+                    _resolvedProps2,
+                    renderLanes
+                  );
+                  break a;
+                } else if ($$typeof === REACT_MEMO_TYPE) {
+                  var _resolvedProps3 = disableDefaultPropsExceptForClasses
+                    ? props
+                    : resolveDefaultPropsOnNonClassComponent(Component, props);
+                  workInProgress.tag = 14;
+                  JSCompiler_inline_result = updateMemoComponent(
+                    null,
+                    workInProgress,
+                    Component,
+                    disableDefaultPropsExceptForClasses
+                      ? _resolvedProps3
+                      : resolveDefaultPropsOnNonClassComponent(
+                          Component.type,
+                          _resolvedProps3
+                        ),
+                    renderLanes
+                  );
+                  break a;
+                }
+              }
+              var hint = "";
+              null !== Component &&
+                "object" === typeof Component &&
+                Component.$$typeof === REACT_LAZY_TYPE &&
+                (hint =
+                  " Did you wrap a component in React.lazy() more than once?");
+              var loggedComponent =
+                getComponentNameFromType(Component) || Component;
+              throw Error(
+                "Element type is invalid. Received a promise that resolves to: " +
+                  loggedComponent +
+                  ". Lazy element type must resolve to a class or function." +
+                  hint
+              );
+            }
           }
-          return workInProgress;
+          return JSCompiler_inline_result;
         case 0:
-          return (
-            (returnFiber = workInProgress.type),
-            (prevSibling = workInProgress.pendingProps),
-            (prevSibling =
+          var Component$jscomp$0 = workInProgress.type,
+            unresolvedProps = workInProgress.pendingProps,
+            resolvedProps$jscomp$0 =
               disableDefaultPropsExceptForClasses ||
-              workInProgress.elementType === returnFiber
-                ? prevSibling
+              workInProgress.elementType === Component$jscomp$0
+                ? unresolvedProps
                 : resolveDefaultPropsOnNonClassComponent(
-                    returnFiber,
-                    prevSibling
-                  )),
-            updateFunctionComponent(
-              current,
-              workInProgress,
-              returnFiber,
-              prevSibling,
-              renderLanes
-            )
+                    Component$jscomp$0,
+                    unresolvedProps
+                  );
+          return updateFunctionComponent(
+            current,
+            workInProgress,
+            Component$jscomp$0,
+            resolvedProps$jscomp$0,
+            renderLanes
           );
         case 1:
-          return (
-            (returnFiber = workInProgress.type),
-            (prevSibling = resolveClassComponentProps(
-              returnFiber,
+          var _Component = workInProgress.type,
+            _resolvedProps4 = resolveClassComponentProps(
+              _Component,
               workInProgress.pendingProps,
-              workInProgress.elementType === returnFiber
-            )),
-            updateClassComponent(
-              current,
-              workInProgress,
-              returnFiber,
-              prevSibling,
-              renderLanes
-            )
+              workInProgress.elementType === _Component
+            );
+          return updateClassComponent(
+            current,
+            workInProgress,
+            _Component,
+            _resolvedProps4,
+            renderLanes
           );
         case 3:
           a: {
@@ -9085,18 +9085,18 @@ __DEV__ &&
               throw Error(
                 "Should have a current fiber. This is a bug in React."
               );
-            var nextProps = workInProgress.pendingProps;
-            prevSibling = workInProgress.memoizedState;
-            returnFiber = prevSibling.element;
+            var nextProps = workInProgress.pendingProps,
+              prevState = workInProgress.memoizedState,
+              prevChildren = prevState.element;
             cloneUpdateQueue(current, workInProgress);
             processUpdateQueue(workInProgress, nextProps, null, renderLanes);
             var nextState = workInProgress.memoizedState;
             enableTransitionTracing &&
               push(transitionStack, workInProgressTransitions, workInProgress);
             enableTransitionTracing && pushRootMarkerInstance(workInProgress);
-            nextProps = nextState.cache;
-            pushProvider(workInProgress, CacheContext, nextProps);
-            nextProps !== prevSibling.cache &&
+            var nextCache = nextState.cache;
+            pushProvider(workInProgress, CacheContext, nextCache);
+            nextCache !== prevState.cache &&
               propagateContextChanges(
                 workInProgress,
                 [CacheContext],
@@ -9104,317 +9104,313 @@ __DEV__ &&
                 !0
               );
             suspendIfUpdateReadFromEntangledAsyncAction();
-            nextProps = nextState.element;
-            if (supportsHydration && prevSibling.isDehydrated)
-              if (
-                ((prevSibling = {
-                  element: nextProps,
-                  isDehydrated: !1,
-                  cache: nextState.cache
-                }),
-                (workInProgress.updateQueue.baseState = prevSibling),
-                (workInProgress.memoizedState = prevSibling),
-                workInProgress.flags & 256)
-              ) {
-                workInProgress = mountHostRootWithoutHydrating(
-                  current,
-                  workInProgress,
-                  nextProps,
-                  renderLanes
-                );
+            var nextChildren = nextState.element;
+            if (supportsHydration && prevState.isDehydrated) {
+              var overrideState = {
+                element: nextChildren,
+                isDehydrated: !1,
+                cache: nextState.cache
+              };
+              workInProgress.updateQueue.baseState = overrideState;
+              workInProgress.memoizedState = overrideState;
+              if (workInProgress.flags & 256) {
+                var JSCompiler_inline_result$jscomp$0 =
+                  mountHostRootWithoutHydrating(
+                    current,
+                    workInProgress,
+                    nextChildren,
+                    renderLanes
+                  );
                 break a;
-              } else if (nextProps !== returnFiber) {
-                returnFiber = createCapturedValueAtFiber(
+              } else if (nextChildren !== prevChildren) {
+                var recoverableError = createCapturedValueAtFiber(
                   Error(
                     "This root received an early update, before anything was able hydrate. Switched the entire root to client rendering."
                   ),
                   workInProgress
                 );
-                queueHydrationError(returnFiber);
-                workInProgress = mountHostRootWithoutHydrating(
-                  current,
-                  workInProgress,
-                  nextProps,
-                  renderLanes
-                );
+                queueHydrationError(recoverableError);
+                JSCompiler_inline_result$jscomp$0 =
+                  mountHostRootWithoutHydrating(
+                    current,
+                    workInProgress,
+                    nextChildren,
+                    renderLanes
+                  );
                 break a;
-              } else
+              } else {
+                supportsHydration &&
+                  ((nextHydratableInstance =
+                    getFirstHydratableChildWithinContainer(
+                      workInProgress.stateNode.containerInfo
+                    )),
+                  (hydrationParentFiber = workInProgress),
+                  (isHydrating = !0),
+                  (hydrationErrors = null),
+                  (didSuspendOrErrorDEV = !1),
+                  (hydrationDiffRootDEV = null),
+                  (rootOrSingletonContext = !0));
                 for (
-                  supportsHydration &&
-                    ((nextHydratableInstance =
-                      getFirstHydratableChildWithinContainer(
-                        workInProgress.stateNode.containerInfo
-                      )),
-                    (hydrationParentFiber = workInProgress),
-                    (isHydrating = !0),
-                    (hydrationErrors = null),
-                    (didSuspendOrErrorDEV = !1),
-                    (hydrationDiffRootDEV = null),
-                    (rootOrSingletonContext = !0)),
-                    renderLanes = mountChildFibers(
+                  var child = mountChildFibers(
                       workInProgress,
                       null,
-                      nextProps,
+                      nextChildren,
                       renderLanes
                     ),
-                    workInProgress.child = renderLanes;
-                  renderLanes;
+                    node = (workInProgress.child = child);
+                  node;
 
                 )
-                  (renderLanes.flags = (renderLanes.flags & -3) | 4096),
-                    (renderLanes = renderLanes.sibling);
-            else {
+                  (node.flags = (node.flags & -3) | 4096),
+                    (node = node.sibling);
+              }
+            } else {
               resetHydrationState();
-              if (nextProps === returnFiber) {
-                workInProgress = bailoutOnAlreadyFinishedWork(
-                  current,
-                  workInProgress,
-                  renderLanes
-                );
+              if (nextChildren === prevChildren) {
+                JSCompiler_inline_result$jscomp$0 =
+                  bailoutOnAlreadyFinishedWork(
+                    current,
+                    workInProgress,
+                    renderLanes
+                  );
                 break a;
               }
               reconcileChildren(
                 current,
                 workInProgress,
-                nextProps,
+                nextChildren,
                 renderLanes
               );
             }
-            workInProgress = workInProgress.child;
+            JSCompiler_inline_result$jscomp$0 = workInProgress.child;
           }
-          return workInProgress;
+          return JSCompiler_inline_result$jscomp$0;
         case 26:
-          if (supportsResources)
-            return (
-              markRef(current, workInProgress),
-              null === current
-                ? (renderLanes = getResource(
-                    workInProgress.type,
-                    null,
-                    workInProgress.pendingProps,
-                    null
-                  ))
-                  ? (workInProgress.memoizedState = renderLanes)
-                  : isHydrating ||
-                    (workInProgress.stateNode = createHoistableInstance(
-                      workInProgress.type,
-                      workInProgress.pendingProps,
-                      requiredContext(rootInstanceStackCursor.current),
-                      workInProgress
-                    ))
-                : (workInProgress.memoizedState = getResource(
-                    workInProgress.type,
-                    current.memoizedProps,
-                    workInProgress.pendingProps,
-                    current.memoizedState
-                  )),
-              null
-            );
-        case 27:
-          if (supportsSingletons)
-            return (
-              pushHostContext(workInProgress),
-              null === current &&
-                supportsSingletons &&
-                isHydrating &&
-                ((prevSibling = requiredContext(
-                  rootInstanceStackCursor.current
-                )),
-                (returnFiber = getHostContext()),
-                (prevSibling = workInProgress.stateNode =
-                  resolveSingletonInstance(
-                    workInProgress.type,
-                    workInProgress.pendingProps,
-                    prevSibling,
-                    returnFiber,
-                    !1
-                  )),
-                didSuspendOrErrorDEV ||
-                  ((returnFiber = diffHydratedPropsForDevWarnings(
-                    prevSibling,
-                    workInProgress.type,
-                    workInProgress.pendingProps,
-                    returnFiber
-                  )),
-                  null !== returnFiber &&
-                    (buildHydrationDiffNode(workInProgress, 0).serverProps =
-                      returnFiber)),
-                (hydrationParentFiber = workInProgress),
-                (rootOrSingletonContext = !0),
-                (nextHydratableInstance =
-                  getFirstHydratableChildWithinSingleton(
-                    workInProgress.type,
-                    prevSibling,
-                    nextHydratableInstance
-                  ))),
-              reconcileChildren(
-                current,
-                workInProgress,
-                workInProgress.pendingProps.children,
-                renderLanes
-              ),
-              markRef(current, workInProgress),
-              null === current && (workInProgress.flags |= 4194304),
-              workInProgress.child
-            );
-        case 5:
-          return (
-            null === current &&
-              isHydrating &&
-              ((nextProps = getHostContext()),
-              (returnFiber = validateHydratableInstance(
+          if (supportsResources) {
+            markRef(current, workInProgress);
+            if (null === current) {
+              var resource = getResource(
                 workInProgress.type,
+                null,
                 workInProgress.pendingProps,
-                nextProps
-              )),
-              (prevSibling = nextHydratableInstance),
-              (nextState = !prevSibling) ||
-                ((nextState = canHydrateInstance(
-                  prevSibling,
+                null
+              );
+              resource
+                ? (workInProgress.memoizedState = resource)
+                : isHydrating ||
+                  (workInProgress.stateNode = createHoistableInstance(
+                    workInProgress.type,
+                    workInProgress.pendingProps,
+                    requiredContext(rootInstanceStackCursor.current),
+                    workInProgress
+                  ));
+            } else
+              workInProgress.memoizedState = getResource(
+                workInProgress.type,
+                current.memoizedProps,
+                workInProgress.pendingProps,
+                current.memoizedState
+              );
+            return null;
+          }
+        case 27:
+          if (supportsSingletons) {
+            pushHostContext(workInProgress);
+            if (null === current && supportsSingletons && isHydrating) {
+              var currentRootContainer = requiredContext(
+                  rootInstanceStackCursor.current
+                ),
+                currentHostContext = getHostContext(),
+                instance = (workInProgress.stateNode = resolveSingletonInstance(
                   workInProgress.type,
                   workInProgress.pendingProps,
-                  rootOrSingletonContext
-                )),
-                null !== nextState
-                  ? ((workInProgress.stateNode = nextState),
-                    didSuspendOrErrorDEV ||
-                      ((nextProps = diffHydratedPropsForDevWarnings(
-                        nextState,
-                        workInProgress.type,
-                        workInProgress.pendingProps,
-                        nextProps
-                      )),
-                      null !== nextProps &&
-                        (buildHydrationDiffNode(workInProgress, 0).serverProps =
-                          nextProps)),
-                    (hydrationParentFiber = workInProgress),
-                    (nextHydratableInstance =
-                      getFirstHydratableChild(nextState)),
-                    (rootOrSingletonContext = !1),
-                    (nextProps = !0))
-                  : (nextProps = !1),
-                (nextState = !nextProps)),
-              nextState &&
-                (returnFiber &&
-                  warnNonHydratedInstance(workInProgress, prevSibling),
-                throwOnHydrationMismatch(workInProgress))),
-            pushHostContext(workInProgress),
-            (prevSibling = workInProgress.type),
-            (nextProps = workInProgress.pendingProps),
-            (nextState = null !== current ? current.memoizedProps : null),
-            (returnFiber = nextProps.children),
-            shouldSetTextContent(prevSibling, nextProps)
-              ? (returnFiber = null)
-              : null !== nextState &&
-                shouldSetTextContent(prevSibling, nextState) &&
-                (workInProgress.flags |= 32),
-            null !== workInProgress.memoizedState &&
-              ((prevSibling = renderWithHooks(
-                current,
-                workInProgress,
-                TransitionAwareHostComponent,
-                null,
-                null,
-                renderLanes
-              )),
-              isPrimaryRenderer
-                ? (HostTransitionContext._currentValue = prevSibling)
-                : (HostTransitionContext._currentValue2 = prevSibling)),
-            markRef(current, workInProgress),
+                  currentRootContainer,
+                  currentHostContext,
+                  !1
+                ));
+              if (!didSuspendOrErrorDEV) {
+                var differences = diffHydratedPropsForDevWarnings(
+                  instance,
+                  workInProgress.type,
+                  workInProgress.pendingProps,
+                  currentHostContext
+                );
+                null !== differences &&
+                  (buildHydrationDiffNode(workInProgress, 0).serverProps =
+                    differences);
+              }
+              hydrationParentFiber = workInProgress;
+              rootOrSingletonContext = !0;
+              nextHydratableInstance = getFirstHydratableChildWithinSingleton(
+                workInProgress.type,
+                instance,
+                nextHydratableInstance
+              );
+            }
             reconcileChildren(
               current,
               workInProgress,
-              returnFiber,
+              workInProgress.pendingProps.children,
               renderLanes
-            ),
-            workInProgress.child
+            );
+            markRef(current, workInProgress);
+            null === current && (workInProgress.flags |= 4194304);
+            return workInProgress.child;
+          }
+        case 5:
+          if (null === current && isHydrating) {
+            var currentHostContext$jscomp$0 = getHostContext(),
+              shouldKeepWarning = validateHydratableInstance(
+                workInProgress.type,
+                workInProgress.pendingProps,
+                currentHostContext$jscomp$0
+              ),
+              nextInstance = nextHydratableInstance,
+              JSCompiler_temp$jscomp$0;
+            if (!(JSCompiler_temp$jscomp$0 = !nextInstance)) {
+              var instance$jscomp$0 = canHydrateInstance(
+                nextInstance,
+                workInProgress.type,
+                workInProgress.pendingProps,
+                rootOrSingletonContext
+              );
+              if (null !== instance$jscomp$0) {
+                workInProgress.stateNode = instance$jscomp$0;
+                if (!didSuspendOrErrorDEV) {
+                  var differences$jscomp$0 = diffHydratedPropsForDevWarnings(
+                    instance$jscomp$0,
+                    workInProgress.type,
+                    workInProgress.pendingProps,
+                    currentHostContext$jscomp$0
+                  );
+                  null !== differences$jscomp$0 &&
+                    (buildHydrationDiffNode(workInProgress, 0).serverProps =
+                      differences$jscomp$0);
+                }
+                hydrationParentFiber = workInProgress;
+                nextHydratableInstance =
+                  getFirstHydratableChild(instance$jscomp$0);
+                rootOrSingletonContext = !1;
+                var JSCompiler_inline_result$jscomp$1 = !0;
+              } else JSCompiler_inline_result$jscomp$1 = !1;
+              JSCompiler_temp$jscomp$0 = !JSCompiler_inline_result$jscomp$1;
+            }
+            JSCompiler_temp$jscomp$0 &&
+              (shouldKeepWarning &&
+                warnNonHydratedInstance(workInProgress, nextInstance),
+              throwOnHydrationMismatch(workInProgress));
+          }
+          pushHostContext(workInProgress);
+          var type = workInProgress.type,
+            nextProps$jscomp$0 = workInProgress.pendingProps,
+            prevProps = null !== current ? current.memoizedProps : null,
+            nextChildren$jscomp$0 = nextProps$jscomp$0.children;
+          shouldSetTextContent(type, nextProps$jscomp$0)
+            ? (nextChildren$jscomp$0 = null)
+            : null !== prevProps &&
+              shouldSetTextContent(type, prevProps) &&
+              (workInProgress.flags |= 32);
+          if (null !== workInProgress.memoizedState) {
+            var newState = renderWithHooks(
+              current,
+              workInProgress,
+              TransitionAwareHostComponent,
+              null,
+              null,
+              renderLanes
+            );
+            isPrimaryRenderer
+              ? (HostTransitionContext._currentValue = newState)
+              : (HostTransitionContext._currentValue2 = newState);
+          }
+          markRef(current, workInProgress);
+          reconcileChildren(
+            current,
+            workInProgress,
+            nextChildren$jscomp$0,
+            renderLanes
           );
+          return workInProgress.child;
         case 6:
-          return (
-            null === current &&
-              isHydrating &&
-              ((renderLanes = workInProgress.pendingProps),
-              (current = getHostContext()),
-              (renderLanes = validateHydratableTextInstance(
-                renderLanes,
-                current
-              )),
-              (current = nextHydratableInstance),
-              (returnFiber = !current) ||
-                ((returnFiber = canHydrateTextInstance(
-                  current,
-                  workInProgress.pendingProps,
-                  rootOrSingletonContext
-                )),
-                null !== returnFiber
-                  ? ((workInProgress.stateNode = returnFiber),
-                    (hydrationParentFiber = workInProgress),
-                    (nextHydratableInstance = null),
-                    (returnFiber = !0))
-                  : (returnFiber = !1),
-                (returnFiber = !returnFiber)),
-              returnFiber &&
-                (renderLanes &&
-                  warnNonHydratedInstance(workInProgress, current),
-                throwOnHydrationMismatch(workInProgress))),
-            null
-          );
+          if (null === current && isHydrating) {
+            var text = workInProgress.pendingProps,
+              currentHostContext$jscomp$1 = getHostContext();
+            var shouldKeepWarning$jscomp$0 = validateHydratableTextInstance(
+              text,
+              currentHostContext$jscomp$1
+            );
+            var nextInstance$jscomp$0 = nextHydratableInstance,
+              JSCompiler_temp$jscomp$1;
+            if (!(JSCompiler_temp$jscomp$1 = !nextInstance$jscomp$0)) {
+              var textInstance = canHydrateTextInstance(
+                nextInstance$jscomp$0,
+                workInProgress.pendingProps,
+                rootOrSingletonContext
+              );
+              if (null !== textInstance) {
+                workInProgress.stateNode = textInstance;
+                hydrationParentFiber = workInProgress;
+                nextHydratableInstance = null;
+                var JSCompiler_inline_result$jscomp$2 = !0;
+              } else JSCompiler_inline_result$jscomp$2 = !1;
+              JSCompiler_temp$jscomp$1 = !JSCompiler_inline_result$jscomp$2;
+            }
+            JSCompiler_temp$jscomp$1 &&
+              (shouldKeepWarning$jscomp$0 &&
+                warnNonHydratedInstance(workInProgress, nextInstance$jscomp$0),
+              throwOnHydrationMismatch(workInProgress));
+          }
+          return null;
         case 13:
           return updateSuspenseComponent(current, workInProgress, renderLanes);
         case 4:
-          return (
-            pushHostContainer(
-              workInProgress,
-              workInProgress.stateNode.containerInfo
-            ),
-            (returnFiber = workInProgress.pendingProps),
-            null === current
-              ? (workInProgress.child = reconcileChildFibers(
-                  workInProgress,
-                  null,
-                  returnFiber,
-                  renderLanes
-                ))
-              : reconcileChildren(
-                  current,
-                  workInProgress,
-                  returnFiber,
-                  renderLanes
-                ),
-            workInProgress.child
+          pushHostContainer(
+            workInProgress,
+            workInProgress.stateNode.containerInfo
           );
+          var nextChildren$jscomp$1 = workInProgress.pendingProps;
+          null === current
+            ? (workInProgress.child = reconcileChildFibers(
+                workInProgress,
+                null,
+                nextChildren$jscomp$1,
+                renderLanes
+              ))
+            : reconcileChildren(
+                current,
+                workInProgress,
+                nextChildren$jscomp$1,
+                renderLanes
+              );
+          return workInProgress.child;
         case 11:
-          return (
-            (returnFiber = workInProgress.type),
-            (prevSibling = workInProgress.pendingProps),
-            (prevSibling =
+          var type$jscomp$0 = workInProgress.type,
+            _unresolvedProps2 = workInProgress.pendingProps,
+            _resolvedProps5 =
               disableDefaultPropsExceptForClasses ||
-              workInProgress.elementType === returnFiber
-                ? prevSibling
+              workInProgress.elementType === type$jscomp$0
+                ? _unresolvedProps2
                 : resolveDefaultPropsOnNonClassComponent(
-                    returnFiber,
-                    prevSibling
-                  )),
-            updateForwardRef(
-              current,
-              workInProgress,
-              returnFiber,
-              prevSibling,
-              renderLanes
-            )
+                    type$jscomp$0,
+                    _unresolvedProps2
+                  );
+          return updateForwardRef(
+            current,
+            workInProgress,
+            type$jscomp$0,
+            _resolvedProps5,
+            renderLanes
           );
         case 7:
-          return (
-            (returnFiber = workInProgress.pendingProps),
-            enableFragmentRefs && markRef(current, workInProgress),
-            reconcileChildren(
-              current,
-              workInProgress,
-              returnFiber,
-              renderLanes
-            ),
-            workInProgress.child
+          var nextChildren$jscomp$2 = workInProgress.pendingProps;
+          enableFragmentRefs && markRef(current, workInProgress);
+          reconcileChildren(
+            current,
+            workInProgress,
+            nextChildren$jscomp$2,
+            renderLanes
           );
+          return workInProgress.child;
         case 8:
           return (
             reconcileChildren(
@@ -9426,96 +9422,84 @@ __DEV__ &&
             workInProgress.child
           );
         case 12:
-          return (
-            (workInProgress.flags |= 4),
-            (workInProgress.flags |= 2048),
-            (returnFiber = workInProgress.stateNode),
-            (returnFiber.effectDuration = -0),
-            (returnFiber.passiveEffectDuration = -0),
-            reconcileChildren(
-              current,
-              workInProgress,
-              workInProgress.pendingProps.children,
-              renderLanes
-            ),
-            workInProgress.child
+          workInProgress.flags |= 4;
+          workInProgress.flags |= 2048;
+          var stateNode = workInProgress.stateNode;
+          stateNode.effectDuration = -0;
+          stateNode.passiveEffectDuration = -0;
+          reconcileChildren(
+            current,
+            workInProgress,
+            workInProgress.pendingProps.children,
+            renderLanes
           );
+          return workInProgress.child;
         case 10:
-          return (
-            (returnFiber = enableRenderableContext
-              ? workInProgress.type
-              : workInProgress.type._context),
-            (prevSibling = workInProgress.pendingProps),
-            (nextProps = prevSibling.value),
-            "value" in prevSibling ||
-              hasWarnedAboutUsingNoValuePropOnContextProvider ||
-              ((hasWarnedAboutUsingNoValuePropOnContextProvider = !0),
-              console.error(
-                "The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?"
-              )),
-            pushProvider(workInProgress, returnFiber, nextProps),
-            reconcileChildren(
-              current,
-              workInProgress,
-              prevSibling.children,
-              renderLanes
-            ),
-            workInProgress.child
+          var context = enableRenderableContext
+            ? workInProgress.type
+            : workInProgress.type._context;
+          var newProps = workInProgress.pendingProps,
+            newValue = newProps.value;
+          "value" in newProps ||
+            hasWarnedAboutUsingNoValuePropOnContextProvider ||
+            ((hasWarnedAboutUsingNoValuePropOnContextProvider = !0),
+            console.error(
+              "The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?"
+            ));
+          pushProvider(workInProgress, context, newValue);
+          reconcileChildren(
+            current,
+            workInProgress,
+            newProps.children,
+            renderLanes
           );
+          return workInProgress.child;
         case 9:
-          return (
-            enableRenderableContext
-              ? (prevSibling = workInProgress.type._context)
-              : ((prevSibling = workInProgress.type),
-                void 0 !== prevSibling._context &&
-                  (prevSibling = prevSibling._context)),
-            (returnFiber = workInProgress.pendingProps.children),
-            "function" !== typeof returnFiber &&
-              console.error(
-                "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it."
-              ),
-            prepareToReadContext(workInProgress),
-            (prevSibling = readContext(prevSibling)),
-            enableSchedulingProfiler &&
-              markComponentRenderStarted(workInProgress),
-            (returnFiber = callComponentInDEV(
-              returnFiber,
-              prevSibling,
-              void 0
-            )),
-            enableSchedulingProfiler && markComponentRenderStopped(),
-            (workInProgress.flags |= 1),
-            reconcileChildren(
-              current,
-              workInProgress,
-              returnFiber,
-              renderLanes
-            ),
-            workInProgress.child
+          if (enableRenderableContext)
+            var context$jscomp$0 = workInProgress.type._context;
+          else
+            (context$jscomp$0 = workInProgress.type),
+              void 0 !== context$jscomp$0._context &&
+                (context$jscomp$0 = context$jscomp$0._context);
+          var render = workInProgress.pendingProps.children;
+          "function" !== typeof render &&
+            console.error(
+              "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it."
+            );
+          prepareToReadContext(workInProgress);
+          var newValue$jscomp$0 = readContext(context$jscomp$0);
+          enableSchedulingProfiler &&
+            markComponentRenderStarted(workInProgress);
+          var newChildren = callComponentInDEV(
+            render,
+            newValue$jscomp$0,
+            void 0
           );
+          enableSchedulingProfiler && markComponentRenderStopped();
+          workInProgress.flags |= 1;
+          reconcileChildren(current, workInProgress, newChildren, renderLanes);
+          return workInProgress.child;
         case 14:
-          return (
-            (returnFiber = workInProgress.type),
-            (prevSibling = workInProgress.pendingProps),
-            (prevSibling = disableDefaultPropsExceptForClasses
-              ? prevSibling
+          var _type = workInProgress.type,
+            _unresolvedProps3 = workInProgress.pendingProps,
+            _resolvedProps6 = disableDefaultPropsExceptForClasses
+              ? _unresolvedProps3
               : resolveDefaultPropsOnNonClassComponent(
-                  returnFiber,
-                  prevSibling
-                )),
-            (prevSibling = disableDefaultPropsExceptForClasses
-              ? prevSibling
-              : resolveDefaultPropsOnNonClassComponent(
-                  returnFiber.type,
-                  prevSibling
-                )),
-            updateMemoComponent(
-              current,
-              workInProgress,
-              returnFiber,
-              prevSibling,
-              renderLanes
-            )
+                  _type,
+                  _unresolvedProps3
+                );
+          _resolvedProps6 = disableDefaultPropsExceptForClasses
+            ? _resolvedProps6
+            : resolveDefaultPropsOnNonClassComponent(
+                _type.type,
+                _resolvedProps6
+              );
+          return updateMemoComponent(
+            current,
+            workInProgress,
+            _type,
+            _resolvedProps6,
+            renderLanes
           );
         case 15:
           return updateSimpleMemoComponent(
@@ -9532,17 +9516,42 @@ __DEV__ &&
             renderLanes
           );
         case 21:
-          return (
-            (returnFiber = workInProgress.pendingProps.children),
-            markRef(current, workInProgress),
-            reconcileChildren(
-              current,
-              workInProgress,
-              returnFiber,
-              renderLanes
-            ),
-            workInProgress.child
+          var nextChildren$jscomp$3 = workInProgress.pendingProps.children;
+          markRef(current, workInProgress);
+          reconcileChildren(
+            current,
+            workInProgress,
+            nextChildren$jscomp$3,
+            renderLanes
           );
+          return workInProgress.child;
+        case 31:
+          var nextProps$jscomp$1 = workInProgress.pendingProps,
+            mode = workInProgress.mode,
+            offscreenChildProps = {
+              mode: nextProps$jscomp$1.mode,
+              children: nextProps$jscomp$1.children
+            };
+          if (null === current) {
+            var primaryChildFragment = mountWorkInProgressOffscreenFiber(
+              offscreenChildProps,
+              mode
+            );
+            primaryChildFragment.ref = workInProgress.ref;
+            workInProgress.child = primaryChildFragment;
+            primaryChildFragment.return = workInProgress;
+            var JSCompiler_inline_result$jscomp$3 = primaryChildFragment;
+          } else {
+            var _primaryChildFragment = createWorkInProgress(
+              current.child,
+              offscreenChildProps
+            );
+            _primaryChildFragment.ref = workInProgress.ref;
+            workInProgress.child = _primaryChildFragment;
+            _primaryChildFragment.return = workInProgress;
+            JSCompiler_inline_result$jscomp$3 = _primaryChildFragment;
+          }
+          return JSCompiler_inline_result$jscomp$3;
         case 22:
           return updateOffscreenComponent(current, workInProgress, renderLanes);
         case 23:
@@ -9552,130 +9561,132 @@ __DEV__ &&
             renderLanes
           );
         case 24:
-          return (
-            prepareToReadContext(workInProgress),
-            (returnFiber = readContext(CacheContext)),
-            null === current
-              ? ((prevSibling = peekCacheFromPool()),
-                null === prevSibling &&
-                  ((prevSibling = workInProgressRoot),
-                  (nextProps = createCache()),
-                  (prevSibling.pooledCache = nextProps),
-                  retainCache(nextProps),
-                  null !== nextProps &&
-                    (prevSibling.pooledCacheLanes |= renderLanes),
-                  (prevSibling = nextProps)),
-                (workInProgress.memoizedState = {
-                  parent: returnFiber,
-                  cache: prevSibling
-                }),
-                initializeUpdateQueue(workInProgress),
-                pushProvider(workInProgress, CacheContext, prevSibling))
-              : (0 !== (current.lanes & renderLanes) &&
-                  (cloneUpdateQueue(current, workInProgress),
-                  processUpdateQueue(workInProgress, null, null, renderLanes),
-                  suspendIfUpdateReadFromEntangledAsyncAction()),
-                (prevSibling = current.memoizedState),
-                (nextProps = workInProgress.memoizedState),
-                prevSibling.parent !== returnFiber
-                  ? ((prevSibling = {
-                      parent: returnFiber,
-                      cache: returnFiber
-                    }),
-                    (workInProgress.memoizedState = prevSibling),
-                    0 === workInProgress.lanes &&
-                      (workInProgress.memoizedState =
-                        workInProgress.updateQueue.baseState =
-                          prevSibling),
-                    pushProvider(workInProgress, CacheContext, returnFiber))
-                  : ((returnFiber = nextProps.cache),
-                    pushProvider(workInProgress, CacheContext, returnFiber),
-                    returnFiber !== prevSibling.cache &&
-                      propagateContextChanges(
-                        workInProgress,
-                        [CacheContext],
-                        renderLanes,
-                        !0
-                      ))),
-            reconcileChildren(
-              current,
-              workInProgress,
-              workInProgress.pendingProps.children,
-              renderLanes
-            ),
-            workInProgress.child
+          prepareToReadContext(workInProgress);
+          var parentCache = readContext(CacheContext);
+          if (null === current) {
+            var cacheFromPool = peekCacheFromPool();
+            if (null !== cacheFromPool) var freshCache = cacheFromPool;
+            else {
+              var root = workInProgressRoot,
+                freshCache$jscomp$0 = createCache();
+              root.pooledCache = freshCache$jscomp$0;
+              retainCache(freshCache$jscomp$0);
+              null !== freshCache$jscomp$0 &&
+                (root.pooledCacheLanes |= renderLanes);
+              freshCache = freshCache$jscomp$0;
+            }
+            workInProgress.memoizedState = {
+              parent: parentCache,
+              cache: freshCache
+            };
+            initializeUpdateQueue(workInProgress);
+            pushProvider(workInProgress, CacheContext, freshCache);
+          } else {
+            0 !== (current.lanes & renderLanes) &&
+              (cloneUpdateQueue(current, workInProgress),
+              processUpdateQueue(workInProgress, null, null, renderLanes),
+              suspendIfUpdateReadFromEntangledAsyncAction());
+            var prevState$jscomp$0 = current.memoizedState,
+              nextState$jscomp$0 = workInProgress.memoizedState;
+            if (prevState$jscomp$0.parent !== parentCache) {
+              var derivedState = { parent: parentCache, cache: parentCache };
+              workInProgress.memoizedState = derivedState;
+              0 === workInProgress.lanes &&
+                (workInProgress.memoizedState =
+                  workInProgress.updateQueue.baseState =
+                    derivedState);
+              pushProvider(workInProgress, CacheContext, parentCache);
+            } else {
+              var nextCache$jscomp$0 = nextState$jscomp$0.cache;
+              pushProvider(workInProgress, CacheContext, nextCache$jscomp$0);
+              nextCache$jscomp$0 !== prevState$jscomp$0.cache &&
+                propagateContextChanges(
+                  workInProgress,
+                  [CacheContext],
+                  renderLanes,
+                  !0
+                );
+            }
+          }
+          reconcileChildren(
+            current,
+            workInProgress,
+            workInProgress.pendingProps.children,
+            renderLanes
           );
+          return workInProgress.child;
         case 25:
-          if (enableTransitionTracing)
-            return (
-              enableTransitionTracing
-                ? (null === current
-                    ? ((returnFiber = enableTransitionTracing
-                        ? transitionStack.current
-                        : null),
-                      null !== returnFiber &&
-                        ((returnFiber = {
-                          tag: TransitionTracingMarker,
-                          transitions: new Set(returnFiber),
-                          pendingBoundaries: null,
-                          name: workInProgress.pendingProps.name,
-                          aborts: null
-                        }),
-                        (workInProgress.stateNode = returnFiber),
-                        (workInProgress.flags |= 2048)))
-                    : current.memoizedProps.name !==
-                        workInProgress.pendingProps.name &&
-                      console.error(
-                        "Changing the name of a tracing marker after mount is not supported. To remount the tracing marker, pass it a new key."
-                      ),
-                  (returnFiber = workInProgress.stateNode),
-                  null !== returnFiber &&
-                    pushMarkerInstance(workInProgress, returnFiber),
-                  reconcileChildren(
-                    current,
-                    workInProgress,
-                    workInProgress.pendingProps.children,
-                    renderLanes
-                  ),
-                  (workInProgress = workInProgress.child))
-                : (workInProgress = null),
-              workInProgress
-            );
-          break;
-        case 30:
-          if (enableViewTransition)
-            return (
-              (returnFiber = workInProgress.pendingProps),
-              (prevSibling = workInProgress.stateNode),
-              null != returnFiber.name && "auto" !== returnFiber.name
-                ? (workInProgress.flags |=
-                    null === current ? 18882560 : 18874368)
-                : null === prevSibling.autoName &&
-                  ((nextProps = workInProgressRoot.identifierPrefix),
-                  isHydrating
-                    ? ((nextState = getTreeId()),
-                      (nextProps =
-                        "\u00ab" + nextProps + "T" + nextState + "\u00bb"))
-                    : ((nextState = globalClientIdCounter$1++),
-                      (nextProps =
-                        "\u00ab" +
-                        nextProps +
-                        "t" +
-                        nextState.toString(32) +
-                        "\u00bb")),
-                  (prevSibling.autoName = nextProps)),
-              null !== current &&
-              current.memoizedProps.name !== returnFiber.name
-                ? (workInProgress.flags |= 4194816)
-                : markRef(current, workInProgress),
+          if (enableTransitionTracing) {
+            if (enableTransitionTracing) {
+              if (null === current) {
+                var currentTransitions = enableTransitionTracing
+                  ? transitionStack.current
+                  : null;
+                if (null !== currentTransitions) {
+                  var markerInstance = {
+                    tag: TransitionTracingMarker,
+                    transitions: new Set(currentTransitions),
+                    pendingBoundaries: null,
+                    name: workInProgress.pendingProps.name,
+                    aborts: null
+                  };
+                  workInProgress.stateNode = markerInstance;
+                  workInProgress.flags |= 2048;
+                }
+              } else
+                current.memoizedProps.name !==
+                  workInProgress.pendingProps.name &&
+                  console.error(
+                    "Changing the name of a tracing marker after mount is not supported. To remount the tracing marker, pass it a new key."
+                  );
+              var instance$jscomp$1 = workInProgress.stateNode;
+              null !== instance$jscomp$1 &&
+                pushMarkerInstance(workInProgress, instance$jscomp$1);
               reconcileChildren(
                 current,
                 workInProgress,
-                returnFiber.children,
+                workInProgress.pendingProps.children,
                 renderLanes
-              ),
-              workInProgress.child
+              );
+              var JSCompiler_inline_result$jscomp$4 = workInProgress.child;
+            } else JSCompiler_inline_result$jscomp$4 = null;
+            return JSCompiler_inline_result$jscomp$4;
+          }
+          break;
+        case 30:
+          if (enableViewTransition) {
+            var pendingProps = workInProgress.pendingProps,
+              instance$jscomp$2 = workInProgress.stateNode;
+            if (null != pendingProps.name && "auto" !== pendingProps.name)
+              workInProgress.flags |= null === current ? 18882560 : 18874368;
+            else if (null === instance$jscomp$2.autoName) {
+              var identifierPrefix = workInProgressRoot.identifierPrefix;
+              if (isHydrating) {
+                var treeId = getTreeId();
+                var name =
+                  "\u00ab" + identifierPrefix + "T" + treeId + "\u00bb";
+              } else {
+                var globalClientId = globalClientIdCounter$1++;
+                name =
+                  "\u00ab" +
+                  identifierPrefix +
+                  "t" +
+                  globalClientId.toString(32) +
+                  "\u00bb";
+              }
+              instance$jscomp$2.autoName = name;
+            }
+            null !== current && current.memoizedProps.name !== pendingProps.name
+              ? (workInProgress.flags |= 4194816)
+              : markRef(current, workInProgress);
+            reconcileChildren(
+              current,
+              workInProgress,
+              pendingProps.children,
+              renderLanes
             );
+            return workInProgress.child;
+          }
           break;
         case 29:
           throw workInProgress.pendingProps;
@@ -10120,6 +10131,7 @@ __DEV__ &&
       var newProps = workInProgress.pendingProps;
       popTreeContext(workInProgress);
       switch (workInProgress.tag) {
+        case 31:
         case 16:
         case 15:
         case 0:
@@ -17705,6 +17717,13 @@ __DEV__ &&
                 : 5);
       else
         a: switch (type) {
+          case REACT_ACTIVITY_TYPE:
+            return (
+              (key = createFiber(31, pendingProps, key, mode)),
+              (key.elementType = REACT_ACTIVITY_TYPE),
+              (key.lanes = lanes),
+              key
+            );
           case REACT_FRAGMENT_TYPE:
             return createFiberFromFragment(
               pendingProps.children,
@@ -18204,6 +18223,7 @@ __DEV__ &&
       REACT_LAZY_TYPE = Symbol.for("react.lazy"),
       REACT_SCOPE_TYPE = Symbol.for("react.scope"),
       REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
+      REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
       REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
       REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
@@ -20998,7 +21018,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-17d274dc-20250314"
+        reconcilerVersion: "19.1.0-www-modern-1a191701-20250317"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

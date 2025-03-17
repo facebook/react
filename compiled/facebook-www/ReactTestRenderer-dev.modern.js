@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1131() {
+    function JSCompiler_object_inline_createNodeMock_1151() {
       return null;
     }
     function findHook(fiber, id) {
@@ -283,6 +283,8 @@ __DEV__ &&
           return "Suspense";
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
+        case REACT_ACTIVITY_TYPE:
+          return "Activity";
       }
       if ("object" === typeof type)
         switch (
@@ -322,6 +324,8 @@ __DEV__ &&
     function getComponentNameFromFiber(fiber) {
       var type = fiber.type;
       switch (fiber.tag) {
+        case 31:
+          return "Activity";
         case 24:
           return "Cache";
         case 9:
@@ -1113,6 +1117,8 @@ __DEV__ &&
           return describeNativeComponentFrame(fiber.type.render, !1);
         case 1:
           return describeNativeComponentFrame(fiber.type, !0);
+        case 31:
+          return describeBuiltInComponentFrame("Activity");
         default:
           return "";
       }
@@ -1665,6 +1671,9 @@ __DEV__ &&
             break;
           case 19:
             info += describeBuiltInComponentFrame("SuspenseList");
+            break;
+          case 31:
+            info += describeBuiltInComponentFrame("Activity");
             break;
           case 30:
           case 0:
@@ -7914,6 +7923,30 @@ __DEV__ &&
             ),
             workInProgress.child
           );
+        case 31:
+          return (
+            (returnFiber = workInProgress.pendingProps),
+            (renderLanes = workInProgress.mode),
+            (returnFiber = {
+              mode: returnFiber.mode,
+              children: returnFiber.children
+            }),
+            null === current
+              ? ((current = mountWorkInProgressOffscreenFiber(
+                  returnFiber,
+                  renderLanes
+                )),
+                (current.ref = workInProgress.ref),
+                (workInProgress.child = current),
+                (current.return = workInProgress),
+                (workInProgress = current))
+              : ((current = createWorkInProgress(current.child, returnFiber)),
+                (current.ref = workInProgress.ref),
+                (workInProgress.child = current),
+                (current.return = workInProgress),
+                (workInProgress = current)),
+            workInProgress
+          );
         case 22:
           return updateOffscreenComponent(current, workInProgress, renderLanes);
         case 24:
@@ -8186,6 +8219,7 @@ __DEV__ &&
     function completeWork(current, workInProgress, renderLanes) {
       var newProps = workInProgress.pendingProps;
       switch (workInProgress.tag) {
+        case 31:
         case 16:
         case 15:
         case 0:
@@ -12467,6 +12501,13 @@ __DEV__ &&
       else if ("string" === typeof type) fiberTag = 5;
       else
         a: switch (type) {
+          case REACT_ACTIVITY_TYPE:
+            return (
+              (type = createFiber(31, pendingProps, key, mode)),
+              (type.elementType = REACT_ACTIVITY_TYPE),
+              (type.lanes = lanes),
+              type
+            );
           case REACT_FRAGMENT_TYPE:
             return createFiberFromFragment(
               pendingProps.children,
@@ -13066,6 +13107,7 @@ __DEV__ &&
       REACT_LAZY_TYPE = Symbol.for("react.lazy"),
       REACT_SCOPE_TYPE = Symbol.for("react.scope"),
       REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
+      REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
       REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
     Symbol.for("react.tracing_marker");
     var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
@@ -15037,10 +15079,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-17d274dc-20250314",
+        version: "19.1.0-www-modern-1a191701-20250317",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-17d274dc-20250314"
+        reconcilerVersion: "19.1.0-www-modern-1a191701-20250317"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15060,7 +15102,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1131,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1151,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15175,5 +15217,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-modern-17d274dc-20250314";
+    exports.version = "19.1.0-www-modern-1a191701-20250317";
   })();

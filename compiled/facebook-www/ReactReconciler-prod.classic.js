@@ -185,6 +185,8 @@ module.exports = function ($$$config) {
         return "Suspense";
       case REACT_SUSPENSE_LIST_TYPE:
         return "SuspenseList";
+      case REACT_ACTIVITY_TYPE:
+        return "Activity";
       case REACT_VIEW_TRANSITION_TYPE:
         if (enableViewTransition) return "ViewTransition";
       case REACT_TRACING_MARKER_TYPE:
@@ -229,6 +231,8 @@ module.exports = function ($$$config) {
   function getComponentNameFromFiber(fiber) {
     var type = fiber.type;
     switch (fiber.tag) {
+      case 31:
+        return "Activity";
       case 24:
         return "Cache";
       case 9:
@@ -876,6 +880,8 @@ module.exports = function ($$$config) {
         return describeNativeComponentFrame(fiber.type.render, !1);
       case 1:
         return describeNativeComponentFrame(fiber.type, !0);
+      case 31:
+        return describeBuiltInComponentFrame("Activity");
       case 30:
         if (enableViewTransition)
           return describeBuiltInComponentFrame("ViewTransition");
@@ -6318,6 +6324,27 @@ module.exports = function ($$$config) {
           reconcileChildren(current, workInProgress, props, renderLanes),
           workInProgress.child
         );
+      case 31:
+        return (
+          (props = workInProgress.pendingProps),
+          (renderLanes = workInProgress.mode),
+          (props = { mode: props.mode, children: props.children }),
+          null === current
+            ? ((renderLanes = mountWorkInProgressOffscreenFiber(
+                props,
+                renderLanes
+              )),
+              (renderLanes.ref = workInProgress.ref),
+              (workInProgress.child = renderLanes),
+              (renderLanes.return = workInProgress),
+              (workInProgress = renderLanes))
+            : ((renderLanes = createWorkInProgress(current.child, props)),
+              (renderLanes.ref = workInProgress.ref),
+              (workInProgress.child = renderLanes),
+              (renderLanes.return = workInProgress),
+              (workInProgress = renderLanes)),
+          workInProgress
+        );
       case 22:
         return updateOffscreenComponent(current, workInProgress, renderLanes);
       case 23:
@@ -6601,44 +6628,44 @@ module.exports = function ($$$config) {
         needsVisibilityToggle = needsVisibilityToggle.sibling;
       }
     else if (supportsPersistence)
-      for (var node$104 = workInProgress.child; null !== node$104; ) {
-        if (5 === node$104.tag) {
-          var instance = node$104.stateNode;
+      for (var node$105 = workInProgress.child; null !== node$105; ) {
+        if (5 === node$105.tag) {
+          var instance = node$105.stateNode;
           needsVisibilityToggle &&
             isHidden &&
             (instance = cloneHiddenInstance(
               instance,
-              node$104.type,
-              node$104.memoizedProps
+              node$105.type,
+              node$105.memoizedProps
             ));
           appendInitialChild(parent, instance);
-        } else if (6 === node$104.tag)
-          (instance = node$104.stateNode),
+        } else if (6 === node$105.tag)
+          (instance = node$105.stateNode),
             needsVisibilityToggle &&
               isHidden &&
               (instance = cloneHiddenTextInstance(
                 instance,
-                node$104.memoizedProps
+                node$105.memoizedProps
               )),
             appendInitialChild(parent, instance);
-        else if (4 !== node$104.tag)
-          if (22 === node$104.tag && null !== node$104.memoizedState)
-            (instance = node$104.child),
-              null !== instance && (instance.return = node$104),
-              appendAllChildren(parent, node$104, !0, !0);
-          else if (null !== node$104.child) {
-            node$104.child.return = node$104;
-            node$104 = node$104.child;
+        else if (4 !== node$105.tag)
+          if (22 === node$105.tag && null !== node$105.memoizedState)
+            (instance = node$105.child),
+              null !== instance && (instance.return = node$105),
+              appendAllChildren(parent, node$105, !0, !0);
+          else if (null !== node$105.child) {
+            node$105.child.return = node$105;
+            node$105 = node$105.child;
             continue;
           }
-        if (node$104 === workInProgress) break;
-        for (; null === node$104.sibling; ) {
-          if (null === node$104.return || node$104.return === workInProgress)
+        if (node$105 === workInProgress) break;
+        for (; null === node$105.sibling; ) {
+          if (null === node$105.return || node$105.return === workInProgress)
             return;
-          node$104 = node$104.return;
+          node$105 = node$105.return;
         }
-        node$104.sibling.return = node$104.return;
-        node$104 = node$104.sibling;
+        node$105.sibling.return = node$105.return;
+        node$105 = node$105.sibling;
       }
   }
   function appendAllChildrenToContainer(
@@ -6716,31 +6743,31 @@ module.exports = function ($$$config) {
       current.memoizedProps !== newProps && markUpdate(workInProgress);
     else if (supportsPersistence) {
       var currentInstance = current.stateNode,
-        oldProps$107 = current.memoizedProps;
+        oldProps$108 = current.memoizedProps;
       if (
         (current = doesRequireClone(current, workInProgress)) ||
-        oldProps$107 !== newProps
+        oldProps$108 !== newProps
       ) {
         var currentHostContext = contextStackCursor.current;
-        oldProps$107 = cloneInstance(
+        oldProps$108 = cloneInstance(
           currentInstance,
           type,
-          oldProps$107,
+          oldProps$108,
           newProps,
           !current,
           null
         );
-        oldProps$107 === currentInstance
+        oldProps$108 === currentInstance
           ? (workInProgress.stateNode = currentInstance)
           : (finalizeInitialChildren(
-              oldProps$107,
+              oldProps$108,
               type,
               newProps,
               currentHostContext
             ) && markUpdate(workInProgress),
-            (workInProgress.stateNode = oldProps$107),
+            (workInProgress.stateNode = oldProps$108),
             current
-              ? appendAllChildren(oldProps$107, workInProgress, !1, !1)
+              ? appendAllChildren(oldProps$108, workInProgress, !1, !1)
               : markUpdate(workInProgress));
       } else workInProgress.stateNode = currentInstance;
     }
@@ -6791,15 +6818,15 @@ module.exports = function ($$$config) {
           break;
         case "collapsed":
           lastTailNode = renderState.tail;
-          for (var lastTailNode$109 = null; null !== lastTailNode; )
+          for (var lastTailNode$110 = null; null !== lastTailNode; )
             null !== lastTailNode.alternate &&
-              (lastTailNode$109 = lastTailNode),
+              (lastTailNode$110 = lastTailNode),
               (lastTailNode = lastTailNode.sibling);
-          null === lastTailNode$109
+          null === lastTailNode$110
             ? hasRenderedATailFallback || null === renderState.tail
               ? (renderState.tail = null)
               : (renderState.tail.sibling = null)
-            : (lastTailNode$109.sibling = null);
+            : (lastTailNode$110.sibling = null);
       }
   }
   function bubbleProperties(completedWork) {
@@ -6809,19 +6836,19 @@ module.exports = function ($$$config) {
       newChildLanes = 0,
       subtreeFlags = 0;
     if (didBailout)
-      for (var child$110 = completedWork.child; null !== child$110; )
-        (newChildLanes |= child$110.lanes | child$110.childLanes),
-          (subtreeFlags |= child$110.subtreeFlags & 65011712),
-          (subtreeFlags |= child$110.flags & 65011712),
-          (child$110.return = completedWork),
-          (child$110 = child$110.sibling);
+      for (var child$111 = completedWork.child; null !== child$111; )
+        (newChildLanes |= child$111.lanes | child$111.childLanes),
+          (subtreeFlags |= child$111.subtreeFlags & 65011712),
+          (subtreeFlags |= child$111.flags & 65011712),
+          (child$111.return = completedWork),
+          (child$111 = child$111.sibling);
     else
-      for (child$110 = completedWork.child; null !== child$110; )
-        (newChildLanes |= child$110.lanes | child$110.childLanes),
-          (subtreeFlags |= child$110.subtreeFlags),
-          (subtreeFlags |= child$110.flags),
-          (child$110.return = completedWork),
-          (child$110 = child$110.sibling);
+      for (child$111 = completedWork.child; null !== child$111; )
+        (newChildLanes |= child$111.lanes | child$111.childLanes),
+          (subtreeFlags |= child$111.subtreeFlags),
+          (subtreeFlags |= child$111.flags),
+          (child$111.return = completedWork),
+          (child$111 = child$111.sibling);
     completedWork.subtreeFlags |= subtreeFlags;
     completedWork.childLanes = newChildLanes;
     return didBailout;
@@ -6830,6 +6857,7 @@ module.exports = function ($$$config) {
     var newProps = workInProgress.pendingProps;
     popTreeContext(workInProgress);
     switch (workInProgress.tag) {
+      case 31:
       case 16:
       case 15:
       case 0:
@@ -7105,11 +7133,11 @@ module.exports = function ($$$config) {
             null !== newProps.alternate.memoizedState &&
             null !== newProps.alternate.memoizedState.cachePool &&
             (nextResource = newProps.alternate.memoizedState.cachePool.pool);
-          var cache$124 = null;
+          var cache$125 = null;
           null !== newProps.memoizedState &&
             null !== newProps.memoizedState.cachePool &&
-            (cache$124 = newProps.memoizedState.cachePool.pool);
-          cache$124 !== nextResource && (newProps.flags |= 2048);
+            (cache$125 = newProps.memoizedState.cachePool.pool);
+          cache$125 !== nextResource && (newProps.flags |= 2048);
         }
         renderLanes !== current &&
           (enableTransitionTracing && (workInProgress.child.flags |= 2048),
@@ -7145,8 +7173,8 @@ module.exports = function ($$$config) {
         if (null === nextResource)
           return bubbleProperties(workInProgress), null;
         newProps = 0 !== (workInProgress.flags & 128);
-        cache$124 = nextResource.rendering;
-        if (null === cache$124)
+        cache$125 = nextResource.rendering;
+        if (null === cache$125)
           if (newProps) cutOffTailIfNeeded(nextResource, !1);
           else {
             if (
@@ -7154,11 +7182,11 @@ module.exports = function ($$$config) {
               (null !== current && 0 !== (current.flags & 128))
             )
               for (current = workInProgress.child; null !== current; ) {
-                cache$124 = findFirstSuspended(current);
-                if (null !== cache$124) {
+                cache$125 = findFirstSuspended(current);
+                if (null !== cache$125) {
                   workInProgress.flags |= 128;
                   cutOffTailIfNeeded(nextResource, !1);
-                  current = cache$124.updateQueue;
+                  current = cache$125.updateQueue;
                   workInProgress.updateQueue = current;
                   scheduleRetryEffect(workInProgress, current);
                   workInProgress.subtreeFlags = 0;
@@ -7187,7 +7215,7 @@ module.exports = function ($$$config) {
           }
         else {
           if (!newProps)
-            if (((current = findFirstSuspended(cache$124)), null !== current)) {
+            if (((current = findFirstSuspended(cache$125)), null !== current)) {
               if (
                 ((workInProgress.flags |= 128),
                 (newProps = !0),
@@ -7197,7 +7225,7 @@ module.exports = function ($$$config) {
                 cutOffTailIfNeeded(nextResource, !0),
                 null === nextResource.tail &&
                   "hidden" === nextResource.tailMode &&
-                  !cache$124.alternate &&
+                  !cache$125.alternate &&
                   !isHydrating)
               )
                 return bubbleProperties(workInProgress), null;
@@ -7210,13 +7238,13 @@ module.exports = function ($$$config) {
                 cutOffTailIfNeeded(nextResource, !1),
                 (workInProgress.lanes = 4194304));
           nextResource.isBackwards
-            ? ((cache$124.sibling = workInProgress.child),
-              (workInProgress.child = cache$124))
+            ? ((cache$125.sibling = workInProgress.child),
+              (workInProgress.child = cache$125))
             : ((current = nextResource.last),
               null !== current
-                ? (current.sibling = cache$124)
-                : (workInProgress.child = cache$124),
-              (nextResource.last = cache$124));
+                ? (current.sibling = cache$125)
+                : (workInProgress.child = cache$125),
+              (nextResource.last = cache$125));
         }
         if (null !== nextResource.tail)
           return (
@@ -7482,10 +7510,10 @@ module.exports = function ($$$config) {
                 inst.destroy = lastEffect;
               }
             } else {
-              var create$141 = updateQueue.create,
-                inst$142 = updateQueue.inst;
-              lastEffect = create$141();
-              inst$142.destroy = lastEffect;
+              var create$142 = updateQueue.create,
+                inst$143 = updateQueue.inst;
+              lastEffect = create$142();
+              inst$143.destroy = lastEffect;
             }
           updateQueue = updateQueue.next;
         } while (updateQueue !== firstEffect);
@@ -7628,8 +7656,8 @@ module.exports = function ($$$config) {
       else if ("function" === typeof ref)
         try {
           ref(null);
-        } catch (error$145) {
-          captureCommitPhaseError(current, nearestMountedAncestor, error$145);
+        } catch (error$146) {
+          captureCommitPhaseError(current, nearestMountedAncestor, error$146);
         }
       else ref.current = null;
   }
@@ -8480,11 +8508,11 @@ module.exports = function ($$$config) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$143) {
+            } catch (error$144) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$143
+                error$144
               );
             }
           }
@@ -9538,25 +9566,25 @@ module.exports = function ($$$config) {
                 break;
               }
             case 5:
-              var parent$146 = hostParentFiber.stateNode;
+              var parent$147 = hostParentFiber.stateNode;
               hostParentFiber.flags & 32 &&
-                (resetTextContent(parent$146), (hostParentFiber.flags &= -33));
-              var before$147 = getHostSibling(finishedWork);
+                (resetTextContent(parent$147), (hostParentFiber.flags &= -33));
+              var before$148 = getHostSibling(finishedWork);
               insertOrAppendPlacementNode(
                 finishedWork,
-                before$147,
-                parent$146,
+                before$148,
+                parent$147,
                 parentFragmentInstances
               );
               break;
             case 3:
             case 4:
-              var parent$148 = hostParentFiber.stateNode.containerInfo,
-                before$149 = getHostSibling(finishedWork);
+              var parent$149 = hostParentFiber.stateNode.containerInfo,
+                before$150 = getHostSibling(finishedWork);
               insertOrAppendPlacementNodeIntoContainer(
                 finishedWork,
-                before$149,
-                parent$148,
+                before$150,
+                parent$149,
                 parentFragmentInstances
               );
               break;
@@ -10122,14 +10150,14 @@ module.exports = function ($$$config) {
           );
         break;
       case 22:
-        var instance$160 = finishedWork.stateNode,
-          current$161 = finishedWork.alternate;
+        var instance$161 = finishedWork.stateNode,
+          current$162 = finishedWork.alternate;
         null !== finishedWork.memoizedState
           ? (isViewTransitionEligible &&
-              null !== current$161 &&
-              null === current$161.memoizedState &&
-              restoreEnterOrExitViewTransitions(current$161),
-            instance$160._visibility & 4
+              null !== current$162 &&
+              null === current$162.memoizedState &&
+              restoreEnterOrExitViewTransitions(current$162),
+            instance$161._visibility & 4
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
@@ -10141,17 +10169,17 @@ module.exports = function ($$$config) {
                   finishedWork
                 ))
           : (isViewTransitionEligible &&
-              null !== current$161 &&
-              null !== current$161.memoizedState &&
+              null !== current$162 &&
+              null !== current$162.memoizedState &&
               restoreEnterOrExitViewTransitions(finishedWork),
-            instance$160._visibility & 4
+            instance$161._visibility & 4
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
                   committedLanes,
                   committedTransitions
                 )
-              : ((instance$160._visibility |= 4),
+              : ((instance$161._visibility |= 4),
                 recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -10161,9 +10189,9 @@ module.exports = function ($$$config) {
                 )));
         flags & 2048 &&
           commitOffscreenPassiveMountEffects(
-            current$161,
+            current$162,
             finishedWork,
-            instance$160
+            instance$161
           );
         break;
       case 24:
@@ -10259,9 +10287,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$164 = finishedWork.stateNode;
+          var instance$165 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$164._visibility & 4
+            ? instance$165._visibility & 4
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -10273,7 +10301,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-            : ((instance$164._visibility |= 4),
+            : ((instance$165._visibility |= 4),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -10286,7 +10314,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$164
+              instance$165
             );
           break;
         case 24:
@@ -11406,8 +11434,8 @@ module.exports = function ($$$config) {
         workLoopSync();
         exitStatus = workInProgressRootExitStatus;
         break;
-      } catch (thrownValue$180) {
-        handleThrow(root, thrownValue$180);
+      } catch (thrownValue$181) {
+        handleThrow(root, thrownValue$181);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -11528,8 +11556,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrentByScheduler();
         break;
-      } catch (thrownValue$182) {
-        handleThrow(root, thrownValue$182);
+      } catch (thrownValue$183) {
+        handleThrow(root, thrownValue$183);
       }
     while (1);
     lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -12349,6 +12377,13 @@ module.exports = function ($$$config) {
               : 5;
     else
       a: switch (type) {
+        case REACT_ACTIVITY_TYPE:
+          return (
+            (type = createFiber(31, pendingProps, key, mode)),
+            (type.elementType = REACT_ACTIVITY_TYPE),
+            (type.lanes = lanes),
+            type
+          );
         case REACT_FRAGMENT_TYPE:
           return createFiberFromFragment(
             pendingProps.children,
@@ -12763,6 +12798,7 @@ module.exports = function ($$$config) {
     REACT_LAZY_TYPE = Symbol.for("react.lazy"),
     REACT_SCOPE_TYPE = Symbol.for("react.scope"),
     REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
+    REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
     REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
     REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
     REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
@@ -13907,7 +13943,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-17d274dc-20250314"
+      reconcilerVersion: "19.1.0-www-classic-1a191701-20250317"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
