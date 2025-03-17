@@ -947,8 +947,11 @@ describe('ReactLazy', () => {
       </Suspense>,
     );
     await waitForThrow(
-      'Element type is invalid. Received a promise that resolves to: Context.Provider. ' +
-        'Lazy element type must resolve to a class or function.',
+      gate('enableRenderableContext')
+        ? 'Element type is invalid. Received a promise that resolves to: Context.Provider. ' +
+            'Lazy element type must resolve to a class or function.'
+        : 'Element type is invalid. Received a promise that resolves to: Context.Consumer. ' +
+            'Lazy element type must resolve to a class or function.',
     );
   });
 
