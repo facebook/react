@@ -9,7 +9,7 @@
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 
-import type {Instance, TextInstance} from './ReactFiberConfig';
+import type {Instance, TextInstance, Props} from './ReactFiberConfig';
 
 import type {OffscreenState} from './ReactFiberActivityComponent';
 
@@ -25,6 +25,7 @@ import {
   removeRootViewTransitionClone,
   cancelRootViewTransitionName,
   restoreRootViewTransitionName,
+  cancelViewTransitionName,
   applyViewTransitionName,
   appendChild,
   commitUpdate,
@@ -1123,13 +1124,38 @@ export function applyDepartureTransitions(
   finishedWork: Fiber,
 ): void {
   // First measure and apply view-transition-names to the "new" states.
+  viewTransitionContextChanged = false;
+  pushViewTransitionCancelableScope();
+
   recursivelyApplyViewTransitions(finishedWork);
+
   // Then remove the clones.
   const rootClone = root.gestureClone;
   if (rootClone !== null) {
     root.gestureClone = null;
     removeRootViewTransitionClone(root.containerInfo, rootClone);
   }
+
+  if (!viewTransitionContextChanged) {
+    // If we didn't leak any resizing out to the root, we don't have to transition
+    // the root itself. This means that we can now safely cancel any cancellations
+    // that bubbled all the way up.
+    const cancelableChildren = viewTransitionCancelableChildren;
+    if (cancelableChildren !== null) {
+      for (let i = 0; i < cancelableChildren.length; i += 3) {
+        cancelViewTransitionName(
+          ((cancelableChildren[i]: any): Instance),
+          ((cancelableChildren[i + 1]: any): string),
+          ((cancelableChildren[i + 2]: any): Props),
+        );
+      }
+    }
+    // We also cancel the root itself. First we restore the name to the documentElement
+    // and then we cancel it.
+    restoreRootViewTransitionName(root.containerInfo);
+    cancelRootViewTransitionName(root.containerInfo);
+  }
+  popViewTransitionCancelableScope(null);
 }
 
 function recursivelyRestoreViewTransitions(parentFiber: Fiber) {

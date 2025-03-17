@@ -2474,7 +2474,6 @@ function commitAfterMutationEffectsOnFiber(
         // the root itself. This means that we can now safely cancel any cancellations
         // that bubbled all the way up.
         const cancelableChildren = viewTransitionCancelableChildren;
-        popViewTransitionCancelableScope(null);
         if (cancelableChildren !== null) {
           for (let i = 0; i < cancelableChildren.length; i += 3) {
             cancelViewTransitionName(
@@ -2487,6 +2486,7 @@ function commitAfterMutationEffectsOnFiber(
         // We also cancel the root itself.
         cancelRootViewTransitionName(root.containerInfo);
       }
+      popViewTransitionCancelableScope(null);
       break;
     }
     case HostComponent: {
