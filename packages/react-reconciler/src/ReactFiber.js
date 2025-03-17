@@ -110,10 +110,6 @@ import {
   REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
-import {
-  detachOffscreenInstance,
-  attachOffscreenInstance,
-} from './ReactFiberCommitWork';
 import {getHostContext} from './ReactFiberHostContext';
 import type {ReactComponentInfo} from '../../shared/ReactTypes';
 import isArray from 'shared/isArray';
@@ -854,13 +850,9 @@ export function createFiberFromOffscreen(
   fiber.lanes = lanes;
   const primaryChildInstance: OffscreenInstance = {
     _visibility: OffscreenVisible,
-    _pendingVisibility: OffscreenVisible,
     _pendingMarkers: null,
     _retryCache: null,
     _transitions: null,
-    _current: null,
-    detach: () => detachOffscreenInstance(primaryChildInstance),
-    attach: () => attachOffscreenInstance(primaryChildInstance),
   };
   fiber.stateNode = primaryChildInstance;
   return fiber;
@@ -909,13 +901,9 @@ export function createFiberFromLegacyHidden(
   // the offscreen implementation, which depends on a state node
   const instance: OffscreenInstance = {
     _visibility: OffscreenVisible,
-    _pendingVisibility: OffscreenVisible,
     _pendingMarkers: null,
     _transitions: null,
     _retryCache: null,
-    _current: null,
-    detach: () => detachOffscreenInstance(instance),
-    attach: () => attachOffscreenInstance(instance),
   };
   fiber.stateNode = instance;
   return fiber;
