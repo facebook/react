@@ -13,11 +13,14 @@ import {
   BlockId,
   DependencyPathEntry,
   GeneratedSource,
+  getHookKind,
   HIRFunction,
   Identifier,
   IdentifierId,
   InstructionId,
   InstructionValue,
+  LoweredFunction,
+  Place,
   PropertyLiteral,
   ReactiveScopeDependency,
   ScopeId,
@@ -112,6 +115,9 @@ export function collectHoistablePropertyLoads(
     hoistableFromOptionals,
     registry,
     nestedFnImmutableContext: null,
+    likelyInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
+      ? new Set()
+      : getLikelyInvokedFunctions(fn),
   });
 }
 
@@ -127,6 +133,11 @@ type CollectHoistablePropertyLoadsContext = {
    * but are currently kept separate for readability.
    */
   nestedFnImmutableContext: ReadonlySet<IdentifierId> | null;
+  /**
+   * Functions which are assumed to be eventually called (as opposed to ones which might
+   * not be called, e.g. the 0th argument of Array.map)
+   */
+  likelyInvokedFns: ReadonlySet<LoweredFunction>;
 };
 function collectHoistablePropertyLoadsImpl(
   fn: HIRFunction,
@@ -338,7 +349,13 @@ function collectNonNullsInBlocks(
       context.registry.getOrCreateIdentifier(identifier),
     );
   }
-  const nodes = new Map<BlockId, BlockInfo>();
+  const nodes = new Map<
+    BlockId,
+    {
+      block: BasicBlock;
+      assumedNonNullObjects: Set<PropertyPathNode>;
+    }
+  >();
   for (const [_, block] of fn.body.blocks) {
     const assumedNonNullObjects = new Set<PropertyPathNode>(
       knownNonNullIdentifiers,
@@ -358,32 +375,30 @@ function collectNonNullsInBlocks(
       ) {
         assumedNonNullObjects.add(maybeNonNull);
       }
-      if (
-        (instr.value.kind === 'FunctionExpression' ||
-          instr.value.kind === 'ObjectMethod') &&
-        !fn.env.config.enableTreatFunctionDepsAsConditional
-      ) {
+      if (instr.value.kind === 'FunctionExpression') {
         const innerFn = instr.value.loweredFunc;
-        const innerHoistableMap = collectHoistablePropertyLoadsImpl(
-          innerFn.func,
-          {
-            ...context,
-            nestedFnImmutableContext:
-              context.nestedFnImmutableContext ??
-              new Set(
-                innerFn.func.context
-                  .filter(place =>
-                    isImmutableAtInstr(place.identifier, instr.id, context),
-                  )
-                  .map(place => place.identifier.id),
-              ),
-          },
-        );
-        const innerHoistables = assertNonNull(
-          innerHoistableMap.get(innerFn.func.body.entry),
-        );
-        for (const entry of innerHoistables.assumedNonNullObjects) {
-          assumedNonNullObjects.add(entry);
+        if (context.likelyInvokedFns.has(innerFn)) {
+          const innerHoistableMap = collectHoistablePropertyLoadsImpl(
+            innerFn.func,
+            {
+              ...context,
+              nestedFnImmutableContext:
+                context.nestedFnImmutableContext ??
+                new Set(
+                  innerFn.func.context
+                    .filter(place =>
+                      isImmutableAtInstr(place.identifier, instr.id, context),
+                    )
+                    .map(place => place.identifier.id),
+                ),
+            },
+          );
+          const innerHoistables = assertNonNull(
+            innerHoistableMap.get(innerFn.func.body.entry),
+          );
+          for (const entry of innerHoistables.assumedNonNullObjects) {
+            assumedNonNullObjects.add(entry);
+          }
         }
       }
     }
@@ -590,4 +605,131 @@ function reduceMaybeOptionalChains(
       }
     }
   } while (changed);
+}
+
+function getLikelyInvokedFunctions(
+  fn: HIRFunction,
+  temporaries: Map<
+    IdentifierId,
+    {fn: LoweredFunction; mayInvoke: Set<LoweredFunction>}
+  > = new Map(),
+): ReadonlySet<LoweredFunction> {
+  const hoistableFunctions = new Set<LoweredFunction>();
+  /**
+   * Step 1: Conservatively collect identifier to function expression mappings
+   */
+  for (const block of fn.body.blocks.values()) {
+    for (const {lvalue, value} of block.instructions) {
+      /**
+       * Conservatively only match function expressions which can have guaranteed ssa.
+       * ObjectMethods and ObjectProperties do not.
+       */
+      if (value.kind === 'FunctionExpression') {
+        temporaries.set(lvalue.identifier.id, {
+          fn: value.loweredFunc,
+          mayInvoke: new Set(),
+        });
+      } else if (value.kind === 'StoreLocal') {
+        const lvalue = value.lvalue.place.identifier;
+        const maybeLoweredFunc = temporaries.get(value.value.identifier.id);
+        if (maybeLoweredFunc != null) {
+          temporaries.set(lvalue.id, maybeLoweredFunc);
+        }
+      } else if (value.kind === 'LoadLocal') {
+        const maybeLoweredFunc = temporaries.get(value.place.identifier.id);
+        if (maybeLoweredFunc != null) {
+          temporaries.set(lvalue.identifier.id, maybeLoweredFunc);
+        }
+      }
+    }
+  }
+  /**
+   * Step 2: Forward pass to do analysis of assumed function calls. Note that
+   * this is conservative and does not count indirect references through
+   * containers (e.g. `return {cb: () => {...}})`).
+   */
+  for (const block of fn.body.blocks.values()) {
+    for (const {lvalue, value} of block.instructions) {
+      if (value.kind === 'CallExpression') {
+        const callee = value.callee;
+        const maybeHook = getHookKind(fn.env, callee.identifier);
+        const maybeLoweredFunc = temporaries.get(callee.identifier.id);
+        if (maybeLoweredFunc != null) {
+          // Direct calls
+          hoistableFunctions.add(maybeLoweredFunc.fn);
+        } else if (maybeHook != null) {
+          /**
+           * Assume arguments to all hooks are safe to invoke
+           */
+          for (const arg of value.args.filter(
+            arg => arg.kind === 'Identifier',
+          ) as Array<Place>) {
+            const maybeLoweredFunc = temporaries.get(arg.identifier.id);
+            if (maybeLoweredFunc != null) {
+              hoistableFunctions.add(maybeLoweredFunc.fn);
+            }
+          }
+        }
+      } else if (value.kind === 'JsxExpression') {
+        /**
+         * Assume JSX attributes and children are safe to invoke
+         */
+        for (const attr of value.props) {
+          if (attr.kind === 'JsxSpreadAttribute') {
+            continue;
+          }
+          const maybeLoweredFunc = temporaries.get(attr.place.identifier.id);
+          if (maybeLoweredFunc != null) {
+            hoistableFunctions.add(maybeLoweredFunc.fn);
+          }
+        }
+        for (const child of value.children ?? []) {
+          const maybeLoweredFunc = temporaries.get(child.identifier.id);
+          if (maybeLoweredFunc != null) {
+            hoistableFunctions.add(maybeLoweredFunc.fn);
+          }
+        }
+      } else if (value.kind === 'FunctionExpression') {
+        /**
+         * Recursively traverse into other function expressions which may invoke
+         * or pass already declared functions to react (e.g. as JSXAttributes).
+         *
+         * If lambda A calls lambda B, we assume lambda B is safe to invoke if
+         * lambda A is -- even if lambda B is conditionally called. (see
+         * `conditional-call-chain` fixture for example).
+         */
+        const loweredFunc = value.loweredFunc.func;
+        const lambdasCalled = getLikelyInvokedFunctions(
+          loweredFunc,
+          temporaries,
+        );
+        const maybeLoweredFunc = temporaries.get(lvalue.identifier.id);
+        if (maybeLoweredFunc != null) {
+          for (const called of lambdasCalled) {
+            maybeLoweredFunc.mayInvoke.add(called);
+          }
+        }
+      }
+    }
+    if (block.terminal.kind === 'return') {
+      /**
+       * Assume directly returned functions are safe to call
+       */
+      const maybeLoweredFunc = temporaries.get(
+        block.terminal.value.identifier.id,
+      );
+      if (maybeLoweredFunc != null) {
+        hoistableFunctions.add(maybeLoweredFunc.fn);
+      }
+    }
+  }
+
+  for (const [_, {fn, mayInvoke}] of temporaries) {
+    if (hoistableFunctions.has(fn)) {
+      for (const called of mayInvoke) {
+        hoistableFunctions.add(called);
+      }
+    }
+  }
+  return hoistableFunctions;
 }
