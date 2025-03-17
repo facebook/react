@@ -246,16 +246,12 @@ jobs:
           git status -u
       - name: Commit changes to branch
         if: inputs.force == true || steps.check_should_commit.outputs.should_commit == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: |
-            ${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
+        run: |
+          git commit --author="${{ github.triggering_actor }} <${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}>" -m "${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
 
-            DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})
-          branch: builds/facebook-www
-          commit_user_name: ${{ github.triggering_actor }}
-          commit_user_email: ${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}
-          create_branch: true
+          DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})"
+
+          git push
 
   commit_fbsource_artifacts:
     needs: download_artifacts
@@ -413,13 +409,9 @@ jobs:
           git status
       - name: Commit changes to branch
         if: inputs.force == true || steps.check_should_commit.outputs.should_commit == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: |
-            ${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
+        run: |
+          git commit --author="${{ github.triggering_actor }} <${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}>" -m "${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
 
-            DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})
-          branch: builds/facebook-fbsource
-          commit_user_name: ${{ github.triggering_actor }}
-          commit_user_email: ${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}
-          create_branch: true
+          DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})"
+
+          git push
