@@ -31,6 +31,7 @@ import {
   applyViewTransitionName,
   restoreViewTransitionName,
   measureInstance,
+  measureClonedInstance,
   hasInstanceChanged,
   hasInstanceAffectedParent,
   wasInstanceInViewport,
@@ -834,7 +835,7 @@ export function measureUpdateViewTransition(
     if (clones === null) {
       previousMeasurements = null;
     } else {
-      previousMeasurements = clones.map(measureInstance);
+      previousMeasurements = clones.map(measureClonedInstance);
     }
   } else {
     previousMeasurements = oldFiber.memoizedState;
@@ -880,7 +881,7 @@ export function measureNestedViewTransitions(
         if (clones === null) {
           previousMeasurements = null;
         } else {
-          previousMeasurements = clones.map(measureInstance);
+          previousMeasurements = clones.map(measureClonedInstance);
         }
       } else {
         previousMeasurements = child.memoizedState;

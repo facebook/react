@@ -149,6 +149,7 @@ export const cloneRootViewTransitionContainer =
 export const removeRootViewTransitionClone =
   $$$config.removeRootViewTransitionClone;
 export const measureInstance = $$$config.measureInstance;
+export const measureClonedInstance = $$$config.measureClonedInstance;
 export const wasInstanceInViewport = $$$config.wasInstanceInViewport;
 export const hasInstanceChanged = $$$config.hasInstanceChanged;
 export const hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent;

@@ -1477,10 +1477,12 @@ export type InstanceMeasurement = {
   view: boolean, // is in viewport bounds
 };
 
-export function measureInstance(instance: Instance): InstanceMeasurement {
-  const ownerWindow = instance.ownerDocument.defaultView;
-  const rect = instance.getBoundingClientRect();
-  const computedStyle = getComputedStyle(instance);
+function createMeasurement(
+  rect: ClientRect | DOMRect,
+  computedStyle: CSSStyleDeclaration,
+  element: Element,
+): InstanceMeasurement {
+  const ownerWindow = element.ownerDocument.defaultView;
   return {
     rect: rect,
     abs:
@@ -1506,6 +1508,26 @@ export function measureInstance(instance: Instance): InstanceMeasurement {
       rect.top <= ownerWindow.innerHeight &&
       rect.left <= ownerWindow.innerWidth,
   };
+}
+
+export function measureInstance(instance: Instance): InstanceMeasurement {
+  const rect = instance.getBoundingClientRect();
+  const computedStyle = getComputedStyle(instance);
+  return createMeasurement(rect, computedStyle, instance);
+}
+
+export function measureClonedInstance(instance: Instance): InstanceMeasurement {
+  const measuredRect = instance.getBoundingClientRect();
+  // Adjust the DOMRect based on the translate that put it outside the viewport.
+  // TODO: This might not be completely correct if the parent also has a transform.
+  const rect = new DOMRect(
+    measuredRect.x + 20000,
+    measuredRect.y + 20000,
+    measuredRect.width,
+    measuredRect.height,
+  );
+  const computedStyle = getComputedStyle(instance);
+  return createMeasurement(rect, computedStyle, instance);
 }
 
 export function wasInstanceInViewport(

@@ -518,6 +518,10 @@ export function measureInstance(instance) {
   return null;
 }
 
+export function measureClonedInstance(instance) {
+  return null;
+}
+
 export function wasInstanceInViewport(measurement): boolean {
   return true;
 }
