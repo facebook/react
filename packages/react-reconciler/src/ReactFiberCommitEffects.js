@@ -51,7 +51,6 @@ import {
 import {
   getPublicInstance,
   createViewTransitionInstance,
-  createFragmentInstance,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -88,6 +87,7 @@ import {
   ResourceEffectIdentityKind,
   ResourceEffectUpdateKind,
 } from './ReactFiberHooks';
+import {createFragmentComponentInstance} from './ReactFiberFragmentComponent';
 
 function shouldProfile(current: Fiber): boolean {
   return (
@@ -899,7 +899,8 @@ function commitAttachRef(finishedWork: Fiber) {
         if (enableFragmentRefs) {
           const instance: null | FragmentInstanceType = finishedWork.stateNode;
           if (instance === null) {
-            finishedWork.stateNode = createFragmentInstance(finishedWork);
+            finishedWork.stateNode =
+              createFragmentComponentInstance(finishedWork);
           }
           instanceToUse = finishedWork.stateNode;
           break;

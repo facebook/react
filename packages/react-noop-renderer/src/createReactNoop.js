@@ -512,7 +512,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       throw new Error('Not yet implemented.');
     },
 
-    createFragmentInstance(parentInstance) {
+    createFragmentInstance(fragmentFiber, parentHostInstance) {
       return null;
     },
 

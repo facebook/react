@@ -166,7 +166,6 @@ import {
   cancelRootViewTransitionName,
   restoreRootViewTransitionName,
   isSingletonScope,
-  updateFragmentInstanceFiber,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -262,6 +261,7 @@ import {
   pushMutationContext,
   popMutationContext,
 } from './ReactFiberMutationTracking';
+import {updateFragmentComponentInstance} from './ReactFiberFragmentComponent';
 
 // Used during the commit phase to track the state of the Offscreen component stack.
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
@@ -2341,7 +2341,7 @@ function commitMutationEffectsOnFiber(
     case Fragment:
       if (enableFragmentRefs) {
         if (current && current.stateNode !== null) {
-          updateFragmentInstanceFiber(finishedWork, current.stateNode);
+          updateFragmentComponentInstance(finishedWork, current.stateNode);
         }
       }
     // Fallthrough

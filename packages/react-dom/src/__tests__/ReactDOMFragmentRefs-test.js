@@ -884,4 +884,25 @@ describe('FragmentRefs', () => {
       expect(clientRects[2].left).toBe(9);
     });
   });
+
+  describe('getRootNode', () => {
+    // @gate enableFragmentRefs
+    it('returns the root node of the parent', async () => {
+      const fragmentRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test() {
+        return (
+          <div>
+            <React.Fragment ref={fragmentRef}>
+              <div />
+            </React.Fragment>
+          </div>
+        );
+      }
+
+      await act(() => root.render(<Test />));
+      expect(fragmentRef.current.getRootNode()).toBe(document);
+    });
+  });
 });

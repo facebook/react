@@ -2212,6 +2212,7 @@ type FocusOptions = {
 
 export type FragmentInstanceType = {
   _fragmentFiber: Fiber,
+  _parentHostInstance: Instance,
   _eventListeners: null | Array<StoredEventListener>,
   _observers: null | Set<IntersectionObserver | ResizeObserver>,
   addEventListener(
@@ -2230,10 +2231,16 @@ export type FragmentInstanceType = {
   observeUsing(observer: IntersectionObserver | ResizeObserver): void,
   unobserveUsing(observer: IntersectionObserver | ResizeObserver): void,
   getClientRects(): Array<DOMRect>,
+  getRootNode(getRootNodeOptions?: {composed: boolean}): Document | ShadowRoot,
 };
 
-function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
+function FragmentInstance(
+  this: FragmentInstanceType,
+  fragmentFiber: Fiber,
+  parentHostInstance: Instance,
+) {
   this._fragmentFiber = fragmentFiber;
+  this._parentHostInstance = parentHostInstance;
   this._eventListeners = null;
   this._observers = null;
 }
@@ -2329,7 +2336,7 @@ FragmentInstance.prototype.focus = function (
 FragmentInstance.prototype.focusLast = function (
   this: FragmentInstanceType,
   focusOptions?: FocusOptions,
-) {
+): void {
   const children: Array<Instance> = [];
   traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
   for (let i = children.length - 1; i >= 0; i--) {
@@ -2348,17 +2355,23 @@ function collectChildren(
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
-  // TODO: When we have a parent element reference, we can skip traversal if the fragment's parent
-  //   does not contain document.activeElement
-  traverseFragmentInstance(
-    this._fragmentFiber,
-    blurActiveElementWithinFragment,
-  );
+  const activeElement = this._parentHostInstance.ownerDocument.activeElement;
+  if (
+    activeElement !== null &&
+    this._parentHostInstance.contains(activeElement)
+  ) {
+    traverseFragmentInstance(
+      this._fragmentFiber,
+      blurActiveElementWithinFragment,
+      activeElement,
+    );
+  }
 };
-function blurActiveElementWithinFragment(child: Instance): boolean {
-  // TODO: We can get the activeElement from the parent outside of the loop when we have a reference.
-  const ownerDocument = child.ownerDocument;
-  if (child === ownerDocument.activeElement) {
+function blurActiveElementWithinFragment(
+  child: Instance,
+  activeElement: Instance,
+): boolean {
+  if (child === activeElement) {
     // $FlowFixMe[prop-missing]
     child.blur();
     return true;
@@ -2420,6 +2433,16 @@ function collectClientRects(child: Instance, rects: Array<DOMRect>): boolean {
   rects.push.apply(rects, child.getClientRects());
   return false;
 }
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.getRootNode = function (
+  this: FragmentInstanceType,
+  getRootNodeOptions?: {composed: boolean},
+): Document | ShadowRoot {
+  // $FlowFixMe[incompatible-cast] Flow expects Node
+  return (this._parentHostInstance.getRootNode(getRootNodeOptions):
+    | Document
+    | ShadowRoot);
+};
 
 function normalizeListenerOptions(
   opts: ?EventListenerOptionsOrUseCapture,
@@ -2457,15 +2480,18 @@ function indexOfEventListener(
 
 export function createFragmentInstance(
   fragmentFiber: Fiber,
+  parentHostInstance: Instance,
 ): FragmentInstanceType {
-  return new (FragmentInstance: any)(fragmentFiber);
+  return new (FragmentInstance: any)(fragmentFiber, parentHostInstance);
 }
 
-export function updateFragmentInstanceFiber(
+export function updateFragmentInstance(
   fragmentFiber: Fiber,
+  parentHostInstance: Instance,
   instance: FragmentInstanceType,
 ): void {
   instance._fragmentFiber = fragmentFiber;
+  instance._parentHostInstance = parentHostInstance;
 }
 
 export function commitNewChildToFragmentInstance(
