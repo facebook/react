@@ -62,6 +62,7 @@ import {
 import {
   restoreEnterOrExitViewTransitions,
   restoreNestedViewTransitions,
+  restoreUpdateViewTransitionForGesture,
   appearingViewTransitions,
   commitEnterViewTransitions,
   measureNestedViewTransitions,
@@ -1170,15 +1171,6 @@ function restoreViewTransitionsOnFiber(finishedWork: Fiber) {
   // because the fiber tag is more specific. An exception is any flag related
   // to reconciliation, because those can be set on all fiber types.
   switch (finishedWork.tag) {
-    case HostComponent: {
-      // const instance: Instance = finishedWork.stateNode;
-      // TODO: Restore the name.
-      recursivelyRestoreViewTransitions(finishedWork);
-      break;
-    }
-    case HostText: {
-      break;
-    }
     case HostPortal: {
       // TODO: Consider what should happen to Portals. For now we exclude them.
       break;
@@ -1197,8 +1189,7 @@ function restoreViewTransitionsOnFiber(finishedWork: Fiber) {
       break;
     }
     case ViewTransitionComponent:
-      const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
-      viewTransitionState.clones = null; // Reset
+      restoreUpdateViewTransitionForGesture(current, finishedWork);
       recursivelyRestoreViewTransitions(finishedWork);
       break;
     default: {

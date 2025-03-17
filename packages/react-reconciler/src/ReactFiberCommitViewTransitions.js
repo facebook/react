@@ -569,6 +569,15 @@ export function restoreUpdateViewTransition(
   restoreViewTransitionOnHostInstances(finishedWork.child, true);
 }
 
+export function restoreUpdateViewTransitionForGesture(
+  current: Fiber,
+  finishedWork: Fiber,
+): void {
+  // For gestures we don't need to reset "finishedWork" because those would
+  // have all been clones that got deleted.
+  restoreViewTransitionOnHostInstances(current.child, true);
+}
+
 export function restoreNestedViewTransitions(changedParent: Fiber): void {
   let child = changedParent.child;
   while (child !== null) {
