@@ -40,6 +40,7 @@ import {
   popMutationContext,
   pushMutationContext,
   viewTransitionMutationContext,
+  trackHostMutation,
 } from './ReactFiberMutationTracking';
 import {
   MutationMask,
@@ -432,6 +433,7 @@ function recursivelyInsertNewFiber(
       // For insertions we don't need to clone. It's already new state node.
       if (visitPhase !== INSERT_APPEARING_PAIR) {
         appendChild(hostParentClone, instance);
+        trackHostMutation();
         recursivelyInsertNew(
           finishedWork,
           instance,
@@ -461,6 +463,7 @@ function recursivelyInsertNewFiber(
       // For insertions we don't need to clone. It's already new state node.
       if (visitPhase !== INSERT_APPEARING_PAIR) {
         appendChild(hostParentClone, textInstance);
+        trackHostMutation();
       }
       break;
     }
@@ -586,6 +589,7 @@ function recursivelyInsertClonesFromExistingTree(
         }
         if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
           unhideInstance(clone, child.memoizedProps);
+          trackHostMutation();
         }
         break;
       }
@@ -601,6 +605,7 @@ function recursivelyInsertClonesFromExistingTree(
         appendChild(hostParentClone, clone);
         if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
           unhideTextInstance(clone, child.memoizedProps);
+          trackHostMutation();
         }
         break;
       }
@@ -690,6 +695,10 @@ function recursivelyInsertClones(
     for (let i = 0; i < deletions.length; i++) {
       const childToDelete = deletions[i];
       trackEnterViewTransitions(childToDelete);
+      // Normally we would only mark something as triggering a mutation if there was
+      // actually a HostInstance below here. If this tree didn't contain a HostInstances
+      // we shouldn't trigger a mutation even though a virtual component was deleted.
+      trackHostMutation();
     }
   }
 
@@ -812,6 +821,7 @@ function insertDestinationClonesOfFiber(
         clone = cloneMutableInstance(instance, true);
         if (finishedWork.flags & ContentReset) {
           resetTextContent(clone);
+          trackHostMutation();
         }
       } else {
         // If we have children we'll clone them as we walk the tree so we just
@@ -836,6 +846,7 @@ function insertDestinationClonesOfFiber(
         );
         appendChild(hostParentClone, clone);
         unhideInstance(clone, finishedWork.memoizedProps);
+        trackHostMutation();
       } else {
         recursivelyInsertClones(finishedWork, clone, null, visitPhase);
         appendChild(hostParentClone, clone);
@@ -862,10 +873,12 @@ function insertDestinationClonesOfFiber(
         const newText: string = finishedWork.memoizedProps;
         const oldText: string = current.memoizedProps;
         commitTextUpdate(clone, newText, oldText);
+        trackHostMutation();
       }
       appendChild(hostParentClone, clone);
       if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
         unhideTextInstance(clone, finishedWork.memoizedProps);
+        trackHostMutation();
       }
       break;
     }
@@ -896,6 +909,10 @@ function insertDestinationClonesOfFiber(
       } else if (current !== null && current.memoizedState === null) {
         // Was previously mounted as visible but is now hidden.
         trackEnterViewTransitions(current);
+        // Normally we would only mark something as triggering a mutation if there was
+        // actually a HostInstance below here. If this tree didn't contain a HostInstances
+        // we shouldn't trigger a mutation even though a virtual component was hidden.
+        trackHostMutation();
       }
       break;
     }
