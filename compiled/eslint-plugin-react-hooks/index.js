@@ -29533,6 +29533,9 @@ PERFORMANCE OF THIS SOFTWARE.
         case "computed": {
           return "[".concat(printPlace(key.name), "]");
         }
+        case "number": {
+          return String(key.name);
+        }
       }
     }
     function printInstructionValue(instrValue) {
@@ -35935,6 +35938,8 @@ PERFORMANCE OF THIS SOFTWARE.
         return { kind: "computed", name: place };
       } else if (key.isIdentifier()) {
         return { kind: "identifier", name: key.node.name };
+      } else if (key.isNumericLiteral()) {
+        return { kind: "identifier", name: String(key.node.value) };
       }
       builder.errors.push({
         reason: "(BuildHIR::lowerExpression) Expected Identifier, got ".concat(
@@ -54069,6 +54074,9 @@ PERFORMANCE OF THIS SOFTWARE.
             suggestions: null
           });
           return expr;
+        }
+        case "number": {
+          return libExports.numericLiteral(key.name);
         }
       }
     }
