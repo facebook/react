@@ -666,7 +666,6 @@ var hasOwnProperty = Object.prototype.hasOwnProperty,
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
   REACT_SCOPE_TYPE = Symbol.for("react.scope"),
-  REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
@@ -13610,8 +13609,6 @@ function createFiberFromTypeAndProps(
           (type.lanes = lanes),
           type
         );
-      case REACT_OFFSCREEN_TYPE:
-        return createFiberFromOffscreen(pendingProps, mode, lanes, key);
       case REACT_LEGACY_HIDDEN_TYPE:
         return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
       case REACT_VIEW_TRANSITION_TYPE:
@@ -13698,7 +13695,6 @@ function createFiberFromFragment(elements, mode, lanes, key) {
 }
 function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
   pendingProps = createFiber(22, pendingProps, key, mode);
-  pendingProps.elementType = REACT_OFFSCREEN_TYPE;
   pendingProps.lanes = lanes;
   var primaryChildInstance = {
     _visibility: 1,
@@ -18903,14 +18899,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1918 = React.version;
 if (
-  "19.1.0-www-classic-1a191701-20250317" !==
+  "19.1.0-www-classic-df319522-20250317" !==
   isomorphicReactPackageVersion$jscomp$inline_1918
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1918,
-      "19.1.0-www-classic-1a191701-20250317"
+      "19.1.0-www-classic-df319522-20250317"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18928,10 +18924,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2507 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-1a191701-20250317",
+  version: "19.1.0-www-classic-df319522-20250317",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-1a191701-20250317"
+  reconcilerVersion: "19.1.0-www-classic-df319522-20250317"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2508 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -19295,4 +19291,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-1a191701-20250317";
+exports.version = "19.1.0-www-classic-df319522-20250317";

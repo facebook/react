@@ -12419,8 +12419,6 @@ module.exports = function ($$$config) {
             (type.lanes = lanes),
             type
           );
-        case REACT_OFFSCREEN_TYPE:
-          return createFiberFromOffscreen(pendingProps, mode, lanes, key);
         case REACT_LEGACY_HIDDEN_TYPE:
           return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
         case REACT_VIEW_TRANSITION_TYPE:
@@ -12511,7 +12509,6 @@ module.exports = function ($$$config) {
   }
   function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
     pendingProps = createFiber(22, pendingProps, key, mode);
-    pendingProps.elementType = REACT_OFFSCREEN_TYPE;
     pendingProps.lanes = lanes;
     var primaryChildInstance = {
       _visibility: 1,
@@ -12797,7 +12794,6 @@ module.exports = function ($$$config) {
     REACT_MEMO_TYPE = Symbol.for("react.memo"),
     REACT_LAZY_TYPE = Symbol.for("react.lazy"),
     REACT_SCOPE_TYPE = Symbol.for("react.scope"),
-    REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
     REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
     REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
     REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
@@ -13943,7 +13939,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-1a191701-20250317"
+      reconcilerVersion: "19.1.0-www-classic-df319522-20250317"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
