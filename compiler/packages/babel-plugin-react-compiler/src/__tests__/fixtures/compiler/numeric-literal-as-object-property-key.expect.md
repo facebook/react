@@ -6,7 +6,14 @@ function Test() {
   const obj = {
     21: 'dimaMachina',
   };
-  return <div>{obj[21]}</div>;
+  // Destructuring assignment
+  const {21: myVar} = obj;
+  return (
+    <div>
+      {obj[21]}
+      {myVar}
+    </div>
+  );
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -21,17 +28,30 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Test() {
-  const $ = _c(1);
+  const $ = _c(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const obj = { 21: "dimaMachina" };
-
-    t0 = <div>{obj[21]}</div>;
+    t0 = { 21: "dimaMachina" };
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  return t0;
+  const obj = t0;
+
+  const { 21: myVar } = obj;
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = (
+      <div>
+        {obj[21]}
+        {myVar}
+      </div>
+    );
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -42,4 +62,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div>dimaMachina</div>
+(kind: ok) <div>dimaMachinadimaMachina</div>
