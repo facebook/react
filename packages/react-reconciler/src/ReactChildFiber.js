@@ -1457,6 +1457,7 @@ function createChildReconciler(
           deleteChild(returnFiber, oldFiber);
         }
       }
+      previousNewFiber.sibling = newFiber;
       lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
       previousNewFiber = newFiber;
       oldFiber = nextOldFiber;
