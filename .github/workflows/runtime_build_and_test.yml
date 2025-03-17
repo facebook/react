@@ -330,7 +330,7 @@ jobs:
           merge-multiple: true
       - name: Display structure of build
         run: ls -R build
-      - run: echo ${{ github.sha }} >> build/COMMIT_SHA
+      - run: echo ${{ github.event.pull_request.head.sha || github.sha }} >> build/COMMIT_SHA
       - name: Scrape warning messages
         run: |
           mkdir -p ./build/__test_utils__
@@ -664,7 +664,7 @@ jobs:
           node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
       - name: Display structure of build for PR
         run: ls -R build
-      - run: echo ${{ github.sha }} >> build/COMMIT_SHA
+      - run: echo ${{ github.event.pull_request.head.sha || github.sha }} >> build/COMMIT_SHA
       - run: node ./scripts/tasks/danger
       - name: Archive sizebot results
         uses: actions/upload-artifact@v4
