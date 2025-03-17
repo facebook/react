@@ -236,6 +236,7 @@ type FrontendEvents = {
   renamePath: [RenamePath],
   savedPreferences: [SavedPreferencesParams],
   setTraceUpdatesEnabled: [boolean],
+  setFbInternalFeaturesEnabled: [boolean],
   shutdown: [],
   startInspectingHost: [],
   startProfiling: [StartProfilingParams],
