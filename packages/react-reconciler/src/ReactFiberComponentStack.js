@@ -24,6 +24,7 @@ import {
   ClassComponent,
   HostText,
   ViewTransitionComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
 import {
   describeBuiltInComponentFrame,
@@ -53,6 +54,8 @@ function describeFiber(fiber: Fiber): string {
       return describeFunctionComponentFrame(fiber.type.render);
     case ClassComponent:
       return describeClassComponentFrame(fiber.type);
+    case ActivityComponent:
+      return describeBuiltInComponentFrame('Activity');
     case ViewTransitionComponent:
       if (enableViewTransition) {
         return describeBuiltInComponentFrame('ViewTransition');
@@ -129,9 +132,12 @@ export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
       case SuspenseListComponent:
         info += describeBuiltInComponentFrame('SuspenseList');
         break;
+      case ActivityComponent:
+        info += describeBuiltInComponentFrame('Activity');
+        break;
       case ViewTransitionComponent:
         if (enableViewTransition) {
-          info += describeBuiltInComponentFrame('SuspenseList');
+          info += describeBuiltInComponentFrame('ViewTransition');
           break;
         }
       // Fallthrough

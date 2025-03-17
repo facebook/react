@@ -169,8 +169,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
-        working-directory: compiler
+      - run: yarn --cwd compiler install --frozen-lockfile
       - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
 
   # ----- BUILD -----
@@ -208,8 +207,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
-        working-directory: compiler
+      - run: yarn --cwd compiler install --frozen-lockfile
       - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
@@ -287,8 +285,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
-        working-directory: compiler
+      - run: yarn --cwd compiler install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -330,7 +327,7 @@ jobs:
           merge-multiple: true
       - name: Display structure of build
         run: ls -R build
-      - run: echo ${{ github.sha }} >> build/COMMIT_SHA
+      - run: echo ${{ github.event.pull_request.head.sha || github.sha }} >> build/COMMIT_SHA
       - name: Scrape warning messages
         run: |
           mkdir -p ./build/__test_utils__
@@ -438,8 +435,7 @@ jobs:
           key: fixtures_dom-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
-      - run: yarn install --frozen-lockfile
-        working-directory: fixtures/dom
+      - run: yarn --cwd fixtures/dom install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -635,8 +631,7 @@ jobs:
           key: runtime-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
-      - run: yarn install --frozen-lockfile
-        working-directory: scripts/release
+      - run: yarn --cwd scripts/release install --frozen-lockfile
       - name: Download artifacts for base revision
         run: |
           GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse ${{ github.event.pull_request.base.sha }})
@@ -664,7 +659,7 @@ jobs:
           node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
       - name: Display structure of build for PR
         run: ls -R build
-      - run: echo ${{ github.sha }} >> build/COMMIT_SHA
+      - run: echo ${{ github.event.pull_request.head.sha || github.sha }} >> build/COMMIT_SHA
       - run: node ./scripts/tasks/danger
       - name: Archive sizebot results
         uses: actions/upload-artifact@v4

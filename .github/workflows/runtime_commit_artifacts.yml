@@ -16,6 +16,11 @@ on:
         required: true
         default: false
         type: boolean
+      dry_run:
+        description: Perform a dry run (run everything except push)
+        required: true
+        default: false
+        type: boolean
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -79,10 +84,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
-        name: yarn install (react)
-      - run: yarn install --frozen-lockfile
-        name: yarn install (scripts/release)
-        working-directory: scripts/release
+      - run: yarn --cwd scripts/release install --frozen-lockfile
       - name: Download artifacts for base revision
         run: |
           GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.event.workflow_run.head_sha || github.sha }}
@@ -246,16 +248,16 @@ jobs:
           git status -u
       - name: Commit changes to branch
         if: inputs.force == true || steps.check_should_commit.outputs.should_commit == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: |
-            ${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
+        run: |
+          git config --global user.email "${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}"
+          git config --global user.name "${{ github.triggering_actor }}"
 
-            DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})
-          branch: builds/facebook-www
-          commit_user_name: ${{ github.triggering_actor }}
-          commit_user_email: ${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}
-          create_branch: true
+          git commit -m "${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
+
+          DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})" || echo "No changes to commit"
+      - name: Push changes to branch
+        if: inputs.dry_run == false && (inputs.force == true || steps.check_should_commit.outputs.should_commit == 'true')
+        run: git push
 
   commit_fbsource_artifacts:
     needs: download_artifacts
@@ -413,13 +415,13 @@ jobs:
           git status
       - name: Commit changes to branch
         if: inputs.force == true || steps.check_should_commit.outputs.should_commit == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: |
-            ${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
+        run: |
+          git config --global user.email "${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}"
+          git config --global user.name "${{ github.triggering_actor }}"
 
-            DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})
-          branch: builds/facebook-fbsource
-          commit_user_name: ${{ github.triggering_actor }}
-          commit_user_email: ${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}
-          create_branch: true
+          git commit -m "${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
+
+          DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})" || echo "No changes to commit"
+      - name: Push changes to branch
+        if: inputs.dry_run == false && (inputs.force == true || steps.check_should_commit.outputs.should_commit == 'true')
+        run: git push

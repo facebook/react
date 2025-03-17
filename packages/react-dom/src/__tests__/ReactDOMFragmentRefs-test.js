@@ -15,6 +15,9 @@ let act;
 let container;
 let Fragment;
 let Activity;
+let mockIntersectionObserver;
+let simulateIntersection;
+let assertConsoleErrorDev;
 
 describe('FragmentRefs', () => {
   beforeEach(() => {
@@ -24,6 +27,12 @@ describe('FragmentRefs', () => {
     Activity = React.unstable_Activity;
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
+    const IntersectionMocks = require('./utils/IntersectionMocks');
+    mockIntersectionObserver = IntersectionMocks.mockIntersectionObserver;
+    simulateIntersection = IntersectionMocks.simulateIntersection;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
+
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -615,6 +624,111 @@ describe('FragmentRefs', () => {
         // Event order is flipped here because the nested child re-registers first
         expect(logs).toEqual(['clicked 2', 'clicked 1']);
       });
+    });
+  });
+
+  describe('observers', () => {
+    beforeEach(() => {
+      mockIntersectionObserver();
+    });
+
+    // @gate enableFragmentRefs
+    it('attaches intersection observers to children', async () => {
+      let logs = [];
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          logs.push(entry.target.id);
+        });
+      });
+      function Test({showB}) {
+        const fragmentRef = React.useRef(null);
+        React.useEffect(() => {
+          fragmentRef.current.observeUsing(observer);
+          const lastRefValue = fragmentRef.current;
+          return () => {
+            lastRefValue.unobserveUsing(observer);
+          };
+        }, []);
+        return (
+          <div id="parent">
+            <React.Fragment ref={fragmentRef}>
+              <div id="childA">A</div>
+              {showB && <div id="childB">B</div>}
+            </React.Fragment>
+          </div>
+        );
+      }
+
+      function simulateAllChildrenIntersecting() {
+        const parent = container.firstChild;
+        if (parent) {
+          const children = Array.from(parent.children).map(child => {
+            return [child, {y: 0, x: 0, width: 1, height: 1}, 1];
+          });
+          simulateIntersection(...children);
+        }
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => root.render(<Test showB={false} />));
+      simulateAllChildrenIntersecting();
+      expect(logs).toEqual(['childA']);
+
+      // Reveal child and expect it to be observed
+      logs = [];
+      await act(() => root.render(<Test showB={true} />));
+      simulateAllChildrenIntersecting();
+      expect(logs).toEqual(['childA', 'childB']);
+
+      // Hide child and expect it to be unobserved
+      logs = [];
+      await act(() => root.render(<Test showB={false} />));
+      simulateAllChildrenIntersecting();
+      expect(logs).toEqual(['childA']);
+
+      // Unmount component and expect all children to be unobserved
+      logs = [];
+      await act(() => root.render(null));
+      simulateAllChildrenIntersecting();
+      expect(logs).toEqual([]);
+    });
+
+    // @gate enableFragmentRefs
+    it('warns when unobserveUsing() is called with an observer that was not observed', async () => {
+      const fragmentRef = React.createRef();
+      const observer = new IntersectionObserver(() => {});
+      const observer2 = new IntersectionObserver(() => {});
+      function Test() {
+        return (
+          <React.Fragment ref={fragmentRef}>
+            <div />
+          </React.Fragment>
+        );
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => root.render(<Test />));
+
+      // Warning when there is no attached observer
+      fragmentRef.current.unobserveUsing(observer);
+      assertConsoleErrorDev(
+        [
+          'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
+            'instance. First attach the observer with observeUsing()',
+        ],
+        {withoutStack: true},
+      );
+
+      // Warning when the attached observer does not match
+      fragmentRef.current.observeUsing(observer);
+      fragmentRef.current.unobserveUsing(observer2);
+      assertConsoleErrorDev(
+        [
+          'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
+            'instance. First attach the observer with observeUsing()',
+        ],
+        {withoutStack: true},
+      );
     });
   });
 });

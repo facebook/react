@@ -42,6 +42,8 @@ import {
   ElementTypeOtherOrUnknown,
   ElementTypeProfiler,
   ElementTypeSuspense,
+  ElementTypeActivity,
+  ElementTypeViewTransition,
 } from 'react-devtools-shared/src/frontend/types';
 import {getDefaultOpenInEditorURL} from 'react-devtools-shared/src/utils';
 
@@ -56,6 +58,7 @@ import type {
   RegExpComponentFilter,
   EnvironmentNameComponentFilter,
 } from 'react-devtools-shared/src/frontend/types';
+import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 
 const vscodeFilepath = 'vscode://file/{path}:{line}';
 
@@ -472,6 +475,9 @@ export default function ComponentsSettings({
                         ((parseInt(currentTarget.value, 10): any): ElementType),
                       )
                     }>
+                    {isInternalFacebookBuild && (
+                      <option value={ElementTypeActivity}>activity</option>
+                    )}
                     <option value={ElementTypeClass}>class</option>
                     <option value={ElementTypeContext}>context</option>
                     <option value={ElementTypeFunction}>function</option>
@@ -485,6 +491,11 @@ export default function ComponentsSettings({
                     <option value={ElementTypeOtherOrUnknown}>other</option>
                     <option value={ElementTypeProfiler}>profiler</option>
                     <option value={ElementTypeSuspense}>suspense</option>
+                    {isInternalFacebookBuild && (
+                      <option value={ElementTypeViewTransition}>
+                        view transition
+                      </option>
+                    )}
                   </select>
                 )}
                 {(componentFilter.type === ComponentFilterLocation ||
