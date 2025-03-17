@@ -18845,7 +18845,7 @@ function createViewTransitionInstance(name) {
 }
 function FragmentInstance(fragmentFiber) {
   this._fragmentFiber = fragmentFiber;
-  this._eventListeners = null;
+  this._observers = this._eventListeners = null;
 }
 FragmentInstance.prototype.addEventListener = function (
   type,
@@ -18915,6 +18915,37 @@ FragmentInstance.prototype.focus = function () {
     void 0
   );
 };
+FragmentInstance.prototype.observeUsing = function (observer) {
+  null === this._observers && (this._observers = new Set());
+  this._observers.add(observer);
+  traverseFragmentInstanceChildren(
+    this._fragmentFiber.child,
+    observeChild,
+    observer,
+    void 0,
+    void 0
+  );
+};
+function observeChild(child, observer) {
+  observer.observe(child);
+  return !1;
+}
+FragmentInstance.prototype.unobserveUsing = function (observer) {
+  null !== this._observers &&
+    this._observers.has(observer) &&
+    (this._observers.delete(observer),
+    traverseFragmentInstanceChildren(
+      this._fragmentFiber.child,
+      unobserveChild,
+      observer,
+      void 0,
+      void 0
+    ));
+};
+function unobserveChild(child, observer) {
+  observer.unobserve(child);
+  return !1;
+}
 function normalizeListenerOptions(opts) {
   return null == opts
     ? "0"
@@ -18946,16 +18977,20 @@ function indexOfEventListener(
   return -1;
 }
 function commitNewChildToFragmentInstance(childElement, fragmentInstance) {
-  fragmentInstance = fragmentInstance._eventListeners;
-  if (null !== fragmentInstance)
-    for (var i = 0; i < fragmentInstance.length; i++) {
-      var _eventListeners$i = fragmentInstance[i];
+  var eventListeners = fragmentInstance._eventListeners;
+  if (null !== eventListeners)
+    for (var i = 0; i < eventListeners.length; i++) {
+      var _eventListeners$i = eventListeners[i];
       childElement.addEventListener(
         _eventListeners$i.type,
         _eventListeners$i.listener,
         _eventListeners$i.optionsOrUseCapture
       );
     }
+  null !== fragmentInstance._observers &&
+    fragmentInstance._observers.forEach(function (observer) {
+      observer.observe(childElement);
+    });
 }
 function clearContainerSparingly(container) {
   var nextNode = container.firstChild;
@@ -20641,14 +20676,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2078 = React.version;
 if (
-  "19.1.0-www-classic-8243f3f0-20250317" !==
+  "19.1.0-www-classic-cd28a946-20250317" !==
   isomorphicReactPackageVersion$jscomp$inline_2078
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2078,
-      "19.1.0-www-classic-8243f3f0-20250317"
+      "19.1.0-www-classic-cd28a946-20250317"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20666,10 +20701,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2080 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-8243f3f0-20250317",
+  version: "19.1.0-www-classic-cd28a946-20250317",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-8243f3f0-20250317"
+  reconcilerVersion: "19.1.0-www-classic-cd28a946-20250317"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2080.getLaneLabelMap = getLaneLabelMap),
@@ -21036,7 +21071,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-8243f3f0-20250317";
+exports.version = "19.1.0-www-classic-cd28a946-20250317";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

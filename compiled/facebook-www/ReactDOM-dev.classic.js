@@ -24327,7 +24327,7 @@ __DEV__ &&
     }
     function FragmentInstance(fragmentFiber) {
       this._fragmentFiber = fragmentFiber;
-      this._eventListeners = null;
+      this._observers = this._eventListeners = null;
     }
     function addEventListenerToChild(
       child,
@@ -24345,6 +24345,14 @@ __DEV__ &&
       optionsOrUseCapture
     ) {
       child.removeEventListener(type, listener, optionsOrUseCapture);
+      return !1;
+    }
+    function observeChild(child, observer) {
+      observer.observe(child);
+      return !1;
+    }
+    function unobserveChild(child, observer) {
+      observer.unobserve(child);
       return !1;
     }
     function normalizeListenerOptions(opts) {
@@ -24378,16 +24386,20 @@ __DEV__ &&
       return -1;
     }
     function commitNewChildToFragmentInstance(childElement, fragmentInstance) {
-      fragmentInstance = fragmentInstance._eventListeners;
-      if (null !== fragmentInstance)
-        for (var i = 0; i < fragmentInstance.length; i++) {
-          var _eventListeners$i = fragmentInstance[i];
+      var eventListeners = fragmentInstance._eventListeners;
+      if (null !== eventListeners)
+        for (var i = 0; i < eventListeners.length; i++) {
+          var _eventListeners$i = eventListeners[i];
           childElement.addEventListener(
             _eventListeners$i.type,
             _eventListeners$i.listener,
             _eventListeners$i.optionsOrUseCapture
           );
         }
+      null !== fragmentInstance._observers &&
+        fragmentInstance._observers.forEach(function (observer) {
+          observer.observe(childElement);
+        });
     }
     function clearContainerSparingly(container) {
       var nextNode = container.firstChild;
@@ -29877,6 +29889,31 @@ __DEV__ &&
         void 0
       );
     };
+    FragmentInstance.prototype.observeUsing = function (observer) {
+      null === this._observers && (this._observers = new Set());
+      this._observers.add(observer);
+      traverseFragmentInstanceChildren(
+        this._fragmentFiber.child,
+        observeChild,
+        observer,
+        void 0,
+        void 0
+      );
+    };
+    FragmentInstance.prototype.unobserveUsing = function (observer) {
+      null !== this._observers && this._observers.has(observer)
+        ? (this._observers.delete(observer),
+          traverseFragmentInstanceChildren(
+            this._fragmentFiber.child,
+            unobserveChild,
+            observer,
+            void 0,
+            void 0
+          ))
+        : console.error(
+            "You are calling unobserveUsing() with an observer that is not being observed with this fragment instance. First attach the observer with observeUsing()"
+          );
+    };
     var previousHydratableOnEnteringScopedSingleton = null,
       NotLoaded = 0,
       Loaded = 1,
@@ -30166,11 +30203,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-classic-8243f3f0-20250317" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-classic-cd28a946-20250317" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-classic-8243f3f0-20250317\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-classic-cd28a946-20250317\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30213,10 +30250,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-classic-8243f3f0-20250317",
+          version: "19.1.0-www-classic-cd28a946-20250317",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-classic-8243f3f0-20250317"
+          reconcilerVersion: "19.1.0-www-classic-cd28a946-20250317"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30814,7 +30851,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-classic-8243f3f0-20250317";
+    exports.version = "19.1.0-www-classic-cd28a946-20250317";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
