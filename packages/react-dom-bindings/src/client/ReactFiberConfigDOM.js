@@ -2297,12 +2297,7 @@ FragmentInstance.prototype.observeUsing = function (
     this._observers = new Set();
   }
   this._observers.add(observer);
-  traverseFragmentInstanceChildren(
-    this,
-    this._fragmentFiber.child,
-    observeChild,
-    observer,
-  );
+  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
 };
 function observeChild(
   child: Instance,
@@ -2325,12 +2320,7 @@ FragmentInstance.prototype.unobserveUsing = function (
     }
   } else {
     this._observers.delete(observer);
-    traverseFragmentInstanceChildren(
-      this,
-      this._fragmentFiber.child,
-      unobserveChild,
-      observer,
-    );
+    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
   }
 };
 function unobserveChild(
