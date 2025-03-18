@@ -31,14 +31,14 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
+import { isForgetEnabled_Fixtures as _isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime"; // @gating
 import * as React from "react";
 
 /**
  * Test that the correct `Foo` is printed
  */
-let Foo = isForgetEnabled_Fixtures()
+let Foo = _isForgetEnabled_Fixtures()
   ? () => {
       const $ = _c(1);
       let t0;
@@ -52,7 +52,7 @@ let Foo = isForgetEnabled_Fixtures()
     }
   : () => <div>hello world 1!</div>;
 const MemoOne = React.memo(Foo);
-Foo = isForgetEnabled_Fixtures()
+Foo = _isForgetEnabled_Fixtures()
   ? () => {
       const $ = _c(1);
       let t0;

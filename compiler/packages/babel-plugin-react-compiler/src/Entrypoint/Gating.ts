@@ -7,7 +7,6 @@
 
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
-import {PluginOptions} from './Options';
 import {CompilerError} from '../CompilerError';
 
 /**
@@ -34,7 +33,7 @@ import {CompilerError} from '../CompilerError';
 function insertAdditionalFunctionDeclaration(
   fnPath: NodePath<t.FunctionDeclaration>,
   compiled: t.FunctionDeclaration,
-  gating: NonNullable<PluginOptions['gating']>,
+  gatingImportedName: string,
 ): void {
   const originalFnName = fnPath.node.id;
   const originalFnParams = fnPath.node.params;
@@ -58,7 +57,7 @@ function insertAdditionalFunctionDeclaration(
   });
 
   const gatingCondition = fnPath.scope.generateUidIdentifier(
-    `${gating.importSpecifierName}_result`,
+    `${gatingImportedName}_result`,
   );
   const unoptimizedFnName = fnPath.scope.generateUidIdentifier(
     `${originalFnName.name}_unoptimized`,
@@ -115,7 +114,7 @@ function insertAdditionalFunctionDeclaration(
     t.variableDeclaration('const', [
       t.variableDeclarator(
         gatingCondition,
-        t.callExpression(t.identifier(gating.importSpecifierName), []),
+        t.callExpression(t.identifier(gatingImportedName), []),
       ),
     ]),
   );
@@ -129,7 +128,7 @@ export function insertGatedFunctionDeclaration(
     | t.FunctionDeclaration
     | t.ArrowFunctionExpression
     | t.FunctionExpression,
-  gating: NonNullable<PluginOptions['gating']>,
+  gatingImportedName: string,
   referencedBeforeDeclaration: boolean,
 ): void {
   if (referencedBeforeDeclaration && fnPath.isFunctionDeclaration()) {
@@ -138,10 +137,10 @@ export function insertGatedFunctionDeclaration(
       description: `Got ${compiled.type} but expected FunctionDeclaration`,
       loc: fnPath.node.loc ?? null,
     });
-    insertAdditionalFunctionDeclaration(fnPath, compiled, gating);
+    insertAdditionalFunctionDeclaration(fnPath, compiled, gatingImportedName);
   } else {
     const gatingExpression = t.conditionalExpression(
-      t.callExpression(t.identifier(gating.importSpecifierName), []),
+      t.callExpression(t.identifier(gatingImportedName), []),
       buildFunctionExpression(compiled),
       buildFunctionExpression(fnPath.node),
     );

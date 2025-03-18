@@ -21,7 +21,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime";
+import { useFire as _useFire } from "react/compiler-runtime";
 import { c as _c } from "react/compiler-runtime"; // @enableFire @inferEffectDependencies
 import { fire, useEffect } from "react";
 
@@ -38,7 +38,7 @@ function Component(props) {
     t0 = $[1];
   }
   const foo = t0;
-  const t1 = useFire(foo);
+  const t1 = _useFire(foo);
   let t2;
   if ($[2] !== props || $[3] !== t1) {
     t2 = () => {

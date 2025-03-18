@@ -36,14 +36,17 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { useRenderCounter, shouldInstrument } from "react-compiler-runtime";
+import { isForgetEnabled_Fixtures as _isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
+import {
+  useRenderCounter as _useRenderCounter,
+  shouldInstrument as _shouldInstrument,
+} from "react-compiler-runtime";
 import { c as _c } from "react/compiler-runtime"; // @enableEmitInstrumentForget @compilationMode(annotation) @gating
-const Bar = isForgetEnabled_Fixtures()
+const Bar = _isForgetEnabled_Fixtures()
   ? function Bar(props) {
       "use forget";
-      if (DEV && shouldInstrument)
-        useRenderCounter("Bar", "/codegen-instrument-forget-gating-test.ts");
+      if (DEV && _shouldInstrument)
+        _useRenderCounter("Bar", "/codegen-instrument-forget-gating-test.ts");
       const $ = _c(2);
       let t0;
       if ($[0] !== props.bar) {
@@ -63,11 +66,11 @@ const Bar = isForgetEnabled_Fixtures()
 function NoForget(props) {
   return <Bar>{props.noForget}</Bar>;
 }
-const Foo = isForgetEnabled_Fixtures()
+const Foo = _isForgetEnabled_Fixtures()
   ? function Foo(props) {
       "use forget";
-      if (DEV && shouldInstrument)
-        useRenderCounter("Foo", "/codegen-instrument-forget-gating-test.ts");
+      if (DEV && _shouldInstrument)
+        _useRenderCounter("Foo", "/codegen-instrument-forget-gating-test.ts");
       const $ = _c(3);
       if (props.bar < 0) {
         return props.children;

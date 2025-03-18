@@ -18,9 +18,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
+import { isForgetEnabled_Fixtures as _isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime"; // @gating
-const Component = isForgetEnabled_Fixtures()
+const Component = _isForgetEnabled_Fixtures()
   ? function Component() {
       const $ = _c(1);
       const name = Component.name;

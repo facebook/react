@@ -29,16 +29,21 @@ import {
   promoteTemporary,
   reversePostorderBlocks,
 } from '../HIR';
+import {ImportedExternalFunction} from '../HIR/Environment';
 import {createTemporaryPlace} from '../HIR/HIRBuilder';
 import {enterSSA} from '../SSA';
 import {inferTypes} from '../TypeInference';
 
 export function lowerContextAccess(
   fn: HIRFunction,
-  loweredContextCallee: ExternalFunction,
+  loweredContextCalleeConfig: ExternalFunction,
 ): void {
   const contextAccess: Map<IdentifierId, CallExpression> = new Map();
   const contextKeys: Map<IdentifierId, Array<string>> = new Map();
+  const loweredContextCallee: ImportedExternalFunction = {
+    ...loweredContextCalleeConfig,
+    local: fn.env.importedUids.lowerContextAccess!,
+  };
 
   // collect context access and keys
   for (const [, block] of fn.body.blocks) {
@@ -128,14 +133,15 @@ export function lowerContextAccess(
 
 function emitLoadLoweredContextCallee(
   env: Environment,
-  loweredContextCallee: ExternalFunction,
+  loweredContextCallee: ImportedExternalFunction,
 ): Instruction {
   const loadGlobal: LoadGlobal = {
     kind: 'LoadGlobal',
     binding: {
-      kind: 'ImportNamespace',
+      kind: 'ImportSpecifier',
       module: loweredContextCallee.source,
-      name: loweredContextCallee.importSpecifierName,
+      name: loweredContextCallee.local,
+      imported: loweredContextCallee.importSpecifierName,
     },
     loc: GeneratedSource,
   };

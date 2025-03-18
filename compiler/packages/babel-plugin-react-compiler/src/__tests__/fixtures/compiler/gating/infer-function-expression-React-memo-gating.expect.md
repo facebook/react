@@ -13,11 +13,11 @@ export default React.forwardRef(function notNamedLikeAComponent(props) {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
+import { isForgetEnabled_Fixtures as _isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime"; // @gating @compilationMode(infer)
 import React from "react";
 export default React.forwardRef(
-  isForgetEnabled_Fixtures()
+  _isForgetEnabled_Fixtures()
     ? function notNamedLikeAComponent(props) {
         const $ = _c(1);
         let t0;
