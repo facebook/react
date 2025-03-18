@@ -2599,6 +2599,7 @@ export type FragmentInstanceType = {
   getRootNode(getRootNodeOptions?: {
     composed: boolean,
   }): Document | ShadowRoot | FragmentInstanceType,
+  compareDocumentPosition(otherNode: Instance): number,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -2802,6 +2803,41 @@ FragmentInstance.prototype.getRootNode = function (
     // $FlowFixMe[incompatible-cast] Flow expects Node
     (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
   return rootNode;
+};
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.compareDocumentPosition = function (
+  this: FragmentInstanceType,
+  otherNode: Instance,
+): number {
+  const children: Array<Instance> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  if (children.length === 0) {
+    return (
+      Node.DOCUMENT_POSITION_DISCONNECTED |
+      Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
+    );
+  }
+
+  const firstElement = children[0];
+  const lastElement = children[children.length - 1];
+  const firstResult = firstElement.compareDocumentPosition(otherNode);
+  const lastResult = lastElement.compareDocumentPosition(otherNode);
+  let result;
+
+  // If otherNode is a child of the Fragment, it should only be
+  // Node.DOCUMENT_POSITION_CONTAINED_BY
+  if (
+    (firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
+      lastResult & Node.DOCUMENT_POSITION_PRECEDING) ||
+    otherNode === firstElement ||
+    otherNode === lastElement
+  ) {
+    result = Node.DOCUMENT_POSITION_CONTAINED_BY;
+  } else {
+    result = firstResult;
+  }
+
+  return result;
 };
 
 function normalizeListenerOptions(
