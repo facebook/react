@@ -10801,14 +10801,6 @@ __DEV__ &&
           restoreEnterOrExitViewTransitions(fiber), (fiber = fiber.sibling);
       else restorePairedViewTransitions(fiber);
     }
-    function restoreNestedViewTransitions(changedParent) {
-      for (changedParent = changedParent.child; null !== changedParent; )
-        30 === changedParent.tag
-          ? (changedParent.memoizedState = null)
-          : 0 !== (changedParent.subtreeFlags & 33554432) &&
-            restoreNestedViewTransitions(changedParent),
-          (changedParent = changedParent.sibling);
-    }
     function commitBeforeMutationEffects(root, firstChild, committedLanes) {
       focusedInstanceHandle = null;
       shouldFireAfterActiveInstanceBlur = !1;
@@ -11921,6 +11913,7 @@ __DEV__ &&
                           instance,
                           lanes.memoizedProps
                         );
+                    trackHostMutation();
                   } catch (error) {
                     captureCommitPhaseError(lanes, lanes.return, error);
                   }
@@ -12358,38 +12351,37 @@ __DEV__ &&
       committedTransitions,
       endTime
     ) {
-      var isViewTransitionEligible =
-        enableViewTransition && (committedLanes & 335544064) === committedLanes;
       if (
-        parentFiber.subtreeFlags & (isViewTransitionEligible ? 10262 : 10256) ||
+        parentFiber.subtreeFlags &
+          (enableViewTransition &&
+          (committedLanes & 335544064) === committedLanes
+            ? 10262
+            : 10256) ||
         (enableComponentPerformanceTrack &&
           0 !== parentFiber.actualDuration &&
           (null === parentFiber.alternate ||
             parentFiber.alternate.child !== parentFiber.child))
       )
         for (parentFiber = parentFiber.child; null !== parentFiber; )
-          enableComponentPerformanceTrack
-            ? ((isViewTransitionEligible = parentFiber.sibling),
-              commitPassiveMountOnFiber(
-                root,
-                parentFiber,
-                committedLanes,
-                committedTransitions,
-                null !== isViewTransitionEligible
-                  ? isViewTransitionEligible.actualStartTime
-                  : endTime
-              ),
-              (parentFiber = isViewTransitionEligible))
-            : (commitPassiveMountOnFiber(
-                root,
-                parentFiber,
-                committedLanes,
-                committedTransitions,
-                0
-              ),
-              (parentFiber = parentFiber.sibling));
-      else
-        isViewTransitionEligible && restoreNestedViewTransitions(parentFiber);
+          if (enableComponentPerformanceTrack) {
+            var nextSibling = parentFiber.sibling;
+            commitPassiveMountOnFiber(
+              root,
+              parentFiber,
+              committedLanes,
+              committedTransitions,
+              null !== nextSibling ? nextSibling.actualStartTime : endTime
+            );
+            parentFiber = nextSibling;
+          } else
+            commitPassiveMountOnFiber(
+              root,
+              parentFiber,
+              committedLanes,
+              committedTransitions,
+              0
+            ),
+              (parentFiber = parentFiber.sibling);
     }
     function commitPassiveMountOnFiber(
       finishedRoot,
@@ -12691,10 +12683,6 @@ __DEV__ &&
           break;
         case 30:
           if (enableViewTransition) {
-            isViewTransitionEligible &&
-              null !== finishedWork.alternate &&
-              0 !== (finishedWork.subtreeFlags & 8246) &&
-              (finishedWork.memoizedState = null);
             recursivelyTraversePassiveMountEffects(
               finishedRoot,
               finishedWork,

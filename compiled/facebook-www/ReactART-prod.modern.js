@@ -7270,14 +7270,6 @@ function restoreEnterOrExitViewTransitions(fiber) {
       restoreEnterOrExitViewTransitions(fiber), (fiber = fiber.sibling);
   else restorePairedViewTransitions(fiber);
 }
-function restoreNestedViewTransitions(changedParent) {
-  for (changedParent = changedParent.child; null !== changedParent; )
-    30 === changedParent.tag
-      ? (changedParent.memoizedState = null)
-      : 0 !== (changedParent.subtreeFlags & 33554432) &&
-        restoreNestedViewTransitions(changedParent),
-      (changedParent = changedParent.sibling);
-}
 var offscreenSubtreeIsHidden = !1,
   offscreenSubtreeWasHidden = !1,
   PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
@@ -8036,11 +8028,11 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         offscreenSubtreeIsHidden &&
         ((finishedWork = finishedWork.updateQueue),
         null !== finishedWork &&
-          ((current = finishedWork.callbacks),
-          null !== current &&
-            ((flags = finishedWork.shared.hiddenCallbacks),
+          ((flags = finishedWork.callbacks),
+          null !== flags &&
+            ((current = finishedWork.shared.hiddenCallbacks),
             (finishedWork.shared.hiddenCallbacks =
-              null === flags ? current : flags.concat(current)))));
+              null === current ? flags : current.concat(flags)))));
       break;
     case 26:
     case 27:
@@ -8118,10 +8110,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
-        current = finishedWork.updateQueue;
-        null !== current &&
+        flags = finishedWork.updateQueue;
+        null !== flags &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, current));
+          attachSuspenseRetryListeners(finishedWork, flags));
       }
       break;
     case 22:
@@ -8174,8 +8166,16 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                 captureCommitPhaseError(lanes, lanes.return, error);
               }
             }
+          } else if (6 === root.tag) {
+            if (null === current) {
+              lanes = root;
+              try {
+                trackHostMutation();
+              } catch (error) {
+                captureCommitPhaseError(lanes, lanes.return, error);
+              }
+            }
           } else if (
-            6 !== root.tag &&
             ((22 !== root.tag && 23 !== root.tag) ||
               null === root.memoizedState ||
               root === finishedWork) &&
@@ -8196,21 +8196,21 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           root = root.sibling;
         }
       flags & 4 &&
-        ((current = finishedWork.updateQueue),
-        null !== current &&
-          ((flags = current.retryQueue),
-          null !== flags &&
-            ((current.retryQueue = null),
-            attachSuspenseRetryListeners(finishedWork, flags))));
+        ((flags = finishedWork.updateQueue),
+        null !== flags &&
+          ((current = flags.retryQueue),
+          null !== current &&
+            ((flags.retryQueue = null),
+            attachSuspenseRetryListeners(finishedWork, current))));
       break;
     case 19:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
       flags & 4 &&
-        ((current = finishedWork.updateQueue),
-        null !== current &&
+        ((flags = finishedWork.updateQueue),
+        null !== flags &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, current)));
+          attachSuspenseRetryListeners(finishedWork, flags)));
       break;
     case 30:
       enableViewTransition &&
@@ -8546,9 +8546,12 @@ function recursivelyTraversePassiveMountEffects(
   committedLanes,
   committedTransitions
 ) {
-  var isViewTransitionEligible =
-    enableViewTransition && (committedLanes & 335544064) === committedLanes;
-  if (parentFiber.subtreeFlags & (isViewTransitionEligible ? 10262 : 10256))
+  if (
+    parentFiber.subtreeFlags &
+    (enableViewTransition && (committedLanes & 335544064) === committedLanes
+      ? 10262
+      : 10256)
+  )
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitPassiveMountOnFiber(
         root,
@@ -8557,7 +8560,6 @@ function recursivelyTraversePassiveMountEffects(
         committedTransitions
       ),
         (parentFiber = parentFiber.sibling);
-  else isViewTransitionEligible && restoreNestedViewTransitions(parentFiber);
 }
 function commitPassiveMountOnFiber(
   finishedRoot,
@@ -8759,10 +8761,6 @@ function commitPassiveMountOnFiber(
       break;
     case 30:
       if (enableViewTransition) {
-        isViewTransitionEligible &&
-          null !== finishedWork.alternate &&
-          0 !== (finishedWork.subtreeFlags & 8246) &&
-          (finishedWork.memoizedState = null);
         recursivelyTraversePassiveMountEffects(
           finishedRoot,
           finishedWork,
@@ -8836,9 +8834,9 @@ function recursivelyTraverseReconnectPassiveEffects(
           );
         break;
       case 22:
-        var instance$128 = finishedWork.stateNode;
+        var instance$127 = finishedWork.stateNode;
         null !== finishedWork.memoizedState
-          ? instance$128._visibility & 4
+          ? instance$127._visibility & 4
             ? recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -8850,7 +8848,7 @@ function recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork
               )
-          : ((instance$128._visibility |= 4),
+          : ((instance$127._visibility |= 4),
             recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
               finishedWork,
@@ -8863,7 +8861,7 @@ function recursivelyTraverseReconnectPassiveEffects(
           commitOffscreenPassiveMountEffects(
             finishedWork.alternate,
             finishedWork,
-            instance$128
+            instance$127
           );
         break;
       case 24:
@@ -9812,8 +9810,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$140) {
-      handleThrow(root, thrownValue$140);
+    } catch (thrownValue$139) {
+      handleThrow(root, thrownValue$139);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -9928,8 +9926,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrentByScheduler();
       break;
-    } catch (thrownValue$142) {
-      handleThrow(root, thrownValue$142);
+    } catch (thrownValue$141) {
+      handleThrow(root, thrownValue$141);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -11045,7 +11043,7 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1555 = {
+var internals$jscomp$inline_1556 = {
   bundleType: 0,
   version: "19.1.0-www-modern-9320a013-20250317",
   rendererPackageName: "react-art",
@@ -11053,16 +11051,16 @@ var internals$jscomp$inline_1555 = {
   reconcilerVersion: "19.1.0-www-modern-9320a013-20250317"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1556 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1557 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1556.isDisabled &&
-    hook$jscomp$inline_1556.supportsFiber
+    !hook$jscomp$inline_1557.isDisabled &&
+    hook$jscomp$inline_1557.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1556.inject(
-        internals$jscomp$inline_1555
+      (rendererID = hook$jscomp$inline_1557.inject(
+        internals$jscomp$inline_1556
       )),
-        (injectedHook = hook$jscomp$inline_1556);
+        (injectedHook = hook$jscomp$inline_1557);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
