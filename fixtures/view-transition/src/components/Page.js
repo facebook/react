@@ -91,7 +91,7 @@ export default function Page({url, navigate}) {
             <ViewTransition>
               <div>
                 <ViewTransition className={transitions['slide-on-nav']}>
-                  <h1>{!show ? 'A' : 'B'}</h1>
+                  <h1>{!show ? 'A' : 'B' + counter}</h1>
                 </ViewTransition>
               </div>
             </ViewTransition>
@@ -100,7 +100,7 @@ export default function Page({url, navigate}) {
                 'navigation-back': transitions['slide-right'],
                 'navigation-forward': transitions['slide-left'],
               }}>
-              <h1>{!show ? 'A' + counter : 'B' + counter}</h1>
+              <h1>{!show ? 'A' + counter : 'B'}</h1>
             </ViewTransition>
             {show ? (
               <div>
