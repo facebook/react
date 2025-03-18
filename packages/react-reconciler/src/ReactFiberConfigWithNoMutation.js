@@ -46,6 +46,7 @@ export const cloneRootViewTransitionContainer = shim;
 export const removeRootViewTransitionClone = shim;
 export type InstanceMeasurement = null;
 export const measureInstance = shim;
+export const measureClonedInstance = shim;
 export const wasInstanceInViewport = shim;
 export const hasInstanceChanged = shim;
 export const hasInstanceAffectedParent = shim;

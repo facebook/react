@@ -199,6 +199,7 @@ export function commitShowHideHostTextInstance(node: Fiber, isHidden: boolean) {
         unhideTextInstance(instance, node.memoizedProps);
       }
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(node, node.return, error);
   }

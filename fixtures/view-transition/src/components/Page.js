@@ -77,9 +77,9 @@ export default function Page({url, navigate}) {
     <div>
       <button
         onClick={() => {
-          navigate(show ? '/?a' : '/?b');
+          navigate(url === '/?b' ? '/?a' : '/?b');
         }}>
-        {show ? 'A' : 'B'}
+        {url === '/?b' ? 'A' : 'B'}
       </button>
       <ViewTransition className="none">
         <div>

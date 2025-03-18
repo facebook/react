@@ -31,6 +31,7 @@ import {
   applyViewTransitionName,
   restoreViewTransitionName,
   measureInstance,
+  measureClonedInstance,
   hasInstanceChanged,
   hasInstanceAffectedParent,
   wasInstanceInViewport,
@@ -564,16 +565,23 @@ export function restoreUpdateViewTransition(
   current: Fiber,
   finishedWork: Fiber,
 ): void {
-  finishedWork.memoizedState = null;
   restoreViewTransitionOnHostInstances(current.child, true);
   restoreViewTransitionOnHostInstances(finishedWork.child, true);
+}
+
+export function restoreUpdateViewTransitionForGesture(
+  current: Fiber,
+  finishedWork: Fiber,
+): void {
+  // For gestures we don't need to reset "finishedWork" because those would
+  // have all been clones that got deleted.
+  restoreViewTransitionOnHostInstances(current.child, true);
 }
 
 export function restoreNestedViewTransitions(changedParent: Fiber): void {
   let child = changedParent.child;
   while (child !== null) {
     if (child.tag === ViewTransitionComponent) {
-      child.memoizedState = null;
       restoreViewTransitionOnHostInstances(child.child, false);
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
       restoreNestedViewTransitions(child);
@@ -774,13 +782,16 @@ function measureViewTransitionHostInstancesRecursive(
 export function measureUpdateViewTransition(
   current: Fiber,
   finishedWork: Fiber,
+  gesture: boolean,
 ): boolean {
-  const props: ViewTransitionProps = finishedWork.memoizedProps;
-  const newName = getViewTransitionName(props, finishedWork.stateNode);
-  const oldName = getViewTransitionName(
-    current.memoizedProps,
-    current.stateNode,
-  );
+  // If this was a gesture then which Fiber was used for the "old" vs "new" state is reversed.
+  // We still need to treat "finishedWork" as the Fiber that contains the flags for this commmit.
+  const oldFiber = gesture ? finishedWork : current;
+  const newFiber = gesture ? current : finishedWork;
+  const props: ViewTransitionProps = newFiber.memoizedProps;
+  const state: ViewTransitionState = newFiber.stateNode;
+  const newName = getViewTransitionName(props, state);
+  const oldName = getViewTransitionName(oldFiber.memoizedProps, state);
   const updateClassName: ?string = getViewTransitionClassName(
     props.className,
     props.update,
@@ -807,7 +818,9 @@ export function measureUpdateViewTransition(
     if (layoutClassName === 'none') {
       // If we did not update, then all changes are considered a layout. We'll
       // attempt to cancel.
-      cancelViewTransitionHostInstances(finishedWork.child, oldName, true);
+      // This should use the Fiber that got names applied in the snapshot phase
+      // since those are the ones we're trying to cancel.
+      cancelViewTransitionHostInstances(oldFiber.child, oldName, true);
       return false;
     }
     // We didn't update but we might still apply layout so we measure each
@@ -816,10 +829,21 @@ export function measureUpdateViewTransition(
   }
   // If nothing changed due to a mutation, or children changing size
   // and the measurements end up unchanged, we should restore it to not animate.
-  const previousMeasurements = current.memoizedState;
+  let previousMeasurements: null | Array<InstanceMeasurement>;
+  if (gesture) {
+    const clones = state.clones;
+    if (clones === null) {
+      previousMeasurements = null;
+    } else {
+      previousMeasurements = clones.map(measureClonedInstance);
+    }
+  } else {
+    previousMeasurements = oldFiber.memoizedState;
+    oldFiber.memoizedState = null; // Clear it. We won't need it anymore.
+  }
   const inViewport = measureViewTransitionHostInstances(
-    finishedWork,
-    finishedWork.child,
+    finishedWork, // This is always finishedWork since it's used to assign flags.
+    newFiber.child, // This either current or finishedWork depending on if was a gesture.
     newName,
     oldName,
     className,
@@ -857,10 +881,11 @@ export function measureNestedViewTransitions(
         if (clones === null) {
           previousMeasurements = null;
         } else {
-          previousMeasurements = clones.map(measureInstance);
+          previousMeasurements = clones.map(measureClonedInstance);
         }
       } else {
         previousMeasurements = child.memoizedState;
+        child.memoizedState = null; // Clear it. We won't need it anymore.
       }
       const inViewport = measureViewTransitionHostInstances(
         child,
