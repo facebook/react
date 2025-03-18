@@ -146,6 +146,12 @@ function canPreserveStateBetween(prevType: any, nextType: any) {
   if (isReactClass(prevType) || isReactClass(nextType)) {
     return false;
   }
+  if (
+    typeof prevType !== typeof nextType ||
+    getProperty(prevType, '$$typeof') !== getProperty(nextType, '$$typeof')
+  ) {
+    return false;
+  }
   if (haveEqualSignatures(prevType, nextType)) {
     return true;
   }
@@ -215,6 +221,7 @@ export function performReactRefresh(): RefreshUpdate | null {
       if (canPreserveStateBetween(prevType, nextType)) {
         updatedFamilies.add(family);
       } else {
+        console.log('mark family as stale', family);
         staleFamilies.add(family);
       }
     });

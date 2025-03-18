@@ -261,7 +261,7 @@ function scheduleFibersWithFamiliesRecursively(
   staleFamilies: Set<Family>,
 ): void {
   if (__DEV__) {
-    const {alternate, child, sibling, tag, type} = fiber;
+    const {alternate, child, sibling, tag, type, elementType} = fiber;
 
     let candidateType = null;
     switch (tag) {
@@ -283,6 +283,11 @@ function scheduleFibersWithFamiliesRecursively(
 
     let needsRender = false;
     let needsRemount = false;
+    if (staleFamilies.has(resolveFamily(elementType))) {
+      console.log('gonna mark stale fiber for remount');
+      needsRemount = true;
+    }
+
     if (candidateType !== null) {
       const family = resolveFamily(candidateType);
       if (family !== undefined) {
