@@ -20,13 +20,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
+import { isForgetEnabled_Fixtures as _isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime";
 import { Stringify } from "shared-runtime";
 import * as React from "react";
 
 const Foo = React.forwardRef(Foo_withRef);
-const _isForgetEnabled_Fixtures_result = isForgetEnabled_Fixtures();
+const _isForgetEnabled_Fixtures_result = _isForgetEnabled_Fixtures();
 function _Foo_withRef_optimized(_$$empty_props_placeholder$$, ref) {
   const $ = _c(2);
   let t0;

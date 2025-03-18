@@ -36,7 +36,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { $dispatcherGuard } from "react-compiler-runtime";
+import { $dispatcherGuard as _$dispatcherGuard } from "react-compiler-runtime";
 import { c as _c } from "react/compiler-runtime"; // @enableEmitHookGuards
 import { createContext, useContext, useEffect, useState } from "react";
 import {
@@ -51,7 +51,7 @@ const MyContext = createContext("my context value");
 function Component(t0) {
   const $ = _c(4);
   try {
-    $dispatcherGuard(0);
+    _$dispatcherGuard(0);
     const { value } = t0;
     print(identity(CONST_STRING0));
     let t1;
@@ -63,10 +63,10 @@ function Component(t0) {
     }
     const [state, setState] = (function () {
       try {
-        $dispatcherGuard(2);
+        _$dispatcherGuard(2);
         return useState(t1);
       } finally {
-        $dispatcherGuard(3);
+        _$dispatcherGuard(3);
       }
     })();
     print(value, state);
@@ -89,32 +89,32 @@ function Component(t0) {
     }
     (function () {
       try {
-        $dispatcherGuard(2);
+        _$dispatcherGuard(2);
         return useEffect(t2, t3);
       } finally {
-        $dispatcherGuard(3);
+        _$dispatcherGuard(3);
       }
     })();
     print(identity(value + state));
     return (function () {
       try {
-        $dispatcherGuard(2);
+        _$dispatcherGuard(2);
         return ObjectWithHooks.useIdentity(
           (function () {
             try {
-              $dispatcherGuard(2);
+              _$dispatcherGuard(2);
               return useContext(MyContext);
             } finally {
-              $dispatcherGuard(3);
+              _$dispatcherGuard(3);
             }
           })(),
         );
       } finally {
-        $dispatcherGuard(3);
+        _$dispatcherGuard(3);
       }
     })();
   } finally {
-    $dispatcherGuard(1);
+    _$dispatcherGuard(1);
   }
 }
 

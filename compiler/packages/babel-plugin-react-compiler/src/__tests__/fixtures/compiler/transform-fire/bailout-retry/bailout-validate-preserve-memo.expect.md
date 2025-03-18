@@ -24,7 +24,7 @@ function Component({prop1, bar}) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableFire @panicThreshold(none)
+import { useFire as _useFire } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableFire @panicThreshold(none)
 import { fire } from "react";
 import { sum } from "shared-runtime";
 
@@ -33,8 +33,8 @@ function Component(t0) {
   const foo = () => {
     console.log(prop1);
   };
-  const t1 = useFire(foo);
-  const t2 = useFire(bar);
+  const t1 = _useFire(foo);
+  const t2 = _useFire(bar);
 
   useEffect(() => {
     t1(prop1);

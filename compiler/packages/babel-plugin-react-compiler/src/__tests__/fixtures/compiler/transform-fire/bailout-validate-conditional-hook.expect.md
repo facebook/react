@@ -29,7 +29,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime"; // @enableFire @panicThreshold(none)
+import { useFire as _useFire } from "react/compiler-runtime"; // @enableFire @panicThreshold(none)
 import { fire, useEffect } from "react";
 import { Stringify } from "shared-runtime";
 
@@ -40,7 +40,7 @@ import { Stringify } from "shared-runtime";
 function Component(props) {
   const foo = _temp;
   if (props.cond) {
-    const t0 = useFire(foo);
+    const t0 = _useFire(foo);
     useEffect(() => {
       t0(props);
     });
