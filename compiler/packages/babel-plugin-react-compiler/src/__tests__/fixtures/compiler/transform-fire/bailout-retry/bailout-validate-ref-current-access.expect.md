@@ -25,7 +25,7 @@ component Component(prop1, ref) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime";
+import { useFire as _useFire } from "react/compiler-runtime";
 import { fire } from "react";
 import { print } from "shared-runtime";
 
@@ -35,7 +35,7 @@ function Component_withRef(t0, ref) {
   const foo = () => {
     console.log(prop1);
   };
-  const t1 = useFire(foo);
+  const t1 = _useFire(foo);
   useEffect(() => {
     t1(prop1);
     bar();

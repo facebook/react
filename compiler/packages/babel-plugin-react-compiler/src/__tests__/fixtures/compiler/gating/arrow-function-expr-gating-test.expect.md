@@ -18,10 +18,10 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
+import { isForgetEnabled_Fixtures as _isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime"; // @gating
 import { Stringify } from "shared-runtime";
-const ErrorView = isForgetEnabled_Fixtures()
+const ErrorView = _isForgetEnabled_Fixtures()
   ? (t0) => {
       const $ = _c(2);
       const { error } = t0;

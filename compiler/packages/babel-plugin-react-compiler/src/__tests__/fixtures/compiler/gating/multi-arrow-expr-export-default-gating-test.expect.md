@@ -19,11 +19,11 @@ export default props => (
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
+import { isForgetEnabled_Fixtures as _isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime"; // @gating
 import { Stringify } from "shared-runtime";
 
-const ErrorView = isForgetEnabled_Fixtures()
+const ErrorView = _isForgetEnabled_Fixtures()
   ? (error, _retry) => {
       const $ = _c(2);
       let t0;
@@ -38,7 +38,7 @@ const ErrorView = isForgetEnabled_Fixtures()
     }
   : (error, _retry) => <Stringify error={error}></Stringify>;
 
-export default isForgetEnabled_Fixtures()
+export default _isForgetEnabled_Fixtures()
   ? (props) => {
       const $ = _c(1);
       let t0;

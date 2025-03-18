@@ -22,13 +22,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
+import { isForgetEnabled_Fixtures as _isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime"; // @gating
 import { memo } from "react";
 import { Stringify } from "shared-runtime";
 
 export default memo(Foo);
-const _isForgetEnabled_Fixtures_result = isForgetEnabled_Fixtures();
+const _isForgetEnabled_Fixtures_result = _isForgetEnabled_Fixtures();
 function _Foo_optimized(t0) {
   "use memo";
   const $ = _c(3);

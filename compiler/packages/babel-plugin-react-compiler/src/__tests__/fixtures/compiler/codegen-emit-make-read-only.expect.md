@@ -19,7 +19,7 @@ function MyComponentName(props) {
 ## Code
 
 ```javascript
-import { makeReadOnly } from "react-compiler-runtime";
+import { makeReadOnly as _makeReadOnly } from "react-compiler-runtime";
 import { c as _c } from "react/compiler-runtime"; // @enableEmitFreeze true
 
 function MyComponentName(props) {
@@ -34,7 +34,7 @@ function MyComponentName(props) {
     y.push(x);
     $[0] = props.a;
     $[1] = props.b;
-    $[2] = __DEV__ ? makeReadOnly(y, "MyComponentName") : y;
+    $[2] = __DEV__ ? _makeReadOnly(y, "MyComponentName") : y;
   } else {
     y = $[2];
   }

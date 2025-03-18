@@ -28,6 +28,7 @@ import {
   Environment,
   EnvironmentConfig,
   ReactFunctionType,
+  ImportedUids,
 } from '../HIR/Environment';
 import {findContextIdentifiers} from '../HIR/FindContextIdentifiers';
 import {
@@ -116,7 +117,7 @@ function run(
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
   mode: CompilerMode,
-  useMemoCacheIdentifier: string,
+  uniquedImports: ImportedUids,
   logger: Logger | null,
   filename: string | null,
   code: string | null,
@@ -131,7 +132,7 @@ function run(
     logger,
     filename,
     code,
-    useMemoCacheIdentifier,
+    uniquedImports,
   );
   env.logger?.debugLogIRs?.({
     kind: 'debug',
@@ -547,7 +548,7 @@ export function compileFn(
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
   mode: CompilerMode,
-  useMemoCacheIdentifier: string,
+  uniquedImports: ImportedUids,
   logger: Logger | null,
   filename: string | null,
   code: string | null,
@@ -557,7 +558,7 @@ export function compileFn(
     config,
     fnType,
     mode,
-    useMemoCacheIdentifier,
+    uniquedImports,
     logger,
     filename,
     code,

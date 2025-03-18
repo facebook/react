@@ -14,7 +14,7 @@ import {
   renameVariables,
 } from '.';
 import {CompilerError, ErrorSeverity} from '../CompilerError';
-import {Environment, EnvironmentConfig, ExternalFunction} from '../HIR';
+import {Environment} from '../HIR';
 import {
   ArrayPattern,
   BlockId,
@@ -155,7 +155,7 @@ export function codegenFunction(
   }
   const compiled = compileResult.unwrap();
 
-  const hookGuard = fn.env.config.enableEmitHookGuards;
+  const hookGuard = fn.env.importedUids.enableEmitHookGuards;
   if (hookGuard != null) {
     compiled.body = t.blockStatement([
       createHookGuard(
@@ -176,9 +176,10 @@ export function codegenFunction(
       t.variableDeclaration('const', [
         t.variableDeclarator(
           t.identifier(cx.synthesizeName('$')),
-          t.callExpression(t.identifier(fn.env.useMemoCacheIdentifier), [
-            t.numericLiteral(cacheCount),
-          ]),
+          t.callExpression(
+            t.identifier(fn.env.importedUids.useMemoCacheIdentifier),
+            [t.numericLiteral(cacheCount)],
+          ),
         ),
       ]),
     );
@@ -249,7 +250,7 @@ export function codegenFunction(
     compiled.body.body.unshift(...preface);
   }
 
-  const emitInstrumentForget = fn.env.config.enableEmitInstrumentForget;
+  const emitInstrumentForget = fn.env.importedUids.enableEmitInstrumentForget;
   if (emitInstrumentForget != null && fn.id != null) {
     /*
      * Technically, this is a conditional hook call. However, we expect
@@ -263,10 +264,10 @@ export function codegenFunction(
       gating = t.logicalExpression(
         '&&',
         t.identifier(emitInstrumentForget.globalGating),
-        t.identifier(emitInstrumentForget.gating.importSpecifierName),
+        t.identifier(emitInstrumentForget.gating),
       );
     } else if (emitInstrumentForget.gating != null) {
-      gating = t.identifier(emitInstrumentForget.gating.importSpecifierName);
+      gating = t.identifier(emitInstrumentForget.gating);
     } else {
       CompilerError.invariant(emitInstrumentForget.globalGating != null, {
         reason:
@@ -279,10 +280,10 @@ export function codegenFunction(
     const test: t.IfStatement = t.ifStatement(
       gating,
       t.expressionStatement(
-        t.callExpression(
-          t.identifier(emitInstrumentForget.fn.importSpecifierName),
-          [t.stringLiteral(fn.id), t.stringLiteral(fn.env.filename ?? '')],
-        ),
+        t.callExpression(t.identifier(emitInstrumentForget.fn), [
+          t.stringLiteral(fn.id),
+          t.stringLiteral(fn.env.filename ?? ''),
+        ]),
       ),
     );
     compiled.body.body.unshift(test);
@@ -548,14 +549,14 @@ function codegenBlockNoReset(
 }
 
 function wrapCacheDep(cx: Context, value: t.Expression): t.Expression {
-  if (cx.env.config.enableEmitFreeze != null) {
+  if (cx.env.importedUids.enableEmitFreeze != null) {
     // The import declaration for emitFreeze is inserted in the Babel plugin
     return t.conditionalExpression(
       t.identifier('__DEV__'),
-      t.callExpression(
-        t.identifier(cx.env.config.enableEmitFreeze.importSpecifierName),
-        [value, t.stringLiteral(cx.fnName)],
-      ),
+      t.callExpression(t.identifier(cx.env.importedUids.enableEmitFreeze), [
+        value,
+        t.stringLiteral(cx.fnName),
+      ]),
       value,
     );
   } else {
@@ -710,7 +711,7 @@ function codegenReactiveScope(
 
   let memoStatement;
   if (
-    cx.env.config.enableChangeDetectionForDebugging != null &&
+    cx.env.importedUids.enableChangeDetectionForDebugging != null &&
     changeExpressions.length > 0
   ) {
     const loc =
@@ -718,7 +719,7 @@ function codegenReactiveScope(
         ? 'unknown location'
         : `(${scope.loc.start.line}:${scope.loc.end.line})`;
     const detectionFunction =
-      cx.env.config.enableChangeDetectionForDebugging.importSpecifierName;
+      cx.env.importedUids.enableChangeDetectionForDebugging;
     const cacheLoadOldValueStatements: Array<t.Statement> = [];
     const changeDetectionStatements: Array<t.Statement> = [];
     const idempotenceDetectionStatements: Array<t.Statement> = [];
@@ -1513,16 +1514,14 @@ const createJsxOpeningElement = withLoc(t.jsxOpeningElement);
 const createStringLiteral = withLoc(t.stringLiteral);
 
 function createHookGuard(
-  guard: ExternalFunction,
+  guardFnName: string,
   stmts: Array<t.Statement>,
   before: GuardKind,
   after: GuardKind,
 ): t.TryStatement {
   function createHookGuardImpl(kind: number): t.ExpressionStatement {
     return t.expressionStatement(
-      t.callExpression(t.identifier(guard.importSpecifierName), [
-        t.numericLiteral(kind),
-      ]),
+      t.callExpression(t.identifier(guardFnName), [t.numericLiteral(kind)]),
     );
   }
 
@@ -1553,7 +1552,7 @@ function createHookGuard(
  * ```
  */
 function createCallExpression(
-  config: EnvironmentConfig,
+  env: Environment,
   callee: t.Expression,
   args: Array<t.Expression | t.SpreadElement>,
   loc: SourceLocation | null,
@@ -1564,7 +1563,7 @@ function createCallExpression(
     callExpr.loc = loc;
   }
 
-  const hookGuard = config.enableEmitHookGuards;
+  const hookGuard = env.importedUids.enableEmitHookGuards;
   if (hookGuard != null && isHook) {
     const iife = t.functionExpression(
       null,
@@ -1701,7 +1700,7 @@ function codegenInstructionValue(
       const callee = codegenPlaceToExpression(cx, instrValue.callee);
       const args = instrValue.args.map(arg => codegenArgument(cx, arg));
       value = createCallExpression(
-        cx.env.config,
+        cx.env,
         callee,
         args,
         instrValue.loc,
@@ -1791,7 +1790,7 @@ function codegenInstructionValue(
       );
       const args = instrValue.args.map(arg => codegenArgument(cx, arg));
       value = createCallExpression(
-        cx.env.config,
+        cx.env,
         memberExpr,
         args,
         instrValue.loc,

@@ -20,7 +20,7 @@ function Component({prop1}) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime"; // @enableFire @panicThreshold(none)
+import { useFire as _useFire } from "react/compiler-runtime"; // @enableFire @panicThreshold(none)
 import { fire } from "react";
 
 function Component(t0) {
@@ -28,7 +28,7 @@ function Component(t0) {
   const foo = () => {
     console.log(prop1);
   };
-  const t1 = useFire(foo);
+  const t1 = _useFire(foo);
 
   useEffect(() => {
     t1(prop1);
