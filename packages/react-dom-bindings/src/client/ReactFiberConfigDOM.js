@@ -34,7 +34,6 @@ import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostCo
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
-import {traverseFragmentInstanceReverse} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {
   setCurrentUpdatePriority,
@@ -2308,12 +2307,22 @@ FragmentInstance.prototype.focusLast = function (
   this: FragmentInstanceType,
   focusOptions?: FocusOptions,
 ) {
-  traverseFragmentInstanceReverse(
-    this._fragmentFiber,
-    setFocusIfFocusable,
-    focusOptions,
-  );
+  const children: Array<Instance> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  for (let i = children.length - 1; i >= 0; i--) {
+    const child = children[i];
+    if (setFocusIfFocusable(child, focusOptions)) {
+      break;
+    }
+  }
 };
+function collectChildren(
+  child: Instance,
+  collection: Array<Instance>,
+): boolean {
+  collection.push(child);
+  return false;
+}
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
   // TODO: When we have a parent element reference, we can skip traversal if the fragment's parent
