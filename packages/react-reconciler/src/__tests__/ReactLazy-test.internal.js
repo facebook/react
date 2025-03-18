@@ -791,7 +791,7 @@ describe('ReactLazy', () => {
     );
   });
 
-  it('throws with a useful error when wrapping fragment with lazy()', async () => {
+  it('throws with a useful error when wrapping Fragment with lazy()', async () => {
     const BadLazy = lazy(() => fakeImport(React.Fragment));
 
     const root = ReactTestRenderer.create(
@@ -813,6 +813,280 @@ describe('ReactLazy', () => {
     );
     await waitForThrow(
       'Element type is invalid. Received a promise that resolves to: Fragment. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate !fb
+  it('throws with a useful error when wrapping createPortal with lazy()', async () => {
+    const ReactDOM = require('react-dom');
+    const container = document.createElement('div');
+    const portal = ReactDOM.createPortal(<div />, container);
+    const BadLazy = lazy(() => fakeImport(portal));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(portal);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Portal. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  it('throws with a useful error when wrapping Profiler with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.Profiler));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.Profiler);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Profiler. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  it('throws with a useful error when wrapping StrictMode with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.StrictMode));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.StrictMode);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: StrictMode. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  it('throws with a useful error when wrapping Suspense with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.Suspense));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.Suspense);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Suspense. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  it('throws with a useful error when wrapping Context with lazy()', async () => {
+    const Context = React.createContext(null);
+    const BadLazy = lazy(() => fakeImport(Context));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(Context);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      gate('enableRenderableContext')
+        ? 'Element type is invalid. Received a promise that resolves to: Context.Provider. ' +
+            'Lazy element type must resolve to a class or function.'
+        : 'Element type is invalid. Received a promise that resolves to: Context.Consumer. ' +
+            'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate enableRenderableContext
+  it('throws with a useful error when wrapping Context.Consumer with lazy()', async () => {
+    const Context = React.createContext(null);
+    const BadLazy = lazy(() => fakeImport(Context.Consumer));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(Context.Consumer);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Context.Consumer. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('throws with a useful error when wrapping SuspenseList with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.unstable_SuspenseList));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.unstable_SuspenseList);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: SuspenseList. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate enableViewTransition
+  it('throws with a useful error when wrapping ViewTransition with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.unstable_ViewTransition));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.unstable_ViewTransition);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: ViewTransition. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate enableActivity
+  it('throws with a useful error when wrapping Activity with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.unstable_Activity));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.unstable_Activity);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Activity. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  // @gate enableTransitionTracing
+  it('throws with a useful error when wrapping TracingMarker with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.unstable_TracingMarker));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.unstable_TracingMarker);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: TracingMarker. ' +
         'Lazy element type must resolve to a class or function.',
     );
   });

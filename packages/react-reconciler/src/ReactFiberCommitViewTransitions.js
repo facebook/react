@@ -31,6 +31,7 @@ import {
   applyViewTransitionName,
   restoreViewTransitionName,
   measureInstance,
+  measureClonedInstance,
   hasInstanceChanged,
   hasInstanceAffectedParent,
   wasInstanceInViewport,
@@ -49,7 +50,8 @@ export function resetShouldStartViewTransition(): void {
 
 // This tracks named ViewTransition components found in the accumulateSuspenseyCommit
 // phase that might need to find deleted pairs in the beforeMutation phase.
-let appearingViewTransitions: Map<string, ViewTransitionState> | null = null;
+export let appearingViewTransitions: Map<string, ViewTransitionState> | null =
+  null;
 
 export function resetAppearingViewTransitions(): void {
   appearingViewTransitions = null;
@@ -256,7 +258,10 @@ function commitAppearingPairViewTransitions(placement: Fiber): void {
   }
 }
 
-export function commitEnterViewTransitions(placement: Fiber): void {
+export function commitEnterViewTransitions(
+  placement: Fiber,
+  gesture: boolean,
+): void {
   if (placement.tag === ViewTransitionComponent) {
     const state: ViewTransitionState = placement.stateNode;
     const props: ViewTransitionProps = placement.memoizedProps;
@@ -283,7 +288,11 @@ export function commitEnterViewTransitions(placement: Fiber): void {
         commitAppearingPairViewTransitions(placement);
 
         if (!state.paired) {
-          scheduleViewTransitionEvent(placement, props.onEnter);
+          if (gesture) {
+            // TODO: Schedule gesture events.
+          } else {
+            scheduleViewTransitionEvent(placement, props.onEnter);
+          }
         }
       }
     } else {
@@ -292,7 +301,7 @@ export function commitEnterViewTransitions(placement: Fiber): void {
   } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = placement.child;
     while (child !== null) {
-      commitEnterViewTransitions(child);
+      commitEnterViewTransitions(child, gesture);
       child = child.sibling;
     }
   } else {
@@ -347,9 +356,10 @@ function commitDeletedPairViewTransitions(deletion: Fiber): void {
                 restoreViewTransitionOnHostInstances(child.child, false);
               } else {
                 // We'll transition between them.
-                const oldinstance: ViewTransitionState = child.stateNode;
+                const oldInstance: ViewTransitionState = child.stateNode;
                 const newInstance: ViewTransitionState = pair;
-                newInstance.paired = oldinstance;
+                newInstance.paired = oldInstance;
+                oldInstance.paired = newInstance;
                 // Note: If the other side ends up outside the viewport, we'll still run this.
                 // Therefore it's possible for onShare to be called with only an old snapshot.
                 scheduleViewTransitionEvent(child, props.onShare);
@@ -398,9 +408,10 @@ export function commitExitViewTransitions(deletion: Fiber): void {
       } else if (pair !== undefined) {
         // We found a new appearing view transition with the same name as this deletion.
         // We'll transition between them instead of running the normal exit.
-        const oldinstance: ViewTransitionState = deletion.stateNode;
+        const oldInstance: ViewTransitionState = deletion.stateNode;
         const newInstance: ViewTransitionState = pair;
-        newInstance.paired = oldinstance;
+        newInstance.paired = oldInstance;
+        oldInstance.paired = newInstance;
         // Delete the entry so that we know when we've found all of them
         // and can stop searching (size reaches zero).
         // $FlowFixMe[incompatible-use]: Refined by the pair.
@@ -554,16 +565,23 @@ export function restoreUpdateViewTransition(
   current: Fiber,
   finishedWork: Fiber,
 ): void {
-  finishedWork.memoizedState = null;
   restoreViewTransitionOnHostInstances(current.child, true);
   restoreViewTransitionOnHostInstances(finishedWork.child, true);
+}
+
+export function restoreUpdateViewTransitionForGesture(
+  current: Fiber,
+  finishedWork: Fiber,
+): void {
+  // For gestures we don't need to reset "finishedWork" because those would
+  // have all been clones that got deleted.
+  restoreViewTransitionOnHostInstances(current.child, true);
 }
 
 export function restoreNestedViewTransitions(changedParent: Fiber): void {
   let child = changedParent.child;
   while (child !== null) {
     if (child.tag === ViewTransitionComponent) {
-      child.memoizedState = null;
       restoreViewTransitionOnHostInstances(child.child, false);
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
       restoreNestedViewTransitions(child);
@@ -700,6 +718,8 @@ function measureViewTransitionHostInstancesRecursive(
       }
       if ((parentViewTransition.flags & Update) !== NoFlags) {
         // We might update this node so we need to apply its new name for the new state.
+        // Additionally in the ApplyGesture case we also need to do this because the clone
+        // will have the name but this one won't.
         applyViewTransitionName(
           instance,
           viewTransitionHostInstanceIdx === 0
@@ -762,13 +782,16 @@ function measureViewTransitionHostInstancesRecursive(
 export function measureUpdateViewTransition(
   current: Fiber,
   finishedWork: Fiber,
+  gesture: boolean,
 ): boolean {
-  const props: ViewTransitionProps = finishedWork.memoizedProps;
-  const newName = getViewTransitionName(props, finishedWork.stateNode);
-  const oldName = getViewTransitionName(
-    current.memoizedProps,
-    current.stateNode,
-  );
+  // If this was a gesture then which Fiber was used for the "old" vs "new" state is reversed.
+  // We still need to treat "finishedWork" as the Fiber that contains the flags for this commmit.
+  const oldFiber = gesture ? finishedWork : current;
+  const newFiber = gesture ? current : finishedWork;
+  const props: ViewTransitionProps = newFiber.memoizedProps;
+  const state: ViewTransitionState = newFiber.stateNode;
+  const newName = getViewTransitionName(props, state);
+  const oldName = getViewTransitionName(oldFiber.memoizedProps, state);
   const updateClassName: ?string = getViewTransitionClassName(
     props.className,
     props.update,
@@ -795,7 +818,9 @@ export function measureUpdateViewTransition(
     if (layoutClassName === 'none') {
       // If we did not update, then all changes are considered a layout. We'll
       // attempt to cancel.
-      cancelViewTransitionHostInstances(finishedWork.child, oldName, true);
+      // This should use the Fiber that got names applied in the snapshot phase
+      // since those are the ones we're trying to cancel.
+      cancelViewTransitionHostInstances(oldFiber.child, oldName, true);
       return false;
     }
     // We didn't update but we might still apply layout so we measure each
@@ -804,10 +829,21 @@ export function measureUpdateViewTransition(
   }
   // If nothing changed due to a mutation, or children changing size
   // and the measurements end up unchanged, we should restore it to not animate.
-  const previousMeasurements = current.memoizedState;
+  let previousMeasurements: null | Array<InstanceMeasurement>;
+  if (gesture) {
+    const clones = state.clones;
+    if (clones === null) {
+      previousMeasurements = null;
+    } else {
+      previousMeasurements = clones.map(measureClonedInstance);
+    }
+  } else {
+    previousMeasurements = oldFiber.memoizedState;
+    oldFiber.memoizedState = null; // Clear it. We won't need it anymore.
+  }
   const inViewport = measureViewTransitionHostInstances(
-    finishedWork,
-    finishedWork.child,
+    finishedWork, // This is always finishedWork since it's used to assign flags.
+    newFiber.child, // This either current or finishedWork depending on if was a gesture.
     newName,
     oldName,
     className,
@@ -825,32 +861,52 @@ export function measureUpdateViewTransition(
   return inViewport;
 }
 
-export function measureNestedViewTransitions(changedParent: Fiber): void {
+export function measureNestedViewTransitions(
+  changedParent: Fiber,
+  gesture: boolean,
+): void {
   let child = changedParent.child;
   while (child !== null) {
     if (child.tag === ViewTransitionComponent) {
       const props: ViewTransitionProps = child.memoizedProps;
-      const name = getViewTransitionName(props, child.stateNode);
+      const state: ViewTransitionState = child.stateNode;
+      const name = getViewTransitionName(props, state);
       const className: ?string = getViewTransitionClassName(
         props.className,
         props.layout,
       );
+      let previousMeasurements: null | Array<InstanceMeasurement>;
+      if (gesture) {
+        const clones = state.clones;
+        if (clones === null) {
+          previousMeasurements = null;
+        } else {
+          previousMeasurements = clones.map(measureClonedInstance);
+        }
+      } else {
+        previousMeasurements = child.memoizedState;
+        child.memoizedState = null; // Clear it. We won't need it anymore.
+      }
       const inViewport = measureViewTransitionHostInstances(
         child,
         child.child,
         name,
         name, // Since this is unchanged, new and old name is the same.
         className,
-        child.memoizedState,
+        previousMeasurements,
         false,
       );
       if ((child.flags & Update) === NoFlags || !inViewport) {
         // Nothing changed.
       } else {
-        scheduleViewTransitionEvent(child, props.onLayout);
+        if (gesture) {
+          // TODO: Schedule gesture events.
+        } else {
+          scheduleViewTransitionEvent(child, props.onLayout);
+        }
       }
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-      measureNestedViewTransitions(child);
+      measureNestedViewTransitions(child, gesture);
     }
     child = child.sibling;
   }

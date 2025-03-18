@@ -703,6 +703,10 @@ export type ObjectPropertyKey =
   | {
       kind: 'computed';
       name: Place;
+    }
+  | {
+      kind: 'number';
+      name: number;
     };
 
 export type ObjectProperty = {

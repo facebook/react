@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Container, SuspenseInstance} from './ReactFiberConfig';
+import type {Container, SuspenseInstance, Instance} from './ReactFiberConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
@@ -19,6 +19,7 @@ import {
   HostPortal,
   HostText,
   SuspenseComponent,
+  OffscreenComponent,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 
@@ -316,4 +317,38 @@ export function doesFiberContain(
     node = node.return;
   }
   return false;
+}
+
+export function traverseFragmentInstance<A, B, C>(
+  fragmentFiber: Fiber,
+  fn: (Instance, A, B, C) => boolean,
+  a: A,
+  b: B,
+  c: C,
+): void {
+  traverseFragmentInstanceChildren(fragmentFiber.child, fn, a, b, c);
+}
+
+function traverseFragmentInstanceChildren<A, B, C>(
+  child: Fiber | null,
+  fn: (Instance, A, B, C) => boolean,
+  a: A,
+  b: B,
+  c: C,
+): void {
+  while (child !== null) {
+    if (child.tag === HostComponent) {
+      if (fn(child.stateNode, a, b, c)) {
+        return;
+      }
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip hidden subtrees
+    } else {
+      traverseFragmentInstanceChildren(child.child, fn, a, b, c);
+    }
+    child = child.sibling;
+  }
 }

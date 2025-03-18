@@ -9,7 +9,7 @@
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 
-import type {Instance, TextInstance} from './ReactFiberConfig';
+import type {Instance, TextInstance, Props} from './ReactFiberConfig';
 
 import type {OffscreenState} from './ReactFiberActivityComponent';
 
@@ -25,6 +25,8 @@ import {
   removeRootViewTransitionClone,
   cancelRootViewTransitionName,
   restoreRootViewTransitionName,
+  cancelViewTransitionName,
+  applyViewTransitionName,
   appendChild,
   commitUpdate,
   commitTextUpdate,
@@ -38,6 +40,7 @@ import {
   popMutationContext,
   pushMutationContext,
   viewTransitionMutationContext,
+  trackHostMutation,
 } from './ReactFiberMutationTracking';
 import {
   MutationMask,
@@ -47,6 +50,7 @@ import {
   Visibility,
   ViewTransitionNamedStatic,
   ViewTransitionStatic,
+  AffectedParentLayout,
 } from './ReactFiberFlags';
 import {
   HostComponent,
@@ -60,9 +64,25 @@ import {
 import {
   restoreEnterOrExitViewTransitions,
   restoreNestedViewTransitions,
+  restoreUpdateViewTransitionForGesture,
+  appearingViewTransitions,
+  commitEnterViewTransitions,
+  measureNestedViewTransitions,
+  measureUpdateViewTransition,
+  viewTransitionCancelableChildren,
+  pushViewTransitionCancelableScope,
+  popViewTransitionCancelableScope,
 } from './ReactFiberCommitViewTransitions';
+import {
+  getViewTransitionName,
+  getViewTransitionClassName,
+} from './ReactFiberViewTransitionComponent';
 
 let didWarnForRootClone = false;
+
+// Used during the apply phase to track whether a parent ViewTransition component
+// might have been affected by any mutations / relayouts below.
+let viewTransitionContextChanged: boolean = false;
 
 function detectMutationOrInsertClones(finishedWork: Fiber): boolean {
   return true;
@@ -78,7 +98,37 @@ const INSERT_APPEND = 6; // Inside a newly mounted tree before the next HostComp
 const INSERT_APPEARING_PAIR = 7; // Inside a newly mounted tree only finding pairs.
 type VisitPhase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
+function applyViewTransitionToClones(
+  name: string,
+  className: ?string,
+  clones: Array<Instance>,
+): void {
+  // This gets called when we have found a pair, but after the clone in created. The clone is
+  // created by the insertion side. If the insertion side if found before the deletion side
+  // then this is called by the deletion. If the deletion is visited first then this is called
+  // later by the insertion when the clone has been created.
+  for (let i = 0; i < clones.length; i++) {
+    applyViewTransitionName(
+      clones[i],
+      i === 0
+        ? name
+        : // If we have multiple Host Instances below, we add a suffix to the name to give
+          // each one a unique name.
+          name + '_' + i,
+      className,
+    );
+  }
+}
+
 function trackDeletedPairViewTransitions(deletion: Fiber): void {
+  if (
+    appearingViewTransitions === null ||
+    appearingViewTransitions.size === 0
+  ) {
+    // We've found all.
+    return;
+  }
+  const pairs = appearingViewTransitions;
   if ((deletion.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
     // This has no named view transitions in its subtree.
     return;
@@ -95,7 +145,40 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
         const props: ViewTransitionProps = child.memoizedProps;
         const name = props.name;
         if (name != null && name !== 'auto') {
-          // TODO: Find a pair
+          const pair = pairs.get(name);
+          if (pair !== undefined) {
+            // Delete the entry so that we know when we've found all of them
+            // and can stop searching (size reaches zero).
+            pairs.delete(name);
+            const className: ?string = getViewTransitionClassName(
+              props.className,
+              props.share,
+            );
+            if (className !== 'none') {
+              // TODO: Since the deleted instance already has layout we could
+              // check if it's in the viewport and if not skip the pairing.
+              // It would currently cause layout thrash though so if we did that
+              // we need to avoid inserting the root of the cloned trees until
+              // the end.
+
+              // The "old" instance is actually the one we're inserting.
+              const oldInstance: ViewTransitionState = pair;
+              // The "new" instance is the already mounted one we're deleting.
+              const newInstance: ViewTransitionState = child.stateNode;
+              oldInstance.paired = newInstance;
+              newInstance.paired = oldInstance;
+              const clones = oldInstance.clones;
+              if (clones !== null) {
+                // If we have clones that means that we've already visited this
+                // ViewTransition boundary before and we can now apply the name
+                // to those clones. Otherwise, we have to wait until we clone it.
+                applyViewTransitionToClones(name, className, clones);
+              }
+            }
+            if (pairs.size === 0) {
+              break;
+            }
+          }
         }
       }
       trackDeletedPairViewTransitions(child);
@@ -107,9 +190,41 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
 function trackEnterViewTransitions(deletion: Fiber): void {
   if (deletion.tag === ViewTransitionComponent) {
     const props: ViewTransitionProps = deletion.memoizedProps;
-    const name = props.name;
-    if (name != null && name !== 'auto') {
-      // TODO: Find a pair
+    const name = getViewTransitionName(props, deletion.stateNode);
+    const pair =
+      appearingViewTransitions !== null
+        ? appearingViewTransitions.get(name)
+        : undefined;
+    const className: ?string = getViewTransitionClassName(
+      props.className,
+      pair !== undefined ? props.share : props.enter,
+    );
+    if (className !== 'none') {
+      if (pair !== undefined) {
+        // TODO: Since the deleted instance already has layout we could
+        // check if it's in the viewport and if not skip the pairing.
+        // It would currently cause layout thrash though so if we did that
+        // we need to avoid inserting the root of the cloned trees until
+        // the end.
+
+        // Delete the entry so that we know when we've found all of them
+        // and can stop searching (size reaches zero).
+        // $FlowFixMe[incompatible-use]: Refined by the pair.
+        appearingViewTransitions.delete(name);
+        // The "old" instance is actually the one we're inserting.
+        const oldInstance: ViewTransitionState = pair;
+        // The "new" instance is the already mounted one we're deleting.
+        const newInstance: ViewTransitionState = deletion.stateNode;
+        oldInstance.paired = newInstance;
+        newInstance.paired = oldInstance;
+        const clones = oldInstance.clones;
+        if (clones !== null) {
+          // If we have clones that means that we've already visited this
+          // ViewTransition boundary before and we can now apply the name
+          // to those clones. Otherwise, we have to wait until we clone it.
+          applyViewTransitionToClones(name, className, clones);
+        }
+      }
     }
     // Look for more pairs deeper in the tree.
     trackDeletedPairViewTransitions(deletion);
@@ -121,6 +236,122 @@ function trackEnterViewTransitions(deletion: Fiber): void {
     }
   } else {
     trackDeletedPairViewTransitions(deletion);
+  }
+}
+
+function applyAppearingPairViewTransition(child: Fiber): void {
+  // Normally these helpers do recursive calls but since insertion/offscreen is forked
+  // we call this helper from those loops instead. This must be called only on
+  // ViewTransitionComponent that has already had their clones filled.
+  if ((child.flags & ViewTransitionNamedStatic) !== NoFlags) {
+    const state: ViewTransitionState = child.stateNode;
+    // If this is not yet paired, it doesn't mean that we won't pair it later when
+    // we find the deletion side. If that's the case then we'll add the names to
+    // the clones then.
+    if (state.paired) {
+      const props: ViewTransitionProps = child.memoizedProps;
+      if (props.name == null || props.name === 'auto') {
+        throw new Error(
+          'Found a pair with an auto name. This is a bug in React.',
+        );
+      }
+      const name = props.name;
+      // Note that this class name that doesn't actually really matter because the
+      // "new" side will be the one that wins in practice.
+      const className: ?string = getViewTransitionClassName(
+        props.className,
+        props.share,
+      );
+      if (className !== 'none') {
+        const clones = state.clones;
+        // If there are no clones at this point, that should mean that there are no
+        // HostComponent children in this ViewTransition.
+        if (clones !== null) {
+          applyViewTransitionToClones(name, className, clones);
+        }
+      }
+    }
+  }
+}
+
+function applyExitViewTransition(placement: Fiber): void {
+  // Normally these helpers do recursive calls but since insertion/offscreen is forked
+  // we call this helper from those loops instead. This must be called only on
+  // ViewTransitionComponent that has already had their clones filled.
+  const state: ViewTransitionState = placement.stateNode;
+  const props: ViewTransitionProps = placement.memoizedProps;
+  const name = getViewTransitionName(props, state);
+  const className: ?string = getViewTransitionClassName(
+    props.className,
+    // Note that just because we don't have a pair yet doesn't mean we won't find one
+    // later. However, that doesn't matter because if we do the class name that wins
+    // is the one applied by the "new" side anyway.
+    state.paired ? props.share : props.exit,
+  );
+  if (className !== 'none') {
+    // TODO: Ideally we could determine if this exit is in the viewport and
+    // exclude it otherwise but that would require waiting until we insert
+    // and layout the clones first. Currently wait until the view transition
+    // starts before reading the layout.
+    const clones = state.clones;
+    // If there are no clones at this point, that should mean that there are no
+    // HostComponent children in this ViewTransition.
+    if (clones !== null) {
+      applyViewTransitionToClones(name, className, clones);
+    }
+  }
+}
+
+function applyNestedViewTransition(child: Fiber): void {
+  const state: ViewTransitionState = child.stateNode;
+  const props: ViewTransitionProps = child.memoizedProps;
+  const name = getViewTransitionName(props, state);
+  const className: ?string = getViewTransitionClassName(
+    props.className,
+    props.layout,
+  );
+  if (className !== 'none') {
+    const clones = state.clones;
+    // If there are no clones at this point, that should mean that there are no
+    // HostComponent children in this ViewTransition.
+    if (clones !== null) {
+      applyViewTransitionToClones(name, className, clones);
+    }
+  }
+}
+
+function applyUpdateViewTransition(current: Fiber, finishedWork: Fiber): void {
+  const state: ViewTransitionState = finishedWork.stateNode;
+  // Updates can have conflicting names and classNames.
+  // Since we're doing a reverse animation the "new" state is actually the current
+  // and the "old" state is the finishedWork.
+  const newProps: ViewTransitionProps = current.memoizedProps;
+  const oldProps: ViewTransitionProps = finishedWork.memoizedProps;
+  const oldName = getViewTransitionName(oldProps, state);
+  // This className applies only if there are fewer child DOM nodes than
+  // before or if this update should've been cancelled but we ended up with
+  // a parent animating so we need to animate the child too. Otherwise
+  // the "new" state wins. Since "new" normally wins, that's usually what
+  // we would use. However, since this animation is going in reverse we actually
+  // want the props from "current" since that's the class that would've won if
+  // it was the normal direction. To preserve the same effect in either direction.
+  let className: ?string = getViewTransitionClassName(
+    newProps.className,
+    newProps.update,
+  );
+  if (className === 'none') {
+    className = getViewTransitionClassName(newProps.className, newProps.layout);
+    if (className === 'none') {
+      // If both update and layout are both "none" then we don't have to
+      // apply a name. Since we won't animate this boundary.
+      return;
+    }
+  }
+  const clones = state.clones;
+  // If there are no clones at this point, that should mean that there are no
+  // HostComponent children in this ViewTransition.
+  if (clones !== null) {
+    applyViewTransitionToClones(oldName, className, clones);
   }
 }
 
@@ -202,6 +433,7 @@ function recursivelyInsertNewFiber(
       // For insertions we don't need to clone. It's already new state node.
       if (visitPhase !== INSERT_APPEARING_PAIR) {
         appendChild(hostParentClone, instance);
+        trackHostMutation();
         recursivelyInsertNew(
           finishedWork,
           instance,
@@ -231,6 +463,7 @@ function recursivelyInsertNewFiber(
       // For insertions we don't need to clone. It's already new state node.
       if (visitPhase !== INSERT_APPEARING_PAIR) {
         appendChild(hostParentClone, textInstance);
+        trackHostMutation();
       }
       break;
     }
@@ -265,7 +498,6 @@ function recursivelyInsertNewFiber(
         // This was an Enter of a ViewTransition. We now move onto inserting the inner
         // HostComponents and finding inner pairs.
         nextPhase = INSERT_APPEND;
-        // TODO: Mark the name and find a pair.
       } else {
         nextPhase = visitPhase;
       }
@@ -275,6 +507,16 @@ function recursivelyInsertNewFiber(
         viewTransitionState,
         nextPhase,
       );
+      // After we've inserted the new nodes into the "clones" set we can apply share
+      // or exit transitions to them.
+      if (visitPhase === INSERT_EXIT) {
+        applyExitViewTransition(finishedWork);
+      } else if (
+        visitPhase === INSERT_APPEARING_PAIR ||
+        visitPhase === INSERT_APPEND
+      ) {
+        applyAppearingPairViewTransition(finishedWork);
+      }
       popMutationContext(prevMutationContext);
       break;
     default: {
@@ -347,6 +589,7 @@ function recursivelyInsertClonesFromExistingTree(
         }
         if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
           unhideInstance(clone, child.memoizedProps);
+          trackHostMutation();
         }
         break;
       }
@@ -362,6 +605,7 @@ function recursivelyInsertClonesFromExistingTree(
         appendChild(hostParentClone, clone);
         if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
           unhideTextInstance(clone, child.memoizedProps);
+          trackHostMutation();
         }
         break;
       }
@@ -412,8 +656,18 @@ function recursivelyInsertClonesFromExistingTree(
           viewTransitionState,
           nextPhase,
         );
-        // TODO: Only the first level should track if this was s
-        // child.flags |= Update;
+        // After we've collected the cloned instances, we can apply exit or share transitions
+        // to them.
+        if (visitPhase === CLONE_EXIT) {
+          applyExitViewTransition(child);
+        } else if (
+          visitPhase === CLONE_APPEARING_PAIR ||
+          visitPhase === CLONE_UNHIDE
+        ) {
+          applyAppearingPairViewTransition(child);
+        } else if (visitPhase === CLONE_UPDATE) {
+          applyNestedViewTransition(child);
+        }
         popMutationContext(prevMutationContext);
         break;
       default: {
@@ -441,6 +695,10 @@ function recursivelyInsertClones(
     for (let i = 0; i < deletions.length; i++) {
       const childToDelete = deletions[i];
       trackEnterViewTransitions(childToDelete);
+      // Normally we would only mark something as triggering a mutation if there was
+      // actually a HostInstance below here. If this tree didn't contain a HostInstances
+      // we shouldn't trigger a mutation even though a virtual component was deleted.
+      trackHostMutation();
     }
   }
 
@@ -563,6 +821,7 @@ function insertDestinationClonesOfFiber(
         clone = cloneMutableInstance(instance, true);
         if (finishedWork.flags & ContentReset) {
           resetTextContent(clone);
+          trackHostMutation();
         }
       } else {
         // If we have children we'll clone them as we walk the tree so we just
@@ -587,6 +846,7 @@ function insertDestinationClonesOfFiber(
         );
         appendChild(hostParentClone, clone);
         unhideInstance(clone, finishedWork.memoizedProps);
+        trackHostMutation();
       } else {
         recursivelyInsertClones(finishedWork, clone, null, visitPhase);
         appendChild(hostParentClone, clone);
@@ -613,10 +873,12 @@ function insertDestinationClonesOfFiber(
         const newText: string = finishedWork.memoizedProps;
         const oldText: string = current.memoizedProps;
         commitTextUpdate(clone, newText, oldText);
+        trackHostMutation();
       }
       appendChild(hostParentClone, clone);
       if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
         unhideTextInstance(clone, finishedWork.memoizedProps);
+        trackHostMutation();
       }
       break;
     }
@@ -647,6 +909,10 @@ function insertDestinationClonesOfFiber(
       } else if (current !== null && current.memoizedState === null) {
         // Was previously mounted as visible but is now hidden.
         trackEnterViewTransitions(current);
+        // Normally we would only mark something as triggering a mutation if there was
+        // actually a HostInstance below here. If this tree didn't contain a HostInstances
+        // we shouldn't trigger a mutation even though a virtual component was hidden.
+        trackHostMutation();
       }
       break;
     }
@@ -674,6 +940,18 @@ function insertDestinationClonesOfFiber(
         // Track that this boundary had a mutation and therefore needs to animate
         // whether it resized or not.
         finishedWork.flags |= Update;
+      }
+      // After we've collected the cloned instances, we can apply exit or share transitions
+      // to them.
+      if (visitPhase === CLONE_EXIT) {
+        applyExitViewTransition(finishedWork);
+      } else if (
+        visitPhase === CLONE_APPEARING_PAIR ||
+        visitPhase === CLONE_UNHIDE
+      ) {
+        applyAppearingPairViewTransition(finishedWork);
+      } else if (visitPhase === CLONE_UPDATE) {
+        applyUpdateViewTransition(current, finishedWork);
       }
       popMutationContext(prevMutationContext);
       break;
@@ -720,53 +998,6 @@ export function insertDestinationClones(
   }
 }
 
-function applyDeletedPairViewTransitions(deletion: Fiber): void {
-  if ((deletion.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
-    // This has no named view transitions in its subtree.
-    return;
-  }
-  let child = deletion.child;
-  while (child !== null) {
-    if (child.tag === OffscreenComponent && child.memoizedState === null) {
-      // This tree was already hidden so we skip it.
-    } else {
-      if (
-        child.tag === ViewTransitionComponent &&
-        (child.flags & ViewTransitionNamedStatic) !== NoFlags
-      ) {
-        const props: ViewTransitionProps = child.memoizedProps;
-        const name = props.name;
-        if (name != null && name !== 'auto') {
-          // TODO: Find a pair
-        }
-      }
-      applyDeletedPairViewTransitions(child);
-    }
-    child = child.sibling;
-  }
-}
-
-function applyEnterViewTransitions(deletion: Fiber): void {
-  if (deletion.tag === ViewTransitionComponent) {
-    const props: ViewTransitionProps = deletion.memoizedProps;
-    const name = props.name;
-    if (name != null && name !== 'auto') {
-      // TODO: Find a pair
-    }
-    // Look for more pairs deeper in the tree.
-    applyDeletedPairViewTransitions(deletion);
-  } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-    // TODO: Check if this is a hidden Offscreen or a Portal.
-    let child = deletion.child;
-    while (child !== null) {
-      applyEnterViewTransitions(child);
-      child = child.sibling;
-    }
-  } else {
-    applyDeletedPairViewTransitions(deletion);
-  }
-}
-
 function measureExitViewTransitions(placement: Fiber): void {
   if (placement.tag === ViewTransitionComponent) {
     // const state: ViewTransitionState = placement.stateNode;
@@ -788,37 +1019,12 @@ function measureExitViewTransitions(placement: Fiber): void {
   }
 }
 
-function measureNestedViewTransitions(changedParent: Fiber): void {
-  let child = changedParent.child;
-  while (child !== null) {
-    if (child.tag === ViewTransitionComponent) {
-      const current = child.alternate;
-      if (current !== null) {
-        // const props: ViewTransitionProps = child.memoizedProps;
-        // const name = getViewTransitionName(props, child.stateNode);
-        // TODO: Measure both the old and new state and see if they're different.
-      }
-    } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
-      // TODO: Check if this is a hidden Offscreen or a Portal.
-      measureNestedViewTransitions(child);
-    }
-    child = child.sibling;
-  }
-}
-
-function measureUpdateViewTransition(
-  current: Fiber,
-  finishedWork: Fiber,
-): void {
-  // TODO
-}
-
 function recursivelyApplyViewTransitions(parentFiber: Fiber) {
   const deletions = parentFiber.deletions;
   if (deletions !== null) {
     for (let i = 0; i < deletions.length; i++) {
       const childToDelete = deletions[i];
-      applyEnterViewTransitions(childToDelete);
+      commitEnterViewTransitions(childToDelete, true);
     }
   }
 
@@ -836,7 +1042,7 @@ function recursivelyApplyViewTransitions(parentFiber: Fiber) {
     // Nothing has changed in this subtree, but the parent may have still affected
     // its size and position. We need to measure the old and new state to see if
     // we should animate its size and position.
-    measureNestedViewTransitions(parentFiber);
+    measureNestedViewTransitions(parentFiber, true);
   }
 }
 
@@ -852,15 +1058,6 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber) {
   // because the fiber tag is more specific. An exception is any flag related
   // to reconciliation, because those can be set on all fiber types.
   switch (finishedWork.tag) {
-    case HostComponent: {
-      // const instance: Instance = finishedWork.stateNode;
-      // TODO: Apply name and measure.
-      recursivelyApplyViewTransitions(finishedWork);
-      break;
-    }
-    case HostText: {
-      break;
-    }
     case HostPortal: {
       // TODO: Consider what should happen to Portals. For now we exclude them.
       break;
@@ -873,17 +1070,64 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber) {
           measureExitViewTransitions(finishedWork);
         } else if (current !== null && current.memoizedState === null) {
           // Was previously mounted as visible but is now hidden.
-          applyEnterViewTransitions(current);
+          commitEnterViewTransitions(current, true);
         }
       }
       break;
     }
-    case ViewTransitionComponent:
-      measureUpdateViewTransition(current, finishedWork);
+    case ViewTransitionComponent: {
+      const prevContextChanged = viewTransitionContextChanged;
+      const prevCancelableChildren = pushViewTransitionCancelableScope();
+      viewTransitionContextChanged = false;
+      recursivelyApplyViewTransitions(finishedWork);
+
+      if (viewTransitionContextChanged) {
+        finishedWork.flags |= Update;
+      }
+
+      const inViewport = measureUpdateViewTransition(
+        current,
+        finishedWork,
+        true,
+      );
+
+      if ((finishedWork.flags & Update) === NoFlags || !inViewport) {
+        // If this boundary didn't update, then we may be able to cancel its children.
+        // We bubble them up to the parent set to be determined later if we can cancel.
+        // Similarly, if old and new state was outside the viewport, we can skip it
+        // even if it did update.
+        if (prevCancelableChildren === null) {
+          // Bubbling up this whole set to the parent.
+        } else {
+          // Merge with parent set.
+          // $FlowFixMe[method-unbinding]
+          prevCancelableChildren.push.apply(
+            prevCancelableChildren,
+            viewTransitionCancelableChildren,
+          );
+          popViewTransitionCancelableScope(prevCancelableChildren);
+        }
+        // TODO: If this doesn't end up canceled, because a parent animates,
+        // then we should probably issue an event since this instance is part of it.
+      } else {
+        // TODO: Schedule gesture events.
+        // If this boundary did update, we cannot cancel its children so those are dropped.
+        popViewTransitionCancelableScope(prevCancelableChildren);
+      }
+
+      if ((finishedWork.flags & AffectedParentLayout) !== NoFlags) {
+        // This boundary changed size in a way that may have caused its parent to
+        // relayout. We need to bubble this information up to the parent.
+        viewTransitionContextChanged = true;
+      } else {
+        // Otherwise, we restore it to whatever the parent had found so far.
+        viewTransitionContextChanged = prevContextChanged;
+      }
+
       const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
       viewTransitionState.clones = null; // Reset
-      recursivelyApplyViewTransitions(finishedWork);
       break;
+    }
     default: {
       recursivelyApplyViewTransitions(finishedWork);
       break;
@@ -897,13 +1141,38 @@ export function applyDepartureTransitions(
   finishedWork: Fiber,
 ): void {
   // First measure and apply view-transition-names to the "new" states.
+  viewTransitionContextChanged = false;
+  pushViewTransitionCancelableScope();
+
   recursivelyApplyViewTransitions(finishedWork);
+
   // Then remove the clones.
   const rootClone = root.gestureClone;
   if (rootClone !== null) {
     root.gestureClone = null;
     removeRootViewTransitionClone(root.containerInfo, rootClone);
   }
+
+  if (!viewTransitionContextChanged) {
+    // If we didn't leak any resizing out to the root, we don't have to transition
+    // the root itself. This means that we can now safely cancel any cancellations
+    // that bubbled all the way up.
+    const cancelableChildren = viewTransitionCancelableChildren;
+    if (cancelableChildren !== null) {
+      for (let i = 0; i < cancelableChildren.length; i += 3) {
+        cancelViewTransitionName(
+          ((cancelableChildren[i]: any): Instance),
+          ((cancelableChildren[i + 1]: any): string),
+          ((cancelableChildren[i + 2]: any): Props),
+        );
+      }
+    }
+    // We also cancel the root itself. First we restore the name to the documentElement
+    // and then we cancel it.
+    restoreRootViewTransitionName(root.containerInfo);
+    cancelRootViewTransitionName(root.containerInfo);
+  }
+  popViewTransitionCancelableScope(null);
 }
 
 function recursivelyRestoreViewTransitions(parentFiber: Fiber) {
@@ -945,15 +1214,6 @@ function restoreViewTransitionsOnFiber(finishedWork: Fiber) {
   // because the fiber tag is more specific. An exception is any flag related
   // to reconciliation, because those can be set on all fiber types.
   switch (finishedWork.tag) {
-    case HostComponent: {
-      // const instance: Instance = finishedWork.stateNode;
-      // TODO: Restore the name.
-      recursivelyRestoreViewTransitions(finishedWork);
-      break;
-    }
-    case HostText: {
-      break;
-    }
     case HostPortal: {
       // TODO: Consider what should happen to Portals. For now we exclude them.
       break;
@@ -972,8 +1232,7 @@ function restoreViewTransitionsOnFiber(finishedWork: Fiber) {
       break;
     }
     case ViewTransitionComponent:
-      const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
-      viewTransitionState.clones = null; // Reset
+      restoreUpdateViewTransitionForGesture(current, finishedWork);
       recursivelyRestoreViewTransitions(finishedWork);
       break;
     default: {
