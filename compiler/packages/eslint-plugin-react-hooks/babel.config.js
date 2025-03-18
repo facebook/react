@@ -6,10 +6,16 @@
  */
 
 module.exports = {
-  presets: ['@babel/preset-env', '@babel/preset-typescript'],
+  presets: [
+    ['@babel/preset-env', {targets: {esmodules: false, node: 'current'}}],
+    '@babel/preset-typescript',
+  ],
   plugins: [
+    '@babel/plugin-syntax-jsx',
+    '@babel/plugin-transform-flow-strip-types',
+    ['@babel/plugin-proposal-class-properties', {loose: true}],
+    '@babel/plugin-transform-classes',
     ['@babel/plugin-transform-private-property-in-object', {loose: true}],
-    ['@babel/plugin-transform-class-properties', {loose: true}],
     ['@babel/plugin-transform-private-methods', {loose: true}],
   ],
 };
