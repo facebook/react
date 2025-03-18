@@ -16,6 +16,10 @@ import {
   EnvironmentConfig,
   ExternalFunction,
   ReactFunctionType,
+  ImportedExternalFunction,
+  ImportedUids,
+  EMIT_FREEZE_GLOBAL_GATING,
+  USE_FIRE_FUNCTION_NAME,
 } from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
 import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
@@ -34,6 +38,7 @@ import {
   findProgramSuppressions,
   suppressionsToCompilerError,
 } from './Suppression';
+import {Err, Ok, Result} from '../Utils/Result';
 
 export type CompilerPass = {
   opts: PluginOptions;
@@ -271,6 +276,137 @@ function isFilePartOfSources(
   return false;
 }
 
+function getExternalFunctions(
+  program: NodePath<t.Program>,
+  options: PluginOptions,
+): Result<
+  {
+    importedIdentifierNames: ImportedUids;
+    importedFunctions: Array<ImportedExternalFunction>;
+  },
+  CompilerError
+> {
+  const environment = options.environment;
+  const importedFunctions: Array<ImportedExternalFunction> = [];
+  const pushUid = (fn: ExternalFunction): string => {
+    /**
+     * TODO: Don't call babel's generateUid for known hook imports, as
+     * InferTypes might eventually type `HookKind` based on callee naming
+     * convention and `_useFoo` is not named as a hook.
+     *
+     * Local uid generation is susceptible to check-before-use bugs since we're
+     * checking for naming conflicts / references long before we actually insert
+     * the import. (see similar logic in HIRBuilder:resolveBinding)
+     *
+     * Instead, implement a program-scoped `generateUid` that generates and
+     * tracks all generated identifiers. While babel apis allow for registering
+     * new identifiers and references, at this point we have no concrete
+     * NodePath to point the new declaration to.
+     */
+    const uid = program.scope.generateUid(fn.importSpecifierName);
+    importedFunctions.push({...fn, local: uid});
+    return uid;
+  };
+  const useMemoCacheIdentifier = program.scope.generateUid('c');
+
+  const importedIdentifierNames: ImportedUids = {
+    useMemoCacheIdentifier,
+    gating: null,
+    lowerContextAccess: null,
+    enableEmitInstrumentForget: null,
+    enableEmitFreeze: null,
+    enableEmitHookGuards: null,
+    enableChangeDetectionForDebugging: null,
+    enableFire: null,
+  };
+
+  // TODO: check for duplicate import specifiers
+  if (options.gating != null) {
+    importedIdentifierNames.gating = pushUid(options.gating);
+  }
+
+  if (environment.lowerContextAccess) {
+    importedIdentifierNames.lowerContextAccess = pushUid(
+      environment.lowerContextAccess,
+    );
+  }
+
+  const enableEmitInstrumentForget = environment.enableEmitInstrumentForget;
+  if (enableEmitInstrumentForget != null) {
+    importedIdentifierNames.enableEmitInstrumentForget = {
+      fn: pushUid(enableEmitInstrumentForget.fn),
+      gating: null,
+      globalGating: null,
+    };
+    if (enableEmitInstrumentForget.gating != null) {
+      importedIdentifierNames.enableEmitInstrumentForget.gating = pushUid(
+        enableEmitInstrumentForget.gating,
+      );
+    }
+    if (enableEmitInstrumentForget.globalGating != null) {
+      if (program.scope.hasReference(enableEmitInstrumentForget.globalGating)) {
+        /**
+         * Note that getBinding returns undefined for declared-but-not-defined
+         * uids generated with `Scope:generateUidIdentifier`.
+         */
+        const maybeBinding = program.scope.getBinding(
+          enableEmitInstrumentForget.globalGating,
+        );
+        return Err(
+          new CompilerError({
+            severity: ErrorSeverity.Todo,
+            reason:
+              'Found conflicting local binding for `enableEmitInstrumentForget.globalGating`',
+            description: `Identifier name: ${enableEmitInstrumentForget.globalGating}`,
+            loc: maybeBinding?.path.node.loc ?? null,
+          }),
+        );
+      }
+      importedIdentifierNames.enableEmitInstrumentForget.globalGating =
+        enableEmitInstrumentForget.globalGating;
+    }
+  }
+
+  if (environment.enableEmitFreeze != null) {
+    if (program.scope.hasReference(EMIT_FREEZE_GLOBAL_GATING)) {
+      /**
+       * Note that getBinding returns undefined for declared-but-not-defined
+       * uids generated with `Scope:generateUidIdentifier`.
+       */
+      const maybeBinding = program.scope.getBinding(EMIT_FREEZE_GLOBAL_GATING);
+      return Err(
+        new CompilerError({
+          severity: ErrorSeverity.Todo,
+          reason:
+            'Found conflicting local binding for enableEmitFreeze global gating',
+          description: `Identifier name: ${EMIT_FREEZE_GLOBAL_GATING}`,
+          loc: maybeBinding?.path.node.loc ?? null,
+        }),
+      );
+    }
+    importedIdentifierNames.enableEmitFreeze = pushUid(
+      environment.enableEmitFreeze,
+    );
+  }
+
+  if (environment.enableEmitHookGuards != null) {
+    importedIdentifierNames.enableEmitHookGuards = pushUid(
+      environment.enableEmitHookGuards,
+    );
+  }
+
+  if (environment.enableChangeDetectionForDebugging != null) {
+    importedIdentifierNames.enableChangeDetectionForDebugging = pushUid(
+      environment.enableChangeDetectionForDebugging,
+    );
+  }
+
+  if (environment.enableFire) {
+    importedIdentifierNames.enableFire = pushUid(getUseFireFunction(options));
+  }
+  return Ok({importedIdentifierNames, importedFunctions});
+}
+
 type CompileProgramResult = {
   retryErrors: Array<{fn: BabelFn; error: CompilerError}>;
 };
@@ -299,7 +435,14 @@ export function compileProgram(
     handleError(restrictedImportsErr, pass, null);
     return null;
   }
-  const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
+
+  const externalFunctionsResult = getExternalFunctions(program, pass.opts);
+  if (externalFunctionsResult.isErr()) {
+    handleError(externalFunctionsResult.unwrapErr(), pass, null);
+    return null;
+  }
+  const {importedIdentifierNames, importedFunctions} =
+    externalFunctionsResult.unwrap();
 
   /*
    * Record lint errors and critical errors as depending on Forget's config,
@@ -410,7 +553,7 @@ export function compileProgram(
             environment,
             fnType,
             'all_features',
-            useMemoCacheIdentifier.name,
+            importedIdentifierNames,
             pass.opts.logger,
             pass.filename,
             pass.code,
@@ -445,7 +588,7 @@ export function compileProgram(
             environment,
             fnType,
             'no_inferred_memo',
-            useMemoCacheIdentifier.name,
+            importedIdentifierNames,
             pass.opts.logger,
             pass.filename,
             pass.code,
@@ -548,79 +691,63 @@ export function compileProgram(
   if (moduleScopeOptOutDirectives.length > 0) {
     return null;
   }
-  let gating: null | {
-    gatingFn: ExternalFunction;
-    referencedBeforeDeclared: Set<CompileResult>;
-  } = null;
-  if (pass.opts.gating != null) {
-    gating = {
-      gatingFn: pass.opts.gating,
-      referencedBeforeDeclared:
-        getFunctionReferencedBeforeDeclarationAtTopLevel(program, compiledFns),
-    };
-  }
 
   const hasLoweredContextAccess = compiledFns.some(
     c => c.compiledFn.hasLoweredContextAccess,
   );
-  const externalFunctions: Array<ExternalFunction> = [];
-  try {
-    // TODO: check for duplicate import specifiers
-    if (gating != null) {
-      externalFunctions.push(gating.gatingFn);
-    }
+  const lowerContextAccess = environment.lowerContextAccess;
+  if (!hasLoweredContextAccess && lowerContextAccess != null) {
+    // remove loweredContextAccess import if not used
+    const idx = importedFunctions.findIndex(
+      f =>
+        f.source === lowerContextAccess.source &&
+        f.importSpecifierName === lowerContextAccess.importSpecifierName,
+    );
+    CompilerError.invariant(idx >= 0, {
+      reason: 'Expected to find loweredContextAccess import',
+      loc: null,
+    });
+    importedFunctions.splice(idx, 1);
+  }
 
-    const lowerContextAccess = environment.lowerContextAccess;
-    if (lowerContextAccess && hasLoweredContextAccess) {
-      externalFunctions.push(lowerContextAccess);
-    }
-
-    const enableEmitInstrumentForget = environment.enableEmitInstrumentForget;
-    if (enableEmitInstrumentForget != null) {
-      externalFunctions.push(enableEmitInstrumentForget.fn);
-      if (enableEmitInstrumentForget.gating != null) {
-        externalFunctions.push(enableEmitInstrumentForget.gating);
-      }
-    }
-
-    if (environment.enableEmitFreeze != null) {
-      externalFunctions.push(environment.enableEmitFreeze);
-    }
-
-    if (environment.enableEmitHookGuards != null) {
-      externalFunctions.push(environment.enableEmitHookGuards);
-    }
-
-    if (environment.enableChangeDetectionForDebugging != null) {
-      externalFunctions.push(environment.enableChangeDetectionForDebugging);
-    }
-
-    const hasFireRewrite = compiledFns.some(c => c.compiledFn.hasFireRewrite);
-    if (environment.enableFire && hasFireRewrite) {
-      externalFunctions.push({
-        source: getReactCompilerRuntimeModule(pass.opts),
-        importSpecifierName: 'useFire',
-      });
-    }
-  } catch (err) {
-    handleError(err, pass, null);
-    return null;
+  const hasFireRewrite = compiledFns.some(c => c.compiledFn.hasFireRewrite);
+  if (!hasFireRewrite && environment.enableFire) {
+    const fireFunction = getUseFireFunction(pass.opts);
+    // remove useFire import if not used
+    const idx = importedFunctions.findIndex(
+      f =>
+        f.source === fireFunction.source &&
+        f.importSpecifierName === fireFunction.importSpecifierName,
+    );
+    CompilerError.invariant(idx >= 0, {
+      reason: 'Expected to find useFire import',
+      loc: null,
+    });
+    importedFunctions.splice(idx, 1);
   }
 
   /*
    * Only insert Forget-ified functions if we have not encountered a critical
    * error elsewhere in the file, regardless of bailout mode.
    */
+  const referencedBeforeDeclared =
+    pass.opts.gating != null
+      ? getFunctionReferencedBeforeDeclarationAtTopLevel(program, compiledFns)
+      : null;
   for (const result of compiledFns) {
     const {kind, originalFn, compiledFn} = result;
     const transformedFn = createNewFunctionNode(originalFn, compiledFn);
 
-    if (gating != null && kind === 'original') {
+    if (referencedBeforeDeclared != null && kind === 'original') {
+      CompilerError.invariant(importedIdentifierNames.gating != null, {
+        reason: "Expected 'gating' import to be present",
+        loc: null,
+      });
       insertGatedFunctionDeclaration(
         originalFn,
         transformedFn,
-        gating.gatingFn,
-        gating.referencedBeforeDeclared.has(result),
+        importedIdentifierNames.gating,
+        referencedBeforeDeclared.has(result),
       );
     } else {
       originalFn.replaceWith(transformedFn);
@@ -641,10 +768,10 @@ export function compileProgram(
       updateMemoCacheFunctionImport(
         program,
         getReactCompilerRuntimeModule(pass.opts),
-        useMemoCacheIdentifier.name,
+        importedIdentifierNames.useMemoCacheIdentifier,
       );
     }
-    addImportsToProgram(program, externalFunctions);
+    addImportsToProgram(program, importedFunctions);
   }
   return {retryErrors};
 }
@@ -1161,6 +1288,12 @@ function getFunctionReferencedBeforeDeclarationAtTopLevel(
   });
 
   return referencedBeforeDeclaration;
+}
+function getUseFireFunction(options: PluginOptions): ExternalFunction {
+  return {
+    source: getReactCompilerRuntimeModule(options),
+    importSpecifierName: USE_FIRE_FUNCTION_NAME,
+  };
 }
 
 function getReactCompilerRuntimeModule(opts: PluginOptions): string {

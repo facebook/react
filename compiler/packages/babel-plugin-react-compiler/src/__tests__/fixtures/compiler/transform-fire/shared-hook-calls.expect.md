@@ -26,7 +26,7 @@ function Component({bar, baz}) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime";
+import { useFire as _useFire } from "react/compiler-runtime";
 import { c as _c } from "react/compiler-runtime"; // @enableFire
 import { fire } from "react";
 
@@ -44,8 +44,8 @@ function Component(t0) {
     t1 = $[1];
   }
   const foo = t1;
-  const t2 = useFire(foo);
-  const t3 = useFire(baz);
+  const t2 = _useFire(foo);
+  const t3 = _useFire(baz);
   let t4;
   if ($[2] !== bar || $[3] !== t2 || $[4] !== t3) {
     t4 = () => {

@@ -8,8 +8,9 @@
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 import {CompilerError, ErrorSeverity} from '../CompilerError';
-import {EnvironmentConfig, ExternalFunction, GeneratedSource} from '../HIR';
+import {EnvironmentConfig, GeneratedSource} from '../HIR';
 import {getOrInsertDefault} from '../Utils/utils';
+import {ImportedExternalFunction} from '../HIR/Environment';
 
 export function validateRestrictedImports(
   path: NodePath<t.Program>,
@@ -44,45 +45,36 @@ export function validateRestrictedImports(
 
 export function addImportsToProgram(
   path: NodePath<t.Program>,
-  importList: Array<ExternalFunction>,
+  importList: Array<ImportedExternalFunction>,
 ): void {
-  const identifiers: Set<string> = new Set();
-  const sortedImports: Map<string, Array<string>> = new Map();
-  for (const {importSpecifierName, source} of importList) {
-    /*
-     * Codegen currently does not rename import specifiers, so we do additional
-     * validation here
+  const sortedImports: Map<string, Array<ImportedExternalFunction>> = new Map();
+  for (const import_ of importList) {
+    /**
+     * Assert that the import identifier hasn't already be declared in the program.
+     * Note: we use getBinding here since `Scope.hasBinding` pessimistically returns true
+     * for all allocated uids (from `Scope.getUid`)
      */
-    CompilerError.invariant(identifiers.has(importSpecifierName) === false, {
-      reason: `Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
-      description: null,
+    CompilerError.invariant(path.scope.getBinding(import_.local) == null, {
+      reason: 'Encountered conflicting import specifiers in generated program',
+      description: `Conflict from import ${import_.source}:(${import_.importSpecifierName} as ${import_.local}).`,
       loc: GeneratedSource,
       suggestions: null,
     });
-    CompilerError.invariant(
-      path.scope.hasBinding(importSpecifierName) === false,
-      {
-        reason: `Encountered conflicting import specifiers for ${importSpecifierName} in generated program.`,
-        description: null,
-        loc: GeneratedSource,
-        suggestions: null,
-      },
-    );
-    identifiers.add(importSpecifierName);
-
     const importSpecifierNameList = getOrInsertDefault(
       sortedImports,
-      source,
+      import_.source,
       [],
     );
-    importSpecifierNameList.push(importSpecifierName);
+    importSpecifierNameList.push(import_);
   }
 
   const stmts: Array<t.ImportDeclaration> = [];
-  for (const [source, importSpecifierNameList] of sortedImports) {
-    const importSpecifiers = importSpecifierNameList.map(name => {
-      const id = t.identifier(name);
-      return t.importSpecifier(id, id);
+  for (const [source, import_] of sortedImports) {
+    const importSpecifiers = import_.map(specifier => {
+      return t.importSpecifier(
+        t.identifier(specifier.local),
+        t.identifier(specifier.importSpecifierName),
+      );
     });
 
     stmts.push(t.importDeclaration(importSpecifiers, t.stringLiteral(source)));

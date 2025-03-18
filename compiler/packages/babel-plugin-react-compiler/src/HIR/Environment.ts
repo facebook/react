@@ -84,6 +84,8 @@ export const InstrumentationSchema = z
   );
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
+export type ImportedExternalFunction = ExternalFunction & {local: string};
+export const USE_FIRE_FUNCTION_NAME = 'useFire';
 
 export const MacroMethodSchema = z.union([
   z.object({type: z.literal('wildcard')}),
@@ -823,6 +825,22 @@ export function printFunctionType(type: ReactFunctionType): string {
   }
 }
 
+export const EMIT_FREEZE_GLOBAL_GATING = '__DEV__';
+export type ImportedUids = {
+  useMemoCacheIdentifier: string;
+  gating: string | null;
+  lowerContextAccess: string | null;
+  enableEmitInstrumentForget: {
+    fn: string;
+    gating: string | null;
+    globalGating: string | null;
+  } | null;
+  enableEmitFreeze: string | null;
+  enableEmitHookGuards: string | null;
+  enableChangeDetectionForDebugging: string | null;
+  enableFire: string | null;
+};
+
 export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
@@ -841,7 +859,7 @@ export class Environment {
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
   compilerMode: CompilerMode;
-  useMemoCacheIdentifier: string;
+  importedUids: ImportedUids;
   hasLoweredContextAccess: boolean;
   hasFireRewrite: boolean;
 
@@ -857,7 +875,7 @@ export class Environment {
     logger: Logger | null,
     filename: string | null,
     code: string | null,
-    useMemoCacheIdentifier: string,
+    importedUids: ImportedUids,
   ) {
     this.#scope = scope;
     this.fnType = fnType;
@@ -866,7 +884,7 @@ export class Environment {
     this.filename = filename;
     this.code = code;
     this.logger = logger;
-    this.useMemoCacheIdentifier = useMemoCacheIdentifier;
+    this.importedUids = importedUids;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
     this.hasLoweredContextAccess = false;
