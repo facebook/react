@@ -878,12 +878,10 @@ describe('FragmentRefs', () => {
       ]);
       setClientRects(childBRef.current, [{x: 9, y: 10, width: 11, height: 12}]);
       const clientRects = fragmentRef.current.getClientRects();
-      const [childARects, childBRects] = clientRects;
-      expect(childARects.length).toBe(2);
-      expect(childBRects.length).toBe(1);
-      expect(childARects[0].left).toBe(1);
-      expect(childARects[1].left).toBe(5);
-      expect(childBRects[0].left).toBe(9);
+      expect(clientRects.length).toBe(3);
+      expect(clientRects[0].left).toBe(1);
+      expect(clientRects[1].left).toBe(5);
+      expect(clientRects[2].left).toBe(9);
     });
   });
 });

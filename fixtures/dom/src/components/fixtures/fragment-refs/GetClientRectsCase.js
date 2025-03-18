@@ -35,39 +35,31 @@ export default function GetClientRectsCase() {
                 height: '30vh',
                 border: '1px solid black',
               }}>
-              {rects.map((rectList, index) => {
+              {rects.map(({x, y, width, height}, index) => {
                 const scale = 0.3;
 
                 return (
-                  <div>
-                    {Array.from(rectList).map(({x, y, width, height}, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          position: 'absolute',
-                          top: y * scale,
-                          left: x * scale,
-                          width: width * scale,
-                          height: height * scale,
-                          border: '1px solid red',
-                          boxSizing: 'border-box',
-                        }}></div>
-                    ))}
-                  </div>
+                  <div
+                    key={index}
+                    style={{
+                      position: 'absolute',
+                      top: y * scale,
+                      left: x * scale,
+                      width: width * scale,
+                      height: height * scale,
+                      border: '1px solid red',
+                      boxSizing: 'border-box',
+                    }}></div>
                 );
               })}
             </div>
             <div>
-              {rects.map((rectList, index) => {
+              {rects.map(({x, y, width, height}, index) => {
                 return (
                   <div>
-                    {Array.from(rectList).map(({x, y, width, height}, idx) => (
-                      <div>
-                        {index}.{idx} :: {`{`}x: {x}, y: {y}, width: {width},
-                        height: {height}
-                        {`}`}
-                      </div>
-                    ))}
+                    {index} :: {`{`}x: {x}, y: {y}, width: {width}, height:{' '}
+                    {height}
+                    {`}`}
                   </div>
                 );
               })}

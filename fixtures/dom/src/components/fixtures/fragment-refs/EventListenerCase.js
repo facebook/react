@@ -70,7 +70,7 @@ export default function EventListenerCase() {
             Remove click event listeners
           </button>
         </Fixture.Controls>
-        <div class="card-container">
+        <div className="card-container">
           <Fragment ref={fragmentRef}>
             <div className="card" id="child-a">
               Child A

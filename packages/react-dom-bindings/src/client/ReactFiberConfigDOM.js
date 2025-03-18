@@ -2210,8 +2210,6 @@ type FocusOptions = {
   focusVisible?: boolean,
 };
 
-type ChildRectLists = Array<DOMRectList>;
-
 export type FragmentInstanceType = {
   _fragmentFiber: Fiber,
   _eventListeners: null | Array<StoredEventListener>,
@@ -2231,7 +2229,7 @@ export type FragmentInstanceType = {
   blur(): void,
   observeUsing(observer: IntersectionObserver | ResizeObserver): void,
   unobserveUsing(observer: IntersectionObserver | ResizeObserver): void,
-  getClientRects(): ChildRectLists,
+  getClientRects(): Array<DOMRect>,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -2412,14 +2410,14 @@ function unobserveChild(
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.getClientRects = function (
   this: FragmentInstanceType,
-): ChildRectLists {
-  const rects: ChildRectLists = [];
+): Array<DOMRect> {
+  const rects: Array<DOMRect> = [];
   traverseFragmentInstance(this._fragmentFiber, collectClientRects, rects);
   return rects;
 };
-function collectClientRects(child: Instance, rects: ChildRectLists): boolean {
-  // $FlowFixMe[incompatible-call]
-  rects.push(child.getClientRects());
+function collectClientRects(child: Instance, rects: Array<DOMRect>): boolean {
+  // $FlowFixMe[method-unbinding]
+  rects.push.apply(rects, child.getClientRects());
   return false;
 }
 
