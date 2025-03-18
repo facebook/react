@@ -17252,6 +17252,21 @@ function unobserveChild(child, observer) {
   observer.unobserve(child);
   return !1;
 }
+FragmentInstance.prototype.getClientRects = function () {
+  var rects = [];
+  traverseFragmentInstanceChildren(
+    this._fragmentFiber.child,
+    collectClientRects,
+    rects,
+    void 0,
+    void 0
+  );
+  return rects;
+};
+function collectClientRects(child, rects) {
+  rects.push.apply(rects, child.getClientRects());
+  return !1;
+}
 function normalizeListenerOptions(opts) {
   return null == opts
     ? "0"
@@ -18980,15 +18995,15 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1965 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1971 = React.version;
 if (
   "19.1.0-www-classic-9320a013-20250317" !==
-  isomorphicReactPackageVersion$jscomp$inline_1965
+  isomorphicReactPackageVersion$jscomp$inline_1971
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1965,
+      isomorphicReactPackageVersion$jscomp$inline_1971,
       "19.1.0-www-classic-9320a013-20250317"
     )
   );
@@ -19005,7 +19020,7 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2553 = {
+var internals$jscomp$inline_2559 = {
   bundleType: 0,
   version: "19.1.0-www-classic-9320a013-20250317",
   rendererPackageName: "react-dom",
@@ -19013,16 +19028,16 @@ var internals$jscomp$inline_2553 = {
   reconcilerVersion: "19.1.0-www-classic-9320a013-20250317"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2554 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2560 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2554.isDisabled &&
-    hook$jscomp$inline_2554.supportsFiber
+    !hook$jscomp$inline_2560.isDisabled &&
+    hook$jscomp$inline_2560.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2554.inject(
-        internals$jscomp$inline_2553
+      (rendererID = hook$jscomp$inline_2560.inject(
+        internals$jscomp$inline_2559
       )),
-        (injectedHook = hook$jscomp$inline_2554);
+        (injectedHook = hook$jscomp$inline_2560);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
