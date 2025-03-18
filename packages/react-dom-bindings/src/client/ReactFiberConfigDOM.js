@@ -2205,6 +2205,11 @@ type StoredEventListener = {
   optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
 };
 
+type FocusOptions = {
+  preventScroll?: boolean,
+  focusVisible?: boolean,
+};
+
 export type FragmentInstanceType = {
   _fragmentFiber: Fiber,
   _eventListeners: null | Array<StoredEventListener>,
@@ -2219,7 +2224,9 @@ export type FragmentInstanceType = {
     listener: EventListener,
     optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
   ): void,
-  focus(): void,
+  focus(focusOptions?: FocusOptions): void,
+  focusLast(focusOptions?: FocusOptions): void,
+  blur(): void,
   observeUsing(observer: IntersectionObserver | ResizeObserver): void,
   unobserveUsing(observer: IntersectionObserver | ResizeObserver): void,
 };
@@ -2307,9 +2314,56 @@ function removeEventListenerFromChild(
   return false;
 }
 // $FlowFixMe[prop-missing]
-FragmentInstance.prototype.focus = function (this: FragmentInstanceType) {
-  traverseFragmentInstance(this._fragmentFiber, setFocusIfFocusable);
+FragmentInstance.prototype.focus = function (
+  this: FragmentInstanceType,
+  focusOptions?: FocusOptions,
+): void {
+  traverseFragmentInstance(
+    this._fragmentFiber,
+    setFocusIfFocusable,
+    focusOptions,
+  );
 };
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.focusLast = function (
+  this: FragmentInstanceType,
+  focusOptions?: FocusOptions,
+) {
+  const children: Array<Instance> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  for (let i = children.length - 1; i >= 0; i--) {
+    const child = children[i];
+    if (setFocusIfFocusable(child, focusOptions)) {
+      break;
+    }
+  }
+};
+function collectChildren(
+  child: Instance,
+  collection: Array<Instance>,
+): boolean {
+  collection.push(child);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
+  // TODO: When we have a parent element reference, we can skip traversal if the fragment's parent
+  //   does not contain document.activeElement
+  traverseFragmentInstance(
+    this._fragmentFiber,
+    blurActiveElementWithinFragment,
+  );
+};
+function blurActiveElementWithinFragment(child: Instance): boolean {
+  // TODO: We can get the activeElement from the parent outside of the loop when we have a reference.
+  const ownerDocument = child.ownerDocument;
+  if (child === ownerDocument.activeElement) {
+    // $FlowFixMe[prop-missing]
+    child.blur();
+    return true;
+  }
+  return false;
+}
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.observeUsing = function (
   this: FragmentInstanceType,
@@ -3190,7 +3244,10 @@ export function isHiddenSubtree(fiber: Fiber): boolean {
   return fiber.tag === HostComponent && fiber.memoizedProps.hidden === true;
 }
 
-export function setFocusIfFocusable(node: Instance): boolean {
+export function setFocusIfFocusable(
+  node: Instance,
+  focusOptions?: FocusOptions,
+): boolean {
   // The logic for determining if an element is focusable is kind of complex,
   // and since we want to actually change focus anyway- we can just skip it.
   // Instead we'll just listen for a "focus" event to verify that focus was set.
@@ -3206,7 +3263,7 @@ export function setFocusIfFocusable(node: Instance): boolean {
   try {
     element.addEventListener('focus', handleFocus);
     // $FlowFixMe[method-unbinding]
-    (element.focus || HTMLElement.prototype.focus).call(element);
+    (element.focus || HTMLElement.prototype.focus).call(element, focusOptions);
   } finally {
     element.removeEventListener('focus', handleFocus);
   }
