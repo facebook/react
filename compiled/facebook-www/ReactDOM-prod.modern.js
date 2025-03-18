@@ -16910,15 +16910,46 @@ function removeEventListenerFromChild(
   child.removeEventListener(type, listener, optionsOrUseCapture);
   return !1;
 }
-FragmentInstance.prototype.focus = function () {
+FragmentInstance.prototype.focus = function (focusOptions) {
   traverseFragmentInstanceChildren(
     this._fragmentFiber.child,
     setFocusIfFocusable,
+    focusOptions,
+    void 0,
+    void 0
+  );
+};
+FragmentInstance.prototype.focusLast = function (focusOptions) {
+  var children = [];
+  traverseFragmentInstanceChildren(
+    this._fragmentFiber.child,
+    collectChildren,
+    children,
+    void 0,
+    void 0
+  );
+  for (
+    var i = children.length - 1;
+    0 <= i && !setFocusIfFocusable(children[i], focusOptions);
+    i--
+  );
+};
+function collectChildren(child, collection) {
+  collection.push(child);
+  return !1;
+}
+FragmentInstance.prototype.blur = function () {
+  traverseFragmentInstanceChildren(
+    this._fragmentFiber.child,
+    blurActiveElementWithinFragment,
     void 0,
     void 0,
     void 0
   );
 };
+function blurActiveElementWithinFragment(child) {
+  return child === child.ownerDocument.activeElement ? (child.blur(), !0) : !1;
+}
 FragmentInstance.prototype.observeUsing = function (observer) {
   null === this._observers && (this._observers = new Set());
   this._observers.add(observer);
@@ -17151,14 +17182,14 @@ function getParentSuspenseInstance(targetInstance) {
   }
   return null;
 }
-function setFocusIfFocusable(node) {
+function setFocusIfFocusable(node, focusOptions) {
   function handleFocus() {
     didFocus = !0;
   }
   var didFocus = !1;
   try {
     node.addEventListener("focus", handleFocus),
-      (node.focus || HTMLElement.prototype.focus).call(node);
+      (node.focus || HTMLElement.prototype.focus).call(node, focusOptions);
   } finally {
     node.removeEventListener("focus", handleFocus);
   }
@@ -18678,15 +18709,15 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1913 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1955 = React.version;
 if (
   "19.1.0-www-modern-9320a013-20250317" !==
-  isomorphicReactPackageVersion$jscomp$inline_1913
+  isomorphicReactPackageVersion$jscomp$inline_1955
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1913,
+      isomorphicReactPackageVersion$jscomp$inline_1955,
       "19.1.0-www-modern-9320a013-20250317"
     )
   );
@@ -18703,7 +18734,7 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2493 = {
+var internals$jscomp$inline_2535 = {
   bundleType: 0,
   version: "19.1.0-www-modern-9320a013-20250317",
   rendererPackageName: "react-dom",
@@ -18711,16 +18742,16 @@ var internals$jscomp$inline_2493 = {
   reconcilerVersion: "19.1.0-www-modern-9320a013-20250317"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2494 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2536 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2494.isDisabled &&
-    hook$jscomp$inline_2494.supportsFiber
+    !hook$jscomp$inline_2536.isDisabled &&
+    hook$jscomp$inline_2536.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2494.inject(
-        internals$jscomp$inline_2493
+      (rendererID = hook$jscomp$inline_2536.inject(
+        internals$jscomp$inline_2535
       )),
-        (injectedHook = hook$jscomp$inline_2494);
+        (injectedHook = hook$jscomp$inline_2536);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {

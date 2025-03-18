@@ -18923,15 +18923,46 @@ function removeEventListenerFromChild(
   child.removeEventListener(type, listener, optionsOrUseCapture);
   return !1;
 }
-FragmentInstance.prototype.focus = function () {
+FragmentInstance.prototype.focus = function (focusOptions) {
   traverseFragmentInstanceChildren(
     this._fragmentFiber.child,
     setFocusIfFocusable,
+    focusOptions,
+    void 0,
+    void 0
+  );
+};
+FragmentInstance.prototype.focusLast = function (focusOptions) {
+  var children = [];
+  traverseFragmentInstanceChildren(
+    this._fragmentFiber.child,
+    collectChildren,
+    children,
+    void 0,
+    void 0
+  );
+  for (
+    var i = children.length - 1;
+    0 <= i && !setFocusIfFocusable(children[i], focusOptions);
+    i--
+  );
+};
+function collectChildren(child, collection) {
+  collection.push(child);
+  return !1;
+}
+FragmentInstance.prototype.blur = function () {
+  traverseFragmentInstanceChildren(
+    this._fragmentFiber.child,
+    blurActiveElementWithinFragment,
     void 0,
     void 0,
     void 0
   );
 };
+function blurActiveElementWithinFragment(child) {
+  return child === child.ownerDocument.activeElement ? (child.blur(), !0) : !1;
+}
 FragmentInstance.prototype.observeUsing = function (observer) {
   null === this._observers && (this._observers = new Set());
   this._observers.add(observer);
@@ -19164,14 +19195,14 @@ function getParentSuspenseInstance(targetInstance) {
   }
   return null;
 }
-function setFocusIfFocusable(node) {
+function setFocusIfFocusable(node, focusOptions) {
   function handleFocus() {
     didFocus = !0;
   }
   var didFocus = !1;
   try {
     node.addEventListener("focus", handleFocus),
-      (node.focus || HTMLElement.prototype.focus).call(node);
+      (node.focus || HTMLElement.prototype.focus).call(node, focusOptions);
   } finally {
     node.removeEventListener("focus", handleFocus);
   }
@@ -20691,15 +20722,15 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2083 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2125 = React.version;
 if (
   "19.1.0-www-classic-9320a013-20250317" !==
-  isomorphicReactPackageVersion$jscomp$inline_2083
+  isomorphicReactPackageVersion$jscomp$inline_2125
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2083,
+      isomorphicReactPackageVersion$jscomp$inline_2125,
       "19.1.0-www-classic-9320a013-20250317"
     )
   );
@@ -20716,7 +20747,7 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2085 = {
+var internals$jscomp$inline_2127 = {
   bundleType: 0,
   version: "19.1.0-www-classic-9320a013-20250317",
   rendererPackageName: "react-dom",
@@ -20724,19 +20755,19 @@ var internals$jscomp$inline_2085 = {
   reconcilerVersion: "19.1.0-www-classic-9320a013-20250317"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2085.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2085.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2127.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2127.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2650 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2692 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2650.isDisabled &&
-    hook$jscomp$inline_2650.supportsFiber
+    !hook$jscomp$inline_2692.isDisabled &&
+    hook$jscomp$inline_2692.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2650.inject(
-        internals$jscomp$inline_2085
+      (rendererID = hook$jscomp$inline_2692.inject(
+        internals$jscomp$inline_2127
       )),
-        (injectedHook = hook$jscomp$inline_2650);
+        (injectedHook = hook$jscomp$inline_2692);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
