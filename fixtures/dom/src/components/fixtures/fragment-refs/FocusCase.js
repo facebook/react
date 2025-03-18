@@ -31,15 +31,16 @@ export default function FocusCase() {
         </p>
       </TestCase.ExpectedResult>
 
-      <button onClick={() => fragmentRef.current.focus()}>
-        Focus first child
-      </button>
-      <button onClick={() => fragmentRef.current.focusLast()}>
-        Focus last child
-      </button>
-      <button onClick={() => fragmentRef.current.blur()}>Blur</button>
-
       <Fixture>
+        <Fixture.Controls>
+          <button onClick={() => fragmentRef.current.focus()}>
+            Focus first child
+          </button>
+          <button onClick={() => fragmentRef.current.focusLast()}>
+            Focus last child
+          </button>
+          <button onClick={() => fragmentRef.current.blur()}>Blur</button>
+        </Fixture.Controls>
         <div className="highlight-focused-children" style={{display: 'flex'}}>
           <Fragment ref={fragmentRef}>
             <div style={{outline: '1px solid black'}}>Unfocusable div</div>
