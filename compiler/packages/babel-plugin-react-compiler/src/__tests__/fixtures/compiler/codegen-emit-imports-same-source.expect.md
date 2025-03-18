@@ -14,21 +14,21 @@ function useFoo(props) {
 
 ```javascript
 import {
-  useRenderCounter,
-  shouldInstrument,
-  makeReadOnly,
+  useRenderCounter as _useRenderCounter,
+  shouldInstrument as _shouldInstrument,
+  makeReadOnly as _makeReadOnly,
 } from "react-compiler-runtime";
 import { c as _c } from "react/compiler-runtime"; // @enableEmitFreeze @enableEmitInstrumentForget
 
 function useFoo(props) {
-  if (DEV && shouldInstrument)
-    useRenderCounter("useFoo", "/codegen-emit-imports-same-source.ts");
+  if (DEV && _shouldInstrument)
+    _useRenderCounter("useFoo", "/codegen-emit-imports-same-source.ts");
   const $ = _c(2);
   let t0;
   if ($[0] !== props.x) {
     t0 = foo(props.x);
     $[0] = props.x;
-    $[1] = __DEV__ ? makeReadOnly(t0, "useFoo") : t0;
+    $[1] = __DEV__ ? _makeReadOnly(t0, "useFoo") : t0;
   } else {
     t0 = $[1];
   }

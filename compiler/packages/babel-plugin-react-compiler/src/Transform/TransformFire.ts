@@ -36,6 +36,7 @@ import {getOrInsertWith} from '../Utils/utils';
 import {BuiltInFireId, DefaultNonmutatingHook} from '../HIR/ObjectShape';
 import {eachInstructionOperand} from '../HIR/visitors';
 import {printSourceLocationLine} from '../HIR/PrintHIR';
+import {USE_FIRE_FUNCTION_NAME} from '../HIR/Environment';
 
 /*
  * TODO(jmbrown):
@@ -408,13 +409,17 @@ function makeLoadUseFireInstruction(env: Environment): Instruction {
   const useFirePlace = createTemporaryPlace(env, GeneratedSource);
   useFirePlace.effect = Effect.Read;
   useFirePlace.identifier.type = DefaultNonmutatingHook;
+  CompilerError.invariant(env.importedUids.enableFire != null, {
+    reason: "Couldn't find useFire import",
+    loc: GeneratedSource,
+  });
   const instrValue: InstructionValue = {
     kind: 'LoadGlobal',
     binding: {
       kind: 'ImportSpecifier',
-      name: 'useFire',
+      name: env.importedUids.enableFire,
       module: 'react',
-      imported: 'useFire',
+      imported: USE_FIRE_FUNCTION_NAME,
     },
     loc: GeneratedSource,
   };

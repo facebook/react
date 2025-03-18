@@ -14,12 +14,12 @@ function App() {
 ## Code
 
 ```javascript
-import { useContext_withSelector } from "react-compiler-runtime";
+import { useContext_withSelector as _useContext_withSelector } from "react-compiler-runtime";
 import { c as _c } from "react/compiler-runtime"; // @lowerContextAccess
 function App() {
   const $ = _c(3);
-  const { foo } = useContext_withSelector(MyContext, _temp);
-  const { bar } = useContext_withSelector(MyContext, _temp2);
+  const { foo } = _useContext_withSelector(MyContext, _temp);
+  const { bar } = _useContext_withSelector(MyContext, _temp2);
   let t0;
   if ($[0] !== bar || $[1] !== foo) {
     t0 = <Bar foo={foo} bar={bar} />;

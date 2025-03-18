@@ -3,9 +3,9 @@
 
 ```javascript
 // @enableEmitFreeze @instrumentForget
-
-let makeReadOnly = 'conflicting identifier';
 function useFoo(props) {
+  const __DEV__ = 'conflicting global';
+  console.log(__DEV__);
   return foo(props.x);
 }
 
@@ -15,7 +15,7 @@ function useFoo(props) {
 ## Error
 
 ```
-Invariant: Encountered conflicting import specifiers for makeReadOnly in generated program.
+[object Object]
 ```
           
       

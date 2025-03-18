@@ -24,14 +24,14 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
+import { isForgetEnabled_Fixtures as _isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime"; // @gating
 import { identity, useHook as useRenamed } from "shared-runtime";
 const _ = {
-  useHook: isForgetEnabled_Fixtures() ? () => {} : () => {},
+  useHook: _isForgetEnabled_Fixtures() ? () => {} : () => {},
 };
 identity(_.useHook);
-const useHook = isForgetEnabled_Fixtures()
+const useHook = _isForgetEnabled_Fixtures()
   ? function useHook() {
       const $ = _c(1);
       useRenamed();

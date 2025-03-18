@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { $structuralCheck } from "react-compiler-runtime";
+import { $structuralCheck as _$structuralCheck } from "react-compiler-runtime";
 import { c as _c } from "react/compiler-runtime";
 import { useState } from "react"; // @enableChangeDetectionForDebugging
 
@@ -42,13 +42,13 @@ function Component(props) {
     let condition = $[0] !== props.x;
     if (!condition) {
       let old$t0 = $[1];
-      $structuralCheck(old$t0, t0, "t0", "Component", "cached", "(4:4)");
+      _$structuralCheck(old$t0, t0, "t0", "Component", "cached", "(4:4)");
     }
     $[0] = props.x;
     $[1] = t0;
     if (condition) {
       t0 = f(props.x);
-      $structuralCheck($[1], t0, "t0", "Component", "recomputed", "(4:4)");
+      _$structuralCheck($[1], t0, "t0", "Component", "recomputed", "(4:4)");
       t0 = $[1];
     }
   }
@@ -65,7 +65,7 @@ function Component(props) {
     let condition = $[2] !== w || $[3] !== x;
     if (!condition) {
       let old$t1 = $[4];
-      $structuralCheck(old$t1, t1, "t1", "Component", "cached", "(7:10)");
+      _$structuralCheck(old$t1, t1, "t1", "Component", "cached", "(7:10)");
     }
     $[2] = w;
     $[3] = x;
@@ -77,7 +77,7 @@ function Component(props) {
           {w}
         </div>
       );
-      $structuralCheck($[4], t1, "t1", "Component", "recomputed", "(7:10)");
+      _$structuralCheck($[4], t1, "t1", "Component", "recomputed", "(7:10)");
       t1 = $[4];
     }
   }
