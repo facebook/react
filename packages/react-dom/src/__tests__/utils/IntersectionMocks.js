@@ -75,3 +75,21 @@ export function setBoundingClientRect(target, {x, y, width, height}) {
     };
   };
 }
+
+/**
+ * Stub out getClientRects for the specified target.
+ */
+export function setClientRects(target, rects) {
+  target.getClientRects = function () {
+    return rects.map(({x, y, width, height}) => ({
+      width,
+      height,
+      left: x,
+      right: x + width,
+      top: y,
+      bottom: y + height,
+      x,
+      y,
+    }));
+  };
+}

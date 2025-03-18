@@ -224,7 +224,7 @@ p {
 }
 
 .test-case__body {
-  padding: 10px;
+  padding: 10px 10px 0 10px;
 }
 
 .test-case__desc {
@@ -280,9 +280,15 @@ p {
 
 .test-fixture {
   padding: 20px;
-  margin: 0 -15px; /* opposite of .test-case padding */
+  margin: 0 -10px; /* opposite of .test-case padding */
   background-color: #f4f4f4;
   border-top: 1px solid #d9d9d9;
+}
+
+.test-fixture__controls {
+  margin: -20px -20px 20px -20px;
+  padding: 20px;
+  border: 1px solid #444;
 }
 
 .field-group {
