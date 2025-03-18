@@ -74,75 +74,80 @@ export default function Page({url, navigate}) {
     </ViewTransition>
   );
   return (
-    <div>
-      <button
-        onClick={() => {
-          navigate(url === '/?b' ? '/?a' : '/?b');
-        }}>
-        {url === '/?b' ? 'A' : 'B'}
-      </button>
-      <ViewTransition className="none">
-        <div>
-          <ViewTransition>
-            <div>
-              <ViewTransition className={transitions['slide-on-nav']}>
-                <h1>{!show ? 'A' : 'B'}</h1>
+    <div className="swipe-recognizer">
+      <SwipeRecognizer
+        action={swipeAction}
+        gesture={startGesture}
+        direction={show ? 'left' : 'right'}>
+        <button
+          className="button"
+          onClick={() => {
+            navigate(url === '/?b' ? '/?a' : '/?b');
+          }}>
+          {url === '/?b' ? 'Goto A' : 'Goto B'}
+        </button>
+        <ViewTransition className="none">
+          <div>
+            <ViewTransition>
+              <div>
+                <ViewTransition className={transitions['slide-on-nav']}>
+                  <h1>{!show ? 'A' : 'B'}</h1>
+                </ViewTransition>
+              </div>
+            </ViewTransition>
+            <ViewTransition
+              className={{
+                'navigation-back': transitions['slide-right'],
+                'navigation-forward': transitions['slide-left'],
+              }}>
+              <h1>{!show ? 'A' + counter : 'B' + counter}</h1>
+            </ViewTransition>
+            {show ? (
+              <div>
+                {a}
+                {b}
+              </div>
+            ) : (
+              <div>
+                {b}
+                {a}
+              </div>
+            )}
+            <ViewTransition>
+              {show ? (
+                <div>hello{exclamation}</div>
+              ) : (
+                <section>Loading</section>
+              )}
+            </ViewTransition>
+            <p>
+              <Id />
+            </p>
+            {show ? null : (
+              <ViewTransition>
+                <div>world{exclamation}</div>
               </ViewTransition>
-            </div>
-          </ViewTransition>
-          <ViewTransition
-            className={{
-              'navigation-back': transitions['slide-right'],
-              'navigation-forward': transitions['slide-left'],
-            }}>
-            <h1>{!show ? 'A' + counter : 'B' + counter}</h1>
-          </ViewTransition>
-          {show ? (
-            <div>
-              {a}
-              {b}
-            </div>
-          ) : (
-            <div>
-              {b}
-              {a}
-            </div>
-          )}
-          <ViewTransition>
-            {show ? <div>hello{exclamation}</div> : <section>Loading</section>}
-          </ViewTransition>
-          <p>scroll me</p>
-          <p>
-            <Id />
-          </p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <div className="swipe-recognizer">
-            <SwipeRecognizer
-              action={swipeAction}
-              gesture={startGesture}
-              direction={show ? 'left' : 'right'}>
-              Swipe me
-            </SwipeRecognizer>
+            )}
+            <Activity mode={show ? 'visible' : 'hidden'}>
+              <ViewTransition>
+                <div>!!</div>
+              </ViewTransition>
+            </Activity>
+            <p>these</p>
+            <p>rows</p>
+            <p>exist</p>
+            <p>to</p>
+            <p>test</p>
+            <p>scrolling</p>
+            <p>content</p>
+            <p>out</p>
+            <p>of</p>
+            <p>the</p>
+            <p>viewport</p>
+            {show ? <Component /> : null}
           </div>
-          <p></p>
-          <p></p>
-          {show ? null : (
-            <ViewTransition>
-              <div>world{exclamation}</div>
-            </ViewTransition>
-          )}
-          <Activity mode={show ? 'visible' : 'hidden'}>
-            <ViewTransition>
-              <div>!!</div>
-            </ViewTransition>
-          </Activity>
-          {show ? <Component /> : null}
-        </div>
-      </ViewTransition>
+        </ViewTransition>
+      </SwipeRecognizer>
     </div>
   );
 }
