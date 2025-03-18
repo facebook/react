@@ -33,7 +33,6 @@ const canaryChannelLabel = 'canary';
 const rcNumber = 0;
 
 const stablePackages = {
-  'eslint-plugin-react-hooks': '5.2.0',
   'jest-react': '0.17.0',
   react: ReactVersion,
   'react-art': ReactVersion,
