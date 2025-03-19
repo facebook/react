@@ -205,6 +205,64 @@ describe('ReactJSXTransformIntegration', () => {
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
   });
 
+  it('identifies valid nodes', () => {
+    {
+      expect(React.isValidNode(<div />)).toEqual(true);
+      expect(React.isValidNode(<Component />)).toEqual(true);
+
+      expect(React.isValidNode(null)).toEqual(true);
+      expect(React.isValidNode(true)).toEqual(true);
+      expect(React.isValidNode({})).toEqual(false);
+      expect(React.isValidNode('string')).toEqual(true);
+      expect(React.isValidNode(Component)).toEqual(false);
+      expect(React.isValidNode({type: 'div', props: {}})).toEqual(false);
+    }
+
+    {
+      {
+        const element = React.createElement('div', null, 'Hello');
+        expect(React.isValidNode(element)).toBe(true);
+      }
+      {
+        const jsx = <div>Hello</div>;
+        expect(React.isValidNode(jsx)).toBe(true);
+      }
+      {
+        const fragment = <React.Fragment>Hello</React.Fragment>;
+        expect(React.isValidNode(fragment)).toBe(true);
+      }
+      {
+        expect(React.isValidNode('Hello')).toBe(true);
+      }
+      {
+        expect(React.isValidNode(42)).toBe(true);
+      }
+      {
+        expect(React.isValidNode(true)).toBe(true);
+        expect(React.isValidNode(false)).toBe(true);
+      }
+      {
+        expect(React.isValidNode(null)).toBe(true);
+        expect(React.isValidNode(undefined)).toBe(true);
+      }
+      {
+        const arr = ['Hello', <div>World</div>, 42, null, true];
+        expect(React.isValidNode(arr)).toBe(true);
+      }
+      {
+        const arr = ['Hello', <div>World</div>, {}];
+        expect(React.isValidNode(arr)).toBe(false);
+      }
+      {
+        expect(React.isValidNode({})).toBe(false);
+        expect(React.isValidNode({type: 'div'})).toBe(false);
+      }
+      {
+        expect(React.isValidNode(() => {})).toBe(false);
+      }
+    }
+  });
+
   it('is indistinguishable from a plain object', () => {
     const element = <div className="foo" />;
     const object = {};
