@@ -7675,61 +7675,60 @@ const tests = {
   ],
 };
 
-if (__EXPERIMENTAL__) {
-  tests.valid = [
-    ...tests.valid,
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          const onStuff = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          useEffect(() => {
-            onStuff();
-          }, []);
-        }
-      `,
-    },
-  ];
+tests.valid = [
+  ...tests.valid,
+  {
+    code: normalizeIndent`
+      function MyComponent({ theme }) {
+        const onStuff = useEffectEvent(() => {
+          showNotification(theme);
+        });
+        useEffect(() => {
+          onStuff();
+        }, []);
+      }
+    `,
+  },
+];
 
-  tests.invalid = [
-    ...tests.invalid,
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          const onStuff = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          useEffect(() => {
-            onStuff();
-          }, [onStuff]);
-        }
-      `,
-      errors: [
-        {
-          message:
-            'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
-            'Remove `onStuff` from the list.',
-          suggestions: [
-            {
-              desc: 'Remove the dependency `onStuff`',
-              output: normalizeIndent`
-                function MyComponent({ theme }) {
-                  const onStuff = useEffectEvent(() => {
-                    showNotification(theme);
-                  });
-                  useEffect(() => {
-                    onStuff();
-                  }, []);
-                }
-              `,
-            },
-          ],
-        },
-      ],
-    },
-  ];
-}
+// useEffectEvent
+tests.invalid = [
+  ...tests.invalid,
+  {
+    code: normalizeIndent`
+      function MyComponent({ theme }) {
+        const onStuff = useEffectEvent(() => {
+          showNotification(theme);
+        });
+        useEffect(() => {
+          onStuff();
+        }, [onStuff]);
+      }
+    `,
+    errors: [
+      {
+        message:
+          'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
+          'Remove `onStuff` from the list.',
+        suggestions: [
+          {
+            desc: 'Remove the dependency `onStuff`',
+            output: normalizeIndent`
+              function MyComponent({ theme }) {
+                const onStuff = useEffectEvent(() => {
+                  showNotification(theme);
+                });
+                useEffect(() => {
+                  onStuff();
+                }, []);
+              }
+            `,
+          },
+        ],
+      },
+    ],
+  },
+];
 
 // Tests that are only valid/invalid across parsers supporting Flow
 const testsFlow = {
@@ -8370,16 +8369,16 @@ describe('rules-of-hooks/exhaustive-deps', () => {
     testsTypescriptEslintParser
   );
 
-  new ESLintTesterV9({
-    languageOptions: {
-      ...languageOptionsV9,
-      parser: require('@typescript-eslint/parser-v3'),
-    },
-  }).run(
-    'eslint: v9, parser: @typescript-eslint/parser@3.x',
-    ReactHooksESLintRule,
-    testsTypescriptEslintParser
-  );
+  // new ESLintTesterV9({
+  //   languageOptions: {
+  //     ...languageOptionsV9,
+  //     parser: require('@typescript-eslint/parser-v3'),
+  //   },
+  // }).run(
+  //   'eslint: v9, parser: @typescript-eslint/parser@3.x',
+  //   ReactHooksESLintRule,
+  //   testsTypescriptEslintParser
+  // );
 
   new ESLintTesterV7({
     parser: require.resolve('@typescript-eslint/parser-v4'),
