@@ -253,7 +253,7 @@ jobs:
   build_and_lint:
     name: yarn build and lint
     needs: [runtime_compiler_yarn_cache]
-    runs-on: ubuntu-latest
+    runs-on: 32-core-ubuntu
     strategy:
       fail-fast: false
       matrix:
