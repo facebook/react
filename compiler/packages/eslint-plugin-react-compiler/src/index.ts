@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type {Linter} from 'eslint';
 import ReactCompilerRule from './rules/ReactCompilerRule';
 
 const meta = {
@@ -26,7 +27,7 @@ const configs = {
     },
     rules: {
       'react-compiler/react-compiler': 'error',
-    },
+    } satisfies Linter.RulesRecord,
   },
 };
 
