@@ -720,6 +720,8 @@ jobs:
           key: runtime-release-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
+      - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd scripts/release install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Download artifacts for base revision
