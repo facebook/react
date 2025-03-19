@@ -92,7 +92,5 @@ export const enableRenderableContext = true;
 export const enableReactTestRendererWarning = true;
 export const disableDefaultPropsExceptForClasses = true;
 
-export const enableObjectFiber = false;
-
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

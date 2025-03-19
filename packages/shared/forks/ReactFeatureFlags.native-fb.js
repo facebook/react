@@ -22,7 +22,6 @@ export const {
   alwaysThrottleRetries,
   enableFabricCompleteRootInCommitPhase,
   enableHiddenSubtreeInsertionEffectCleanup,
-  enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
   enableUseEffectCRUDOverload,
