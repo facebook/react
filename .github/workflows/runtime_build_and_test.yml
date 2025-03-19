@@ -17,11 +17,11 @@ env:
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
 
 jobs:
-  # ----- YARN CACHE -----
-  # Centralize the yarn/node_modules cache so it is saved once and each subsequent job only needs to
+  # ----- NODE_MODULES CACHE -----
+  # Centralize the node_modules cache so it is saved once and each subsequent job only needs to
   # restore the cache. Prevents race conditions where multiple workflows try to write to the cache.
-  runtime_yarn_cache:
-    name: Cache Runtime
+  runtime_node_modules_cache:
+    name: Cache Runtime node_modules
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,8 +51,8 @@ jobs:
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
 
-  runtime_compiler_yarn_cache:
-    name: Cache Runtime, Compiler
+  runtime_compiler_node_modules_cache:
+    name: Cache Runtime, Compiler node_modules
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -105,7 +105,7 @@ jobs:
 
   flow:
     name: Flow check ${{ matrix.flow_inline_config_shortname }}
-    needs: [discover_flow_inline_configs, runtime_yarn_cache]
+    needs: [discover_flow_inline_configs, runtime_node_modules_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -136,7 +136,7 @@ jobs:
   # ----- FIZZ -----
   check_generated_fizz_runtime:
     name: Confirm generated inline Fizz runtime is up to date
-    needs: [runtime_yarn_cache]
+    needs: [runtime_node_modules_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -165,7 +165,7 @@ jobs:
   # ----- FEATURE FLAGS -----
   flags:
     name: Check flags
-    needs: [runtime_yarn_cache]
+    needs: [runtime_node_modules_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -192,7 +192,7 @@ jobs:
   # ----- TESTS -----
   test:
     name: yarn test ${{ matrix.params }} (Shard ${{ matrix.shard }})
-    needs: [runtime_compiler_yarn_cache]
+    needs: [runtime_compiler_node_modules_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -252,13 +252,13 @@ jobs:
   # ----- BUILD -----
   build_and_lint:
     name: yarn build and lint
-    needs: [runtime_compiler_yarn_cache]
+    needs: [runtime_compiler_node_modules_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
-        worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+        worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
         release_channel: [stable, experimental]
     steps:
       - uses: actions/checkout@v4
@@ -288,7 +288,7 @@ jobs:
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd compiler install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
-      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
+      - run: yarn build --index=${{ matrix.worker_id }} --total=25 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
@@ -305,7 +305,7 @@ jobs:
 
   test_build:
     name: yarn test-build
-    needs: [build_and_lint, runtime_compiler_yarn_cache]
+    needs: [build_and_lint, runtime_compiler_node_modules_cache]
     strategy:
       fail-fast: false
       matrix:
@@ -380,7 +380,7 @@ jobs:
 
   process_artifacts_combined:
     name: Process artifacts combined
-    needs: [build_and_lint, runtime_yarn_cache]
+    needs: [build_and_lint, runtime_node_modules_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -429,7 +429,7 @@ jobs:
 
   check_error_codes:
     name: Search build artifacts for unminified errors
-    needs: [build_and_lint, runtime_yarn_cache]
+    needs: [build_and_lint, runtime_node_modules_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -466,7 +466,7 @@ jobs:
 
   check_release_dependencies:
     name: Check release dependencies
-    needs: [build_and_lint, runtime_yarn_cache]
+    needs: [build_and_lint, runtime_node_modules_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -604,7 +604,7 @@ jobs:
   # ----- DEVTOOLS -----
   build_devtools_and_process_artifacts:
     name: Build DevTools and process artifacts
-    needs: [build_and_lint, runtime_yarn_cache]
+    needs: [build_and_lint, runtime_node_modules_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -661,7 +661,7 @@ jobs:
 
   run_devtools_e2e_tests:
     name: Run DevTools e2e tests
-    needs: [build_and_lint, runtime_yarn_cache]
+    needs: [build_and_lint, runtime_node_modules_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -700,7 +700,7 @@ jobs:
   sizebot:
     if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' && github.event.pull_request.base.ref == 'main' }}
     name: Run sizebot
-    needs: [build_and_lint, runtime_yarn_cache]
+    needs: [build_and_lint, runtime_node_modules_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
