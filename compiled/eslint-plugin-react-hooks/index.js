@@ -6078,385 +6078,372 @@ if (process.env.NODE_ENV !== "production") {
       return (0, _helperValidatorIdentifier$1.isIdentifierName)(name);
     }
     var lib$1 = {};
-    var hasRequiredLib$1;
-    function requireLib$1() {
-      if (hasRequiredLib$1) return lib$1;
-      hasRequiredLib$1 = 1;
-      Object.defineProperty(lib$1, "__esModule", { value: true });
-      lib$1.readCodePoint = readCodePoint;
-      lib$1.readInt = readInt;
-      lib$1.readStringContents = readStringContents;
-      var _isDigit = function isDigit(code) {
-        return code >= 48 && code <= 57;
-      };
-      var forbiddenNumericSeparatorSiblings = {
-        decBinOct: new Set([46, 66, 69, 79, 95, 98, 101, 111]),
-        hex: new Set([46, 88, 95, 120])
-      };
-      var isAllowedNumericSeparatorSibling = {
-        bin: function bin(ch) {
-          return ch === 48 || ch === 49;
-        },
-        oct: function oct(ch) {
-          return ch >= 48 && ch <= 55;
-        },
-        dec: function dec(ch) {
-          return ch >= 48 && ch <= 57;
-        },
-        hex: function hex(ch) {
-          return (
-            (ch >= 48 && ch <= 57) ||
-            (ch >= 65 && ch <= 70) ||
-            (ch >= 97 && ch <= 102)
-          );
-        }
-      };
-      function readStringContents(
-        type,
-        input,
-        pos,
-        lineStart,
-        curLine,
-        errors
-      ) {
-        var initialPos = pos;
-        var initialLineStart = lineStart;
-        var initialCurLine = curLine;
-        var out = "";
-        var firstInvalidLoc = null;
-        var chunkStart = pos;
-        var length = input.length;
-        for (;;) {
-          if (pos >= length) {
-            errors.unterminated(initialPos, initialLineStart, initialCurLine);
-            out += input.slice(chunkStart, pos);
-            break;
-          }
-          var ch = input.charCodeAt(pos);
-          if (isStringEnd(type, ch, input, pos)) {
-            out += input.slice(chunkStart, pos);
-            break;
-          }
-          if (ch === 92) {
-            out += input.slice(chunkStart, pos);
-            var res = readEscapedChar(
-              input,
-              pos,
-              lineStart,
-              curLine,
-              type === "template",
-              errors
-            );
-            if (res.ch === null && !firstInvalidLoc) {
-              firstInvalidLoc = {
-                pos: pos,
-                lineStart: lineStart,
-                curLine: curLine
-              };
-            } else {
-              out += res.ch;
-            }
-            pos = res.pos;
-            lineStart = res.lineStart;
-            curLine = res.curLine;
-            chunkStart = pos;
-          } else if (ch === 8232 || ch === 8233) {
-            ++pos;
-            ++curLine;
-            lineStart = pos;
-          } else if (ch === 10 || ch === 13) {
-            if (type === "template") {
-              out += input.slice(chunkStart, pos) + "\n";
-              ++pos;
-              if (ch === 13 && input.charCodeAt(pos) === 10) {
-                ++pos;
-              }
-              ++curLine;
-              chunkStart = lineStart = pos;
-            } else {
-              errors.unterminated(initialPos, initialLineStart, initialCurLine);
-            }
-          } else {
-            ++pos;
-          }
-        }
-        return {
-          pos: pos,
-          str: out,
-          firstInvalidLoc: firstInvalidLoc,
-          lineStart: lineStart,
-          curLine: curLine,
-          containsInvalid: !!firstInvalidLoc
-        };
-      }
-      function isStringEnd(type, ch, input, pos) {
-        if (type === "template") {
-          return ch === 96 || (ch === 36 && input.charCodeAt(pos + 1) === 123);
-        }
-        return ch === (type === "double" ? 34 : 39);
-      }
-      function readEscapedChar(
-        input,
-        pos,
-        lineStart,
-        curLine,
-        inTemplate,
-        errors
-      ) {
-        var throwOnInvalid = !inTemplate;
-        pos++;
-        var res = function res(ch) {
-          return { pos: pos, ch: ch, lineStart: lineStart, curLine: curLine };
-        };
-        var ch = input.charCodeAt(pos++);
-        switch (ch) {
-          case 110:
-            return res("\n");
-          case 114:
-            return res("\r");
-          case 120: {
-            var code;
-            var _readHexChar = readHexChar(
-              input,
-              pos,
-              lineStart,
-              curLine,
-              2,
-              false,
-              throwOnInvalid,
-              errors
-            );
-            code = _readHexChar.code;
-            pos = _readHexChar.pos;
-            return res(code === null ? null : String.fromCharCode(code));
-          }
-          case 117: {
-            var _code;
-            var _readCodePoint = readCodePoint(
-              input,
-              pos,
-              lineStart,
-              curLine,
-              throwOnInvalid,
-              errors
-            );
-            _code = _readCodePoint.code;
-            pos = _readCodePoint.pos;
-            return res(_code === null ? null : String.fromCodePoint(_code));
-          }
-          case 116:
-            return res("\t");
-          case 98:
-            return res("\b");
-          case 118:
-            return res("\x0B");
-          case 102:
-            return res("\f");
-          case 13:
-            if (input.charCodeAt(pos) === 10) {
-              ++pos;
-            }
-          case 10:
-            lineStart = pos;
-            ++curLine;
-          case 8232:
-          case 8233:
-            return res("");
-          case 56:
-          case 57:
-            if (inTemplate) {
-              return res(null);
-            } else {
-              errors.strictNumericEscape(pos - 1, lineStart, curLine);
-            }
-          default:
-            if (ch >= 48 && ch <= 55) {
-              var startPos = pos - 1;
-              var match = /^[0-7]+/.exec(input.slice(startPos, pos + 2));
-              var octalStr = match[0];
-              var octal = parseInt(octalStr, 8);
-              if (octal > 255) {
-                octalStr = octalStr.slice(0, -1);
-                octal = parseInt(octalStr, 8);
-              }
-              pos += octalStr.length - 1;
-              var next = input.charCodeAt(pos);
-              if (octalStr !== "0" || next === 56 || next === 57) {
-                if (inTemplate) {
-                  return res(null);
-                } else {
-                  errors.strictNumericEscape(startPos, lineStart, curLine);
-                }
-              }
-              return res(String.fromCharCode(octal));
-            }
-            return res(String.fromCharCode(ch));
-        }
-      }
-      function readHexChar(
-        input,
-        pos,
-        lineStart,
-        curLine,
-        len,
-        forceLen,
-        throwOnInvalid,
-        errors
-      ) {
-        var initialPos = pos;
-        var n;
-        var _readInt = readInt(
-          input,
-          pos,
-          lineStart,
-          curLine,
-          16,
-          len,
-          forceLen,
-          false,
-          errors,
-          !throwOnInvalid
+    Object.defineProperty(lib$1, "__esModule", { value: true });
+    lib$1.readCodePoint = readCodePoint;
+    lib$1.readInt = readInt;
+    lib$1.readStringContents = readStringContents;
+    var _isDigit = function isDigit(code) {
+      return code >= 48 && code <= 57;
+    };
+    var forbiddenNumericSeparatorSiblings = {
+      decBinOct: new Set([46, 66, 69, 79, 95, 98, 101, 111]),
+      hex: new Set([46, 88, 95, 120])
+    };
+    var isAllowedNumericSeparatorSibling = {
+      bin: function bin(ch) {
+        return ch === 48 || ch === 49;
+      },
+      oct: function oct(ch) {
+        return ch >= 48 && ch <= 55;
+      },
+      dec: function dec(ch) {
+        return ch >= 48 && ch <= 57;
+      },
+      hex: function hex(ch) {
+        return (
+          (ch >= 48 && ch <= 57) ||
+          (ch >= 65 && ch <= 70) ||
+          (ch >= 97 && ch <= 102)
         );
-        n = _readInt.n;
-        pos = _readInt.pos;
-        if (n === null) {
-          if (throwOnInvalid) {
-            errors.invalidEscapeSequence(initialPos, lineStart, curLine);
-          } else {
-            pos = initialPos - 1;
-          }
-        }
-        return { code: n, pos: pos };
       }
-      function readInt(
-        input,
-        pos,
-        lineStart,
-        curLine,
-        radix,
-        len,
-        forceLen,
-        allowNumSeparator,
-        errors,
-        bailOnError
-      ) {
-        var start = pos;
-        var forbiddenSiblings =
-          radix === 16
-            ? forbiddenNumericSeparatorSiblings.hex
-            : forbiddenNumericSeparatorSiblings.decBinOct;
-        var isAllowedSibling =
-          radix === 16
-            ? isAllowedNumericSeparatorSibling.hex
-            : radix === 10
-              ? isAllowedNumericSeparatorSibling.dec
-              : radix === 8
-                ? isAllowedNumericSeparatorSibling.oct
-                : isAllowedNumericSeparatorSibling.bin;
-        var invalid = false;
-        var total = 0;
-        for (var i = 0, e = len == null ? Infinity : len; i < e; ++i) {
-          var code = input.charCodeAt(pos);
-          var val = void 0;
-          if (code === 95 && allowNumSeparator !== "bail") {
-            var prev = input.charCodeAt(pos - 1);
-            var next = input.charCodeAt(pos + 1);
-            if (!allowNumSeparator) {
-              if (bailOnError) return { n: null, pos: pos };
-              errors.numericSeparatorInEscapeSequence(pos, lineStart, curLine);
-            } else if (
-              Number.isNaN(next) ||
-              !isAllowedSibling(next) ||
-              forbiddenSiblings.has(prev) ||
-              forbiddenSiblings.has(next)
-            ) {
-              if (bailOnError) return { n: null, pos: pos };
-              errors.unexpectedNumericSeparator(pos, lineStart, curLine);
-            }
-            ++pos;
-            continue;
-          }
-          if (code >= 97) {
-            val = code - 97 + 10;
-          } else if (code >= 65) {
-            val = code - 65 + 10;
-          } else if (_isDigit(code)) {
-            val = code - 48;
-          } else {
-            val = Infinity;
-          }
-          if (val >= radix) {
-            if (val <= 9 && bailOnError) {
-              return { n: null, pos: pos };
-            } else if (
-              val <= 9 &&
-              errors.invalidDigit(pos, lineStart, curLine, radix)
-            ) {
-              val = 0;
-            } else if (forceLen) {
-              val = 0;
-              invalid = true;
-            } else {
-              break;
-            }
-          }
-          ++pos;
-          total = total * radix + val;
+    };
+    function readStringContents(type, input, pos, lineStart, curLine, errors) {
+      var initialPos = pos;
+      var initialLineStart = lineStart;
+      var initialCurLine = curLine;
+      var out = "";
+      var firstInvalidLoc = null;
+      var chunkStart = pos;
+      var length = input.length;
+      for (;;) {
+        if (pos >= length) {
+          errors.unterminated(initialPos, initialLineStart, initialCurLine);
+          out += input.slice(chunkStart, pos);
+          break;
         }
-        if (pos === start || (len != null && pos - start !== len) || invalid) {
-          return { n: null, pos: pos };
-        }
-        return { n: total, pos: pos };
-      }
-      function readCodePoint(
-        input,
-        pos,
-        lineStart,
-        curLine,
-        throwOnInvalid,
-        errors
-      ) {
         var ch = input.charCodeAt(pos);
-        var code;
-        if (ch === 123) {
-          ++pos;
-          var _readHexChar2 = readHexChar(
+        if (isStringEnd(type, ch, input, pos)) {
+          out += input.slice(chunkStart, pos);
+          break;
+        }
+        if (ch === 92) {
+          out += input.slice(chunkStart, pos);
+          var res = readEscapedChar(
             input,
             pos,
             lineStart,
             curLine,
-            input.indexOf("}", pos) - pos,
-            true,
-            throwOnInvalid,
+            type === "template",
             errors
           );
-          code = _readHexChar2.code;
-          pos = _readHexChar2.pos;
+          if (res.ch === null && !firstInvalidLoc) {
+            firstInvalidLoc = {
+              pos: pos,
+              lineStart: lineStart,
+              curLine: curLine
+            };
+          } else {
+            out += res.ch;
+          }
+          pos = res.pos;
+          lineStart = res.lineStart;
+          curLine = res.curLine;
+          chunkStart = pos;
+        } else if (ch === 8232 || ch === 8233) {
           ++pos;
-          if (code !== null && code > 0x10ffff) {
-            if (throwOnInvalid) {
-              errors.invalidCodePoint(pos, lineStart, curLine);
-            } else {
-              return { code: null, pos: pos };
+          ++curLine;
+          lineStart = pos;
+        } else if (ch === 10 || ch === 13) {
+          if (type === "template") {
+            out += input.slice(chunkStart, pos) + "\n";
+            ++pos;
+            if (ch === 13 && input.charCodeAt(pos) === 10) {
+              ++pos;
             }
+            ++curLine;
+            chunkStart = lineStart = pos;
+          } else {
+            errors.unterminated(initialPos, initialLineStart, initialCurLine);
           }
         } else {
-          var _readHexChar3 = readHexChar(
+          ++pos;
+        }
+      }
+      return {
+        pos: pos,
+        str: out,
+        firstInvalidLoc: firstInvalidLoc,
+        lineStart: lineStart,
+        curLine: curLine,
+        containsInvalid: !!firstInvalidLoc
+      };
+    }
+    function isStringEnd(type, ch, input, pos) {
+      if (type === "template") {
+        return ch === 96 || (ch === 36 && input.charCodeAt(pos + 1) === 123);
+      }
+      return ch === (type === "double" ? 34 : 39);
+    }
+    function readEscapedChar(
+      input,
+      pos,
+      lineStart,
+      curLine,
+      inTemplate,
+      errors
+    ) {
+      var throwOnInvalid = !inTemplate;
+      pos++;
+      var res = function res(ch) {
+        return { pos: pos, ch: ch, lineStart: lineStart, curLine: curLine };
+      };
+      var ch = input.charCodeAt(pos++);
+      switch (ch) {
+        case 110:
+          return res("\n");
+        case 114:
+          return res("\r");
+        case 120: {
+          var code;
+          var _readHexChar = readHexChar(
             input,
             pos,
             lineStart,
             curLine,
-            4,
+            2,
             false,
             throwOnInvalid,
             errors
           );
-          code = _readHexChar3.code;
-          pos = _readHexChar3.pos;
+          code = _readHexChar.code;
+          pos = _readHexChar.pos;
+          return res(code === null ? null : String.fromCharCode(code));
         }
-        return { code: code, pos: pos };
+        case 117: {
+          var _code;
+          var _readCodePoint = readCodePoint(
+            input,
+            pos,
+            lineStart,
+            curLine,
+            throwOnInvalid,
+            errors
+          );
+          _code = _readCodePoint.code;
+          pos = _readCodePoint.pos;
+          return res(_code === null ? null : String.fromCodePoint(_code));
+        }
+        case 116:
+          return res("\t");
+        case 98:
+          return res("\b");
+        case 118:
+          return res("\x0B");
+        case 102:
+          return res("\f");
+        case 13:
+          if (input.charCodeAt(pos) === 10) {
+            ++pos;
+          }
+        case 10:
+          lineStart = pos;
+          ++curLine;
+        case 8232:
+        case 8233:
+          return res("");
+        case 56:
+        case 57:
+          if (inTemplate) {
+            return res(null);
+          } else {
+            errors.strictNumericEscape(pos - 1, lineStart, curLine);
+          }
+        default:
+          if (ch >= 48 && ch <= 55) {
+            var startPos = pos - 1;
+            var match = /^[0-7]+/.exec(input.slice(startPos, pos + 2));
+            var octalStr = match[0];
+            var octal = parseInt(octalStr, 8);
+            if (octal > 255) {
+              octalStr = octalStr.slice(0, -1);
+              octal = parseInt(octalStr, 8);
+            }
+            pos += octalStr.length - 1;
+            var next = input.charCodeAt(pos);
+            if (octalStr !== "0" || next === 56 || next === 57) {
+              if (inTemplate) {
+                return res(null);
+              } else {
+                errors.strictNumericEscape(startPos, lineStart, curLine);
+              }
+            }
+            return res(String.fromCharCode(octal));
+          }
+          return res(String.fromCharCode(ch));
       }
-      return lib$1;
+    }
+    function readHexChar(
+      input,
+      pos,
+      lineStart,
+      curLine,
+      len,
+      forceLen,
+      throwOnInvalid,
+      errors
+    ) {
+      var initialPos = pos;
+      var n;
+      var _readInt = readInt(
+        input,
+        pos,
+        lineStart,
+        curLine,
+        16,
+        len,
+        forceLen,
+        false,
+        errors,
+        !throwOnInvalid
+      );
+      n = _readInt.n;
+      pos = _readInt.pos;
+      if (n === null) {
+        if (throwOnInvalid) {
+          errors.invalidEscapeSequence(initialPos, lineStart, curLine);
+        } else {
+          pos = initialPos - 1;
+        }
+      }
+      return { code: n, pos: pos };
+    }
+    function readInt(
+      input,
+      pos,
+      lineStart,
+      curLine,
+      radix,
+      len,
+      forceLen,
+      allowNumSeparator,
+      errors,
+      bailOnError
+    ) {
+      var start = pos;
+      var forbiddenSiblings =
+        radix === 16
+          ? forbiddenNumericSeparatorSiblings.hex
+          : forbiddenNumericSeparatorSiblings.decBinOct;
+      var isAllowedSibling =
+        radix === 16
+          ? isAllowedNumericSeparatorSibling.hex
+          : radix === 10
+            ? isAllowedNumericSeparatorSibling.dec
+            : radix === 8
+              ? isAllowedNumericSeparatorSibling.oct
+              : isAllowedNumericSeparatorSibling.bin;
+      var invalid = false;
+      var total = 0;
+      for (var i = 0, e = len == null ? Infinity : len; i < e; ++i) {
+        var code = input.charCodeAt(pos);
+        var val = void 0;
+        if (code === 95 && allowNumSeparator !== "bail") {
+          var prev = input.charCodeAt(pos - 1);
+          var next = input.charCodeAt(pos + 1);
+          if (!allowNumSeparator) {
+            if (bailOnError) return { n: null, pos: pos };
+            errors.numericSeparatorInEscapeSequence(pos, lineStart, curLine);
+          } else if (
+            Number.isNaN(next) ||
+            !isAllowedSibling(next) ||
+            forbiddenSiblings.has(prev) ||
+            forbiddenSiblings.has(next)
+          ) {
+            if (bailOnError) return { n: null, pos: pos };
+            errors.unexpectedNumericSeparator(pos, lineStart, curLine);
+          }
+          ++pos;
+          continue;
+        }
+        if (code >= 97) {
+          val = code - 97 + 10;
+        } else if (code >= 65) {
+          val = code - 65 + 10;
+        } else if (_isDigit(code)) {
+          val = code - 48;
+        } else {
+          val = Infinity;
+        }
+        if (val >= radix) {
+          if (val <= 9 && bailOnError) {
+            return { n: null, pos: pos };
+          } else if (
+            val <= 9 &&
+            errors.invalidDigit(pos, lineStart, curLine, radix)
+          ) {
+            val = 0;
+          } else if (forceLen) {
+            val = 0;
+            invalid = true;
+          } else {
+            break;
+          }
+        }
+        ++pos;
+        total = total * radix + val;
+      }
+      if (pos === start || (len != null && pos - start !== len) || invalid) {
+        return { n: null, pos: pos };
+      }
+      return { n: total, pos: pos };
+    }
+    function readCodePoint(
+      input,
+      pos,
+      lineStart,
+      curLine,
+      throwOnInvalid,
+      errors
+    ) {
+      var ch = input.charCodeAt(pos);
+      var code;
+      if (ch === 123) {
+        ++pos;
+        var _readHexChar2 = readHexChar(
+          input,
+          pos,
+          lineStart,
+          curLine,
+          input.indexOf("}", pos) - pos,
+          true,
+          throwOnInvalid,
+          errors
+        );
+        code = _readHexChar2.code;
+        pos = _readHexChar2.pos;
+        ++pos;
+        if (code !== null && code > 0x10ffff) {
+          if (throwOnInvalid) {
+            errors.invalidCodePoint(pos, lineStart, curLine);
+          } else {
+            return { code: null, pos: pos };
+          }
+        }
+      } else {
+        var _readHexChar3 = readHexChar(
+          input,
+          pos,
+          lineStart,
+          curLine,
+          4,
+          false,
+          throwOnInvalid,
+          errors
+        );
+        code = _readHexChar3.code;
+        pos = _readHexChar3.pos;
+      }
+      return { code: code, pos: pos };
     }
     var constants = {};
     Object.defineProperty(constants, "__esModule", { value: true });
@@ -7043,7 +7030,7 @@ if (process.env.NODE_ENV !== "production") {
       var _is = requireIs();
       var _isValidIdentifier = isValidIdentifier$1;
       var _helperValidatorIdentifier = lib$2;
-      var _helperStringParser = requireLib$1();
+      var _helperStringParser = lib$1;
       var _index = constants;
       var _utils = requireUtils();
       var defineType = (0, _utils.defineAliasedType)("Standardized");
@@ -68051,7 +68038,10 @@ PERFORMANCE OF THIS SOFTWARE.
         knownImmutableIdentifiers: knownImmutableIdentifiers,
         hoistableFromOptionals: hoistableFromOptionals,
         registry: registry,
-        nestedFnImmutableContext: null
+        nestedFnImmutableContext: null,
+        assumedInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
+          ? new Set()
+          : getAssumedInvokedFunctions(fn)
       });
     }
     function collectHoistablePropertyLoadsImpl(fn, context) {
@@ -68240,54 +68230,52 @@ PERFORMANCE OF THIS SOFTWARE.
               ) {
                 assumedNonNullObjects.add(maybeNonNull);
               }
-              if (
-                (instr.value.kind === "FunctionExpression" ||
-                  instr.value.kind === "ObjectMethod") &&
-                !fn.env.config.enableTreatFunctionDepsAsConditional
-              ) {
+              if (instr.value.kind === "FunctionExpression") {
                 var innerFn = instr.value.loweredFunc;
-                var innerHoistableMap = collectHoistablePropertyLoadsImpl(
-                  innerFn.func,
-                  Object.assign(Object.assign({}, context), {
-                    nestedFnImmutableContext:
-                      (_a = context.nestedFnImmutableContext) !== null &&
-                      _a !== void 0
-                        ? _a
-                        : new Set(
-                            innerFn.func.context
-                              .filter(function (place) {
-                                return isImmutableAtInstr(
-                                  place.identifier,
-                                  instr.id,
-                                  context
-                                );
-                              })
-                              .map(function (place) {
-                                return place.identifier.id;
-                              })
-                          )
-                  })
-                );
-                var innerHoistables = assertNonNull(
-                  innerHoistableMap.get(innerFn.func.body.entry)
-                );
-                var _iterator526 = _createForOfIteratorHelper(
-                    innerHoistables.assumedNonNullObjects
-                  ),
-                  _step526;
-                try {
-                  for (
-                    _iterator526.s();
-                    !(_step526 = _iterator526.n()).done;
+                if (context.assumedInvokedFns.has(innerFn)) {
+                  var innerHoistableMap = collectHoistablePropertyLoadsImpl(
+                    innerFn.func,
+                    Object.assign(Object.assign({}, context), {
+                      nestedFnImmutableContext:
+                        (_a = context.nestedFnImmutableContext) !== null &&
+                        _a !== void 0
+                          ? _a
+                          : new Set(
+                              innerFn.func.context
+                                .filter(function (place) {
+                                  return isImmutableAtInstr(
+                                    place.identifier,
+                                    instr.id,
+                                    context
+                                  );
+                                })
+                                .map(function (place) {
+                                  return place.identifier.id;
+                                })
+                            )
+                    })
+                  );
+                  var innerHoistables = assertNonNull(
+                    innerHoistableMap.get(innerFn.func.body.entry)
+                  );
+                  var _iterator526 = _createForOfIteratorHelper(
+                      innerHoistables.assumedNonNullObjects
+                    ),
+                    _step526;
+                  try {
+                    for (
+                      _iterator526.s();
+                      !(_step526 = _iterator526.n()).done;
 
-                  ) {
-                    var entry = _step526.value;
-                    assumedNonNullObjects.add(entry);
+                    ) {
+                      var entry = _step526.value;
+                      assumedNonNullObjects.add(entry);
+                    }
+                  } catch (err) {
+                    _iterator526.e(err);
+                  } finally {
+                    _iterator526.f();
                   }
-                } catch (err) {
-                  _iterator526.e(err);
-                } finally {
-                  _iterator526.f();
                 }
               }
             };
@@ -68507,6 +68495,228 @@ PERFORMANCE OF THIS SOFTWARE.
         }
       } while (changed);
     }
+    function getAssumedInvokedFunctions(fn) {
+      var temporaries =
+        arguments.length > 1 && arguments[1] !== undefined
+          ? arguments[1]
+          : new Map();
+      var _a;
+      var hoistableFunctions = new Set();
+      var _iterator532 = _createForOfIteratorHelper(fn.body.blocks.values()),
+        _step532;
+      try {
+        for (_iterator532.s(); !(_step532 = _iterator532.n()).done; ) {
+          var block = _step532.value;
+          var _iterator535 = _createForOfIteratorHelper(block.instructions),
+            _step535;
+          try {
+            for (_iterator535.s(); !(_step535 = _iterator535.n()).done; ) {
+              var _step535$value = _step535.value,
+                lvalue = _step535$value.lvalue,
+                value = _step535$value.value;
+              if (value.kind === "FunctionExpression") {
+                temporaries.set(lvalue.identifier.id, {
+                  fn: value.loweredFunc,
+                  mayInvoke: new Set()
+                });
+              } else if (value.kind === "StoreLocal") {
+                var _lvalue25 = value.lvalue.place.identifier;
+                var maybeLoweredFunc = temporaries.get(
+                  value.value.identifier.id
+                );
+                if (maybeLoweredFunc != null) {
+                  temporaries.set(_lvalue25.id, maybeLoweredFunc);
+                }
+              } else if (value.kind === "LoadLocal") {
+                var _maybeLoweredFunc = temporaries.get(
+                  value.place.identifier.id
+                );
+                if (_maybeLoweredFunc != null) {
+                  temporaries.set(lvalue.identifier.id, _maybeLoweredFunc);
+                }
+              }
+            }
+          } catch (err) {
+            _iterator535.e(err);
+          } finally {
+            _iterator535.f();
+          }
+        }
+      } catch (err) {
+        _iterator532.e(err);
+      } finally {
+        _iterator532.f();
+      }
+      var _iterator533 = _createForOfIteratorHelper(fn.body.blocks.values()),
+        _step533;
+      try {
+        for (_iterator533.s(); !(_step533 = _iterator533.n()).done; ) {
+          var _block20 = _step533.value;
+          var _iterator536 = _createForOfIteratorHelper(_block20.instructions),
+            _step536;
+          try {
+            for (_iterator536.s(); !(_step536 = _iterator536.n()).done; ) {
+              var _step536$value = _step536.value,
+                _lvalue26 = _step536$value.lvalue,
+                _value26 = _step536$value.value;
+              if (_value26.kind === "CallExpression") {
+                var callee = _value26.callee;
+                var maybeHook = getHookKind(fn.env, callee.identifier);
+                var _maybeLoweredFunc3 = temporaries.get(callee.identifier.id);
+                if (_maybeLoweredFunc3 != null) {
+                  hoistableFunctions.add(_maybeLoweredFunc3.fn);
+                } else if (maybeHook != null) {
+                  var _iterator537 = _createForOfIteratorHelper(_value26.args),
+                    _step537;
+                  try {
+                    for (
+                      _iterator537.s();
+                      !(_step537 = _iterator537.n()).done;
+
+                    ) {
+                      var arg = _step537.value;
+                      if (arg.kind === "Identifier") {
+                        var _maybeLoweredFunc4 = temporaries.get(
+                          arg.identifier.id
+                        );
+                        if (_maybeLoweredFunc4 != null) {
+                          hoistableFunctions.add(_maybeLoweredFunc4.fn);
+                        }
+                      }
+                    }
+                  } catch (err) {
+                    _iterator537.e(err);
+                  } finally {
+                    _iterator537.f();
+                  }
+                }
+              } else if (_value26.kind === "JsxExpression") {
+                var _iterator538 = _createForOfIteratorHelper(_value26.props),
+                  _step538;
+                try {
+                  for (
+                    _iterator538.s();
+                    !(_step538 = _iterator538.n()).done;
+
+                  ) {
+                    var attr = _step538.value;
+                    if (attr.kind === "JsxSpreadAttribute") {
+                      continue;
+                    }
+                    var _maybeLoweredFunc5 = temporaries.get(
+                      attr.place.identifier.id
+                    );
+                    if (_maybeLoweredFunc5 != null) {
+                      hoistableFunctions.add(_maybeLoweredFunc5.fn);
+                    }
+                  }
+                } catch (err) {
+                  _iterator538.e(err);
+                } finally {
+                  _iterator538.f();
+                }
+                var _iterator539 = _createForOfIteratorHelper(
+                    (_a = _value26.children) !== null && _a !== void 0 ? _a : []
+                  ),
+                  _step539;
+                try {
+                  for (
+                    _iterator539.s();
+                    !(_step539 = _iterator539.n()).done;
+
+                  ) {
+                    var child = _step539.value;
+                    var _maybeLoweredFunc6 = temporaries.get(
+                      child.identifier.id
+                    );
+                    if (_maybeLoweredFunc6 != null) {
+                      hoistableFunctions.add(_maybeLoweredFunc6.fn);
+                    }
+                  }
+                } catch (err) {
+                  _iterator539.e(err);
+                } finally {
+                  _iterator539.f();
+                }
+              } else if (_value26.kind === "FunctionExpression") {
+                var loweredFunc = _value26.loweredFunc.func;
+                var lambdasCalled = getAssumedInvokedFunctions(
+                  loweredFunc,
+                  temporaries
+                );
+                var _maybeLoweredFunc7 = temporaries.get(
+                  _lvalue26.identifier.id
+                );
+                if (_maybeLoweredFunc7 != null) {
+                  var _iterator540 = _createForOfIteratorHelper(lambdasCalled),
+                    _step540;
+                  try {
+                    for (
+                      _iterator540.s();
+                      !(_step540 = _iterator540.n()).done;
+
+                    ) {
+                      var called = _step540.value;
+                      _maybeLoweredFunc7.mayInvoke.add(called);
+                    }
+                  } catch (err) {
+                    _iterator540.e(err);
+                  } finally {
+                    _iterator540.f();
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            _iterator536.e(err);
+          } finally {
+            _iterator536.f();
+          }
+          if (_block20.terminal.kind === "return") {
+            var _maybeLoweredFunc2 = temporaries.get(
+              _block20.terminal.value.identifier.id
+            );
+            if (_maybeLoweredFunc2 != null) {
+              hoistableFunctions.add(_maybeLoweredFunc2.fn);
+            }
+          }
+        }
+      } catch (err) {
+        _iterator533.e(err);
+      } finally {
+        _iterator533.f();
+      }
+      var _iterator534 = _createForOfIteratorHelper(temporaries),
+        _step534;
+      try {
+        for (_iterator534.s(); !(_step534 = _iterator534.n()).done; ) {
+          var _step534$value = _slicedToArray(_step534.value, 2),
+            _ = _step534$value[0],
+            _step534$value$ = _step534$value[1],
+            _fn3 = _step534$value$.fn,
+            mayInvoke = _step534$value$.mayInvoke;
+          if (hoistableFunctions.has(_fn3)) {
+            var _iterator541 = _createForOfIteratorHelper(mayInvoke),
+              _step541;
+            try {
+              for (_iterator541.s(); !(_step541 = _iterator541.n()).done; ) {
+                var _called = _step541.value;
+                hoistableFunctions.add(_called);
+              }
+            } catch (err) {
+              _iterator541.e(err);
+            } finally {
+              _iterator541.f();
+            }
+          }
+        }
+      } catch (err) {
+        _iterator534.e(err);
+      } finally {
+        _iterator534.f();
+      }
+      return hoistableFunctions;
+    }
     var _Node_value, _Node_next;
     function empty() {
       return EMPTY;
@@ -68640,13 +68850,13 @@ PERFORMANCE OF THIS SOFTWARE.
         var _b;
         _ReactiveScopeDependencyTreeHIR_hoistableObjects.set(this, new Map());
         _ReactiveScopeDependencyTreeHIR_deps.set(this, new Map());
-        var _iterator532 = _createForOfIteratorHelper(hoistableObjects),
-          _step532;
+        var _iterator542 = _createForOfIteratorHelper(hoistableObjects),
+          _step542;
         try {
-          for (_iterator532.s(); !(_step532 = _iterator532.n()).done; ) {
-            var _step532$value = _step532.value,
-              path = _step532$value.path,
-              _identifier22 = _step532$value.identifier;
+          for (_iterator542.s(); !(_step542 = _iterator542.n()).done; ) {
+            var _step542$value = _step542.value,
+              path = _step542$value.path,
+              _identifier22 = _step542$value.identifier;
             var currNode = __classPrivateFieldGet(
               _a,
               _a,
@@ -68685,9 +68895,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator532.e(err);
+          _iterator542.e(err);
         } finally {
-          _iterator532.f();
+          _iterator542.f();
         }
       }
       return _createClass(
@@ -68718,11 +68928,11 @@ PERFORMANCE OF THIS SOFTWARE.
                 _ReactiveScopeDependencyTreeHIR_hoistableObjects,
                 "f"
               ).get(identifier);
-              var _iterator533 = _createForOfIteratorHelper(path),
-                _step533;
+              var _iterator543 = _createForOfIteratorHelper(path),
+                _step543;
               try {
-                for (_iterator533.s(); !(_step533 = _iterator533.n()).done; ) {
-                  var entry = _step533.value;
+                for (_iterator543.s(); !(_step543 = _iterator543.n()).done; ) {
+                  var entry = _step543.value;
                   var nextHoistableCursor = void 0;
                   var nextDepCursor = void 0;
                   if (entry.optional) {
@@ -68765,9 +68975,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   hoistableCursor = nextHoistableCursor;
                 }
               } catch (err) {
-                _iterator533.e(err);
+                _iterator543.e(err);
               } finally {
-                _iterator533.f();
+                _iterator543.f();
               }
               depCursor.accessType = merge(
                 depCursor.accessType,
@@ -68779,19 +68989,19 @@ PERFORMANCE OF THIS SOFTWARE.
             key: "deriveMinimalDependencies",
             value: function deriveMinimalDependencies() {
               var results = new Set();
-              var _iterator534 = _createForOfIteratorHelper(
+              var _iterator544 = _createForOfIteratorHelper(
                   __classPrivateFieldGet(
                     this,
                     _ReactiveScopeDependencyTreeHIR_deps,
                     "f"
                   ).entries()
                 ),
-                _step534;
+                _step544;
               try {
-                for (_iterator534.s(); !(_step534 = _iterator534.n()).done; ) {
-                  var _step534$value = _slicedToArray(_step534.value, 2),
-                    rootId = _step534$value[0],
-                    rootNode = _step534$value[1];
+                for (_iterator544.s(); !(_step544 = _iterator544.n()).done; ) {
+                  var _step544$value = _slicedToArray(_step544.value, 2),
+                    rootId = _step544$value[0],
+                    rootNode = _step544$value[1];
                   collectMinimalDependenciesInSubtree(
                     rootNode,
                     rootId,
@@ -68800,9 +69010,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   );
                 }
               } catch (err) {
-                _iterator534.e(err);
+                _iterator544.e(err);
               } finally {
-                _iterator534.f();
+                _iterator544.f();
               }
               return results;
             }
@@ -68811,19 +69021,19 @@ PERFORMANCE OF THIS SOFTWARE.
             key: "printDeps",
             value: function printDeps(includeAccesses) {
               var res = [];
-              var _iterator535 = _createForOfIteratorHelper(
+              var _iterator545 = _createForOfIteratorHelper(
                   __classPrivateFieldGet(
                     this,
                     _ReactiveScopeDependencyTreeHIR_deps,
                     "f"
                   ).entries()
                 ),
-                _step535;
+                _step545;
               try {
                 var _loop17 = function _loop17() {
-                  var _step535$value = _slicedToArray(_step535.value, 2),
-                    rootId = _step535$value[0],
-                    rootNode = _step535$value[1];
+                  var _step545$value = _slicedToArray(_step545.value, 2),
+                    rootId = _step545$value[0],
+                    rootNode = _step545$value[1];
                   var rootResults = printSubtree(rootNode, includeAccesses).map(
                     function (result) {
                       return ""
@@ -68833,13 +69043,13 @@ PERFORMANCE OF THIS SOFTWARE.
                   );
                   res.push(rootResults);
                 };
-                for (_iterator535.s(); !(_step535 = _iterator535.n()).done; ) {
+                for (_iterator545.s(); !(_step545 = _iterator545.n()).done; ) {
                   _loop17();
                 }
               } catch (err) {
-                _iterator535.e(err);
+                _iterator545.e(err);
               } finally {
-                _iterator535.f();
+                _iterator545.f();
               }
               return res.flat().join("\n");
             }
@@ -68850,13 +69060,13 @@ PERFORMANCE OF THIS SOFTWARE.
             key: "debug",
             value: function debug(roots) {
               var buf = ["tree() ["];
-              var _iterator536 = _createForOfIteratorHelper(roots),
-                _step536;
+              var _iterator546 = _createForOfIteratorHelper(roots),
+                _step546;
               try {
-                for (_iterator536.s(); !(_step536 = _iterator536.n()).done; ) {
-                  var _step536$value = _slicedToArray(_step536.value, 2),
-                    rootId = _step536$value[0],
-                    rootNode = _step536$value[1];
+                for (_iterator546.s(); !(_step546 = _iterator546.n()).done; ) {
+                  var _step546$value = _slicedToArray(_step546.value, 2),
+                    rootId = _step546$value[0],
+                    rootNode = _step546$value[1];
                   buf.push(
                     ""
                       .concat(printIdentifier(rootId), " (")
@@ -68870,9 +69080,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   ).call(this, buf, rootNode, 1);
                 }
               } catch (err) {
-                _iterator536.e(err);
+                _iterator546.e(err);
               } finally {
-                _iterator536.f();
+                _iterator546.f();
               }
               buf.push("]");
               return buf.length > 2 ? buf.join("\n") : buf.join("");
@@ -68903,13 +69113,13 @@ PERFORMANCE OF THIS SOFTWARE.
             arguments.length > 2 && arguments[2] !== undefined
               ? arguments[2]
               : 0;
-          var _iterator537 = _createForOfIteratorHelper(node.properties),
-            _step537;
+          var _iterator547 = _createForOfIteratorHelper(node.properties),
+            _step547;
           try {
-            for (_iterator537.s(); !(_step537 = _iterator537.n()).done; ) {
-              var _step537$value = _slicedToArray(_step537.value, 2),
-                property = _step537$value[0],
-                childNode = _step537$value[1];
+            for (_iterator547.s(); !(_step547 = _iterator547.n()).done; ) {
+              var _step547$value = _slicedToArray(_step547.value, 2),
+                property = _step547$value[0],
+                childNode = _step547$value[1];
               buf.push(
                 ""
                   .concat("  ".repeat(depth), ".")
@@ -68924,9 +69134,9 @@ PERFORMANCE OF THIS SOFTWARE.
               ).call(this, buf, childNode, depth + 1);
             }
           } catch (err) {
-            _iterator537.e(err);
+            _iterator547.e(err);
           } finally {
-            _iterator537.f();
+            _iterator547.f();
           }
         });
     var PropertyAccessType;
@@ -68974,13 +69184,13 @@ PERFORMANCE OF THIS SOFTWARE.
       if (isDependency(node.accessType)) {
         results.add({ identifier: rootIdentifier, path: path });
       } else {
-        var _iterator538 = _createForOfIteratorHelper(node.properties),
-          _step538;
+        var _iterator548 = _createForOfIteratorHelper(node.properties),
+          _step548;
         try {
-          for (_iterator538.s(); !(_step538 = _iterator538.n()).done; ) {
-            var _step538$value = _slicedToArray(_step538.value, 2),
-              childName = _step538$value[0],
-              childNode = _step538$value[1];
+          for (_iterator548.s(); !(_step548 = _iterator548.n()).done; ) {
+            var _step548$value = _slicedToArray(_step548.value, 2),
+              childName = _step548$value[0],
+              childNode = _step548$value[1];
             collectMinimalDependenciesInSubtree(
               childNode,
               rootIdentifier,
@@ -68994,21 +69204,21 @@ PERFORMANCE OF THIS SOFTWARE.
             );
           }
         } catch (err) {
-          _iterator538.e(err);
+          _iterator548.e(err);
         } finally {
-          _iterator538.f();
+          _iterator548.f();
         }
       }
     }
     function printSubtree(node, includeAccesses) {
       var results = [];
-      var _iterator539 = _createForOfIteratorHelper(node.properties),
-        _step539;
+      var _iterator549 = _createForOfIteratorHelper(node.properties),
+        _step549;
       try {
         var _loop18 = function _loop18() {
-          var _step539$value = _slicedToArray(_step539.value, 2),
-            propertyName = _step539$value[0],
-            propertyNode = _step539$value[1];
+          var _step549$value = _slicedToArray(_step549.value, 2),
+            propertyName = _step549$value[0],
+            propertyNode = _step549$value[1];
           if (includeAccesses || isDependency(propertyNode.accessType)) {
             results.push(
               "".concat(propertyName, " (").concat(propertyNode.accessType, ")")
@@ -69024,13 +69234,13 @@ PERFORMANCE OF THIS SOFTWARE.
             )
           );
         };
-        for (_iterator539.s(); !(_step539 = _iterator539.n()).done; ) {
+        for (_iterator549.s(); !(_step549 = _iterator549.n()).done; ) {
           _loop18();
         }
       } catch (err) {
-        _iterator539.e(err);
+        _iterator549.e(err);
       } finally {
-        _iterator539.f();
+        _iterator549.f();
       }
       return results;
     }
@@ -69061,18 +69271,18 @@ PERFORMANCE OF THIS SOFTWARE.
       };
     }
     function traverseFunction(fn, context) {
-      var _iterator540 = _createForOfIteratorHelper(fn.body.blocks),
-        _step540;
+      var _iterator550 = _createForOfIteratorHelper(fn.body.blocks),
+        _step550;
       try {
-        for (_iterator540.s(); !(_step540 = _iterator540.n()).done; ) {
-          var _step540$value = _slicedToArray(_step540.value, 2),
-            _ = _step540$value[0],
-            block = _step540$value[1];
-          var _iterator541 = _createForOfIteratorHelper(block.instructions),
-            _step541;
+        for (_iterator550.s(); !(_step550 = _iterator550.n()).done; ) {
+          var _step550$value = _slicedToArray(_step550.value, 2),
+            _ = _step550$value[0],
+            block = _step550$value[1];
+          var _iterator551 = _createForOfIteratorHelper(block.instructions),
+            _step551;
           try {
-            for (_iterator541.s(); !(_step541 = _iterator541.n()).done; ) {
-              var instr = _step541.value;
+            for (_iterator551.s(); !(_step551 = _iterator551.n()).done; ) {
+              var instr = _step551.value;
               if (
                 instr.value.kind === "FunctionExpression" ||
                 instr.value.kind === "ObjectMethod"
@@ -69087,9 +69297,9 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator541.e(err);
+            _iterator551.e(err);
           } finally {
-            _iterator541.f();
+            _iterator551.f();
           }
           if (
             block.terminal.kind === "optional" &&
@@ -69099,9 +69309,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator540.e(err);
+        _iterator550.e(err);
       } finally {
-        _iterator540.f();
+        _iterator550.f();
       }
     }
     function matchOptionalTestBlock(terminal, blocks) {
@@ -69320,13 +69530,13 @@ PERFORMANCE OF THIS SOFTWARE.
         ),
         processedInstrsInOptional
       );
-      var _iterator542 = _createForOfIteratorHelper(scopeDeps),
-        _step542;
+      var _iterator552 = _createForOfIteratorHelper(scopeDeps),
+        _step552;
       try {
-        for (_iterator542.s(); !(_step542 = _iterator542.n()).done; ) {
-          var _step542$value = _slicedToArray(_step542.value, 2),
-            scope = _step542$value[0],
-            deps = _step542$value[1];
+        for (_iterator552.s(); !(_step552 = _iterator552.n()).done; ) {
+          var _step552$value = _slicedToArray(_step552.value, 2),
+            scope = _step552$value[0],
+            deps = _step552$value[1];
           if (deps.length === 0) {
             continue;
           }
@@ -69343,24 +69553,24 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             )
           );
-          var _iterator543 = _createForOfIteratorHelper(deps),
-            _step543;
+          var _iterator553 = _createForOfIteratorHelper(deps),
+            _step553;
           try {
-            for (_iterator543.s(); !(_step543 = _iterator543.n()).done; ) {
-              var dep = _step543.value;
+            for (_iterator553.s(); !(_step553 = _iterator553.n()).done; ) {
+              var dep = _step553.value;
               tree.addDependency(Object.assign({}, dep));
             }
           } catch (err) {
-            _iterator543.e(err);
+            _iterator553.e(err);
           } finally {
-            _iterator543.f();
+            _iterator553.f();
           }
           var candidates = tree.deriveMinimalDependencies();
-          var _iterator544 = _createForOfIteratorHelper(candidates),
-            _step544;
+          var _iterator554 = _createForOfIteratorHelper(candidates),
+            _step554;
           try {
             var _loop19 = function _loop19() {
-              var candidateDep = _step544.value;
+              var candidateDep = _step554.value;
               if (
                 !Iterable_some(scope.dependencies, function (existingDep) {
                   return (
@@ -69372,19 +69582,19 @@ PERFORMANCE OF THIS SOFTWARE.
               )
                 scope.dependencies.add(candidateDep);
             };
-            for (_iterator544.s(); !(_step544 = _iterator544.n()).done; ) {
+            for (_iterator554.s(); !(_step554 = _iterator554.n()).done; ) {
               _loop19();
             }
           } catch (err) {
-            _iterator544.e(err);
+            _iterator554.e(err);
           } finally {
-            _iterator544.f();
+            _iterator554.f();
           }
         }
       } catch (err) {
-        _iterator542.e(err);
+        _iterator552.e(err);
       } finally {
-        _iterator542.f();
+        _iterator552.f();
       }
     }
     function findTemporariesUsedOutsideDeclaringScope(fn) {
@@ -69416,13 +69626,13 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       }
-      var _iterator545 = _createForOfIteratorHelper(fn.body.blocks),
-        _step545;
+      var _iterator555 = _createForOfIteratorHelper(fn.body.blocks),
+        _step555;
       try {
-        for (_iterator545.s(); !(_step545 = _iterator545.n()).done; ) {
-          var _step545$value = _slicedToArray(_step545.value, 2),
-            blockId = _step545$value[0],
-            block = _step545$value[1];
+        for (_iterator555.s(); !(_step555 = _iterator555.n()).done; ) {
+          var _step555$value = _slicedToArray(_step555.value, 2),
+            blockId = _step555$value[0],
+            block = _step555$value[1];
           scopeTraversal.recordScopes(block);
           var scopeStartInfo = scopeTraversal.blockInfos.get(blockId);
           if (
@@ -69433,51 +69643,51 @@ PERFORMANCE OF THIS SOFTWARE.
           ) {
             prunedScopes.add(scopeStartInfo.scope.id);
           }
-          var _iterator546 = _createForOfIteratorHelper(block.instructions),
-            _step546;
+          var _iterator556 = _createForOfIteratorHelper(block.instructions),
+            _step556;
           try {
-            for (_iterator546.s(); !(_step546 = _iterator546.n()).done; ) {
-              var instr = _step546.value;
-              var _iterator548 = _createForOfIteratorHelper(
+            for (_iterator556.s(); !(_step556 = _iterator556.n()).done; ) {
+              var instr = _step556.value;
+              var _iterator558 = _createForOfIteratorHelper(
                   eachInstructionOperand(instr)
                 ),
-                _step548;
+                _step558;
               try {
-                for (_iterator548.s(); !(_step548 = _iterator548.n()).done; ) {
-                  var place = _step548.value;
+                for (_iterator558.s(); !(_step558 = _iterator558.n()).done; ) {
+                  var place = _step558.value;
                   handlePlace(place);
                 }
               } catch (err) {
-                _iterator548.e(err);
+                _iterator558.e(err);
               } finally {
-                _iterator548.f();
+                _iterator558.f();
               }
               handleInstruction(instr);
             }
           } catch (err) {
-            _iterator546.e(err);
+            _iterator556.e(err);
           } finally {
-            _iterator546.f();
+            _iterator556.f();
           }
-          var _iterator547 = _createForOfIteratorHelper(
+          var _iterator557 = _createForOfIteratorHelper(
               eachTerminalOperand(block.terminal)
             ),
-            _step547;
+            _step557;
           try {
-            for (_iterator547.s(); !(_step547 = _iterator547.n()).done; ) {
-              var _place29 = _step547.value;
+            for (_iterator557.s(); !(_step557 = _iterator557.n()).done; ) {
+              var _place29 = _step557.value;
               handlePlace(_place29);
             }
           } catch (err) {
-            _iterator547.e(err);
+            _iterator557.e(err);
           } finally {
-            _iterator547.f();
+            _iterator557.f();
           }
         }
       } catch (err) {
-        _iterator545.e(err);
+        _iterator555.e(err);
       } finally {
-        _iterator545.f();
+        _iterator555.f();
       }
       return usedOutsideDeclaringScope;
     }
@@ -69508,21 +69718,21 @@ PERFORMANCE OF THIS SOFTWARE.
       temporaries,
       innerFnContext
     ) {
-      var _iterator549 = _createForOfIteratorHelper(fn.body.blocks),
-        _step549;
+      var _iterator559 = _createForOfIteratorHelper(fn.body.blocks),
+        _step559;
       try {
-        for (_iterator549.s(); !(_step549 = _iterator549.n()).done; ) {
-          var _step549$value = _slicedToArray(_step549.value, 2),
-            _ = _step549$value[0],
-            block = _step549$value[1];
-          var _iterator550 = _createForOfIteratorHelper(block.instructions),
-            _step550;
+        for (_iterator559.s(); !(_step559 = _iterator559.n()).done; ) {
+          var _step559$value = _slicedToArray(_step559.value, 2),
+            _ = _step559$value[0],
+            block = _step559$value[1];
+          var _iterator560 = _createForOfIteratorHelper(block.instructions),
+            _step560;
           try {
             var _loop20 = function _loop20() {
-              var _step550$value = _step550.value,
-                value = _step550$value.value,
-                lvalue = _step550$value.lvalue,
-                origInstrId = _step550$value.id;
+              var _step560$value = _step560.value,
+                value = _step560$value.value,
+                lvalue = _step560$value.lvalue,
+                origInstrId = _step560$value.id;
               var instrId =
                 innerFnContext != null ? innerFnContext.instrId : origInstrId;
               var usedOutside = usedOutsideDeclaringScope.has(
@@ -69573,19 +69783,19 @@ PERFORMANCE OF THIS SOFTWARE.
                 );
               }
             };
-            for (_iterator550.s(); !(_step550 = _iterator550.n()).done; ) {
+            for (_iterator560.s(); !(_step560 = _iterator560.n()).done; ) {
               _loop20();
             }
           } catch (err) {
-            _iterator550.e(err);
+            _iterator560.e(err);
           } finally {
-            _iterator550.f();
+            _iterator560.f();
           }
         }
       } catch (err) {
-        _iterator549.e(err);
+        _iterator559.e(err);
       } finally {
-        _iterator549.f();
+        _iterator559.f();
       }
     }
     function getProperty(object, propertyName, optional, temporaries) {
@@ -69680,11 +69890,11 @@ PERFORMANCE OF THIS SOFTWARE.
               __classPrivateFieldGet(this, _Context_dependencies, "f").pop(),
               "f"
             );
-            var _iterator551 = _createForOfIteratorHelper(scopedDependencies),
-              _step551;
+            var _iterator561 = _createForOfIteratorHelper(scopedDependencies),
+              _step561;
             try {
-              for (_iterator551.s(); !(_step551 = _iterator551.n()).done; ) {
-                var dep = _step551.value;
+              for (_iterator561.s(); !(_step561 = _iterator561.n()).done; ) {
+                var dep = _step561.value;
                 if (
                   __classPrivateFieldGet(
                     this,
@@ -69703,9 +69913,9 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator551.e(err);
+              _iterator561.e(err);
             } finally {
-              _iterator551.f();
+              _iterator561.f();
             }
             if (!pruned) {
               this.deps.set(scope, scopedDependencies);
@@ -69997,13 +70207,13 @@ PERFORMANCE OF THIS SOFTWARE.
         });
       } else if (value.kind === "Destructure") {
         context.visitOperand(value.value);
-        var _iterator552 = _createForOfIteratorHelper(
+        var _iterator562 = _createForOfIteratorHelper(
             eachPatternOperand(value.lvalue.pattern)
           ),
-          _step552;
+          _step562;
         try {
-          for (_iterator552.s(); !(_step552 = _iterator552.n()).done; ) {
-            var place = _step552.value;
+          for (_iterator562.s(); !(_step562 = _iterator562.n()).done; ) {
+            var place = _step562.value;
             if (value.lvalue.kind === InstructionKind.Reassign) {
               context.visitReassignment(place);
             }
@@ -70013,24 +70223,24 @@ PERFORMANCE OF THIS SOFTWARE.
             });
           }
         } catch (err) {
-          _iterator552.e(err);
+          _iterator562.e(err);
         } finally {
-          _iterator552.f();
+          _iterator562.f();
         }
       } else {
-        var _iterator553 = _createForOfIteratorHelper(
+        var _iterator563 = _createForOfIteratorHelper(
             eachInstructionValueOperand(value)
           ),
-          _step553;
+          _step563;
         try {
-          for (_iterator553.s(); !(_step553 = _iterator553.n()).done; ) {
-            var operand = _step553.value;
+          for (_iterator563.s(); !(_step563 = _iterator563.n()).done; ) {
+            var operand = _step563.value;
             context.visitOperand(operand);
           }
         } catch (err) {
-          _iterator553.e(err);
+          _iterator563.e(err);
         } finally {
-          _iterator553.f();
+          _iterator563.f();
         }
       }
     }
@@ -70045,11 +70255,11 @@ PERFORMANCE OF THIS SOFTWARE.
         temporaries,
         processedInstrsInOptional
       );
-      var _iterator554 = _createForOfIteratorHelper(fn.params),
-        _step554;
+      var _iterator564 = _createForOfIteratorHelper(fn.params),
+        _step564;
       try {
-        for (_iterator554.s(); !(_step554 = _iterator554.n()).done; ) {
-          var param = _step554.value;
+        for (_iterator564.s(); !(_step564 = _iterator564.n()).done; ) {
+          var param = _step564.value;
           if (param.kind === "Identifier") {
             context.declare(param.identifier, {
               id: makeInstructionId(0),
@@ -70063,19 +70273,19 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator554.e(err);
+        _iterator564.e(err);
       } finally {
-        _iterator554.f();
+        _iterator564.f();
       }
       var scopeTraversal = new ScopeBlockTraversal();
       var _handleFunction = function handleFunction(fn) {
-        var _iterator555 = _createForOfIteratorHelper(fn.body.blocks),
-          _step555;
+        var _iterator565 = _createForOfIteratorHelper(fn.body.blocks),
+          _step565;
         try {
-          for (_iterator555.s(); !(_step555 = _iterator555.n()).done; ) {
-            var _step555$value = _slicedToArray(_step555.value, 2),
-              blockId = _step555$value[0],
-              block = _step555$value[1];
+          for (_iterator565.s(); !(_step565 = _iterator565.n()).done; ) {
+            var _step565$value = _slicedToArray(_step565.value, 2),
+              blockId = _step565$value[0],
+              block = _step565$value[1];
             scopeTraversal.recordScopes(block);
             var scopeBlockInfo = scopeTraversal.blockInfos.get(blockId);
             if (
@@ -70091,20 +70301,20 @@ PERFORMANCE OF THIS SOFTWARE.
             ) {
               context.exitScope(scopeBlockInfo.scope, scopeBlockInfo.pruned);
             }
-            var _iterator556 = _createForOfIteratorHelper(block.phis),
-              _step556;
+            var _iterator566 = _createForOfIteratorHelper(block.phis),
+              _step566;
             try {
-              for (_iterator556.s(); !(_step556 = _iterator556.n()).done; ) {
-                var phi = _step556.value;
-                var _iterator559 = _createForOfIteratorHelper(phi.operands),
-                  _step559;
+              for (_iterator566.s(); !(_step566 = _iterator566.n()).done; ) {
+                var phi = _step566.value;
+                var _iterator569 = _createForOfIteratorHelper(phi.operands),
+                  _step569;
                 try {
                   for (
-                    _iterator559.s();
-                    !(_step559 = _iterator559.n()).done;
+                    _iterator569.s();
+                    !(_step569 = _iterator569.n()).done;
 
                   ) {
-                    var operand = _step559.value;
+                    var operand = _step569.value;
                     var maybeOptionalChain = temporaries.get(
                       operand[1].identifier.id
                     );
@@ -70113,21 +70323,21 @@ PERFORMANCE OF THIS SOFTWARE.
                     }
                   }
                 } catch (err) {
-                  _iterator559.e(err);
+                  _iterator569.e(err);
                 } finally {
-                  _iterator559.f();
+                  _iterator569.f();
                 }
               }
             } catch (err) {
-              _iterator556.e(err);
+              _iterator566.e(err);
             } finally {
-              _iterator556.f();
+              _iterator566.f();
             }
-            var _iterator557 = _createForOfIteratorHelper(block.instructions),
-              _step557;
+            var _iterator567 = _createForOfIteratorHelper(block.instructions),
+              _step567;
             try {
               var _loop21 = function _loop21() {
-                var instr = _step557.value;
+                var instr = _step567.value;
                 if (
                   instr.value.kind === "FunctionExpression" ||
                   instr.value.kind === "ObjectMethod"
@@ -70144,13 +70354,13 @@ PERFORMANCE OF THIS SOFTWARE.
                   handleInstruction(instr, context);
                 }
               };
-              for (_iterator557.s(); !(_step557 = _iterator557.n()).done; ) {
+              for (_iterator567.s(); !(_step567 = _iterator567.n()).done; ) {
                 _loop21();
               }
             } catch (err) {
-              _iterator557.e(err);
+              _iterator567.e(err);
             } finally {
-              _iterator557.f();
+              _iterator567.f();
             }
             if (
               !context.isDeferredDependency({
@@ -70158,26 +70368,26 @@ PERFORMANCE OF THIS SOFTWARE.
                 value: block.terminal
               })
             ) {
-              var _iterator558 = _createForOfIteratorHelper(
+              var _iterator568 = _createForOfIteratorHelper(
                   eachTerminalOperand(block.terminal)
                 ),
-                _step558;
+                _step568;
               try {
-                for (_iterator558.s(); !(_step558 = _iterator558.n()).done; ) {
-                  var place = _step558.value;
+                for (_iterator568.s(); !(_step568 = _iterator568.n()).done; ) {
+                  var place = _step568.value;
                   context.visitOperand(place);
                 }
               } catch (err) {
-                _iterator558.e(err);
+                _iterator568.e(err);
               } finally {
-                _iterator558.f();
+                _iterator568.f();
               }
             }
           }
         } catch (err) {
-          _iterator555.e(err);
+          _iterator565.e(err);
         } finally {
-          _iterator555.f();
+          _iterator565.f();
         }
       };
       _handleFunction(fn);
@@ -70213,12 +70423,12 @@ PERFORMANCE OF THIS SOFTWARE.
           rewriteInstr.set(state.jsx.at(0).id, result.instrs);
         }
       }
-      var _iterator560 = _createForOfIteratorHelper(fn.body.blocks),
-        _step560;
+      var _iterator570 = _createForOfIteratorHelper(fn.body.blocks),
+        _step570;
       try {
-        for (_iterator560.s(); !(_step560 = _iterator560.n()).done; ) {
-          var _step560$value = _slicedToArray(_step560.value, 2),
-            block = _step560$value[1];
+        for (_iterator570.s(); !(_step570 = _iterator570.n()).done; ) {
+          var _step570$value = _slicedToArray(_step570.value, 2),
+            block = _step570$value[1];
           var rewriteInstr = new Map();
           var state = { jsx: [], children: new Set() };
           for (var i = block.instructions.length - 1; i >= 0; i--) {
@@ -70241,21 +70451,21 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
                 state.jsx.push(instr);
                 if (value.children) {
-                  var _iterator561 = _createForOfIteratorHelper(value.children),
-                    _step561;
+                  var _iterator571 = _createForOfIteratorHelper(value.children),
+                    _step571;
                   try {
                     for (
-                      _iterator561.s();
-                      !(_step561 = _iterator561.n()).done;
+                      _iterator571.s();
+                      !(_step571 = _iterator571.n()).done;
 
                     ) {
-                      var child = _step561.value;
+                      var child = _step571.value;
                       state.children.add(child.identifier.id);
                     }
                   } catch (err) {
-                    _iterator561.e(err);
+                    _iterator571.e(err);
                   } finally {
-                    _iterator561.f();
+                    _iterator571.f();
                   }
                 }
                 break;
@@ -70327,9 +70537,9 @@ PERFORMANCE OF THIS SOFTWARE.
           deadCodeElimination(fn);
         }
       } catch (err) {
-        _iterator560.e(err);
+        _iterator570.e(err);
       } finally {
-        _iterator560.f();
+        _iterator570.f();
       }
     }
     function process$1(fn, jsx, globals) {
@@ -70363,17 +70573,17 @@ PERFORMANCE OF THIS SOFTWARE.
         })
       );
       var seen = new Set();
-      var _iterator562 = _createForOfIteratorHelper(instructions),
-        _step562;
+      var _iterator572 = _createForOfIteratorHelper(instructions),
+        _step572;
       try {
-        for (_iterator562.s(); !(_step562 = _iterator562.n()).done; ) {
-          var instr = _step562.value;
+        for (_iterator572.s(); !(_step572 = _iterator572.n()).done; ) {
+          var instr = _step572.value;
           var value = instr.value;
-          var _iterator563 = _createForOfIteratorHelper(value.props),
-            _step563;
+          var _iterator573 = _createForOfIteratorHelper(value.props),
+            _step573;
           try {
-            for (_iterator563.s(); !(_step563 = _iterator563.n()).done; ) {
-              var at = _step563.value;
+            for (_iterator573.s(); !(_step573 = _iterator573.n()).done; ) {
+              var at = _step573.value;
               if (at.kind === "JsxSpreadAttribute") {
                 return null;
               }
@@ -70387,16 +70597,16 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator563.e(err);
+            _iterator573.e(err);
           } finally {
-            _iterator563.f();
+            _iterator573.f();
           }
           if (value.children) {
-            var _iterator564 = _createForOfIteratorHelper(value.children),
-              _step564;
+            var _iterator574 = _createForOfIteratorHelper(value.children),
+              _step574;
             try {
-              for (_iterator564.s(); !(_step564 = _iterator564.n()).done; ) {
-                var child = _step564.value;
+              for (_iterator574.s(); !(_step574 = _iterator574.n()).done; ) {
+                var child = _step574.value;
                 if (jsxIds.has(child.identifier.id)) {
                   continue;
                 }
@@ -70409,16 +70619,16 @@ PERFORMANCE OF THIS SOFTWARE.
                 });
               }
             } catch (err) {
-              _iterator564.e(err);
+              _iterator574.e(err);
             } finally {
-              _iterator564.f();
+              _iterator574.f();
             }
           }
         }
       } catch (err) {
-        _iterator562.e(err);
+        _iterator572.e(err);
       } finally {
-        _iterator562.f();
+        _iterator572.f();
       }
       return attributes;
     }
@@ -70509,11 +70719,11 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function emitLoadGlobals(jsx, globals) {
       var instructions = [];
-      var _iterator565 = _createForOfIteratorHelper(jsx),
-        _step565;
+      var _iterator575 = _createForOfIteratorHelper(jsx),
+        _step575;
       try {
-        for (_iterator565.s(); !(_step565 = _iterator565.n()).done; ) {
-          var value = _step565.value.value;
+        for (_iterator575.s(); !(_step575 = _iterator575.n()).done; ) {
+          var value = _step575.value.value;
           if (value.tag.kind === "Identifier") {
             var loadGlobalInstr = globals.get(value.tag.identifier.id);
             if (!loadGlobalInstr) {
@@ -70523,9 +70733,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator565.e(err);
+        _iterator575.e(err);
       } finally {
-        _iterator565.f();
+        _iterator575.f();
       }
       return instructions;
     }
@@ -70536,18 +70746,18 @@ PERFORMANCE OF THIS SOFTWARE.
           return i.lvalue.identifier.id;
         })
       );
-      var _iterator566 = _createForOfIteratorHelper(jsx),
-        _step566;
+      var _iterator576 = _createForOfIteratorHelper(jsx),
+        _step576;
       try {
-        for (_iterator566.s(); !(_step566 = _iterator566.n()).done; ) {
-          var instr = _step566.value;
+        for (_iterator576.s(); !(_step576 = _iterator576.n()).done; ) {
+          var instr = _step576.value;
           var value = instr.value;
           var newProps = [];
-          var _iterator567 = _createForOfIteratorHelper(value.props),
-            _step567;
+          var _iterator577 = _createForOfIteratorHelper(value.props),
+            _step577;
           try {
-            for (_iterator567.s(); !(_step567 = _iterator567.n()).done; ) {
-              var prop = _step567.value;
+            for (_iterator577.s(); !(_step577 = _iterator577.n()).done; ) {
+              var prop = _step577.value;
               invariant_1(
                 prop.kind === "JsxAttribute",
                 "Expected only attributes but found ".concat(prop.kind)
@@ -70569,18 +70779,18 @@ PERFORMANCE OF THIS SOFTWARE.
               });
             }
           } catch (err) {
-            _iterator567.e(err);
+            _iterator577.e(err);
           } finally {
-            _iterator567.f();
+            _iterator577.f();
           }
           var newChildren = null;
           if (value.children) {
             newChildren = [];
-            var _iterator568 = _createForOfIteratorHelper(value.children),
-              _step568;
+            var _iterator578 = _createForOfIteratorHelper(value.children),
+              _step578;
             try {
-              for (_iterator568.s(); !(_step568 = _iterator568.n()).done; ) {
-                var child = _step568.value;
+              for (_iterator578.s(); !(_step578 = _iterator578.n()).done; ) {
+                var child = _step578.value;
                 if (jsxIds.has(child.identifier.id)) {
                   newChildren.push(Object.assign({}, child));
                   continue;
@@ -70595,9 +70805,9 @@ PERFORMANCE OF THIS SOFTWARE.
                 newChildren.push(Object.assign({}, newChild.place));
               }
             } catch (err) {
-              _iterator568.e(err);
+              _iterator578.e(err);
             } finally {
-              _iterator568.f();
+              _iterator578.f();
             }
           }
           newInstrs.push(
@@ -70610,19 +70820,19 @@ PERFORMANCE OF THIS SOFTWARE.
           );
         }
       } catch (err) {
-        _iterator566.e(err);
+        _iterator576.e(err);
       } finally {
-        _iterator566.f();
+        _iterator576.f();
       }
       return newInstrs;
     }
     function createOldToNewPropsMapping(env, oldProps) {
       var oldToNewProps = new Map();
-      var _iterator569 = _createForOfIteratorHelper(oldProps),
-        _step569;
+      var _iterator579 = _createForOfIteratorHelper(oldProps),
+        _step579;
       try {
-        for (_iterator569.s(); !(_step569 = _iterator569.n()).done; ) {
-          var oldProp = _step569.value;
+        for (_iterator579.s(); !(_step579 = _iterator579.n()).done; ) {
+          var oldProp = _step579.value;
           if (oldProp.originalName === "key") {
             continue;
           }
@@ -70633,21 +70843,21 @@ PERFORMANCE OF THIS SOFTWARE.
           oldToNewProps.set(oldProp.place.identifier.id, newProp);
         }
       } catch (err) {
-        _iterator569.e(err);
+        _iterator579.e(err);
       } finally {
-        _iterator569.f();
+        _iterator579.f();
       }
       return oldToNewProps;
     }
     function emitDestructureProps(env, propsObj, oldToNewProps) {
       var properties = [];
-      var _iterator570 = _createForOfIteratorHelper(oldToNewProps),
-        _step570;
+      var _iterator580 = _createForOfIteratorHelper(oldToNewProps),
+        _step580;
       try {
-        for (_iterator570.s(); !(_step570 = _iterator570.n()).done; ) {
-          var _step570$value = _slicedToArray(_step570.value, 2),
-            _ = _step570$value[0],
-            prop = _step570$value[1];
+        for (_iterator580.s(); !(_step580 = _iterator580.n()).done; ) {
+          var _step580$value = _slicedToArray(_step580.value, 2),
+            _ = _step580$value[0],
+            prop = _step580$value[1];
           properties.push({
             kind: "ObjectProperty",
             key: { kind: "string", name: prop.newName },
@@ -70656,9 +70866,9 @@ PERFORMANCE OF THIS SOFTWARE.
           });
         }
       } catch (err) {
-        _iterator570.e(err);
+        _iterator580.e(err);
       } finally {
-        _iterator570.f();
+        _iterator580.f();
       }
       var destructurePropsInstr = {
         id: makeInstructionId(0),
@@ -70677,12 +70887,12 @@ PERFORMANCE OF THIS SOFTWARE.
       return destructurePropsInstr;
     }
     function optimizePropsMethodCalls(fn) {
-      var _iterator571 = _createForOfIteratorHelper(fn.body.blocks),
-        _step571;
+      var _iterator581 = _createForOfIteratorHelper(fn.body.blocks),
+        _step581;
       try {
-        for (_iterator571.s(); !(_step571 = _iterator571.n()).done; ) {
-          var _step571$value = _slicedToArray(_step571.value, 2),
-            block = _step571$value[1];
+        for (_iterator581.s(); !(_step581 = _iterator581.n()).done; ) {
+          var _step581$value = _slicedToArray(_step581.value, 2),
+            block = _step581$value[1];
           for (var i = 0; i < block.instructions.length; i++) {
             var instr = block.instructions[i];
             if (
@@ -70699,9 +70909,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator571.e(err);
+        _iterator581.e(err);
       } finally {
-        _iterator571.f();
+        _iterator581.f();
       }
     }
     var _Context_env,
@@ -70726,19 +70936,19 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function replaceFireFunctions(fn, context) {
       var hasRewrite = false;
-      var _iterator572 = _createForOfIteratorHelper(fn.body.blocks),
-        _step572;
+      var _iterator582 = _createForOfIteratorHelper(fn.body.blocks),
+        _step582;
       try {
-        for (_iterator572.s(); !(_step572 = _iterator572.n()).done; ) {
-          var _step572$value = _slicedToArray(_step572.value, 2),
-            block = _step572$value[1];
+        for (_iterator582.s(); !(_step582 = _iterator582.n()).done; ) {
+          var _step582$value = _slicedToArray(_step582.value, 2),
+            block = _step582$value[1];
           var rewriteInstrs = new Map();
           var deleteInstrs = new Set();
-          var _iterator573 = _createForOfIteratorHelper(block.instructions),
-            _step573;
+          var _iterator583 = _createForOfIteratorHelper(block.instructions),
+            _step583;
           try {
-            for (_iterator573.s(); !(_step573 = _iterator573.n()).done; ) {
-              var instr = _step573.value;
+            for (_iterator583.s(); !(_step583 = _iterator583.n()).done; ) {
+              var instr = _step583.value;
               var value = instr.value,
                 lvalue = instr.lvalue;
               if (
@@ -70758,19 +70968,19 @@ PERFORMANCE OF THIS SOFTWARE.
                       true
                     );
                   var newInstrs = [];
-                  var _iterator574 = _createForOfIteratorHelper(
+                  var _iterator584 = _createForOfIteratorHelper(
                       capturedCallees.entries()
                     ),
-                    _step574;
+                    _step584;
                   try {
                     for (
-                      _iterator574.s();
-                      !(_step574 = _iterator574.n()).done;
+                      _iterator584.s();
+                      !(_step584 = _iterator584.n()).done;
 
                     ) {
-                      var _step574$value = _slicedToArray(_step574.value, 2),
-                        fireCalleePlace = _step574$value[0],
-                        fireCalleeInfo = _step574$value[1];
+                      var _step584$value = _slicedToArray(_step584.value, 2),
+                        fireCalleePlace = _step584$value[0],
+                        fireCalleeInfo = _step584$value[1];
                       if (!context.hasCalleeWithInsertedFire(fireCalleePlace)) {
                         context.addCalleeWithInsertedFire(fireCalleePlace);
                         var loadUseFireInstr = makeLoadUseFireInstruction(
@@ -70814,9 +71024,9 @@ PERFORMANCE OF THIS SOFTWARE.
                       }
                     }
                   } catch (err) {
-                    _iterator574.e(err);
+                    _iterator584.e(err);
                   } finally {
-                    _iterator574.f();
+                    _iterator584.f();
                   }
                   ensureNoRemainingCalleeCaptures(
                     lambda.loweredFunc.func,
@@ -70833,17 +71043,17 @@ PERFORMANCE OF THIS SOFTWARE.
                       depArray.identifier.id
                     );
                     if (depArrayExpression != null) {
-                      var _iterator575 = _createForOfIteratorHelper(
+                      var _iterator585 = _createForOfIteratorHelper(
                           depArrayExpression.elements
                         ),
-                        _step575;
+                        _step585;
                       try {
                         for (
-                          _iterator575.s();
-                          !(_step575 = _iterator575.n()).done;
+                          _iterator585.s();
+                          !(_step585 = _iterator585.n()).done;
 
                         ) {
-                          var dependency = _step575.value;
+                          var dependency = _step585.value;
                           if (dependency.kind === "Identifier") {
                             var loadOfDependency = context.getLoadLocalInstr(
                               dependency.identifier.id
@@ -70860,9 +71070,9 @@ PERFORMANCE OF THIS SOFTWARE.
                           }
                         }
                       } catch (err) {
-                        _iterator575.e(err);
+                        _iterator585.e(err);
                       } finally {
-                        _iterator575.f();
+                        _iterator585.f();
                       }
                     } else {
                       context.pushError({
@@ -70980,9 +71190,9 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator573.e(err);
+            _iterator583.e(err);
           } finally {
-            _iterator573.f();
+            _iterator583.f();
           }
           block.instructions = rewriteInstructions(
             rewriteInstrs,
@@ -70998,9 +71208,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator572.e(err);
+        _iterator582.e(err);
       } finally {
-        _iterator572.f();
+        _iterator582.f();
       }
       if (hasRewrite) {
         markInstructionIds(fn.body);
@@ -71037,37 +71247,37 @@ PERFORMANCE OF THIS SOFTWARE.
       return calleesCapturedByFnExpression;
     }
     function eachReachablePlace(fn) {
-      var _iterator576,
-        _step576,
-        _step576$value,
+      var _iterator586,
+        _step586,
+        _step586$value,
         block,
-        _iterator577,
-        _step577,
+        _iterator587,
+        _step587,
         instr;
       return _regeneratorRuntime().wrap(
         function eachReachablePlace$(_context12) {
           while (1)
             switch ((_context12.prev = _context12.next)) {
               case 0:
-                _iterator576 = _createForOfIteratorHelper(fn.body.blocks);
+                _iterator586 = _createForOfIteratorHelper(fn.body.blocks);
                 _context12.prev = 1;
-                _iterator576.s();
+                _iterator586.s();
               case 3:
-                if ((_step576 = _iterator576.n()).done) {
+                if ((_step586 = _iterator586.n()).done) {
                   _context12.next = 27;
                   break;
                 }
-                (_step576$value = _slicedToArray(_step576.value, 2)),
-                  (block = _step576$value[1]);
-                _iterator577 = _createForOfIteratorHelper(block.instructions);
+                (_step586$value = _slicedToArray(_step586.value, 2)),
+                  (block = _step586$value[1]);
+                _iterator587 = _createForOfIteratorHelper(block.instructions);
                 _context12.prev = 6;
-                _iterator577.s();
+                _iterator587.s();
               case 8:
-                if ((_step577 = _iterator577.n()).done) {
+                if ((_step587 = _iterator587.n()).done) {
                   _context12.next = 17;
                   break;
                 }
-                instr = _step577.value;
+                instr = _step587.value;
                 if (
                   !(
                     instr.value.kind === "FunctionExpression" ||
@@ -71100,10 +71310,10 @@ PERFORMANCE OF THIS SOFTWARE.
               case 19:
                 _context12.prev = 19;
                 _context12.t2 = _context12["catch"](6);
-                _iterator577.e(_context12.t2);
+                _iterator587.e(_context12.t2);
               case 22:
                 _context12.prev = 22;
-                _iterator577.f();
+                _iterator587.f();
                 return _context12.finish(22);
               case 25:
                 _context12.next = 3;
@@ -71114,10 +71324,10 @@ PERFORMANCE OF THIS SOFTWARE.
               case 29:
                 _context12.prev = 29;
                 _context12.t3 = _context12["catch"](1);
-                _iterator576.e(_context12.t3);
+                _iterator586.e(_context12.t3);
               case 32:
                 _context12.prev = 32;
-                _iterator576.f();
+                _iterator586.f();
                 return _context12.finish(32);
               case 35:
               case "end":
@@ -71134,11 +71344,11 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function ensureNoRemainingCalleeCaptures(fn, context, capturedCallees) {
       var _a;
-      var _iterator578 = _createForOfIteratorHelper(eachReachablePlace(fn)),
-        _step578;
+      var _iterator588 = _createForOfIteratorHelper(eachReachablePlace(fn)),
+        _step588;
       try {
-        for (_iterator578.s(); !(_step578 = _iterator578.n()).done; ) {
-          var place = _step578.value;
+        for (_iterator588.s(); !(_step588 = _iterator588.n()).done; ) {
+          var place = _step588.value;
           var calleeInfo = capturedCallees.get(place.identifier.id);
           if (calleeInfo != null) {
             var calleeName =
@@ -71167,17 +71377,17 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator578.e(err);
+        _iterator588.e(err);
       } finally {
-        _iterator578.f();
+        _iterator588.f();
       }
     }
     function ensureNoMoreFireUses(fn, context) {
-      var _iterator579 = _createForOfIteratorHelper(eachReachablePlace(fn)),
-        _step579;
+      var _iterator589 = _createForOfIteratorHelper(eachReachablePlace(fn)),
+        _step589;
       try {
-        for (_iterator579.s(); !(_step579 = _iterator579.n()).done; ) {
-          var place = _step579.value;
+        for (_iterator589.s(); !(_step589 = _iterator589.n()).done; ) {
+          var place = _step589.value;
           if (
             place.identifier.type.kind === "Function" &&
             place.identifier.type.shapeId === BuiltInFireId
@@ -71192,9 +71402,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator579.e(err);
+        _iterator589.e(err);
       } finally {
-        _iterator579.f();
+        _iterator589.f();
       }
     }
     function makeLoadUseFireInstruction(env) {
@@ -71419,15 +71629,15 @@ PERFORMANCE OF THIS SOFTWARE.
         {
           key: "mergeCalleesFromInnerScope",
           value: function mergeCalleesFromInnerScope(innerCallees) {
-            var _iterator580 = _createForOfIteratorHelper(
+            var _iterator590 = _createForOfIteratorHelper(
                 innerCallees.entries()
               ),
-              _step580;
+              _step590;
             try {
-              for (_iterator580.s(); !(_step580 = _iterator580.n()).done; ) {
-                var _step580$value = _slicedToArray(_step580.value, 2),
-                  id = _step580$value[0],
-                  calleeInfo = _step580$value[1];
+              for (_iterator590.s(); !(_step590 = _iterator590.n()).done; ) {
+                var _step590$value = _slicedToArray(_step590.value, 2),
+                  id = _step590$value[0],
+                  calleeInfo = _step590$value[1];
                 __classPrivateFieldGet(
                   this,
                   _Context_capturedCalleeIdentifierIds,
@@ -71435,9 +71645,9 @@ PERFORMANCE OF THIS SOFTWARE.
                 ).set(id, calleeInfo);
               }
             } catch (err) {
-              _iterator580.e(err);
+              _iterator590.e(err);
             } finally {
-              _iterator580.f();
+              _iterator590.f();
             }
           }
         },
@@ -71571,11 +71781,11 @@ PERFORMANCE OF THIS SOFTWARE.
     function rewriteInstructions(rewriteInstrs, instructions) {
       if (rewriteInstrs.size > 0) {
         var newInstrs = [];
-        var _iterator581 = _createForOfIteratorHelper(instructions),
-          _step581;
+        var _iterator591 = _createForOfIteratorHelper(instructions),
+          _step591;
         try {
-          for (_iterator581.s(); !(_step581 = _iterator581.n()).done; ) {
-            var instr = _step581.value;
+          for (_iterator591.s(); !(_step591 = _iterator591.n()).done; ) {
+            var instr = _step591.value;
             var newInstrsAtId = rewriteInstrs.get(instr.id);
             if (newInstrsAtId != null) {
               newInstrs.push.apply(
@@ -71587,9 +71797,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator581.e(err);
+          _iterator591.e(err);
         } finally {
-          _iterator581.f();
+          _iterator591.f();
         }
         return newInstrs;
       }
@@ -71597,17 +71807,17 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function validateNoImpureFunctionsInRender(fn) {
       var errors = new CompilerError();
-      var _iterator582 = _createForOfIteratorHelper(fn.body.blocks),
-        _step582;
+      var _iterator592 = _createForOfIteratorHelper(fn.body.blocks),
+        _step592;
       try {
-        for (_iterator582.s(); !(_step582 = _iterator582.n()).done; ) {
-          var _step582$value = _slicedToArray(_step582.value, 2),
-            block = _step582$value[1];
-          var _iterator583 = _createForOfIteratorHelper(block.instructions),
-            _step583;
+        for (_iterator592.s(); !(_step592 = _iterator592.n()).done; ) {
+          var _step592$value = _slicedToArray(_step592.value, 2),
+            block = _step592$value[1];
+          var _iterator593 = _createForOfIteratorHelper(block.instructions),
+            _step593;
           try {
-            for (_iterator583.s(); !(_step583 = _iterator583.n()).done; ) {
-              var instr = _step583.value;
+            for (_iterator593.s(); !(_step593 = _iterator593.n()).done; ) {
+              var instr = _step593.value;
               var value = instr.value;
               if (
                 value.kind === "MethodCall" ||
@@ -71638,15 +71848,15 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator583.e(err);
+            _iterator593.e(err);
           } finally {
-            _iterator583.f();
+            _iterator593.f();
           }
         }
       } catch (err) {
-        _iterator582.e(err);
+        _iterator592.e(err);
       } finally {
-        _iterator582.f();
+        _iterator592.f();
       }
       if (errors.hasErrors()) {
         throw errors;
@@ -71960,17 +72170,17 @@ PERFORMANCE OF THIS SOFTWARE.
         fbtOperands: fbtOperands
       }).unwrap();
       log({ kind: "ast", name: "Codegen", value: ast });
-      var _iterator584 = _createForOfIteratorHelper(ast.outlined),
-        _step584;
+      var _iterator594 = _createForOfIteratorHelper(ast.outlined),
+        _step594;
       try {
-        for (_iterator584.s(); !(_step584 = _iterator584.n()).done; ) {
-          var outlined = _step584.value;
+        for (_iterator594.s(); !(_step594 = _iterator594.n()).done; ) {
+          var outlined = _step594.value;
           log({ kind: "ast", name: "Codegen (outlined)", value: outlined.fn });
         }
       } catch (err) {
-        _iterator584.e(err);
+        _iterator594.e(err);
       } finally {
-        _iterator584.f();
+        _iterator594.f();
       }
       if (env.config.throwUnknownException__testonly) {
         throw new Error("unexpected error");
@@ -72010,11 +72220,11 @@ PERFORMANCE OF THIS SOFTWARE.
     function filterSuppressionsThatAffectFunction(suppressionRanges, fn) {
       var suppressionsInScope = [];
       var fnNode = fn.node;
-      var _iterator585 = _createForOfIteratorHelper(suppressionRanges),
-        _step585;
+      var _iterator595 = _createForOfIteratorHelper(suppressionRanges),
+        _step595;
       try {
-        for (_iterator585.s(); !(_step585 = _iterator585.n()).done; ) {
-          var suppressionRange = _step585.value;
+        for (_iterator595.s(); !(_step595 = _iterator595.n()).done; ) {
+          var suppressionRange = _step595.value;
           if (
             suppressionRange.disableComment.start == null ||
             fnNode.start == null ||
@@ -72040,9 +72250,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator585.e(err);
+        _iterator595.e(err);
       } finally {
-        _iterator585.f();
+        _iterator595.f();
       }
       return suppressionsInScope;
     }
@@ -72064,11 +72274,11 @@ PERFORMANCE OF THIS SOFTWARE.
       var flowSuppressionPattern = new RegExp(
         "\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule"
       );
-      var _iterator586 = _createForOfIteratorHelper(programComments),
-        _step586;
+      var _iterator596 = _createForOfIteratorHelper(programComments),
+        _step596;
       try {
-        for (_iterator586.s(); !(_step586 = _iterator586.n()).done; ) {
-          var comment = _step586.value;
+        for (_iterator596.s(); !(_step596 = _iterator596.n()).done; ) {
+          var comment = _step596.value;
           if (comment.start == null || comment.end == null) {
             continue;
           }
@@ -72108,9 +72318,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator586.e(err);
+        _iterator596.e(err);
       } finally {
-        _iterator586.f();
+        _iterator596.f();
       }
       return suppressionRanges;
     }
@@ -72121,11 +72331,11 @@ PERFORMANCE OF THIS SOFTWARE.
         loc: GeneratedSource
       });
       var error = new CompilerError();
-      var _iterator587 = _createForOfIteratorHelper(suppressionRanges),
-        _step587;
+      var _iterator597 = _createForOfIteratorHelper(suppressionRanges),
+        _step597;
       try {
-        for (_iterator587.s(); !(_step587 = _iterator587.n()).done; ) {
-          var suppressionRange = _step587.value;
+        for (_iterator597.s(); !(_step597 = _iterator597.n()).done; ) {
+          var suppressionRange = _step597.value;
           if (
             suppressionRange.disableComment.start == null ||
             suppressionRange.disableComment.end == null
@@ -72180,9 +72390,9 @@ PERFORMANCE OF THIS SOFTWARE.
           );
         }
       } catch (err) {
-        _iterator587.e(err);
+        _iterator597.e(err);
       } finally {
-        _iterator587.f();
+        _iterator597.f();
       }
       return error;
     }
@@ -72213,11 +72423,11 @@ PERFORMANCE OF THIS SOFTWARE.
       var _a, _b;
       if (pass.opts.logger) {
         if (err instanceof CompilerError) {
-          var _iterator588 = _createForOfIteratorHelper(err.details),
-            _step588;
+          var _iterator598 = _createForOfIteratorHelper(err.details),
+            _step598;
           try {
-            for (_iterator588.s(); !(_step588 = _iterator588.n()).done; ) {
-              var detail = _step588.value;
+            for (_iterator598.s(); !(_step598 = _iterator598.n()).done; ) {
+              var detail = _step598.value;
               pass.opts.logger.logEvent(pass.filename, {
                 kind: "CompileError",
                 fnLoc: fnLoc,
@@ -72225,9 +72435,9 @@ PERFORMANCE OF THIS SOFTWARE.
               });
             }
           } catch (err) {
-            _iterator588.e(err);
+            _iterator598.e(err);
           } finally {
-            _iterator588.f();
+            _iterator598.f();
           }
         } else {
           var stringifiedError;
@@ -72280,7 +72490,7 @@ PERFORMANCE OF THIS SOFTWARE.
           break;
         }
         case "ArrowFunctionExpression": {
-          var _fn3 = {
+          var _fn4 = {
             type: "ArrowFunctionExpression",
             loc:
               (_b = originalFn.node.loc) !== null && _b !== void 0 ? _b : null,
@@ -72290,11 +72500,11 @@ PERFORMANCE OF THIS SOFTWARE.
             expression: originalFn.node.expression,
             body: compiledFn.body
           };
-          transformedFn = _fn3;
+          transformedFn = _fn4;
           break;
         }
         case "FunctionExpression": {
-          var _fn4 = {
+          var _fn5 = {
             type: "FunctionExpression",
             id: compiledFn.id,
             loc:
@@ -72304,7 +72514,7 @@ PERFORMANCE OF THIS SOFTWARE.
             params: compiledFn.params,
             body: compiledFn.body
           };
-          transformedFn = _fn4;
+          transformedFn = _fn5;
           break;
         }
         default: {
@@ -72370,19 +72580,19 @@ PERFORMANCE OF THIS SOFTWARE.
       if (typeof sources === "function") {
         return sources(filename);
       }
-      var _iterator589 = _createForOfIteratorHelper(sources),
-        _step589;
+      var _iterator599 = _createForOfIteratorHelper(sources),
+        _step599;
       try {
-        for (_iterator589.s(); !(_step589 = _iterator589.n()).done; ) {
-          var prefix = _step589.value;
+        for (_iterator599.s(); !(_step599 = _iterator599.n()).done; ) {
+          var prefix = _step599.value;
           if (filename.indexOf(prefix) !== -1) {
             return true;
           }
         }
       } catch (err) {
-        _iterator589.e(err);
+        _iterator599.e(err);
       } finally {
-        _iterator589.f();
+        _iterator599.f();
       }
       return false;
     }
@@ -72550,11 +72760,11 @@ PERFORMANCE OF THIS SOFTWARE.
           pass.opts.ignoreUseNoForget === false &&
           optOutDirectives.length > 0
         ) {
-          var _iterator590 = _createForOfIteratorHelper(optOutDirectives),
-            _step590;
+          var _iterator600 = _createForOfIteratorHelper(optOutDirectives),
+            _step600;
           try {
-            for (_iterator590.s(); !(_step590 = _iterator590.n()).done; ) {
-              var _directive = _step590.value;
+            for (_iterator600.s(); !(_step600 = _iterator600.n()).done; ) {
+              var _directive = _step600.value;
               (_g = pass.opts.logger) === null || _g === void 0
                 ? void 0
                 : _g.logEvent(pass.filename, {
@@ -72574,9 +72784,9 @@ PERFORMANCE OF THIS SOFTWARE.
                   });
             }
           } catch (err) {
-            _iterator590.e(err);
+            _iterator600.e(err);
           } finally {
-            _iterator590.f();
+            _iterator600.f();
           }
           return null;
         }
@@ -72591,11 +72801,11 @@ PERFORMANCE OF THIS SOFTWARE.
         if (compiled === null) {
           continue;
         }
-        var _iterator591 = _createForOfIteratorHelper(compiled.outlined),
-          _step591;
+        var _iterator601 = _createForOfIteratorHelper(compiled.outlined),
+          _step601;
         try {
-          for (_iterator591.s(); !(_step591 = _iterator591.n()).done; ) {
-            var outlined = _step591.value;
+          for (_iterator601.s(); !(_step601 = _iterator601.n()).done; ) {
+            var outlined = _step601.value;
             CompilerError.invariant(outlined.fn.outlined.length === 0, {
               reason: "Unexpected nested outlined functions",
               loc: outlined.fn.loc
@@ -72612,9 +72822,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator591.e(err);
+          _iterator601.e(err);
         } finally {
-          _iterator591.f();
+          _iterator601.f();
         }
         compiledFns.push({
           kind: current.kind,
@@ -72703,20 +72913,20 @@ PERFORMANCE OF THIS SOFTWARE.
       }
       if (compiledFns.length > 0) {
         var needsMemoCacheFunctionImport = false;
-        var _iterator592 = _createForOfIteratorHelper(compiledFns),
-          _step592;
+        var _iterator602 = _createForOfIteratorHelper(compiledFns),
+          _step602;
         try {
-          for (_iterator592.s(); !(_step592 = _iterator592.n()).done; ) {
-            var _fn5 = _step592.value;
-            if (_fn5.compiledFn.memoSlotsUsed > 0) {
+          for (_iterator602.s(); !(_step602 = _iterator602.n()).done; ) {
+            var _fn6 = _step602.value;
+            if (_fn6.compiledFn.memoSlotsUsed > 0) {
               needsMemoCacheFunctionImport = true;
               break;
             }
           }
         } catch (err) {
-          _iterator592.e(err);
+          _iterator602.e(err);
         } finally {
-          _iterator592.f();
+          _iterator602.f();
         }
         if (needsMemoCacheFunctionImport) {
           updateMemoCacheFunctionImport(
@@ -73144,11 +73354,11 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function pipelineUsesReanimatedPlugin(plugins) {
       if (Array.isArray(plugins)) {
-        var _iterator593 = _createForOfIteratorHelper(plugins),
-          _step593;
+        var _iterator603 = _createForOfIteratorHelper(plugins),
+          _step603;
         try {
-          for (_iterator593.s(); !(_step593 = _iterator593.n()).done; ) {
-            var _plugin2 = _step593.value;
+          for (_iterator603.s(); !(_step603 = _iterator603.n()).done; ) {
+            var _plugin2 = _step603.value;
             if (hasOwnProperty$1(_plugin2, "key")) {
               var _key42 = _plugin2.key;
               if (
@@ -73160,9 +73370,9 @@ PERFORMANCE OF THIS SOFTWARE.
             }
           }
         } catch (err) {
-          _iterator593.e(err);
+          _iterator603.e(err);
         } finally {
-          _iterator593.f();
+          _iterator603.f();
         }
       }
       return hasModule("react-native-reanimated");
@@ -73191,11 +73401,11 @@ PERFORMANCE OF THIS SOFTWARE.
     }
     function assertValidEffectImportReference(numArgs, paths, context) {
       var _a;
-      var _iterator594 = _createForOfIteratorHelper(paths),
-        _step594;
+      var _iterator604 = _createForOfIteratorHelper(paths),
+        _step604;
       try {
-        for (_iterator594.s(); !(_step594 = _iterator594.n()).done; ) {
-          var path = _step594.value;
+        for (_iterator604.s(); !(_step604 = _iterator604.n()).done; ) {
+          var path = _step604.value;
           var parent = path.parentPath;
           if (parent != null && parent.isCallExpression()) {
             var args = parent.get("arguments");
@@ -73222,9 +73432,9 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator594.e(err);
+        _iterator604.e(err);
       } finally {
-        _iterator594.f();
+        _iterator604.f();
       }
     }
     function assertValidFireImportReference(paths, context) {
@@ -73257,36 +73467,36 @@ PERFORMANCE OF THIS SOFTWARE.
     ) {
       var moduleLoadChecks = new Map();
       if (env.enableFire) {
-        var _iterator595 = _createForOfIteratorHelper(
+        var _iterator605 = _createForOfIteratorHelper(
             Environment.knownReactModules
           ),
-          _step595;
+          _step605;
         try {
-          for (_iterator595.s(); !(_step595 = _iterator595.n()).done; ) {
-            var module = _step595.value;
+          for (_iterator605.s(); !(_step605 = _iterator605.n()).done; ) {
+            var module = _step605.value;
             var react = getOrInsertWith(moduleLoadChecks, module, function () {
               return new Map();
             });
             react.set("fire", assertValidFireImportReference);
           }
         } catch (err) {
-          _iterator595.e(err);
+          _iterator605.e(err);
         } finally {
-          _iterator595.f();
+          _iterator605.f();
         }
       }
       if (env.inferEffectDependencies) {
-        var _iterator596 = _createForOfIteratorHelper(
+        var _iterator606 = _createForOfIteratorHelper(
             env.inferEffectDependencies
           ),
-          _step596;
+          _step606;
         try {
-          for (_iterator596.s(); !(_step596 = _iterator596.n()).done; ) {
-            var _step596$value = _step596.value,
-              _step596$value$functi = _step596$value["function"],
-              source = _step596$value$functi.source,
-              importSpecifierName = _step596$value$functi.importSpecifierName,
-              numRequiredArgs = _step596$value.numRequiredArgs;
+          for (_iterator606.s(); !(_step606 = _iterator606.n()).done; ) {
+            var _step606$value = _step606.value,
+              _step606$value$functi = _step606$value["function"],
+              source = _step606$value$functi.source,
+              importSpecifierName = _step606$value$functi.importSpecifierName,
+              numRequiredArgs = _step606$value.numRequiredArgs;
             var _module = getOrInsertWith(
               moduleLoadChecks,
               source,
@@ -73300,9 +73510,9 @@ PERFORMANCE OF THIS SOFTWARE.
             );
           }
         } catch (err) {
-          _iterator596.e(err);
+          _iterator606.e(err);
         } finally {
-          _iterator596.f();
+          _iterator606.f();
         }
       }
       if (moduleLoadChecks.size > 0) {
@@ -73352,11 +73562,11 @@ PERFORMANCE OF THIS SOFTWARE.
         loc: (_a = local.node.loc) !== null && _a !== void 0 ? _a : null
       });
       var filteredReferences = new Map();
-      var _iterator597 = _createForOfIteratorHelper(binding.referencePaths),
-        _step597;
+      var _iterator607 = _createForOfIteratorHelper(binding.referencePaths),
+        _step607;
       try {
-        for (_iterator597.s(); !(_step597 = _iterator597.n()).done; ) {
-          var reference = _step597.value;
+        for (_iterator607.s(); !(_step607 = _iterator607.n()).done; ) {
+          var reference = _step607.value;
           if (defaultCheckFn != null) {
             getOrInsertWith(filteredReferences, defaultCheckFn, function () {
               return [];
@@ -73383,23 +73593,23 @@ PERFORMANCE OF THIS SOFTWARE.
           }
         }
       } catch (err) {
-        _iterator597.e(err);
+        _iterator607.e(err);
       } finally {
-        _iterator597.f();
+        _iterator607.f();
       }
-      var _iterator598 = _createForOfIteratorHelper(filteredReferences),
-        _step598;
+      var _iterator608 = _createForOfIteratorHelper(filteredReferences),
+        _step608;
       try {
-        for (_iterator598.s(); !(_step598 = _iterator598.n()).done; ) {
-          var _step598$value = _slicedToArray(_step598.value, 2),
-            _checkFn = _step598$value[0],
-            references = _step598$value[1];
+        for (_iterator608.s(); !(_step608 = _iterator608.n()).done; ) {
+          var _step608$value = _slicedToArray(_step608.value, 2),
+            _checkFn = _step608$value[0],
+            references = _step608$value[1];
           _checkFn(references, state);
         }
       } catch (err) {
-        _iterator598.e(err);
+        _iterator608.e(err);
       } finally {
-        _iterator598.f();
+        _iterator608.f();
       }
     }
     function transformProgram(
@@ -73425,11 +73635,11 @@ PERFORMANCE OF THIS SOFTWARE.
             return;
           }
           var specifiers = path.get("specifiers");
-          var _iterator599 = _createForOfIteratorHelper(specifiers),
-            _step599;
+          var _iterator609 = _createForOfIteratorHelper(specifiers),
+            _step609;
           try {
-            for (_iterator599.s(); !(_step599 = _iterator599.n()).done; ) {
-              var specifier = _step599.value;
+            for (_iterator609.s(); !(_step609 = _iterator609.n()).done; ) {
+              var specifier = _step609.value;
               if (specifier.isImportSpecifier()) {
                 validateImportSpecifier(
                   specifier,
@@ -73445,29 +73655,29 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator599.e(err);
+            _iterator609.e(err);
           } finally {
-            _iterator599.f();
+            _iterator609.f();
           }
         }
       });
     }
     function matchCompilerDiagnostic(badReference, transformErrors) {
-      var _iterator600 = _createForOfIteratorHelper(transformErrors),
-        _step600;
+      var _iterator610 = _createForOfIteratorHelper(transformErrors),
+        _step610;
       try {
-        for (_iterator600.s(); !(_step600 = _iterator600.n()).done; ) {
-          var _step600$value = _step600.value,
-            fn = _step600$value.fn,
-            error = _step600$value.error;
+        for (_iterator610.s(); !(_step610 = _iterator610.n()).done; ) {
+          var _step610$value = _step610.value,
+            fn = _step610$value.fn,
+            error = _step610$value.error;
           if (fn.isAncestor(badReference)) {
             return error.toString();
           }
         }
       } catch (err) {
-        _iterator600.e(err);
+        _iterator610.e(err);
       } finally {
-        _iterator600.f();
+        _iterator610.f();
       }
       return null;
     }
@@ -73578,11 +73788,11 @@ PERFORMANCE OF THIS SOFTWARE.
     function makeSuggestions(detail) {
       var suggest = [];
       if (Array.isArray(detail.suggestions)) {
-        var _iterator601 = _createForOfIteratorHelper(detail.suggestions),
-          _step601;
+        var _iterator611 = _createForOfIteratorHelper(detail.suggestions),
+          _step611;
         try {
           var _loop22 = function _loop22() {
-            var suggestion = _step601.value;
+            var suggestion = _step611.value;
             switch (suggestion.op) {
               case CompilerSuggestionOperation.InsertBefore:
                 suggest.push({
@@ -73629,13 +73839,13 @@ PERFORMANCE OF THIS SOFTWARE.
                 assertExhaustive(suggestion, "Unhandled suggestion operation");
             }
           };
-          for (_iterator601.s(); !(_step601 = _iterator601.n()).done; ) {
+          for (_iterator611.s(); !(_step611 = _iterator611.n()).done; ) {
             _loop22();
           }
         } catch (err) {
-          _iterator601.e(err);
+          _iterator611.e(err);
         } finally {
-          _iterator601.f();
+          _iterator611.f();
         }
       }
       return suggest;
@@ -73774,11 +73984,11 @@ PERFORMANCE OF THIS SOFTWARE.
           var flowSuppressionRegex = new RegExp(
             "\\$FlowFixMe\\[" + suppression + "\\]"
           );
-          var _iterator602 = _createForOfIteratorHelper(comments),
-            _step602;
+          var _iterator612 = _createForOfIteratorHelper(comments),
+            _step612;
           try {
-            for (_iterator602.s(); !(_step602 = _iterator602.n()).done; ) {
-              var commentNode = _step602.value;
+            for (_iterator612.s(); !(_step612 = _iterator612.n()).done; ) {
+              var commentNode = _step612.value;
               if (
                 flowSuppressionRegex.test(commentNode.value) &&
                 commentNode.loc.end.line === nodeLoc.start.line - 1
@@ -73787,9 +73997,9 @@ PERFORMANCE OF THIS SOFTWARE.
               }
             }
           } catch (err) {
-            _iterator602.e(err);
+            _iterator612.e(err);
           } finally {
-            _iterator602.f();
+            _iterator612.f();
           }
           return false;
         }
@@ -73855,51 +74065,51 @@ PERFORMANCE OF THIS SOFTWARE.
         if (shouldReportUnusedOptOutDirective) {
           return {
             FunctionDeclaration: function FunctionDeclaration(fnDecl) {
-              var _iterator603 = _createForOfIteratorHelper(fnDecl.body.body),
-                _step603;
+              var _iterator613 = _createForOfIteratorHelper(fnDecl.body.body),
+                _step613;
               try {
-                for (_iterator603.s(); !(_step603 = _iterator603.n()).done; ) {
-                  var stmt = _step603.value;
+                for (_iterator613.s(); !(_step613 = _iterator613.n()).done; ) {
+                  var stmt = _step613.value;
                   reportUnusedOptOutDirective(stmt);
                 }
               } catch (err) {
-                _iterator603.e(err);
+                _iterator613.e(err);
               } finally {
-                _iterator603.f();
+                _iterator613.f();
               }
             },
             ArrowFunctionExpression: function ArrowFunctionExpression(fnExpr) {
               if (fnExpr.body.type === "BlockStatement") {
-                var _iterator604 = _createForOfIteratorHelper(fnExpr.body.body),
-                  _step604;
+                var _iterator614 = _createForOfIteratorHelper(fnExpr.body.body),
+                  _step614;
                 try {
                   for (
-                    _iterator604.s();
-                    !(_step604 = _iterator604.n()).done;
+                    _iterator614.s();
+                    !(_step614 = _iterator614.n()).done;
 
                   ) {
-                    var stmt = _step604.value;
+                    var stmt = _step614.value;
                     reportUnusedOptOutDirective(stmt);
                   }
                 } catch (err) {
-                  _iterator604.e(err);
+                  _iterator614.e(err);
                 } finally {
-                  _iterator604.f();
+                  _iterator614.f();
                 }
               }
             },
             FunctionExpression: function FunctionExpression(fnExpr) {
-              var _iterator605 = _createForOfIteratorHelper(fnExpr.body.body),
-                _step605;
+              var _iterator615 = _createForOfIteratorHelper(fnExpr.body.body),
+                _step615;
               try {
-                for (_iterator605.s(); !(_step605 = _iterator605.n()).done; ) {
-                  var stmt = _step605.value;
+                for (_iterator615.s(); !(_step615 = _iterator615.n()).done; ) {
+                  var stmt = _step615.value;
                   reportUnusedOptOutDirective(stmt);
                 }
               } catch (err) {
-                _iterator605.e(err);
+                _iterator615.e(err);
               } finally {
-                _iterator605.f();
+                _iterator615.f();
               }
             }
           };
@@ -74004,11 +74214,11 @@ PERFORMANCE OF THIS SOFTWARE.
         var codePathSegmentStack = [];
         var useEffectEventFunctions = new WeakSet();
         function recordAllUseEffectEventFunctions(scope) {
-          var _iterator606 = _createForOfIteratorHelper(scope.references),
-            _step606;
+          var _iterator616 = _createForOfIteratorHelper(scope.references),
+            _step616;
           try {
-            for (_iterator606.s(); !(_step606 = _iterator606.n()).done; ) {
-              var reference = _step606.value;
+            for (_iterator616.s(); !(_step616 = _iterator616.n()).done; ) {
+              var reference = _step616.value;
               var parent = reference.identifier.parent;
               if (
                 (parent === null || parent === void 0
@@ -74022,32 +74232,32 @@ PERFORMANCE OF THIS SOFTWARE.
                 if (reference.resolved === null) {
                   throw new Error("Unexpected null reference.resolved");
                 }
-                var _iterator607 = _createForOfIteratorHelper(
+                var _iterator617 = _createForOfIteratorHelper(
                     reference.resolved.references
                   ),
-                  _step607;
+                  _step617;
                 try {
                   for (
-                    _iterator607.s();
-                    !(_step607 = _iterator607.n()).done;
+                    _iterator617.s();
+                    !(_step617 = _iterator617.n()).done;
 
                   ) {
-                    var ref = _step607.value;
+                    var ref = _step617.value;
                     if (ref !== reference) {
                       useEffectEventFunctions.add(ref.identifier);
                     }
                   }
                 } catch (err) {
-                  _iterator607.e(err);
+                  _iterator617.e(err);
                 } finally {
-                  _iterator607.f();
+                  _iterator617.f();
                 }
               }
             }
           } catch (err) {
-            _iterator606.e(err);
+            _iterator616.e(err);
           } finally {
-            _iterator606.f();
+            _iterator616.f();
           }
         }
         var getSourceCode =
@@ -74097,21 +74307,21 @@ PERFORMANCE OF THIS SOFTWARE.
                 var cyclicSegments = pathArray.slice(
                   pathArray.indexOf(segment.id) + 1
                 );
-                var _iterator608 = _createForOfIteratorHelper(cyclicSegments),
-                  _step608;
+                var _iterator618 = _createForOfIteratorHelper(cyclicSegments),
+                  _step618;
                 try {
                   for (
-                    _iterator608.s();
-                    !(_step608 = _iterator608.n()).done;
+                    _iterator618.s();
+                    !(_step618 = _iterator618.n()).done;
 
                   ) {
-                    var cyclicSegment = _step608.value;
+                    var cyclicSegment = _step618.value;
                     cyclic.add(cyclicSegment);
                   }
                 } catch (err) {
-                  _iterator608.e(err);
+                  _iterator618.e(err);
                 } finally {
-                  _iterator608.f();
+                  _iterator618.f();
                 }
                 return BigInt("0");
               }
@@ -74125,23 +74335,23 @@ PERFORMANCE OF THIS SOFTWARE.
                 paths = BigInt("1");
               } else {
                 paths = BigInt("0");
-                var _iterator609 = _createForOfIteratorHelper(
+                var _iterator619 = _createForOfIteratorHelper(
                     segment.prevSegments
                   ),
-                  _step609;
+                  _step619;
                 try {
                   for (
-                    _iterator609.s();
-                    !(_step609 = _iterator609.n()).done;
+                    _iterator619.s();
+                    !(_step619 = _iterator619.n()).done;
 
                   ) {
-                    var prevSegment = _step609.value;
+                    var prevSegment = _step619.value;
                     paths += countPathsFromStart(prevSegment, pathList);
                   }
                 } catch (err) {
-                  _iterator609.e(err);
+                  _iterator619.e(err);
                 } finally {
-                  _iterator609.f();
+                  _iterator619.f();
                 }
               }
               if (segment.reachable && paths === BigInt("0")) {
@@ -74160,21 +74370,21 @@ PERFORMANCE OF THIS SOFTWARE.
                 var cyclicSegments = pathArray.slice(
                   pathArray.indexOf(segment.id) + 1
                 );
-                var _iterator610 = _createForOfIteratorHelper(cyclicSegments),
-                  _step610;
+                var _iterator620 = _createForOfIteratorHelper(cyclicSegments),
+                  _step620;
                 try {
                   for (
-                    _iterator610.s();
-                    !(_step610 = _iterator610.n()).done;
+                    _iterator620.s();
+                    !(_step620 = _iterator620.n()).done;
 
                   ) {
-                    var cyclicSegment = _step610.value;
+                    var cyclicSegment = _step620.value;
                     cyclic.add(cyclicSegment);
                   }
                 } catch (err) {
-                  _iterator610.e(err);
+                  _iterator620.e(err);
                 } finally {
-                  _iterator610.f();
+                  _iterator620.f();
                 }
                 return BigInt("0");
               }
@@ -74188,23 +74398,23 @@ PERFORMANCE OF THIS SOFTWARE.
                 paths = BigInt("1");
               } else {
                 paths = BigInt("0");
-                var _iterator611 = _createForOfIteratorHelper(
+                var _iterator621 = _createForOfIteratorHelper(
                     segment.nextSegments
                   ),
-                  _step611;
+                  _step621;
                 try {
                   for (
-                    _iterator611.s();
-                    !(_step611 = _iterator611.n()).done;
+                    _iterator621.s();
+                    !(_step621 = _iterator621.n()).done;
 
                   ) {
-                    var nextSegment = _step611.value;
+                    var nextSegment = _step621.value;
                     paths += countPathsToEnd(nextSegment, pathList);
                   }
                 } catch (err) {
-                  _iterator611.e(err);
+                  _iterator621.e(err);
                 } finally {
-                  _iterator611.f();
+                  _iterator621.f();
                 }
               }
               cache.set(segment.id, paths);
@@ -74224,26 +74434,26 @@ PERFORMANCE OF THIS SOFTWARE.
                 length = 1;
               } else {
                 length = Infinity;
-                var _iterator612 = _createForOfIteratorHelper(
+                var _iterator622 = _createForOfIteratorHelper(
                     segment.prevSegments
                   ),
-                  _step612;
+                  _step622;
                 try {
                   for (
-                    _iterator612.s();
-                    !(_step612 = _iterator612.n()).done;
+                    _iterator622.s();
+                    !(_step622 = _iterator622.n()).done;
 
                   ) {
-                    var prevSegment = _step612.value;
+                    var prevSegment = _step622.value;
                     var prevLength = shortestPathLengthToStart(prevSegment);
                     if (prevLength < length) {
                       length = prevLength;
                     }
                   }
                 } catch (err) {
-                  _iterator612.e(err);
+                  _iterator622.e(err);
                 } finally {
-                  _iterator612.f();
+                  _iterator622.f();
                 }
                 length += 1;
               }
@@ -74265,13 +74475,13 @@ PERFORMANCE OF THIS SOFTWARE.
               : isForwardRefCallback(codePathNode) ||
                 isMemoCallback(codePathNode);
             var shortestFinalPathLength = Infinity;
-            var _iterator613 = _createForOfIteratorHelper(
+            var _iterator623 = _createForOfIteratorHelper(
                 codePath.finalSegments
               ),
-              _step613;
+              _step623;
             try {
-              for (_iterator613.s(); !(_step613 = _iterator613.n()).done; ) {
-                var finalSegment = _step613.value;
+              for (_iterator623.s(); !(_step623 = _iterator623.n()).done; ) {
+                var finalSegment = _step623.value;
                 if (!finalSegment.reachable) {
                   continue;
                 }
@@ -74281,17 +74491,17 @@ PERFORMANCE OF THIS SOFTWARE.
                 }
               }
             } catch (err) {
-              _iterator613.e(err);
+              _iterator623.e(err);
             } finally {
-              _iterator613.f();
+              _iterator623.f();
             }
-            var _iterator614 = _createForOfIteratorHelper(reactHooksMap),
-              _step614;
+            var _iterator624 = _createForOfIteratorHelper(reactHooksMap),
+              _step624;
             try {
-              for (_iterator614.s(); !(_step614 = _iterator614.n()).done; ) {
-                var _step614$value = _slicedToArray(_step614.value, 2),
-                  segment = _step614$value[0],
-                  reactHooks = _step614$value[1];
+              for (_iterator624.s(); !(_step624 = _iterator624.n()).done; ) {
+                var _step624$value = _slicedToArray(_step624.value, 2),
+                  segment = _step624$value[0],
+                  reactHooks = _step624$value[1];
                 if (!segment.reachable) {
                   continue;
                 }
@@ -74304,15 +74514,15 @@ PERFORMANCE OF THIS SOFTWARE.
                 var pathsFromStartToEnd =
                   countPathsFromStart(segment) * countPathsToEnd(segment);
                 var cycled = cyclic.has(segment.id);
-                var _iterator615 = _createForOfIteratorHelper(reactHooks),
-                  _step615;
+                var _iterator625 = _createForOfIteratorHelper(reactHooks),
+                  _step625;
                 try {
                   for (
-                    _iterator615.s();
-                    !(_step615 = _iterator615.n()).done;
+                    _iterator625.s();
+                    !(_step625 = _iterator625.n()).done;
 
                   ) {
-                    var hook = _step615.value;
+                    var hook = _step625.value;
                     if (
                       (cycled || isInsideDoWhileLoop(hook)) &&
                       !isUseIdentifier(hook)
@@ -74416,15 +74626,15 @@ PERFORMANCE OF THIS SOFTWARE.
                     }
                   }
                 } catch (err) {
-                  _iterator615.e(err);
+                  _iterator625.e(err);
                 } finally {
-                  _iterator615.f();
+                  _iterator625.f();
                 }
               }
             } catch (err) {
-              _iterator614.e(err);
+              _iterator624.e(err);
             } finally {
-              _iterator614.f();
+              _iterator624.f();
             }
           },
           CallExpression: function CallExpression(node) {
