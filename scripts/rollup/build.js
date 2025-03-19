@@ -26,7 +26,6 @@ const {asyncRimRaf} = require('./utils');
 const codeFrame = require('@babel/code-frame').default;
 const Wrappers = require('./wrappers');
 const commonjs = require('@rollup/plugin-commonjs');
-const {getBabelOutputPlugin} = require('@rollup/plugin-babel');
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
 
@@ -418,12 +417,6 @@ function getPlugins(
           bundle
         )
       ),
-      // For Meta internal requirements this package needs to be built targeting ES5.
-      bundle.name === 'eslint-plugin-react-hooks'
-        ? getBabelOutputPlugin({
-            presets: ['@babel/preset-env'],
-          })
-        : false,
       // Remove 'use strict' from individual source files. We skip eslint-plugin-react-hooks because
       // it bundles compiler-type code that may examine "use strict" used outside of a directive
       // context, e.g. as a StringLiteral.
@@ -503,7 +496,7 @@ function getPlugins(
           // takes care of it.
           renaming: false,
         }),
-      (needsMinifiedByClosure || bundle.name === 'eslint-plugin-react-hooks') &&
+      needsMinifiedByClosure &&
         // Add the whitespace back
         prettier({
           parser: 'flow',
