@@ -48,7 +48,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: compiler-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
+          key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - name: Publish packages to npm
         run: |
