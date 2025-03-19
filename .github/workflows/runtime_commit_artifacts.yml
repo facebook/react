@@ -246,8 +246,8 @@ jobs:
       - name: Will commit these changes
         if: inputs.force == true || steps.check_should_commit.outputs.should_commit == 'true'
         run: |
-          echo ":"
-          git status -u
+          git add .
+          git status
       - name: Check commit message
         if: inputs.dry_run
         run: |
