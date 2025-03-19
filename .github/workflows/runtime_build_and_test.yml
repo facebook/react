@@ -17,6 +17,71 @@ env:
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
 
 jobs:
+  # ----- YARN CACHE -----
+  # Centralize the yarn/node_modules cache so it is saved once and each subsequent job only needs to
+  # restore the cache. Prevents race conditions where multiple workflows try to write to the cache.
+  runtime_yarn_cache:
+    name: Restore or create yarn/node_modules cache for runtime
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v4
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: yarn-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.arch }}-${{ runner.os }}-
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+
+  runtime_compiler_yarn_cache:
+    name: Restore or create yarn/node_modules cache for runtime and compiler
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v4
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: yarn-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.arch }}-${{ runner.os }}-
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: |
+            **/node_modules
+          key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+
   # ----- FLOW -----
   discover_flow_inline_configs:
     name: Discover flow inline configs
@@ -52,7 +117,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -77,7 +142,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -104,7 +169,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -160,7 +225,7 @@ jobs:
             yarn.lock
             compiler/yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -198,7 +263,7 @@ jobs:
           distribution: temurin
           java-version: 11.0.22
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -276,7 +341,7 @@ jobs:
             yarn.lock
             compiler/yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -310,7 +375,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -358,7 +423,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -394,7 +459,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -427,7 +492,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache@v4 # note: this does not reuse centralized cache since it has unique cache key
         id: node_modules
         with:
           path: |
@@ -470,7 +535,7 @@ jobs:
       # That means dependencies of the built packages are not installed.
       # We need to install dependencies of the workroot to fulfill all dependency constraints
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache@v4 # note: this does not reuse centralized cache since it has unique cache key
         id: node_modules
         with:
           path: |
@@ -533,7 +598,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -585,7 +650,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -623,7 +688,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
