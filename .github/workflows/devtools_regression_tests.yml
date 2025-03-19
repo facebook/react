@@ -47,6 +47,7 @@ jobs:
         with:
           name: build
           path: build
+          if-no-files-found: error
 
   build_devtools_and_process_artifacts:
     name: Build DevTools and process artifacts
@@ -84,17 +85,20 @@ jobs:
         with:
           name: react-devtools
           path: build/devtools.tgz
+          if-no-files-found: error
       # Simplifies getting the extension for local testing
       - name: Archive chrome extension
         uses: actions/upload-artifact@v4
         with:
           name: react-devtools-chrome-extension
           path: build/devtools/chrome-extension.zip
+          if-no-files-found: error
       - name: Archive firefox extension
         uses: actions/upload-artifact@v4
         with:
           name: react-devtools-firefox-extension
           path: build/devtools/firefox-extension.zip
+          if-no-files-found: error
 
   run_devtools_tests_for_versions:
     name: Run DevTools tests for versions
@@ -179,3 +183,4 @@ jobs:
         with:
           name: screenshots
           path: ./tmp/screenshots
+          if-no-files-found: warn

@@ -170,10 +170,12 @@ jobs:
         with:
           name: compiled
           path: compiled/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: compiled-rn
           path: compiled-rn/
+          if-no-files-found: error
 
   commit_www_artifacts:
     needs: download_artifacts
