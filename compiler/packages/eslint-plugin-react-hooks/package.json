@@ -63,6 +63,7 @@
     "@types/estree-jsx": "^1.0.5",
     "@types/node": "^20.2.5",
     "babel-eslint": "^10.0.3",
+    "babel-jest": "^29.7.0",
     "eslint-v7": "npm:eslint@^7.7.0",
     "eslint-v8": "npm:eslint@^8.57.1",
     "eslint-v9": "npm:eslint@^9.0.0",
