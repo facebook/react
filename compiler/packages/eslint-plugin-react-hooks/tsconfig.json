@@ -9,7 +9,7 @@
     "types": ["estree-jsx", "node"],
     "downlevelIteration": true,
     "paths": {
-      "babel-plugin-react-compiler": ["../../compiler/packages/babel-plugin-react-compiler/src"]
+      "babel-plugin-react-compiler": ["../babel-plugin-react-compiler/src"]
     },
     "jsx": "react-jsxdev",
     "rootDir": "../..",
