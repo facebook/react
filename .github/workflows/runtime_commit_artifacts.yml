@@ -252,9 +252,9 @@ jobs:
           git config --global user.email "${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}"
           git config --global user.name "${{ github.triggering_actor }}"
 
-          git commit -m "${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
-
-          DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})" || echo "No changes to commit"
+          git commit -m $COMMIT_MSG || echo "No changes to commit"
+        env:
+          COMMIT_MSG: "$(git show --no-patch --pretty=format:'%B%n%nDiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha}})')"
       - name: Push changes to branch
         if: inputs.dry_run == false && (inputs.force == true || steps.check_should_commit.outputs.should_commit == 'true')
         run: git push
@@ -419,9 +419,9 @@ jobs:
           git config --global user.email "${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}"
           git config --global user.name "${{ github.triggering_actor }}"
 
-          git commit -m "${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
-
-          DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})" || echo "No changes to commit"
+          git commit -m $COMMIT_MSG || echo "No changes to commit"
+        env:
+          COMMIT_MSG: "$(git show --no-patch --pretty=format:'%B%n%nDiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha}})')"
       - name: Push changes to branch
         if: inputs.dry_run == false && (inputs.force == true || steps.check_should_commit.outputs.should_commit == 'true')
         run: git push
