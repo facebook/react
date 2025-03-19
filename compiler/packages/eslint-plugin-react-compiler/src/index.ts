@@ -25,7 +25,7 @@ const configs = {
       },
     },
     rules: {
-      'react-compiler/react-compiler': 'error',
+      'react-compiler/react-compiler': 'error' as const,
     },
   },
 };
