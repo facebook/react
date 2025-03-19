@@ -50,3 +50,4 @@ jobs:
         with:
           name: test-results
           path: compiler/apps/playground/test-results
+          if-no-files-found: ignore
