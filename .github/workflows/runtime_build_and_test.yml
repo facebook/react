@@ -193,7 +193,7 @@ jobs:
   test:
     name: yarn test ${{ matrix.params }} (Shard ${{ matrix.shard }})
     needs: [runtime_compiler_yarn_cache]
-    runs-on: ubuntu-latest
+    runs-on: 32-core-ubuntu
     strategy:
       fail-fast: false
       matrix:
@@ -253,7 +253,7 @@ jobs:
   build_and_lint:
     name: yarn build and lint
     needs: [runtime_compiler_yarn_cache]
-    runs-on: ubuntu-latest
+    runs-on: 32-core-ubuntu
     strategy:
       fail-fast: false
       matrix:
@@ -343,7 +343,7 @@ jobs:
           - 1/3
           - 2/3
           - 3/3
-    runs-on: ubuntu-latest
+    runs-on: 32-core-ubuntu
     steps:
       - uses: actions/checkout@v4
         with:
