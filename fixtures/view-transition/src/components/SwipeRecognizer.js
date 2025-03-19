@@ -92,7 +92,6 @@ export default function SwipeRecognizer({
     width: axis === 'x' ? '100%' : null,
     height: axis === 'y' ? '100%' : null,
     overflow: 'scroll hidden',
-    touchAction: 'pan-' + direction,
     // Disable overscroll on Safari which moves the sticky content.
     // Unfortunately, this also means that we disable chaining. We should only disable
     // it if the parent is not scrollable in this axis.
