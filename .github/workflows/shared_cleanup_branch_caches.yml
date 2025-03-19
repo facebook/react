@@ -6,6 +6,10 @@ on:
     types:
       - closed
   workflow_dispatch:
+    inputs:
+      pr_number:
+        required: true
+        type: string
 
 jobs:
   cleanup:
@@ -23,13 +27,13 @@ jobs:
 
           ## Setting this to not fail the workflow while deleting cache keys.
           set +e
-          echo "Deleting caches..."
           for cacheKey in $cacheKeysForPR
           do
               gh cache delete $cacheKey
+              echo "Deleting $cacheKey"
           done
           echo "Done"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          BRANCH: refs/pull/${{ github.event.pull_request.number }}/merge
+          BRANCH: refs/pull/${{ inputs.pr_number || github.event.pull_request.number }}/merge
