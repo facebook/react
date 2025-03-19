@@ -331,6 +331,11 @@ const EnvironmentConfigSchema = z.object({
   validateNoJSXInTryStatements: z.boolean().default(false),
 
   /**
+   * Validates against dynamically creating components during render.
+   */
+  validateStaticComponents: z.boolean().default(false),
+
+  /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure
    * that Forget does not introduce infinite renders caused by a dependency changing,
    * triggering an effect, which triggers re-rendering, which causes a dependency to change,
