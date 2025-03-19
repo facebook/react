@@ -151,9 +151,9 @@ jobs:
           ls -R ./compiled-rn
       - name: Add REVISION files
         run: |
-          echo ${{ github.sha }} >> ./compiled/facebook-www/REVISION
+          echo ${{ inputs.commit_sha || github.event.workflow_run.head_sha || github.sha }} >> ./compiled/facebook-www/REVISION
           cp ./compiled/facebook-www/REVISION ./compiled/facebook-www/REVISION_TRANSFORMS
-          echo ${{ github.sha}} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
+          echo ${{ inputs.commit_sha || github.event.workflow_run.head_sha || github.sha }} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
       - name: "Get current version string"
         id: get_current_version
         run: |
