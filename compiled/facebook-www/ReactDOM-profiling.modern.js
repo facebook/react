@@ -20537,14 +20537,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2121 = React.version;
 if (
-  "19.1.0-www-modern-9320a013-20250317" !==
+  "19.1.0-www-modern-ff8f6f21-20250319" !==
   isomorphicReactPackageVersion$jscomp$inline_2121
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2121,
-      "19.1.0-www-modern-9320a013-20250317"
+      "19.1.0-www-modern-ff8f6f21-20250319"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20562,10 +20562,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2123 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-9320a013-20250317",
+  version: "19.1.0-www-modern-ff8f6f21-20250319",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-9320a013-20250317"
+  reconcilerVersion: "19.1.0-www-modern-ff8f6f21-20250319"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2123.getLaneLabelMap = getLaneLabelMap),
@@ -20932,7 +20932,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-9320a013-20250317";
+exports.version = "19.1.0-www-modern-ff8f6f21-20250319";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
