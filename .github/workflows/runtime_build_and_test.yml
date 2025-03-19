@@ -717,7 +717,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-release-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn --cwd scripts/release install --frozen-lockfile
