@@ -7,12 +7,6 @@ module.exports = {
     '<rootDir>/scripts/bench/',
   ],
   transform: {
-    '^.+babel-plugin-react-compiler/dist/index.js$': [
-      'babel-jest',
-      {
-        configFile: require.resolve('../../babel.config-react-compiler.js'),
-      },
-    ],
     '^.+\\.ts$': [
       'babel-jest',
       {configFile: require.resolve('../../babel.config-ts.js')},
