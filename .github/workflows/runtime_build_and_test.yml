@@ -302,6 +302,7 @@ jobs:
         with:
           name: _build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
           path: build
+          if-no-files-found: error
 
   test_build:
     name: yarn test-build
@@ -426,6 +427,7 @@ jobs:
           path: |
             ./build.tgz
             ./build2.tgz
+          if-no-files-found: error
 
   check_error_codes:
     name: Search build artifacts for unminified errors
@@ -603,11 +605,13 @@ jobs:
         with:
           name: flight-playwright-report
           path: fixtures/flight/playwright-report
+          if-no-files-found: warn
       - name: Archive Flight fixture artifacts
         uses: actions/upload-artifact@v4
         with:
           name: flight-test-results
           path: fixtures/flight/test-results
+          if-no-files-found: ignore
 
   # ----- DEVTOOLS -----
   build_devtools_and_process_artifacts:
@@ -655,6 +659,7 @@ jobs:
         with:
           name: react-devtools-${{ matrix.browser }}-extension
           path: build/devtools/${{ matrix.browser }}-extension.zip
+          if-no-files-found: error
 
   merge_devtools_artifacts:
     name: Merge DevTools artifacts
@@ -767,3 +772,4 @@ jobs:
         with:
           name: sizebot-message
           path: sizebot-message.md
+          if-no-files-found: ignore
