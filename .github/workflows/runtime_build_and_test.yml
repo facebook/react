@@ -17,6 +17,75 @@ env:
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
 
 jobs:
+  # ----- YARN CACHE -----
+  # Centralize the yarn/node_modules cache so it is saved once and each subsequent job only needs to
+  # restore the cache. Prevents race conditions where multiple workflows try to write to the cache.
+  runtime_yarn_cache:
+    name: Cache Runtime
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Check cache hit
+        uses: actions/cache/restore@v4
+        id: node_modules
+        with:
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          lookup-only: true
+      - uses: actions/setup-node@v4
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - name: Save cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+
+  runtime_compiler_yarn_cache:
+    name: Cache Runtime, Compiler
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Check cache hit
+        uses: actions/cache/restore@v4
+        id: node_modules
+        with:
+          path: |
+            **/node_modules
+          key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          lookup-only: true
+      - uses: actions/setup-node@v4
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: |
+            yarn.lock
+            compiler/yarn.lock
+      - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - run: yarn --cwd compiler install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - name: Save cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            **/node_modules
+          key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+
   # ----- FLOW -----
   discover_flow_inline_configs:
     name: Discover flow inline configs
@@ -36,7 +105,7 @@ jobs:
 
   flow:
     name: Flow check ${{ matrix.flow_inline_config_shortname }}
-    needs: discover_flow_inline_configs
+    needs: [discover_flow_inline_configs, runtime_yarn_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -52,7 +121,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -61,11 +130,13 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: node ./scripts/tasks/flow-ci ${{ matrix.flow_inline_config_shortname }}
 
   # ----- FIZZ -----
   check_generated_fizz_runtime:
     name: Confirm generated inline Fizz runtime is up to date
+    needs: [runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,7 +148,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -86,6 +157,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: |
           yarn generate-inline-fizz-runtime
           git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
@@ -93,6 +165,7 @@ jobs:
   # ----- FEATURE FLAGS -----
   flags:
     name: Check flags
+    needs: [runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,7 +177,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -113,11 +186,13 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn flags
 
   # ----- TESTS -----
   test:
     name: yarn test ${{ matrix.params }} (Shard ${{ matrix.shard }})
+    needs: [runtime_compiler_yarn_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -160,7 +235,7 @@ jobs:
             yarn.lock
             compiler/yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -169,12 +244,15 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd compiler install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
 
   # ----- BUILD -----
   build_and_lint:
     name: yarn build and lint
+    needs: [runtime_compiler_yarn_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -198,7 +276,7 @@ jobs:
           distribution: temurin
           java-version: 11.0.22
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -207,7 +285,9 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd compiler install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
@@ -225,7 +305,7 @@ jobs:
 
   test_build:
     name: yarn test-build
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_compiler_yarn_cache]
     strategy:
       fail-fast: false
       matrix:
@@ -276,7 +356,7 @@ jobs:
             yarn.lock
             compiler/yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -285,7 +365,9 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd compiler install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -298,7 +380,7 @@ jobs:
 
   process_artifacts_combined:
     name: Process artifacts combined
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -310,7 +392,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -319,6 +401,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -346,7 +429,7 @@ jobs:
 
   check_error_codes:
     name: Search build artifacts for unminified errors
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -358,7 +441,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -367,6 +450,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -382,7 +466,7 @@ jobs:
 
   check_release_dependencies:
     name: Check release dependencies
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -394,7 +478,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -403,6 +487,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -427,7 +512,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache@v4 # note: this does not reuse centralized cache since it has unique cache key
         id: node_modules
         with:
           path: |
@@ -436,6 +521,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn --cwd fixtures/dom install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -470,7 +556,7 @@ jobs:
       # That means dependencies of the built packages are not installed.
       # We need to install dependencies of the workroot to fulfill all dependency constraints
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache@v4 # note: this does not reuse centralized cache since it has unique cache key
         id: node_modules
         with:
           path: |
@@ -479,6 +565,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -517,7 +604,7 @@ jobs:
   # ----- DEVTOOLS -----
   build_devtools_and_process_artifacts:
     name: Build DevTools and process artifacts
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -533,7 +620,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -542,6 +629,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -573,7 +661,7 @@ jobs:
 
   run_devtools_e2e_tests:
     name: Run DevTools e2e tests
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -585,7 +673,7 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
@@ -594,6 +682,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -611,7 +700,7 @@ jobs:
   sizebot:
     if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' && github.event.pull_request.base.ref == 'main' }}
     name: Run sizebot
-    needs: [build_and_lint]
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -623,15 +712,18 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-release-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
+      - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd scripts/release install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Download artifacts for base revision
         run: |
           GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse ${{ github.event.pull_request.base.sha }})
@@ -647,6 +739,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Restore archived build for PR
         uses: actions/download-artifact@v4
         with:
