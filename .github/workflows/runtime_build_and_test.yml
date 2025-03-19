@@ -101,7 +101,7 @@ jobs:
 
   flow:
     name: Flow check ${{ matrix.flow_inline_config_shortname }}
-    needs: discover_flow_inline_configs
+    needs: [discover_flow_inline_configs, runtime_yarn_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -131,6 +131,7 @@ jobs:
   # ----- FIZZ -----
   check_generated_fizz_runtime:
     name: Confirm generated inline Fizz runtime is up to date
+    needs: [runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -158,6 +159,7 @@ jobs:
   # ----- FEATURE FLAGS -----
   flags:
     name: Check flags
+    needs: [runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -183,6 +185,7 @@ jobs:
   # ----- TESTS -----
   test:
     name: yarn test ${{ matrix.params }} (Shard ${{ matrix.shard }})
+    needs: [runtime_compiler_yarn_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -240,6 +243,7 @@ jobs:
   # ----- BUILD -----
   build_and_lint:
     name: yarn build and lint
+    needs: [runtime_compiler_yarn_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -290,7 +294,7 @@ jobs:
 
   test_build:
     name: yarn test-build
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_compiler_yarn_cache]
     strategy:
       fail-fast: false
       matrix:
@@ -363,7 +367,7 @@ jobs:
 
   process_artifacts_combined:
     name: Process artifacts combined
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -411,7 +415,7 @@ jobs:
 
   check_error_codes:
     name: Search build artifacts for unminified errors
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -447,7 +451,7 @@ jobs:
 
   check_release_dependencies:
     name: Check release dependencies
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -582,7 +586,7 @@ jobs:
   # ----- DEVTOOLS -----
   build_devtools_and_process_artifacts:
     name: Build DevTools and process artifacts
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -638,7 +642,7 @@ jobs:
 
   run_devtools_e2e_tests:
     name: Run DevTools e2e tests
-    needs: build_and_lint
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -676,7 +680,7 @@ jobs:
   sizebot:
     if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' && github.event.pull_request.base.ref == 'main' }}
     name: Run sizebot
-    needs: [build_and_lint]
+    needs: [build_and_lint, runtime_yarn_cache]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
