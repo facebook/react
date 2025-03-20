@@ -28,6 +28,7 @@ import {
   ElementTypeSuspenseList,
   ElementTypeTracingMarker,
   ElementTypeViewTransition,
+  ElementTypeActivity,
   ElementTypeVirtual,
   StrictMode,
 } from 'react-devtools-shared/src/frontend/types';
@@ -385,6 +386,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: 29,
       ViewTransitionComponent: 30, // Experimental
+      ActivityComponent: 31,
     };
   } else if (gte(version, '17.0.0-alpha')) {
     ReactTypeOfWork = {
@@ -421,6 +423,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
@@ -457,6 +460,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
@@ -493,6 +497,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   } else {
     ReactTypeOfWork = {
@@ -529,6 +534,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: 9,
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   }
   // **********************************************************
@@ -572,6 +578,7 @@ export function getInternalReactConstants(version: string): {
     TracingMarkerComponent,
     Throw,
     ViewTransitionComponent,
+    ActivityComponent,
   } = ReactTypeOfWork;
 
   function resolveFiberType(type: any): $FlowFixMe {
@@ -622,6 +629,8 @@ export function getInternalReactConstants(version: string): {
     }
 
     switch (tag) {
+      case ActivityComponent:
+        return 'Activity';
       case CacheComponent:
         return 'Cache';
       case ClassComponent:
@@ -892,6 +901,7 @@ export function attach(
     StrictModeBits,
   } = getInternalReactConstants(version);
   const {
+    ActivityComponent,
     CacheComponent,
     ClassComponent,
     ContextConsumer,
@@ -1565,6 +1575,8 @@ export function attach(
     const {type, tag} = fiber;
 
     switch (tag) {
+      case ActivityComponent:
+        return ElementTypeActivity;
       case ClassComponent:
       case IncompleteClassComponent:
         return ElementTypeClass;

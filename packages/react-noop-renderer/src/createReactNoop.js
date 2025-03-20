@@ -796,6 +796,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           return null;
         },
 
+        measureClonedInstance(instance: Instance): InstanceMeasurement {
+          return null;
+        },
+
         wasInstanceInViewport(measurement: InstanceMeasurement): boolean {
           return true;
         },

@@ -44,12 +44,11 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-eslint_e2e-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          key: runtime-and-compiler-eslint_e2e-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
-        working-directory: compiler
+      - run: yarn --cwd compiler install --frozen-lockfile
       - name: Build plugin
         working-directory: fixtures/eslint-v${{ matrix.eslint_major }}
         run: node build.mjs

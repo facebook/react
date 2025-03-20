@@ -8,6 +8,7 @@
 import {CompilerError, ErrorSeverity} from '..';
 import {HIRFunction} from '../HIR';
 import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
+import {Result} from '../Utils/Result';
 
 /**
  * Checks that known-impure functions are not called during render. Examples of invalid functions to
@@ -18,7 +19,9 @@ import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
  * this in several of our validation passes and should unify those analyses into a reusable helper
  * and use it here.
  */
-export function validateNoImpureFunctionsInRender(fn: HIRFunction): void {
+export function validateNoImpureFunctionsInRender(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
@@ -46,7 +49,5 @@ export function validateNoImpureFunctionsInRender(fn: HIRFunction): void {
       }
     }
   }
-  if (errors.hasErrors()) {
-    throw errors;
-  }
+  return errors.asResult();
 }

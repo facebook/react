@@ -1477,10 +1477,12 @@ export type InstanceMeasurement = {
   view: boolean, // is in viewport bounds
 };
 
-export function measureInstance(instance: Instance): InstanceMeasurement {
-  const ownerWindow = instance.ownerDocument.defaultView;
-  const rect = instance.getBoundingClientRect();
-  const computedStyle = getComputedStyle(instance);
+function createMeasurement(
+  rect: ClientRect | DOMRect,
+  computedStyle: CSSStyleDeclaration,
+  element: Element,
+): InstanceMeasurement {
+  const ownerWindow = element.ownerDocument.defaultView;
   return {
     rect: rect,
     abs:
@@ -1506,6 +1508,26 @@ export function measureInstance(instance: Instance): InstanceMeasurement {
       rect.top <= ownerWindow.innerHeight &&
       rect.left <= ownerWindow.innerWidth,
   };
+}
+
+export function measureInstance(instance: Instance): InstanceMeasurement {
+  const rect = instance.getBoundingClientRect();
+  const computedStyle = getComputedStyle(instance);
+  return createMeasurement(rect, computedStyle, instance);
+}
+
+export function measureClonedInstance(instance: Instance): InstanceMeasurement {
+  const measuredRect = instance.getBoundingClientRect();
+  // Adjust the DOMRect based on the translate that put it outside the viewport.
+  // TODO: This might not be completely correct if the parent also has a transform.
+  const rect = new DOMRect(
+    measuredRect.x + 20000,
+    measuredRect.y + 20000,
+    measuredRect.width,
+    measuredRect.height,
+  );
+  const computedStyle = getComputedStyle(instance);
+  return createMeasurement(rect, computedStyle, instance);
 }
 
 export function wasInstanceInViewport(
@@ -2183,9 +2205,15 @@ type StoredEventListener = {
   optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
 };
 
+type FocusOptions = {
+  preventScroll?: boolean,
+  focusVisible?: boolean,
+};
+
 export type FragmentInstanceType = {
   _fragmentFiber: Fiber,
   _eventListeners: null | Array<StoredEventListener>,
+  _observers: null | Set<IntersectionObserver | ResizeObserver>,
   addEventListener(
     type: string,
     listener: EventListener,
@@ -2196,12 +2224,18 @@ export type FragmentInstanceType = {
     listener: EventListener,
     optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
   ): void,
-  focus(): void,
+  focus(focusOptions?: FocusOptions): void,
+  focusLast(focusOptions?: FocusOptions): void,
+  blur(): void,
+  observeUsing(observer: IntersectionObserver | ResizeObserver): void,
+  unobserveUsing(observer: IntersectionObserver | ResizeObserver): void,
+  getClientRects(): Array<DOMRect>,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
   this._fragmentFiber = fragmentFiber;
   this._eventListeners = null;
+  this._observers = null;
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.addEventListener = function (
@@ -2281,9 +2315,111 @@ function removeEventListenerFromChild(
   return false;
 }
 // $FlowFixMe[prop-missing]
-FragmentInstance.prototype.focus = function (this: FragmentInstanceType) {
-  traverseFragmentInstance(this._fragmentFiber, setFocusIfFocusable);
+FragmentInstance.prototype.focus = function (
+  this: FragmentInstanceType,
+  focusOptions?: FocusOptions,
+): void {
+  traverseFragmentInstance(
+    this._fragmentFiber,
+    setFocusIfFocusable,
+    focusOptions,
+  );
 };
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.focusLast = function (
+  this: FragmentInstanceType,
+  focusOptions?: FocusOptions,
+) {
+  const children: Array<Instance> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  for (let i = children.length - 1; i >= 0; i--) {
+    const child = children[i];
+    if (setFocusIfFocusable(child, focusOptions)) {
+      break;
+    }
+  }
+};
+function collectChildren(
+  child: Instance,
+  collection: Array<Instance>,
+): boolean {
+  collection.push(child);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
+  // TODO: When we have a parent element reference, we can skip traversal if the fragment's parent
+  //   does not contain document.activeElement
+  traverseFragmentInstance(
+    this._fragmentFiber,
+    blurActiveElementWithinFragment,
+  );
+};
+function blurActiveElementWithinFragment(child: Instance): boolean {
+  // TODO: We can get the activeElement from the parent outside of the loop when we have a reference.
+  const ownerDocument = child.ownerDocument;
+  if (child === ownerDocument.activeElement) {
+    // $FlowFixMe[prop-missing]
+    child.blur();
+    return true;
+  }
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.observeUsing = function (
+  this: FragmentInstanceType,
+  observer: IntersectionObserver | ResizeObserver,
+): void {
+  if (this._observers === null) {
+    this._observers = new Set();
+  }
+  this._observers.add(observer);
+  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
+};
+function observeChild(
+  child: Instance,
+  observer: IntersectionObserver | ResizeObserver,
+) {
+  observer.observe(child);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.unobserveUsing = function (
+  this: FragmentInstanceType,
+  observer: IntersectionObserver | ResizeObserver,
+): void {
+  if (this._observers === null || !this._observers.has(observer)) {
+    if (__DEV__) {
+      console.error(
+        'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
+          'instance. First attach the observer with observeUsing()',
+      );
+    }
+  } else {
+    this._observers.delete(observer);
+    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
+  }
+};
+function unobserveChild(
+  child: Instance,
+  observer: IntersectionObserver | ResizeObserver,
+) {
+  observer.unobserve(child);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.getClientRects = function (
+  this: FragmentInstanceType,
+): Array<DOMRect> {
+  const rects: Array<DOMRect> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectClientRects, rects);
+  return rects;
+};
+function collectClientRects(child: Instance, rects: Array<DOMRect>): boolean {
+  // $FlowFixMe[method-unbinding]
+  rects.push.apply(rects, child.getClientRects());
+  return false;
+}
 
 function normalizeListenerOptions(
   opts: ?EventListenerOptionsOrUseCapture,
@@ -2342,6 +2478,11 @@ export function commitNewChildToFragmentInstance(
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
       childElement.addEventListener(type, listener, optionsOrUseCapture);
     }
+  }
+  if (fragmentInstance._observers !== null) {
+    fragmentInstance._observers.forEach(observer => {
+      observer.observe(childElement);
+    });
   }
 }
 
@@ -3117,7 +3258,10 @@ export function isHiddenSubtree(fiber: Fiber): boolean {
   return fiber.tag === HostComponent && fiber.memoizedProps.hidden === true;
 }
 
-export function setFocusIfFocusable(node: Instance): boolean {
+export function setFocusIfFocusable(
+  node: Instance,
+  focusOptions?: FocusOptions,
+): boolean {
   // The logic for determining if an element is focusable is kind of complex,
   // and since we want to actually change focus anyway- we can just skip it.
   // Instead we'll just listen for a "focus" event to verify that focus was set.
@@ -3133,7 +3277,7 @@ export function setFocusIfFocusable(node: Instance): boolean {
   try {
     element.addEventListener('focus', handleFocus);
     // $FlowFixMe[method-unbinding]
-    (element.focus || HTMLElement.prototype.focus).call(element);
+    (element.focus || HTMLElement.prototype.focus).call(element, focusOptions);
   } finally {
     element.removeEventListener('focus', handleFocus);
   }

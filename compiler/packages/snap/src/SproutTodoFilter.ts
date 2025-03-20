@@ -450,6 +450,7 @@ const skipFilter = new Set([
   'invalid-jsx-lowercase-localvar',
 
   // bugs
+  'inner-function/nullable-objects/bug-invalid-array-map-manual',
   'bug-object-expression-computed-key-modified-during-after-construction-hoisted-sequence-expr',
   `bug-capturing-func-maybealias-captured-mutate`,
   'bug-aliased-capture-aliased-mutate',

@@ -146,21 +146,6 @@ function canPreserveStateBetween(prevType: any, nextType: any) {
   if (isReactClass(prevType) || isReactClass(nextType)) {
     return false;
   }
-
-  if (typeof prevType !== typeof nextType) {
-    return false;
-  } else if (
-    typeof prevType === 'object' &&
-    prevType !== null &&
-    nextType !== null
-  ) {
-    if (
-      getProperty(prevType, '$$typeof') !== getProperty(nextType, '$$typeof')
-    ) {
-      return false;
-    }
-  }
-
   if (haveEqualSignatures(prevType, nextType)) {
     return true;
   }
@@ -198,18 +183,6 @@ function getProperty(object: any, property: string) {
   }
 }
 
-function registerRefreshUpdate(
-  update: RefreshUpdate,
-  family: Family,
-  shouldPreserveState: boolean,
-) {
-  if (shouldPreserveState) {
-    update.updatedFamilies.add(family);
-  } else {
-    update.staleFamilies.add(family);
-  }
-}
-
 export function performReactRefresh(): RefreshUpdate | null {
   if (!__DEV__) {
     throw new Error(
@@ -227,11 +200,6 @@ export function performReactRefresh(): RefreshUpdate | null {
   try {
     const staleFamilies = new Set<Family>();
     const updatedFamilies = new Set<Family>();
-    // TODO: rename these fields to something more meaningful.
-    const update: RefreshUpdate = {
-      updatedFamilies, // Families that will re-render preserving state
-      staleFamilies, // Families that will be remounted
-    };
 
     const updates = pendingUpdates;
     pendingUpdates = [];
@@ -243,33 +211,19 @@ export function performReactRefresh(): RefreshUpdate | null {
       updatedFamiliesByType.set(nextType, family);
       family.current = nextType;
 
-      const shouldPreserveState = canPreserveStateBetween(prevType, nextType);
-
-      if (typeof prevType === 'object' && prevType !== null) {
-        const nextFamily = {
-          current:
-            getProperty(nextType, '$$typeof') === REACT_FORWARD_REF_TYPE
-              ? nextType.render
-              : getProperty(nextType, '$$typeof') === REACT_MEMO_TYPE
-                ? nextType.type
-                : nextType,
-        };
-        switch (getProperty(prevType, '$$typeof')) {
-          case REACT_FORWARD_REF_TYPE: {
-            updatedFamiliesByType.set(prevType.render, nextFamily);
-            registerRefreshUpdate(update, nextFamily, shouldPreserveState);
-            break;
-          }
-          case REACT_MEMO_TYPE:
-            updatedFamiliesByType.set(prevType.type, nextFamily);
-            registerRefreshUpdate(update, nextFamily, shouldPreserveState);
-            break;
-        }
-      }
-
       // Determine whether this should be a re-render or a re-mount.
-      registerRefreshUpdate(update, family, shouldPreserveState);
+      if (canPreserveStateBetween(prevType, nextType)) {
+        updatedFamilies.add(family);
+      } else {
+        staleFamilies.add(family);
+      }
     });
+
+    // TODO: rename these fields to something more meaningful.
+    const update: RefreshUpdate = {
+      updatedFamilies, // Families that will re-render preserving state
+      staleFamilies, // Families that will be remounted
+    };
 
     helpersByRendererID.forEach(helpers => {
       // Even if there are no roots, set the handler on first update.

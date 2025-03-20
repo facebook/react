@@ -331,6 +331,11 @@ const EnvironmentConfigSchema = z.object({
   validateNoJSXInTryStatements: z.boolean().default(false),
 
   /**
+   * Validates against dynamically creating components during render.
+   */
+  validateStaticComponents: z.boolean().default(false),
+
+  /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure
    * that Forget does not introduce infinite renders caused by a dependency changing,
    * triggering an effect, which triggers re-rendering, which causes a dependency to change,
@@ -930,6 +935,19 @@ export class Environment {
 
   get nextScopeId(): ScopeId {
     return makeScopeId(this.#nextScope++);
+  }
+
+  logErrors(errors: Result<void, CompilerError>): void {
+    if (errors.isOk() || this.logger == null) {
+      return;
+    }
+    for (const error of errors.unwrapErr().details) {
+      this.logger.logEvent(this.filename, {
+        kind: 'CompileError',
+        detail: error,
+        fnLoc: null,
+      });
+    }
   }
 
   isContextIdentifier(node: t.Identifier): boolean {

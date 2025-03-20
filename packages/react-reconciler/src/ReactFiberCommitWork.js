@@ -2474,7 +2474,6 @@ function commitAfterMutationEffectsOnFiber(
         // the root itself. This means that we can now safely cancel any cancellations
         // that bubbled all the way up.
         const cancelableChildren = viewTransitionCancelableChildren;
-        popViewTransitionCancelableScope(null);
         if (cancelableChildren !== null) {
           for (let i = 0; i < cancelableChildren.length; i += 3) {
             cancelViewTransitionName(
@@ -2487,6 +2486,7 @@ function commitAfterMutationEffectsOnFiber(
         // We also cancel the root itself.
         cancelRootViewTransitionName(root.containerInfo);
       }
+      popViewTransitionCancelableScope(null);
       break;
     }
     case HostComponent: {
@@ -2528,7 +2528,11 @@ function commitAfterMutationEffectsOnFiber(
         finishedWork.flags |= Update;
       }
 
-      const inViewport = measureUpdateViewTransition(current, finishedWork);
+      const inViewport = measureUpdateViewTransition(
+        current,
+        finishedWork,
+        false,
+      );
 
       if ((finishedWork.flags & Update) === NoFlags || !inViewport) {
         // If this boundary didn't update, then we may be able to cancel its children.
@@ -3618,15 +3622,7 @@ function commitPassiveMountOnFiber(
           if (current === null) {
             // This is a new mount. We should have handled this as part of the
             // Placement effect or it is deeper inside a entering transition.
-          } else if (
-            (finishedWork.subtreeFlags &
-              (Placement |
-                Update |
-                ChildDeletion |
-                ContentReset |
-                Visibility)) !==
-            NoFlags
-          ) {
+          } else {
             // Something mutated within this subtree. This might have caused
             // something to cross-fade if we didn't already cancel it.
             // If not, restore it.

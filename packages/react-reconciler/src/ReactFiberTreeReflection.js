@@ -326,7 +326,7 @@ export function traverseFragmentInstance<A, B, C>(
   b: B,
   c: C,
 ): void {
-  return traverseFragmentInstanceChildren(fragmentFiber.child, fn, a, b, c);
+  traverseFragmentInstanceChildren(fragmentFiber.child, fn, a, b, c);
 }
 
 function traverseFragmentInstanceChildren<A, B, C>(
