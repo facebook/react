@@ -41898,7 +41898,7 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
     }
     const compiled = compileResult.unwrap();
     const hookGuard = fn.env.config.enableEmitHookGuards;
-    if (hookGuard != null) {
+    if (hookGuard != null && fn.env.isInferredMemoEnabled) {
         compiled.body = libExports.blockStatement([
             createHookGuard(hookGuard, compiled.body.body, GuardKind.PushHookGuard, GuardKind.PopHookGuard),
         ]);
@@ -41925,7 +41925,9 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
         compiled.body.body.unshift(...preface);
     }
     const emitInstrumentForget = fn.env.config.enableEmitInstrumentForget;
-    if (emitInstrumentForget != null && fn.id != null) {
+    if (emitInstrumentForget != null &&
+        fn.id != null &&
+        fn.env.isInferredMemoEnabled) {
         let gating;
         if (emitInstrumentForget.gating != null &&
             emitInstrumentForget.globalGating != null) {
@@ -42136,7 +42138,7 @@ function codegenBlockNoReset(cx, block) {
     return libExports.blockStatement(statements);
 }
 function wrapCacheDep(cx, value) {
-    if (cx.env.config.enableEmitFreeze != null) {
+    if (cx.env.config.enableEmitFreeze != null && cx.env.isInferredMemoEnabled) {
         return libExports.conditionalExpression(libExports.identifier('true'), libExports.callExpression(libExports.identifier(cx.env.config.enableEmitFreeze.importSpecifierName), [value, libExports.stringLiteral(cx.fnName)]), value);
     }
     else {
@@ -42826,13 +42828,13 @@ function createHookGuard(guard, stmts, before, after) {
     }
     return libExports.tryStatement(libExports.blockStatement([createHookGuardImpl(before), ...stmts]), null, libExports.blockStatement([createHookGuardImpl(after)]));
 }
-function createCallExpression(config, callee, args, loc, isHook) {
+function createCallExpression(env, callee, args, loc, isHook) {
     const callExpr = libExports.callExpression(callee, args);
     if (loc != null && loc != GeneratedSource) {
         callExpr.loc = loc;
     }
-    const hookGuard = config.enableEmitHookGuards;
-    if (hookGuard != null && isHook) {
+    const hookGuard = env.config.enableEmitHookGuards;
+    if (hookGuard != null && isHook && env.isInferredMemoEnabled) {
         const iife = libExports.functionExpression(null, [], libExports.blockStatement([
             createHookGuard(hookGuard, [libExports.returnStatement(callExpr)], GuardKind.AllowHook, GuardKind.DisallowHook),
         ]));
@@ -42924,7 +42926,7 @@ function codegenInstructionValue(cx, instrValue) {
             const isHook = getHookKind(cx.env, instrValue.callee.identifier) != null;
             const callee = codegenPlaceToExpression(cx, instrValue.callee);
             const args = instrValue.args.map(arg => codegenArgument(cx, arg));
-            value = createCallExpression(cx.env.config, callee, args, instrValue.loc, isHook);
+            value = createCallExpression(cx.env, callee, args, instrValue.loc, isHook);
             break;
         }
         case 'OptionalExpression': {
@@ -42983,7 +42985,7 @@ function codegenInstructionValue(cx, instrValue) {
                 suggestions: null,
             });
             const args = instrValue.args.map(arg => codegenArgument(cx, arg));
-            value = createCallExpression(cx.env.config, memberExpr, args, instrValue.loc, isHook);
+            value = createCallExpression(cx.env, memberExpr, args, instrValue.loc, isHook);
             break;
         }
         case 'NewExpression': {
@@ -54175,6 +54177,10 @@ function compileProgram(program, pass) {
                     kind: 'compile',
                     compiledFn: compileFn(fn, environment, fnType, 'no_inferred_memo', useMemoCacheIdentifier.name, pass.opts.logger, pass.filename, pass.code),
                 };
+                if (!compileResult.compiledFn.hasFireRewrite &&
+                    !compileResult.compiledFn.hasLoweredContextAccess) {
+                    return null;
+                }
             }
             catch (err) {
                 if (err instanceof CompilerError) {
