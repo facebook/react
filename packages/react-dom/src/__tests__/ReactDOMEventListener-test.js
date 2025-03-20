@@ -453,7 +453,72 @@ describe('ReactDOMEventListener', () => {
   });
 
   describe('Form resetting', () => {
-    it('should not reset form if is prevented', async () => {
+    it('should reset the form correctly', async () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      try {
+        const textRef = React.createRef();
+        const buttonRef = React.createRef();
+
+        const handleChangeTextBox = jest.fn();
+
+        class Form extends React.Component {
+          state = {text: 'test'};
+
+          render() {
+            return (
+              <form>
+                <input
+                  ref={textRef}
+                  defaultValue="test"
+                  onChange={event => {
+                    this.setState({text: event.target.value});
+                    handleChangeTextBox(event);
+                  }}
+                />
+                <button ref={buttonRef} type="reset">
+                  reset
+                </button>
+              </form>
+            );
+          }
+        }
+
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(<Form />);
+        });
+
+        expect(textRef.current.value).toEqual('test');
+
+        await act(() => {
+          setUntrackedValue.call(textRef.current, 'test1');
+          dispatchEventOnNode(textRef.current, 'input');
+        });
+
+        expect(handleChangeTextBox).toHaveBeenCalledTimes(1);
+        expect(textRef.current.value).toEqual('test1');
+
+        await act(() => {
+          buttonRef.current.click();
+        });
+
+        expect(textRef.current.value).toEqual('test');
+
+        handleChangeTextBox.mockClear();
+        await act(() => {
+          setUntrackedValue.call(textRef.current, 'test');
+          dispatchEventOnNode(textRef.current, 'input');
+        });
+
+        expect(handleChangeTextBox).toHaveBeenCalledTimes(1);
+      } finally {
+        document.body.removeChild(container);
+      }
+    });
+
+    it('should not reset form if it is prevented', async () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
 
