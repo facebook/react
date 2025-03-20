@@ -133,10 +133,7 @@ import {
   callRenderInDEV,
 } from './ReactFizzCallUserSpace';
 
-import {
-  startResettingOwnerStackLimit,
-  stopResettingOwnerStackLimit,
-} from 'shared/ReactOwnerStackReset';
+import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
 import {
   getIteratorFn,
   ASYNC_ITERATOR,
@@ -477,6 +474,10 @@ export function createRequest(
   onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
   formState: void | null | ReactFormState<any, any>,
 ): Request {
+  if (__DEV__) {
+    resetOwnerStackLimit();
+  }
+
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   const request: Request = new RequestInstance(
     resumableState,
@@ -575,6 +576,10 @@ export function resumeRequest(
   onFatalError: void | ((error: mixed) => void),
   onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
 ): Request {
+  if (__DEV__) {
+    resetOwnerStackLimit();
+  }
+
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   const request: Request = new RequestInstance(
     postponedState.resumableState,
@@ -4600,8 +4605,6 @@ export function performWork(request: Request): void {
   if (__DEV__) {
     prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
     ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
-
-    startResettingOwnerStackLimit();
   }
   const prevResumableState = currentResumableState;
   setCurrentResumableState(request.resumableState);
@@ -4627,8 +4630,6 @@ export function performWork(request: Request): void {
     ReactSharedInternals.A = prevAsyncDispatcher;
 
     if (__DEV__) {
-      stopResettingOwnerStackLimit();
-
       ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
     }
     if (prevDispatcher === HooksDispatcher) {

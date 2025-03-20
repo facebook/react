@@ -34,12 +34,17 @@ function normalizeCodeLocInfo(str) {
 let ReactServer;
 let ReactNoopFlightServer;
 let Scheduler;
+let advanceTimersByTime;
 let assertLog;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
     // Mock performance.now for timing tests
-    let time = 10;
+    let time = 0;
+    advanceTimersByTime = timeMS => {
+      time += timeMS;
+      jest.advanceTimersByTime(timeMS);
+    };
     const now = jest.fn().mockImplementation(() => {
       return time++;
     });
@@ -73,10 +78,8 @@ describe('ReactFlight', () => {
         let i = 0;
         i <
         siblingsBeforeStackOne -
-          // JSX callsites before this are irrelevant since we always reset the limit
-          // when we start a render. Both <App /> and <UnknownOwner /> were created
-          // before we actually start rendering.
-          0 -
+          // <App /> callsite
+          1 -
           // Stop so that OwnerStackOne will be right before cutoff
           1;
         i++
@@ -145,16 +148,31 @@ describe('ReactFlight', () => {
     }).toEqual({
       pendingTimers: 0,
       stackOne: '\n    in App (at **)',
-      stackTwo:
-        // captured after we reset the limit
-        '\n    in OwnerStackDelayed (at **)' +
-        (__VARIANT__
-          ? // captured right after we hit the limit but before we reset it
-            '\n    in UnknownOwner (at **)'
-          : // We never hit the limit outside __VARIANT__
-            '\n    in App (at **)'),
+      stackTwo: __VARIANT__
+        ? // Didn't advance timers yet to reset
+          '\n    in UnknownOwner (at **)' + '\n    in UnknownOwner (at **)'
+        : // We never hit the limit outside __VARIANT__
+          '\n    in OwnerStackDelayed (at **)' + '\n    in App (at **)',
     });
 
-    jest.advanceTimersByTime(2000);
+    // Ensure we reset the limit after the timeout
+    advanceTimersByTime(1000);
+    ReactNoopFlightServer.render(
+      ReactServer.createElement(App, {
+        key: 'two',
+        siblingsBeforeStackOne: 0,
+        timeout: 0,
+      }),
+    );
+
+    expect({
+      pendingTimers: jest.getTimerCount(),
+      stackOne: normalizeCodeLocInfo(stackOne),
+      stackTwo: normalizeCodeLocInfo(stackTwo),
+    }).toEqual({
+      pendingTimers: 0,
+      stackOne: '\n    in App (at **)',
+      stackTwo: '\n    in OwnerStackDelayed (at **)' + '\n    in App (at **)',
+    });
   });
 });

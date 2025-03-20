@@ -14,14 +14,32 @@ let ReactNoop;
 let ReactNoopServer;
 let Scheduler;
 let act;
+let advanceTimersByTime;
 let assertLog;
 let serverAct;
 let waitFor;
 
 describe('ReactOwnerStacks', () => {
   beforeEach(function () {
-    jest.resetModules();
+    let time = 10;
+    advanceTimersByTime = timeMS => {
+      jest.advanceTimersByTime(timeMS);
+      time += timeMS;
+    };
 
+    const now = jest.fn().mockImplementation(() => {
+      return time++;
+    });
+    Object.defineProperty(performance, 'timeOrigin', {
+      value: time,
+      configurable: true,
+    });
+    Object.defineProperty(performance, 'now', {
+      value: now,
+      configurable: true,
+    });
+
+    jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     ReactNoopServer = require('react-noop-renderer/server');
@@ -104,10 +122,8 @@ describe('ReactOwnerStacks', () => {
         let i = 0;
         i <
         siblingsBeforeStackOne -
-          // JSX callsites before this are irrelevant since we always reset the limit
-          // when we start a render. Both <App /> and <UnknownOwner /> were created
-          // before we actually start rendering.
-          0 -
+          // <App /> callsite
+          1 -
           // Stop so that OwnerStackOne will be right before cutoff
           1;
         i++
@@ -158,14 +174,12 @@ describe('ReactOwnerStacks', () => {
           '\n    in App (at **)',
     });
 
-    // Our internal act flushes pending timers, so this will render with owner
-    // stacks intact until we hit the limit again.
     await act(() => {
       ReactNoop.render(
         <App
           // TODO: Owner Stacks should update on re-render.
           key="two"
-          siblingsBeforeStackOne={499}
+          siblingsBeforeStackOne={0}
         />,
       );
     });
@@ -176,9 +190,45 @@ describe('ReactOwnerStacks', () => {
       stackTwo: normalizeCodeLocInfo(stackTwo),
     }).toEqual({
       pendingTimers: 0,
-      // rendered everything before cutoff
+      stackOne: __VARIANT__
+        ? // We re-rendered immediately so not enough time has ellapsed to reset the limit.
+          '\n    in UnknownOwner (at **)'
+        : // We never hit the limit outside __VARIANT__
+          '\n    in App (at **)',
+      stackTwo: __VARIANT__
+        ? // We re-rendered immediately so not enough time has ellapsed to reset the limit.
+          '\n    in UnknownOwner (at **)'
+        : // We never hit the limit outside __VARIANT__
+          '\n    in App (at **)',
+    });
+
+    // advance time so that we reset the limit
+    advanceTimersByTime(1001);
+
+    await act(() => {
+      ReactNoop.render(
+        <App
+          // TODO: Owner Stacks should update on re-render.
+          key="three"
+          // We reset after <App /> so we need to render one more
+          // to have similar cutoff as the initial render (key="one")
+          siblingsBeforeStackOne={501}
+        />,
+      );
+    });
+
+    expect({
+      pendingTimers: jest.getTimerCount(),
+      stackOne: normalizeCodeLocInfo(stackOne),
+      stackTwo: normalizeCodeLocInfo(stackTwo),
+    }).toEqual({
+      pendingTimers: 0,
       stackOne: '\n    in App (at **)',
-      stackTwo: '\n    in App (at **)',
+      stackTwo: __VARIANT__
+        ? // captured right after cutoff
+          '\n    in UnknownOwner (at **)'
+        : // We never hit the limit outside __VARIANT__
+          '\n    in App (at **)',
     });
   });
 
@@ -190,10 +240,8 @@ describe('ReactOwnerStacks', () => {
         let i = 0;
         i <
         siblingsBeforeStackOne -
-          // JSX callsites before this are irrelevant since we always reset the limit
-          // when we start a render. Both <App /> and <UnknownOwner /> were created
-          // before we actually start rendering.
-          0 -
+          // <App /> callsite
+          1 -
           // Stop so that OwnerStackOne will be right before cutoff
           1;
         i++
@@ -254,15 +302,13 @@ describe('ReactOwnerStacks', () => {
       stackTwo: normalizeCodeLocInfo(stackTwo),
     }).toEqual({
       // 1 for the timeout
-      // And since we haven't committed yet, we continue to reset the Owner Stack
-      // limit periodically.
-      pendingTimers: 2,
+      pendingTimers: 1,
       stackOne: '\n    in App (at **)',
       stackTwo: undefined,
     });
 
     // resolve `timeout` Promise
-    jest.advanceTimersByTime(1000);
+    advanceTimersByTime(1000);
 
     await waitFor(['render OwnerStackDelayed', 'render OwnerStackTwo']);
 
@@ -273,14 +319,12 @@ describe('ReactOwnerStacks', () => {
     }).toEqual({
       pendingTimers: 0,
       stackOne: '\n    in App (at **)',
-      stackTwo:
-        // captured after we reset the limit
-        '\n    in OwnerStackDelayed (at **)' +
-        (__VARIANT__
-          ? // captured right after we hit the limit but before we reset it
-            '\n    in UnknownOwner (at **)'
-          : // We never hit the limit outside __VARIANT__
-            '\n    in App (at **)'),
+      stackTwo: __VARIANT__
+        ? // We don't reset in Fiber until we start a new render.
+          // Here we just continued after a ping.
+          '\n    in UnknownOwner (at **)' + '\n    in UnknownOwner (at **)'
+        : // We never hit the limit outside __VARIANT__
+          '\n    in OwnerStackDelayed (at **)' + '\n    in App (at **)',
     });
   });
 
@@ -292,10 +336,8 @@ describe('ReactOwnerStacks', () => {
         let i = 0;
         i <
         siblingsBeforeStackOne -
-          // JSX callsites before this are irrelevant since we always reset the limit
-          // when we start a render. Both <App /> and <UnknownOwner /> were created
-          // before we actually start rendering.
-          0 -
+          // <App /> callsite
+          1 -
           // Stop so that OwnerStackOne will be right before cutoff
           1;
         i++
@@ -360,7 +402,7 @@ describe('ReactOwnerStacks', () => {
     });
 
     await serverAct(() => {
-      jest.advanceTimersByTime(1000);
+      advanceTimersByTime(1000);
     });
 
     expect({
@@ -370,14 +412,12 @@ describe('ReactOwnerStacks', () => {
     }).toEqual({
       pendingTimers: 0,
       stackOne: '\n    in App (at **)',
-      stackTwo:
-        // captured after we reset the limit
-        '\n    in OwnerStackDelayed (at **)' +
-        (__VARIANT__
-          ? // captured right after we hit the limit but before we reset it
-            '\n    in UnknownOwner (at **)'
-          : // We never hit the limit outside __VARIANT__
-            '\n    in App (at **)'),
+      stackTwo: __VARIANT__
+        ? // We don't reset in Fiber until we start a new render.
+          // Here we just continued after a ping.
+          '\n    in UnknownOwner (at **)' + '\n    in UnknownOwner (at **)'
+        : // We never hit the limit outside __VARIANT__
+          '\n    in OwnerStackDelayed (at **)' + '\n    in App (at **)',
     });
   });
 });

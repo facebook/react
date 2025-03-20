@@ -103,10 +103,7 @@ import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
 import {getOwnerStackByComponentInfoInDev} from 'shared/ReactComponentInfoStack';
-import {
-  startResettingOwnerStackLimit,
-  stopResettingOwnerStackLimit,
-} from 'shared/ReactOwnerStackReset';
+import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
 
 import {
   callComponentInDEV,
@@ -556,6 +553,10 @@ export function createRequest(
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
 ): Request {
+  if (__DEV__) {
+    resetOwnerStackLimit();
+  }
+
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new RequestInstance(
     RENDER,
@@ -584,6 +585,10 @@ export function createPrerenderRequest(
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
 ): Request {
+  if (__DEV__) {
+    resetOwnerStackLimit();
+  }
+
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new RequestInstance(
     PRERENDER,
@@ -4062,10 +4067,6 @@ function performWork(request: Request): void {
   currentRequest = request;
   prepareToUseHooksForRequest(request);
 
-  if (__DEV__) {
-    startResettingOwnerStackLimit();
-  }
-
   const hadAbortableTasks = request.abortableTasks.size > 0;
   try {
     const pingedTasks = request.pingedTasks;
@@ -4088,10 +4089,6 @@ function performWork(request: Request): void {
     logRecoverableError(request, error, null);
     fatalError(request, error);
   } finally {
-    if (__DEV__) {
-      stopResettingOwnerStackLimit();
-    }
-
     ReactSharedInternals.H = prevDispatcher;
     resetHooksForRequest();
     currentRequest = prevRequest;

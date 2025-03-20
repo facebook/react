@@ -9,44 +9,34 @@
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-let resetOwnerStackIntervalId: mixed = null;
+let lastResetTime = 0;
 
-export function startResettingOwnerStackLimit() {
-  if (__DEV__) {
-    ReactSharedInternals.recentlyCreatedOwnerStacks = 0;
+let getCurrentTime: () => number | DOMHighResTimeStamp;
+const hasPerformanceNow =
+  // $FlowFixMe[method-unbinding]
+  typeof performance === 'object' && typeof performance.now === 'function';
 
-    if (typeof setInterval === 'function') {
-      // Renderers might start in render but stop in commit.
-      // So we need to be resilient against start being called multiple times.
-      if (resetOwnerStackIntervalId !== null) {
-        clearInterval((resetOwnerStackIntervalId: any));
-      }
-      resetOwnerStackIntervalId = setInterval(() => {
-        ReactSharedInternals.recentlyCreatedOwnerStacks = 0;
-      }, 1000);
-    }
-  } else {
-    // These errors should never make it into a build so we don't need to encode them in codes.json
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'startResettingOwnerStackLimit should never be called in production mode. This is a bug in React.',
-    );
-  }
+if (hasPerformanceNow) {
+  const localPerformance = performance;
+  getCurrentTime = () => localPerformance.now();
+} else {
+  const localDate = Date;
+  getCurrentTime = () => localDate.now();
 }
 
-export function stopResettingOwnerStackLimit() {
+export function resetOwnerStackLimit() {
   if (__DEV__) {
-    if (typeof setInterval === 'function') {
-      if (resetOwnerStackIntervalId !== null) {
-        clearInterval((resetOwnerStackIntervalId: any));
-        resetOwnerStackIntervalId = null;
-      }
+    const now = getCurrentTime();
+    const timeSinceLastReset = now - lastResetTime;
+    if (timeSinceLastReset > 1000) {
+      ReactSharedInternals.recentlyCreatedOwnerStacks = 0;
+      lastResetTime = now;
     }
   } else {
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'stopResettingOwnerStackLimit should never be called in production mode. This is a bug in React.',
+      'resetOwnerStackLimit should never be called in production mode. This is a bug in React.',
     );
   }
 }
