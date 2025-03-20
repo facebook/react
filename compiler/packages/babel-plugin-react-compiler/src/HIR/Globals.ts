@@ -10,8 +10,10 @@ import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
   BuiltInFireId,
+  BuiltInMapId,
   BuiltInMixedReadonlyId,
   BuiltInObjectId,
+  BuiltInSetId,
   BuiltInUseActionStateId,
   BuiltInUseContextHookId,
   BuiltInUseEffectHookId,
@@ -63,8 +65,6 @@ const UNTYPED_GLOBALS: Set<string> = new Set([
   'Int8Array',
   'Int16Array',
   'Int32Array',
-  'Map',
-  'Set',
   'WeakMap',
   'Uint8Array',
   'Uint8ClampedArray',
@@ -138,7 +138,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
         'from',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [
-            Effect.ConditionallyMutate,
+            Effect.ConditionallyMutateIterator,
             Effect.ConditionallyMutate,
             Effect.ConditionallyMutate,
           ],
@@ -457,6 +457,38 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Primitive,
     }),
+  ],
+  [
+    'Map',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [Effect.ConditionallyMutateIterator],
+        restParam: null,
+        returnType: {kind: 'Object', shapeId: BuiltInMapId},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
+  ],
+  [
+    'Set',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [Effect.ConditionallyMutateIterator],
+        restParam: null,
+        returnType: {kind: 'Object', shapeId: BuiltInSetId},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
   ],
   // TODO: rest of Global objects
 ];

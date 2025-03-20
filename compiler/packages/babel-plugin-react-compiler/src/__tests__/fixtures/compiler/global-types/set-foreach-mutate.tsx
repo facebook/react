@@ -3,11 +3,10 @@ import {mutateAndReturn, Stringify, useIdentity} from 'shared-runtime';
 function Component({value}) {
   const arr = [{value: 'foo'}, {value: 'bar'}, {value}];
   useIdentity();
-  const derived = Array.from(arr).map(mutateAndReturn);
+  const derived = new Set(arr).forEach(mutateAndReturn);
   return (
     <Stringify>
-      {derived.at(0)}
-      {derived.at(-1)}
+      {[...derived]}
     </Stringify>
   );
 }
