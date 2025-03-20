@@ -79,9 +79,5 @@ export function validateStaticComponents(
       }
     }
   }
-  if (error.hasErrors()) {
-    return Err(error);
-  } else {
-    return Ok(undefined);
-  }
+  return error.asResult();
 }

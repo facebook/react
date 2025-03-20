@@ -6,6 +6,7 @@
  */
 
 import type {SourceLocation} from './HIR';
+import {Err, Ok, Result} from './Utils/Result';
 import {assertExhaustive} from './Utils/utils';
 
 export enum ErrorSeverity {
@@ -222,6 +223,10 @@ export class CompilerError extends Error {
 
   hasErrors(): boolean {
     return this.details.length > 0;
+  }
+
+  asResult(): Result<void, CompilerError> {
+    return this.hasErrors() ? Err(this) : Ok(undefined);
   }
 
   /*
