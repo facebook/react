@@ -7,7 +7,7 @@
 
 import {CompilerError, ErrorSeverity} from '..';
 import {BlockId, HIRFunction} from '../HIR';
-import {Err, Ok, Result} from '../Utils/Result';
+import {Result} from '../Utils/Result';
 import {retainWhere} from '../Utils/utils';
 
 /**

@@ -26,7 +26,7 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {assertExhaustive} from '../Utils/utils';
-import {Err, Ok, Result} from '../Utils/Result';
+import {Result} from '../Utils/Result';
 
 /**
  * Represents the possible kinds of value which may be stored at a given Place during

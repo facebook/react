@@ -7,7 +7,7 @@
 import {CompilerError, EnvironmentConfig, ErrorSeverity} from '..';
 import {HIRFunction, IdentifierId} from '../HIR';
 import {DEFAULT_GLOBALS} from '../HIR/Globals';
-import {Err, Ok, Result} from '../Utils/Result';
+import {Result} from '../Utils/Result';
 
 export function validateNoCapitalizedCalls(
   fn: HIRFunction,

@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect, ErrorSeverity} from '..';
+import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {
   DeclarationId,
+  Effect,
   GeneratedSource,
   Identifier,
   IdentifierId,

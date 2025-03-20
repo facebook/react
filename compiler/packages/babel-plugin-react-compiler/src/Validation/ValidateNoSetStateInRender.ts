@@ -9,7 +9,7 @@ import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {HIRFunction, IdentifierId, isSetStateType} from '../HIR';
 import {computeUnconditionalBlocks} from '../HIR/ComputeUnconditionalBlocks';
 import {eachInstructionValueOperand} from '../HIR/visitors';
-import {Err, Ok, Result} from '../Utils/Result';
+import {Result} from '../Utils/Result';
 
 /**
  * Validates that the given function does not have an infinite update loop

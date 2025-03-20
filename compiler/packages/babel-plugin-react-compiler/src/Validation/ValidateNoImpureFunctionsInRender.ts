@@ -8,7 +8,7 @@
 import {CompilerError, ErrorSeverity} from '..';
 import {HIRFunction} from '../HIR';
 import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
-import {Err, Ok, Result} from '../Utils/Result';
+import {Result} from '../Utils/Result';
 
 /**
  * Checks that known-impure functions are not called during render. Examples of invalid functions to

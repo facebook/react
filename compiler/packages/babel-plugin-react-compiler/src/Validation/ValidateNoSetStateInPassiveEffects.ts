@@ -14,7 +14,7 @@ import {
   Place,
 } from '../HIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
-import {Err, Ok, Result} from '../Utils/Result';
+import {Result} from '../Utils/Result';
 
 /**
  * Validates against calling setState in the body of a *passive* effect (useEffect),

@@ -7,7 +7,7 @@
 
 import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {HIRFunction, IdentifierId, SourceLocation} from '../HIR';
-import {Err, Ok, Result} from '../Utils/Result';
+import {Result} from '../Utils/Result';
 
 /**
  * Validates against components that are created dynamically and whose identity is not guaranteed
