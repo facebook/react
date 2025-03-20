@@ -17,7 +17,6 @@ describe('ReactDOMEventListener', () => {
   let act;
   let simulateEventDispatch;
   let setUntrackedValue;
-  let setUntrackedChecked;
 
   function dispatchEventOnNode(node, type) {
     node.dispatchEvent(new Event(type, {bubbles: true, cancelable: true}));
@@ -30,10 +29,6 @@ describe('ReactDOMEventListener', () => {
     setUntrackedValue = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
       'value',
-    ).set;
-    setUntrackedChecked = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      'checked',
     ).set;
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
