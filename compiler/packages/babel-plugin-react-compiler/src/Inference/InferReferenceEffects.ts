@@ -251,7 +251,7 @@ type FreezeAction = {values: Set<InstructionValue>; reason: Set<ValueReason>};
 
 // Maintains a mapping of top-level variables to the kind of value they hold
 class InferenceState {
-  #env: Environment;
+  env: Environment;
 
   // The kind of each value, based on its allocation site
   #values: Map<InstructionValue, AbstractValue>;
@@ -267,7 +267,7 @@ class InferenceState {
     values: Map<InstructionValue, AbstractValue>,
     variables: Map<IdentifierId, Set<InstructionValue>>,
   ) {
-    this.#env = env;
+    this.env = env;
     this.#values = values;
     this.#variables = variables;
   }
@@ -409,8 +409,8 @@ class InferenceState {
       });
       if (
         value.kind === 'FunctionExpression' &&
-        (this.#env.config.enablePreserveExistingMemoizationGuarantees ||
-          this.#env.config.enableTransitivelyFreezeFunctionExpressions)
+        (this.env.config.enablePreserveExistingMemoizationGuarantees ||
+          this.env.config.enableTransitivelyFreezeFunctionExpressions)
       ) {
         for (const operand of value.loweredFunc.func.context) {
           const operandValues = this.#variables.get(operand.identifier.id);
@@ -590,7 +590,7 @@ class InferenceState {
       return null;
     } else {
       return new InferenceState(
-        this.#env,
+        this.env,
         nextValues ?? new Map(this.#values),
         nextVariables ?? new Map(this.#variables),
       );
@@ -604,7 +604,7 @@ class InferenceState {
    */
   clone(): InferenceState {
     return new InferenceState(
-      this.#env,
+      this.env,
       new Map(this.#values),
       new Map(this.#variables),
     );
@@ -2012,6 +2012,32 @@ export function getFunctionEffects(
   return results;
 }
 
+export function isKnownMutableEffect(effect: Effect): boolean {
+  switch (effect) {
+    case Effect.Store:
+    case Effect.ConditionallyMutate:
+    case Effect.Mutate: {
+      return true;
+    }
+
+    case Effect.Unknown: {
+      CompilerError.invariant(false, {
+        reason: 'Unexpected unknown effect',
+        description: null,
+        loc: GeneratedSource,
+        suggestions: null,
+      });
+    }
+    case Effect.Read:
+    case Effect.Capture:
+    case Effect.Freeze: {
+      return false;
+    }
+    default: {
+      assertExhaustive(effect, `Unexpected effect \`${effect}\``);
+    }
+  }
+}
 /**
  * Returns true if all of the arguments are both non-mutable (immutable or frozen)
  * _and_ are not functions which might mutate their arguments. Note that function
@@ -2023,10 +2049,20 @@ function areArgumentsImmutableAndNonMutating(
   args: MethodCall['args'],
 ): boolean {
   for (const arg of args) {
+    if (arg.kind === 'Identifier' && arg.identifier.type.kind === 'Function') {
+      const fnShape = state.env.getFunctionSignature(arg.identifier.type);
+      if (fnShape != null) {
+        return (
+          !fnShape.positionalParams.some(isKnownMutableEffect) &&
+          (fnShape.restParam == null ||
+            !isKnownMutableEffect(fnShape.restParam))
+        );
+      }
+    }
     const place = arg.kind === 'Identifier' ? arg : arg.place;
+
     const kind = state.kind(place).kind;
     switch (kind) {
-      case ValueKind.Global:
       case ValueKind.Primitive:
       case ValueKind.Frozen: {
         /*
@@ -2037,6 +2073,10 @@ function areArgumentsImmutableAndNonMutating(
         break;
       }
       default: {
+        /**
+         * Globals, module locals, and other locally defined functions may
+         * mutate their arguments.
+         */
         return false;
       }
     }

@@ -4,10 +4,14 @@
 ```javascript
 import {mutateAndReturn, Stringify, useIdentity} from 'shared-runtime';
 
+/**
+ * Copy of repro-array-map-capture-mutate-bug, showing that the same issue applies to any
+ * function call which captures its callee when applying an operand.
+ */
 function Component({value}) {
   const arr = [{value: 'foo'}, {value: 'bar'}, {value}];
-  useIdentity();
-  const derived = Array.from(arr, mutateAndReturn);
+  useIdentity(null);
+  const derived = arr.map(mutateAndReturn);
   return (
     <Stringify>
       {derived.at(0)}
@@ -30,12 +34,16 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 import { mutateAndReturn, Stringify, useIdentity } from "shared-runtime";
 
+/**
+ * Copy of repro-array-map-capture-mutate-bug, showing that the same issue applies to any
+ * function call which captures its callee when applying an operand.
+ */
 function Component(t0) {
   const $ = _c(7);
   const { value } = t0;
   const arr = [{ value: "foo" }, { value: "bar" }, { value }];
-  useIdentity();
-  const derived = Array.from(arr, mutateAndReturn);
+  useIdentity(null);
+  const derived = arr.map(mutateAndReturn);
   let t1;
   if ($[0] !== derived) {
     t1 = derived.at(0);

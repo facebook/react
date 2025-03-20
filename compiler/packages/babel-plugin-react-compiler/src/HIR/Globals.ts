@@ -11,6 +11,7 @@ import {
   BuiltInArrayId,
   BuiltInFireId,
   BuiltInMixedReadonlyId,
+  BuiltInObjectId,
   BuiltInUseActionStateId,
   BuiltInUseContextHookId,
   BuiltInUseEffectHookId,
@@ -45,21 +46,17 @@ export const DEFAULT_SHAPES: ShapeRegistry = new Map(BUILTIN_SHAPES);
 
 // Hack until we add ObjectShapes for all globals
 const UNTYPED_GLOBALS: Set<string> = new Set([
-  'String',
   'Object',
   'Function',
-  'Number',
   'RegExp',
   'Date',
   'Error',
-  'Function',
   'TypeError',
   'RangeError',
   'ReferenceError',
   'SyntaxError',
   'URIError',
   'EvalError',
-  'Boolean',
   'DataView',
   'Float32Array',
   'Float64Array',
@@ -75,16 +72,8 @@ const UNTYPED_GLOBALS: Set<string> = new Set([
   'Uint32Array',
   'ArrayBuffer',
   'JSON',
-  'parseFloat',
-  'parseInt',
   'console',
-  'isNaN',
   'eval',
-  'isFinite',
-  'encodeURI',
-  'decodeURI',
-  'encodeURIComponent',
-  'decodeURIComponent',
 ]);
 
 const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
@@ -97,6 +86,23 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           positionalParams: [Effect.Read],
           restParam: null,
           returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable,
+        }),
+      ],
+      [
+        /**
+         * Object.fromEntries(iterable)
+         * iterable: An iterable, such as an Array or Map, containing a list of
+         *           objects. Each object should have two properties.
+         * Returns a new object whose properties are given by the entries of the
+         * iterable.
+         */
+        'fromEntries',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [Effect.ConditionallyMutate],
+          restParam: null,
+          returnType: {kind: 'Object', shapeId: BuiltInObjectId},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Mutable,
         }),
@@ -364,6 +370,86 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
   ],
   [
     'String',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'parseInt',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'parseFloat',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'isNaN',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'isFinite',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'encodeURI',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'encodeURIComponent',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'decodeURI',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'decodeURIComponent',
     addFunction(DEFAULT_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
