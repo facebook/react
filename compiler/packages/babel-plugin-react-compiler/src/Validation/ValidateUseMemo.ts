@@ -5,10 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError} from '..';
+import {CompilerError, ErrorSeverity} from '..';
 import {FunctionExpression, HIRFunction, IdentifierId} from '../HIR';
+import {Result} from '../Utils/Result';
 
-export function validateUseMemo(fn: HIRFunction): void {
+export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
+  const errors = new CompilerError();
   const useMemos = new Set<IdentifierId>();
   const react = new Set<IdentifierId>();
   const functions = new Map<IdentifierId, FunctionExpression>();
@@ -61,7 +63,8 @@ export function validateUseMemo(fn: HIRFunction): void {
           }
 
           if (body.loweredFunc.func.params.length > 0) {
-            CompilerError.throwInvalidReact({
+            errors.push({
+              severity: ErrorSeverity.InvalidReact,
               reason: 'useMemo callbacks may not accept any arguments',
               description: null,
               loc: body.loc,
@@ -70,7 +73,8 @@ export function validateUseMemo(fn: HIRFunction): void {
           }
 
           if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
-            CompilerError.throwInvalidReact({
+            errors.push({
+              severity: ErrorSeverity.InvalidReact,
               reason:
                 'useMemo callbacks may not be async or generator functions',
               description: null,
@@ -84,4 +88,5 @@ export function validateUseMemo(fn: HIRFunction): void {
       }
     }
   }
+  return errors.asResult();
 }

@@ -100,8 +100,9 @@ import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHI
 import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
 import {transformFire} from '../Transform';
-import {validateNoImpureFunctionsInRender} from '../Validation/ValiateNoImpureFunctionsInRender';
+import {validateNoImpureFunctionsInRender} from '../Validation/ValidateNoImpureFunctionsInRender';
 import {CompilerError} from '..';
+import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -161,7 +162,7 @@ function runWithEnvironment(
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
   validateContextVariableLValues(hir);
-  validateUseMemo(hir);
+  validateUseMemo(hir).unwrap();
 
   if (
     env.isInferredMemoEnabled &&
@@ -202,10 +203,10 @@ function runWithEnvironment(
 
   if (env.isInferredMemoEnabled) {
     if (env.config.validateHooksUsage) {
-      validateHooksUsage(hir);
+      validateHooksUsage(hir).unwrap();
     }
     if (env.config.validateNoCapitalizedCalls) {
-      validateNoCapitalizedCalls(hir);
+      validateNoCapitalizedCalls(hir).unwrap();
     }
   }
 
@@ -255,23 +256,23 @@ function runWithEnvironment(
     }
 
     if (env.config.validateRefAccessDuringRender) {
-      validateNoRefAccessInRender(hir);
+      validateNoRefAccessInRender(hir).unwrap();
     }
 
     if (env.config.validateNoSetStateInRender) {
-      validateNoSetStateInRender(hir);
+      validateNoSetStateInRender(hir).unwrap();
     }
 
     if (env.config.validateNoSetStateInPassiveEffects) {
-      validateNoSetStateInPassiveEffects(hir);
+      env.logErrors(validateNoSetStateInPassiveEffects(hir));
     }
 
     if (env.config.validateNoJSXInTryStatements) {
-      validateNoJSXInTryStatement(hir);
+      env.logErrors(validateNoJSXInTryStatement(hir));
     }
 
     if (env.config.validateNoImpureFunctionsInRender) {
-      validateNoImpureFunctionsInRender(hir);
+      validateNoImpureFunctionsInRender(hir).unwrap();
     }
   }
 
@@ -293,6 +294,10 @@ function runWithEnvironment(
   });
 
   if (env.isInferredMemoEnabled) {
+    if (env.config.validateStaticComponents) {
+      env.logErrors(validateStaticComponents(hir));
+    }
+
     /**
      * Only create reactive scopes (which directly map to generated memo blocks)
      * if inferred memoization is enabled. This makes all later passes which
@@ -509,14 +514,14 @@ function runWithEnvironment(
   });
 
   if (env.config.validateMemoizedEffectDependencies) {
-    validateMemoizedEffectDependencies(reactiveFunction);
+    validateMemoizedEffectDependencies(reactiveFunction).unwrap();
   }
 
   if (
     env.config.enablePreserveExistingMemoizationGuarantees ||
     env.config.validatePreserveExistingMemoizationGuarantees
   ) {
-    validatePreservedManualMemoization(reactiveFunction);
+    validatePreservedManualMemoization(reactiveFunction).unwrap();
   }
 
   const ast = codegenFunction(reactiveFunction, {

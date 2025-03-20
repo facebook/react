@@ -1,4 +1,4 @@
-// @validateNoSetStateInPassiveEffects
+// @logger @validateNoSetStateInPassiveEffects
 import {useEffect, useState} from 'react';
 
 function Component() {
