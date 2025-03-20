@@ -1,6 +1,6 @@
 const MODULE_LOCAL = new Set([4, 5, 6]);
 function useFoo({propArr}: {propArr: Array<number>}) {
-  /* TODO: Array can be memoized separately of the Set */
+  /* Array can be memoized separately of the Set */
   const s1 = new Set([1, 2, 3]);
   s1.add(propArr[0]);
 
@@ -12,7 +12,7 @@ function useFoo({propArr}: {propArr: Array<number>}) {
   s3.add(propArr[2]);
 
   /**
-   * TODO: s3 should be memoized separately of s4
+   * s4 should be memoized separately from s3
    */
   const s4 = new Set(s3);
   s4.add(propArr[3]);
