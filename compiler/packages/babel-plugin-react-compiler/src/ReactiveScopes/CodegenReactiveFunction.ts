@@ -14,7 +14,7 @@ import {
   renameVariables,
 } from '.';
 import {CompilerError, ErrorSeverity} from '../CompilerError';
-import {Environment, EnvironmentConfig, ExternalFunction} from '../HIR';
+import {Environment, ExternalFunction} from '../HIR';
 import {
   ArrayPattern,
   BlockId,
@@ -156,7 +156,7 @@ export function codegenFunction(
   const compiled = compileResult.unwrap();
 
   const hookGuard = fn.env.config.enableEmitHookGuards;
-  if (hookGuard != null) {
+  if (hookGuard != null && fn.env.isInferredMemoEnabled) {
     compiled.body = t.blockStatement([
       createHookGuard(
         hookGuard,
@@ -250,7 +250,11 @@ export function codegenFunction(
   }
 
   const emitInstrumentForget = fn.env.config.enableEmitInstrumentForget;
-  if (emitInstrumentForget != null && fn.id != null) {
+  if (
+    emitInstrumentForget != null &&
+    fn.id != null &&
+    fn.env.isInferredMemoEnabled
+  ) {
     /*
      * Technically, this is a conditional hook call. However, we expect
      * __DEV__ and gating identifier to be runtime constants
@@ -548,7 +552,7 @@ function codegenBlockNoReset(
 }
 
 function wrapCacheDep(cx: Context, value: t.Expression): t.Expression {
-  if (cx.env.config.enableEmitFreeze != null) {
+  if (cx.env.config.enableEmitFreeze != null && cx.env.isInferredMemoEnabled) {
     // The import declaration for emitFreeze is inserted in the Babel plugin
     return t.conditionalExpression(
       t.identifier('__DEV__'),
@@ -1553,7 +1557,7 @@ function createHookGuard(
  * ```
  */
 function createCallExpression(
-  config: EnvironmentConfig,
+  env: Environment,
   callee: t.Expression,
   args: Array<t.Expression | t.SpreadElement>,
   loc: SourceLocation | null,
@@ -1564,8 +1568,8 @@ function createCallExpression(
     callExpr.loc = loc;
   }
 
-  const hookGuard = config.enableEmitHookGuards;
-  if (hookGuard != null && isHook) {
+  const hookGuard = env.config.enableEmitHookGuards;
+  if (hookGuard != null && isHook && env.isInferredMemoEnabled) {
     const iife = t.functionExpression(
       null,
       [],
@@ -1701,7 +1705,7 @@ function codegenInstructionValue(
       const callee = codegenPlaceToExpression(cx, instrValue.callee);
       const args = instrValue.args.map(arg => codegenArgument(cx, arg));
       value = createCallExpression(
-        cx.env.config,
+        cx.env,
         callee,
         args,
         instrValue.loc,
@@ -1791,7 +1795,7 @@ function codegenInstructionValue(
       );
       const args = instrValue.args.map(arg => codegenArgument(cx, arg));
       value = createCallExpression(
-        cx.env.config,
+        cx.env,
         memberExpr,
         args,
         instrValue.loc,
