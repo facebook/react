@@ -77,40 +77,46 @@ function Validate({ x, val1, val2 }) {
 }
 function useFoo(t0) {
   "use memo";
-  const $ = _c(8);
+  const $ = _c(9);
   const { val1, val2 } = t0;
-
-  const x = Array.from([]);
-  useIdentity();
   let t1;
-  if ($[0] !== val1) {
-    t1 = [val1];
-    $[0] = val1;
-    $[1] = t1;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = [];
+    $[0] = t1;
   } else {
-    t1 = $[1];
+    t1 = $[0];
   }
-  x.push(t1);
+  const x = Array.from(t1);
+  useIdentity();
   let t2;
-  if ($[2] !== val2) {
-    t2 = [val2];
-    $[2] = val2;
-    $[3] = t2;
+  if ($[1] !== val1) {
+    t2 = [val1];
+    $[1] = val1;
+    $[2] = t2;
   } else {
-    t2 = $[3];
+    t2 = $[2];
   }
   x.push(t2);
   let t3;
-  if ($[4] !== val1 || $[5] !== val2 || $[6] !== x) {
-    t3 = <Validate x={x} val1={val1} val2={val2} />;
-    $[4] = val1;
-    $[5] = val2;
-    $[6] = x;
-    $[7] = t3;
+  if ($[3] !== val2) {
+    t3 = [val2];
+    $[3] = val2;
+    $[4] = t3;
   } else {
-    t3 = $[7];
+    t3 = $[4];
   }
-  return t3;
+  x.push(t3);
+  let t4;
+  if ($[5] !== val1 || $[6] !== val2 || $[7] !== x) {
+    t4 = <Validate x={x} val1={val1} val2={val2} />;
+    $[5] = val1;
+    $[6] = val2;
+    $[7] = x;
+    $[8] = t4;
+  } else {
+    t4 = $[8];
+  }
+  return t4;
 }
 
 export const FIXTURE_ENTRYPOINT = {
