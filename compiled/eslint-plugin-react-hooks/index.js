@@ -16295,6 +16295,125 @@ function requireLib () {
 
 var libExports = requireLib();
 
+function Ok(val) {
+    return new OkImpl(val);
+}
+class OkImpl {
+    constructor(val) {
+        this.val = val;
+    }
+    map(fn) {
+        return new OkImpl(fn(this.val));
+    }
+    mapErr(_fn) {
+        return this;
+    }
+    mapOr(_fallback, fn) {
+        return fn(this.val);
+    }
+    mapOrElse(_fallback, fn) {
+        return fn(this.val);
+    }
+    andThen(fn) {
+        return fn(this.val);
+    }
+    and(res) {
+        return res;
+    }
+    or(_res) {
+        return this;
+    }
+    orElse(_fn) {
+        return this;
+    }
+    isOk() {
+        return true;
+    }
+    isErr() {
+        return false;
+    }
+    expect(_msg) {
+        return this.val;
+    }
+    expectErr(msg) {
+        throw new Error(`${msg}: ${this.val}`);
+    }
+    unwrap() {
+        return this.val;
+    }
+    unwrapOr(_fallback) {
+        return this.val;
+    }
+    unwrapOrElse(_fallback) {
+        return this.val;
+    }
+    unwrapErr() {
+        if (this.val instanceof Error) {
+            throw this.val;
+        }
+        throw new Error(`Can't unwrap \`Ok\` to \`Err\`: ${this.val}`);
+    }
+}
+function Err(val) {
+    return new ErrImpl(val);
+}
+class ErrImpl {
+    constructor(val) {
+        this.val = val;
+    }
+    map(_fn) {
+        return this;
+    }
+    mapErr(fn) {
+        return new ErrImpl(fn(this.val));
+    }
+    mapOr(fallback, _fn) {
+        return fallback;
+    }
+    mapOrElse(fallback, _fn) {
+        return fallback();
+    }
+    andThen(_fn) {
+        return this;
+    }
+    and(_res) {
+        return this;
+    }
+    or(res) {
+        return res;
+    }
+    orElse(fn) {
+        return fn(this.val);
+    }
+    isOk() {
+        return false;
+    }
+    isErr() {
+        return true;
+    }
+    expect(msg) {
+        throw new Error(`${msg}: ${this.val}`);
+    }
+    expectErr(_msg) {
+        return this.val;
+    }
+    unwrap() {
+        if (this.val instanceof Error) {
+            throw this.val;
+        }
+        throw new Error(`Can't unwrap \`Err\` to \`Ok\`: ${this.val}`);
+    }
+    unwrapOr(fallback) {
+        return fallback;
+    }
+    unwrapOrElse(fallback) {
+        return fallback(this.val);
+    }
+    unwrapErr() {
+        return this.val;
+    }
+}
+
 function assertExhaustive$1(_, errorMsg) {
     throw new Error(errorMsg);
 }
@@ -16510,6 +16629,9 @@ class CompilerError extends Error {
     }
     hasErrors() {
         return this.details.length > 0;
+    }
+    asResult() {
+        return this.hasErrors() ? Err(this) : Ok(undefined);
     }
     isCritical() {
         return this.details.some(detail => {
@@ -27950,125 +28072,6 @@ function validateMutableRange(mutableRange) {
         mutableRange.end > mutableRange.start, 'Identifier scope mutableRange was invalid: [%s:%s]', mutableRange.start, mutableRange.end);
 }
 
-function Ok(val) {
-    return new OkImpl(val);
-}
-class OkImpl {
-    constructor(val) {
-        this.val = val;
-    }
-    map(fn) {
-        return new OkImpl(fn(this.val));
-    }
-    mapErr(_fn) {
-        return this;
-    }
-    mapOr(_fallback, fn) {
-        return fn(this.val);
-    }
-    mapOrElse(_fallback, fn) {
-        return fn(this.val);
-    }
-    andThen(fn) {
-        return fn(this.val);
-    }
-    and(res) {
-        return res;
-    }
-    or(_res) {
-        return this;
-    }
-    orElse(_fn) {
-        return this;
-    }
-    isOk() {
-        return true;
-    }
-    isErr() {
-        return false;
-    }
-    expect(_msg) {
-        return this.val;
-    }
-    expectErr(msg) {
-        throw new Error(`${msg}: ${this.val}`);
-    }
-    unwrap() {
-        return this.val;
-    }
-    unwrapOr(_fallback) {
-        return this.val;
-    }
-    unwrapOrElse(_fallback) {
-        return this.val;
-    }
-    unwrapErr() {
-        if (this.val instanceof Error) {
-            throw this.val;
-        }
-        throw new Error(`Can't unwrap \`Ok\` to \`Err\`: ${this.val}`);
-    }
-}
-function Err(val) {
-    return new ErrImpl(val);
-}
-class ErrImpl {
-    constructor(val) {
-        this.val = val;
-    }
-    map(_fn) {
-        return this;
-    }
-    mapErr(fn) {
-        return new ErrImpl(fn(this.val));
-    }
-    mapOr(fallback, _fn) {
-        return fallback;
-    }
-    mapOrElse(fallback, _fn) {
-        return fallback();
-    }
-    andThen(_fn) {
-        return this;
-    }
-    and(_res) {
-        return this;
-    }
-    or(res) {
-        return res;
-    }
-    orElse(fn) {
-        return fn(this.val);
-    }
-    isOk() {
-        return false;
-    }
-    isErr() {
-        return true;
-    }
-    expect(msg) {
-        throw new Error(`${msg}: ${this.val}`);
-    }
-    expectErr(_msg) {
-        return this.val;
-    }
-    unwrap() {
-        if (this.val instanceof Error) {
-            throw this.val;
-        }
-        throw new Error(`Can't unwrap \`Err\` to \`Ok\`: ${this.val}`);
-    }
-    unwrapOr(fallback) {
-        return fallback;
-    }
-    unwrapOrElse(fallback) {
-        return fallback(this.val);
-    }
-    unwrapErr() {
-        return this.val;
-    }
-}
-
 var _HIRBuilder_instances, _HIRBuilder_completed, _HIRBuilder_current, _HIRBuilder_entry, _HIRBuilder_scopes, _HIRBuilder_context, _HIRBuilder_bindings, _HIRBuilder_env, _HIRBuilder_exceptionHandlerStack, _HIRBuilder_resolveBabelBinding;
 function newBlock(id, kind) {
     return { id, kind, instructions: [] };
@@ -36999,6 +37002,7 @@ const EnvironmentConfigSchema = zod.z.object({
     validateNoSetStateInRender: zod.z.boolean().default(true),
     validateNoSetStateInPassiveEffects: zod.z.boolean().default(false),
     validateNoJSXInTryStatements: zod.z.boolean().default(false),
+    validateStaticComponents: zod.z.boolean().default(false),
     validateMemoizedEffectDependencies: zod.z.boolean().default(false),
     validateNoCapitalizedCalls: zod.z.nullable(zod.z.array(zod.z.string())).default(null),
     validateBlocklistedImports: zod.z.nullable(zod.z.array(zod.z.string())).default(null),
@@ -37097,6 +37101,18 @@ class Environment {
     get nextScopeId() {
         var _a, _b;
         return makeScopeId((__classPrivateFieldSet(this, _Environment_nextScope, (_b = __classPrivateFieldGet(this, _Environment_nextScope, "f"), _a = _b++, _b), "f"), _a));
+    }
+    logErrors(errors) {
+        if (errors.isOk() || this.logger == null) {
+            return;
+        }
+        for (const error of errors.unwrapErr().details) {
+            this.logger.logEvent(this.filename, {
+                kind: 'CompileError',
+                detail: error,
+                fnLoc: null,
+            });
+        }
     }
     isContextIdentifier(node) {
         return __classPrivateFieldGet(this, _Environment_contextIdentifiers, "f").has(node);
@@ -49807,9 +49823,7 @@ function validateHooksUsage(fn) {
     for (const [, error] of errorsByPlace) {
         errors.push(error);
     }
-    if (errors.hasErrors()) {
-        throw errors;
-    }
+    return errors.asResult();
 }
 function visitFunctionExpression(errors, fn) {
     for (const [, block] of fn.body.blocks) {
@@ -49845,9 +49859,7 @@ function visitFunctionExpression(errors, fn) {
 function validateMemoizedEffectDependencies(fn) {
     const errors = new CompilerError();
     visitReactiveFunction(fn, new Visitor$1(), errors);
-    if (errors.hasErrors()) {
-        throw errors;
-    }
+    return errors.asResult();
 }
 let Visitor$1 = class Visitor extends ReactiveFunctionVisitor {
     constructor() {
@@ -49910,6 +49922,7 @@ function validateNoCapitalizedCalls(fn) {
     const isAllowed = (name) => {
         return (ALLOW_LIST.has(name) || (hookPattern != null && hookPattern.test(name)));
     };
+    const errors = new CompilerError();
     const capitalLoadGlobals = new Map();
     const capitalizedProperties = new Map();
     const reason = 'Capitalized functions are reserved for components, which must be invoked with JSX. If this is a component, render it with JSX. Otherwise, ensure that it has no hook calls and rename it to begin with a lowercase letter. Alternatively, if you know for a fact that this function is not a component, you can allowlist it via the compiler config';
@@ -49949,7 +49962,8 @@ function validateNoCapitalizedCalls(fn) {
                     const propertyIdentifier = value.property.identifier.id;
                     const propertyName = capitalizedProperties.get(propertyIdentifier);
                     if (propertyName != null) {
-                        CompilerError.throwInvalidReact({
+                        errors.push({
+                            severity: ErrorSeverity.InvalidReact,
                             reason,
                             description: `${propertyName} may be a component.`,
                             loc: value.loc,
@@ -49961,6 +49975,7 @@ function validateNoCapitalizedCalls(fn) {
             }
         }
     }
+    return errors.asResult();
 }
 
 var _Env_changed;
@@ -50001,7 +50016,7 @@ class Env extends Map {
 _Env_changed = new WeakMap();
 function validateNoRefAccessInRender(fn) {
     const env = new Env();
-    validateNoRefAccessInRenderImpl(fn, env).unwrap();
+    return validateNoRefAccessInRenderImpl(fn, env).map(_ => undefined);
 }
 function refTypeOfType(place) {
     if (isRefValueType(place.identifier)) {
@@ -50471,7 +50486,7 @@ function validateNoDirectRefValueAccess(errors, operand, env) {
 
 function validateNoSetStateInRender(fn) {
     const unconditionalSetStateFunctions = new Set();
-    validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions).unwrap();
+    return validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions);
 }
 function validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions) {
     const unconditionalBlocks = computeUnconditionalBlocks(fn);
@@ -50546,12 +50561,7 @@ function validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions) {
             }
         }
     }
-    if (errors.hasErrors()) {
-        return Err(errors);
-    }
-    else {
-        return Ok(undefined);
-    }
+    return errors.asResult();
 }
 
 function validatePreservedManualMemoization(fn) {
@@ -50560,9 +50570,7 @@ function validatePreservedManualMemoization(fn) {
         manualMemoState: null,
     };
     visitReactiveFunction(fn, new Visitor(), state);
-    if (state.errors.hasErrors()) {
-        throw state.errors;
-    }
+    return state.errors.asResult();
 }
 var CompareDependencyResult;
 (function (CompareDependencyResult) {
@@ -50842,6 +50850,7 @@ function isUnmemoized(operand, scopes) {
 }
 
 function validateUseMemo(fn) {
+    const errors = new CompilerError();
     const useMemos = new Set();
     const react = new Set();
     const functions = new Map();
@@ -50887,7 +50896,8 @@ function validateUseMemo(fn) {
                         continue;
                     }
                     if (body.loweredFunc.func.params.length > 0) {
-                        CompilerError.throwInvalidReact({
+                        errors.push({
+                            severity: ErrorSeverity.InvalidReact,
                             reason: 'useMemo callbacks may not accept any arguments',
                             description: null,
                             loc: body.loc,
@@ -50895,7 +50905,8 @@ function validateUseMemo(fn) {
                         });
                     }
                     if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
-                        CompilerError.throwInvalidReact({
+                        errors.push({
+                            severity: ErrorSeverity.InvalidReact,
                             reason: 'useMemo callbacks may not be async or generator functions',
                             description: null,
                             loc: body.loc,
@@ -50907,6 +50918,7 @@ function validateUseMemo(fn) {
             }
         }
     }
+    return errors.asResult();
 }
 
 function validateLocalsNotReassignedAfterRender(fn) {
@@ -51381,9 +51393,7 @@ function validateNoSetStateInPassiveEffects(fn) {
             }
         }
     }
-    if (errors.hasErrors()) {
-        throw errors;
-    }
+    return errors.asResult();
 }
 function getSetStateCall(fn, setStateFunctions) {
     for (const [, block] of fn.body.blocks) {
@@ -51440,9 +51450,7 @@ function validateNoJSXInTryStatement(fn) {
             activeTryBlocks.push(block.terminal.handler);
         }
     }
-    if (errors.hasErrors()) {
-        throw errors;
-    }
+    return errors.asResult();
 }
 
 function collectHoistablePropertyLoads(fn, temporaries, hoistableFromOptionals) {
@@ -53417,9 +53425,72 @@ function validateNoImpureFunctionsInRender(fn) {
             }
         }
     }
-    if (errors.hasErrors()) {
-        throw errors;
+    return errors.asResult();
+}
+
+function validateStaticComponents(fn) {
+    const error = new CompilerError();
+    const knownDynamicComponents = new Map();
+    for (const block of fn.body.blocks.values()) {
+        phis: for (const phi of block.phis) {
+            for (const operand of phi.operands.values()) {
+                const loc = knownDynamicComponents.get(operand.identifier.id);
+                if (loc != null) {
+                    knownDynamicComponents.set(phi.place.identifier.id, loc);
+                    continue phis;
+                }
+            }
+        }
+        for (const instr of block.instructions) {
+            const { lvalue, value } = instr;
+            switch (value.kind) {
+                case 'FunctionExpression':
+                case 'NewExpression':
+                case 'MethodCall':
+                case 'CallExpression': {
+                    knownDynamicComponents.set(lvalue.identifier.id, value.loc);
+                    break;
+                }
+                case 'LoadLocal': {
+                    const loc = knownDynamicComponents.get(value.place.identifier.id);
+                    if (loc != null) {
+                        knownDynamicComponents.set(lvalue.identifier.id, loc);
+                    }
+                    break;
+                }
+                case 'StoreLocal': {
+                    const loc = knownDynamicComponents.get(value.value.identifier.id);
+                    if (loc != null) {
+                        knownDynamicComponents.set(lvalue.identifier.id, loc);
+                        knownDynamicComponents.set(value.lvalue.place.identifier.id, loc);
+                    }
+                    break;
+                }
+                case 'JsxExpression': {
+                    if (value.tag.kind === 'Identifier') {
+                        const location = knownDynamicComponents.get(value.tag.identifier.id);
+                        if (location != null) {
+                            error.push({
+                                reason: `Components created during render will reset their state each time they are created. Declare components outside of render. `,
+                                severity: ErrorSeverity.InvalidReact,
+                                loc: value.tag.loc,
+                                description: null,
+                                suggestions: null,
+                            });
+                            error.push({
+                                reason: `The component may be created during render`,
+                                severity: ErrorSeverity.InvalidReact,
+                                loc: location,
+                                description: null,
+                                suggestions: null,
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
+    return error.asResult();
 }
 
 function run(func, config, fnType, mode, useMemoCacheIdentifier, logger, filename, code) {
@@ -53443,7 +53514,7 @@ function runWithEnvironment(func, env) {
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
     validateContextVariableLValues(hir);
-    validateUseMemo(hir);
+    validateUseMemo(hir).unwrap();
     if (env.isInferredMemoEnabled &&
         !env.config.enablePreserveExistingManualUseMemo &&
         !env.config.disableMemoizationForDebugging &&
@@ -53472,10 +53543,10 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'InferTypes', value: hir });
     if (env.isInferredMemoEnabled) {
         if (env.config.validateHooksUsage) {
-            validateHooksUsage(hir);
+            validateHooksUsage(hir).unwrap();
         }
         if (env.config.validateNoCapitalizedCalls) {
-            validateNoCapitalizedCalls(hir);
+            validateNoCapitalizedCalls(hir).unwrap();
         }
     }
     if (env.config.enableFire) {
@@ -53512,19 +53583,19 @@ function runWithEnvironment(func, env) {
             assertValidMutableRanges(hir);
         }
         if (env.config.validateRefAccessDuringRender) {
-            validateNoRefAccessInRender(hir);
+            validateNoRefAccessInRender(hir).unwrap();
         }
         if (env.config.validateNoSetStateInRender) {
-            validateNoSetStateInRender(hir);
+            validateNoSetStateInRender(hir).unwrap();
         }
         if (env.config.validateNoSetStateInPassiveEffects) {
-            validateNoSetStateInPassiveEffects(hir);
+            env.logErrors(validateNoSetStateInPassiveEffects(hir));
         }
         if (env.config.validateNoJSXInTryStatements) {
-            validateNoJSXInTryStatement(hir);
+            env.logErrors(validateNoJSXInTryStatement(hir));
         }
         if (env.config.validateNoImpureFunctionsInRender) {
-            validateNoImpureFunctionsInRender(hir);
+            validateNoImpureFunctionsInRender(hir).unwrap();
         }
     }
     inferReactivePlaces(hir);
@@ -53542,6 +53613,9 @@ function runWithEnvironment(func, env) {
         value: hir,
     });
     if (env.isInferredMemoEnabled) {
+        if (env.config.validateStaticComponents) {
+            env.logErrors(validateStaticComponents(hir));
+        }
         inferReactiveScopeVariables(hir);
         log({ kind: 'hir', name: 'InferReactiveScopeVariables', value: hir });
     }
@@ -53722,11 +53796,11 @@ function runWithEnvironment(func, env) {
         value: reactiveFunction,
     });
     if (env.config.validateMemoizedEffectDependencies) {
-        validateMemoizedEffectDependencies(reactiveFunction);
+        validateMemoizedEffectDependencies(reactiveFunction).unwrap();
     }
     if (env.config.enablePreserveExistingMemoizationGuarantees ||
         env.config.validatePreserveExistingMemoizationGuarantees) {
-        validatePreservedManualMemoization(reactiveFunction);
+        validatePreservedManualMemoization(reactiveFunction).unwrap();
     }
     const ast = codegenFunction(reactiveFunction, {
         uniqueIdentifiers,
