@@ -58,13 +58,11 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
   if (canvas === null) {
     initialize();
   } else {
-    try {
-      if (!canvas.matches(':popover-open')) {
-        // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
-        // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
-        canvas.showPopover();
-      }
-    } catch (e) {}
+    if (!canvas.matches(':popover-open')) {
+      // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+      // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+      canvas.showPopover();
+    }
   }
 
   const dpr = window.devicePixelRatio || 1;
@@ -211,11 +209,9 @@ function destroyNative(agent: Agent) {
 
 function destroyWeb() {
   if (canvas !== null) {
-    try {
-      // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
-      // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
-      canvas.hidePopover();
-    } catch (e) {}
+    // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+    // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+    canvas.hidePopover();
 
     // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API and loses canvas nullability tracking
     if (canvas.parentNode != null) {
@@ -253,9 +249,7 @@ function initialize(): void {
   const root = window.document.documentElement;
   root.insertBefore(canvas, root.firstChild);
 
-  try {
-    // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
-    // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
-    canvas.showPopover();
-  } catch (e) {}
+  // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+  // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+  canvas.showPopover();
 }
