@@ -147,7 +147,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -175,7 +177,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -205,7 +209,6 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -264,7 +267,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-and-compiler-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -306,7 +311,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-and-compiler-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -388,7 +395,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-and-compiler-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -425,7 +434,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -476,7 +487,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -514,7 +527,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -664,7 +679,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -719,7 +736,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
