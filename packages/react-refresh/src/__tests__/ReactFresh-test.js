@@ -701,6 +701,7 @@ describe('ReactFresh', () => {
 
   fit('can remount when change function to memo', async () => {
     if (__DEV__) {
+      console.group('\n\n=== initial render\n\n');
       await act(async () => {
         await render(() => {
           function Test() {
@@ -715,6 +716,8 @@ describe('ReactFresh', () => {
       const el = container.firstChild;
       expect(el.textContent).toBe('hi test');
 
+      console.groupEnd('\n\n=== initial render\n\n');
+      console.group('\n\n=== patch to memo\n\n');
       // Patch to change function to memo
       await act(async () => {
         await patch(() => {
@@ -733,7 +736,8 @@ describe('ReactFresh', () => {
       const nextEl = container.firstChild;
       expect(nextEl.textContent).toBe('hi memo');
 
-      console.log('patch to original');
+      console.groupEnd('\n\n=== patch to memo\n\n');
+      console.group('\n\n=== patch to original\n\n');
 
       // Patch back to original function
       await act(async () => {
@@ -746,6 +750,8 @@ describe('ReactFresh', () => {
         });
       });
 
+      console.groupEnd('\n\n=== patch to original\n\n');
+
       // Check final remount
       expect(container.firstChild !== nextEl).toBe(true);
       const newEl = container.firstChild;
@@ -753,8 +759,9 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('can remount when change memo to forwardRef', async () => {
+  fit('can remount when change memo to forwardRef', async () => {
     if (__DEV__) {
+      console.group('\n\n=== initial render as memo) \n\n');
       await act(async () => {
         await render(() => {
           function Test2() {
@@ -770,6 +777,8 @@ describe('ReactFresh', () => {
       const el = container.firstChild;
       expect(el.textContent).toBe('hi memo');
 
+      console.groupEnd('\n\n=== initial render as memo) \n\n');
+      console.group('\n\n=== patch to fowardRef\n\n');
       // Patch to change memo to forwardRef
       await act(async () => {
         await patch(() => {
@@ -783,10 +792,12 @@ describe('ReactFresh', () => {
         });
       });
       // Check remount
-      expect(container.firstChild).not.toBe(el);
+      expect(container.firstChild !== el).toBe(true);
       const nextEl = container.firstChild;
       expect(nextEl.textContent).toBe('hi forwardRef');
 
+      console.groupEnd('\n\n=== patch to fowardRef\n\n');
+      console.group('\n\n=== patch back to memo\n\n');
       // Patch back to memo
       await act(async () => {
         await patch(() => {
@@ -799,15 +810,17 @@ describe('ReactFresh', () => {
           return Test;
         });
       });
+      console.groupEnd('\n\n=== patch back to memo\n\n');
       // Check final remount
-      expect(container.firstChild).not.toBe(nextEl);
+      expect(container.firstChild !== nextEl).toBe(true);
       const newEl = container.firstChild;
       expect(newEl.textContent).toBe('hi memo');
     }
   });
 
-  it('can remount when change function to forwardRef', async () => {
+  fit('can remount when change function to forwardRef', async () => {
     if (__DEV__) {
+      console.group('\n\n=== initial render\n\n');
       await act(async () => {
         await render(() => {
           function Test() {
@@ -822,6 +835,8 @@ describe('ReactFresh', () => {
       const el = container.firstChild;
       expect(el.textContent).toBe('hi test');
 
+      console.groupEnd('\n\n=== initial render\n\n');
+      console.group('\n\n=== patch to forwardRef \n\n');
       // Patch to change function to forwardRef
       await act(async () => {
         await patch(() => {
@@ -836,10 +851,12 @@ describe('ReactFresh', () => {
       });
 
       // Check remount
-      expect(container.firstChild).not.toBe(el);
+      expect(container.firstChild !== el).toBe(true);
       const nextEl = container.firstChild;
       expect(nextEl.textContent).toBe('hi forwardRef');
 
+      console.groupEnd('\n\n=== patch to forwardRef \n\n');
+      console.group('\n\n=== patch to original \n\n');
       // Patch back to a new function
       await act(async () => {
         await patch(() => {
@@ -851,15 +868,17 @@ describe('ReactFresh', () => {
         });
       });
 
+      console.groupEnd('\n\n=== patch to original \n\n');
       // Check final remount
-      expect(container.firstChild).not.toBe(nextEl);
+      expect(container.firstChild !== nextEl).toBe(true);
       const newEl = container.firstChild;
       expect(newEl.textContent).toBe('hi test1');
     }
   });
 
-  it('resets state when switching between different component types', async () => {
+  fit('resets state when switching between different component types', async () => {
     if (__DEV__) {
+      console.group('\n\n=== initial render \n\n');
       await act(async () => {
         await render(() => {
           function Test() {
@@ -879,6 +898,8 @@ describe('ReactFresh', () => {
       });
       expect(container.firstChild.textContent).toBe('count: 1');
 
+      console.groupEnd('\n\n=== initial render \n\n');
+      console.group('\n\n=== patch to memo \n\n');
       await act(async () => {
         await patch(() => {
           function Test2() {
@@ -894,12 +915,16 @@ describe('ReactFresh', () => {
         });
       });
 
+      console.groupEnd('\n\n=== patch to memo \n\n');
+      console.group('\n\n=== click with memo \n\n');
       expect(container.firstChild.textContent).toBe('count: 0');
       await act(async () => {
         container.firstChild.click();
       });
       expect(container.firstChild.textContent).toBe('count: 1');
 
+      console.groupEnd('\n\n=== click with memo \n\n');
+      console.group('\n\n=== patch to forwardRed \n\n');
       await act(async () => {
         await patch(() => {
           const Test = React.forwardRef((props, ref) => {
@@ -929,10 +954,13 @@ describe('ReactFresh', () => {
         });
       });
 
+      console.groupEnd('\n\n=== patch to forwardRed \n\n');
+      console.group('\n\n=== click with forwardRed \n\n');
       expect(container.firstChild.textContent).toBe('count: 0');
       await act(async () => {
         container.firstChild.click();
       });
+      console.groupEnd('\n\n=== click with forwardRed \n\n');
       expect(container.firstChild.textContent).toBe('count: 1');
     }
   });

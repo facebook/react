@@ -204,6 +204,7 @@ export function performReactRefresh(): RefreshUpdate | null {
 
   isPerformingRefresh = true;
   try {
+    console.group('React Refresh');
     const staleFamilies = new Set<Family>();
     const updatedFamilies = new Set<Family>();
 
@@ -219,9 +220,18 @@ export function performReactRefresh(): RefreshUpdate | null {
 
       // Determine whether this should be a re-render or a re-mount.
       if (canPreserveStateBetween(prevType, nextType)) {
+        console.log('REFRESH: updated');
+
+        console.log('    prev ->', prevType);
+        console.log('    next ->', nextType);
+        console.log('');
         updatedFamilies.add(family);
       } else {
-        console.log('mark family as stale', family);
+        console.log('REFRESH: stale');
+
+        console.log('    prev ->', prevType);
+        console.log('    next ->', nextType);
+        console.log('');
         staleFamilies.add(family);
       }
     });
@@ -302,6 +312,7 @@ export function performReactRefresh(): RefreshUpdate | null {
     return update;
   } finally {
     isPerformingRefresh = false;
+    console.groupEnd('React Refresh');
   }
 }
 

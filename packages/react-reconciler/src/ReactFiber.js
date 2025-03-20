@@ -327,6 +327,14 @@ export function isFunctionClassComponent(
 
 // This is used to create an alternate fiber to do work on.
 export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
+  if (current.tag !== HostRoot) {
+    console.group('createWorkInProgress');
+    console.log(' (start)');
+    console.log('          tag ->', current.tag);
+    console.log('         type ->', current.type);
+    console.log('  elementType ->', current.elementType);
+    console.log('');
+  }
   let workInProgress = current.alternate;
   if (workInProgress === null) {
     // We use a double buffering pooling technique because we know that we'll
@@ -418,17 +426,34 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   }
 
   if (__DEV__) {
+    if (current.tag !== HostRoot) {
+      console.log(' (dev)');
+      console.log('  current');
+      console.log('   tag         ->', current?.tag);
+      console.log('   type        ->', current?.type);
+      console.log('   elementType ->', current?.elementType);
+      console.log('  wip');
+      console.log('   tag         ->', workInProgress.tag);
+      console.log('   type        ->', workInProgress.type);
+      console.log('   elementType ->', workInProgress.elementType);
+    }
     workInProgress._debugInfo = current._debugInfo;
     workInProgress._debugNeedsRemount = current._debugNeedsRemount;
     switch (workInProgress.tag) {
       case FunctionComponent:
+        console.log('');
+        workInProgress.type = resolveFunctionForHotReloading(current.type);
+        // workInProgress.elementType = workInProgress.type;
+        break;
       case SimpleMemoComponent:
+        console.log('');
         workInProgress.type = resolveFunctionForHotReloading(current.type);
         break;
       case ClassComponent:
         workInProgress.type = resolveClassForHotReloading(current.type);
         break;
       case ForwardRef:
+        console.log('');
         workInProgress.type = resolveForwardRefForHotReloading(current.type);
         break;
       default:
@@ -436,6 +461,18 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     }
   }
 
+  if (current.tag !== HostRoot) {
+    console.log(' (end)');
+    console.log('  current');
+    console.log('   tag         ->', current?.tag);
+    console.log('   type        ->', current?.type);
+    console.log('   elementType ->', current?.elementType);
+    console.log('  wip');
+    console.log('   tag         ->', workInProgress.tag);
+    console.log('   type        ->', workInProgress.type);
+    console.log('   elementType ->', workInProgress.elementType);
+  }
+  console.groupEnd('createWorkInProgress');
   return workInProgress;
 }
 
@@ -555,6 +592,11 @@ export function createFiberFromTypeAndProps(
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
+  if (typeof type !== 'string') {
+    console.group('createFiberFromTypeAndProps');
+    console.log('    type ->', type);
+    console.log('');
+  }
   let fiberTag = FunctionComponent;
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
   let resolvedType = type;
@@ -566,7 +608,13 @@ export function createFiberFromTypeAndProps(
       }
     } else {
       if (__DEV__) {
+        const ogResolvedType = resolvedType;
         resolvedType = resolveFunctionForHotReloading(resolvedType);
+        console.log('(early if) createFiberFromTypeAndProps resolved type');
+        console.log('           tag ->', fiberTag);
+        console.log('   before type ->', ogResolvedType);
+        console.log(' resolved type ->', resolvedType);
+        console.log('');
       }
     }
   } else if (typeof type === 'string') {
@@ -733,6 +781,15 @@ export function createFiberFromTypeAndProps(
 
   if (__DEV__) {
     fiber._debugOwner = owner;
+  }
+  if (typeof type !== 'string') {
+    console.log('(end) createFiberFromTypeAndProps');
+    console.log('    tag      ->', fiber.tag);
+    console.log('    og       ->', type);
+    console.log('    resolved ->', fiber.type);
+    console.log('    elementType ->', fiber.elementType);
+    console.log('');
+    console.groupEnd('createFiberFromTypeAndProps');
   }
 
   return fiber;

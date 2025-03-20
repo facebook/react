@@ -3103,6 +3103,30 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         completedWork,
         entangledRenderLanes,
       );
+      if (
+        completedWork.tag !== HostRoot &&
+        completedWork.tag !== HostComponent
+      ) {
+        console.log('');
+        console.group('complete fiber');
+        console.log('    current');
+        console.log('      tag         ->', current?.tag);
+        console.log('      type        ->', current?.type);
+        console.log('      elementType ->', current?.elementType);
+        console.log('    complete');
+        console.log('      tag         ->', completedWork?.tag);
+        console.log('      type        ->', completedWork?.type);
+        console.log('      elementType ->', completedWork?.elementType);
+        console.log('    next');
+        console.log('      tag         ->', next?.tag);
+        console.log('      type        ->', next?.type);
+        console.log('      elementType ->', next?.elementType);
+        console.log('    wip');
+        console.log('      tag         ->', workInProgress?.tag);
+        console.log('      type        ->', workInProgress?.type);
+        console.log('      elementType ->', workInProgress?.elementType);
+        console.groupEnd('complete fiber');
+      }
     } else {
       next = completeWork(current, completedWork, entangledRenderLanes);
     }

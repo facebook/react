@@ -28,6 +28,8 @@ import {
   ForwardRef,
   MemoComponent,
   SimpleMemoComponent,
+  HostRoot,
+  HostComponent,
 } from './ReactWorkTags';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -62,15 +64,40 @@ export const setRefreshHandler = (handler: RefreshHandler | null): void => {
 };
 
 export function resolveFunctionForHotReloading(type: any): any {
+  const location = new Error().stack
+    .split('\n')
+    .slice(2, 3)
+    .join('')
+    .replace(/(.*[\\/])/, '')
+    .replace(')', '');
   if (__DEV__) {
     if (resolveFamily === null) {
+      console.log(
+        '  -> resolveFunctionForHotReloading',
+        location,
+        type,
+        'result -> disabled',
+      );
       // Hot reloading is disabled.
       return type;
     }
     const family = resolveFamily(type);
     if (family === undefined) {
+      console.log(
+        '  -> resolveFunctionForHotReloading',
+        location,
+        type,
+        'result -> not found',
+      );
       return type;
     }
+
+    console.log(
+      '  -> resolveFunctionForHotReloading',
+      location,
+      family.current,
+      'result -> new family',
+    );
     // Use the latest known implementation.
     return family.current;
   } else {
@@ -84,8 +111,20 @@ export function resolveClassForHotReloading(type: any): any {
 }
 
 export function resolveForwardRefForHotReloading(type: any): any {
+  const location = new Error().stack
+    .split('\n')
+    .slice(2, 3)
+    .join('')
+    .replace(/(.*[\\/])/, '')
+    .replace(')', '');
   if (__DEV__) {
     if (resolveFamily === null) {
+      console.log(
+        '  -> resolveForwardRefForHotReloading',
+        location,
+        type,
+        'result -> disabled',
+      );
       // Hot reloading is disabled.
       return type;
     }
@@ -109,11 +148,30 @@ export function resolveForwardRefForHotReloading(type: any): any {
           if (type.displayName !== undefined) {
             (syntheticType: any).displayName = type.displayName;
           }
+          console.log(
+            '  -> resolveForwardRefForHotReloading',
+            location,
+            syntheticType,
+            'result -> synthetic',
+          );
           return syntheticType;
         }
       }
+
+      console.log(
+        '  -> resolveForwardRefForHotReloading',
+        location,
+        type,
+        'result -> not found',
+      );
       return type;
     }
+    console.log(
+      '  -> resolveForwardRefForHotReloading',
+      location,
+      type,
+      'result -> new family',
+    );
     // Use the latest known implementation.
     return family.current;
   } else {
@@ -133,6 +191,11 @@ export function isCompatibleFamilyForHotReloading(
 
     const prevType = fiber.elementType;
     const nextType = element.type;
+
+    console.log('isCompatibleFamilyForHotReloading');
+    console.log('      type -> ', fiber.type);
+    console.log('  prevType -> ', prevType);
+    console.log('  nextType -> ', nextType);
 
     // If we got here, we know types aren't === equal.
     let needsCompareFamilies = false;
@@ -283,8 +346,11 @@ function scheduleFibersWithFamiliesRecursively(
 
     let needsRender = false;
     let needsRemount = false;
+    const isTypeStale = staleFamilies.has(resolveFamily(type));
+    const isElementTypeStale = staleFamilies.has(resolveFamily(elementType));
+    const isCandidateTypeStale = staleFamilies.has(resolveFamily(elementType));
+
     if (staleFamilies.has(resolveFamily(elementType))) {
-      console.log('gonna mark stale fiber for remount');
       needsRemount = true;
     }
 
@@ -310,6 +376,19 @@ function scheduleFibersWithFamiliesRecursively(
       ) {
         needsRemount = true;
       }
+    }
+
+    if (tag !== HostRoot && tag !== HostComponent) {
+      console.log('scheduleFibersWithFamiliesRecursively');
+      console.log('      type stale ->', isTypeStale);
+      console.log(' candidate stale ->', isCandidateTypeStale);
+      console.log('   element stale ->', isElementTypeStale);
+      console.log('             tag ->', tag);
+      console.log('   candidateType ->', candidateType);
+      console.log('     elementType ->', elementType);
+      console.log('            type ->', type);
+      console.log('    needs render ->', needsRender);
+      console.log('   needs remount ->', needsRemount);
     }
 
     if (needsRemount) {

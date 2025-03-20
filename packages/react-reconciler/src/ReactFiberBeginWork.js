@@ -135,6 +135,7 @@ import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
   resolveClassForHotReloading,
+  isCompatibleFamilyForHotReloading,
 } from './ReactFiberHotReloading';
 
 import {
@@ -485,6 +486,7 @@ function updateMemoComponent(
   nextProps: any,
   renderLanes: Lanes,
 ): null | Fiber {
+  console.group('updateMemoComponent');
   if (current === null) {
     const type = Component.type;
     if (
@@ -506,6 +508,19 @@ function updateMemoComponent(
       if (__DEV__) {
         validateFunctionComponentInDev(workInProgress, type);
       }
+      console.log(' current');
+      console.log('  needsRemount ->', current?._debugNeedsRemount);
+      console.log('           tag ->', current?.tag);
+      console.log('          type ->', current?.type);
+      console.log('   elementType ->', current?.elementType);
+      console.log(' wip');
+      console.log('  needsRemount ->', workInProgress?._debugNeedsRemount);
+      console.log('           tag ->', workInProgress?.tag);
+      console.log('          type ->', workInProgress?.type);
+      console.log('   elementType ->', workInProgress?.elementType);
+
+      console.log(' return updateSimpleMemoComponent');
+      console.groupEnd('updateMemoComponent');
       return updateSimpleMemoComponent(
         current,
         workInProgress,
@@ -537,6 +552,13 @@ function updateMemoComponent(
       workInProgress.mode,
       renderLanes,
     );
+    console.log(' child');
+    console.log('  needsRemount ->', child?._debugNeedsRemount);
+    console.log('           tag ->', child?.tag);
+    console.log('          type ->', child?.type);
+    console.log('   elementType ->', child?.elementType);
+
+    console.groupEnd('updateMemoComponent');
     child.ref = workInProgress.ref;
     child.return = workInProgress;
     workInProgress.child = child;
@@ -3819,6 +3841,22 @@ function beginWork(
   renderLanes: Lanes,
 ): Fiber | null {
   if (__DEV__) {
+    if (
+      workInProgress?.tag !== HostRoot &&
+      workInProgress.tag !== HostComponent
+    ) {
+      console.group('beginWork');
+      console.log(' current');
+      console.log('  needsRemount ->', current?._debugNeedsRemount);
+      console.log('           tag ->', current?.tag);
+      console.log('          type ->', current?.type);
+      console.log('   elementType ->', current?.elementType);
+      console.log(' wip');
+      console.log('  needsRemount ->', workInProgress?._debugNeedsRemount);
+      console.log('           tag ->', workInProgress?.tag);
+      console.log('          type ->', workInProgress?.type);
+      console.log('   elementType ->', workInProgress?.elementType);
+    }
     if (workInProgress._debugNeedsRemount && current !== null) {
       // This will restart the begin phase with a new fiber.
       const copiedFiber = createFiberFromTypeAndProps(
@@ -3831,9 +3869,27 @@ function beginWork(
       );
       copiedFiber._debugStack = workInProgress._debugStack;
       copiedFiber._debugTask = workInProgress._debugTask;
-      return remountFiber(current, workInProgress, copiedFiber);
+      console.log('copied fiber');
+      console.log('  original');
+      console.log('    tag         -> ', workInProgress.tag);
+      console.log('    type        -> ', workInProgress.type);
+      console.log('    elementType -> ', workInProgress.elementType);
+      console.log('  copy');
+      console.log('    tag         -> ', copiedFiber.tag);
+      console.log('    type        -> ', copiedFiber.type);
+      console.log('    elementType -> ', copiedFiber.elementType);
+
+      const remounted = remountFiber(current, workInProgress, copiedFiber);
+      console.log('  remounted');
+      console.log('    tag         -> ', remounted.tag);
+      console.log('    type        -> ', remounted.type);
+      console.log('    elementType -> ', remounted.elementType);
+      console.log('');
+      console.groupEnd('beginWork');
+      return remounted;
     }
   }
+  console.groupEnd('beginWork');
 
   if (current !== null) {
     const oldProps = current.memoizedProps;

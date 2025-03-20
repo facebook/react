@@ -7,6 +7,8 @@
 
 /* eslint-disable react-internal/no-production-logging */
 
+import {CustomConsole} from '@jest/console';
+
 const chalk = require('chalk');
 const util = require('util');
 const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
@@ -62,9 +64,40 @@ const patchConsoleMethod = (methodName, logged) => {
 
 let logMethod;
 export function patchConsoleMethods({includeLog} = {includeLog: false}) {
+  // Collapse console logs so they don't log file names.
+
+  // Argument is serialized when passed from jest-cli script through to setupTests.
+  const formatter = (type, message) => {
+    switch (type) {
+      case 'error':
+        return '\x1b[31m' + message + '\x1b[0m';
+      case 'warn':
+        return '\x1b[33m' + message + '\x1b[0m';
+      case 'log':
+      default:
+        return message;
+    }
+  };
+
+  global.console = new CustomConsole(process.stdout, process.stderr, formatter);
+
   patchConsoleMethod('error', loggedErrors);
   patchConsoleMethod('warn', loggedWarns);
 
+  const originalLog = console.log;
+  console.log = function (format, ...args) {
+    for (let i = 0; i < args.length; i++) {
+      if (typeof args[i] === 'object' && args[i] !== null && args[i].$$typeof) {
+        const render = args[i].render;
+        args[i] = [args[i].$$typeof, 'type', args[i].type];
+        if (render) {
+          args[i].push('render');
+          args[i].push(render);
+        }
+      }
+    }
+    originalLog(format, ...args);
+  };
   // Only assert console.log isn't called in CI so you can debug tests in DEV.
   // The matchers will still work in DEV, so you can assert locally.
   if (includeLog) {
