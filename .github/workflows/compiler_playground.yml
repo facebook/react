@@ -40,7 +40,19 @@ jobs:
             **/node_modules
           key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+      - name: Check Playwright version
+        id: playwright_version
+        run: echo "playwright_version=$(npm ls @playwright/test | grep @playwright | sed 's/.*@//' | head -1)" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright Browsers for version ${{ steps.playwright_version.outputs.playwright_version }}
+        id: cache_playwright_browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-v6-${{ runner.arch }}-${{ runner.os }}-${{ steps.playwright_version.outputs.playwright_version }}
       - run: npx playwright install --with-deps chromium
+        if: steps.cache_playwright_browsers.outputs.cache-hit != 'true'
+      - run: npx playwright install-deps
+        if: steps.cache_playwright_browsers.outputs.cache-hit == 'true'
       - run: CI=true yarn test
       - run: ls -R test-results
         if: '!cancelled()'

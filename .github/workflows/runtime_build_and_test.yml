@@ -599,13 +599,10 @@ jobs:
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd fixtures/flight install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
-      - name: Store Playwright version
+      - name: Check Playwright version
         id: playwright_version
-        run: |
-          PLAYWRIGHT_VERSION=$(npm ls @playwright/test | grep @playwright | sed 's/.*@//')
-          echo "Playwright's Version: $PLAYWRIGHT_VERSION"
-          echo "playwright_version=$PLAYWRIGHT_VERSION" >> "$GITHUB_OUTPUT"
-      - name: Cache Playwright Browsers for Playwright's Version
+        run: echo "playwright_version=$(npm ls @playwright/test | grep @playwright | sed 's/.*@//' | head -1)" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright Browsers for version ${{ steps.playwright_version.outputs.playwright_version }}
         id: cache_playwright_browsers
         uses: actions/cache@v4
         with:
