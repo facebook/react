@@ -162,7 +162,7 @@ export const enableUseEffectCRUDOverload = false;
 export const enableFastAddPropertiesInDiffing = true;
 export const enableLazyPublicInstanceInFabric = false;
 
-export const enableFragmentRefs = false;
+export const enableFragmentRefs = __EXPERIMENTAL__;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
