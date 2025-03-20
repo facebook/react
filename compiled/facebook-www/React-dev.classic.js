@@ -89,7 +89,7 @@ __DEV__ &&
     function getComponentNameFromType(type) {
       if (null == type) return null;
       if ("function" === typeof type)
-        return type.$$typeof === REACT_CLIENT_REFERENCE$1
+        return type.$$typeof === REACT_CLIENT_REFERENCE
           ? null
           : type.displayName || type.name || null;
       if ("string" === typeof type) return type;
@@ -707,11 +707,11 @@ __DEV__ &&
       REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
       REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
-      REACT_LAZY_TYPE = Symbol.for("react.lazy"),
-      REACT_SCOPE_TYPE = Symbol.for("react.scope"),
-      REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
-      REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-      REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
+      REACT_LAZY_TYPE = Symbol.for("react.lazy");
+    renameElementSymbol = Symbol.for("react.scope");
+    var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
+    dynamicFeatureFlags = Symbol.for("react.legacy_hidden");
+    var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
       didWarnStateUpdateForUnmountedComponent = {},
@@ -747,7 +747,7 @@ __DEV__ &&
     Component.prototype.forceUpdate = function (callback) {
       this.updater.enqueueForceUpdate(this, callback, "forceUpdate");
     };
-    renameElementSymbol = {
+    var deprecatedAPIs = {
       isMounted: [
         "isMounted",
         "Instead, make sure to clean up subscriptions and pending requests in componentWillUnmount to prevent memory leaks."
@@ -757,16 +757,16 @@ __DEV__ &&
         "Refactor your code to use setState instead (see https://github.com/facebook/react/issues/3236)."
       ]
     };
-    for (var fnName in renameElementSymbol)
-      renameElementSymbol.hasOwnProperty(fnName) &&
-        defineDeprecationWarning(fnName, renameElementSymbol[fnName]);
+    for (fnName in deprecatedAPIs)
+      deprecatedAPIs.hasOwnProperty(fnName) &&
+        defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
     ComponentDummy.prototype = Component.prototype;
-    fnName = PureComponent.prototype = new ComponentDummy();
+    var fnName = (PureComponent.prototype = new ComponentDummy());
     fnName.constructor = PureComponent;
     assign(fnName, Component.prototype);
     fnName.isPureReactComponent = !0;
     var isArrayImpl = Array.isArray,
-      REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference"),
+      REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       ReactSharedInternals = {
         H: null,
         A: null,
@@ -792,7 +792,6 @@ __DEV__ &&
     var didWarnAboutKeySpread = {},
       didWarnAboutMaps = !1,
       userProvidedKeyEscapeRegex = /\/+/g,
-      REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       reportGlobalError =
         "function" === typeof reportError
           ? reportError
@@ -836,7 +835,7 @@ __DEV__ &&
             }
           : enqueueTask;
     fnName = Object.freeze({ __proto__: null, c: useMemoCache });
-    renameElementSymbol = {
+    deprecatedAPIs = {
       map: mapChildren,
       forEach: function (children, forEachFunc, forEachContext) {
         mapChildren(
@@ -874,7 +873,7 @@ __DEV__ &&
       var getCurrentStack = ReactSharedInternals.getCurrentStack;
       return null === getCurrentStack ? null : getCurrentStack();
     };
-    exports.Children = renameElementSymbol;
+    exports.Children = deprecatedAPIs;
     exports.Component = Component;
     exports.Fragment = REACT_FRAGMENT_TYPE;
     exports.Profiler = REACT_PROFILER_TYPE;
@@ -1323,30 +1322,7 @@ __DEV__ &&
       return lazyType;
     };
     exports.memo = function (type, compare) {
-      "string" === typeof type ||
-        "function" === typeof type ||
-        type === REACT_FRAGMENT_TYPE ||
-        type === REACT_PROFILER_TYPE ||
-        type === REACT_STRICT_MODE_TYPE ||
-        type === REACT_SUSPENSE_TYPE ||
-        type === REACT_SUSPENSE_LIST_TYPE ||
-        type === REACT_LEGACY_HIDDEN_TYPE ||
-        type === REACT_ACTIVITY_TYPE ||
-        type === REACT_SCOPE_TYPE ||
-        (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE) ||
-        (enableViewTransition && type === REACT_VIEW_TRANSITION_TYPE) ||
-        ("object" === typeof type &&
-          null !== type &&
-          (type.$$typeof === REACT_LAZY_TYPE ||
-            type.$$typeof === REACT_MEMO_TYPE ||
-            type.$$typeof === REACT_CONTEXT_TYPE ||
-            (!enableRenderableContext &&
-              type.$$typeof === REACT_PROVIDER_TYPE) ||
-            (enableRenderableContext &&
-              type.$$typeof === REACT_CONSUMER_TYPE) ||
-            type.$$typeof === REACT_FORWARD_REF_TYPE ||
-            type.$$typeof === REACT_CLIENT_REFERENCE ||
-            void 0 !== type.getModuleId)) ||
+      null == type &&
         console.error(
           "memo: The first argument must be a component. Instead received: %s",
           null === type ? "null" : typeof type
@@ -1407,8 +1383,8 @@ __DEV__ &&
       }
     };
     exports.unstable_Activity = REACT_ACTIVITY_TYPE;
-    exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
-    exports.unstable_Scope = REACT_SCOPE_TYPE;
+    exports.unstable_LegacyHidden = dynamicFeatureFlags;
+    exports.unstable_Scope = renameElementSymbol;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
@@ -1534,7 +1510,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-www-classic-e3c06424-20250320";
+    exports.version = "19.1.0-www-classic-b630219b-20250320";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

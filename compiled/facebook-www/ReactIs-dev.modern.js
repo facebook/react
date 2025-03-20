@@ -68,7 +68,6 @@ __DEV__ &&
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy"),
       REACT_SCOPE_TYPE = Symbol.for("react.scope"),
-      REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
       REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
       REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
@@ -142,7 +141,6 @@ __DEV__ &&
         type === REACT_SUSPENSE_TYPE ||
         type === REACT_SUSPENSE_LIST_TYPE ||
         type === REACT_LEGACY_HIDDEN_TYPE ||
-        type === REACT_ACTIVITY_TYPE ||
         type === REACT_SCOPE_TYPE ||
         (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE) ||
         (enableViewTransition && type === REACT_VIEW_TRANSITION_TYPE) ||
