@@ -41,6 +41,16 @@ jobs:
           node-version-file: '.nvmrc'
           cache: yarn
           cache-dependency-path: yarn.lock
+      - name: Warm with old cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - run: yarn install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Save cache
@@ -74,6 +84,16 @@ jobs:
           cache-dependency-path: |
             yarn.lock
             compiler/yarn.lock
+      - name: Warm with old cache
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            **/node_modules
+          key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          restore-keys: |
+            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-and-compiler-node_modules-v6-
       - run: yarn install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd compiler install --frozen-lockfile
