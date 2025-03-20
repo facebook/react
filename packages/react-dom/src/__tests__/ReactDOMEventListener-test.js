@@ -457,7 +457,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  describe('form resetting', () => {
+  describe('Form resetting', () => {
     it('should not reset form if is prevented', async () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
