@@ -102,6 +102,7 @@ import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls
 import {transformFire} from '../Transform';
 import {validateNoImpureFunctionsInRender} from '../Validation/ValiateNoImpureFunctionsInRender';
 import {CompilerError} from '..';
+import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -293,6 +294,10 @@ function runWithEnvironment(
   });
 
   if (env.isInferredMemoEnabled) {
+    if (env.config.validateStaticComponents) {
+      env.logErrors(validateStaticComponents(hir));
+    }
+
     /**
      * Only create reactive scopes (which directly map to generated memo blocks)
      * if inferred memoization is enabled. This makes all later passes which
