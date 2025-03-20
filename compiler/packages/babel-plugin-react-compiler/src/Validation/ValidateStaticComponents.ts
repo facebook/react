@@ -7,12 +7,15 @@
 
 import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {HIRFunction, IdentifierId, SourceLocation} from '../HIR';
+import {Err, Ok, Result} from '../Utils/Result';
 
 /**
  * Validates against components that are created dynamically and whose identity is not guaranteed
  * to be stable (which would cause the component to reset on each re-render).
  */
-export function validateStaticComponents(fn: HIRFunction): void {
+export function validateStaticComponents(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const error = new CompilerError();
   const knownDynamicComponents = new Map<IdentifierId, SourceLocation>();
   for (const block of fn.body.blocks.values()) {
@@ -77,6 +80,8 @@ export function validateStaticComponents(fn: HIRFunction): void {
     }
   }
   if (error.hasErrors()) {
-    throw error;
+    return Err(error);
+  } else {
+    return Ok(undefined);
   }
 }

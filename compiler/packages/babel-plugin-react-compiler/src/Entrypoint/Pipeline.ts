@@ -295,7 +295,7 @@ function runWithEnvironment(
 
   if (env.isInferredMemoEnabled) {
     if (env.config.validateStaticComponents) {
-      validateStaticComponents(hir);
+      env.logErrors(validateStaticComponents(hir));
     }
 
     /**

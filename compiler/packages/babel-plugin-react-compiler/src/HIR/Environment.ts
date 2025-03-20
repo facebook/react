@@ -937,6 +937,19 @@ export class Environment {
     return makeScopeId(this.#nextScope++);
   }
 
+  logErrors(errors: Result<void, CompilerError>): void {
+    if (errors.isOk() || this.logger == null) {
+      return;
+    }
+    for (const error of errors.unwrapErr().details) {
+      this.logger.logEvent(this.filename, {
+        kind: 'CompileError',
+        detail: error,
+        fnLoc: null,
+      });
+    }
+  }
+
   isContextIdentifier(node: t.Identifier): boolean {
     return this.#contextIdentifiers.has(node);
   }
