@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect, ErrorSeverity} from '..';
+import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {
   DeclarationId,
+  Effect,
   GeneratedSource,
   Identifier,
   IdentifierId,
@@ -30,6 +31,7 @@ import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
 } from '../ReactiveScopes/visitors';
+import {Result} from '../Utils/Result';
 import {getOrInsertDefault} from '../Utils/utils';
 
 /**
@@ -39,15 +41,15 @@ import {getOrInsertDefault} from '../Utils/utils';
  * This can occur if a value's mutable range somehow extended to include a hook and
  * was pruned.
  */
-export function validatePreservedManualMemoization(fn: ReactiveFunction): void {
+export function validatePreservedManualMemoization(
+  fn: ReactiveFunction,
+): Result<void, CompilerError> {
   const state = {
     errors: new CompilerError(),
     manualMemoState: null,
   };
   visitReactiveFunction(fn, new Visitor(), state);
-  if (state.errors.hasErrors()) {
-    throw state.errors;
-  }
+  return state.errors.asResult();
 }
 
 const DEBUG = false;

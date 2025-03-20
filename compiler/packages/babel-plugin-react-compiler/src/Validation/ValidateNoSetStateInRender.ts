@@ -9,7 +9,7 @@ import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {HIRFunction, IdentifierId, isSetStateType} from '../HIR';
 import {computeUnconditionalBlocks} from '../HIR/ComputeUnconditionalBlocks';
 import {eachInstructionValueOperand} from '../HIR/visitors';
-import {Err, Ok, Result} from '../Utils/Result';
+import {Result} from '../Utils/Result';
 
 /**
  * Validates that the given function does not have an infinite update loop
@@ -39,9 +39,11 @@ import {Err, Ok, Result} from '../Utils/Result';
  * y();
  * ```
  */
-export function validateNoSetStateInRender(fn: HIRFunction): void {
+export function validateNoSetStateInRender(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const unconditionalSetStateFunctions: Set<IdentifierId> = new Set();
-  validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions).unwrap();
+  return validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions);
 }
 
 function validateNoSetStateInRenderImpl(
@@ -145,9 +147,5 @@ function validateNoSetStateInRenderImpl(
     }
   }
 
-  if (errors.hasErrors()) {
-    return Err(errors);
-  } else {
-    return Ok(undefined);
-  }
+  return errors.asResult();
 }
