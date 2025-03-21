@@ -333,6 +333,9 @@ jobs:
         run: yarn lint-build
       - name: Display structure of build
         run: ls -R build
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'build/**/*'
       - name: Archive build
         id: upload_build
         uses: actions/upload-artifact@v4
