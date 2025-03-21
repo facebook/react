@@ -320,15 +320,11 @@ export function cloneMutableTextInstance(textInstance) {
 
 export type FragmentInstanceType = null;
 
-export function createFragmentInstance(fiber, parentHostInstance): null {
+export function createFragmentInstance(fiber): null {
   return null;
 }
 
-export function updateFragmentInstance(
-  fiber,
-  parentHostInstance,
-  instance,
-): void {
+export function updateFragmentInstanceFiber(fiber, instance): void {
   // Noop
 }
 

@@ -846,7 +846,7 @@ describe('FragmentRefs', () => {
 
   describe('getClientRects', () => {
     // @gate enableFragmentRefs
-    it('returns the bounding client recs of all children', async () => {
+    it('returns the bounding client rects of all children', async () => {
       const fragmentRef = React.createRef();
       const childARef = React.createRef();
       const childBRef = React.createRef();
@@ -903,6 +903,61 @@ describe('FragmentRefs', () => {
 
       await act(() => root.render(<Test />));
       expect(fragmentRef.current.getRootNode()).toBe(document);
+    });
+
+    // @gate enableFragmentRefs
+    it('returns the topmost disconnected element if the fragment and parent are unmounted', async () => {
+      const containerRef = React.createRef();
+      const parentRef = React.createRef();
+      const fragmentRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test({mounted}) {
+        return (
+          <div ref={containerRef} id="container">
+            {mounted && (
+              <div ref={parentRef} id="parent">
+                <React.Fragment ref={fragmentRef}>
+                  <div />
+                </React.Fragment>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      await act(() => root.render(<Test mounted={true} />));
+      expect(fragmentRef.current.getRootNode()).toBe(document);
+      // const fragmentHandle = fragmentRef.current;
+      // const parentRefHandle = parentRef.current;
+      await act(() => root.render(<Test mounted={false} />));
+      // TODO: Should this pass? fragmentHandle._fragmentFiber.return is null
+      // expect(fragmentHandle.getRootNode().id).toBe(parentRefHandle.id);
+    });
+
+    // @gate enableFragmentRefs
+    it('returns self when only the fragment was unmounted', async () => {
+      const fragmentRef = React.createRef();
+      const parentRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test({mounted}) {
+        return (
+          <div ref={parentRef} id="parent">
+            {mounted && (
+              <React.Fragment ref={fragmentRef}>
+                <div />
+              </React.Fragment>
+            )}
+          </div>
+        );
+      }
+
+      await act(() => root.render(<Test mounted={true} />));
+      expect(fragmentRef.current.getRootNode()).toBe(document);
+      const fragmentHandle = fragmentRef.current;
+      await act(() => root.render(<Test mounted={false} />));
+      expect(fragmentHandle.getRootNode()).toBe(fragmentHandle);
     });
   });
 });

@@ -53,7 +53,10 @@ import {
   markNodeAsHoistable,
   isOwnedInstance,
 } from './ReactDOMComponentTree';
-import {traverseFragmentInstance} from 'react-reconciler/src/ReactFiberTreeReflection';
+import {
+  traverseFragmentInstance,
+  getFragmentParentHostInstance,
+} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
@@ -2212,7 +2215,6 @@ type FocusOptions = {
 
 export type FragmentInstanceType = {
   _fragmentFiber: Fiber,
-  _parentHostInstance: Instance,
   _eventListeners: null | Array<StoredEventListener>,
   _observers: null | Set<IntersectionObserver | ResizeObserver>,
   addEventListener(
@@ -2231,16 +2233,13 @@ export type FragmentInstanceType = {
   observeUsing(observer: IntersectionObserver | ResizeObserver): void,
   unobserveUsing(observer: IntersectionObserver | ResizeObserver): void,
   getClientRects(): Array<DOMRect>,
-  getRootNode(getRootNodeOptions?: {composed: boolean}): Document | ShadowRoot,
+  getRootNode(getRootNodeOptions?: {
+    composed: boolean,
+  }): Document | ShadowRoot | FragmentInstanceType,
 };
 
-function FragmentInstance(
-  this: FragmentInstanceType,
-  fragmentFiber: Fiber,
-  parentHostInstance: Instance,
-) {
+function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
   this._fragmentFiber = fragmentFiber;
-  this._parentHostInstance = parentHostInstance;
   this._eventListeners = null;
   this._observers = null;
 }
@@ -2355,23 +2354,17 @@ function collectChildren(
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
-  const activeElement = this._parentHostInstance.ownerDocument.activeElement;
-  if (
-    activeElement !== null &&
-    this._parentHostInstance.contains(activeElement)
-  ) {
-    traverseFragmentInstance(
-      this._fragmentFiber,
-      blurActiveElementWithinFragment,
-      activeElement,
-    );
-  }
+  // TODO: When we have a parent element reference, we can skip traversal if the fragment's parent
+  //   does not contain document.activeElement
+  traverseFragmentInstance(
+    this._fragmentFiber,
+    blurActiveElementWithinFragment,
+  );
 };
-function blurActiveElementWithinFragment(
-  child: Instance,
-  activeElement: Instance,
-): boolean {
-  if (child === activeElement) {
+function blurActiveElementWithinFragment(child: Instance): boolean {
+  // TODO: We can get the activeElement from the parent outside of the loop when we have a reference.
+  const ownerDocument = child.ownerDocument;
+  if (child === ownerDocument.activeElement) {
     // $FlowFixMe[prop-missing]
     child.blur();
     return true;
@@ -2437,11 +2430,15 @@ function collectClientRects(child: Instance, rects: Array<DOMRect>): boolean {
 FragmentInstance.prototype.getRootNode = function (
   this: FragmentInstanceType,
   getRootNodeOptions?: {composed: boolean},
-): Document | ShadowRoot {
-  // $FlowFixMe[incompatible-cast] Flow expects Node
-  return (this._parentHostInstance.getRootNode(getRootNodeOptions):
-    | Document
-    | ShadowRoot);
+): Document | ShadowRoot | FragmentInstanceType {
+  const parentHostInstance = getFragmentParentHostInstance(this._fragmentFiber);
+  if (parentHostInstance === null) {
+    return this;
+  }
+  const rootNode =
+    // $FlowFixMe[incompatible-cast] Flow expects Node
+    (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
+  return rootNode;
 };
 
 function normalizeListenerOptions(
@@ -2480,18 +2477,15 @@ function indexOfEventListener(
 
 export function createFragmentInstance(
   fragmentFiber: Fiber,
-  parentHostInstance: Instance,
 ): FragmentInstanceType {
-  return new (FragmentInstance: any)(fragmentFiber, parentHostInstance);
+  return new (FragmentInstance: any)(fragmentFiber);
 }
 
-export function updateFragmentInstance(
+export function updateFragmentInstanceFiber(
   fragmentFiber: Fiber,
-  parentHostInstance: Instance,
   instance: FragmentInstanceType,
 ): void {
   instance._fragmentFiber = fragmentFiber;
-  instance._parentHostInstance = parentHostInstance;
 }
 
 export function commitNewChildToFragmentInstance(

@@ -457,14 +457,12 @@ export type FragmentInstanceType = null;
 
 export function createFragmentInstance(
   fragmentFiber: Object,
-  parentHostInstance: Instance,
 ): FragmentInstanceType {
   return null;
 }
 
-export function updateFragmentInstance(
+export function updateFragmentInstanceFiber(
   fragmentFiber: Object,
-  parentHostInstance: Instance,
   instance: FragmentInstanceType,
 ): void {
   // Noop
