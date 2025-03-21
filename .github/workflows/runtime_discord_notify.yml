@@ -7,6 +7,8 @@ on:
       - compiler/**
       - .github/workflows/compiler_**.yml
 
+permissions: {}
+
 jobs:
   check_maintainer:
     uses: facebook/react/.github/workflows/shared_check_maintainer.yml@main
