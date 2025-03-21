@@ -284,6 +284,8 @@ jobs:
   build_and_lint:
     name: yarn build and lint
     needs: [runtime_compiler_node_modules_cache]
+    permissions:
+      attestations: write
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -332,11 +334,16 @@ jobs:
       - name: Display structure of build
         run: ls -R build
       - name: Archive build
+        id: upload_build
         uses: actions/upload-artifact@v4
         with:
           name: _build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
           path: build
           if-no-files-found: error
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: build
+          subject-digest: sha256:${{ steps.upload_build.outputs.artifact-digest }}
 
   test_build:
     name: yarn test-build
