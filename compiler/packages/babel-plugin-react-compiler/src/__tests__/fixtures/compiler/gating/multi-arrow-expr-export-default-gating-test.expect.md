@@ -19,8 +19,8 @@ export default props => (
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { c as _c } from "react/compiler-runtime"; // @gating
+import { c as _c } from "react/compiler-runtime";
+import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag"; // @gating
 import { Stringify } from "shared-runtime";
 
 const ErrorView = isForgetEnabled_Fixtures()

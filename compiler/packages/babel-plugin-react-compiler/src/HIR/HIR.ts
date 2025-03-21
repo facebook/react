@@ -1165,18 +1165,21 @@ export type VariableBinding =
   // bindings declard outside the current component/hook
   | NonLocalBinding;
 
+// `import {bar as baz} from 'foo'`: name=baz, module=foo, imported=bar
+export type NonLocalImportSpecifier = {
+  kind: 'ImportSpecifier';
+  name: string;
+  module: string;
+  imported: string;
+};
+
 export type NonLocalBinding =
   // `import Foo from 'foo'`: name=Foo, module=foo
   | {kind: 'ImportDefault'; name: string; module: string}
   // `import * as Foo from 'foo'`: name=Foo, module=foo
   | {kind: 'ImportNamespace'; name: string; module: string}
-  // `import {bar as baz} from 'foo'`: name=baz, module=foo, imported=bar
-  | {
-      kind: 'ImportSpecifier';
-      name: string;
-      module: string;
-      imported: string;
-    }
+  // `import {bar as baz} from 'foo'`
+  | NonLocalImportSpecifier
   // let, const, function, etc declared in the module but outside the current component/hook
   | {kind: 'ModuleLocal'; name: string}
   // an unresolved binding

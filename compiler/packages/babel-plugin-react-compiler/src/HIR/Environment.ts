@@ -15,6 +15,7 @@ import {
   PanicThresholdOptions,
   parsePluginOptions,
   PluginOptions,
+  ProgramContext,
 } from '../Entrypoint';
 import {Err, Ok, Result} from '../Utils/Result';
 import {
@@ -84,6 +85,8 @@ export const InstrumentationSchema = z
   );
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
+export const USE_FIRE_FUNCTION_NAME = 'useFire';
+export const EMIT_FREEZE_GLOBAL_GATING = '__DEV__';
 
 export const MacroMethodSchema = z.union([
   z.object({type: z.literal('wildcard')}),
@@ -846,7 +849,7 @@ export class Environment {
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
   compilerMode: CompilerMode;
-  useMemoCacheIdentifier: string;
+  programContext: ProgramContext;
   hasLoweredContextAccess: boolean;
   hasFireRewrite: boolean;
 
@@ -862,7 +865,7 @@ export class Environment {
     logger: Logger | null,
     filename: string | null,
     code: string | null,
-    useMemoCacheIdentifier: string,
+    programContext: ProgramContext,
   ) {
     this.#scope = scope;
     this.fnType = fnType;
@@ -871,7 +874,7 @@ export class Environment {
     this.filename = filename;
     this.code = code;
     this.logger = logger;
-    this.useMemoCacheIdentifier = useMemoCacheIdentifier;
+    this.programContext = programContext;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
     this.hasLoweredContextAccess = false;
@@ -935,6 +938,10 @@ export class Environment {
 
   get nextScopeId(): ScopeId {
     return makeScopeId(this.#nextScope++);
+  }
+
+  get scope(): BabelScope {
+    return this.#scope;
   }
 
   logErrors(errors: Result<void, CompilerError>): void {

@@ -19,6 +19,7 @@ export {
   parsePluginOptions,
   OPT_OUT_DIRECTIVES,
   OPT_IN_DIRECTIVES,
+  ProgramContext,
   findDirectiveEnablingMemoization,
   findDirectiveDisablingMemoization,
   type CompilerPipelineValue,
