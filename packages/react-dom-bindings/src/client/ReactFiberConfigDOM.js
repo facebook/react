@@ -2236,6 +2236,7 @@ export type FragmentInstanceType = {
     listener: EventListener,
     optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
   ): void,
+  dispatchEvent(event: Event): boolean,
   focus(focusOptions?: FocusOptions): void,
   focusLast(focusOptions?: FocusOptions): void,
   blur(): void,
@@ -2330,6 +2331,23 @@ function removeEventListenerFromChild(
   child.removeEventListener(type, listener, optionsOrUseCapture);
   return false;
 }
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.dispatchEvent = function (
+  this: FragmentInstanceType,
+  event: Event,
+): boolean {
+  const parentHostInstance = getFragmentParentHostInstance(this._fragmentFiber);
+  if (parentHostInstance === null) {
+    if (__DEV__) {
+      console.error(
+        'You are attempting to dispatch an event on a disconnected ' +
+          'FragmentInstance. No event was dispatched.',
+      );
+    }
+    return true;
+  }
+  return parentHostInstance.dispatchEvent(event);
+};
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.focus = function (
   this: FragmentInstanceType,
