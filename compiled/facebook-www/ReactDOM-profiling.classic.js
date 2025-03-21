@@ -6481,13 +6481,10 @@ function updateSimpleMemoComponent(
 function updateOffscreenComponent(current, workInProgress, renderLanes) {
   var nextProps = workInProgress.pendingProps,
     nextChildren = nextProps.children,
-    nextIsDetached = 0 !== (workInProgress.stateNode._pendingVisibility & 2),
     prevState = null !== current ? current.memoizedState : null;
-  markRef(current, workInProgress);
   if (
     "hidden" === nextProps.mode ||
-    "unstable-defer-without-hiding" === nextProps.mode ||
-    nextIsDetached
+    "unstable-defer-without-hiding" === nextProps.mode
   ) {
     if (0 !== (workInProgress.flags & 128)) {
       nextChildren =
@@ -6530,14 +6527,14 @@ function updateOffscreenComponent(current, workInProgress, renderLanes) {
       );
   } else if (null !== prevState) {
     nextProps = prevState.cachePool;
-    nextIsDetached = null;
+    var transitions = null;
     if (enableTransitionTracing) {
       var instance = workInProgress.stateNode;
       null !== instance &&
         null != instance._transitions &&
-        (nextIsDetached = Array.from(instance._transitions));
+        (transitions = Array.from(instance._transitions));
     }
-    pushTransition(workInProgress, nextProps, nextIsDetached);
+    pushTransition(workInProgress, nextProps, transitions);
     pushHiddenContext(workInProgress, prevState);
     reuseSuspenseHandlerOnStack(workInProgress);
     workInProgress.memoizedState = null;
@@ -7414,7 +7411,15 @@ function mountSuspenseFallbackChildren(
   return fallbackChildren;
 }
 function mountWorkInProgressOffscreenFiber(offscreenProps, mode) {
-  return createFiberFromOffscreen(offscreenProps, mode, 0, null);
+  offscreenProps = createFiber(22, offscreenProps, null, mode);
+  offscreenProps.lanes = 0;
+  offscreenProps.stateNode = {
+    _visibility: 1,
+    _pendingMarkers: null,
+    _retryCache: null,
+    _transitions: null
+  };
+  return offscreenProps;
 }
 function retrySuspenseComponentWithoutHydrating(
   current,
@@ -10571,19 +10576,21 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
         null !== finishedRoot &&
           ((finishedRoot = finishedRoot.dehydrated),
           null !== finishedRoot &&
-            ((flags = retryDehydratedSuspenseBoundary.bind(null, finishedWork)),
-            registerSuspenseInstanceRetry(finishedRoot, flags))));
+            ((current = retryDehydratedSuspenseBoundary.bind(
+              null,
+              finishedWork
+            )),
+            registerSuspenseInstanceRetry(finishedRoot, current))));
       break;
     case 22:
-      prevProps =
-        null !== finishedWork.memoizedState || offscreenSubtreeIsHidden;
-      if (!prevProps) {
+      flags = null !== finishedWork.memoizedState || offscreenSubtreeIsHidden;
+      if (!flags) {
         current =
           (null !== current && null !== current.memoizedState) ||
           offscreenSubtreeWasHidden;
-        var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-          prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
-        offscreenSubtreeIsHidden = prevProps;
+        prevProps = offscreenSubtreeIsHidden;
+        var prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+        offscreenSubtreeIsHidden = flags;
         (offscreenSubtreeWasHidden = current) && !prevOffscreenSubtreeWasHidden
           ? recursivelyTraverseReappearLayoutEffects(
               finishedRoot,
@@ -10591,13 +10598,9 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
               0 !== (finishedWork.subtreeFlags & 8772)
             )
           : recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
+        offscreenSubtreeIsHidden = prevProps;
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
       }
-      flags & 512 &&
-        ("manual" === finishedWork.memoizedProps.mode
-          ? safelyAttachRef(finishedWork, finishedWork.return)
-          : safelyDetachRef(finishedWork, finishedWork.return));
       break;
     case 30:
       enableViewTransition &&
@@ -11006,8 +11009,6 @@ function commitDeletionEffectsOnFiber(
       );
       break;
     case 22:
-      offscreenSubtreeWasHidden ||
-        safelyDetachRef(deletedFiber, nearestMountedAncestor);
       offscreenSubtreeWasHidden =
         (prevHostParent = offscreenSubtreeWasHidden) ||
         null !== deletedFiber.memoizedState;
@@ -11073,26 +11074,6 @@ function getRetryCache(finishedWork) {
       );
     default:
       throw Error(formatProdErrorMessage(435, finishedWork.tag));
-  }
-}
-function detachOffscreenInstance(instance) {
-  var fiber = instance._current;
-  if (null === fiber) throw Error(formatProdErrorMessage(456));
-  if (0 === (instance._pendingVisibility & 2)) {
-    var root = enqueueConcurrentRenderForLane(fiber, 2);
-    null !== root &&
-      ((instance._pendingVisibility |= 2),
-      scheduleUpdateOnFiber(root, fiber, 2));
-  }
-}
-function attachOffscreenInstance(instance) {
-  var fiber = instance._current;
-  if (null === fiber) throw Error(formatProdErrorMessage(456));
-  if (0 !== (instance._pendingVisibility & 2)) {
-    var root = enqueueConcurrentRenderForLane(fiber, 2);
-    null !== root &&
-      ((instance._pendingVisibility &= -3),
-      scheduleUpdateOnFiber(root, fiber, 2));
   }
 }
 function attachSuspenseRetryListeners(finishedWork, wakeables) {
@@ -11455,10 +11436,6 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       }
       break;
     case 22:
-      flags & 512 &&
-        (offscreenSubtreeWasHidden ||
-          null === current ||
-          safelyDetachRef(current, current.return));
       suspenseCallback = null !== finishedWork.memoizedState;
       retryQueue = null !== current && null !== current.memoizedState;
       var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
@@ -11470,25 +11447,23 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
       offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
       commitReconciliationEffects(finishedWork);
-      root = finishedWork.stateNode;
-      root._current = finishedWork;
-      root._visibility &= -3;
-      root._visibility |= root._pendingVisibility & 2;
-      if (
-        flags & 8192 &&
-        ((root._visibility = suspenseCallback
-          ? root._visibility & -2
-          : root._visibility | 1),
-        suspenseCallback &&
-          (null === current ||
-            retryQueue ||
-            offscreenSubtreeIsHidden ||
-            offscreenSubtreeWasHidden ||
-            recursivelyTraverseDisappearLayoutEffects(finishedWork)),
-        null === finishedWork.memoizedProps ||
-          "manual" !== finishedWork.memoizedProps.mode)
-      )
-        a: for (current = null, root = finishedWork; ; ) {
+      if (flags & 8192)
+        a: for (
+          root = finishedWork.stateNode,
+            root._visibility = suspenseCallback
+              ? root._visibility & -2
+              : root._visibility | 1,
+            suspenseCallback &&
+              (null === current ||
+                retryQueue ||
+                offscreenSubtreeIsHidden ||
+                offscreenSubtreeWasHidden ||
+                recursivelyTraverseDisappearLayoutEffects(finishedWork)),
+            current = null,
+            root = finishedWork;
+          ;
+
+        ) {
           if (5 === root.tag || 26 === root.tag) {
             if (null === current) {
               lanes = current = root;
@@ -11876,7 +11851,6 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
         break;
       case 22:
-        safelyDetachRef(finishedWork, finishedWork.return);
         null === finishedWork.memoizedState &&
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
         break;
@@ -12437,7 +12411,7 @@ function commitPassiveMountOnFiber(
             null !== wasInHydratedSubtree &&
             null === wasInHydratedSubtree.memoizedState &&
             restoreEnterOrExitViewTransitions(wasInHydratedSubtree),
-          prevEffectDuration._visibility & 4
+          prevEffectDuration._visibility & 2
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
                 finishedWork,
@@ -12456,7 +12430,7 @@ function commitPassiveMountOnFiber(
             null !== wasInHydratedSubtree &&
             null !== wasInHydratedSubtree.memoizedState &&
             restoreEnterOrExitViewTransitions(finishedWork),
-          prevEffectDuration._visibility & 4
+          prevEffectDuration._visibility & 2
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
                 finishedWork,
@@ -12464,7 +12438,7 @@ function commitPassiveMountOnFiber(
                 committedTransitions,
                 endTime
               )
-            : ((prevEffectDuration._visibility |= 4),
+            : ((prevEffectDuration._visibility |= 2),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -12633,7 +12607,7 @@ function reconnectPassiveEffects(
     case 22:
       var instance$202 = finishedWork.stateNode;
       null !== finishedWork.memoizedState
-        ? instance$202._visibility & 4
+        ? instance$202._visibility & 2
           ? recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
               finishedWork,
@@ -12649,7 +12623,7 @@ function reconnectPassiveEffects(
               committedTransitions,
               endTime
             )
-        : ((instance$202._visibility |= 4),
+        : ((instance$202._visibility |= 2),
           recursivelyTraverseReconnectPassiveEffects(
             finishedRoot,
             finishedWork,
@@ -12926,9 +12900,9 @@ function commitPassiveUnmountOnFiber(finishedWork) {
     case 22:
       prevEffectDuration = finishedWork.stateNode;
       null !== finishedWork.memoizedState &&
-      prevEffectDuration._visibility & 4 &&
+      prevEffectDuration._visibility & 2 &&
       (null === finishedWork.return || 13 !== finishedWork.return.tag)
-        ? ((prevEffectDuration._visibility &= -5),
+        ? ((prevEffectDuration._visibility &= -3),
           recursivelyTraverseDisconnectPassiveEffects(finishedWork))
         : recursivelyTraversePassiveUnmountEffects(finishedWork);
       break;
@@ -12975,8 +12949,8 @@ function recursivelyTraverseDisconnectPassiveEffects(parentFiber) {
         break;
       case 22:
         i = deletions.stateNode;
-        i._visibility & 4 &&
-          ((i._visibility &= -5),
+        i._visibility & 2 &&
+          ((i._visibility &= -3),
           recursivelyTraverseDisconnectPassiveEffects(deletions));
         break;
       default:
@@ -15318,7 +15292,18 @@ function createFiberFromTypeAndProps(
           type
         );
       case REACT_LEGACY_HIDDEN_TYPE:
-        return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
+        return (
+          (type = createFiber(23, pendingProps, key, mode)),
+          (type.elementType = REACT_LEGACY_HIDDEN_TYPE),
+          (type.lanes = lanes),
+          (type.stateNode = {
+            _visibility: 1,
+            _pendingMarkers: null,
+            _transitions: null,
+            _retryCache: null
+          }),
+          type
+        );
       case REACT_VIEW_TRANSITION_TYPE:
         if (enableViewTransition)
           return (
@@ -15400,47 +15385,6 @@ function createFiberFromFragment(elements, mode, lanes, key) {
   elements = createFiber(7, elements, key, mode);
   elements.lanes = lanes;
   return elements;
-}
-function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
-  pendingProps = createFiber(22, pendingProps, key, mode);
-  pendingProps.lanes = lanes;
-  var primaryChildInstance = {
-    _visibility: 1,
-    _pendingVisibility: 1,
-    _pendingMarkers: null,
-    _retryCache: null,
-    _transitions: null,
-    _current: null,
-    detach: function () {
-      return detachOffscreenInstance(primaryChildInstance);
-    },
-    attach: function () {
-      return attachOffscreenInstance(primaryChildInstance);
-    }
-  };
-  pendingProps.stateNode = primaryChildInstance;
-  return pendingProps;
-}
-function createFiberFromLegacyHidden(pendingProps, mode, lanes, key) {
-  pendingProps = createFiber(23, pendingProps, key, mode);
-  pendingProps.elementType = REACT_LEGACY_HIDDEN_TYPE;
-  pendingProps.lanes = lanes;
-  var instance = {
-    _visibility: 1,
-    _pendingVisibility: 1,
-    _pendingMarkers: null,
-    _transitions: null,
-    _retryCache: null,
-    _current: null,
-    detach: function () {
-      return detachOffscreenInstance(instance);
-    },
-    attach: function () {
-      return attachOffscreenInstance(instance);
-    }
-  };
-  pendingProps.stateNode = instance;
-  return pendingProps;
 }
 function createFiberFromText(content, mode, lanes) {
   content = createFiber(6, content, null, mode);
@@ -16587,20 +16531,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1894 = 0;
-  i$jscomp$inline_1894 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1894++
+  var i$jscomp$inline_1910 = 0;
+  i$jscomp$inline_1910 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1910++
 ) {
-  var eventName$jscomp$inline_1895 =
-      simpleEventPluginEvents[i$jscomp$inline_1894],
-    domEventName$jscomp$inline_1896 =
-      eventName$jscomp$inline_1895.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1897 =
-      eventName$jscomp$inline_1895[0].toUpperCase() +
-      eventName$jscomp$inline_1895.slice(1);
+  var eventName$jscomp$inline_1911 =
+      simpleEventPluginEvents[i$jscomp$inline_1910],
+    domEventName$jscomp$inline_1912 =
+      eventName$jscomp$inline_1911.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1913 =
+      eventName$jscomp$inline_1911[0].toUpperCase() +
+      eventName$jscomp$inline_1911.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1896,
-    "on" + capitalizedEvent$jscomp$inline_1897
+    domEventName$jscomp$inline_1912,
+    "on" + capitalizedEvent$jscomp$inline_1913
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -20739,16 +20683,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2131 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2147 = React.version;
 if (
-  "19.1.0-www-classic-e1e74071-20250321" !==
-  isomorphicReactPackageVersion$jscomp$inline_2131
+  "19.1.0-www-classic-de4aad5b-20250321" !==
+  isomorphicReactPackageVersion$jscomp$inline_2147
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2131,
-      "19.1.0-www-classic-e1e74071-20250321"
+      isomorphicReactPackageVersion$jscomp$inline_2147,
+      "19.1.0-www-classic-de4aad5b-20250321"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20764,27 +20708,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2133 = {
+var internals$jscomp$inline_2149 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-e1e74071-20250321",
+  version: "19.1.0-www-classic-de4aad5b-20250321",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-e1e74071-20250321"
+  reconcilerVersion: "19.1.0-www-classic-de4aad5b-20250321"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2133.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2133.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2149.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2149.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2698 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2714 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2698.isDisabled &&
-    hook$jscomp$inline_2698.supportsFiber
+    !hook$jscomp$inline_2714.isDisabled &&
+    hook$jscomp$inline_2714.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2698.inject(
-        internals$jscomp$inline_2133
+      (rendererID = hook$jscomp$inline_2714.inject(
+        internals$jscomp$inline_2149
       )),
-        (injectedHook = hook$jscomp$inline_2698);
+        (injectedHook = hook$jscomp$inline_2714);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -21136,7 +21080,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-e1e74071-20250321";
+exports.version = "19.1.0-www-classic-de4aad5b-20250321";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
