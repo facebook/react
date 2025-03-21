@@ -57,7 +57,7 @@ function RegularComponent() {
   );
 }
 
-export default function TraceUpdatesTest() {
+export default function TraceUpdatesTest(): React.Node {
   return (
     <div>
       <h2>TraceUpdates Test</h2>

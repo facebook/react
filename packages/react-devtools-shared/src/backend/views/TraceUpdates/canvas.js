@@ -68,12 +68,19 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
 
   if (canvas !== null) {
     if (nodeToData.size === 0 && canvas.matches(':popover-open')) {
+      // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+      // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
       canvas.hidePopover();
       return;
     }
+    // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
     if (canvas.matches(':popover-open')) {
+      // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+      // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
       canvas.hidePopover();
     }
+    // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+    // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
     canvas.showPopover();
   }
 }
