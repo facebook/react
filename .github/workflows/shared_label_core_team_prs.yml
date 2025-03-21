@@ -3,6 +3,8 @@ name: (Shared) Label Core Team PRs
 on:
   pull_request_target:
 
+permissions: {}
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
   # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout

@@ -8,6 +8,8 @@ on:
       - main
   workflow_dispatch:
 
+permissions: {}
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
 
