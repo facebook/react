@@ -52,7 +52,8 @@ import {assertExhaustive} from '../Utils/utils';
 import {buildReactiveFunction} from './BuildReactiveFunction';
 import {SINGLE_CHILD_FBT_TAGS} from './MemoizeFbtAndMacroOperandsInSameScope';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
-import {ReactFunctionType} from '../HIR/Environment';
+import {EMIT_FREEZE_GLOBAL_GATING, ReactFunctionType} from '../HIR/Environment';
+import {ProgramContext} from '../Entrypoint';
 
 export const MEMO_CACHE_SENTINEL = 'react.memo_cache_sentinel';
 export const EARLY_RETURN_SENTINEL = 'react.early_return_sentinel';
@@ -160,6 +161,7 @@ export function codegenFunction(
     compiled.body = t.blockStatement([
       createHookGuard(
         hookGuard,
+        fn.env.context,
         compiled.body.body,
         GuardKind.PushHookGuard,
         GuardKind.PopHookGuard,
@@ -170,13 +172,14 @@ export function codegenFunction(
   const cacheCount = compiled.memoSlotsUsed;
   if (cacheCount !== 0) {
     const preface: Array<t.Statement> = [];
+    const useMemoCacheIdentifier = fn.env.context.addMemoCacheImport().name;
 
     // The import declaration for `useMemoCache` is inserted in the Babel plugin
     preface.push(
       t.variableDeclaration('const', [
         t.variableDeclarator(
           t.identifier(cx.synthesizeName('$')),
-          t.callExpression(t.identifier(fn.env.useMemoCacheIdentifier), [
+          t.callExpression(t.identifier(useMemoCacheIdentifier), [
             t.numericLiteral(cacheCount),
           ]),
         ),
@@ -259,34 +262,52 @@ export function codegenFunction(
      * Technically, this is a conditional hook call. However, we expect
      * __DEV__ and gating identifier to be runtime constants
      */
-    let gating: t.Expression;
-    if (
-      emitInstrumentForget.gating != null &&
+    const gating =
+      emitInstrumentForget.gating != null
+        ? t.identifier(
+            fn.env.context.addImportSpecifier(emitInstrumentForget.gating).name,
+          )
+        : null;
+
+    const globalGating =
       emitInstrumentForget.globalGating != null
-    ) {
-      gating = t.logicalExpression(
-        '&&',
-        t.identifier(emitInstrumentForget.globalGating),
-        t.identifier(emitInstrumentForget.gating.importSpecifierName),
+        ? t.identifier(emitInstrumentForget.globalGating)
+        : null;
+
+    if (emitInstrumentForget.globalGating != null) {
+      const assertResult = fn.env.context.assertGlobalBinding(
+        emitInstrumentForget.globalGating,
       );
-    } else if (emitInstrumentForget.gating != null) {
-      gating = t.identifier(emitInstrumentForget.gating.importSpecifierName);
+      if (assertResult.isErr()) {
+        return assertResult;
+      }
+    }
+
+    let ifTest: t.Expression;
+    if (gating != null && globalGating != null) {
+      ifTest = t.logicalExpression('&&', globalGating, gating);
+    } else if (gating != null) {
+      ifTest = gating;
     } else {
-      CompilerError.invariant(emitInstrumentForget.globalGating != null, {
+      CompilerError.invariant(globalGating != null, {
         reason:
           'Bad config not caught! Expected at least one of gating or globalGating',
         loc: null,
         suggestions: null,
       });
-      gating = t.identifier(emitInstrumentForget.globalGating);
+      ifTest = globalGating;
     }
+
+    const instrumentFnIdentifier = fn.env.context.addImportSpecifier(
+      emitInstrumentForget.fn,
+    ).name;
     const test: t.IfStatement = t.ifStatement(
-      gating,
+      ifTest,
       t.expressionStatement(
-        t.callExpression(
-          t.identifier(emitInstrumentForget.fn.importSpecifierName),
-          [t.stringLiteral(fn.id), t.stringLiteral(fn.env.filename ?? '')],
-        ),
+        t.callExpression(t.identifier(instrumentFnIdentifier), [
+          t.stringLiteral(fn.id),
+          t.stringLiteral(fn.env.filename ?? ''),
+        ]),
       ),
     );
     compiled.body.body.unshift(test);
@@ -553,13 +574,18 @@ function codegenBlockNoReset(
 
 function wrapCacheDep(cx: Context, value: t.Expression): t.Expression {
   if (cx.env.config.enableEmitFreeze != null && cx.env.isInferredMemoEnabled) {
-    // The import declaration for emitFreeze is inserted in the Babel plugin
+    const emitFreezeIdentifier = cx.env.context.addImportSpecifier(
+      cx.env.config.enableEmitFreeze,
+    ).name;
+    cx.env.context
+      .assertGlobalBinding(EMIT_FREEZE_GLOBAL_GATING, cx.env.scope)
+      .unwrap();
     return t.conditionalExpression(
-      t.identifier('__DEV__'),
-      t.callExpression(
-        t.identifier(cx.env.config.enableEmitFreeze.importSpecifierName),
-        [value, t.stringLiteral(cx.fnName)],
-      ),
+      t.identifier(EMIT_FREEZE_GLOBAL_GATING),
+      t.callExpression(t.identifier(emitFreezeIdentifier), [
+        value,
+        t.stringLiteral(cx.fnName),
+      ]),
       value,
     );
   } else {
@@ -713,16 +739,14 @@ function codegenReactiveScope(
   let computationBlock = codegenBlock(cx, block);
 
   let memoStatement;
-  if (
-    cx.env.config.enableChangeDetectionForDebugging != null &&
-    changeExpressions.length > 0
-  ) {
+  const detectionFunction = cx.env.config.enableChangeDetectionForDebugging;
+  if (detectionFunction != null && changeExpressions.length > 0) {
     const loc =
       typeof scope.loc === 'symbol'
         ? 'unknown location'
         : `(${scope.loc.start.line}:${scope.loc.end.line})`;
-    const detectionFunction =
-      cx.env.config.enableChangeDetectionForDebugging.importSpecifierName;
+    const importedDetectionFunctionIdentifier =
+      cx.env.context.addImportSpecifier(detectionFunction).name;
     const cacheLoadOldValueStatements: Array<t.Statement> = [];
     const changeDetectionStatements: Array<t.Statement> = [];
     const idempotenceDetectionStatements: Array<t.Statement> = [];
@@ -744,7 +768,7 @@ function codegenReactiveScope(
       );
       changeDetectionStatements.push(
         t.expressionStatement(
-          t.callExpression(t.identifier(detectionFunction), [
+          t.callExpression(t.identifier(importedDetectionFunctionIdentifier), [
             t.identifier(loadName),
             t.cloneNode(name, true),
             t.stringLiteral(name.name),
@@ -756,7 +780,7 @@ function codegenReactiveScope(
       );
       idempotenceDetectionStatements.push(
         t.expressionStatement(
-          t.callExpression(t.identifier(detectionFunction), [
+          t.callExpression(t.identifier(importedDetectionFunctionIdentifier), [
             t.cloneNode(slot, true),
             t.cloneNode(name, true),
             t.stringLiteral(name.name),
@@ -1518,15 +1542,15 @@ const createStringLiteral = withLoc(t.stringLiteral);
 
 function createHookGuard(
   guard: ExternalFunction,
+  context: ProgramContext,
   stmts: Array<t.Statement>,
   before: GuardKind,
   after: GuardKind,
 ): t.TryStatement {
+  const guardFnName = context.addImportSpecifier(guard).name;
   function createHookGuardImpl(kind: number): t.ExpressionStatement {
     return t.expressionStatement(
-      t.callExpression(t.identifier(guard.importSpecifierName), [
-        t.numericLiteral(kind),
-      ]),
+      t.callExpression(t.identifier(guardFnName), [t.numericLiteral(kind)]),
     );
   }
 
@@ -1576,6 +1600,7 @@ function createCallExpression(
       t.blockStatement([
         createHookGuard(
           hookGuard,
+          env.context,
           [t.returnStatement(callExpr)],
           GuardKind.AllowHook,
           GuardKind.DisallowHook,
