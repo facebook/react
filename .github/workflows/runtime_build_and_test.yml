@@ -284,6 +284,11 @@ jobs:
   build_and_lint:
     name: yarn build and lint
     needs: [runtime_compiler_node_modules_cache]
+    permissions:
+      # Attestation for build: https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds#generating-build-provenance-for-binaries
+      id-token: write
+      contents: read
+      attestations: write
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -332,11 +337,29 @@ jobs:
       - name: Display structure of build
         run: ls -R build
       - name: Archive build
+        id: upload_build
         uses: actions/upload-artifact@v4
         with:
           name: _build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
           path: build
           if-no-files-found: error
+
+  attest_build:
+    name: Generate signed build provenance attestations
+    runs-on: ubuntu-latest
+    needs: [build_and_lint]
+    steps:
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'build/**/*'
 
   test_build:
     name: yarn test-build
