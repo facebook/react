@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6fbf49c49b6ec24e7b90f7d3c8164648>>
+ * @generated SignedSource<<1f1761416168bdd6f536412d71082c24>>
  */
 
 "use strict";
@@ -7565,11 +7565,8 @@ __DEV__ &&
     function updateOffscreenComponent(current, workInProgress, renderLanes) {
       var nextProps = workInProgress.pendingProps,
         nextChildren = nextProps.children,
-        nextIsDetached =
-          0 !== (workInProgress.stateNode._pendingVisibility & 2),
         prevState = null !== current ? current.memoizedState : null;
-      markRef(current, workInProgress);
-      if ("hidden" === nextProps.mode || nextIsDetached) {
+      if ("hidden" === nextProps.mode) {
         if (0 !== (workInProgress.flags & 128)) {
           nextProps =
             null !== prevState
@@ -7577,11 +7574,11 @@ __DEV__ &&
               : renderLanes;
           if (null !== current) {
             nextChildren = workInProgress.child = current.child;
-            for (nextIsDetached = 0; null !== nextChildren; )
-              (nextIsDetached =
-                nextIsDetached | nextChildren.lanes | nextChildren.childLanes),
+            for (prevState = 0; null !== nextChildren; )
+              (prevState =
+                prevState | nextChildren.lanes | nextChildren.childLanes),
                 (nextChildren = nextChildren.sibling);
-            workInProgress.childLanes = nextIsDetached & ~nextProps;
+            workInProgress.childLanes = prevState & ~nextProps;
           } else (workInProgress.childLanes = 0), (workInProgress.child = null);
           return deferHiddenOffscreenComponent(
             current,
@@ -8474,7 +8471,15 @@ __DEV__ &&
       return fallbackChildren;
     }
     function mountWorkInProgressOffscreenFiber(offscreenProps, mode) {
-      return createFiberFromOffscreen(offscreenProps, mode, 0, null);
+      offscreenProps = createFiber(22, offscreenProps, null, mode);
+      offscreenProps.lanes = 0;
+      offscreenProps.stateNode = {
+        _visibility: 1,
+        _pendingMarkers: null,
+        _retryCache: null,
+        _transitions: null
+      };
+      return offscreenProps;
     }
     function retrySuspenseComponentWithoutHydrating(
       current,
@@ -10838,17 +10843,17 @@ __DEV__ &&
         case 22:
           if (0 !== (finishedWork.mode & 1)) {
             if (
-              ((prevProps =
+              ((flags =
                 null !== finishedWork.memoizedState ||
                 offscreenSubtreeIsHidden),
-              !prevProps)
+              !flags)
             ) {
               current =
                 (null !== current && null !== current.memoizedState) ||
                 offscreenSubtreeWasHidden;
-              var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-                prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
-              offscreenSubtreeIsHidden = prevProps;
+              prevProps = offscreenSubtreeIsHidden;
+              var prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+              offscreenSubtreeIsHidden = flags;
               (offscreenSubtreeWasHidden = current) &&
               !prevOffscreenSubtreeWasHidden
                 ? recursivelyTraverseReappearLayoutEffects(
@@ -10857,14 +10862,10 @@ __DEV__ &&
                     0 !== (finishedWork.subtreeFlags & 8772)
                   )
                 : recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-              offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
+              offscreenSubtreeIsHidden = prevProps;
               offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
             }
           } else recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-          flags & 512 &&
-            ("manual" === finishedWork.memoizedProps.mode
-              ? safelyAttachRef(finishedWork, finishedWork.return)
-              : safelyDetachRef(finishedWork, finishedWork.return));
           break;
         case 30:
           break;
@@ -11048,8 +11049,6 @@ __DEV__ &&
           );
           break;
         case 22:
-          offscreenSubtreeWasHidden ||
-            safelyDetachRef(deletedFiber, nearestMountedAncestor);
           deletedFiber.mode & 1
             ? ((offscreenSubtreeWasHidden =
                 (_prevHostParent = offscreenSubtreeWasHidden) ||
@@ -11312,10 +11311,6 @@ __DEV__ &&
           }
           break;
         case 22:
-          flags & 512 &&
-            (offscreenSubtreeWasHidden ||
-              null === current ||
-              safelyDetachRef(current, current.return));
           suspenseCallback = null !== finishedWork.memoizedState;
           retryQueue = null !== current && null !== current.memoizedState;
           if (finishedWork.mode & 1) {
@@ -11330,26 +11325,24 @@ __DEV__ &&
             offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
           } else recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
-          root = finishedWork.stateNode;
-          root._current = finishedWork;
-          root._visibility &= -3;
-          root._visibility |= root._pendingVisibility & 2;
-          if (
-            flags & 8192 &&
-            ((root._visibility = suspenseCallback
-              ? root._visibility & -2
-              : root._visibility | 1),
-            suspenseCallback &&
-              (null === current ||
-                retryQueue ||
-                offscreenSubtreeIsHidden ||
-                offscreenSubtreeWasHidden ||
-                (0 !== (finishedWork.mode & 1) &&
-                  recursivelyTraverseDisappearLayoutEffects(finishedWork))),
-            null === finishedWork.memoizedProps ||
-              "manual" !== finishedWork.memoizedProps.mode)
-          )
-            a: for (current = null, root = finishedWork; ; ) {
+          if (flags & 8192)
+            a: for (
+              root = finishedWork.stateNode,
+                root._visibility = suspenseCallback
+                  ? root._visibility & -2
+                  : root._visibility | 1,
+                suspenseCallback &&
+                  (null === current ||
+                    retryQueue ||
+                    offscreenSubtreeIsHidden ||
+                    offscreenSubtreeWasHidden ||
+                    (0 !== (finishedWork.mode & 1) &&
+                      recursivelyTraverseDisappearLayoutEffects(finishedWork))),
+                current = null,
+                root = finishedWork;
+              ;
+
+            ) {
               if (5 === root.tag) {
                 if (null === current) {
                   retryQueue = current = root;
@@ -11492,7 +11485,6 @@ __DEV__ &&
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
         case 22:
-          safelyDetachRef(finishedWork, finishedWork.return);
           null === finishedWork.memoizedState &&
             recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
@@ -11769,7 +11761,7 @@ __DEV__ &&
           prevEffectDuration = finishedWork.stateNode;
           var _current = finishedWork.alternate;
           null !== finishedWork.memoizedState
-            ? prevEffectDuration._visibility & 4
+            ? prevEffectDuration._visibility & 2
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
@@ -11781,21 +11773,21 @@ __DEV__ &&
                     finishedRoot,
                     finishedWork
                   )
-                : ((prevEffectDuration._visibility |= 4),
+                : ((prevEffectDuration._visibility |= 2),
                   recursivelyTraversePassiveMountEffects(
                     finishedRoot,
                     finishedWork,
                     committedLanes,
                     committedTransitions
                   ))
-            : prevEffectDuration._visibility & 4
+            : prevEffectDuration._visibility & 2
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
                   committedLanes,
                   committedTransitions
                 )
-              : ((prevEffectDuration._visibility |= 4),
+              : ((prevEffectDuration._visibility |= 2),
                 recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -11871,7 +11863,7 @@ __DEV__ &&
         case 22:
           var _instance2 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? _instance2._visibility & 4
+            ? _instance2._visibility & 2
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -11884,7 +11876,7 @@ __DEV__ &&
                     finishedRoot,
                     finishedWork
                   )
-                : ((_instance2._visibility |= 4),
+                : ((_instance2._visibility |= 2),
                   recursivelyTraverseReconnectPassiveEffects(
                     finishedRoot,
                     finishedWork,
@@ -11892,7 +11884,7 @@ __DEV__ &&
                     committedTransitions,
                     includeWorkInProgressEffects
                   ))
-            : ((_instance2._visibility |= 4),
+            : ((_instance2._visibility |= 2),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -12067,9 +12059,9 @@ __DEV__ &&
         case 22:
           prevEffectDuration = finishedWork.stateNode;
           null !== finishedWork.memoizedState &&
-          prevEffectDuration._visibility & 4 &&
+          prevEffectDuration._visibility & 2 &&
           (null === finishedWork.return || 13 !== finishedWork.return.tag)
-            ? ((prevEffectDuration._visibility &= -5),
+            ? ((prevEffectDuration._visibility &= -3),
               recursivelyTraverseDisconnectPassiveEffects(finishedWork))
             : recursivelyTraversePassiveUnmountEffects(finishedWork);
           break;
@@ -12109,8 +12101,8 @@ __DEV__ &&
           break;
         case 22:
           var instance = finishedWork.stateNode;
-          instance._visibility & 4 &&
-            ((instance._visibility &= -5),
+          instance._visibility & 2 &&
+            ((instance._visibility &= -3),
             recursivelyTraverseDisconnectPassiveEffects(finishedWork));
           break;
         default:
@@ -14325,48 +14317,6 @@ __DEV__ &&
       elements = createFiber(7, elements, key, mode);
       elements.lanes = lanes;
       return elements;
-    }
-    function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
-      pendingProps = createFiber(22, pendingProps, key, mode);
-      pendingProps.lanes = lanes;
-      var primaryChildInstance = {
-        _visibility: 1,
-        _pendingVisibility: 1,
-        _pendingMarkers: null,
-        _retryCache: null,
-        _transitions: null,
-        _current: null,
-        detach: function () {
-          var instance = primaryChildInstance,
-            fiber = instance._current;
-          if (null === fiber)
-            throw Error(
-              "Calling Offscreen.detach before instance handle has been set."
-            );
-          if (0 === (instance._pendingVisibility & 2)) {
-            var root = enqueueConcurrentRenderForLane(fiber, 2);
-            null !== root &&
-              ((instance._pendingVisibility |= 2),
-              scheduleUpdateOnFiber(root, fiber, 2));
-          }
-        },
-        attach: function () {
-          var instance = primaryChildInstance,
-            fiber = instance._current;
-          if (null === fiber)
-            throw Error(
-              "Calling Offscreen.detach before instance handle has been set."
-            );
-          if (0 !== (instance._pendingVisibility & 2)) {
-            var root = enqueueConcurrentRenderForLane(fiber, 2);
-            null !== root &&
-              ((instance._pendingVisibility &= -3),
-              scheduleUpdateOnFiber(root, fiber, 2));
-          }
-        }
-      };
-      pendingProps.stateNode = primaryChildInstance;
-      return pendingProps;
     }
     function createFiberFromText(content, mode, lanes) {
       content = createFiber(6, content, null, mode);
@@ -17628,11 +17578,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.1.0-native-fb-b630219b-20250320" !== isomorphicReactPackageVersion)
+    if ("19.1.0-native-fb-de4aad5b-20250321" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.1.0-native-fb-b630219b-20250320\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.1.0-native-fb-de4aad5b-20250321\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17658,10 +17608,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-b630219b-20250320",
+        version: "19.1.0-native-fb-de4aad5b-20250321",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-b630219b-20250320"
+        reconcilerVersion: "19.1.0-native-fb-de4aad5b-20250321"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
