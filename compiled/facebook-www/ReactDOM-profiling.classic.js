@@ -18727,6 +18727,9 @@ function measureClonedInstance(instance) {
   var computedStyle = getComputedStyle(instance);
   return createMeasurement(measuredRect, computedStyle, instance);
 }
+function forceLayout(ownerDocument) {
+  return ownerDocument.documentElement.clientHeight;
+}
 function startViewTransition(
   rootContainer,
   transitionTypes,
@@ -18749,8 +18752,7 @@ function startViewTransition(
         mutationCallback();
         if (
           "loaded" === previousFontLoadingStatus &&
-          (ownerDocument.documentElement.clientHeight,
-          "loading" === ownerDocument.fonts.status)
+          (forceLayout(ownerDocument), "loading" === ownerDocument.fonts.status)
         )
           return (
             (previousFontLoadingStatus = Promise.race([
@@ -20739,14 +20741,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2131 = React.version;
 if (
-  "19.1.0-www-classic-0962f684-20250320" !==
+  "19.1.0-www-classic-e1e74071-20250321" !==
   isomorphicReactPackageVersion$jscomp$inline_2131
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2131,
-      "19.1.0-www-classic-0962f684-20250320"
+      "19.1.0-www-classic-e1e74071-20250321"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20764,10 +20766,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2133 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-0962f684-20250320",
+  version: "19.1.0-www-classic-e1e74071-20250321",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-0962f684-20250320"
+  reconcilerVersion: "19.1.0-www-classic-e1e74071-20250321"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2133.getLaneLabelMap = getLaneLabelMap),
@@ -21134,7 +21136,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-0962f684-20250320";
+exports.version = "19.1.0-www-classic-e1e74071-20250321";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
