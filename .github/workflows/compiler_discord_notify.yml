@@ -19,6 +19,9 @@ jobs:
     if: ${{ needs.check_maintainer.outputs.is_core_team == 'true' }}
     needs: check_maintainer
     runs-on: ubuntu-latest
+    permissions:
+      # Used by check_maintainer
+      contents: read
     steps:
       - name: Discord Webhook Action
         uses: tsickert/discord-webhook@86dc739f3f165f16dadc5666051c367efa1692f4
