@@ -1,15 +1,12 @@
 # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#force-deletion-of-caches-overriding-default-cache-eviction-policy
 
-name: (Shared) Cleanup Branch Caches
+name: (Shared) Cleanup Stale Branch Caches
 on:
-  pull_request:
-    types:
-      - closed
+  schedule:
+    - cron: 0 0 * * *
   workflow_dispatch:
-    inputs:
-      pr_number:
-        required: true
-        type: string
+
+permissions: {}
 
 jobs:
   cleanup:
@@ -22,8 +19,8 @@ jobs:
     steps:
       - name: Cleanup
         run: |
-          echo "Fetching list of cache key"
-          cacheKeysForPR=$(gh cache list --ref $BRANCH --limit 100 --json id --jq '.[].id')
+          echo "Fetching list of cache keys"
+          cacheKeysForPR=$(gh cache list --limit 100 --json id,ref --jq '.[] | select(.ref != "refs/heads/main") | .id')
 
           ## Setting this to not fail the workflow while deleting cache keys.
           set +e
@@ -36,4 +33,3 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          BRANCH: refs/pull/${{ inputs.pr_number || github.event.pull_request.number }}/merge

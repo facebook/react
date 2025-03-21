@@ -7,6 +7,8 @@ on:
     paths-ignore:
       - compiler/**
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
@@ -147,7 +149,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -175,7 +179,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -205,7 +211,6 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -264,7 +269,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-and-compiler-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -306,7 +313,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-and-compiler-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -366,9 +375,16 @@ jobs:
           # TODO: Test more persistent configurations?
         ]
         shard:
-          - 1/3
-          - 2/3
-          - 3/3
+          - 1/10
+          - 2/10
+          - 3/10
+          - 4/10
+          - 5/10
+          - 6/10
+          - 7/10
+          - 8/10
+          - 9/10
+          - 10/10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -388,7 +404,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-and-compiler-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -425,7 +443,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -476,7 +496,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -514,7 +536,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -664,7 +688,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -719,7 +745,9 @@ jobs:
           path: |
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          fail-on-cache-miss: true
+          restore-keys: |
+            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
+            runtime-node_modules-v6-
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -742,6 +770,9 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' && github.event.pull_request.base.ref == 'main' }}
     name: Run sizebot
     needs: [build_and_lint]
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

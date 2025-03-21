@@ -5,6 +5,8 @@ on:
     # At 10 minutes past 9:00 on Mon
     - cron: 10 9 * * 1
 
+permissions: {}
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
 

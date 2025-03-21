@@ -33,7 +33,6 @@ import type {
   ViewTransitionState,
 } from './ReactFiberViewTransitionComponent';
 import {assignViewTransitionAutoName} from './ReactFiberViewTransitionComponent';
-import {OffscreenDetached} from './ReactFiberActivityComponent';
 import type {
   Cache,
   CacheComponentState,
@@ -647,19 +646,13 @@ function updateOffscreenComponent(
 ) {
   const nextProps: OffscreenProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
-  const nextIsDetached =
-    (workInProgress.stateNode._pendingVisibility & OffscreenDetached) !== 0;
 
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
 
-  markRef(current, workInProgress);
-
   if (
     nextProps.mode === 'hidden' ||
-    (enableLegacyHidden &&
-      nextProps.mode === 'unstable-defer-without-hiding') ||
-    nextIsDetached
+    (enableLegacyHidden && nextProps.mode === 'unstable-defer-without-hiding')
   ) {
     // Rendering a hidden tree.
 

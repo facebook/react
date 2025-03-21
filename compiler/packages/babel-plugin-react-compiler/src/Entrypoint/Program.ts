@@ -451,6 +451,12 @@ export function compileProgram(
             pass.code,
           ),
         };
+        if (
+          !compileResult.compiledFn.hasFireRewrite &&
+          !compileResult.compiledFn.hasLoweredContextAccess
+        ) {
+          return null;
+        }
       } catch (err) {
         // TODO: we might want to log error here, but this will also result in duplicate logging
         if (err instanceof CompilerError) {

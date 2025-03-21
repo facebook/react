@@ -1,15 +1,20 @@
 name: (Runtime) Discord Notify
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, ready_for_review]
     paths-ignore:
       - compiler/**
       - .github/workflows/compiler_**.yml
 
+permissions: {}
+
 jobs:
   check_maintainer:
     uses: facebook/react/.github/workflows/shared_check_maintainer.yml@main
+    permissions:
+      # Used by check_maintainer
+      contents: read
     with:
       actor: ${{ github.event.pull_request.user.login }}
 
