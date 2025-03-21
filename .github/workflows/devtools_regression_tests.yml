@@ -9,6 +9,8 @@ on:
         required: false
         type: string
 
+permissions: {}
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
   # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
@@ -18,6 +20,9 @@ jobs:
   download_build:
     name: Download base build
     runs-on: ubuntu-latest
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

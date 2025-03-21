@@ -6,6 +6,8 @@ on:
       prerelease_commit_sha:
         required: true
 
+permissions: {}
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
 
