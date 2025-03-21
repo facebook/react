@@ -16,6 +16,7 @@ import * as t from '@babel/types';
 import {
   EnvironmentConfig,
   validateEnvironmentConfig,
+  ProgramContext,
 } from 'babel-plugin-react-compiler';
 import {basename} from 'path';
 
@@ -158,46 +159,53 @@ function isReactComponentLike(fn: NodePath<FunctionDeclaration>): boolean {
 function ReactForgetFunctionTransform() {
   const compiledFns = new Set();
   const visitor = {
-    FunctionDeclaration(fn: NodePath<FunctionDeclaration>, state: any): void {
-      if (compiledFns.has(fn.node)) {
-        return;
-      }
+    Program(program: NodePath<t.Program>) {
+      program.traverse({
+        FunctionDeclaration(
+          fn: NodePath<t.FunctionDeclaration>,
+          state: any,
+        ): void {
+          if (compiledFns.has(fn.node)) {
+            return;
+          }
 
-      if (!isReactComponentLike(fn)) {
-        return;
-      }
-      if (debugMode) {
-        const filename = basename(state.file.opts.filename);
-        if (fn.node.loc && fn.node.id) {
-          console.log(
-            ` Compiling ${filename}:${fn.node.loc.start.line}:${fn.node.loc.start.column}  ${fn.node.id.name}`,
+          if (!isReactComponentLike(fn)) {
+            return;
+          }
+          if (debugMode) {
+            const filename = basename(state.file.opts.filename);
+            if (fn.node.loc && fn.node.id) {
+              console.log(
+                ` Compiling ${filename}:${fn.node.loc.start.line}:${fn.node.loc.start.column}  ${fn.node.id.name}`,
+              );
+            } else {
+              console.log(` Compiling ${filename} ${fn.node.id?.name}`);
+            }
+          }
+
+          const compiled = compile(
+            fn,
+            forgetOptions,
+            'Other',
+            'all_features',
+            new ProgramContext(program, '19', null),
+            null,
+            null,
+            null,
           );
-        } else {
-          console.log(` Compiling ${filename} ${fn.node.id?.name}`);
-        }
-      }
+          compiledFns.add(compiled);
 
-      const compiled = compile(
-        fn,
-        forgetOptions,
-        'Other',
-        'all_features',
-        '_c',
-        null,
-        null,
-        null,
-      );
-      compiledFns.add(compiled);
-
-      const fun = t.functionDeclaration(
-        compiled.id,
-        compiled.params,
-        compiled.body,
-        compiled.generator,
-        compiled.async,
-      );
-      fn.replaceWith(fun);
-      fn.skip();
+          const fun = t.functionDeclaration(
+            compiled.id,
+            compiled.params,
+            compiled.body,
+            compiled.generator,
+            compiled.async,
+          );
+          fn.replaceWith(fun);
+          fn.skip();
+        },
+      });
     },
   };
   return {

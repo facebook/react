@@ -7,9 +7,20 @@
 
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
+import {Scope as BabelScope} from '@babel/traverse';
+
 import {CompilerError, ErrorSeverity} from '../CompilerError';
-import {EnvironmentConfig, ExternalFunction, GeneratedSource} from '../HIR';
-import {getOrInsertDefault} from '../Utils/utils';
+import {
+  EnvironmentConfig,
+  GeneratedSource,
+  NonLocalBinding,
+  NonLocalImportSpecifier,
+} from '../HIR';
+import {getOrInsertWith} from '../Utils/utils';
+import {ExternalFunction, isHookName} from '../HIR/Environment';
+import {Err, Ok, Result} from '../Utils/Result';
+import {CompilerReactTarget} from './Options';
+import {getReactCompilerRuntimeModule} from './Program';
 
 export function validateRestrictedImports(
   path: NodePath<t.Program>,
@@ -42,50 +53,175 @@ export function validateRestrictedImports(
   }
 }
 
-export function addImportsToProgram(
-  path: NodePath<t.Program>,
-  importList: Array<ExternalFunction>,
-): void {
-  const identifiers: Set<string> = new Set();
-  const sortedImports: Map<string, Array<string>> = new Map();
-  for (const {importSpecifierName, source} of importList) {
-    /*
-     * Codegen currently does not rename import specifiers, so we do additional
-     * validation here
+export class ProgramContext {
+  uids: Set<string> = new Set();
+  hookPattern: string | null;
+  scope: BabelScope;
+  imports: Map<string, Map<string, NonLocalImportSpecifier>> = new Map();
+  reactRuntimeModule: string;
+  constructor(
+    program: NodePath<t.Program>,
+    reactRuntimeModule: CompilerReactTarget,
+    hookPattern: string | null,
+  ) {
+    this.hookPattern = hookPattern;
+    this.scope = program.scope;
+    this.reactRuntimeModule = getReactCompilerRuntimeModule(reactRuntimeModule);
+  }
+  isHookName(name: string): boolean {
+    if (this.hookPattern == null) {
+      return isHookName(name);
+    } else {
+      const match = new RegExp(this.hookPattern).exec(name);
+      return (
+        match != null && typeof match[1] === 'string' && isHookName(match[1])
+      );
+    }
+  }
+  hasReference(name: string): boolean {
+    return (
+      this.uids.has(name) ||
+      this.scope.hasBinding(name) ||
+      this.scope.hasGlobal(name) ||
+      this.scope.hasReference(name)
+    );
+  }
+  newUid(name: string): string {
+    /**
+     * Don't call babel's generateUid for known hook imports, as
+     * InferTypes might eventually type `HookKind` based on callee naming
+     * convention and `_useFoo` is not named as a hook.
+     *
+     * Local uid generation is susceptible to check-before-use bugs since we're
+     * checking for naming conflicts / references long before we actually insert
+     * the import. (see similar logic in HIRBuilder:resolveBinding)
      */
-    CompilerError.invariant(identifiers.has(importSpecifierName) === false, {
-      reason: `Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
-      description: null,
-      loc: GeneratedSource,
-      suggestions: null,
-    });
-    CompilerError.invariant(
-      path.scope.hasBinding(importSpecifierName) === false,
-      {
-        reason: `Encountered conflicting import specifiers for ${importSpecifierName} in generated program.`,
-        description: null,
-        loc: GeneratedSource,
-        suggestions: null,
-      },
-    );
-    identifiers.add(importSpecifierName);
-
-    const importSpecifierNameList = getOrInsertDefault(
-      sortedImports,
-      source,
-      [],
-    );
-    importSpecifierNameList.push(importSpecifierName);
+    let uid;
+    if (this.isHookName(name)) {
+      uid = name;
+      let i = 0;
+      while (this.hasReference(uid)) {
+        uid = `${name}_${i++}`;
+      }
+    } else if (!this.hasReference(name)) {
+      uid = name;
+    } else {
+      uid = this.scope.generateUid(name);
+    }
+    this.uids.add(uid);
+    return uid;
   }
 
+  addMemoCacheImport(): NonLocalImportSpecifier {
+    return this.addImportSpecifier(
+      {
+        source: this.reactRuntimeModule,
+        importSpecifierName: 'c',
+      },
+      '_c',
+    );
+  }
+
+  /**
+   *
+   * @param externalFunction
+   * @param nameHint if defined, will be used as the name of the import specifier
+   * @returns
+   */
+  addImportSpecifier(
+    {source: module, importSpecifierName: specifier}: ExternalFunction,
+    nameHint?: string,
+  ): NonLocalImportSpecifier {
+    const maybeBinding = this.imports.get(module)?.get(specifier);
+    if (maybeBinding != null) {
+      return {...maybeBinding};
+    }
+
+    const binding: NonLocalBinding = {
+      kind: 'ImportSpecifier',
+      name: this.newUid(nameHint ?? specifier),
+      module,
+      imported: specifier,
+    };
+    getOrInsertWith(this.imports, module, () => new Map()).set(specifier, {
+      ...binding,
+    });
+    return binding;
+  }
+
+  addReference(name: string): void {
+    this.uids.add(name);
+  }
+
+  assertGlobalBinding(
+    name: string,
+    localScope?: BabelScope,
+  ): Result<void, CompilerError> {
+    const scope = localScope ?? this.scope;
+    if (!scope.hasReference(name) && !scope.hasBinding(name)) {
+      return Ok(undefined);
+    }
+    const error = new CompilerError();
+    error.push({
+      severity: ErrorSeverity.Todo,
+      reason: 'Encountered conflicting global in generated program',
+      description: `Conflict from local binding ${name}`,
+      loc: scope.getBinding(name)?.path.node.loc ?? null,
+      suggestions: null,
+    });
+    return Err(error);
+  }
+}
+
+export function addImportsToProgram(
+  path: NodePath<t.Program>,
+  programContext: ProgramContext,
+): void {
   const stmts: Array<t.ImportDeclaration> = [];
-  for (const [source, importSpecifierNameList] of sortedImports) {
-    const importSpecifiers = importSpecifierNameList.map(name => {
-      const id = t.identifier(name);
-      return t.importSpecifier(id, id);
+  const sortedModules = [...programContext.imports.entries()].sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
+  for (const [moduleName, importsMap] of sortedModules) {
+    for (const [specifierName, loweredImport] of importsMap) {
+      /**
+       * Assert that the import identifier hasn't already be declared in the program.
+       * Note: we use getBinding here since `Scope.hasBinding` pessimistically returns true
+       * for all allocated uids (from `Scope.getUid`)
+       */
+      CompilerError.invariant(
+        path.scope.getBinding(loweredImport.name) == null,
+        {
+          reason:
+            'Encountered conflicting import specifiers in generated program',
+          description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name}).`,
+          loc: GeneratedSource,
+          suggestions: null,
+        },
+      );
+      CompilerError.invariant(
+        loweredImport.module === moduleName &&
+          loweredImport.imported === specifierName,
+        {
+          reason:
+            'Found inconsistent import specifier. This is an internal bug.',
+          description: `Expected import ${moduleName}:${specifierName} but found ${loweredImport.module}:${loweredImport.imported}`,
+          loc: GeneratedSource,
+        },
+      );
+    }
+    const sortedImport: Array<NonLocalImportSpecifier> = [
+      ...importsMap.values(),
+    ].sort(({imported: a}, {imported: b}) => a.localeCompare(b));
+    const importSpecifiers = sortedImport.map(specifier => {
+      return t.importSpecifier(
+        t.identifier(specifier.name),
+        t.identifier(specifier.imported),
+      );
     });
 
-    stmts.push(t.importDeclaration(importSpecifiers, t.stringLiteral(source)));
+    stmts.push(
+      t.importDeclaration(importSpecifiers, t.stringLiteral(moduleName)),
+    );
   }
   path.unshiftContainer('body', stmts);
 }
