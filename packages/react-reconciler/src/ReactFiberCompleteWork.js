@@ -28,7 +28,6 @@ import type {
   OffscreenState,
   OffscreenQueue,
 } from './ReactFiberActivityComponent';
-import {isOffscreenManual} from './ReactFiberActivityComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import {
@@ -384,12 +383,10 @@ function appendAllChildrenToContainer(
         if (child !== null) {
           child.return = node;
         }
-        // If Offscreen is not in manual mode, detached tree is hidden from user space.
-        const _needsVisibilityToggle = !isOffscreenManual(node);
         appendAllChildrenToContainer(
           containerChildSet,
           node,
-          /* needsVisibilityToggle */ _needsVisibilityToggle,
+          /* needsVisibilityToggle */ true,
           /* isHidden */ true,
         );
 
