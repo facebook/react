@@ -203,6 +203,9 @@ jobs:
     needs: [download_artifacts, process_artifacts]
     if: inputs.force == true || (github.ref == 'refs/heads/main' && needs.process_artifacts.outputs.www_branch_count == '0')
     runs-on: ubuntu-latest
+    permissions:
+      # Used to push a commit to builds/facebook-www
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -289,6 +292,9 @@ jobs:
 
   commit_fbsource_artifacts:
     needs: [download_artifacts, process_artifacts]
+    permissions:
+      # Used to push a commit to builds/facebook-fbsource
+      contents: write
     if: inputs.force == true || (github.ref == 'refs/heads/main' && needs.process_artifacts.outputs.fbsource_branch_count == '0')
     runs-on: ubuntu-latest
     steps:
