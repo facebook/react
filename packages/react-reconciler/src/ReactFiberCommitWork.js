@@ -18,20 +18,15 @@ import type {
 } from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
-import {
-  includesOnlyViewTransitionEligibleLanes,
-  SyncLane,
-} from './ReactFiberLane';
+import {includesOnlyViewTransitionEligibleLanes} from './ReactFiberLane';
 import type {SuspenseState, RetryQueue} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {Wakeable} from 'shared/ReactTypes';
-import {isOffscreenManual} from './ReactFiberActivityComponent';
 import type {
   OffscreenState,
   OffscreenInstance,
   OffscreenQueue,
-  OffscreenProps,
 } from './ReactFiberActivityComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {RootState} from './ReactFiberRoot';
@@ -194,15 +189,12 @@ import {releaseCache, retainCache} from './ReactFiberCacheComponent';
 import {clearTransitionsForLanes} from './ReactFiberLane';
 import {
   OffscreenVisible,
-  OffscreenDetached,
   OffscreenPassiveEffectsConnected,
 } from './ReactFiberActivityComponent';
 import {
   TransitionRoot,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent';
-import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop';
-import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {
   commitHookLayoutEffects,
   commitHookLayoutUnmountEffects,
@@ -741,14 +733,6 @@ function commitLayoutEffectOnFiber(
           finishedWork,
           committedLanes,
         );
-      }
-      if (flags & Ref) {
-        const props: OffscreenProps = finishedWork.memoizedProps;
-        if (props.mode === 'manual') {
-          safelyAttachRef(finishedWork, finishedWork.return);
-        } else {
-          safelyDetachRef(finishedWork, finishedWork.return);
-        }
       }
       break;
     }
@@ -1538,9 +1522,6 @@ function commitDeletionEffectsOnFiber(
       return;
     }
     case OffscreenComponent: {
-      if (!offscreenSubtreeWasHidden) {
-        safelyDetachRef(deletedFiber, nearestMountedAncestor);
-      }
       if (disableLegacyMode || deletedFiber.mode & ConcurrentMode) {
         // If this offscreen component is hidden, we already unmounted it. Before
         // deleting the children, track that it's already unmounted so that we
@@ -1669,48 +1650,6 @@ function getRetryCache(finishedWork: Fiber) {
           'bug in React.',
       );
     }
-  }
-}
-
-export function detachOffscreenInstance(instance: OffscreenInstance): void {
-  const fiber = instance._current;
-  if (fiber === null) {
-    throw new Error(
-      'Calling Offscreen.detach before instance handle has been set.',
-    );
-  }
-
-  if ((instance._pendingVisibility & OffscreenDetached) !== NoFlags) {
-    // The instance is already detached, this is a noop.
-    return;
-  }
-
-  // TODO: There is an opportunity to optimise this by not entering commit phase
-  // and unmounting effects directly.
-  const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
-  if (root !== null) {
-    instance._pendingVisibility |= OffscreenDetached;
-    scheduleUpdateOnFiber(root, fiber, SyncLane);
-  }
-}
-
-export function attachOffscreenInstance(instance: OffscreenInstance): void {
-  const fiber = instance._current;
-  if (fiber === null) {
-    throw new Error(
-      'Calling Offscreen.detach before instance handle has been set.',
-    );
-  }
-
-  if ((instance._pendingVisibility & OffscreenDetached) === NoFlags) {
-    // The instance is already attached, this is a noop.
-    return;
-  }
-
-  const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
-  if (root !== null) {
-    instance._pendingVisibility &= ~OffscreenDetached;
-    scheduleUpdateOnFiber(root, fiber, SyncLane);
   }
 }
 
@@ -2181,12 +2120,6 @@ function commitMutationEffectsOnFiber(
       break;
     }
     case OffscreenComponent: {
-      if (flags & Ref) {
-        if (!offscreenSubtreeWasHidden && current !== null) {
-          safelyDetachRef(current, current.return);
-        }
-      }
-
       const newState: OffscreenState | null = finishedWork.memoizedState;
       const isHidden = newState !== null;
       const wasHidden = current !== null && current.memoizedState !== null;
@@ -2208,18 +2141,9 @@ function commitMutationEffectsOnFiber(
 
       commitReconciliationEffects(finishedWork, lanes);
 
-      const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
-
-      // TODO: Add explicit effect flag to set _current.
-      offscreenInstance._current = finishedWork;
-
-      // Offscreen stores pending changes to visibility in `_pendingVisibility`. This is
-      // to support batching of `attach` and `detach` calls.
-      offscreenInstance._visibility &= ~OffscreenDetached;
-      offscreenInstance._visibility |=
-        offscreenInstance._pendingVisibility & OffscreenDetached;
-
       if (flags & Visibility) {
+        const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
+
         // Track the current state on the Offscreen instance so we can
         // read it during an event
         if (isHidden) {
@@ -2250,8 +2174,7 @@ function commitMutationEffectsOnFiber(
           }
         }
 
-        // Offscreen with manual mode manages visibility manually.
-        if (supportsMutation && !isOffscreenManual(finishedWork)) {
+        if (supportsMutation) {
           // TODO: This needs to run whenever there's an insertion or update
           // inside a hidden Offscreen tree.
           hideOrUnhideAllChildren(finishedWork, isHidden);
@@ -2667,9 +2590,6 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       break;
     }
     case OffscreenComponent: {
-      // TODO (Offscreen) Check: flags & RefStatic
-      safelyDetachRef(finishedWork, finishedWork.return);
-
       const isHidden = finishedWork.memoizedState !== null;
       if (isHidden) {
         // Nested Offscreen tree is already hidden. Don't disappear
