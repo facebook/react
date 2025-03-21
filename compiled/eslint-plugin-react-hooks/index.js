@@ -54557,34 +54557,37 @@ function callsHooksOrCreatesJsx(node, hookPattern) {
     });
     return invokesHooks || createsJsx;
 }
+function isNonNode(node) {
+    if (!node) {
+        return true;
+    }
+    switch (node.type) {
+        case 'ObjectExpression':
+        case 'ArrowFunctionExpression':
+        case 'FunctionExpression':
+        case 'BigIntLiteral':
+        case 'ClassExpression':
+        case 'NewExpression':
+            return true;
+    }
+    return false;
+}
 function returnsNonNode(node) {
-    let hasReturn = false;
     let returnsNonNode = false;
+    if (node.type === 'ArrowFunctionExpression' &&
+        node.node.body.type !== 'BlockStatement') {
+        returnsNonNode = isNonNode(node.node.body);
+    }
     node.traverse({
         ReturnStatement(ret) {
-            hasReturn = true;
-            const argument = ret.node.argument;
-            if (argument == null) {
-                returnsNonNode = true;
-            }
-            else {
-                switch (argument.type) {
-                    case 'ObjectExpression':
-                    case 'ArrowFunctionExpression':
-                    case 'FunctionExpression':
-                    case 'BigIntLiteral':
-                    case 'ClassExpression':
-                    case 'NewExpression':
-                        returnsNonNode = true;
-                }
-            }
+            returnsNonNode = isNonNode(ret.node.argument);
         },
         ArrowFunctionExpression: skipNestedFunctions(node),
         FunctionExpression: skipNestedFunctions(node),
         FunctionDeclaration: skipNestedFunctions(node),
         ObjectMethod: node => node.skip(),
     });
-    return !hasReturn || returnsNonNode;
+    return returnsNonNode;
 }
 function getFunctionName$1(path) {
     if (path.isFunctionDeclaration()) {
