@@ -40,9 +40,12 @@ class OverlayRect {
       borderColor: overlayStyles.margin,
       pointerEvents: 'none',
       position: 'fixed',
+      backgroundColor: 'transparent',
+      outline: 'none',
+      boxShadow: 'none',
     });
 
-    this.node.style.zIndex = '10000000';
+    this.node.setAttribute('popover', 'manual');
 
     this.node.appendChild(this.border);
     this.border.appendChild(this.padding);
@@ -105,7 +108,12 @@ class OverlayTip {
       position: 'fixed',
       fontSize: '12px',
       whiteSpace: 'nowrap',
+      outline: 'none',
+      boxShadow: 'none',
+      border: 'none',
     });
+
+    this.tip.setAttribute('popover', 'manual');
 
     this.nameSpan = doc.createElement('span');
     this.tip.appendChild(this.nameSpan);
@@ -121,7 +129,6 @@ class OverlayTip {
       color: '#d7d7d7',
     });
 
-    this.tip.style.zIndex = '10000000';
     container.appendChild(this.tip);
   }
 
@@ -166,7 +173,6 @@ export default class Overlay {
 
     const doc = currentWindow.document;
     this.container = doc.createElement('div');
-    this.container.style.zIndex = '10000000';
 
     this.tip = new OverlayTip(doc, this.container);
     this.rects = [];
@@ -264,6 +270,20 @@ export default class Overlay {
         width: this.tipBoundsWindow.innerWidth,
       },
     );
+
+    this.rects.forEach(rect => {
+      if (!rect.node.matches(':popover-open')) {
+        // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+        // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+        rect.node.showPopover();
+      }
+    });
+
+    if (!this.tip.tip.matches(':popover-open')) {
+      // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+      // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+      this.tip.tip.showPopover();
+    }
   }
 }
 
