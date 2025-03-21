@@ -24,8 +24,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: check_maintainer
     permissions:
-      # Used to add labels
+      # Used to add labels on issues
       issues: write
+      # Used to add labels on PRs
+      pull-requests: write
     steps:
       - name: Label PR as React Core Team
         uses: actions/github-script@v7
