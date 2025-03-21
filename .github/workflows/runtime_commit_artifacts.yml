@@ -22,6 +22,8 @@ on:
         default: false
         type: boolean
 
+permissions: {}
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
   # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
@@ -30,6 +32,40 @@ env:
 jobs:
   download_artifacts:
     runs-on: ubuntu-latest
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: |
+            **/node_modules
+          key: runtime-release-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
+      - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - run: yarn --cwd scripts/release install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - name: Download artifacts for base revision
+        run: |
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.event.workflow_run.head_sha || github.sha }}
+      - name: Display structure of build
+        run: ls -R build
+      - name: Archive build
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build/
+          if-no-files-found: error
+
+
+  process_artifacts:
+    runs-on: ubuntu-latest
+    needs: [download_artifacts]
     outputs:
       www_branch_count: ${{ steps.check_branches.outputs.www_branch_count }}
       fbsource_branch_count: ${{ steps.check_branches.outputs.fbsource_branch_count }}
@@ -69,25 +105,11 @@ jobs:
         run: |
           echo "www_branch_count=$(git ls-remote --heads origin "refs/heads/meta-www" | wc -l)" >> "$GITHUB_OUTPUT"
           echo "fbsource_branch_count=$(git ls-remote --heads origin "refs/heads/meta-fbsource" | wc -l)" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-node@v4
+      - name: Restore downloaded build
+        uses: actions/download-artifact@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
-      - name: Restore cached node_modules
-        uses: actions/cache@v4
-        id: node_modules
-        with:
-          path: |
-            **/node_modules
-          key: runtime-release-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
-      - name: Ensure clean build directory
-        run: rm -rf build
-      - run: yarn install --frozen-lockfile
-      - run: yarn --cwd scripts/release install --frozen-lockfile
-      - name: Download artifacts for base revision
-        run: |
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.event.workflow_run.head_sha || github.sha }}
+          name: build
+          path: build
       - name: Display structure of build
         run: ls -R build
       - name: Strip @license from eslint plugin and react-refresh
@@ -178,8 +200,8 @@ jobs:
           if-no-files-found: error
 
   commit_www_artifacts:
-    needs: download_artifacts
-    if: inputs.force == true || (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.www_branch_count == '0')
+    needs: [download_artifacts, process_artifacts]
+    if: inputs.force == true || (github.ref == 'refs/heads/main' && needs.process_artifacts.outputs.www_branch_count == '0')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -192,12 +214,12 @@ jobs:
           name: compiled
           path: compiled/
       - name: Revert version changes
-        if: needs.download_artifacts.outputs.last_version_classic != '' && needs.download_artifacts.outputs.last_version_modern != ''
+        if: needs.process_artifacts.outputs.last_version_classic != '' && needs.process_artifacts.outputs.last_version_modern != ''
         env:
-          CURRENT_VERSION_CLASSIC: ${{ needs.download_artifacts.outputs.current_version_classic }}
-          CURRENT_VERSION_MODERN: ${{ needs.download_artifacts.outputs.current_version_modern }}
-          LAST_VERSION_CLASSIC: ${{ needs.download_artifacts.outputs.last_version_classic }}
-          LAST_VERSION_MODERN: ${{ needs.download_artifacts.outputs.last_version_modern }}
+          CURRENT_VERSION_CLASSIC: ${{ needs.process_artifacts.outputs.current_version_classic }}
+          CURRENT_VERSION_MODERN: ${{ needs.process_artifacts.outputs.current_version_modern }}
+          LAST_VERSION_CLASSIC: ${{ needs.process_artifacts.outputs.last_version_classic }}
+          LAST_VERSION_MODERN: ${{ needs.process_artifacts.outputs.last_version_modern }}
         run: |
           echo "Reverting $CURRENT_VERSION_CLASSIC to $LAST_VERSION_CLASSIC"
           grep -rl "$CURRENT_VERSION_CLASSIC" ./compiled || echo "No files found with $CURRENT_VERSION_CLASSIC"
@@ -227,12 +249,12 @@ jobs:
             echo "should_commit=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Re-apply version changes
-        if: inputs.force == true || (steps.check_should_commit.outputs.should_commit == 'true' && needs.download_artifacts.outputs.last_version_classic != '' && needs.download_artifacts.outputs.last_version_modern != '')
+        if: inputs.force == true || (steps.check_should_commit.outputs.should_commit == 'true' && needs.process_artifacts.outputs.last_version_classic != '' && needs.process_artifacts.outputs.last_version_modern != '')
         env:
-          CURRENT_VERSION_CLASSIC: ${{ needs.download_artifacts.outputs.current_version_classic }}
-          CURRENT_VERSION_MODERN: ${{ needs.download_artifacts.outputs.current_version_modern }}
-          LAST_VERSION_CLASSIC: ${{ needs.download_artifacts.outputs.last_version_classic }}
-          LAST_VERSION_MODERN: ${{ needs.download_artifacts.outputs.last_version_modern }}
+          CURRENT_VERSION_CLASSIC: ${{ needs.process_artifacts.outputs.current_version_classic }}
+          CURRENT_VERSION_MODERN: ${{ needs.process_artifacts.outputs.current_version_modern }}
+          LAST_VERSION_CLASSIC: ${{ needs.process_artifacts.outputs.last_version_classic }}
+          LAST_VERSION_MODERN: ${{ needs.process_artifacts.outputs.last_version_modern }}
         run: |
           echo "Re-applying $LAST_VERSION_CLASSIC to $CURRENT_VERSION_CLASSIC"
           grep -rl "$LAST_VERSION_CLASSIC" ./compiled || echo "No files found with $LAST_VERSION_CLASSIC"
@@ -266,8 +288,8 @@ jobs:
         run: git push
 
   commit_fbsource_artifacts:
-    needs: download_artifacts
-    if: inputs.force == true || (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0')
+    needs: [download_artifacts, process_artifacts]
+    if: inputs.force == true || (github.ref == 'refs/heads/main' && needs.process_artifacts.outputs.fbsource_branch_count == '0')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -280,10 +302,10 @@ jobs:
           name: compiled-rn
           path: compiled-rn/
       - name: Revert version changes
-        if: needs.download_artifacts.outputs.last_version_rn != ''
+        if: needs.process_artifacts.outputs.last_version_rn != ''
         env:
-          CURRENT_VERSION: ${{ needs.download_artifacts.outputs.current_version_rn }}
-          LAST_VERSION: ${{ needs.download_artifacts.outputs.last_version_rn }}
+          CURRENT_VERSION: ${{ needs.process_artifacts.outputs.current_version_rn }}
+          LAST_VERSION: ${{ needs.process_artifacts.outputs.last_version_rn }}
         run: |
           echo "Reverting $CURRENT_VERSION to $LAST_VERSION"
           grep -rl "$CURRENT_VERSION" ./compiled-rn || echo "No files found with $CURRENT_VERSION"
@@ -309,10 +331,10 @@ jobs:
             echo "should_commit=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Re-apply version changes
-        if: inputs.force == true || (steps.check_should_commit.outputs.should_commit == 'true' && needs.download_artifacts.outputs.last_version_rn != '')
+        if: inputs.force == true || (steps.check_should_commit.outputs.should_commit == 'true' && needs.process_artifacts.outputs.last_version_rn != '')
         env:
-          CURRENT_VERSION: ${{ needs.download_artifacts.outputs.current_version_rn }}
-          LAST_VERSION: ${{ needs.download_artifacts.outputs.last_version_rn }}
+          CURRENT_VERSION: ${{ needs.process_artifacts.outputs.current_version_rn }}
+          LAST_VERSION: ${{ needs.process_artifacts.outputs.last_version_rn }}
         run: |
           echo "Re-applying $LAST_VERSION to $CURRENT_VERSION"
           grep -rl "$LAST_VERSION" ./compiled-rn || echo "No files found with $LAST_VERSION"
