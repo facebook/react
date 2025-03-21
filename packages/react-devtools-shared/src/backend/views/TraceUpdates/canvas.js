@@ -43,26 +43,8 @@ function drawNative(nodeToData: Map<HostInstance, Data>, agent: Agent) {
 }
 
 function drawWeb(nodeToData: Map<HostInstance, Data>) {
-  // if there are no nodes to draw, detach from top layer
-  if (nodeToData.size === 0) {
-    if (canvas !== null) {
-      if (canvas.matches(':popover-open')) {
-        // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
-        // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
-        canvas.hidePopover();
-      }
-    }
-    return;
-  }
-
   if (canvas === null) {
     initialize();
-  } else {
-    if (!canvas.matches(':popover-open')) {
-      // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
-      // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
-      canvas.showPopover();
-    }
   }
 
   const dpr = window.devicePixelRatio || 1;
@@ -83,6 +65,17 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
     drawGroupBorders(context, group);
     drawGroupLabel(context, group);
   });
+
+  if (canvas !== null) {
+    if (nodeToData.size === 0 && canvas.matches(':popover-open')) {
+      canvas.hidePopover();
+      return;
+    }
+    if (canvas.matches(':popover-open')) {
+      canvas.hidePopover();
+    }
+    canvas.showPopover();
+  }
 }
 
 type GroupItem = {
@@ -209,9 +202,11 @@ function destroyNative(agent: Agent) {
 
 function destroyWeb() {
   if (canvas !== null) {
-    // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
-    // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
-    canvas.hidePopover();
+    if (canvas.matches(':popover-open')) {
+      // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
+      // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
+      canvas.hidePopover();
+    }
 
     // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API and loses canvas nullability tracking
     if (canvas.parentNode != null) {
@@ -248,8 +243,4 @@ function initialize(): void {
 
   const root = window.document.documentElement;
   root.insertBefore(canvas, root.firstChild);
-
-  // $FlowFixMe[prop-missing]: Flow doesn't recognize Popover API
-  // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API
-  canvas.showPopover();
 }
