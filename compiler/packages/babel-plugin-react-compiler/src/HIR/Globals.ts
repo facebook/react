@@ -49,6 +49,7 @@ const UNTYPED_GLOBALS: Set<string> = new Set([
   'Object',
   'Function',
   'Number',
+  'BigInt',
   'RegExp',
   'Date',
   'Error',
@@ -341,6 +342,16 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
         }),
       ],
     ]),
+  ],
+  [
+    'BigInt',
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
   ],
   [
     'Boolean',

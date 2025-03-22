@@ -1494,6 +1494,7 @@ function lowerExpression(
         loc: exprLoc,
       };
     }
+    case 'BigIntLiteral':
     case 'BooleanLiteral':
     case 'NumericLiteral':
     case 'StringLiteral': {
@@ -1503,7 +1504,7 @@ function lowerExpression(
       const value = expr.node.value;
       return {
         kind: 'Primitive',
-        value,
+        value: exprNode.type === 'BigIntLiteral' ? BigInt(value) : value,
         loc: exprLoc,
       };
     }
@@ -4252,6 +4253,7 @@ export function lowerType(node: t.FlowType | t.TSType): Type {
     case 'NumberTypeAnnotation':
     case 'StringLiteralTypeAnnotation':
     case 'StringTypeAnnotation':
+    case 'TSBigIntKeyword':
     case 'TSBooleanKeyword':
     case 'TSNullKeyword':
     case 'TSNumberKeyword':
