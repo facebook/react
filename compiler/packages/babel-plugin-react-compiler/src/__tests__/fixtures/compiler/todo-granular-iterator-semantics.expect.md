@@ -5,7 +5,7 @@
 import {useIdentity, ValidateMemoization} from 'shared-runtime';
 
 /**
- * TODO fixture for granular iterator semantics:
+ * Fixture for granular iterator semantics:
  * 1. ConditionallyMutate the iterator itself, depending on whether the iterator
  *    is a mutable iterator.
  * 2. Capture effect on elements within the iterator.
@@ -26,7 +26,7 @@ function Validate({x, input}) {
 function useFoo(input) {
   'use memo';
   /**
-   * TODO: We should be able to memoize {} separately from `x`.
+   * We should be able to memoize {} separately from `x`.
    */
   const x = Array.from([{}]);
   useIdentity();
@@ -48,7 +48,7 @@ import { c as _c } from "react/compiler-runtime";
 import { useIdentity, ValidateMemoization } from "shared-runtime";
 
 /**
- * TODO fixture for granular iterator semantics:
+ * Fixture for granular iterator semantics:
  * 1. ConditionallyMutate the iterator itself, depending on whether the iterator
  *    is a mutable iterator.
  * 2. Capture effect on elements within the iterator.
@@ -68,29 +68,35 @@ function Validate({ x, input }) {
 }
 function useFoo(input) {
   "use memo";
-  const $ = _c(5);
-
-  const x = Array.from([{}]);
-  useIdentity();
+  const $ = _c(6);
   let t0;
-  if ($[0] !== input) {
-    t0 = [input];
-    $[0] = input;
-    $[1] = t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = [{}];
+    $[0] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[0];
   }
-  x.push(t0);
+  const x = Array.from(t0);
+  useIdentity();
   let t1;
-  if ($[2] !== input || $[3] !== x) {
-    t1 = <Validate x={x} input={input} />;
-    $[2] = input;
-    $[3] = x;
-    $[4] = t1;
+  if ($[1] !== input) {
+    t1 = [input];
+    $[1] = input;
+    $[2] = t1;
   } else {
-    t1 = $[4];
+    t1 = $[2];
   }
-  return t1;
+  x.push(t1);
+  let t2;
+  if ($[3] !== input || $[4] !== x) {
+    t2 = <Validate x={x} input={input} />;
+    $[3] = input;
+    $[4] = x;
+    $[5] = t2;
+  } else {
+    t2 = $[5];
+  }
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

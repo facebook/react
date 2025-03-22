@@ -11,7 +11,10 @@ import {
   Identifier,
   InstructionId,
   InstructionKind,
+  isArrayType,
+  isMapType,
   isRefOrRefValue,
+  isSetType,
   makeInstructionId,
   Place,
 } from '../HIR/HIR';
@@ -90,6 +93,17 @@ function inferPlace(
         infer(place, instrId);
       }
       return;
+    case Effect.ConditionallyMutateIterator: {
+      const identifier = place.identifier;
+      if (
+        !isArrayType(identifier) &&
+        !isSetType(identifier) &&
+        !isMapType(identifier)
+      ) {
+        infer(place, instrId);
+      }
+      return;
+    }
     case Effect.ConditionallyMutate:
     case Effect.Mutate: {
       infer(place, instrId);

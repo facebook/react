@@ -261,6 +261,7 @@ function* generateInstructionTypes(
         kind: 'Function',
         shapeId: null,
         return: returnType,
+        isConstructor: false,
       });
       yield equation(left, returnType);
       break;
@@ -277,6 +278,7 @@ function* generateInstructionTypes(
         kind: 'Function',
         shapeId: null,
         return: returnType,
+        isConstructor: false,
       });
       yield equation(left, returnType);
       break;
@@ -333,6 +335,7 @@ function* generateInstructionTypes(
         kind: 'Function',
         return: returnType,
         shapeId: null,
+        isConstructor: false,
       });
 
       yield equation(left, returnType);
@@ -405,6 +408,7 @@ function* generateInstructionTypes(
         kind: 'Function',
         shapeId: BuiltInFunctionId,
         return: value.loweredFunc.func.returnType,
+        isConstructor: false,
       });
       break;
     }
@@ -425,9 +429,20 @@ function* generateInstructionTypes(
       yield equation(left, {kind: 'Object', shapeId: BuiltInJsxId});
       break;
     }
+    case 'NewExpression': {
+      const returnType = makeType();
+      yield equation(value.callee.identifier.type, {
+        kind: 'Function',
+        return: returnType,
+        shapeId: null,
+        isConstructor: true,
+      });
+
+      yield equation(left, returnType);
+      break;
+    }
     case 'PropertyStore':
     case 'DeclareLocal':
-    case 'NewExpression':
     case 'RegExpLiteral':
     case 'MetaProperty':
     case 'ComputedStore':
@@ -506,8 +521,10 @@ class Unifier {
     }
 
     if (tB.kind === 'Function' && tA.kind === 'Function') {
-      this.unify(tA.return, tB.return);
-      return;
+      if (tA.isConstructor === tB.isConstructor) {
+        this.unify(tA.return, tB.return);
+        return;
+      }
     }
   }
 
@@ -648,6 +665,7 @@ class Unifier {
           kind: 'Function',
           return: returnType,
           shapeId: type.shapeId,
+          isConstructor: type.isConstructor,
         };
       }
       case 'ObjectMethod':

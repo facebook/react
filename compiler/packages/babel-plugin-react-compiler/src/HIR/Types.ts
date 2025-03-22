@@ -38,6 +38,7 @@ export type FunctionType = {
   kind: 'Function';
   shapeId: string | null;
   return: Type;
+  isConstructor: boolean;
 };
 
 export type ObjectType = {
@@ -111,6 +112,7 @@ export function duplicateType(type: Type): Type {
         kind: 'Function',
         return: duplicateType(type.return),
         shapeId: type.shapeId,
+        isConstructor: type.isConstructor,
       };
     }
     case 'Object': {

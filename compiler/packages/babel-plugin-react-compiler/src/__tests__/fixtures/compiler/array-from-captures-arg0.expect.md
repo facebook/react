@@ -50,28 +50,55 @@ import { useIdentity, Stringify } from "shared-runtime";
  * (2) the 1st argument might mutate its callee
  */
 function Component(t0) {
-  const $ = _c(4);
+  const $ = _c(10);
   const { value } = t0;
-  const arr = [{ value: "foo" }, { value: "bar" }, { value }];
-  useIdentity();
-  const derived = Array.from(arr);
   let t1;
-  if ($[0] !== derived) {
-    t1 = derived.at(-1);
-    $[0] = derived;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
   let t2;
-  if ($[2] !== t1) {
-    t2 = <Stringify>{t1}</Stringify>;
-    $[2] = t1;
-    $[3] = t2;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = { value: "foo" };
+    t2 = { value: "bar" };
+    $[0] = t1;
+    $[1] = t2;
   } else {
-    t2 = $[3];
+    t1 = $[0];
+    t2 = $[1];
   }
-  return t2;
+  let t3;
+  if ($[2] !== value) {
+    t3 = [t1, t2, { value }];
+    $[2] = value;
+    $[3] = t3;
+  } else {
+    t3 = $[3];
+  }
+  const arr = t3;
+  useIdentity();
+  let t4;
+  if ($[4] !== arr) {
+    t4 = Array.from(arr);
+    $[4] = arr;
+    $[5] = t4;
+  } else {
+    t4 = $[5];
+  }
+  const derived = t4;
+  let t5;
+  if ($[6] !== derived) {
+    t5 = derived.at(-1);
+    $[6] = derived;
+    $[7] = t5;
+  } else {
+    t5 = $[7];
+  }
+  let t6;
+  if ($[8] !== t5) {
+    t6 = <Stringify>{t5}</Stringify>;
+    $[8] = t5;
+    $[9] = t6;
+  } else {
+    t6 = $[9];
+  }
+  return t6;
 }
 
 export const FIXTURE_ENTRYPOINT = {
