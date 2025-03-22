@@ -35,10 +35,8 @@ export default function GeneralSettings(_: {}): React.Node {
     setDisplayDensity,
     setTheme,
     setTraceUpdatesEnabled,
-    setFbInternalFeaturesEnabled,
     theme,
     traceUpdatesEnabled,
-    fbInternalFeaturesEnabled,
   } = useContext(SettingsContext);
 
   const {backendVersion, supportsTraceUpdates} = useContext(StoreContext);
