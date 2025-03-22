@@ -10,7 +10,7 @@ import * as t from '@babel/types';
 import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
-import {HookKind} from './ObjectShape';
+import type {HookKind} from './ObjectShape';
 import {Type, makeType} from './Types';
 import {z} from 'zod';
 
@@ -829,6 +829,13 @@ export type CallExpression = {
   typeArguments?: Array<t.FlowType>;
 };
 
+export type NewExpression = {
+  kind: 'NewExpression';
+  callee: Place;
+  args: Array<Place | SpreadPattern>;
+  loc: SourceLocation;
+};
+
 export type LoadLocal = {
   kind: 'LoadLocal';
   place: Place;
@@ -894,12 +901,7 @@ export type InstructionValue =
       right: Place;
       loc: SourceLocation;
     }
-  | {
-      kind: 'NewExpression';
-      callee: Place;
-      args: Array<Place | SpreadPattern>;
-      loc: SourceLocation;
-    }
+  | NewExpression
   | CallExpression
   | MethodCall
   | {
@@ -1647,6 +1649,14 @@ export function isPrimitiveType(id: Identifier): boolean {
 
 export function isArrayType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInArray';
+}
+
+export function isMapType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInMap';
+}
+
+export function isSetType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInSet';
 }
 
 export function isPropsType(id: Identifier): boolean {
