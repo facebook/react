@@ -2,12 +2,20 @@
 ## Input
 
 ```javascript
-import {mutateAndReturn, Stringify, useIdentity} from 'shared-runtime';
+import {Stringify, useIdentity} from 'shared-runtime';
 
+/**
+ * Also see repro-array-map-known-nonmutate-Boolean, which calls a global
+ * function that does *not* mutate its operands.
+ */
 function Component({value}) {
-  const arr = [{value: 'foo'}, {value: 'bar'}, {value}];
-  useIdentity();
-  const derived = Array.from(arr, mutateAndReturn);
+  const arr = [
+    new Set([['foo', 2]]).values(),
+    new Set([['bar', 4]]).values(),
+    [['baz', value]],
+  ];
+  useIdentity(null);
+  const derived = arr.map(Object.fromEntries);
   return (
     <Stringify>
       {derived.at(0)}
@@ -28,14 +36,23 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-import { mutateAndReturn, Stringify, useIdentity } from "shared-runtime";
+import { Stringify, useIdentity } from "shared-runtime";
 
+/**
+ * Also see repro-array-map-known-nonmutate-Boolean, which calls a global
+ * function that does *not* mutate its operands.
+ */
 function Component(t0) {
   const $ = _c(7);
   const { value } = t0;
-  const arr = [{ value: "foo" }, { value: "bar" }, { value }];
-  useIdentity();
-  const derived = Array.from(arr, mutateAndReturn);
+  const arr = [
+    new Set([["foo", 2]]).values(),
+    new Set([["bar", 4]]).values(),
+    [["baz", value]],
+  ];
+
+  useIdentity(null);
+  const derived = arr.map(Object.fromEntries);
   let t1;
   if ($[0] !== derived) {
     t1 = derived.at(0);
@@ -78,6 +95,6 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div>{"children":[{"value":"foo","wat0":"joe"},{"value":5,"wat0":"joe"}]}</div>
-<div>{"children":[{"value":"foo","wat0":"joe"},{"value":6,"wat0":"joe"}]}</div>
-<div>{"children":[{"value":"foo","wat0":"joe"},{"value":6,"wat0":"joe"}]}</div>
+(kind: ok) <div>{"children":[{"foo":2},{"baz":5}]}</div>
+<div>{"children":[{"foo":2},{"baz":6}]}</div>
+<div>{"children":[{"foo":2},{"baz":6}]}</div>
