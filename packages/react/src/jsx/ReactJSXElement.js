@@ -866,3 +866,30 @@ export function isValidElement(object) {
     object.$$typeof === REACT_ELEMENT_TYPE
   );
 }
+
+/**
+ * Checks if a value is a valid React node
+ * @param data The value to check
+ * @returns True if the value is a valid React node, false otherwise
+ */
+export function isValidNode(data) {
+  // Check if it's a valid React element
+  if (isValidElement(data)) return true;
+  
+  // Check if it's null or undefined
+  if (data === null || data === undefined) return true;
+  
+  // Check if it's a string or number
+  if (typeof data === 'string' || typeof data === 'number') return true;
+  
+  // Check if it's a boolean
+  if (typeof data === 'boolean') return true;
+  
+  // Check if it's an array of React nodes
+  if (Array.isArray(data)) {
+    return data.every(item => isValidNode(item));
+  }
+  
+  // If it's none of the above, it's not a valid React node
+  return false;
+}
