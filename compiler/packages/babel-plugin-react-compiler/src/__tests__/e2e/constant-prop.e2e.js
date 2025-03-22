@@ -12,6 +12,7 @@ globalThis.constantValue = 'global test value';
 
 test('literal-constant-propagation', () => {
   function Component() {
+    'use memo';
     const x = 'test value 1';
     return <div>{x}</div>;
   }
@@ -38,6 +39,7 @@ test('literal-constant-propagation', () => {
 
 test('global-constant-propagation', () => {
   function Component() {
+    'use memo';
     const x = constantValue;
 
     return <div>{x}</div>;
@@ -65,6 +67,7 @@ test('global-constant-propagation', () => {
 
 test('lambda-constant-propagation', () => {
   function Component() {
+    'use memo';
     const x = 'test value 1';
     const getDiv = () => <div>{x}</div>;
     return getDiv();
@@ -92,6 +95,7 @@ test('lambda-constant-propagation', () => {
 
 test('lambda-constant-propagation-of-phi-node', () => {
   function Component({noopCallback}) {
+    'use memo';
     const x = 'test value 1';
     if (constantValue) {
       noopCallback();
