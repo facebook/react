@@ -53,7 +53,10 @@ import {
   markNodeAsHoistable,
   isOwnedInstance,
 } from './ReactDOMComponentTree';
-import {traverseFragmentInstance} from 'react-reconciler/src/ReactFiberTreeReflection';
+import {
+  traverseFragmentInstance,
+  getFragmentParentHostInstance,
+} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
@@ -2239,6 +2242,9 @@ export type FragmentInstanceType = {
   observeUsing(observer: IntersectionObserver | ResizeObserver): void,
   unobserveUsing(observer: IntersectionObserver | ResizeObserver): void,
   getClientRects(): Array<DOMRect>,
+  getRootNode(getRootNodeOptions?: {
+    composed: boolean,
+  }): Document | ShadowRoot | FragmentInstanceType,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -2338,7 +2344,7 @@ FragmentInstance.prototype.focus = function (
 FragmentInstance.prototype.focusLast = function (
   this: FragmentInstanceType,
   focusOptions?: FocusOptions,
-) {
+): void {
   const children: Array<Instance> = [];
   traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
   for (let i = children.length - 1; i >= 0; i--) {
@@ -2429,6 +2435,20 @@ function collectClientRects(child: Instance, rects: Array<DOMRect>): boolean {
   rects.push.apply(rects, child.getClientRects());
   return false;
 }
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.getRootNode = function (
+  this: FragmentInstanceType,
+  getRootNodeOptions?: {composed: boolean},
+): Document | ShadowRoot | FragmentInstanceType {
+  const parentHostInstance = getFragmentParentHostInstance(this._fragmentFiber);
+  if (parentHostInstance === null) {
+    return this;
+  }
+  const rootNode =
+    // $FlowFixMe[incompatible-cast] Flow expects Node
+    (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
+  return rootNode;
+};
 
 function normalizeListenerOptions(
   opts: ?EventListenerOptionsOrUseCapture,
