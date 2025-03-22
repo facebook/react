@@ -1182,24 +1182,6 @@ const bundles = [
     externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
   },
 
-  /******* ESLint Plugin for Hooks *******/
-  {
-    // TODO: we're building this from typescript source now, but there's really
-    // no reason to have both dev and prod for this package.  It's
-    // currently required in order for the package to be copied over correctly.
-    // So, it would be worth improving that flow.
-    name: 'eslint-plugin-react-hooks',
-    bundleTypes: [NODE_DEV, NODE_PROD, CJS_DTS],
-    moduleType: ISOMORPHIC,
-    entry: 'eslint-plugin-react-hooks/src/index.ts',
-    global: 'ESLintPluginReactHooks',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: [],
-    tsconfig: './packages/eslint-plugin-react-hooks/tsconfig.json',
-    prebuild: `mkdir -p ./compiler/packages/babel-plugin-react-compiler/dist && echo "module.exports = require('../src/index.ts');" > ./compiler/packages/babel-plugin-react-compiler/dist/index.js`,
-  },
-
   /******* React Fresh *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],

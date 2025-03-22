@@ -26,7 +26,7 @@
     "@types/eslint": "^8.56.12",
     "@types/node": "^20.2.5",
     "babel-jest": "^29.0.3",
-    "eslint": "8.57.0",
+    "eslint-v8": "npm:eslint@^8.57.1",
     "hermes-eslint": "^0.25.1",
     "jest": "^29.5.0"
   },
