@@ -101,11 +101,6 @@ export const enableScrollEndPolyfill = __EXPERIMENTAL__;
  */
 export const enableFabricCompleteRootInCommitPhase = false;
 
-/**
- * Switches Fiber creation to a simple object instead of a constructor.
- */
-export const enableObjectFiber = false;
-
 export const enableTransitionTracing = false;
 
 // FB-only usage. The new API has different semantics.
