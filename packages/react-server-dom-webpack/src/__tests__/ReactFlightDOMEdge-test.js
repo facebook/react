@@ -1050,15 +1050,15 @@ describe('ReactFlightDOMEdge', () => {
         owner: null,
       });
       expect(lazyWrapper._debugInfo).toEqual([
-        {time: 11},
-        greetInfo,
         {time: 12},
+        greetInfo,
+        {time: 13},
         expect.objectContaining({
           name: 'Container',
           env: 'Server',
           owner: greetInfo,
         }),
-        {time: 13},
+        {time: 14},
       ]);
       // The owner that created the span was the outer server component.
       // We expect the debug info to be referentially equal to the owner.

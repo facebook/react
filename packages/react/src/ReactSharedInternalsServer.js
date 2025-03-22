@@ -39,6 +39,9 @@ export type SharedStateServer = {
 
   // ReactDebugCurrentFrame
   getCurrentStack: null | (() => string),
+
+  // ReactOwnerStackReset
+  recentlyCreatedOwnerStacks: 0,
 };
 
 export type RendererTask = boolean => RendererTask | null;
@@ -59,6 +62,7 @@ if (enableTaint) {
 if (__DEV__) {
   // Stack implementation injected by the current renderer.
   ReactSharedInternals.getCurrentStack = (null: null | (() => string));
+  ReactSharedInternals.recentlyCreatedOwnerStacks = 0;
 }
 
 export default ReactSharedInternals;
