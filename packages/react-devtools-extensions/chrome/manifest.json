@@ -43,7 +43,9 @@
   "permissions": [
     "scripting",
     "storage",
-    "tabs"
+    "tabs",
+    "http://*/*",
+    "https://*/*"
   ],
   "optional_permissions": [
     "clipboardWrite"
@@ -59,7 +61,8 @@
       "js": [
         "build/prepareInjection.js"
       ],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "all_frames": true
     }
   ]
 }
