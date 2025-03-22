@@ -20,14 +20,14 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime";
+import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { Stringify } from "shared-runtime";
 import * as React from "react";
 
 const Foo = React.forwardRef(Foo_withRef);
-const _isForgetEnabled_Fixtures_result = isForgetEnabled_Fixtures();
-function _Foo_withRef_optimized(_$$empty_props_placeholder$$, ref) {
+const isForgetEnabled_Fixtures_result = isForgetEnabled_Fixtures();
+function Foo_withRef_optimized(_$$empty_props_placeholder$$, ref) {
   const $ = _c(2);
   let t0;
   if ($[0] !== ref) {
@@ -39,16 +39,15 @@ function _Foo_withRef_optimized(_$$empty_props_placeholder$$, ref) {
   }
   return t0;
 }
-function _Foo_withRef_unoptimized(
+function Foo_withRef_unoptimized(
   _$$empty_props_placeholder$$: $ReadOnly<{}>,
   ref: React.RefSetter<Controls>,
 ): React.Node {
   return <Stringify ref={ref} />;
 }
 function Foo_withRef(arg0, arg1) {
-  if (_isForgetEnabled_Fixtures_result)
-    return _Foo_withRef_optimized(arg0, arg1);
-  else return _Foo_withRef_unoptimized(arg0, arg1);
+  if (isForgetEnabled_Fixtures_result) return Foo_withRef_optimized(arg0, arg1);
+  else return Foo_withRef_unoptimized(arg0, arg1);
 }
 
 export const FIXTURE_ENTRYPOINT = {

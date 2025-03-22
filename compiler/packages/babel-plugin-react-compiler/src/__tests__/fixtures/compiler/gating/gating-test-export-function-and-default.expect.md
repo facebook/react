@@ -34,8 +34,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { c as _c } from "react/compiler-runtime"; // @gating @compilationMode(annotation)
+import { c as _c } from "react/compiler-runtime";
+import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag"; // @gating @compilationMode(annotation)
 const Bar = isForgetEnabled_Fixtures()
   ? function Bar(props) {
       "use forget";

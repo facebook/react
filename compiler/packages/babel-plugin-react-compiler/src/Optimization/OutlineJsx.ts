@@ -196,7 +196,7 @@ function process(
     return null;
   }
 
-  const props = collectProps(jsx);
+  const props = collectProps(fn.env, jsx);
   if (!props) return null;
 
   const outlinedTag = fn.env.generateGloballyUniqueIdentifierName(null).value;
@@ -217,6 +217,7 @@ type OutlinedJsxAttribute = {
 };
 
 function collectProps(
+  env: Environment,
   instructions: Array<JsxInstruction>,
 ): Array<OutlinedJsxAttribute> | null {
   let id = 1;
@@ -227,6 +228,7 @@ function collectProps(
       newName = `${oldName}${id++}`;
     }
     seen.add(newName);
+    env.programContext.addNewReference(newName);
     return newName;
   }
 

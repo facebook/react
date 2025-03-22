@@ -23,8 +23,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime";
+import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { memo } from "react";
 
 type Props = React.ElementConfig<typeof Component>;

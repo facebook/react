@@ -331,6 +331,7 @@ export default class HIRBuilder {
           type: makeType(),
           loc: node.loc ?? GeneratedSource,
         };
+        this.#env.programContext.addNewReference(name);
         this.#bindings.set(name, {node, identifier});
         return identifier;
       } else if (mapping.node === node) {

@@ -7,8 +7,9 @@
 
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
-import {PluginOptions} from './Options';
 import {CompilerError} from '../CompilerError';
+import {ProgramContext} from './Imports';
+import {ExternalFunction} from '..';
 
 /**
  * Gating rewrite for function declarations which are referenced before their
@@ -34,7 +35,8 @@ import {CompilerError} from '../CompilerError';
 function insertAdditionalFunctionDeclaration(
   fnPath: NodePath<t.FunctionDeclaration>,
   compiled: t.FunctionDeclaration,
-  gating: NonNullable<PluginOptions['gating']>,
+  programContext: ProgramContext,
+  gatingFunctionIdentifierName: string,
 ): void {
   const originalFnName = fnPath.node.id;
   const originalFnParams = fnPath.node.params;
@@ -57,14 +59,14 @@ function insertAdditionalFunctionDeclaration(
     loc: fnPath.node.loc ?? null,
   });
 
-  const gatingCondition = fnPath.scope.generateUidIdentifier(
-    `${gating.importSpecifierName}_result`,
+  const gatingCondition = t.identifier(
+    programContext.newUid(`${gatingFunctionIdentifierName}_result`),
   );
-  const unoptimizedFnName = fnPath.scope.generateUidIdentifier(
-    `${originalFnName.name}_unoptimized`,
+  const unoptimizedFnName = t.identifier(
+    programContext.newUid(`${originalFnName.name}_unoptimized`),
   );
-  const optimizedFnName = fnPath.scope.generateUidIdentifier(
-    `${originalFnName.name}_optimized`,
+  const optimizedFnName = t.identifier(
+    programContext.newUid(`${originalFnName.name}_optimized`),
   );
   /**
    * Step 1: rename existing functions
@@ -115,7 +117,7 @@ function insertAdditionalFunctionDeclaration(
     t.variableDeclaration('const', [
       t.variableDeclarator(
         gatingCondition,
-        t.callExpression(t.identifier(gating.importSpecifierName), []),
+        t.callExpression(t.identifier(gatingFunctionIdentifierName), []),
       ),
     ]),
   );
@@ -129,19 +131,26 @@ export function insertGatedFunctionDeclaration(
     | t.FunctionDeclaration
     | t.ArrowFunctionExpression
     | t.FunctionExpression,
-  gating: NonNullable<PluginOptions['gating']>,
+  programContext: ProgramContext,
+  gating: ExternalFunction,
   referencedBeforeDeclaration: boolean,
 ): void {
+  const gatingImportedName = programContext.addImportSpecifier(gating).name;
   if (referencedBeforeDeclaration && fnPath.isFunctionDeclaration()) {
     CompilerError.invariant(compiled.type === 'FunctionDeclaration', {
       reason: 'Expected compiled node type to match input type',
       description: `Got ${compiled.type} but expected FunctionDeclaration`,
       loc: fnPath.node.loc ?? null,
     });
-    insertAdditionalFunctionDeclaration(fnPath, compiled, gating);
+    insertAdditionalFunctionDeclaration(
+      fnPath,
+      compiled,
+      programContext,
+      gatingImportedName,
+    );
   } else {
     const gatingExpression = t.conditionalExpression(
-      t.callExpression(t.identifier(gating.importSpecifierName), []),
+      t.callExpression(t.identifier(gatingImportedName), []),
       buildFunctionExpression(compiled),
       buildFunctionExpression(fnPath.node),
     );

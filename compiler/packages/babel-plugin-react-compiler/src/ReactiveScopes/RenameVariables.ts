@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {ProgramContext} from '..';
 import {CompilerError} from '../CompilerError';
 import {
   DeclarationId,
@@ -47,7 +48,7 @@ import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
  */
 export function renameVariables(fn: ReactiveFunction): Set<string> {
   const globals = collectReferencedGlobals(fn);
-  const scopes = new Scopes(globals);
+  const scopes = new Scopes(globals, fn.env.programContext);
   renameVariablesImpl(fn, new Visitor(), scopes);
   return new Set([...scopes.names, ...globals]);
 }
@@ -124,10 +125,12 @@ class Scopes {
   #seen: Map<DeclarationId, IdentifierName> = new Map();
   #stack: Array<Map<string, DeclarationId>> = [new Map()];
   #globals: Set<string>;
+  #programContext: ProgramContext;
   names: Set<ValidIdentifierName> = new Set();
 
-  constructor(globals: Set<string>) {
+  constructor(globals: Set<string>, programContext: ProgramContext) {
     this.#globals = globals;
+    this.#programContext = programContext;
   }
 
   visit(identifier: Identifier): void {
@@ -156,6 +159,7 @@ class Scopes {
         name = `${originalName.value}$${id++}`;
       }
     }
+    this.#programContext.addNewReference(name);
     const identifierName = makeIdentifierName(name);
     identifier.name = identifierName;
     this.#seen.set(identifier.declarationId, identifierName);

@@ -23,7 +23,7 @@ function Foo(props) {
 ## Code
 
 ```javascript
-import { useRenderCounter, shouldInstrument } from "react-compiler-runtime";
+import { shouldInstrument, useRenderCounter } from "react-compiler-runtime";
 import { c as _c } from "react/compiler-runtime"; // @enableEmitInstrumentForget @compilationMode(annotation)
 
 function Bar(props) {

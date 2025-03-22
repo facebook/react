@@ -28,6 +28,7 @@ import {
   isUseEffectHookType,
   LoadLocal,
   makeInstructionId,
+  NonLocalImportSpecifier,
   Place,
   promoteTemporary,
 } from '../HIR';
@@ -36,6 +37,7 @@ import {getOrInsertWith} from '../Utils/utils';
 import {BuiltInFireId, DefaultNonmutatingHook} from '../HIR/ObjectShape';
 import {eachInstructionOperand} from '../HIR/visitors';
 import {printSourceLocationLine} from '../HIR/PrintHIR';
+import {USE_FIRE_FUNCTION_NAME} from '../HIR/Environment';
 
 /*
  * TODO(jmbrown):
@@ -56,6 +58,7 @@ export function transformFire(fn: HIRFunction): void {
 }
 
 function replaceFireFunctions(fn: HIRFunction, context: Context): void {
+  let importedUseFire: NonLocalImportSpecifier | null = null;
   let hasRewrite = false;
   for (const [, block] of fn.body.blocks) {
     const rewriteInstrs = new Map<InstructionId, Array<Instruction>>();
@@ -87,7 +90,15 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
           ] of capturedCallees.entries()) {
             if (!context.hasCalleeWithInsertedFire(fireCalleePlace)) {
               context.addCalleeWithInsertedFire(fireCalleePlace);
-              const loadUseFireInstr = makeLoadUseFireInstruction(fn.env);
+
+              importedUseFire ??= fn.env.programContext.addImportSpecifier({
+                source: fn.env.programContext.reactRuntimeModule,
+                importSpecifierName: USE_FIRE_FUNCTION_NAME,
+              });
+              const loadUseFireInstr = makeLoadUseFireInstruction(
+                fn.env,
+                importedUseFire,
+              );
               const loadFireCalleeInstr = makeLoadFireCalleeInstruction(
                 fn.env,
                 fireCalleeInfo.capturedCalleeIdentifier,
@@ -404,18 +415,16 @@ function ensureNoMoreFireUses(fn: HIRFunction, context: Context): void {
   }
 }
 
-function makeLoadUseFireInstruction(env: Environment): Instruction {
+function makeLoadUseFireInstruction(
+  env: Environment,
+  importedLoadUseFire: NonLocalImportSpecifier,
+): Instruction {
   const useFirePlace = createTemporaryPlace(env, GeneratedSource);
   useFirePlace.effect = Effect.Read;
   useFirePlace.identifier.type = DefaultNonmutatingHook;
   const instrValue: InstructionValue = {
     kind: 'LoadGlobal',
-    binding: {
-      kind: 'ImportSpecifier',
-      name: 'useFire',
-      module: 'react',
-      imported: 'useFire',
-    },
+    binding: {...importedLoadUseFire},
     loc: GeneratedSource,
   };
   return {

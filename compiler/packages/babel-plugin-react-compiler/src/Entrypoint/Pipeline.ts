@@ -8,7 +8,7 @@
 import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
 import prettyFormat from 'pretty-format';
-import {Logger} from '.';
+import {Logger, ProgramContext} from '.';
 import {
   HIRFunction,
   ReactiveFunction,
@@ -117,7 +117,7 @@ function run(
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
   mode: CompilerMode,
-  useMemoCacheIdentifier: string,
+  programContext: ProgramContext,
   logger: Logger | null,
   filename: string | null,
   code: string | null,
@@ -132,7 +132,7 @@ function run(
     logger,
     filename,
     code,
-    useMemoCacheIdentifier,
+    programContext,
   );
   env.logger?.debugLogIRs?.({
     kind: 'debug',
@@ -552,7 +552,7 @@ export function compileFn(
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
   mode: CompilerMode,
-  useMemoCacheIdentifier: string,
+  programContext: ProgramContext,
   logger: Logger | null,
   filename: string | null,
   code: string | null,
@@ -562,7 +562,7 @@ export function compileFn(
     config,
     fnType,
     mode,
-    useMemoCacheIdentifier,
+    programContext,
     logger,
     filename,
     code,
