@@ -336,11 +336,11 @@ module.exports = {
         'packages/react-devtools-extensions/**/*.js',
         'packages/react-devtools-timeline/**/*.js',
         'packages/react-native-renderer/**/*.js',
-        'packages/eslint-plugin-react-hooks/**/*.js',
         'packages/jest-react/**/*.js',
         'packages/internal-test-utils/**/*.js',
         'packages/**/__tests__/*.js',
         'packages/**/npm/*.js',
+        'compiler/packages/eslint-plugin-react-hooks/**/*.js',
       ],
       rules: {
         'react-internal/prod-error-codes': OFF,
@@ -515,7 +515,7 @@ module.exports = {
       },
     },
     {
-      files: ['packages/eslint-plugin-react-hooks/src/**/*'],
+      files: ['compiler/packages/eslint-plugin-react-hooks/src/**/*'],
       extends: ['plugin:@typescript-eslint/recommended'],
       parser: '@typescript-eslint/parser',
       plugins: ['@typescript-eslint', 'eslint-plugin'],

@@ -109,10 +109,7 @@ function isInsideDoWhileLoop(node: Node | undefined): node is DoWhileStatement {
 }
 
 function isUseEffectEventIdentifier(node: Node): boolean {
-  if (__EXPERIMENTAL__) {
-    return node.type === 'Identifier' && node.name === 'useEffectEvent';
-  }
-  return false;
+  return node.type === 'Identifier' && node.name === 'useEffectEvent';
 }
 
 function isUseIdentifier(node: Node): boolean {

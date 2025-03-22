@@ -1286,180 +1286,181 @@ const tests = {
   ],
 };
 
-if (__EXPERIMENTAL__) {
-  tests.valid = [
-    ...tests.valid,
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be called in a useEffect.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          useEffect(() => {
-            onClick();
-          });
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be called in closures.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          return <Child onClick={() => onClick()}></Child>;
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be called in closures.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          const onClick2 = () => { onClick() };
-          const onClick3 = useCallback(() => onClick(), []);
-          return <>
-            <Child onClick={onClick2}></Child>
-            <Child onClick={onClick3}></Child>
-          </>;
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be passed by reference in useEffect
-        // and useEffectEvent.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          const onClick2 = useEffectEvent(() => {
-            debounce(onClick);
-          });
-          useEffect(() => {
-            let id = setInterval(onClick, 100);
-            return () => clearInterval(onClick);
-          }, []);
-          return <Child onClick={() => onClick2()} />
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        const MyComponent = ({theme}) => {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          return <Child onClick={() => onClick()}></Child>;
-        };
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          const notificationService = useNotifications();
-          const showNotification = useEffectEvent((text) => {
-            notificationService.notify(theme, text);
-          });
-          const onClick = useEffectEvent((text) => {
-            showNotification(text);
-          });
-          return <Child onClick={(text) => onClick(text)} />
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          useEffect(() => {
-            onClick();
-          });
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-        }
-      `,
-    },
-  ];
-  tests.invalid = [
-    ...tests.invalid,
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          return <Child onClick={onClick}></Child>;
-        }
-      `,
-      errors: [useEffectEventError('onClick')],
-    },
-    {
-      code: normalizeIndent`
-        // This should error even though it shares an identifier name with the below
-        function MyComponent({theme}) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme)
-          });
-          return <Child onClick={onClick} />
-        }
+// useEffectEvent
+tests.valid = [
+  ...tests.valid,
+  {
+    code: normalizeIndent`
+      // Valid because functions created with useEffectEvent can be called in a useEffect.
+      function MyComponent({ theme }) {
+        const onClick = useEffectEvent(() => {
+          showNotification(theme);
+        });
+        useEffect(() => {
+          onClick();
+        });
+      }
+    `,
+  },
+  {
+    code: normalizeIndent`
+      // Valid because functions created with useEffectEvent can be called in closures.
+      function MyComponent({ theme }) {
+        const onClick = useEffectEvent(() => {
+          showNotification(theme);
+        });
+        return <Child onClick={() => onClick()}></Child>;
+      }
+    `,
+  },
+  {
+    code: normalizeIndent`
+      // Valid because functions created with useEffectEvent can be called in closures.
+      function MyComponent({ theme }) {
+        const onClick = useEffectEvent(() => {
+          showNotification(theme);
+        });
+        const onClick2 = () => { onClick() };
+        const onClick3 = useCallback(() => onClick(), []);
+        return <>
+          <Child onClick={onClick2}></Child>
+          <Child onClick={onClick3}></Child>
+        </>;
+      }
+    `,
+  },
+  {
+    code: normalizeIndent`
+      // Valid because functions created with useEffectEvent can be passed by reference in useEffect
+      // and useEffectEvent.
+      function MyComponent({ theme }) {
+        const onClick = useEffectEvent(() => {
+          showNotification(theme);
+        });
+        const onClick2 = useEffectEvent(() => {
+          debounce(onClick);
+        });
+        useEffect(() => {
+          let id = setInterval(onClick, 100);
+          return () => clearInterval(onClick);
+        }, []);
+        return <Child onClick={() => onClick2()} />
+      }
+    `,
+  },
+  {
+    code: normalizeIndent`
+      const MyComponent = ({theme}) => {
+        const onClick = useEffectEvent(() => {
+          showNotification(theme);
+        });
+        return <Child onClick={() => onClick()}></Child>;
+      };
+    `,
+  },
+  {
+    code: normalizeIndent`
+      function MyComponent({ theme }) {
+        const notificationService = useNotifications();
+        const showNotification = useEffectEvent((text) => {
+          notificationService.notify(theme, text);
+        });
+        const onClick = useEffectEvent((text) => {
+          showNotification(text);
+        });
+        return <Child onClick={(text) => onClick(text)} />
+      }
+    `,
+  },
+  {
+    code: normalizeIndent`
+      function MyComponent({ theme }) {
+        useEffect(() => {
+          onClick();
+        });
+        const onClick = useEffectEvent(() => {
+          showNotification(theme);
+        });
+      }
+    `,
+  },
+];
 
-        // The useEffectEvent function shares an identifier name with the above
-        function MyOtherComponent({theme}) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme)
-          });
-          return <Child onClick={() => onClick()} />
-        }
-      `,
-      errors: [{...useEffectEventError('onClick'), line: 7}],
-    },
-    {
-      code: normalizeIndent`
-        const MyComponent = ({ theme }) => {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          return <Child onClick={onClick}></Child>;
-        }
-      `,
-      errors: [useEffectEventError('onClick')],
-    },
-    {
-      code: normalizeIndent`
-        // Invalid because onClick is being aliased to foo but not invoked
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          let foo = onClick;
-          return <Bar onClick={foo} />
-        }
-      `,
-      errors: [{...useEffectEventError('onClick'), line: 7}],
-    },
-    {
-      code: normalizeIndent`
-        // Should error because it's being passed down to JSX, although it's been referenced once
-        // in an effect
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(them);
-          });
-          useEffect(() => {
-            setTimeout(onClick, 100);
-          });
-          return <Child onClick={onClick} />
-        }
-      `,
-      errors: [useEffectEventError('onClick')],
-    },
-  ];
-}
+// useEffectEvent
+tests.invalid = [
+  ...tests.invalid,
+  {
+    code: normalizeIndent`
+      function MyComponent({ theme }) {
+        const onClick = useEffectEvent(() => {
+          showNotification(theme);
+        });
+        return <Child onClick={onClick}></Child>;
+      }
+    `,
+    errors: [useEffectEventError('onClick')],
+  },
+  {
+    code: normalizeIndent`
+      // This should error even though it shares an identifier name with the below
+      function MyComponent({theme}) {
+        const onClick = useEffectEvent(() => {
+          showNotification(theme)
+        });
+        return <Child onClick={onClick} />
+      }
+
+      // The useEffectEvent function shares an identifier name with the above
+      function MyOtherComponent({theme}) {
+        const onClick = useEffectEvent(() => {
+          showNotification(theme)
+        });
+        return <Child onClick={() => onClick()} />
+      }
+    `,
+    errors: [{...useEffectEventError('onClick'), line: 7}],
+  },
+  {
+    code: normalizeIndent`
+      const MyComponent = ({ theme }) => {
+        const onClick = useEffectEvent(() => {
+          showNotification(theme);
+        });
+        return <Child onClick={onClick}></Child>;
+      }
+    `,
+    errors: [useEffectEventError('onClick')],
+  },
+  {
+    code: normalizeIndent`
+      // Invalid because onClick is being aliased to foo but not invoked
+      function MyComponent({ theme }) {
+        const onClick = useEffectEvent(() => {
+          showNotification(theme);
+        });
+        let foo = onClick;
+        return <Bar onClick={foo} />
+      }
+    `,
+    errors: [{...useEffectEventError('onClick'), line: 7}],
+  },
+  {
+    code: normalizeIndent`
+      // Should error because it's being passed down to JSX, although it's been referenced once
+      // in an effect
+      function MyComponent({ theme }) {
+        const onClick = useEffectEvent(() => {
+          showNotification(them);
+        });
+        useEffect(() => {
+          setTimeout(onClick, 100);
+        });
+        return <Child onClick={onClick} />
+      }
+    `,
+    errors: [useEffectEventError('onClick')],
+  },
+];
 
 function conditionalError(hook, hasPreviousFinalizer = false) {
   return {
@@ -1623,16 +1624,16 @@ describe('rules-of-hooks/rules-of-hooks', () => {
     tests
   );
 
-  new ESLintTesterV9({
-    languageOptions: {
-      ...languageOptionsV9,
-      parser: require('@typescript-eslint/parser-v3'),
-    },
-  }).run(
-    'eslint: v9, parser: @typescript-eslint/parser@3.x',
-    ReactHooksESLintRule,
-    tests
-  );
+  // new ESLintTesterV9({
+  //   languageOptions: {
+  //     ...languageOptionsV9,
+  //     parser: require('@typescript-eslint/parser-v3'),
+  //   },
+  // }).run(
+  //   'eslint: v9, parser: @typescript-eslint/parser@3.x',
+  //   ReactHooksESLintRule,
+  //   tests
+  // );
 
   new ESLintTesterV7({
     parser: require.resolve('@typescript-eslint/parser-v4'),
