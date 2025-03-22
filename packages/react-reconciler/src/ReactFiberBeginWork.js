@@ -14,7 +14,6 @@ import type {
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {
   SuspenseState,
@@ -2340,10 +2339,11 @@ function mountSuspensePrimaryChildren(
     mode: 'visible',
     children: primaryChildren,
   };
-  const primaryChildFragment = mountWorkInProgressOffscreenFiber(
+  const primaryChildFragment = createFiberFromOffscreen(
     primaryChildProps,
     mode,
     renderLanes,
+    null,
   );
   primaryChildFragment.return = workInProgress;
   workInProgress.child = primaryChildFragment;
@@ -2395,10 +2395,11 @@ function mountSuspenseFallbackChildren(
       null,
     );
   } else {
-    primaryChildFragment = mountWorkInProgressOffscreenFiber(
+    primaryChildFragment = createFiberFromOffscreen(
       primaryChildProps,
       mode,
       NoLanes,
+      null,
     );
     fallbackChildFragment = createFiberFromFragment(
       fallbackChildren,
@@ -2413,16 +2414,6 @@ function mountSuspenseFallbackChildren(
   primaryChildFragment.sibling = fallbackChildFragment;
   workInProgress.child = primaryChildFragment;
   return fallbackChildFragment;
-}
-
-function mountWorkInProgressOffscreenFiber(
-  offscreenProps: OffscreenProps,
-  mode: TypeOfMode,
-  renderLanes: Lanes,
-) {
-  // The props argument to `createFiberFromOffscreen` is `any` typed, so we use
-  // this wrapper function to constrain it.
-  return createFiberFromOffscreen(offscreenProps, mode, NoLanes, null);
 }
 
 function updateWorkInProgressOffscreenFiber(
@@ -2601,10 +2592,11 @@ function mountSuspenseFallbackAfterRetryWithoutHydrating(
     mode: 'visible',
     children: primaryChildren,
   };
-  const primaryChildFragment = mountWorkInProgressOffscreenFiber(
+  const primaryChildFragment = createFiberFromOffscreen(
     primaryChildProps,
     fiberMode,
     NoLanes,
+    null,
   );
   const fallbackChildFragment = createFiberFromFragment(
     fallbackChildren,
