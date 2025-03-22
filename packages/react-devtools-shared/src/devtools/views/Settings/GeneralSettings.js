@@ -49,6 +49,12 @@ export default function GeneralSettings(_: {}): React.Node {
 
   return (
     <div className={styles.Settings}>
+      {isInternalFacebookBuild && (
+        <div className={styles.Setting}>
+          This is an internal build of React DevTools for Meta.
+        </div>
+      )}
+
       <div className={styles.Setting}>
         <div className={styles.RadioLabel}>Theme</div>
         <select
@@ -85,21 +91,6 @@ export default function GeneralSettings(_: {}): React.Node {
               }
             />{' '}
             Highlight updates when components render.
-          </label>
-        </div>
-      )}
-
-      {isInternalFacebookBuild && (
-        <div className={styles.Setting}>
-          <label>
-            <input
-              type="checkbox"
-              checked={fbInternalFeaturesEnabled}
-              onChange={({currentTarget}) =>
-                setFbInternalFeaturesEnabled(currentTarget.checked)
-              }
-            />{' '}
-            Enable fb internal features
           </label>
         </div>
       )}

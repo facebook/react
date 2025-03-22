@@ -21,7 +21,6 @@ import {
   LOCAL_STORAGE_BROWSER_THEME,
   LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
-  LOCAL_STORAGE_FB_INTERNAL_FEATURES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
 import {
   COMFORTABLE_LINE_HEIGHT,
@@ -54,9 +53,6 @@ type Context = {
 
   traceUpdatesEnabled: boolean,
   setTraceUpdatesEnabled: (value: boolean) => void,
-
-  fbInternalFeaturesEnabled: boolean,
-  setFbInternalFeaturesEnabled: (value: boolean) => void,
 };
 
 const SettingsContext: ReactContext<Context> = createContext<Context>(
@@ -116,12 +112,6 @@ function SettingsContextController({
       false,
     );
 
-  const [fbInternalFeaturesEnabled, setFbInternalFeaturesEnabled] =
-    useLocalStorageWithLog<boolean>(
-      LOCAL_STORAGE_FB_INTERNAL_FEATURES_ENABLED_KEY,
-      false,
-    );
-
   const documentElements = useMemo<DocumentElements>(() => {
     const array: Array<HTMLElement> = [
       ((document.documentElement: any): HTMLElement),
@@ -174,10 +164,6 @@ function SettingsContextController({
     bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
   }, [bridge, traceUpdatesEnabled]);
 
-  useEffect(() => {
-    bridge.send('setFbInternalFeaturesEnabled', fbInternalFeaturesEnabled);
-  }, [bridge, fbInternalFeaturesEnabled]);
-
   const value: Context = useMemo(
     () => ({
       displayDensity,
@@ -190,11 +176,9 @@ function SettingsContextController({
       setParseHookNames,
       setTheme,
       setTraceUpdatesEnabled,
-      setFbInternalFeaturesEnabled,
       theme,
       browserTheme,
       traceUpdatesEnabled,
-      fbInternalFeaturesEnabled,
     }),
     [
       displayDensity,
@@ -203,11 +187,9 @@ function SettingsContextController({
       setParseHookNames,
       setTheme,
       setTraceUpdatesEnabled,
-      setFbInternalFeaturesEnabled,
       theme,
       browserTheme,
       traceUpdatesEnabled,
-      fbInternalFeaturesEnabled,
     ],
   );
 

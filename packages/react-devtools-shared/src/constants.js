@@ -48,8 +48,6 @@ export const SESSION_STORAGE_RELOAD_AND_PROFILE_KEY =
 export const LOCAL_STORAGE_BROWSER_THEME = 'React::DevTools::theme';
 export const LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY =
   'React::DevTools::traceUpdatesEnabled';
-export const LOCAL_STORAGE_FB_INTERNAL_FEATURES_ENABLED_KEY =
-  'React::DevTools::fbInternalFeaturesEnabled';
 export const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
 
