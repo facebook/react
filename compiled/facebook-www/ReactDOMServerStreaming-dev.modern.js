@@ -8622,7 +8622,22 @@ __DEV__ &&
       },
       callLazyInitInDEV =
         callLazyInit["react-stack-bottom-frame"].bind(callLazyInit),
-      currentRequest = null,
+      lastResetTime = 0;
+    if (
+      "object" === typeof performance &&
+      "function" === typeof performance.now
+    ) {
+      var localPerformance = performance;
+      var getCurrentTime = function () {
+        return localPerformance.now();
+      };
+    } else {
+      var localDate = Date;
+      getCurrentTime = function () {
+        return localDate.now();
+      };
+    }
+    var currentRequest = null,
       didWarnAboutBadClass = {},
       didWarnAboutContextTypes = {},
       didWarnAboutContextTypeOnFunctionComponent = {},
@@ -9083,12 +9098,18 @@ __DEV__ &&
               ),
             streamingFormat.push('" async="">\x3c/script>');
       streamingFormat = createFormatContext(0, null, 0);
+      bootstrapModules = options ? options.progressiveChunkSize : void 0;
+      options = options.onError;
+      bootstrapScripts = getCurrentTime();
+      1e3 < bootstrapScripts - lastResetTime &&
+        ((ReactSharedInternals.recentlyCreatedOwnerStacks = 0),
+        (lastResetTime = bootstrapScripts));
       options = new RequestInstance(
         resumableState,
         externalRuntimeConfig,
         streamingFormat,
-        options ? options.progressiveChunkSize : void 0,
-        options.onError,
+        bootstrapModules,
+        options,
         void 0,
         void 0,
         void 0,

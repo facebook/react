@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1149() {
+    function JSCompiler_object_inline_createNodeMock_1152() {
       return null;
     }
     function findHook(fiber, id) {
@@ -11166,6 +11166,10 @@ __DEV__ &&
         }
       entangledRenderLanes = lanes;
       finishQueueingConcurrentUpdates();
+      lanes = getCurrentTime();
+      1e3 < lanes - lastResetTime &&
+        ((ReactSharedInternals.recentlyCreatedOwnerStacks = 0),
+        (lastResetTime = lanes));
       ReactStrictModeWarnings.discardPendingWarnings();
       return timeoutHandle;
     }
@@ -13147,7 +13151,22 @@ __DEV__ &&
       isRendering = !1,
       hydrationDiffRootDEV = null,
       hydrationErrors = null,
-      objectIs = "function" === typeof Object.is ? Object.is : is,
+      lastResetTime = 0;
+    if (
+      "object" === typeof performance &&
+      "function" === typeof performance.now
+    ) {
+      var localPerformance = performance;
+      var getCurrentTime = function () {
+        return localPerformance.now();
+      };
+    } else {
+      var localDate = Date;
+      getCurrentTime = function () {
+        return localDate.now();
+      };
+    }
+    var objectIs = "function" === typeof Object.is ? Object.is : is,
       valueCursor = createCursor(null);
     var renderer2CursorDEV = createCursor(null);
     var rendererSigil = {};
@@ -15025,10 +15044,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-6b1a2c1d-20250321",
+        version: "19.1.0-www-classic-4a9df081-20250323",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-6b1a2c1d-20250321"
+        reconcilerVersion: "19.1.0-www-classic-4a9df081-20250323"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15048,7 +15067,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1149,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1152,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15163,5 +15182,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-classic-6b1a2c1d-20250321";
+    exports.version = "19.1.0-www-classic-4a9df081-20250323";
   })();
