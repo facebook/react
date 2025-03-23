@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a50c071fce2d2511f2c01f77ce00e358>>
+ * @generated SignedSource<<98f041645781bf29fec31cae4af12107>>
  */
 
 "use strict";
@@ -12402,6 +12402,10 @@ __DEV__ &&
         }
       entangledRenderLanes = lanes;
       finishQueueingConcurrentUpdates();
+      lanes = getCurrentTime();
+      1e3 < lanes - lastResetTime &&
+        ((ReactSharedInternals.recentlyCreatedOwnerStacks = 0),
+        (lastResetTime = lanes));
       ReactStrictModeWarnings.discardPendingWarnings();
       return timeoutHandle;
     }
@@ -15269,7 +15273,22 @@ __DEV__ &&
       needsEscaping = /["'&<>\n\t]|^\s|\s$/,
       hydrationDiffRootDEV = null,
       hydrationErrors = null,
-      objectIs = "function" === typeof Object.is ? Object.is : is,
+      lastResetTime = 0;
+    if (
+      "object" === typeof performance &&
+      "function" === typeof performance.now
+    ) {
+      var localPerformance = performance;
+      var getCurrentTime = function () {
+        return localPerformance.now();
+      };
+    } else {
+      var localDate = Date;
+      getCurrentTime = function () {
+        return localDate.now();
+      };
+    }
+    var objectIs = "function" === typeof Object.is ? Object.is : is,
       valueCursor = createCursor(null);
     var renderer2CursorDEV = createCursor(null);
     var rendererSigil = {};
@@ -17397,10 +17416,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-de4aad5b-20250321",
+        version: "19.1.0-native-fb-4a9df081-20250323",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-de4aad5b-20250321"
+        reconcilerVersion: "19.1.0-native-fb-4a9df081-20250323"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

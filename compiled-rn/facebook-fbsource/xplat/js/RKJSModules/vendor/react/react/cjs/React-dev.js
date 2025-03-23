@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9251e52ff8941feb0eaf92408675bf9f>>
+ * @generated SignedSource<<ddd8f911ac060570ef8734a2bb7b922f>>
  */
 
 "use strict";
@@ -162,6 +162,9 @@ __DEV__ &&
     function getOwner() {
       var dispatcher = ReactSharedInternals.A;
       return null === dispatcher ? null : dispatcher.getOwner();
+    }
+    function UnknownOwner() {
+      return Error("react-stack-top-frame");
     }
     function hasValidKey(config) {
       if (hasOwnProperty.call(config, "key")) {
@@ -667,12 +670,13 @@ __DEV__ &&
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
     var dynamicFlags = require("ReactNativeInternalFeatureFlags"),
-      enableUseEffectCRUDOverload = dynamicFlags.enableUseEffectCRUDOverload;
-    dynamicFlags = dynamicFlags.renameElementSymbol;
-    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-      REACT_ELEMENT_TYPE = dynamicFlags
+      enableUseEffectCRUDOverload = dynamicFlags.enableUseEffectCRUDOverload,
+      renameElementSymbol = dynamicFlags.renameElementSymbol,
+      ownerStackLimit = dynamicFlags.ownerStackLimit;
+    dynamicFlags = Symbol.for("react.element");
+    var REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")
-        : REACT_LEGACY_ELEMENT_TYPE,
+        : dynamicFlags,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -685,9 +689,9 @@ __DEV__ &&
       REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy");
-    dynamicFlags = Symbol.for("react.scope");
+    renameElementSymbol = Symbol.for("react.scope");
     var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
-    REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.legacy_hidden");
+    dynamicFlags = Symbol.for("react.legacy_hidden");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
@@ -755,17 +759,27 @@ __DEV__ &&
         didScheduleLegacyUpdate: !1,
         didUsePromise: !1,
         thrownErrors: [],
-        getCurrentStack: null
+        getCurrentStack: null,
+        recentlyCreatedOwnerStacks: 0
       },
       hasOwnProperty = Object.prototype.hasOwnProperty,
       createTask = console.createTask
         ? console.createTask
         : function () {
             return null;
-          },
-      specialPropKeyWarningShown,
-      didWarnAboutOldJSXRuntime;
+          };
+    fnName = {
+      "react-stack-bottom-frame": function (callStackForError) {
+        return callStackForError();
+      }
+    };
+    var specialPropKeyWarningShown, didWarnAboutOldJSXRuntime;
     var didWarnAboutElementRef = {};
+    var unknownOwnerDebugStack = fnName["react-stack-bottom-frame"].bind(
+      fnName,
+      UnknownOwner
+    )();
+    var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
     var didWarnAboutKeySpread = {},
       didWarnAboutMaps = !1,
       userProvidedKeyEscapeRegex = /\/+/g,
@@ -1067,7 +1081,6 @@ __DEV__ &&
     exports.createElement = function (type, config, children) {
       for (var i = 2; i < arguments.length; i++)
         validateChildKeys(arguments[i]);
-      var propName;
       i = {};
       var key = null;
       if (null != config)
@@ -1108,6 +1121,8 @@ __DEV__ &&
             ? type.displayName || type.name || "Unknown"
             : type
         );
+      var propName =
+        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
       return ReactElement(
         type,
         key,
@@ -1115,8 +1130,8 @@ __DEV__ &&
         void 0,
         getOwner(),
         i,
-        Error("react-stack-top-frame"),
-        createTask(getTaskName(type))
+        propName ? Error("react-stack-top-frame") : unknownOwnerDebugStack,
+        propName ? createTask(getTaskName(type)) : unknownOwnerDebugTask
       );
     };
     exports.createRef = function () {
@@ -1170,6 +1185,8 @@ __DEV__ &&
     };
     exports.isValidElement = isValidElement;
     exports.jsx = function (type, config, maybeKey, source, self) {
+      var trackActualOwner =
+        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
       return jsxDEVImpl(
         type,
         config,
@@ -1177,8 +1194,10 @@ __DEV__ &&
         !1,
         source,
         self,
-        Error("react-stack-top-frame"),
-        createTask(getTaskName(type))
+        trackActualOwner
+          ? Error("react-stack-top-frame")
+          : unknownOwnerDebugStack,
+        trackActualOwner ? createTask(getTaskName(type)) : unknownOwnerDebugTask
       );
     };
     exports.jsxDEV = function (
@@ -1189,6 +1208,8 @@ __DEV__ &&
       source,
       self
     ) {
+      var trackActualOwner =
+        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
       return jsxDEVImpl(
         type,
         config,
@@ -1196,11 +1217,15 @@ __DEV__ &&
         isStaticChildren,
         source,
         self,
-        Error("react-stack-top-frame"),
-        createTask(getTaskName(type))
+        trackActualOwner
+          ? Error("react-stack-top-frame")
+          : unknownOwnerDebugStack,
+        trackActualOwner ? createTask(getTaskName(type)) : unknownOwnerDebugTask
       );
     };
     exports.jsxs = function (type, config, maybeKey, source, self) {
+      var trackActualOwner =
+        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
       return jsxDEVImpl(
         type,
         config,
@@ -1208,8 +1233,10 @@ __DEV__ &&
         !0,
         source,
         self,
-        Error("react-stack-top-frame"),
-        createTask(getTaskName(type))
+        trackActualOwner
+          ? Error("react-stack-top-frame")
+          : unknownOwnerDebugStack,
+        trackActualOwner ? createTask(getTaskName(type)) : unknownOwnerDebugTask
       );
     };
     exports.lazy = function (ctor) {
@@ -1276,8 +1303,8 @@ __DEV__ &&
       }
     };
     exports.unstable_Activity = REACT_ACTIVITY_TYPE;
-    exports.unstable_LegacyHidden = REACT_LEGACY_ELEMENT_TYPE;
-    exports.unstable_Scope = dynamicFlags;
+    exports.unstable_LegacyHidden = dynamicFlags;
+    exports.unstable_Scope = renameElementSymbol;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
@@ -1403,7 +1430,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-de4aad5b-20250321";
+    exports.version = "19.1.0-native-fb-4a9df081-20250323";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

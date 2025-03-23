@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bc168bc0c3ef0cfe71ed2e21bd367121>>
+ * @generated SignedSource<<27da216c0b590435a71412c64adc79a9>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1143() {
+    function JSCompiler_object_inline_createNodeMock_1146() {
       return null;
     }
     function findHook(fiber, id) {
@@ -11558,6 +11558,10 @@ __DEV__ &&
         }
       entangledRenderLanes = lanes;
       finishQueueingConcurrentUpdates();
+      lanes = getCurrentTime();
+      1e3 < lanes - lastResetTime &&
+        ((ReactSharedInternals.recentlyCreatedOwnerStacks = 0),
+        (lastResetTime = lanes));
       ReactStrictModeWarnings.discardPendingWarnings();
       return timeoutHandle;
     }
@@ -13644,7 +13648,22 @@ __DEV__ &&
       isRendering = !1,
       hydrationDiffRootDEV = null,
       hydrationErrors = null,
-      objectIs = "function" === typeof Object.is ? Object.is : is,
+      lastResetTime = 0;
+    if (
+      "object" === typeof performance &&
+      "function" === typeof performance.now
+    ) {
+      var localPerformance = performance;
+      var getCurrentTime = function () {
+        return localPerformance.now();
+      };
+    } else {
+      var localDate = Date;
+      getCurrentTime = function () {
+        return localDate.now();
+      };
+    }
+    var objectIs = "function" === typeof Object.is ? Object.is : is,
       valueCursor = createCursor(null);
     var renderer2CursorDEV = createCursor(null);
     var rendererSigil = {};
@@ -15595,10 +15614,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-de4aad5b-20250321",
+        version: "19.1.0-native-fb-4a9df081-20250323",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-de4aad5b-20250321"
+        reconcilerVersion: "19.1.0-native-fb-4a9df081-20250323"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15620,7 +15639,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1143,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1146,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15743,5 +15762,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-de4aad5b-20250321";
+    exports.version = "19.1.0-native-fb-4a9df081-20250323";
   })();
