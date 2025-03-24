@@ -31,7 +31,6 @@ export const {
   enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric,
   renameElementSymbol,
-  ownerStackLimit,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -85,6 +84,7 @@ export const enableViewTransition = false;
 export const enableSwipeTransition = false;
 export const enableScrollEndPolyfill = true;
 export const enableFragmentRefs = false;
+export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

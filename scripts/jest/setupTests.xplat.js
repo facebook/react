@@ -22,6 +22,9 @@ jest.mock('shared/ReactFeatureFlags', () => {
   actual.enableScopeAPI = true;
   actual.enableTaint = false;
 
+  // Some value that doesn't impact existing tests
+  actual.ownerStackLimit = __VARIANT__ ? 500 : 1e4;
+
   return actual;
 });
 

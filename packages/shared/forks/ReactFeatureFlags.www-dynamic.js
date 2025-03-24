@@ -43,11 +43,6 @@ export const enableComponentPerformanceTrack = __VARIANT__;
 export const enableScrollEndPolyfill = __VARIANT__;
 export const enableFragmentRefs = __VARIANT__;
 
-export const ownerStackLimit: number = __VARIANT__
-  ? // Some value that doesn't impact existing tests
-    500
-  : 1e4;
-
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these
 // to __VARIANT__.
