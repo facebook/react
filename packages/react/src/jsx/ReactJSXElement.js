@@ -16,7 +16,10 @@ import {
 } from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isArray from 'shared/isArray';
-import {disableDefaultPropsExceptForClasses} from 'shared/ReactFeatureFlags';
+import {
+  disableDefaultPropsExceptForClasses,
+  ownerStackLimit,
+} from 'shared/ReactFeatureFlags';
 
 const createTask =
   // eslint-disable-next-line react-internal/no-production-logging
@@ -57,12 +60,32 @@ function getOwner() {
   return null;
 }
 
+/** @noinline */
+function UnknownOwner() {
+  /** @noinline */
+  return (() => Error('react-stack-top-frame'))();
+}
+const createFakeCallStack = {
+  'react-stack-bottom-frame': function (callStackForError) {
+    return callStackForError();
+  },
+};
+
 let specialPropKeyWarningShown;
 let didWarnAboutElementRef;
 let didWarnAboutOldJSXRuntime;
+let unknownOwnerDebugStack;
+let unknownOwnerDebugTask;
 
 if (__DEV__) {
   didWarnAboutElementRef = {};
+
+  // We use this technique to trick minifiers to preserve the function name.
+  unknownOwnerDebugStack = createFakeCallStack['react-stack-bottom-frame'].bind(
+    createFakeCallStack,
+    UnknownOwner,
+  )();
+  unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
 }
 
 function hasValidRef(config) {
@@ -373,6 +396,9 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
 ) {
   if (__DEV__) {
     const isStaticChildren = false;
+    const trackActualOwner =
+      __DEV__ &&
+      ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
     return jsxDEVImpl(
       type,
       config,
@@ -380,8 +406,14 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
       isStaticChildren,
       source,
       self,
-      __DEV__ && Error('react-stack-top-frame'),
-      __DEV__ && createTask(getTaskName(type)),
+      __DEV__ &&
+        (trackActualOwner
+          ? Error('react-stack-top-frame')
+          : unknownOwnerDebugStack),
+      __DEV__ &&
+        (trackActualOwner
+          ? createTask(getTaskName(type))
+          : unknownOwnerDebugTask),
     );
   }
 }
@@ -395,6 +427,9 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
 ) {
   if (__DEV__) {
     const isStaticChildren = true;
+    const trackActualOwner =
+      __DEV__ &&
+      ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
     return jsxDEVImpl(
       type,
       config,
@@ -402,8 +437,14 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
       isStaticChildren,
       source,
       self,
-      __DEV__ && Error('react-stack-top-frame'),
-      __DEV__ && createTask(getTaskName(type)),
+      __DEV__ &&
+        (trackActualOwner
+          ? Error('react-stack-top-frame')
+          : unknownOwnerDebugStack),
+      __DEV__ &&
+        (trackActualOwner
+          ? createTask(getTaskName(type))
+          : unknownOwnerDebugTask),
     );
   }
 }
@@ -417,6 +458,9 @@ const didWarnAboutKeySpread = {};
  * @param {string} key
  */
 export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
+  const trackActualOwner =
+    __DEV__ &&
+    ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
   return jsxDEVImpl(
     type,
     config,
@@ -424,8 +468,14 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
     isStaticChildren,
     source,
     self,
-    __DEV__ && Error('react-stack-top-frame'),
-    __DEV__ && createTask(getTaskName(type)),
+    __DEV__ &&
+      (trackActualOwner
+        ? Error('react-stack-top-frame')
+        : unknownOwnerDebugStack),
+    __DEV__ &&
+      (trackActualOwner
+        ? createTask(getTaskName(type))
+        : unknownOwnerDebugTask),
   );
 }
 
@@ -692,7 +742,9 @@ export function createElement(type, config, children) {
       defineKeyPropWarningGetter(props, displayName);
     }
   }
-
+  const trackActualOwner =
+    __DEV__ &&
+    ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
   return ReactElement(
     type,
     key,
@@ -700,8 +752,14 @@ export function createElement(type, config, children) {
     undefined,
     getOwner(),
     props,
-    __DEV__ && Error('react-stack-top-frame'),
-    __DEV__ && createTask(getTaskName(type)),
+    __DEV__ &&
+      (trackActualOwner
+        ? Error('react-stack-top-frame')
+        : unknownOwnerDebugStack),
+    __DEV__ &&
+      (trackActualOwner
+        ? createTask(getTaskName(type))
+        : unknownOwnerDebugTask),
   );
 }
 

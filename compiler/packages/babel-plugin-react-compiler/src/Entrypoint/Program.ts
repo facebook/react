@@ -12,11 +12,7 @@ import {
   CompilerErrorDetail,
   ErrorSeverity,
 } from '../CompilerError';
-import {
-  EnvironmentConfig,
-  ExternalFunction,
-  ReactFunctionType,
-} from '../HIR/Environment';
+import {EnvironmentConfig, ReactFunctionType} from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
 import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
 import {isHookDeclaration} from '../Utils/HookDeclaration';
@@ -24,10 +20,10 @@ import {assertExhaustive} from '../Utils/utils';
 import {insertGatedFunctionDeclaration} from './Gating';
 import {
   addImportsToProgram,
-  updateMemoCacheFunctionImport,
+  ProgramContext,
   validateRestrictedImports,
 } from './Imports';
-import {PluginOptions} from './Options';
+import {CompilerReactTarget, PluginOptions} from './Options';
 import {compileFn} from './Pipeline';
 import {
   filterSuppressionsThatAffectFunction,
@@ -299,8 +295,12 @@ export function compileProgram(
     handleError(restrictedImportsErr, pass, null);
     return null;
   }
-  const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
 
+  const programContext = new ProgramContext(
+    program,
+    pass.opts.target,
+    environment.hookPattern,
+  );
   /*
    * Record lint errors and critical errors as depending on Forget's config,
    * we may still need to run Forget's analysis on every function (even if we
@@ -410,7 +410,7 @@ export function compileProgram(
             environment,
             fnType,
             'all_features',
-            useMemoCacheIdentifier.name,
+            programContext,
             pass.opts.logger,
             pass.filename,
             pass.code,
@@ -445,7 +445,7 @@ export function compileProgram(
             environment,
             fnType,
             'no_inferred_memo',
-            useMemoCacheIdentifier.name,
+            programContext,
             pass.opts.logger,
             pass.filename,
             pass.code,
@@ -453,7 +453,7 @@ export function compileProgram(
         };
         if (
           !compileResult.compiledFn.hasFireRewrite &&
-          !compileResult.compiledFn.hasLoweredContextAccess
+          !compileResult.compiledFn.hasInferredEffect
         ) {
           return null;
         }
@@ -554,79 +554,29 @@ export function compileProgram(
   if (moduleScopeOptOutDirectives.length > 0) {
     return null;
   }
-  let gating: null | {
-    gatingFn: ExternalFunction;
-    referencedBeforeDeclared: Set<CompileResult>;
-  } = null;
-  if (pass.opts.gating != null) {
-    gating = {
-      gatingFn: pass.opts.gating,
-      referencedBeforeDeclared:
-        getFunctionReferencedBeforeDeclarationAtTopLevel(program, compiledFns),
-    };
-  }
-
-  const hasLoweredContextAccess = compiledFns.some(
-    c => c.compiledFn.hasLoweredContextAccess,
-  );
-  const externalFunctions: Array<ExternalFunction> = [];
-  try {
-    // TODO: check for duplicate import specifiers
-    if (gating != null) {
-      externalFunctions.push(gating.gatingFn);
-    }
-
-    const lowerContextAccess = environment.lowerContextAccess;
-    if (lowerContextAccess && hasLoweredContextAccess) {
-      externalFunctions.push(lowerContextAccess);
-    }
-
-    const enableEmitInstrumentForget = environment.enableEmitInstrumentForget;
-    if (enableEmitInstrumentForget != null) {
-      externalFunctions.push(enableEmitInstrumentForget.fn);
-      if (enableEmitInstrumentForget.gating != null) {
-        externalFunctions.push(enableEmitInstrumentForget.gating);
-      }
-    }
-
-    if (environment.enableEmitFreeze != null) {
-      externalFunctions.push(environment.enableEmitFreeze);
-    }
-
-    if (environment.enableEmitHookGuards != null) {
-      externalFunctions.push(environment.enableEmitHookGuards);
-    }
-
-    if (environment.enableChangeDetectionForDebugging != null) {
-      externalFunctions.push(environment.enableChangeDetectionForDebugging);
-    }
-
-    const hasFireRewrite = compiledFns.some(c => c.compiledFn.hasFireRewrite);
-    if (environment.enableFire && hasFireRewrite) {
-      externalFunctions.push({
-        source: getReactCompilerRuntimeModule(pass.opts),
-        importSpecifierName: 'useFire',
-      });
-    }
-  } catch (err) {
-    handleError(err, pass, null);
-    return null;
-  }
-
   /*
    * Only insert Forget-ified functions if we have not encountered a critical
    * error elsewhere in the file, regardless of bailout mode.
    */
+  const referencedBeforeDeclared =
+    pass.opts.gating != null
+      ? getFunctionReferencedBeforeDeclarationAtTopLevel(program, compiledFns)
+      : null;
   for (const result of compiledFns) {
     const {kind, originalFn, compiledFn} = result;
     const transformedFn = createNewFunctionNode(originalFn, compiledFn);
 
-    if (gating != null && kind === 'original') {
+    if (referencedBeforeDeclared != null && kind === 'original') {
+      CompilerError.invariant(pass.opts.gating != null, {
+        reason: "Expected 'gating' import to be present",
+        loc: null,
+      });
       insertGatedFunctionDeclaration(
         originalFn,
         transformedFn,
-        gating.gatingFn,
-        gating.referencedBeforeDeclared.has(result),
+        programContext,
+        pass.opts.gating,
+        referencedBeforeDeclared.has(result),
       );
     } else {
       originalFn.replaceWith(transformedFn);
@@ -635,22 +585,7 @@ export function compileProgram(
 
   // Forget compiled the component, we need to update existing imports of useMemoCache
   if (compiledFns.length > 0) {
-    let needsMemoCacheFunctionImport = false;
-    for (const fn of compiledFns) {
-      if (fn.compiledFn.memoSlotsUsed > 0) {
-        needsMemoCacheFunctionImport = true;
-        break;
-      }
-    }
-
-    if (needsMemoCacheFunctionImport) {
-      updateMemoCacheFunctionImport(
-        program,
-        getReactCompilerRuntimeModule(pass.opts),
-        useMemoCacheIdentifier.name,
-      );
-    }
-    addImportsToProgram(program, externalFunctions);
+    addImportsToProgram(program, programContext);
   }
   return {retryErrors};
 }
@@ -683,7 +618,7 @@ function shouldSkipCompilation(
   if (
     hasMemoCacheFunctionImport(
       program,
-      getReactCompilerRuntimeModule(pass.opts),
+      getReactCompilerRuntimeModule(pass.opts.target),
     )
   ) {
     return true;
@@ -1008,31 +943,39 @@ function callsHooksOrCreatesJsx(
   return invokesHooks || createsJsx;
 }
 
+function isNonNode(node?: t.Expression | null): boolean {
+  if (!node) {
+    return true;
+  }
+  switch (node.type) {
+    case 'ObjectExpression':
+    case 'ArrowFunctionExpression':
+    case 'FunctionExpression':
+    case 'BigIntLiteral':
+    case 'ClassExpression':
+    case 'NewExpression': // technically `new Array()` is legit, but unlikely
+      return true;
+  }
+  return false;
+}
+
 function returnsNonNode(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
 ): boolean {
-  let hasReturn = false;
   let returnsNonNode = false;
+  if (
+    // node.traverse#ArrowFunctionExpression isn't called for the root node
+    node.type === 'ArrowFunctionExpression' &&
+    node.node.body.type !== 'BlockStatement'
+  ) {
+    returnsNonNode = isNonNode(node.node.body);
+  }
 
   node.traverse({
     ReturnStatement(ret) {
-      hasReturn = true;
-      const argument = ret.node.argument;
-      if (argument == null) {
-        returnsNonNode = true;
-      } else {
-        switch (argument.type) {
-          case 'ObjectExpression':
-          case 'ArrowFunctionExpression':
-          case 'FunctionExpression':
-          case 'BigIntLiteral':
-          case 'ClassExpression':
-          case 'NewExpression': // technically `new Array()` is legit, but unlikely
-            returnsNonNode = true;
-        }
-      }
+      returnsNonNode = isNonNode(ret.node.argument);
     },
     // Skip traversing all nested functions and their return statements
     ArrowFunctionExpression: skipNestedFunctions(node),
@@ -1041,7 +984,7 @@ function returnsNonNode(
     ObjectMethod: node => node.skip(),
   });
 
-  return !hasReturn || returnsNonNode;
+  return returnsNonNode;
 }
 
 /*
@@ -1169,16 +1112,18 @@ function getFunctionReferencedBeforeDeclarationAtTopLevel(
   return referencedBeforeDeclaration;
 }
 
-function getReactCompilerRuntimeModule(opts: PluginOptions): string {
-  if (opts.target === '19') {
+export function getReactCompilerRuntimeModule(
+  target: CompilerReactTarget,
+): string {
+  if (target === '19') {
     return 'react/compiler-runtime'; // from react namespace
-  } else if (opts.target === '17' || opts.target === '18') {
+  } else if (target === '17' || target === '18') {
     return 'react-compiler-runtime'; // npm package
   } else {
     CompilerError.invariant(
-      opts.target != null &&
-        opts.target.kind === 'donotuse_meta_internal' &&
-        typeof opts.target.runtimeModule === 'string',
+      target != null &&
+        target.kind === 'donotuse_meta_internal' &&
+        typeof target.runtimeModule === 'string',
       {
         reason: 'Expected target to already be validated',
         description: null,
@@ -1186,6 +1131,6 @@ function getReactCompilerRuntimeModule(opts: PluginOptions): string {
         suggestions: null,
       },
     );
-    return opts.target.runtimeModule;
+    return target.runtimeModule;
   }
 }

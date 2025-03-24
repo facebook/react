@@ -308,7 +308,7 @@ function applyNestedViewTransition(child: Fiber): void {
   const name = getViewTransitionName(props, state);
   const className: ?string = getViewTransitionClassName(
     props.className,
-    props.layout,
+    props.update,
   );
   if (className !== 'none') {
     const clones = state.clones;
@@ -335,17 +335,13 @@ function applyUpdateViewTransition(current: Fiber, finishedWork: Fiber): void {
   // we would use. However, since this animation is going in reverse we actually
   // want the props from "current" since that's the class that would've won if
   // it was the normal direction. To preserve the same effect in either direction.
-  let className: ?string = getViewTransitionClassName(
+  const className: ?string = getViewTransitionClassName(
     newProps.className,
     newProps.update,
   );
   if (className === 'none') {
-    className = getViewTransitionClassName(newProps.className, newProps.layout);
-    if (className === 'none') {
-      // If both update and layout are both "none" then we don't have to
-      // apply a name. Since we won't animate this boundary.
-      return;
-    }
+    // If update is "none" then we don't have to apply a name. Since we won't animate this boundary.
+    return;
   }
   const clones = state.clones;
   // If there are no clones at this point, that should mean that there are no
