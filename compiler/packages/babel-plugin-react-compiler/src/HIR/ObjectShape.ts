@@ -44,6 +44,7 @@ export function addFunction(
   properties: Iterable<[string, BuiltInType | PolyType]>,
   fn: Omit<FunctionSignature, 'hookKind'>,
   id: string | null = null,
+  isConstructor: boolean = false,
 ): FunctionType {
   const shapeId = id ?? createAnonId();
   addShape(registry, shapeId, properties, {
@@ -54,6 +55,7 @@ export function addFunction(
     kind: 'Function',
     return: fn.returnType,
     shapeId,
+    isConstructor,
   };
 }
 
@@ -73,6 +75,7 @@ export function addHook(
     kind: 'Function',
     return: fn.returnType,
     shapeId,
+    isConstructor: false,
   };
 }
 
@@ -198,6 +201,8 @@ export type ObjectShape = {
 export type ShapeRegistry = Map<string, ObjectShape>;
 export const BuiltInPropsId = 'BuiltInProps';
 export const BuiltInArrayId = 'BuiltInArray';
+export const BuiltInSetId = 'BuiltInSet';
+export const BuiltInMapId = 'BuiltInMap';
 export const BuiltInFunctionId = 'BuiltInFunction';
 export const BuiltInJsxId = 'BuiltInJsx';
 export const BuiltInObjectId = 'BuiltInObject';
@@ -449,6 +454,313 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
    * TODO:
    * hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, valueOf
    */
+]);
+
+/* Built-in Set shape */
+addObject(BUILTIN_SHAPES, BuiltInSetId, [
+  [
+    /**
+     * add(value)
+     * Parameters
+     *   value: the value of the element to add to the Set object.
+     * Returns the Set object with added value.
+     */
+    'add',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInSetId},
+      calleeEffect: Effect.Store,
+      // returnValueKind is technically dependent on the ValueKind of the set itself
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    /**
+     * clear()
+     * Parameters none
+     * Returns undefined
+     */
+    'clear',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    /**
+     * setInstance.delete(value)
+     * Returns true if value was already in Set; otherwise false.
+     */
+    'delete',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'has',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  ['size', PRIMITIVE_TYPE],
+  [
+    /**
+     * difference(other)
+     * Parameters
+     *   other: A Set object, or set-like object.
+     * Returns a new Set object containing elements in this set but not in the other set.
+     */
+    'difference',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInSetId},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    /**
+     * union(other)
+     * Parameters
+     *   other: A Set object, or set-like object.
+     * Returns a new Set object containing elements in either this set or the other set.
+     */
+    'union',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInSetId},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    /**
+     * symmetricalDifference(other)
+     * Parameters
+     *   other: A Set object, or set-like object.
+     * A new Set object containing elements which are in either this set or the other set, but not in both.
+     */
+    'symmetricalDifference',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInSetId},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    /**
+     * isSubsetOf(other)
+     * Parameters
+     *   other: A Set object, or set-like object.
+     * Returns true if all elements in this set are also in the other set, and false otherwise.
+     */
+    'isSubsetOf',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    /**
+     * isSupersetOf(other)
+     * Parameters
+     *  other: A Set object, or set-like object.
+     * Returns true if all elements in the other set are also in this set, and false otherwise.
+     */
+    'isSupersetOf',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    /**
+     * forEach(callbackFn)
+     * forEach(callbackFn, thisArg)
+     */
+    'forEach',
+    addFunction(BUILTIN_SHAPES, [], {
+      /**
+       * see Array.map explanation for why arguments are marked `ConditionallyMutate`
+       */
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Primitive,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  /**
+   * Iterators
+   */
+  [
+    'entries',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'keys',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'values',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+]);
+addObject(BUILTIN_SHAPES, BuiltInMapId, [
+  [
+    /**
+     * clear()
+     * Parameters none
+     * Returns undefined
+     */
+    'clear',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'delete',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'get',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'has',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    /**
+     * Params
+     *   key: the key of the element to add to the Map object. The key may be
+     *   any JavaScript type (any primitive value or any type of JavaScript
+     *   object).
+     *   value: the value of the element to add to the Map object.
+     * Returns the Map object.
+     */
+    'set',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture, Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInMapId},
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  ['size', PRIMITIVE_TYPE],
+  [
+    'forEach',
+    addFunction(BUILTIN_SHAPES, [], {
+      /**
+       * see Array.map explanation for why arguments are marked `ConditionallyMutate`
+       */
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Primitive,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  /**
+   * Iterators
+   */
+  [
+    'entries',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'keys',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'values',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInUseStateId, [

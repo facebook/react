@@ -10,8 +10,10 @@ import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
   BuiltInFireId,
+  BuiltInMapId,
   BuiltInMixedReadonlyId,
   BuiltInObjectId,
+  BuiltInSetId,
   BuiltInUseActionStateId,
   BuiltInUseContextHookId,
   BuiltInUseEffectHookId,
@@ -457,6 +459,38 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Primitive,
     }),
+  ],
+  [
+    'Map',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [Effect.ConditionallyMutate],
+        restParam: null,
+        returnType: {kind: 'Object', shapeId: BuiltInMapId},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
+  ],
+  [
+    'Set',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [Effect.ConditionallyMutate],
+        restParam: null,
+        returnType: {kind: 'Object', shapeId: BuiltInSetId},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
   ],
   // TODO: rest of Global objects
 ];

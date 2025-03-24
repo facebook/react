@@ -12,6 +12,7 @@ import {
   BasicBlock,
   BlockId,
   CallExpression,
+  NewExpression,
   Effect,
   FunctionEffect,
   GeneratedSource,
@@ -39,7 +40,6 @@ import {
   printSourceLocation,
 } from '../HIR/PrintHIR';
 import {
-  eachCallArgument,
   eachInstructionOperand,
   eachInstructionValueOperand,
   eachPatternOperand,
@@ -905,43 +905,12 @@ function inferBlock(
         break;
       }
       case 'NewExpression': {
-        /**
-         * For new expressions, we infer a `read` effect on the Class / Function type
-         * to avoid extending mutable ranges of locally created classes, e.g.
-         * ```js
-         * const MyClass = getClass();
-         * const value = new MyClass(val1, val2)
-         *                   ^ (read)   ^ (conditionally mutate)
-         * ```
-         *
-         * Risks:
-         * Classes / functions created during render could technically capture and
-         * mutate their enclosing scope, which we currently do not detect.
-         */
-        const valueKind: AbstractValue = {
-          kind: ValueKind.Mutable,
-          reason: new Set([ValueReason.Other]),
-          context: new Set(),
-        };
-        state.referenceAndRecordEffects(
+        inferCallEffects(
+          state,
+          instr as TInstruction<NewExpression>,
           freezeActions,
-          instrValue.callee,
-          Effect.Read,
-          ValueReason.Other,
+          getFunctionCallSignature(env, instrValue.callee.identifier.type),
         );
-
-        for (const operand of eachCallArgument(instrValue.args)) {
-          state.referenceAndRecordEffects(
-            freezeActions,
-            operand,
-            Effect.ConditionallyMutate,
-            ValueReason.Other,
-          );
-        }
-
-        state.initialize(instrValue, valueKind);
-        state.define(instr.lvalue, instrValue);
-        instr.lvalue.effect = Effect.ConditionallyMutate;
         continuation = {kind: 'funeffects'};
         break;
       }
@@ -1844,7 +1813,7 @@ export function getFunctionCallSignature(
  * @returns Inferred effects of function arguments, or null if inference fails.
  */
 export function getFunctionEffects(
-  fn: MethodCall | CallExpression,
+  fn: MethodCall | CallExpression | NewExpression,
   sig: FunctionSignature,
 ): Array<Effect> | null {
   const results = [];
@@ -1989,7 +1958,10 @@ function getArgumentEffect(
 
 function inferCallEffects(
   state: InferenceState,
-  instr: TInstruction<CallExpression> | TInstruction<MethodCall>,
+  instr:
+    | TInstruction<CallExpression>
+    | TInstruction<MethodCall>
+    | TInstruction<NewExpression>,
   freezeActions: Array<FreezeAction>,
   signature: FunctionSignature | null,
 ): void {
@@ -2062,9 +2034,7 @@ function inferCallEffects(
     hasCaptureArgument ||= place.effect === Effect.Capture;
   }
   const callee =
-    instrValue.kind === 'CallExpression'
-      ? instrValue.callee
-      : instrValue.receiver;
+    instrValue.kind === 'MethodCall' ? instrValue.receiver : instrValue.callee;
   if (signature !== null) {
     state.referenceAndRecordEffects(
       freezeActions,
@@ -2073,10 +2043,26 @@ function inferCallEffects(
       ValueReason.Other,
     );
   } else {
+    /**
+     * For new expressions, we infer a `read` effect on the Class / Function type
+     * to avoid extending mutable ranges of locally created classes, e.g.
+     * ```js
+     * const MyClass = getClass();
+     * const value = new MyClass(val1, val2)
+     *                   ^ (read)   ^ (conditionally mutate)
+     * ```
+     *
+     * Risks:
+     * Classes / functions created during render could technically capture and
+     * mutate their enclosing scope, which we currently do not detect.
+     */
+
     state.referenceAndRecordEffects(
       freezeActions,
       callee,
-      Effect.ConditionallyMutate,
+      instrValue.kind === 'NewExpression'
+        ? Effect.Read
+        : Effect.ConditionallyMutate,
       ValueReason.Other,
     );
   }
