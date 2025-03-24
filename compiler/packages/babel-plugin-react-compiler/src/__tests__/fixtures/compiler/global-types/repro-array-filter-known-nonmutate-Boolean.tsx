@@ -1,9 +1,13 @@
-import {mutateAndReturn, Stringify, useIdentity} from 'shared-runtime';
+import {Stringify, useIdentity} from 'shared-runtime';
 
+/**
+ * Also see repro-array-map-known-mutate-shape, which calls a global function
+ * that mutates its operands.
+ */
 function Component({value}) {
   const arr = [{value: 'foo'}, {value: 'bar'}, {value}];
-  useIdentity();
-  const derived = Array.from(arr, mutateAndReturn);
+  useIdentity(null);
+  const derived = arr.filter(Boolean);
   return (
     <Stringify>
       {derived.at(0)}
