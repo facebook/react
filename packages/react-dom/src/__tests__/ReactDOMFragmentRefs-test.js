@@ -905,6 +905,10 @@ describe('FragmentRefs', () => {
       expect(fragmentRef.current.getRootNode()).toBe(document);
     });
 
+    // The desired behavior here is to return the topmost disconnected element when
+    // fragment + parent are unmounted. Currently we have a pass during unmount that
+    // recursively cleans up return pointers of the whole tree. We can change this
+    // with a future refactor. See: https://github.com/facebook/react/pull/32682#discussion_r2008313082
     // @gate enableFragmentRefs
     it('returns the topmost disconnected element if the fragment and parent are unmounted', async () => {
       const containerRef = React.createRef();
@@ -928,11 +932,13 @@ describe('FragmentRefs', () => {
 
       await act(() => root.render(<Test mounted={true} />));
       expect(fragmentRef.current.getRootNode()).toBe(document);
-      // const fragmentHandle = fragmentRef.current;
-      // const parentRefHandle = parentRef.current;
+      const fragmentHandle = fragmentRef.current;
       await act(() => root.render(<Test mounted={false} />));
-      // TODO: Should this pass? fragmentHandle._fragmentFiber.return is null
+      // TODO: The commented out assertion is the desired behavior. For now, we return
+      // the fragment instance itself. This is currently the same behavior if you unmount
+      // the fragment but not the parent. See context above.
       // expect(fragmentHandle.getRootNode().id).toBe(parentRefHandle.id);
+      expect(fragmentHandle.getRootNode()).toBe(fragmentHandle);
     });
 
     // @gate enableFragmentRefs
