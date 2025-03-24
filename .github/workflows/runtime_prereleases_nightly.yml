@@ -14,6 +14,9 @@ jobs:
   publish_prerelease_canary:
     name: Publish to Canary channel
     uses: facebook/react/.github/workflows/runtime_prereleases.yml@main
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
     with:
       commit_sha: ${{ github.sha }}
       release_channel: stable
@@ -24,6 +27,9 @@ jobs:
   publish_prerelease_experimental:
     name: Publish to Experimental channel
     uses: facebook/react/.github/workflows/runtime_prereleases.yml@main
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
     # NOTE: Intentionally running these jobs sequentially because npm
     # will sometimes fail if you try to concurrently publish two
     # different versions of the same package, even if they use different
