@@ -13529,7 +13529,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-42a57ea8-20250324"
+      reconcilerVersion: "19.1.0-www-modern-254dc4d9-20250324"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

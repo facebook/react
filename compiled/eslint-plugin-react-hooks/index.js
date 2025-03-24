@@ -44581,6 +44581,8 @@ function pruneHoistedContexts(fn) {
     const hoistedIdentifiers = new Map();
     visitReactiveFunction(fn, new Visitor$8(), hoistedIdentifiers);
 }
+const REWRITTEN_HOISTED_CONST = Symbol('REWRITTEN_HOISTED_CONST');
+const REWRITTEN_HOISTED_LET = Symbol('REWRITTEN_HOISTED_LET');
 let Visitor$8 = class Visitor extends ReactiveFunctionTransform {
     transformInstruction(instruction, state) {
         this.visitInstruction(instruction, state);
@@ -44599,16 +44601,50 @@ let Visitor$8 = class Visitor extends ReactiveFunctionTransform {
             state.set(instruction.value.lvalue.place.identifier.declarationId, InstructionKind.Function);
             return { kind: 'remove' };
         }
-        if (instruction.value.kind === 'StoreContext' &&
-            state.has(instruction.value.lvalue.place.identifier.declarationId)) {
+        if (instruction.value.kind === 'StoreContext') {
             const kind = state.get(instruction.value.lvalue.place.identifier.declarationId);
-            return {
-                kind: 'replace',
-                value: {
-                    kind: 'instruction',
-                    instruction: Object.assign(Object.assign({}, instruction), { value: Object.assign(Object.assign({}, instruction.value), { lvalue: Object.assign(Object.assign({}, instruction.value.lvalue), { kind }), type: null, kind: 'StoreLocal' }) }),
-                },
-            };
+            if (kind != null) {
+                CompilerError.invariant(kind !== REWRITTEN_HOISTED_CONST, {
+                    reason: 'Expected exactly one store to a hoisted const variable',
+                    loc: instruction.loc,
+                });
+                if (kind === InstructionKind.Const ||
+                    kind === InstructionKind.Function) {
+                    state.set(instruction.value.lvalue.place.identifier.declarationId, REWRITTEN_HOISTED_CONST);
+                    return {
+                        kind: 'replace',
+                        value: {
+                            kind: 'instruction',
+                            instruction: Object.assign(Object.assign({}, instruction), { value: Object.assign(Object.assign({}, instruction.value), { lvalue: Object.assign(Object.assign({}, instruction.value.lvalue), { kind }), type: null, kind: 'StoreLocal' }) }),
+                        },
+                    };
+                }
+                else if (kind !== REWRITTEN_HOISTED_LET) {
+                    state.set(instruction.value.lvalue.place.identifier.declarationId, REWRITTEN_HOISTED_LET);
+                    return {
+                        kind: 'replace-many',
+                        value: [
+                            {
+                                kind: 'instruction',
+                                instruction: {
+                                    id: instruction.id,
+                                    lvalue: null,
+                                    value: {
+                                        kind: 'DeclareContext',
+                                        lvalue: {
+                                            kind: InstructionKind.Let,
+                                            place: Object.assign({}, instruction.value.lvalue.place),
+                                        },
+                                        loc: instruction.value.loc,
+                                    },
+                                    loc: instruction.loc,
+                                },
+                            },
+                            { kind: 'instruction', instruction },
+                        ],
+                    };
+                }
+            }
         }
         return { kind: 'keep' };
     }
