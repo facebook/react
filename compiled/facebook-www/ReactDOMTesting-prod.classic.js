@@ -15070,20 +15070,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1779 = 0;
-  i$jscomp$inline_1779 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1779++
+  var i$jscomp$inline_1780 = 0;
+  i$jscomp$inline_1780 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1780++
 ) {
-  var eventName$jscomp$inline_1780 =
-      simpleEventPluginEvents[i$jscomp$inline_1779],
-    domEventName$jscomp$inline_1781 =
-      eventName$jscomp$inline_1780.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1782 =
-      eventName$jscomp$inline_1780[0].toUpperCase() +
-      eventName$jscomp$inline_1780.slice(1);
+  var eventName$jscomp$inline_1781 =
+      simpleEventPluginEvents[i$jscomp$inline_1780],
+    domEventName$jscomp$inline_1782 =
+      eventName$jscomp$inline_1781.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1783 =
+      eventName$jscomp$inline_1781[0].toUpperCase() +
+      eventName$jscomp$inline_1781.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1781,
-    "on" + capitalizedEvent$jscomp$inline_1782
+    domEventName$jscomp$inline_1782,
+    "on" + capitalizedEvent$jscomp$inline_1783
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17485,6 +17485,31 @@ function collectClientRects(child, rects) {
   rects.push.apply(rects, child.getClientRects());
   return !1;
 }
+FragmentInstance.prototype.getRootNode = function (getRootNodeOptions) {
+  var JSCompiler_inline_result;
+  a: {
+    for (
+      JSCompiler_inline_result = this._fragmentFiber.return;
+      null !== JSCompiler_inline_result;
+
+    ) {
+      if (3 === JSCompiler_inline_result.tag) {
+        JSCompiler_inline_result =
+          JSCompiler_inline_result.stateNode.containerInfo;
+        break a;
+      }
+      if (5 === JSCompiler_inline_result.tag) {
+        JSCompiler_inline_result = JSCompiler_inline_result.stateNode;
+        break a;
+      }
+      JSCompiler_inline_result = JSCompiler_inline_result.return;
+    }
+    JSCompiler_inline_result = null;
+  }
+  return null === JSCompiler_inline_result
+    ? this
+    : JSCompiler_inline_result.getRootNode(getRootNodeOptions);
+};
 function normalizeListenerOptions(opts) {
   return null == opts
     ? "0"
@@ -19257,16 +19282,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2016 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2020 = React.version;
 if (
-  "19.1.0-www-classic-c61e75b7-20250324" !==
-  isomorphicReactPackageVersion$jscomp$inline_2016
+  "19.1.0-www-classic-04bf10e6-20250324" !==
+  isomorphicReactPackageVersion$jscomp$inline_2020
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2016,
-      "19.1.0-www-classic-c61e75b7-20250324"
+      isomorphicReactPackageVersion$jscomp$inline_2020,
+      "19.1.0-www-classic-04bf10e6-20250324"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19282,24 +19307,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2609 = {
+var internals$jscomp$inline_2613 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-c61e75b7-20250324",
+  version: "19.1.0-www-classic-04bf10e6-20250324",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-c61e75b7-20250324"
+  reconcilerVersion: "19.1.0-www-classic-04bf10e6-20250324"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2610 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2614 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2610.isDisabled &&
-    hook$jscomp$inline_2610.supportsFiber
+    !hook$jscomp$inline_2614.isDisabled &&
+    hook$jscomp$inline_2614.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2610.inject(
-        internals$jscomp$inline_2609
+      (rendererID = hook$jscomp$inline_2614.inject(
+        internals$jscomp$inline_2613
       )),
-        (injectedHook = hook$jscomp$inline_2610);
+        (injectedHook = hook$jscomp$inline_2614);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -19802,4 +19827,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-c61e75b7-20250324";
+exports.version = "19.1.0-www-classic-04bf10e6-20250324";
