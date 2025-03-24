@@ -28626,13 +28626,14 @@ let nextAnonId = 0;
 function createAnonId() {
     return `<generated_${nextAnonId++}>`;
 }
-function addFunction(registry, properties, fn, id = null) {
+function addFunction(registry, properties, fn, id = null, isConstructor = false) {
     const shapeId = id !== null && id !== void 0 ? id : createAnonId();
     addShape(registry, shapeId, properties, Object.assign(Object.assign({}, fn), { hookKind: null }));
     return {
         kind: 'Function',
         return: fn.returnType,
         shapeId,
+        isConstructor,
     };
 }
 function addHook(registry, fn, id = null) {
@@ -28642,6 +28643,7 @@ function addHook(registry, fn, id = null) {
         kind: 'Function',
         return: fn.returnType,
         shapeId,
+        isConstructor: false,
     };
 }
 function addObject(registry, id, properties) {
@@ -28668,6 +28670,8 @@ function addShape(registry, id, properties, functionType) {
 }
 const BuiltInPropsId = 'BuiltInProps';
 const BuiltInArrayId = 'BuiltInArray';
+const BuiltInSetId = 'BuiltInSet';
+const BuiltInMapId = 'BuiltInMap';
 const BuiltInFunctionId = 'BuiltInFunction';
 const BuiltInJsxId = 'BuiltInJsx';
 const BuiltInObjectId = 'BuiltInObject';
@@ -28874,6 +28878,236 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
             returnType: PRIMITIVE_TYPE,
             calleeEffect: Effect.Read,
             returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+]);
+addObject(BUILTIN_SHAPES, BuiltInSetId, [
+    [
+        'add',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Capture],
+            restParam: null,
+            returnType: { kind: 'Object', shapeId: BuiltInSetId },
+            calleeEffect: Effect.Store,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    [
+        'clear',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Store,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+    [
+        'delete',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Store,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+    [
+        'has',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+    ['size', PRIMITIVE_TYPE],
+    [
+        'difference',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Capture],
+            restParam: null,
+            returnType: { kind: 'Object', shapeId: BuiltInSetId },
+            calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    [
+        'union',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Capture],
+            restParam: null,
+            returnType: { kind: 'Object', shapeId: BuiltInSetId },
+            calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    [
+        'symmetricalDifference',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Capture],
+            restParam: null,
+            returnType: { kind: 'Object', shapeId: BuiltInSetId },
+            calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    [
+        'isSubsetOf',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+    [
+        'isSupersetOf',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+    [
+        'forEach',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [],
+            restParam: Effect.ConditionallyMutate,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.ConditionallyMutate,
+            returnValueKind: ValueKind.Primitive,
+            noAlias: true,
+            mutableOnlyIfOperandsAreMutable: true,
+        }),
+    ],
+    [
+        'entries',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    [
+        'keys',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    [
+        'values',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+]);
+addObject(BUILTIN_SHAPES, BuiltInMapId, [
+    [
+        'clear',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Store,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+    [
+        'delete',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Store,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+    [
+        'get',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    [
+        'has',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+    [
+        'set',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Capture, Effect.Capture],
+            restParam: null,
+            returnType: { kind: 'Object', shapeId: BuiltInMapId },
+            calleeEffect: Effect.Store,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    ['size', PRIMITIVE_TYPE],
+    [
+        'forEach',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [],
+            restParam: Effect.ConditionallyMutate,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.ConditionallyMutate,
+            returnValueKind: ValueKind.Primitive,
+            noAlias: true,
+            mutableOnlyIfOperandsAreMutable: true,
+        }),
+    ],
+    [
+        'entries',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    [
+        'keys',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    [
+        'values',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
         }),
     ],
 ]);
@@ -36622,6 +36856,26 @@ const TYPED_GLOBALS = [
             calleeEffect: Effect.Read,
             returnValueKind: ValueKind.Primitive,
         }),
+    ],
+    [
+        'Map',
+        addFunction(DEFAULT_SHAPES, [], {
+            positionalParams: [Effect.ConditionallyMutate],
+            restParam: null,
+            returnType: { kind: 'Object', shapeId: BuiltInMapId },
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Mutable,
+        }, null, true),
+    ],
+    [
+        'Set',
+        addFunction(DEFAULT_SHAPES, [], {
+            positionalParams: [Effect.ConditionallyMutate],
+            restParam: null,
+            returnType: { kind: 'Object', shapeId: BuiltInSetId },
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Mutable,
+        }, null, true),
     ],
 ];
 const REACT_APIS = [
@@ -45318,18 +45572,7 @@ function inferBlock(env, state, block, functionEffects) {
                 break;
             }
             case 'NewExpression': {
-                const valueKind = {
-                    kind: ValueKind.Mutable,
-                    reason: new Set([ValueReason.Other]),
-                    context: new Set(),
-                };
-                state.referenceAndRecordEffects(freezeActions, instrValue.callee, Effect.Read, ValueReason.Other);
-                for (const operand of eachCallArgument(instrValue.args)) {
-                    state.referenceAndRecordEffects(freezeActions, operand, Effect.ConditionallyMutate, ValueReason.Other);
-                }
-                state.initialize(instrValue, valueKind);
-                state.define(instr.lvalue, instrValue);
-                instr.lvalue.effect = Effect.ConditionallyMutate;
+                inferCallEffects(state, instr, freezeActions, getFunctionCallSignature(env, instrValue.callee.identifier.type));
                 continuation = { kind: 'funeffects' };
                 break;
             }
@@ -46045,14 +46288,14 @@ function inferCallEffects(state, instr, freezeActions, signature) {
         state.referenceAndRecordEffects(freezeActions, place, getArgumentEffect(effects != null ? effects[i] : null, arg), ValueReason.Other);
         hasCaptureArgument || (hasCaptureArgument = place.effect === Effect.Capture);
     }
-    const callee = instrValue.kind === 'CallExpression'
-        ? instrValue.callee
-        : instrValue.receiver;
+    const callee = instrValue.kind === 'MethodCall' ? instrValue.receiver : instrValue.callee;
     if (signature !== null) {
         state.referenceAndRecordEffects(freezeActions, callee, signature.calleeEffect, ValueReason.Other);
     }
     else {
-        state.referenceAndRecordEffects(freezeActions, callee, Effect.ConditionallyMutate, ValueReason.Other);
+        state.referenceAndRecordEffects(freezeActions, callee, instrValue.kind === 'NewExpression'
+            ? Effect.Read
+            : Effect.ConditionallyMutate, ValueReason.Other);
     }
     hasCaptureArgument || (hasCaptureArgument = callee.effect === Effect.Capture);
     state.initialize(instrValue, returnValueKind);
@@ -49160,6 +49403,7 @@ function* generateInstructionTypes(env, names, instr) {
                 kind: 'Function',
                 shapeId: null,
                 return: returnType,
+                isConstructor: false,
             });
             yield equation(left, returnType);
             break;
@@ -49170,6 +49414,7 @@ function* generateInstructionTypes(env, names, instr) {
                 kind: 'Function',
                 shapeId: null,
                 return: returnType,
+                isConstructor: false,
             });
             yield equation(left, returnType);
             break;
@@ -49220,6 +49465,7 @@ function* generateInstructionTypes(env, names, instr) {
                 kind: 'Function',
                 return: returnType,
                 shapeId: null,
+                isConstructor: false,
             });
             yield equation(left, returnType);
             break;
@@ -49287,6 +49533,7 @@ function* generateInstructionTypes(env, names, instr) {
                 kind: 'Function',
                 shapeId: BuiltInFunctionId,
                 return: value.loweredFunc.func.returnType,
+                isConstructor: false,
             });
             break;
         }
@@ -49304,9 +49551,19 @@ function* generateInstructionTypes(env, names, instr) {
             yield equation(left, { kind: 'Object', shapeId: BuiltInJsxId });
             break;
         }
+        case 'NewExpression': {
+            const returnType = makeType();
+            yield equation(value.callee.identifier.type, {
+                kind: 'Function',
+                return: returnType,
+                shapeId: null,
+                isConstructor: true,
+            });
+            yield equation(left, returnType);
+            break;
+        }
         case 'PropertyStore':
         case 'DeclareLocal':
-        case 'NewExpression':
         case 'RegExpLiteral':
         case 'MetaProperty':
         case 'ComputedStore':
@@ -49362,7 +49619,9 @@ class Unifier {
             this.bindVariableTo(tB, tA);
             return;
         }
-        if (tB.kind === 'Function' && tA.kind === 'Function') {
+        if (tB.kind === 'Function' &&
+            tA.kind === 'Function' &&
+            tA.isConstructor === tB.isConstructor) {
             this.unify(tA.return, tB.return);
             return;
         }
@@ -49466,6 +49725,7 @@ class Unifier {
                     kind: 'Function',
                     return: returnType,
                     shapeId: type.shapeId,
+                    isConstructor: type.isConstructor,
                 };
             }
             case 'ObjectMethod':
