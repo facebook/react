@@ -1396,6 +1396,7 @@ export enum Effect {
   Read = 'read',
   // This reference reads and stores the value
   Capture = 'capture',
+  ConditionallyMutateIterator = 'mutate-iterator?',
   /*
    * This reference *may* write to (mutate) the value. This covers two similar cases:
    * - The compiler is being conservative and assuming that a value *may* be mutated
@@ -1414,11 +1415,11 @@ export enum Effect {
   // This reference may alias to (mutate) the value
   Store = 'store',
 }
-
 export const EffectSchema = z.enum([
   Effect.Read,
   Effect.Mutate,
   Effect.ConditionallyMutate,
+  Effect.ConditionallyMutateIterator,
   Effect.Capture,
   Effect.Store,
   Effect.Freeze,
@@ -1432,6 +1433,7 @@ export function isMutableEffect(
     case Effect.Capture:
     case Effect.Store:
     case Effect.ConditionallyMutate:
+    case Effect.ConditionallyMutateIterator:
     case Effect.Mutate: {
       return true;
     }
