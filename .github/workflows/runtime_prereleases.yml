@@ -29,6 +29,9 @@ jobs:
   publish_prerelease:
     name: Publish prelease (${{ inputs.release_channel }}) ${{ inputs.commit_sha }} @${{ inputs.dist_tag }}
     runs-on: ubuntu-latest
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
