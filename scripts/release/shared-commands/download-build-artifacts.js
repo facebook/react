@@ -3,8 +3,9 @@
 const {join} = require('path');
 const theme = require('../theme');
 const {exec} = require('child-process-promise');
-const {existsSync, readFileSync} = require('fs');
+const {existsSync, mkdtempSync, readFileSync} = require('fs');
 const {logPromise} = require('../utils');
+const os = require('os');
 
 if (process.env.GH_TOKEN == null) {
   console.log(
@@ -20,6 +21,15 @@ const GITHUB_HEADERS = `
   -H "Accept: application/vnd.github+json" \
   -H "Authorization: Bearer ${process.env.GH_TOKEN}" \
   -H "X-GitHub-Api-Version: 2022-11-28"`.trim();
+
+async function executableIsAvailable(name) {
+  try {
+    await exec(`which ${name}`);
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -78,10 +88,27 @@ async function getArtifact(workflowRunId, artifactName) {
 async function processArtifact(artifact, commit, releaseChannel) {
   // Download and extract artifact
   const cwd = join(__dirname, '..', '..', '..');
+  const tmpDir = mkdtempSync(join(os.tmpdir(), 'react_'));
   await exec(`rm -rf ./build`, {cwd});
   await exec(
-    `curl -L ${GITHUB_HEADERS} ${artifact.archive_download_url} \
-              > a.zip && unzip a.zip -d . && rm a.zip build2.tgz && tar -xvzf build.tgz && rm build.tgz`,
+    `curl -L ${GITHUB_HEADERS} ${artifact.archive_download_url} > artifacts_combined.zip`,
+    {
+      cwd: tmpDir,
+    }
+  );
+
+  // Use https://cli.github.com/manual/gh_attestation_verify to verify artifact
+  if (executableIsAvailable('gh')) {
+    await exec(
+      `gh attestation verify artifacts_combined.zip --repo=${OWNER}/${REPO}`,
+      {
+        cwd: tmpDir,
+      }
+    );
+  }
+
+  await exec(
+    `unzip ${tmpDir}/artifacts_combined.zip -d . && rm build2.tgz && tar -xvzf build.tgz && rm build.tgz`,
     {
       cwd,
     }
