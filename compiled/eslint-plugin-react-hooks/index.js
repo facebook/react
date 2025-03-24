@@ -16651,7 +16651,7 @@ class CompilerError extends Error {
     }
 }
 
-function insertAdditionalFunctionDeclaration(fnPath, compiled, gating) {
+function insertAdditionalFunctionDeclaration(fnPath, compiled, programContext, gatingFunctionIdentifierName) {
     var _a, _b;
     const originalFnName = fnPath.node.id;
     const originalFnParams = fnPath.node.params;
@@ -16664,9 +16664,9 @@ function insertAdditionalFunctionDeclaration(fnPath, compiled, gating) {
         reason: 'Expected React Compiler optimized function declarations to have the same number of parameters as source',
         loc: (_b = fnPath.node.loc) !== null && _b !== void 0 ? _b : null,
     });
-    const gatingCondition = fnPath.scope.generateUidIdentifier(`${gating.importSpecifierName}_result`);
-    const unoptimizedFnName = fnPath.scope.generateUidIdentifier(`${originalFnName.name}_unoptimized`);
-    const optimizedFnName = fnPath.scope.generateUidIdentifier(`${originalFnName.name}_optimized`);
+    const gatingCondition = libExports.identifier(programContext.newUid(`${gatingFunctionIdentifierName}_result`));
+    const unoptimizedFnName = libExports.identifier(programContext.newUid(`${originalFnName.name}_unoptimized`));
+    const optimizedFnName = libExports.identifier(programContext.newUid(`${originalFnName.name}_optimized`));
     compiled.id.name = optimizedFnName.name;
     fnPath.get('id').replaceInline(unoptimizedFnName);
     const newParams = [];
@@ -16686,22 +16686,23 @@ function insertAdditionalFunctionDeclaration(fnPath, compiled, gating) {
         libExports.ifStatement(gatingCondition, libExports.returnStatement(libExports.callExpression(compiled.id, genNewArgs.map(fn => fn()))), libExports.returnStatement(libExports.callExpression(unoptimizedFnName, genNewArgs.map(fn => fn())))),
     ])));
     fnPath.insertBefore(libExports.variableDeclaration('const', [
-        libExports.variableDeclarator(gatingCondition, libExports.callExpression(libExports.identifier(gating.importSpecifierName), [])),
+        libExports.variableDeclarator(gatingCondition, libExports.callExpression(libExports.identifier(gatingFunctionIdentifierName), [])),
     ]));
     fnPath.insertBefore(compiled);
 }
-function insertGatedFunctionDeclaration(fnPath, compiled, gating, referencedBeforeDeclaration) {
+function insertGatedFunctionDeclaration(fnPath, compiled, programContext, gating, referencedBeforeDeclaration) {
     var _a;
+    const gatingImportedName = programContext.addImportSpecifier(gating).name;
     if (referencedBeforeDeclaration && fnPath.isFunctionDeclaration()) {
         CompilerError.invariant(compiled.type === 'FunctionDeclaration', {
             reason: 'Expected compiled node type to match input type',
             description: `Got ${compiled.type} but expected FunctionDeclaration`,
             loc: (_a = fnPath.node.loc) !== null && _a !== void 0 ? _a : null,
         });
-        insertAdditionalFunctionDeclaration(fnPath, compiled, gating);
+        insertAdditionalFunctionDeclaration(fnPath, compiled, programContext, gatingImportedName);
     }
     else {
-        const gatingExpression = libExports.conditionalExpression(libExports.callExpression(libExports.identifier(gating.importSpecifierName), []), buildFunctionExpression(compiled), buildFunctionExpression(fnPath.node));
+        const gatingExpression = libExports.conditionalExpression(libExports.callExpression(libExports.identifier(gatingImportedName), []), buildFunctionExpression(compiled), buildFunctionExpression(fnPath.node));
         if (fnPath.parentPath.node.type !== 'ExportDefaultDeclaration' &&
             fnPath.node.type === 'FunctionDeclaration' &&
             fnPath.node.id != null) {
@@ -28240,6 +28241,7 @@ class HIRBuilder {
                     type: makeType(),
                     loc: (_b = node.loc) !== null && _b !== void 0 ? _b : GeneratedSource,
                 };
+                __classPrivateFieldGet(this, _HIRBuilder_env, "f").programContext.addNewReference(name);
                 __classPrivateFieldGet(this, _HIRBuilder_bindings, "f").set(name, { node, identifier });
                 return identifier;
             }
@@ -37303,6 +37305,8 @@ const InstrumentationSchema = zod.z
     globalGating: zod.z.string().nullable(),
 })
     .refine(opts => opts.gating != null || opts.globalGating != null, 'Expected at least one of gating or globalGating');
+const USE_FIRE_FUNCTION_NAME = 'useFire';
+const EMIT_FREEZE_GLOBAL_GATING = 'true';
 const MacroMethodSchema = zod.z.union([
     zod.z.object({ type: zod.z.literal('wildcard') }),
     zod.z.object({ type: zod.z.literal('name'), name: zod.z.string() }),
@@ -37367,7 +37371,7 @@ const EnvironmentConfigSchema = zod.z.object({
     lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
 });
 class Environment {
-    constructor(scope, fnType, compilerMode, config, contextIdentifiers, logger, filename, code, useMemoCacheIdentifier) {
+    constructor(scope, fnType, compilerMode, config, contextIdentifiers, logger, filename, code, programContext) {
         _Environment_instances.add(this);
         _Environment_globals.set(this, void 0);
         _Environment_shapes.set(this, void 0);
@@ -37386,11 +37390,11 @@ class Environment {
         this.filename = filename;
         this.code = code;
         this.logger = logger;
-        this.useMemoCacheIdentifier = useMemoCacheIdentifier;
+        this.programContext = programContext;
         __classPrivateFieldSet(this, _Environment_shapes, new Map(DEFAULT_SHAPES), "f");
         __classPrivateFieldSet(this, _Environment_globals, new Map(DEFAULT_GLOBALS), "f");
-        this.hasLoweredContextAccess = false;
         this.hasFireRewrite = false;
+        this.hasInferredEffect = false;
         if (config.disableMemoizationForDebugging &&
             config.enableChangeDetectionForDebugging != null) {
             CompilerError.throwInvalidConfig({
@@ -37440,6 +37444,9 @@ class Environment {
     get nextScopeId() {
         var _a, _b;
         return makeScopeId((__classPrivateFieldSet(this, _Environment_nextScope, (_b = __classPrivateFieldGet(this, _Environment_nextScope, "f"), _a = _b++, _b), "f"), _a));
+    }
+    get scope() {
+        return __classPrivateFieldGet(this, _Environment_scope, "f");
     }
     logErrors(errors) {
         if (errors.isOk() || this.logger == null) {
@@ -38284,208 +38291,12 @@ function pruneUnusedLabelsHIR(fn) {
     }
 }
 
-function validateRestrictedImports(path, { validateBlocklistedImports }) {
-    if (validateBlocklistedImports == null ||
-        validateBlocklistedImports.length === 0) {
-        return null;
-    }
-    const error = new CompilerError();
-    const restrictedImports = new Set(validateBlocklistedImports);
-    path.traverse({
-        ImportDeclaration(importDeclPath) {
-            var _a;
-            if (restrictedImports.has(importDeclPath.node.source.value)) {
-                error.push({
-                    severity: ErrorSeverity.Todo,
-                    reason: 'Bailing out due to blocklisted import',
-                    description: `Import from module ${importDeclPath.node.source.value}`,
-                    loc: (_a = importDeclPath.node.loc) !== null && _a !== void 0 ? _a : null,
-                });
-            }
-        },
-    });
-    if (error.hasErrors()) {
-        return error;
-    }
-    else {
-        return null;
-    }
-}
-function addImportsToProgram(path, importList) {
-    const identifiers = new Set();
-    const sortedImports = new Map();
-    for (const { importSpecifierName, source } of importList) {
-        CompilerError.invariant(identifiers.has(importSpecifierName) === false, {
-            reason: `Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
-            description: null,
-            loc: GeneratedSource,
-            suggestions: null,
-        });
-        CompilerError.invariant(path.scope.hasBinding(importSpecifierName) === false, {
-            reason: `Encountered conflicting import specifiers for ${importSpecifierName} in generated program.`,
-            description: null,
-            loc: GeneratedSource,
-            suggestions: null,
-        });
-        identifiers.add(importSpecifierName);
-        const importSpecifierNameList = getOrInsertDefault(sortedImports, source, []);
-        importSpecifierNameList.push(importSpecifierName);
-    }
-    const stmts = [];
-    for (const [source, importSpecifierNameList] of sortedImports) {
-        const importSpecifiers = importSpecifierNameList.map(name => {
-            const id = libExports.identifier(name);
-            return libExports.importSpecifier(id, id);
-        });
-        stmts.push(libExports.importDeclaration(importSpecifiers, libExports.stringLiteral(source)));
-    }
-    path.unshiftContainer('body', stmts);
-}
-function isNonNamespacedImport(importDeclPath, moduleName) {
-    return (importDeclPath.get('source').node.value === moduleName &&
-        importDeclPath
-            .get('specifiers')
-            .every(specifier => specifier.isImportSpecifier()) &&
-        importDeclPath.node.importKind !== 'type' &&
-        importDeclPath.node.importKind !== 'typeof');
-}
-function hasExistingNonNamespacedImportOfModule(program, moduleName) {
-    let hasExistingImport = false;
-    program.traverse({
-        ImportDeclaration(importDeclPath) {
-            if (isNonNamespacedImport(importDeclPath, moduleName)) {
-                hasExistingImport = true;
-            }
-        },
-    });
-    return hasExistingImport;
-}
-function addMemoCacheFunctionSpecifierToExistingImport(program, moduleName, identifierName) {
-    let didInsertUseMemoCache = false;
-    program.traverse({
-        ImportDeclaration(importDeclPath) {
-            if (!didInsertUseMemoCache &&
-                isNonNamespacedImport(importDeclPath, moduleName)) {
-                importDeclPath.pushContainer('specifiers', libExports.importSpecifier(libExports.identifier(identifierName), libExports.identifier('c')));
-                didInsertUseMemoCache = true;
-            }
-        },
-    });
-    return didInsertUseMemoCache;
-}
-function updateMemoCacheFunctionImport(program, moduleName, useMemoCacheIdentifier) {
-    const hasExistingImport = hasExistingNonNamespacedImportOfModule(program, moduleName);
-    if (hasExistingImport) {
-        const didUpdateImport = addMemoCacheFunctionSpecifierToExistingImport(program, moduleName, useMemoCacheIdentifier);
-        if (!didUpdateImport) {
-            throw new Error(`Expected an ImportDeclaration of \`${moduleName}\` in order to update ImportSpecifiers with useMemoCache`);
-        }
-    }
-    else {
-        addMemoCacheFunctionImportDeclaration(program, moduleName, useMemoCacheIdentifier);
-    }
-}
-function addMemoCacheFunctionImportDeclaration(program, moduleName, localName) {
-    program.unshiftContainer('body', libExports.importDeclaration([libExports.importSpecifier(libExports.identifier(localName), libExports.identifier('c'))], libExports.stringLiteral(moduleName)));
+function isComponentDeclaration(node) {
+    return Object.prototype.hasOwnProperty.call(node, '__componentDeclaration');
 }
 
-zod.z.enum([
-    'all_errors',
-    'critical_errors',
-    'none',
-]);
-const CompilerReactTargetSchema = zod.z.union([
-    zod.z.literal('17'),
-    zod.z.literal('18'),
-    zod.z.literal('19'),
-    zod.z.object({
-        kind: zod.z.literal('donotuse_meta_internal'),
-        runtimeModule: zod.z.string().default('react'),
-    }),
-]);
-zod.z.enum([
-    'infer',
-    'syntax',
-    'annotation',
-    'all',
-]);
-const defaultOptions = {
-    compilationMode: 'infer',
-    panicThreshold: 'none',
-    environment: parseEnvironmentConfig({}).unwrap(),
-    logger: null,
-    gating: null,
-    noEmit: false,
-    eslintSuppressionRules: null,
-    flowSuppressions: true,
-    ignoreUseNoForget: false,
-    sources: filename => {
-        return filename.indexOf('node_modules') === -1;
-    },
-    enableReanimatedCheck: true,
-    target: '19',
-};
-function parsePluginOptions(obj) {
-    if (obj == null || typeof obj !== 'object') {
-        return defaultOptions;
-    }
-    const parsedOptions = Object.create(null);
-    for (let [key, value] of Object.entries(obj)) {
-        if (typeof value === 'string') {
-            value = value.toLowerCase();
-        }
-        if (isCompilerFlag(key)) {
-            switch (key) {
-                case 'environment': {
-                    const environmentResult = parseEnvironmentConfig(value);
-                    if (environmentResult.isErr()) {
-                        CompilerError.throwInvalidConfig({
-                            reason: 'Error in validating environment config. This is an advanced setting and not meant to be used directly',
-                            description: environmentResult.unwrapErr().toString(),
-                            suggestions: null,
-                            loc: null,
-                        });
-                    }
-                    parsedOptions[key] = environmentResult.unwrap();
-                    break;
-                }
-                case 'target': {
-                    parsedOptions[key] = parseTargetConfig(value);
-                    break;
-                }
-                case 'gating': {
-                    if (value == null) {
-                        parsedOptions[key] = null;
-                    }
-                    else {
-                        parsedOptions[key] = tryParseExternalFunction(value);
-                    }
-                    break;
-                }
-                default: {
-                    parsedOptions[key] = value;
-                }
-            }
-        }
-    }
-    return Object.assign(Object.assign({}, defaultOptions), parsedOptions);
-}
-function parseTargetConfig(value) {
-    const parsed = CompilerReactTargetSchema.safeParse(value);
-    if (parsed.success) {
-        return parsed.data;
-    }
-    else {
-        CompilerError.throwInvalidConfig({
-            reason: 'Not a valid target',
-            description: `${zodValidationError.fromZodError(parsed.error)}`,
-            suggestions: null,
-            loc: null,
-        });
-    }
-}
-function isCompilerFlag(s) {
-    return hasOwnProperty$1(defaultOptions, s);
+function isHookDeclaration(node) {
+    return Object.prototype.hasOwnProperty.call(node, '__hookDeclaration');
 }
 
 const DEFAULT_IDENTIFIER_INFO = {
@@ -42239,14 +42050,15 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
     const hookGuard = fn.env.config.enableEmitHookGuards;
     if (hookGuard != null && fn.env.isInferredMemoEnabled) {
         compiled.body = libExports.blockStatement([
-            createHookGuard(hookGuard, compiled.body.body, GuardKind.PushHookGuard, GuardKind.PopHookGuard),
+            createHookGuard(hookGuard, fn.env.programContext, compiled.body.body, GuardKind.PushHookGuard, GuardKind.PopHookGuard),
         ]);
     }
     const cacheCount = compiled.memoSlotsUsed;
     if (cacheCount !== 0) {
         const preface = [];
+        const useMemoCacheIdentifier = fn.env.programContext.addMemoCacheImport().name;
         preface.push(libExports.variableDeclaration('const', [
-            libExports.variableDeclarator(libExports.identifier(cx.synthesizeName('$')), libExports.callExpression(libExports.identifier(fn.env.useMemoCacheIdentifier), [
+            libExports.variableDeclarator(libExports.identifier(cx.synthesizeName('$')), libExports.callExpression(libExports.identifier(useMemoCacheIdentifier), [
                 libExports.numericLiteral(cacheCount),
             ])),
         ]));
@@ -42267,23 +42079,38 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
     if (emitInstrumentForget != null &&
         fn.id != null &&
         fn.env.isInferredMemoEnabled) {
-        let gating;
-        if (emitInstrumentForget.gating != null &&
-            emitInstrumentForget.globalGating != null) {
-            gating = libExports.logicalExpression('&&', libExports.identifier(emitInstrumentForget.globalGating), libExports.identifier(emitInstrumentForget.gating.importSpecifierName));
+        const gating = emitInstrumentForget.gating != null
+            ? libExports.identifier(fn.env.programContext.addImportSpecifier(emitInstrumentForget.gating).name)
+            : null;
+        const globalGating = emitInstrumentForget.globalGating != null
+            ? libExports.identifier(emitInstrumentForget.globalGating)
+            : null;
+        if (emitInstrumentForget.globalGating != null) {
+            const assertResult = fn.env.programContext.assertGlobalBinding(emitInstrumentForget.globalGating);
+            if (assertResult.isErr()) {
+                return assertResult;
+            }
         }
-        else if (emitInstrumentForget.gating != null) {
-            gating = libExports.identifier(emitInstrumentForget.gating.importSpecifierName);
+        let ifTest;
+        if (gating != null && globalGating != null) {
+            ifTest = libExports.logicalExpression('&&', globalGating, gating);
+        }
+        else if (gating != null) {
+            ifTest = gating;
         }
         else {
-            CompilerError.invariant(emitInstrumentForget.globalGating != null, {
+            CompilerError.invariant(globalGating != null, {
                 reason: 'Bad config not caught! Expected at least one of gating or globalGating',
                 loc: null,
                 suggestions: null,
             });
-            gating = libExports.identifier(emitInstrumentForget.globalGating);
+            ifTest = globalGating;
         }
-        const test = libExports.ifStatement(gating, libExports.expressionStatement(libExports.callExpression(libExports.identifier(emitInstrumentForget.fn.importSpecifierName), [libExports.stringLiteral(fn.id), libExports.stringLiteral((_b = fn.env.filename) !== null && _b !== void 0 ? _b : '')])));
+        const instrumentFnIdentifier = fn.env.programContext.addImportSpecifier(emitInstrumentForget.fn).name;
+        const test = libExports.ifStatement(ifTest, libExports.expressionStatement(libExports.callExpression(libExports.identifier(instrumentFnIdentifier), [
+            libExports.stringLiteral(fn.id),
+            libExports.stringLiteral((_b = fn.env.filename) !== null && _b !== void 0 ? _b : ''),
+        ])));
         compiled.body.body.unshift(test);
     }
     const outlined = [];
@@ -42340,8 +42167,8 @@ function codegenReactiveFunction(cx, fn) {
         prunedMemoBlocks: countMemoBlockVisitor.prunedMemoBlocks,
         prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
         outlined: [],
-        hasLoweredContextAccess: fn.env.hasLoweredContextAccess,
         hasFireRewrite: fn.env.hasFireRewrite,
+        hasInferredEffect: fn.env.hasInferredEffect,
     });
 }
 class CountMemoBlockVisitor extends ReactiveFunctionVisitor {
@@ -42478,7 +42305,14 @@ function codegenBlockNoReset(cx, block) {
 }
 function wrapCacheDep(cx, value) {
     if (cx.env.config.enableEmitFreeze != null && cx.env.isInferredMemoEnabled) {
-        return libExports.conditionalExpression(libExports.identifier('true'), libExports.callExpression(libExports.identifier(cx.env.config.enableEmitFreeze.importSpecifierName), [value, libExports.stringLiteral(cx.fnName)]), value);
+        const emitFreezeIdentifier = cx.env.programContext.addImportSpecifier(cx.env.config.enableEmitFreeze).name;
+        cx.env.programContext
+            .assertGlobalBinding(EMIT_FREEZE_GLOBAL_GATING, cx.env.scope)
+            .unwrap();
+        return libExports.conditionalExpression(libExports.identifier(EMIT_FREEZE_GLOBAL_GATING), libExports.callExpression(libExports.identifier(emitFreezeIdentifier), [
+            value,
+            libExports.stringLiteral(cx.fnName),
+        ]), value);
     }
     else {
         return value;
@@ -42561,12 +42395,12 @@ function codegenReactiveScope(cx, statements, scope, block) {
     }
     let computationBlock = codegenBlock(cx, block);
     let memoStatement;
-    if (cx.env.config.enableChangeDetectionForDebugging != null &&
-        changeExpressions.length > 0) {
+    const detectionFunction = cx.env.config.enableChangeDetectionForDebugging;
+    if (detectionFunction != null && changeExpressions.length > 0) {
         const loc = typeof scope.loc === 'symbol'
             ? 'unknown location'
             : `(${scope.loc.start.line}:${scope.loc.end.line})`;
-        const detectionFunction = cx.env.config.enableChangeDetectionForDebugging.importSpecifierName;
+        const importedDetectionFunctionIdentifier = cx.env.programContext.addImportSpecifier(detectionFunction).name;
         const cacheLoadOldValueStatements = [];
         const changeDetectionStatements = [];
         const idempotenceDetectionStatements = [];
@@ -42577,7 +42411,7 @@ function codegenReactiveScope(cx, statements, scope, block) {
             cacheLoadOldValueStatements.push(libExports.variableDeclaration('let', [
                 libExports.variableDeclarator(libExports.identifier(loadName), slot),
             ]));
-            changeDetectionStatements.push(libExports.expressionStatement(libExports.callExpression(libExports.identifier(detectionFunction), [
+            changeDetectionStatements.push(libExports.expressionStatement(libExports.callExpression(libExports.identifier(importedDetectionFunctionIdentifier), [
                 libExports.identifier(loadName),
                 libExports.cloneNode(name, true),
                 libExports.stringLiteral(name.name),
@@ -42585,7 +42419,7 @@ function codegenReactiveScope(cx, statements, scope, block) {
                 libExports.stringLiteral('cached'),
                 libExports.stringLiteral(loc),
             ])));
-            idempotenceDetectionStatements.push(libExports.expressionStatement(libExports.callExpression(libExports.identifier(detectionFunction), [
+            idempotenceDetectionStatements.push(libExports.expressionStatement(libExports.callExpression(libExports.identifier(importedDetectionFunctionIdentifier), [
                 libExports.cloneNode(slot, true),
                 libExports.cloneNode(name, true),
                 libExports.stringLiteral(name.name),
@@ -43159,11 +42993,10 @@ const createJsxText = withLoc(libExports.jsxText);
 const createJsxClosingElement = withLoc(libExports.jsxClosingElement);
 const createJsxOpeningElement = withLoc(libExports.jsxOpeningElement);
 const createStringLiteral = withLoc(libExports.stringLiteral);
-function createHookGuard(guard, stmts, before, after) {
+function createHookGuard(guard, context, stmts, before, after) {
+    const guardFnName = context.addImportSpecifier(guard).name;
     function createHookGuardImpl(kind) {
-        return libExports.expressionStatement(libExports.callExpression(libExports.identifier(guard.importSpecifierName), [
-            libExports.numericLiteral(kind),
-        ]));
+        return libExports.expressionStatement(libExports.callExpression(libExports.identifier(guardFnName), [libExports.numericLiteral(kind)]));
     }
     return libExports.tryStatement(libExports.blockStatement([createHookGuardImpl(before), ...stmts]), null, libExports.blockStatement([createHookGuardImpl(after)]));
 }
@@ -43175,7 +43008,7 @@ function createCallExpression(env, callee, args, loc, isHook) {
     const hookGuard = env.config.enableEmitHookGuards;
     if (hookGuard != null && isHook && env.isInferredMemoEnabled) {
         const iife = libExports.functionExpression(null, [], libExports.blockStatement([
-            createHookGuard(hookGuard, [libExports.returnStatement(callExpr)], GuardKind.AllowHook, GuardKind.DisallowHook),
+            createHookGuard(hookGuard, env.programContext, [libExports.returnStatement(callExpr)], GuardKind.AllowHook, GuardKind.DisallowHook),
         ]));
         return libExports.callExpression(iife, []);
     }
@@ -47181,10 +47014,10 @@ let Visitor$4 = class Visitor extends ReactiveFunctionVisitor {
     }
 };
 
-var _Scopes_instances, _Scopes_seen, _Scopes_stack, _Scopes_globals, _Scopes_lookup;
+var _Scopes_instances, _Scopes_seen, _Scopes_stack, _Scopes_globals, _Scopes_programContext, _Scopes_lookup;
 function renameVariables(fn) {
     const globals = collectReferencedGlobals(fn);
-    const scopes = new Scopes(globals);
+    const scopes = new Scopes(globals, fn.env.programContext);
     renameVariablesImpl(fn, new Visitor$3(), scopes);
     return new Set([...scopes.names, ...globals]);
 }
@@ -47236,13 +47069,15 @@ let Visitor$3 = class Visitor extends ReactiveFunctionVisitor {
     }
 };
 class Scopes {
-    constructor(globals) {
+    constructor(globals, programContext) {
         _Scopes_instances.add(this);
         _Scopes_seen.set(this, new Map());
         _Scopes_stack.set(this, [new Map()]);
         _Scopes_globals.set(this, void 0);
+        _Scopes_programContext.set(this, void 0);
         this.names = new Set();
         __classPrivateFieldSet(this, _Scopes_globals, globals, "f");
+        __classPrivateFieldSet(this, _Scopes_programContext, programContext, "f");
     }
     visit(identifier) {
         const originalName = identifier.name;
@@ -47273,6 +47108,7 @@ class Scopes {
                 name = `${originalName.value}$${id++}`;
             }
         }
+        __classPrivateFieldGet(this, _Scopes_programContext, "f").addNewReference(name);
         const identifierName = makeIdentifierName(name);
         identifier.name = identifierName;
         __classPrivateFieldGet(this, _Scopes_seen, "f").set(identifier.declarationId, identifierName);
@@ -47292,7 +47128,7 @@ class Scopes {
         });
     }
 }
-_Scopes_seen = new WeakMap(), _Scopes_stack = new WeakMap(), _Scopes_globals = new WeakMap(), _Scopes_instances = new WeakSet(), _Scopes_lookup = function _Scopes_lookup(name) {
+_Scopes_seen = new WeakMap(), _Scopes_stack = new WeakMap(), _Scopes_globals = new WeakMap(), _Scopes_programContext = new WeakMap(), _Scopes_instances = new WeakSet(), _Scopes_lookup = function _Scopes_lookup(name) {
     for (let i = __classPrivateFieldGet(this, _Scopes_stack, "f").length - 1; i >= 0; i--) {
         const scope = __classPrivateFieldGet(this, _Scopes_stack, "f")[i];
         const entry = scope.get(name);
@@ -48446,6 +48282,7 @@ function inferEffectDependencies(fn) {
     if (hasRewrite) {
         markInstructionIds(fn.body);
         fixScopeAndIdentifierRanges(fn.body);
+        fn.env.hasInferredEffect = true;
     }
 }
 function writeDependencyToInstructions(dep, reactive, env, loc) {
@@ -51507,7 +51344,7 @@ function propagatePhiTypes(fn) {
     }
 }
 
-function lowerContextAccess(fn, loweredContextCallee) {
+function lowerContextAccess(fn, loweredContextCalleeConfig) {
     const contextAccess = new Map();
     const contextKeys = new Map();
     for (const [, block] of fn.body.blocks) {
@@ -51537,6 +51374,7 @@ function lowerContextAccess(fn, loweredContextCallee) {
             }
         }
     }
+    let importLoweredContextCallee = null;
     if (contextAccess.size > 0 && contextKeys.size > 0) {
         for (const [, block] of fn.body.blocks) {
             let nextInstructions = null;
@@ -51546,7 +51384,8 @@ function lowerContextAccess(fn, loweredContextCallee) {
                 if (value.kind === 'CallExpression' &&
                     isUseContextHookType(value.callee.identifier) &&
                     contextKeys.has(lvalue.identifier.id)) {
-                    const loweredContextCalleeInstr = emitLoadLoweredContextCallee(fn.env, loweredContextCallee);
+                    importLoweredContextCallee !== null && importLoweredContextCallee !== void 0 ? importLoweredContextCallee : (importLoweredContextCallee = fn.env.programContext.addImportSpecifier(loweredContextCalleeConfig));
+                    const loweredContextCalleeInstr = emitLoadLoweredContextCallee(fn.env, importLoweredContextCallee);
                     if (nextInstructions === null) {
                         nextInstructions = block.instructions.slice(0, i);
                     }
@@ -51569,17 +51408,12 @@ function lowerContextAccess(fn, loweredContextCallee) {
         }
         markInstructionIds(fn.body);
         inferTypes(fn);
-        fn.env.hasLoweredContextAccess = true;
     }
 }
-function emitLoadLoweredContextCallee(env, loweredContextCallee) {
+function emitLoadLoweredContextCallee(env, importedLowerContextCallee) {
     const loadGlobal = {
         kind: 'LoadGlobal',
-        binding: {
-            kind: 'ImportNamespace',
-            module: loweredContextCallee.source,
-            name: loweredContextCallee.importSpecifierName,
-        },
+        binding: Object.assign({}, importedLowerContextCallee),
         loc: GeneratedSource,
     };
     return {
@@ -53098,7 +52932,7 @@ function process$1(fn, jsx, globals) {
     if (fn.fnType === 'Component') {
         return null;
     }
-    const props = collectProps(jsx);
+    const props = collectProps(fn.env, jsx);
     if (!props)
         return null;
     const outlinedTag = fn.env.generateGloballyUniqueIdentifierName(null).value;
@@ -53111,7 +52945,7 @@ function process$1(fn, jsx, globals) {
     outlinedFn.id = outlinedTag;
     return { instrs: newInstrs, fn: outlinedFn };
 }
-function collectProps(instructions) {
+function collectProps(env, instructions) {
     let id = 1;
     function generateName(oldName) {
         let newName = oldName;
@@ -53119,6 +52953,7 @@ function collectProps(instructions) {
             newName = `${oldName}${id++}`;
         }
         seen.add(newName);
+        env.programContext.addNewReference(newName);
         return newName;
     }
     const attributes = [];
@@ -53361,6 +53196,7 @@ function transformFire(fn) {
     context.throwIfErrorsFound();
 }
 function replaceFireFunctions(fn, context) {
+    let importedUseFire = null;
     let hasRewrite = false;
     for (const [, block] of fn.body.blocks) {
         const rewriteInstrs = new Map();
@@ -53378,7 +53214,11 @@ function replaceFireFunctions(fn, context) {
                     for (const [fireCalleePlace, fireCalleeInfo,] of capturedCallees.entries()) {
                         if (!context.hasCalleeWithInsertedFire(fireCalleePlace)) {
                             context.addCalleeWithInsertedFire(fireCalleePlace);
-                            const loadUseFireInstr = makeLoadUseFireInstruction(fn.env);
+                            importedUseFire !== null && importedUseFire !== void 0 ? importedUseFire : (importedUseFire = fn.env.programContext.addImportSpecifier({
+                                source: fn.env.programContext.reactRuntimeModule,
+                                importSpecifierName: USE_FIRE_FUNCTION_NAME,
+                            }));
+                            const loadUseFireInstr = makeLoadUseFireInstruction(fn.env, importedUseFire);
                             const loadFireCalleeInstr = makeLoadFireCalleeInstruction(fn.env, fireCalleeInfo.capturedCalleeIdentifier);
                             const callUseFireInstr = makeCallUseFireInstruction(fn.env, loadUseFireInstr.lvalue, loadFireCalleeInstr.lvalue);
                             const storeUseFireInstr = makeStoreUseFireInstruction(fn.env, callUseFireInstr.lvalue, fireCalleeInfo.fireFunctionBinding);
@@ -53591,18 +53431,13 @@ function ensureNoMoreFireUses(fn, context) {
         }
     }
 }
-function makeLoadUseFireInstruction(env) {
+function makeLoadUseFireInstruction(env, importedLoadUseFire) {
     const useFirePlace = createTemporaryPlace(env, GeneratedSource);
     useFirePlace.effect = Effect.Read;
     useFirePlace.identifier.type = DefaultNonmutatingHook;
     const instrValue = {
         kind: 'LoadGlobal',
-        binding: {
-            kind: 'ImportSpecifier',
-            name: 'useFire',
-            module: 'react',
-            imported: 'useFire',
-        },
+        binding: Object.assign({}, importedLoadUseFire),
         loc: GeneratedSource,
     };
     return {
@@ -53875,10 +53710,10 @@ function validateStaticComponents(fn) {
     return error.asResult();
 }
 
-function run(func, config, fnType, mode, useMemoCacheIdentifier, logger, filename, code) {
+function run(func, config, fnType, mode, programContext, logger, filename, code) {
     var _a, _b;
     const contextIdentifiers = findContextIdentifiers(func);
-    const env = new Environment(func.scope, fnType, mode, config, contextIdentifiers, logger, filename, code, useMemoCacheIdentifier);
+    const env = new Environment(func.scope, fnType, mode, config, contextIdentifiers, logger, filename, code, programContext);
     (_b = (_a = env.logger) === null || _a === void 0 ? void 0 : _a.debugLogIRs) === null || _b === void 0 ? void 0 : _b.call(_a, {
         kind: 'debug',
         name: 'EnvironmentConfig',
@@ -54197,16 +54032,8 @@ function runWithEnvironment(func, env) {
     }
     return ast;
 }
-function compileFn(func, config, fnType, mode, useMemoCacheIdentifier, logger, filename, code) {
-    return run(func, config, fnType, mode, useMemoCacheIdentifier, logger, filename, code);
-}
-
-function isComponentDeclaration(node) {
-    return Object.prototype.hasOwnProperty.call(node, '__componentDeclaration');
-}
-
-function isHookDeclaration(node) {
-    return Object.prototype.hasOwnProperty.call(node, '__hookDeclaration');
+function compileFn(func, config, fnType, mode, programContext, logger, filename, code) {
+    return run(func, config, fnType, mode, programContext, logger, filename, code);
 }
 
 function filterSuppressionsThatAffectFunction(suppressionRanges, fn) {
@@ -54488,7 +54315,7 @@ function compileProgram(program, pass) {
         handleError(restrictedImportsErr, pass, null);
         return null;
     }
-    const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
+    const programContext = new ProgramContext(program, pass.opts.target, environment.hookPattern);
     const suppressions = findProgramSuppressions(pass.comments, (_a = pass.opts.eslintSuppressionRules) !== null && _a !== void 0 ? _a : DEFAULT_ESLINT_SUPPRESSIONS, pass.opts.flowSuppressions);
     const queue = [];
     const compiledFns = [];
@@ -54535,7 +54362,7 @@ function compileProgram(program, pass) {
             try {
                 compileResult = {
                     kind: 'compile',
-                    compiledFn: compileFn(fn, environment, fnType, 'all_features', useMemoCacheIdentifier.name, pass.opts.logger, pass.filename, pass.code),
+                    compiledFn: compileFn(fn, environment, fnType, 'all_features', programContext, pass.opts.logger, pass.filename, pass.code),
                 };
             }
             catch (err) {
@@ -54555,10 +54382,10 @@ function compileProgram(program, pass) {
             try {
                 compileResult = {
                     kind: 'compile',
-                    compiledFn: compileFn(fn, environment, fnType, 'no_inferred_memo', useMemoCacheIdentifier.name, pass.opts.logger, pass.filename, pass.code),
+                    compiledFn: compileFn(fn, environment, fnType, 'no_inferred_memo', programContext, pass.opts.logger, pass.filename, pass.code),
                 };
                 if (!compileResult.compiledFn.hasFireRewrite &&
-                    !compileResult.compiledFn.hasLoweredContextAccess) {
+                    !compileResult.compiledFn.hasInferredEffect) {
                     return null;
                 }
             }
@@ -54633,73 +54460,25 @@ function compileProgram(program, pass) {
     if (moduleScopeOptOutDirectives.length > 0) {
         return null;
     }
-    let gating = null;
-    if (pass.opts.gating != null) {
-        gating = {
-            gatingFn: pass.opts.gating,
-            referencedBeforeDeclared: getFunctionReferencedBeforeDeclarationAtTopLevel(program, compiledFns),
-        };
-    }
-    const hasLoweredContextAccess = compiledFns.some(c => c.compiledFn.hasLoweredContextAccess);
-    const externalFunctions = [];
-    try {
-        if (gating != null) {
-            externalFunctions.push(gating.gatingFn);
-        }
-        const lowerContextAccess = environment.lowerContextAccess;
-        if (lowerContextAccess && hasLoweredContextAccess) {
-            externalFunctions.push(lowerContextAccess);
-        }
-        const enableEmitInstrumentForget = environment.enableEmitInstrumentForget;
-        if (enableEmitInstrumentForget != null) {
-            externalFunctions.push(enableEmitInstrumentForget.fn);
-            if (enableEmitInstrumentForget.gating != null) {
-                externalFunctions.push(enableEmitInstrumentForget.gating);
-            }
-        }
-        if (environment.enableEmitFreeze != null) {
-            externalFunctions.push(environment.enableEmitFreeze);
-        }
-        if (environment.enableEmitHookGuards != null) {
-            externalFunctions.push(environment.enableEmitHookGuards);
-        }
-        if (environment.enableChangeDetectionForDebugging != null) {
-            externalFunctions.push(environment.enableChangeDetectionForDebugging);
-        }
-        const hasFireRewrite = compiledFns.some(c => c.compiledFn.hasFireRewrite);
-        if (environment.enableFire && hasFireRewrite) {
-            externalFunctions.push({
-                source: getReactCompilerRuntimeModule(pass.opts),
-                importSpecifierName: 'useFire',
-            });
-        }
-    }
-    catch (err) {
-        handleError(err, pass, null);
-        return null;
-    }
+    const referencedBeforeDeclared = pass.opts.gating != null
+        ? getFunctionReferencedBeforeDeclarationAtTopLevel(program, compiledFns)
+        : null;
     for (const result of compiledFns) {
         const { kind, originalFn, compiledFn } = result;
         const transformedFn = createNewFunctionNode(originalFn, compiledFn);
-        if (gating != null && kind === 'original') {
-            insertGatedFunctionDeclaration(originalFn, transformedFn, gating.gatingFn, gating.referencedBeforeDeclared.has(result));
+        if (referencedBeforeDeclared != null && kind === 'original') {
+            CompilerError.invariant(pass.opts.gating != null, {
+                reason: "Expected 'gating' import to be present",
+                loc: null,
+            });
+            insertGatedFunctionDeclaration(originalFn, transformedFn, programContext, pass.opts.gating, referencedBeforeDeclared.has(result));
         }
         else {
             originalFn.replaceWith(transformedFn);
         }
     }
     if (compiledFns.length > 0) {
-        let needsMemoCacheFunctionImport = false;
-        for (const fn of compiledFns) {
-            if (fn.compiledFn.memoSlotsUsed > 0) {
-                needsMemoCacheFunctionImport = true;
-                break;
-            }
-        }
-        if (needsMemoCacheFunctionImport) {
-            updateMemoCacheFunctionImport(program, getReactCompilerRuntimeModule(pass.opts), useMemoCacheIdentifier.name);
-        }
-        addImportsToProgram(program, externalFunctions);
+        addImportsToProgram(program, programContext);
     }
     return { retryErrors };
 }
@@ -54720,7 +54499,7 @@ function shouldSkipCompilation(program, pass) {
             return true;
         }
     }
-    if (hasMemoCacheFunctionImport(program, getReactCompilerRuntimeModule(pass.opts))) {
+    if (hasMemoCacheFunctionImport(program, getReactCompilerRuntimeModule(pass.opts.target))) {
         return true;
     }
     return false;
@@ -55044,24 +54823,287 @@ function getFunctionReferencedBeforeDeclarationAtTopLevel(program, fns) {
     });
     return referencedBeforeDeclaration;
 }
-function getReactCompilerRuntimeModule(opts) {
-    if (opts.target === '19') {
+function getReactCompilerRuntimeModule(target) {
+    if (target === '19') {
         return 'react/compiler-runtime';
     }
-    else if (opts.target === '17' || opts.target === '18') {
+    else if (target === '17' || target === '18') {
         return 'react-compiler-runtime';
     }
     else {
-        CompilerError.invariant(opts.target != null &&
-            opts.target.kind === 'donotuse_meta_internal' &&
-            typeof opts.target.runtimeModule === 'string', {
+        CompilerError.invariant(target != null &&
+            target.kind === 'donotuse_meta_internal' &&
+            typeof target.runtimeModule === 'string', {
             reason: 'Expected target to already be validated',
             description: null,
             loc: null,
             suggestions: null,
         });
-        return opts.target.runtimeModule;
+        return target.runtimeModule;
     }
+}
+
+function validateRestrictedImports(path, { validateBlocklistedImports }) {
+    if (validateBlocklistedImports == null ||
+        validateBlocklistedImports.length === 0) {
+        return null;
+    }
+    const error = new CompilerError();
+    const restrictedImports = new Set(validateBlocklistedImports);
+    path.traverse({
+        ImportDeclaration(importDeclPath) {
+            var _a;
+            if (restrictedImports.has(importDeclPath.node.source.value)) {
+                error.push({
+                    severity: ErrorSeverity.Todo,
+                    reason: 'Bailing out due to blocklisted import',
+                    description: `Import from module ${importDeclPath.node.source.value}`,
+                    loc: (_a = importDeclPath.node.loc) !== null && _a !== void 0 ? _a : null,
+                });
+            }
+        },
+    });
+    if (error.hasErrors()) {
+        return error;
+    }
+    else {
+        return null;
+    }
+}
+class ProgramContext {
+    constructor(program, reactRuntimeModule, hookPattern) {
+        this.knownReferencedNames = new Set();
+        this.imports = new Map();
+        this.hookPattern = hookPattern;
+        this.scope = program.scope;
+        this.reactRuntimeModule = getReactCompilerRuntimeModule(reactRuntimeModule);
+    }
+    isHookName(name) {
+        if (this.hookPattern == null) {
+            return isHookName$2(name);
+        }
+        else {
+            const match = new RegExp(this.hookPattern).exec(name);
+            return (match != null && typeof match[1] === 'string' && isHookName$2(match[1]));
+        }
+    }
+    hasReference(name) {
+        return (this.knownReferencedNames.has(name) ||
+            this.scope.hasBinding(name) ||
+            this.scope.hasGlobal(name) ||
+            this.scope.hasReference(name));
+    }
+    newUid(name) {
+        let uid;
+        if (this.isHookName(name)) {
+            uid = name;
+            let i = 0;
+            while (this.hasReference(uid)) {
+                this.knownReferencedNames.add(uid);
+                uid = `${name}_${i++}`;
+            }
+        }
+        else if (!this.hasReference(name)) {
+            uid = name;
+        }
+        else {
+            uid = this.scope.generateUid(name);
+        }
+        this.knownReferencedNames.add(uid);
+        return uid;
+    }
+    addMemoCacheImport() {
+        return this.addImportSpecifier({
+            source: this.reactRuntimeModule,
+            importSpecifierName: 'c',
+        }, '_c');
+    }
+    addImportSpecifier({ source: module, importSpecifierName: specifier }, nameHint) {
+        var _a;
+        const maybeBinding = (_a = this.imports.get(module)) === null || _a === void 0 ? void 0 : _a.get(specifier);
+        if (maybeBinding != null) {
+            return Object.assign({}, maybeBinding);
+        }
+        const binding = {
+            kind: 'ImportSpecifier',
+            name: this.newUid(nameHint !== null && nameHint !== void 0 ? nameHint : specifier),
+            module,
+            imported: specifier,
+        };
+        getOrInsertWith(this.imports, module, () => new Map()).set(specifier, Object.assign({}, binding));
+        return binding;
+    }
+    addNewReference(name) {
+        this.knownReferencedNames.add(name);
+    }
+    assertGlobalBinding(name, localScope) {
+        var _a, _b;
+        const scope = localScope !== null && localScope !== void 0 ? localScope : this.scope;
+        if (!scope.hasReference(name) && !scope.hasBinding(name)) {
+            return Ok(undefined);
+        }
+        const error = new CompilerError();
+        error.push({
+            severity: ErrorSeverity.Todo,
+            reason: 'Encountered conflicting global in generated program',
+            description: `Conflict from local binding ${name}`,
+            loc: (_b = (_a = scope.getBinding(name)) === null || _a === void 0 ? void 0 : _a.path.node.loc) !== null && _b !== void 0 ? _b : null,
+            suggestions: null,
+        });
+        return Err(error);
+    }
+}
+function getExistingImports(program) {
+    const existingImports = new Map();
+    program.traverse({
+        ImportDeclaration(path) {
+            if (isNonNamespacedImport(path)) {
+                existingImports.set(path.node.source.value, path);
+            }
+        },
+    });
+    return existingImports;
+}
+function addImportsToProgram(path, programContext) {
+    const existingImports = getExistingImports(path);
+    const stmts = [];
+    const sortedModules = [...programContext.imports.entries()].sort(([a], [b]) => a.localeCompare(b));
+    for (const [moduleName, importsMap] of sortedModules) {
+        for (const [specifierName, loweredImport] of importsMap) {
+            CompilerError.invariant(path.scope.getBinding(loweredImport.name) == null, {
+                reason: 'Encountered conflicting import specifiers in generated program',
+                description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name}).`,
+                loc: GeneratedSource,
+                suggestions: null,
+            });
+            CompilerError.invariant(loweredImport.module === moduleName &&
+                loweredImport.imported === specifierName, {
+                reason: 'Found inconsistent import specifier. This is an internal bug.',
+                description: `Expected import ${moduleName}:${specifierName} but found ${loweredImport.module}:${loweredImport.imported}`,
+                loc: GeneratedSource,
+            });
+        }
+        const sortedImport = [
+            ...importsMap.values(),
+        ].sort(({ imported: a }, { imported: b }) => a.localeCompare(b));
+        const importSpecifiers = sortedImport.map(specifier => {
+            return libExports.importSpecifier(libExports.identifier(specifier.name), libExports.identifier(specifier.imported));
+        });
+        const maybeExistingImports = existingImports.get(moduleName);
+        if (maybeExistingImports != null) {
+            maybeExistingImports.pushContainer('specifiers', importSpecifiers);
+        }
+        else {
+            stmts.push(libExports.importDeclaration(importSpecifiers, libExports.stringLiteral(moduleName)));
+        }
+    }
+    path.unshiftContainer('body', stmts);
+}
+function isNonNamespacedImport(importDeclPath) {
+    return (importDeclPath
+        .get('specifiers')
+        .every(specifier => specifier.isImportSpecifier()) &&
+        importDeclPath.node.importKind !== 'type' &&
+        importDeclPath.node.importKind !== 'typeof');
+}
+
+zod.z.enum([
+    'all_errors',
+    'critical_errors',
+    'none',
+]);
+const CompilerReactTargetSchema = zod.z.union([
+    zod.z.literal('17'),
+    zod.z.literal('18'),
+    zod.z.literal('19'),
+    zod.z.object({
+        kind: zod.z.literal('donotuse_meta_internal'),
+        runtimeModule: zod.z.string().default('react'),
+    }),
+]);
+zod.z.enum([
+    'infer',
+    'syntax',
+    'annotation',
+    'all',
+]);
+const defaultOptions = {
+    compilationMode: 'infer',
+    panicThreshold: 'none',
+    environment: parseEnvironmentConfig({}).unwrap(),
+    logger: null,
+    gating: null,
+    noEmit: false,
+    eslintSuppressionRules: null,
+    flowSuppressions: true,
+    ignoreUseNoForget: false,
+    sources: filename => {
+        return filename.indexOf('node_modules') === -1;
+    },
+    enableReanimatedCheck: true,
+    target: '19',
+};
+function parsePluginOptions(obj) {
+    if (obj == null || typeof obj !== 'object') {
+        return defaultOptions;
+    }
+    const parsedOptions = Object.create(null);
+    for (let [key, value] of Object.entries(obj)) {
+        if (typeof value === 'string') {
+            value = value.toLowerCase();
+        }
+        if (isCompilerFlag(key)) {
+            switch (key) {
+                case 'environment': {
+                    const environmentResult = parseEnvironmentConfig(value);
+                    if (environmentResult.isErr()) {
+                        CompilerError.throwInvalidConfig({
+                            reason: 'Error in validating environment config. This is an advanced setting and not meant to be used directly',
+                            description: environmentResult.unwrapErr().toString(),
+                            suggestions: null,
+                            loc: null,
+                        });
+                    }
+                    parsedOptions[key] = environmentResult.unwrap();
+                    break;
+                }
+                case 'target': {
+                    parsedOptions[key] = parseTargetConfig(value);
+                    break;
+                }
+                case 'gating': {
+                    if (value == null) {
+                        parsedOptions[key] = null;
+                    }
+                    else {
+                        parsedOptions[key] = tryParseExternalFunction(value);
+                    }
+                    break;
+                }
+                default: {
+                    parsedOptions[key] = value;
+                }
+            }
+        }
+    }
+    return Object.assign(Object.assign({}, defaultOptions), parsedOptions);
+}
+function parseTargetConfig(value) {
+    const parsed = CompilerReactTargetSchema.safeParse(value);
+    if (parsed.success) {
+        return parsed.data;
+    }
+    else {
+        CompilerError.throwInvalidConfig({
+            reason: 'Not a valid target',
+            description: `${zodValidationError.fromZodError(parsed.error)}`,
+            suggestions: null,
+            loc: null,
+        });
+    }
+}
+function isCompilerFlag(s) {
+    return hasOwnProperty$1(defaultOptions, s);
 }
 
 function hasModule(name) {
