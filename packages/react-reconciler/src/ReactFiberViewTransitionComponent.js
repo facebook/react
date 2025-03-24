@@ -32,12 +32,10 @@ export type ViewTransitionProps = {
   className?: ViewTransitionClass,
   enter?: ViewTransitionClass,
   exit?: ViewTransitionClass,
-  layout?: ViewTransitionClass,
   share?: ViewTransitionClass,
   update?: ViewTransitionClass,
   onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void,
   onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onLayout?: (instance: ViewTransitionInstance, types: Array<string>) => void,
   onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
   onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
 };

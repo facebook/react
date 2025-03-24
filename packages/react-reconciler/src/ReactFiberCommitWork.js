@@ -2517,8 +2517,6 @@ function commitAfterMutationEffectsOnFiber(
       break;
     }
     case ViewTransitionComponent: {
-      const wasMutated = (finishedWork.flags & Update) !== NoFlags;
-
       const prevContextChanged = viewTransitionContextChanged;
       const prevCancelableChildren = pushViewTransitionCancelableScope();
       viewTransitionContextChanged = false;
@@ -2554,12 +2552,7 @@ function commitAfterMutationEffectsOnFiber(
         // then we should probably issue an event since this instance is part of it.
       } else {
         const props: ViewTransitionProps = finishedWork.memoizedProps;
-        scheduleViewTransitionEvent(
-          finishedWork,
-          wasMutated || viewTransitionContextChanged
-            ? props.onUpdate
-            : props.onLayout,
-        );
+        scheduleViewTransitionEvent(finishedWork, props.onUpdate);
 
         // If this boundary did update, we cannot cancel its children so those are dropped.
         popViewTransitionCancelableScope(prevCancelableChildren);

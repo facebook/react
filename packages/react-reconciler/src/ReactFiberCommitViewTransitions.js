@@ -469,17 +469,13 @@ export function commitBeforeUpdateViewTransition(
   // For example, if update="foo" layout="none" and it turns out this was
   // a layout only change, then the "foo" class will be applied even though
   // it was not actually an update. Which is a bug.
-  let className: ?string = getViewTransitionClassName(
+  const className: ?string = getViewTransitionClassName(
     newProps.className,
     newProps.update,
   );
   if (className === 'none') {
-    className = getViewTransitionClassName(newProps.className, newProps.layout);
-    if (className === 'none') {
-      // If both update and layout are both "none" then we don't have to
-      // apply a name. Since we won't animate this boundary.
-      return;
-    }
+    // If update is "none" then we don't have to apply a name. Since we won't animate this boundary.
+    return;
   }
   applyViewTransitionToHostInstances(
     current.child,
@@ -500,7 +496,7 @@ export function commitNestedViewTransitions(changedParent: Fiber): void {
       const name = getViewTransitionName(props, child.stateNode);
       const className: ?string = getViewTransitionClassName(
         props.className,
-        props.layout,
+        props.update,
       );
       if (className !== 'none') {
         applyViewTransitionToHostInstances(
@@ -585,61 +581,6 @@ export function restoreNestedViewTransitions(changedParent: Fiber): void {
       restoreViewTransitionOnHostInstances(child.child, false);
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
       restoreNestedViewTransitions(child);
-    }
-    child = child.sibling;
-  }
-}
-
-export function cancelViewTransitionHostInstances(
-  child: null | Fiber,
-  oldName: string,
-  stopAtNestedViewTransitions: boolean,
-): void {
-  viewTransitionHostInstanceIdx = 0;
-  cancelViewTransitionHostInstancesRecursive(
-    child,
-    oldName,
-    stopAtNestedViewTransitions,
-  );
-}
-
-function cancelViewTransitionHostInstancesRecursive(
-  child: null | Fiber,
-  oldName: string,
-  stopAtNestedViewTransitions: boolean,
-): void {
-  if (!supportsMutation) {
-    return;
-  }
-  while (child !== null) {
-    if (child.tag === HostComponent) {
-      const instance: Instance = child.stateNode;
-      if (viewTransitionCancelableChildren === null) {
-        viewTransitionCancelableChildren = [];
-      }
-      viewTransitionCancelableChildren.push(
-        instance,
-        oldName,
-        child.memoizedProps,
-      );
-      viewTransitionHostInstanceIdx++;
-    } else if (
-      child.tag === OffscreenComponent &&
-      child.memoizedState !== null
-    ) {
-      // Skip any hidden subtrees. They were or are effectively not there.
-    } else if (
-      child.tag === ViewTransitionComponent &&
-      stopAtNestedViewTransitions
-    ) {
-      // Skip any nested view transitions for updates since in that case the
-      // inner most one is the one that handles the update.
-    } else {
-      cancelViewTransitionHostInstancesRecursive(
-        child.child,
-        oldName,
-        stopAtNestedViewTransitions,
-      );
     }
     child = child.sibling;
   }
@@ -792,40 +733,14 @@ export function measureUpdateViewTransition(
   const state: ViewTransitionState = newFiber.stateNode;
   const newName = getViewTransitionName(props, state);
   const oldName = getViewTransitionName(oldFiber.memoizedProps, state);
-  const updateClassName: ?string = getViewTransitionClassName(
+  // Whether it ends up having been updated or relayout we apply the update class name.
+  const className: ?string = getViewTransitionClassName(
     props.className,
     props.update,
   );
-  const layoutClassName: ?string = getViewTransitionClassName(
-    props.className,
-    props.layout,
-  );
-  let className: ?string;
-  if (updateClassName === 'none') {
-    if (layoutClassName === 'none') {
-      // If both update and layout class name were none, then we didn't apply any
-      // names in the before update phase so we shouldn't now neither.
-      return false;
-    }
-    // We don't care if this is mutated or children layout changed, but we still
-    // measure each instance to see if it moved and therefore should apply layout.
-    finishedWork.flags &= ~Update;
-    className = layoutClassName;
-  } else if ((finishedWork.flags & Update) !== NoFlags) {
-    // It was updated and we have an appropriate class name to apply.
-    className = updateClassName;
-  } else {
-    if (layoutClassName === 'none') {
-      // If we did not update, then all changes are considered a layout. We'll
-      // attempt to cancel.
-      // This should use the Fiber that got names applied in the snapshot phase
-      // since those are the ones we're trying to cancel.
-      cancelViewTransitionHostInstances(oldFiber.child, oldName, true);
-      return false;
-    }
-    // We didn't update but we might still apply layout so we measure each
-    // instance to see if it moved or resized.
-    className = layoutClassName;
+  if (className === 'none') {
+    // If update is "none" then we don't have to apply a name. Since we won't animate this boundary.
+    return false;
   }
   // If nothing changed due to a mutation, or children changing size
   // and the measurements end up unchanged, we should restore it to not animate.
@@ -873,7 +788,7 @@ export function measureNestedViewTransitions(
       const name = getViewTransitionName(props, state);
       const className: ?string = getViewTransitionClassName(
         props.className,
-        props.layout,
+        props.update,
       );
       let previousMeasurements: null | Array<InstanceMeasurement>;
       if (gesture) {
@@ -902,7 +817,7 @@ export function measureNestedViewTransitions(
         if (gesture) {
           // TODO: Schedule gesture events.
         } else {
-          scheduleViewTransitionEvent(child, props.onLayout);
+          scheduleViewTransitionEvent(child, props.onUpdate);
         }
       }
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
