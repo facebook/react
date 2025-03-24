@@ -426,6 +426,10 @@ jobs:
   process_artifacts_combined:
     name: Process artifacts combined
     needs: [build_and_lint, runtime_node_modules_cache]
+    permissions:
+      # https://github.com/actions/attest-build-provenance
+      id-token: write
+      attestations: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
