@@ -7871,7 +7871,7 @@ module.exports = function ($$$config) {
       if (30 === changedParent.tag) {
         var props = changedParent.memoizedProps,
           name = getViewTransitionName(props, changedParent.stateNode);
-        props = getViewTransitionClassName(props.className, props.layout);
+        props = getViewTransitionClassName(props.className, props.update);
         "none" !== props &&
           applyViewTransitionToHostInstances(
             changedParent.child,
@@ -7922,33 +7922,6 @@ module.exports = function ($$$config) {
         : 0 !== (changedParent.subtreeFlags & 33554432) &&
           restoreNestedViewTransitions(changedParent),
         (changedParent = changedParent.sibling);
-  }
-  function cancelViewTransitionHostInstancesRecursive(
-    child,
-    oldName,
-    stopAtNestedViewTransitions
-  ) {
-    if (supportsMutation)
-      for (; null !== child; ) {
-        if (5 === child.tag) {
-          var instance = child.stateNode;
-          null === viewTransitionCancelableChildren &&
-            (viewTransitionCancelableChildren = []);
-          viewTransitionCancelableChildren.push(
-            instance,
-            oldName,
-            child.memoizedProps
-          );
-          viewTransitionHostInstanceIdx++;
-        } else if (22 !== child.tag || null === child.memoizedState)
-          (30 === child.tag && stopAtNestedViewTransitions) ||
-            cancelViewTransitionHostInstancesRecursive(
-              child.child,
-              oldName,
-              stopAtNestedViewTransitions
-            );
-        child = child.sibling;
-      }
   }
   function measureViewTransitionHostInstancesRecursive(
     parentViewTransition,
@@ -8020,7 +7993,7 @@ module.exports = function ($$$config) {
         var props = changedParent.memoizedProps,
           state = changedParent.stateNode,
           name = getViewTransitionName(props, state),
-          className = getViewTransitionClassName(props.className, props.layout);
+          className = getViewTransitionClassName(props.className, props.update);
         if (gesture) {
           state = state.clones;
           var previousMeasurements =
@@ -8043,7 +8016,7 @@ module.exports = function ($$$config) {
         0 !== (changedParent.flags & 4) &&
           name &&
           (gesture ||
-            scheduleViewTransitionEvent(changedParent, props.onLayout));
+            scheduleViewTransitionEvent(changedParent, props.onUpdate));
       } else
         0 !== (changedParent.subtreeFlags & 33554432) &&
           measureNestedViewTransitions(changedParent, gesture);
@@ -8188,34 +8161,25 @@ module.exports = function ($$$config) {
           break;
         case 30:
           if (enableViewTransition) {
-            if (isViewTransitionEligible && null !== current)
-              a: {
-                isViewTransitionEligible = getViewTransitionName(
-                  current.memoizedProps,
-                  current.stateNode
-                );
-                flags = fiber.memoizedProps;
-                JSCompiler_temp = getViewTransitionClassName(
-                  flags.className,
-                  flags.update
-                );
-                if (
-                  "none" === JSCompiler_temp &&
-                  ((JSCompiler_temp = getViewTransitionClassName(
-                    flags.className,
-                    flags.layout
-                  )),
-                  "none" === JSCompiler_temp)
-                )
-                  break a;
+            isViewTransitionEligible &&
+              null !== current &&
+              ((isViewTransitionEligible = getViewTransitionName(
+                current.memoizedProps,
+                current.stateNode
+              )),
+              (flags = fiber.memoizedProps),
+              (flags = getViewTransitionClassName(
+                flags.className,
+                flags.update
+              )),
+              "none" !== flags &&
                 applyViewTransitionToHostInstances(
                   current.child,
                   isViewTransitionEligible,
-                  JSCompiler_temp,
+                  flags,
                   (current.memoizedState = []),
                   !0
-                );
-              }
+                ));
             break;
           }
         default:
@@ -9367,62 +9331,41 @@ module.exports = function ($$$config) {
               : recursivelyTraverseAfterMutationEffects(root, finishedWork));
           break;
         case 30:
-          i = 0 !== (finishedWork.flags & 4);
-          var prevContextChanged = viewTransitionContextChanged,
-            prevCancelableChildren = pushViewTransitionCancelableScope();
+          i = viewTransitionContextChanged;
+          var prevCancelableChildren = pushViewTransitionCancelableScope();
           viewTransitionContextChanged = !1;
           recursivelyTraverseAfterMutationEffects(root, finishedWork);
           viewTransitionContextChanged && (finishedWork.flags |= 4);
-          a: {
-            var props = finishedWork.memoizedProps,
-              state = finishedWork.stateNode;
-            root = getViewTransitionName(props, state);
-            state = getViewTransitionName(current.memoizedProps, state);
-            var updateClassName = getViewTransitionClassName(
-              props.className,
-              props.update
-            );
-            props = getViewTransitionClassName(props.className, props.layout);
-            if ("none" === updateClassName) {
-              if ("none" === props) {
-                current = !1;
-                break a;
-              }
-              finishedWork.flags &= -5;
-              updateClassName = props;
-            } else if (0 === (finishedWork.flags & 4)) {
-              if ("none" === props) {
-                current = current.child;
-                viewTransitionHostInstanceIdx = 0;
-                cancelViewTransitionHostInstancesRecursive(current, state, !0);
-                current = !1;
-                break a;
-              }
-              updateClassName = props;
-            }
-            props = current.memoizedState;
-            current.memoizedState = null;
-            current = finishedWork.child;
-            viewTransitionHostInstanceIdx = 0;
-            current = measureViewTransitionHostInstancesRecursive(
-              finishedWork,
-              current,
-              root,
-              state,
-              updateClassName,
-              props,
-              !0
-            );
-            viewTransitionHostInstanceIdx !==
-              (null === props ? 0 : props.length) && (finishedWork.flags |= 32);
-          }
-          0 !== (finishedWork.flags & 4) && current
-            ? ((current = finishedWork.memoizedProps),
-              scheduleViewTransitionEvent(
+          var props = finishedWork.memoizedProps,
+            state = finishedWork.stateNode;
+          root = getViewTransitionName(props, state);
+          state = getViewTransitionName(current.memoizedProps, state);
+          var className = getViewTransitionClassName(
+            props.className,
+            props.update
+          );
+          "none" === className
+            ? (current = !1)
+            : ((props = current.memoizedState),
+              (current.memoizedState = null),
+              (current = finishedWork.child),
+              (viewTransitionHostInstanceIdx = 0),
+              (current = measureViewTransitionHostInstancesRecursive(
                 finishedWork,
-                i || viewTransitionContextChanged
-                  ? current.onUpdate
-                  : current.onLayout
+                current,
+                root,
+                state,
+                className,
+                props,
+                !0
+              )),
+              viewTransitionHostInstanceIdx !==
+                (null === props ? 0 : props.length) &&
+                (finishedWork.flags |= 32));
+          0 !== (finishedWork.flags & 4) && current
+            ? (scheduleViewTransitionEvent(
+                finishedWork,
+                finishedWork.memoizedProps.onUpdate
               ),
               (viewTransitionCancelableChildren = prevCancelableChildren))
             : null !== prevCancelableChildren &&
@@ -9432,7 +9375,7 @@ module.exports = function ($$$config) {
               ),
               (viewTransitionCancelableChildren = prevCancelableChildren));
           viewTransitionContextChanged =
-            0 !== (finishedWork.flags & 32) ? !0 : prevContextChanged;
+            0 !== (finishedWork.flags & 32) ? !0 : i;
           break;
         default:
           recursivelyTraverseAfterMutationEffects(root, finishedWork);
@@ -13586,7 +13529,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-04bf10e6-20250324"
+      reconcilerVersion: "19.1.0-www-modern-42a57ea8-20250324"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

@@ -10585,7 +10585,7 @@ __DEV__ &&
         if (30 === changedParent.tag) {
           var props = changedParent.memoizedProps,
             name = getViewTransitionName(props, changedParent.stateNode);
-          props = getViewTransitionClassName(props.className, props.layout);
+          props = getViewTransitionClassName(props.className, props.update);
           if ("none" !== props) {
             var collectMeasurements = (changedParent.memoizedState = []);
             applyViewTransitionToHostInstancesRecursive(
@@ -10740,37 +10740,28 @@ __DEV__ &&
             break;
           case 30:
             if (enableViewTransition) {
-              if (isViewTransitionEligible && null !== current)
-                a: {
-                  isViewTransitionEligible = current;
-                  current = finishedWork;
-                  finishedWork = getViewTransitionName(
-                    isViewTransitionEligible.memoizedProps,
-                    isViewTransitionEligible.stateNode
-                  );
-                  flags = current.memoizedProps;
-                  current = getViewTransitionClassName(
-                    flags.className,
-                    flags.update
-                  );
-                  if (
-                    "none" === current &&
-                    ((current = getViewTransitionClassName(
-                      flags.className,
-                      flags.layout
-                    )),
-                    "none" === current)
-                  )
-                    break a;
-                  flags = isViewTransitionEligible.memoizedState = [];
+              isViewTransitionEligible &&
+                null !== current &&
+                ((isViewTransitionEligible = current),
+                (current = finishedWork),
+                (finishedWork = getViewTransitionName(
+                  isViewTransitionEligible.memoizedProps,
+                  isViewTransitionEligible.stateNode
+                )),
+                (current = current.memoizedProps),
+                (current = getViewTransitionClassName(
+                  current.className,
+                  current.update
+                )),
+                "none" !== current &&
+                  ((flags = isViewTransitionEligible.memoizedState = []),
                   applyViewTransitionToHostInstancesRecursive(
                     isViewTransitionEligible.child,
                     finishedWork,
                     current,
                     flags,
                     !0
-                  );
-                }
+                  )));
               break;
             }
           default:
@@ -18255,10 +18246,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-04bf10e6-20250324",
+        version: "19.1.0-www-modern-42a57ea8-20250324",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-04bf10e6-20250324"
+        reconcilerVersion: "19.1.0-www-modern-42a57ea8-20250324"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18292,7 +18283,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-modern-04bf10e6-20250324";
+    exports.version = "19.1.0-www-modern-42a57ea8-20250324";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

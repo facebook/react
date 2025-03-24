@@ -7237,7 +7237,7 @@ function commitNestedViewTransitions(changedParent) {
     if (30 === changedParent.tag) {
       var props = changedParent.memoizedProps,
         name = getViewTransitionName(props, changedParent.stateNode);
-      props = getViewTransitionClassName(props.className, props.layout);
+      props = getViewTransitionClassName(props.className, props.update);
       if ("none" !== props) {
         var collectMeasurements = (changedParent.memoizedState = []);
         applyViewTransitionToHostInstancesRecursive(
@@ -7409,35 +7409,23 @@ function commitBeforeMutationEffects_complete(
         break;
       case 30:
         if (enableViewTransition) {
-          if (isViewTransitionEligible && null !== current)
-            a: {
-              isViewTransitionEligible = getViewTransitionName(
-                current.memoizedProps,
-                current.stateNode
-              );
-              JSCompiler_temp = fiber.memoizedProps;
-              flags = getViewTransitionClassName(
-                JSCompiler_temp.className,
-                JSCompiler_temp.update
-              );
-              if (
-                "none" === flags &&
-                ((flags = getViewTransitionClassName(
-                  JSCompiler_temp.className,
-                  JSCompiler_temp.layout
-                )),
-                "none" === flags)
-              )
-                break a;
-              JSCompiler_temp = current.memoizedState = [];
+          isViewTransitionEligible &&
+            null !== current &&
+            ((isViewTransitionEligible = getViewTransitionName(
+              current.memoizedProps,
+              current.stateNode
+            )),
+            (flags = fiber.memoizedProps),
+            (flags = getViewTransitionClassName(flags.className, flags.update)),
+            "none" !== flags &&
+              ((JSCompiler_temp = current.memoizedState = []),
               applyViewTransitionToHostInstancesRecursive(
                 current.child,
                 isViewTransitionEligible,
                 flags,
                 JSCompiler_temp,
                 !0
-              );
-            }
+              )));
           break;
         }
       default:
@@ -10989,10 +10977,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1572 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-04bf10e6-20250324",
+  version: "19.1.0-www-modern-42a57ea8-20250324",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-04bf10e6-20250324"
+  reconcilerVersion: "19.1.0-www-modern-42a57ea8-20250324"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1573 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11018,4 +11006,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-04bf10e6-20250324";
+exports.version = "19.1.0-www-modern-42a57ea8-20250324";

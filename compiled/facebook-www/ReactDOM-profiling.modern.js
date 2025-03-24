@@ -9792,7 +9792,7 @@ function commitNestedViewTransitions(changedParent) {
     if (30 === changedParent.tag) {
       var props = changedParent.memoizedProps,
         name = getViewTransitionName(props, changedParent.stateNode);
-      props = getViewTransitionClassName(props.className, props.layout);
+      props = getViewTransitionClassName(props.className, props.update);
       "none" !== props &&
         applyViewTransitionToHostInstances(
           changedParent.child,
@@ -9843,32 +9843,6 @@ function restoreNestedViewTransitions(changedParent) {
       : 0 !== (changedParent.subtreeFlags & 33554432) &&
         restoreNestedViewTransitions(changedParent),
       (changedParent = changedParent.sibling);
-}
-function cancelViewTransitionHostInstancesRecursive(
-  child,
-  oldName,
-  stopAtNestedViewTransitions
-) {
-  for (; null !== child; ) {
-    if (5 === child.tag) {
-      var instance = child.stateNode;
-      null === viewTransitionCancelableChildren &&
-        (viewTransitionCancelableChildren = []);
-      viewTransitionCancelableChildren.push(
-        instance,
-        oldName,
-        child.memoizedProps
-      );
-      viewTransitionHostInstanceIdx++;
-    } else if (22 !== child.tag || null === child.memoizedState)
-      (30 === child.tag && stopAtNestedViewTransitions) ||
-        cancelViewTransitionHostInstancesRecursive(
-          child.child,
-          oldName,
-          stopAtNestedViewTransitions
-        );
-    child = child.sibling;
-  }
 }
 function measureViewTransitionHostInstancesRecursive(
   parentViewTransition,
@@ -9952,7 +9926,7 @@ function measureNestedViewTransitions(changedParent, gesture) {
       var props = changedParent.memoizedProps,
         state = changedParent.stateNode,
         name = getViewTransitionName(props, state),
-        className = getViewTransitionClassName(props.className, props.layout);
+        className = getViewTransitionClassName(props.className, props.update);
       if (gesture) {
         state = state.clones;
         var previousMeasurements =
@@ -9974,7 +9948,7 @@ function measureNestedViewTransitions(changedParent, gesture) {
       );
       0 !== (changedParent.flags & 4) &&
         name &&
-        (gesture || scheduleViewTransitionEvent(changedParent, props.onLayout));
+        (gesture || scheduleViewTransitionEvent(changedParent, props.onUpdate));
     } else
       0 !== (changedParent.subtreeFlags & 33554432) &&
         measureNestedViewTransitions(changedParent, gesture);
@@ -10219,34 +10193,22 @@ function commitBeforeMutationEffects_complete(
         break;
       case 30:
         if (enableViewTransition) {
-          if (isViewTransitionEligible && null !== current)
-            a: {
-              isViewTransitionEligible = getViewTransitionName(
-                current.memoizedProps,
-                current.stateNode
-              );
-              flags = fiber.memoizedProps;
-              JSCompiler_temp = getViewTransitionClassName(
-                flags.className,
-                flags.update
-              );
-              if (
-                "none" === JSCompiler_temp &&
-                ((JSCompiler_temp = getViewTransitionClassName(
-                  flags.className,
-                  flags.layout
-                )),
-                "none" === JSCompiler_temp)
-              )
-                break a;
+          isViewTransitionEligible &&
+            null !== current &&
+            ((isViewTransitionEligible = getViewTransitionName(
+              current.memoizedProps,
+              current.stateNode
+            )),
+            (flags = fiber.memoizedProps),
+            (flags = getViewTransitionClassName(flags.className, flags.update)),
+            "none" !== flags &&
               applyViewTransitionToHostInstances(
                 current.child,
                 isViewTransitionEligible,
-                JSCompiler_temp,
+                flags,
                 (current.memoizedState = []),
                 !0
-              );
-            }
+              ));
           break;
         }
       default:
@@ -11504,12 +11466,12 @@ function commitAfterMutationEffectsOnFiber(finishedWork, root) {
           finishedWork = viewTransitionCancelableChildren;
           if (null !== finishedWork)
             for (var i = 0; i < finishedWork.length; i += 3) {
-              var instance = finishedWork[i],
-                oldName = finishedWork[i + 1];
-              restoreViewTransitionName(instance, finishedWork[i + 2]);
-              instance = instance.ownerDocument.documentElement;
-              null !== instance &&
-                instance.animate(
+              current = finishedWork[i];
+              var oldName = finishedWork[i + 1];
+              restoreViewTransitionName(current, finishedWork[i + 2]);
+              current = current.ownerDocument.documentElement;
+              null !== current &&
+                current.animate(
                   { opacity: [0, 0], pointerEvents: ["none", "none"] },
                   {
                     duration: 0,
@@ -11555,69 +11517,47 @@ function commitAfterMutationEffectsOnFiber(finishedWork, root) {
             : recursivelyTraverseAfterMutationEffects(root, finishedWork));
         break;
       case 30:
-        i = 0 !== (finishedWork.flags & 4);
-        oldName = viewTransitionContextChanged;
-        instance = pushViewTransitionCancelableScope();
+        i = viewTransitionContextChanged;
+        oldName = pushViewTransitionCancelableScope();
         viewTransitionContextChanged = !1;
         recursivelyTraverseAfterMutationEffects(root, finishedWork);
         viewTransitionContextChanged && (finishedWork.flags |= 4);
-        a: {
-          var props = finishedWork.memoizedProps,
-            state = finishedWork.stateNode;
-          root = getViewTransitionName(props, state);
-          state = getViewTransitionName(current.memoizedProps, state);
-          var updateClassName = getViewTransitionClassName(
-            props.className,
-            props.update
-          );
-          props = getViewTransitionClassName(props.className, props.layout);
-          if ("none" === updateClassName) {
-            if ("none" === props) {
-              current = !1;
-              break a;
-            }
-            finishedWork.flags &= -5;
-            updateClassName = props;
-          } else if (0 === (finishedWork.flags & 4)) {
-            if ("none" === props) {
-              current = current.child;
-              viewTransitionHostInstanceIdx = 0;
-              cancelViewTransitionHostInstancesRecursive(current, state, !0);
-              current = !1;
-              break a;
-            }
-            updateClassName = props;
-          }
-          props = current.memoizedState;
-          current.memoizedState = null;
-          current = finishedWork.child;
-          viewTransitionHostInstanceIdx = 0;
-          current = measureViewTransitionHostInstancesRecursive(
-            finishedWork,
-            current,
-            root,
-            state,
-            updateClassName,
-            props,
-            !0
-          );
-          viewTransitionHostInstanceIdx !==
-            (null === props ? 0 : props.length) && (finishedWork.flags |= 32);
-        }
-        0 !== (finishedWork.flags & 4) && current
-          ? ((current = finishedWork.memoizedProps),
-            scheduleViewTransitionEvent(
+        var props = finishedWork.memoizedProps,
+          state = finishedWork.stateNode;
+        root = getViewTransitionName(props, state);
+        state = getViewTransitionName(current.memoizedProps, state);
+        var className = getViewTransitionClassName(
+          props.className,
+          props.update
+        );
+        "none" === className
+          ? (current = !1)
+          : ((props = current.memoizedState),
+            (current.memoizedState = null),
+            (current = finishedWork.child),
+            (viewTransitionHostInstanceIdx = 0),
+            (current = measureViewTransitionHostInstancesRecursive(
               finishedWork,
-              i || viewTransitionContextChanged
-                ? current.onUpdate
-                : current.onLayout
+              current,
+              root,
+              state,
+              className,
+              props,
+              !0
+            )),
+            viewTransitionHostInstanceIdx !==
+              (null === props ? 0 : props.length) &&
+              (finishedWork.flags |= 32));
+        0 !== (finishedWork.flags & 4) && current
+          ? (scheduleViewTransitionEvent(
+              finishedWork,
+              finishedWork.memoizedProps.onUpdate
             ),
-            (viewTransitionCancelableChildren = instance))
-          : null !== instance &&
-            (instance.push.apply(instance, viewTransitionCancelableChildren),
-            (viewTransitionCancelableChildren = instance));
-        viewTransitionContextChanged =
-          0 !== (finishedWork.flags & 32) ? !0 : oldName;
+            (viewTransitionCancelableChildren = oldName))
+          : null !== oldName &&
+            (oldName.push.apply(oldName, viewTransitionCancelableChildren),
+            (viewTransitionCancelableChildren = oldName));
+        viewTransitionContextChanged = 0 !== (finishedWork.flags & 32) ? !0 : i;
         break;
       default:
         recursivelyTraverseAfterMutationEffects(root, finishedWork);
@@ -16334,20 +16274,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1901 = 0;
-  i$jscomp$inline_1901 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1901++
+  var i$jscomp$inline_1899 = 0;
+  i$jscomp$inline_1899 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1899++
 ) {
-  var eventName$jscomp$inline_1902 =
-      simpleEventPluginEvents[i$jscomp$inline_1901],
-    domEventName$jscomp$inline_1903 =
-      eventName$jscomp$inline_1902.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1904 =
-      eventName$jscomp$inline_1902[0].toUpperCase() +
-      eventName$jscomp$inline_1902.slice(1);
+  var eventName$jscomp$inline_1900 =
+      simpleEventPluginEvents[i$jscomp$inline_1899],
+    domEventName$jscomp$inline_1901 =
+      eventName$jscomp$inline_1900.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1902 =
+      eventName$jscomp$inline_1900[0].toUpperCase() +
+      eventName$jscomp$inline_1900.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1903,
-    "on" + capitalizedEvent$jscomp$inline_1904
+    domEventName$jscomp$inline_1901,
+    "on" + capitalizedEvent$jscomp$inline_1902
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -20506,16 +20446,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2141 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2139 = React.version;
 if (
-  "19.1.0-www-modern-04bf10e6-20250324" !==
-  isomorphicReactPackageVersion$jscomp$inline_2141
+  "19.1.0-www-modern-42a57ea8-20250324" !==
+  isomorphicReactPackageVersion$jscomp$inline_2139
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2141,
-      "19.1.0-www-modern-04bf10e6-20250324"
+      isomorphicReactPackageVersion$jscomp$inline_2139,
+      "19.1.0-www-modern-42a57ea8-20250324"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20531,27 +20471,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2143 = {
+var internals$jscomp$inline_2141 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-04bf10e6-20250324",
+  version: "19.1.0-www-modern-42a57ea8-20250324",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-04bf10e6-20250324"
+  reconcilerVersion: "19.1.0-www-modern-42a57ea8-20250324"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2143.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2143.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2141.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2141.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2700 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2694 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2700.isDisabled &&
-    hook$jscomp$inline_2700.supportsFiber
+    !hook$jscomp$inline_2694.isDisabled &&
+    hook$jscomp$inline_2694.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2700.inject(
-        internals$jscomp$inline_2143
+      (rendererID = hook$jscomp$inline_2694.inject(
+        internals$jscomp$inline_2141
       )),
-        (injectedHook = hook$jscomp$inline_2700);
+        (injectedHook = hook$jscomp$inline_2694);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -20903,7 +20843,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-04bf10e6-20250324";
+exports.version = "19.1.0-www-modern-42a57ea8-20250324";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -11886,7 +11886,7 @@ __DEV__ &&
         if (30 === changedParent.tag) {
           var props = changedParent.memoizedProps,
             name = getViewTransitionName(props, changedParent.stateNode);
-          props = getViewTransitionClassName(props.className, props.layout);
+          props = getViewTransitionClassName(props.className, props.update);
           "none" !== props &&
             applyViewTransitionToHostInstances(
               changedParent.child,
@@ -11937,33 +11937,6 @@ __DEV__ &&
           : 0 !== (changedParent.subtreeFlags & 33554432) &&
             restoreNestedViewTransitions(changedParent),
           (changedParent = changedParent.sibling);
-    }
-    function cancelViewTransitionHostInstancesRecursive(
-      child,
-      oldName,
-      stopAtNestedViewTransitions
-    ) {
-      if (supportsMutation)
-        for (; null !== child; ) {
-          if (5 === child.tag) {
-            var instance = child.stateNode;
-            null === viewTransitionCancelableChildren &&
-              (viewTransitionCancelableChildren = []);
-            viewTransitionCancelableChildren.push(
-              instance,
-              oldName,
-              child.memoizedProps
-            );
-            viewTransitionHostInstanceIdx++;
-          } else if (22 !== child.tag || null === child.memoizedState)
-            (30 === child.tag && stopAtNestedViewTransitions) ||
-              cancelViewTransitionHostInstancesRecursive(
-                child.child,
-                oldName,
-                stopAtNestedViewTransitions
-              );
-          child = child.sibling;
-        }
     }
     function measureViewTransitionHostInstancesRecursive(
       parentViewTransition,
@@ -12037,7 +12010,7 @@ __DEV__ &&
             name = getViewTransitionName(props, state),
             className = getViewTransitionClassName(
               props.className,
-              props.layout
+              props.update
             );
           if (gesture) {
             state = state.clones;
@@ -12062,7 +12035,7 @@ __DEV__ &&
           0 !== (changedParent.flags & 4) &&
             className &&
             (gesture ||
-              scheduleViewTransitionEvent(changedParent, props.onLayout));
+              scheduleViewTransitionEvent(changedParent, props.onUpdate));
         } else
           0 !== (changedParent.subtreeFlags & 33554432) &&
             measureNestedViewTransitions(changedParent, gesture);
@@ -12194,36 +12167,27 @@ __DEV__ &&
             break;
           case 30:
             if (enableViewTransition) {
-              if (isViewTransitionEligible && null !== current)
-                a: {
-                  isViewTransitionEligible = current;
-                  current = finishedWork;
-                  finishedWork = getViewTransitionName(
-                    isViewTransitionEligible.memoizedProps,
-                    isViewTransitionEligible.stateNode
-                  );
-                  current = current.memoizedProps;
-                  flags = getViewTransitionClassName(
-                    current.className,
-                    current.update
-                  );
-                  if (
-                    "none" === flags &&
-                    ((flags = getViewTransitionClassName(
-                      current.className,
-                      current.layout
-                    )),
-                    "none" === flags)
-                  )
-                    break a;
+              isViewTransitionEligible &&
+                null !== current &&
+                ((isViewTransitionEligible = current),
+                (current = finishedWork),
+                (finishedWork = getViewTransitionName(
+                  isViewTransitionEligible.memoizedProps,
+                  isViewTransitionEligible.stateNode
+                )),
+                (current = current.memoizedProps),
+                (current = getViewTransitionClassName(
+                  current.className,
+                  current.update
+                )),
+                "none" !== current &&
                   applyViewTransitionToHostInstances(
                     isViewTransitionEligible.child,
                     finishedWork,
-                    flags,
+                    current,
                     (isViewTransitionEligible.memoizedState = []),
                     !0
-                  );
-                }
+                  ));
               break;
             }
           default:
@@ -13548,67 +13512,41 @@ __DEV__ &&
                 : recursivelyTraverseAfterMutationEffects(root, finishedWork));
             break;
           case 30:
-            i = 0 !== (finishedWork.flags & 4);
-            var prevContextChanged = viewTransitionContextChanged,
-              prevCancelableChildren = pushViewTransitionCancelableScope();
+            i = viewTransitionContextChanged;
+            var prevCancelableChildren = pushViewTransitionCancelableScope();
             viewTransitionContextChanged = !1;
             recursivelyTraverseAfterMutationEffects(root, finishedWork);
             viewTransitionContextChanged && (finishedWork.flags |= 4);
-            a: {
-              var props = finishedWork.memoizedProps,
-                state = finishedWork.stateNode;
-              root = getViewTransitionName(props, state);
-              state = getViewTransitionName(current.memoizedProps, state);
-              var updateClassName = getViewTransitionClassName(
-                props.className,
-                props.update
-              );
-              props = getViewTransitionClassName(props.className, props.layout);
-              if ("none" === updateClassName) {
-                if ("none" === props) {
-                  current = !1;
-                  break a;
-                }
-                finishedWork.flags &= -5;
-                updateClassName = props;
-              } else if (0 === (finishedWork.flags & 4)) {
-                if ("none" === props) {
-                  current = current.child;
-                  viewTransitionHostInstanceIdx = 0;
-                  cancelViewTransitionHostInstancesRecursive(
-                    current,
-                    state,
-                    !0
-                  );
-                  current = !1;
-                  break a;
-                }
-                updateClassName = props;
-              }
-              props = current.memoizedState;
-              current.memoizedState = null;
-              current = finishedWork.child;
-              viewTransitionHostInstanceIdx = 0;
-              current = measureViewTransitionHostInstancesRecursive(
-                finishedWork,
-                current,
-                root,
-                state,
-                updateClassName,
-                props,
-                !0
-              );
-              viewTransitionHostInstanceIdx !==
-                (null === props ? 0 : props.length) &&
-                (finishedWork.flags |= 32);
-            }
-            0 !== (finishedWork.flags & 4) && current
-              ? ((current = finishedWork.memoizedProps),
-                scheduleViewTransitionEvent(
+            var props = finishedWork.memoizedProps,
+              state = finishedWork.stateNode;
+            root = getViewTransitionName(props, state);
+            state = getViewTransitionName(current.memoizedProps, state);
+            var className = getViewTransitionClassName(
+              props.className,
+              props.update
+            );
+            "none" === className
+              ? (current = !1)
+              : ((props = current.memoizedState),
+                (current.memoizedState = null),
+                (current = finishedWork.child),
+                (viewTransitionHostInstanceIdx = 0),
+                (current = measureViewTransitionHostInstancesRecursive(
                   finishedWork,
-                  i || viewTransitionContextChanged
-                    ? current.onUpdate
-                    : current.onLayout
+                  current,
+                  root,
+                  state,
+                  className,
+                  props,
+                  !0
+                )),
+                viewTransitionHostInstanceIdx !==
+                  (null === props ? 0 : props.length) &&
+                  (finishedWork.flags |= 32));
+            0 !== (finishedWork.flags & 4) && current
+              ? (scheduleViewTransitionEvent(
+                  finishedWork,
+                  finishedWork.memoizedProps.onUpdate
                 ),
                 (viewTransitionCancelableChildren = prevCancelableChildren))
               : null !== prevCancelableChildren &&
@@ -13618,7 +13556,7 @@ __DEV__ &&
                 ),
                 (viewTransitionCancelableChildren = prevCancelableChildren));
             viewTransitionContextChanged =
-              0 !== (finishedWork.flags & 32) ? !0 : prevContextChanged;
+              0 !== (finishedWork.flags & 32) ? !0 : i;
             break;
           default:
             recursivelyTraverseAfterMutationEffects(root, finishedWork);
@@ -20964,7 +20902,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-04bf10e6-20250324"
+        reconcilerVersion: "19.1.0-www-modern-42a57ea8-20250324"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
