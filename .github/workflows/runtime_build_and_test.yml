@@ -7,6 +7,8 @@ on:
     paths-ignore:
       - compiler/**
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
@@ -768,6 +770,9 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' && github.event.pull_request.base.ref == 'main' }}
     name: Run sizebot
     needs: [build_and_lint]
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

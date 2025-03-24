@@ -38,6 +38,9 @@ export type SharedStateClient = {
 
   // ReactDebugCurrentFrame
   getCurrentStack: null | (() => string),
+
+  // ReactOwnerStackReset
+  recentlyCreatedOwnerStacks: 0,
 };
 
 export type RendererTask = boolean => RendererTask | null;
@@ -58,6 +61,7 @@ if (__DEV__) {
   ReactSharedInternals.thrownErrors = [];
   // Stack implementation injected by the current renderer.
   ReactSharedInternals.getCurrentStack = (null: null | (() => string));
+  ReactSharedInternals.recentlyCreatedOwnerStacks = 0;
 }
 
 export default ReactSharedInternals;

@@ -943,31 +943,39 @@ function callsHooksOrCreatesJsx(
   return invokesHooks || createsJsx;
 }
 
+function isNonNode(node?: t.Expression | null): boolean {
+  if (!node) {
+    return true;
+  }
+  switch (node.type) {
+    case 'ObjectExpression':
+    case 'ArrowFunctionExpression':
+    case 'FunctionExpression':
+    case 'BigIntLiteral':
+    case 'ClassExpression':
+    case 'NewExpression': // technically `new Array()` is legit, but unlikely
+      return true;
+  }
+  return false;
+}
+
 function returnsNonNode(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
 ): boolean {
-  let hasReturn = false;
   let returnsNonNode = false;
+  if (
+    // node.traverse#ArrowFunctionExpression isn't called for the root node
+    node.type === 'ArrowFunctionExpression' &&
+    node.node.body.type !== 'BlockStatement'
+  ) {
+    returnsNonNode = isNonNode(node.node.body);
+  }
 
   node.traverse({
     ReturnStatement(ret) {
-      hasReturn = true;
-      const argument = ret.node.argument;
-      if (argument == null) {
-        returnsNonNode = true;
-      } else {
-        switch (argument.type) {
-          case 'ObjectExpression':
-          case 'ArrowFunctionExpression':
-          case 'FunctionExpression':
-          case 'BigIntLiteral':
-          case 'ClassExpression':
-          case 'NewExpression': // technically `new Array()` is legit, but unlikely
-            returnsNonNode = true;
-        }
-      }
+      returnsNonNode = isNonNode(ret.node.argument);
     },
     // Skip traversing all nested functions and their return statements
     ArrowFunctionExpression: skipNestedFunctions(node),
@@ -976,7 +984,7 @@ function returnsNonNode(
     ObjectMethod: node => node.skip(),
   });
 
-  return !hasReturn || returnsNonNode;
+  return returnsNonNode;
 }
 
 /*

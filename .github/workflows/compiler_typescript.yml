@@ -8,6 +8,8 @@ on:
       - compiler/**
       - .github/workflows/compiler_typescript.yml
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true

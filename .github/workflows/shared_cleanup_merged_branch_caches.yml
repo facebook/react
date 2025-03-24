@@ -11,6 +11,8 @@ on:
         required: true
         type: string
 
+permissions: {}
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest

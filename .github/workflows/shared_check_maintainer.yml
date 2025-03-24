@@ -14,6 +14,8 @@ on:
       is_core_team:
         value: ${{ jobs.check_maintainer.outputs.is_core_team }}
 
+permissions: {}
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
   # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
@@ -22,6 +24,9 @@ env:
 jobs:
   check_maintainer:
     runs-on: ubuntu-latest
+    permissions:
+      # We fetch the contents of the MAINTAINERS file
+      contents: read
     outputs:
       is_core_team: ${{ steps.check_if_actor_is_maintainer.outputs.result }}
     steps:

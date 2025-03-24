@@ -1669,6 +1669,12 @@ function customizeViewTransitionError(
   return error;
 }
 
+/** @noinline */
+function forceLayout(ownerDocument: Document) {
+  // This function exists to trick minifiers to not remove this unused member expression.
+  return (ownerDocument.documentElement: any).clientHeight;
+}
+
 export function startViewTransition(
   rootContainer: Container,
   transitionTypes: null | TransitionTypes,
@@ -1698,8 +1704,7 @@ export function startViewTransition(
         mutationCallback();
         if (previousFontLoadingStatus === 'loaded') {
           // Force layout calculation to trigger font loading.
-          // eslint-disable-next-line ft-flow/no-unused-expressions
-          (ownerDocument.documentElement: any).clientHeight;
+          forceLayout(ownerDocument);
           if (
             // $FlowFixMe[prop-missing]
             ownerDocument.fonts.status === 'loading'
@@ -1898,6 +1903,10 @@ export function startGestureTransition(
       ? (rootContainer: any)
       : rootContainer.ownerDocument;
   try {
+    // Force layout before we start the Transition. This works around a bug in Safari
+    // if one of the clones end up being a stylesheet that isn't loaded or uncached.
+    // https://bugs.webkit.org/show_bug.cgi?id=290146
+    forceLayout(ownerDocument);
     // $FlowFixMe[prop-missing]
     const transition = ownerDocument.startViewTransition({
       update: mutationCallback,
