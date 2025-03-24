@@ -23,6 +23,7 @@ jobs:
       dist_tag: canary,next
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish_prerelease_experimental:
     name: Publish to Experimental channel
@@ -41,3 +42,4 @@ jobs:
       dist_tag: experimental
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
