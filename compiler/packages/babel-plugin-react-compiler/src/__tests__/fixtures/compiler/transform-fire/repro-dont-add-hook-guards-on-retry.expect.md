@@ -23,7 +23,6 @@ function Component(props, useDynamicHook) {
 ## Code
 
 ```javascript
-import { $dispatcherGuard } from "react-compiler-runtime";
 import { useFire } from "react/compiler-runtime";
 import { useEffect, fire } from "react";
 

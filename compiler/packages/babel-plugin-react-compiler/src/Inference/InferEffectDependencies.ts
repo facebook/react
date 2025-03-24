@@ -249,6 +249,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
     // Renumber instructions and fix scope ranges
     markInstructionIds(fn.body);
     fixScopeAndIdentifierRanges(fn.body);
+    fn.env.hasInferredEffect = true;
   }
 }
 
