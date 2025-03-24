@@ -29,8 +29,10 @@ import {
   ValueKind,
   ValueReason,
   isArrayType,
+  isMapType,
   isMutableEffect,
   isObjectType,
+  isSetType,
 } from '../HIR/HIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
 import {
@@ -469,6 +471,25 @@ class InferenceState {
         }
         break;
       }
+      case Effect.ConditionallyMutateIterator: {
+        if (
+          valueKind.kind === ValueKind.Mutable ||
+          valueKind.kind === ValueKind.Context
+        ) {
+          if (
+            isArrayType(place.identifier) ||
+            isSetType(place.identifier) ||
+            isMapType(place.identifier)
+          ) {
+            effect = Effect.Capture;
+          } else {
+            effect = Effect.ConditionallyMutate;
+          }
+        } else {
+          effect = Effect.Read;
+        }
+        break;
+      }
       case Effect.Mutate: {
         effect = Effect.Mutate;
         break;
@@ -880,9 +901,7 @@ function inferBlock(
             state.referenceAndRecordEffects(
               freezeActions,
               element.place,
-              isArrayType(element.place.identifier)
-                ? Effect.Capture
-                : Effect.ConditionallyMutate,
+              Effect.ConditionallyMutateIterator,
               ValueReason.Other,
             );
           } else if (element.kind === 'Identifier') {
@@ -1643,7 +1662,13 @@ function inferBlock(
           kind === ValueKind.Mutable || kind === ValueKind.Context;
         let effect;
         let valueKind: AbstractValue;
-        if (!isMutable || isArrayType(instrValue.collection.identifier)) {
+        const iterator = instrValue.collection.identifier;
+        if (
+          !isMutable ||
+          isArrayType(iterator) ||
+          isMapType(iterator) ||
+          isSetType(iterator)
+        ) {
           // Case 1, assume iterator is a separate mutable object
           effect = {
             kind: Effect.Read,
@@ -1684,7 +1709,7 @@ function inferBlock(
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.iterator,
-          Effect.ConditionallyMutate,
+          Effect.ConditionallyMutateIterator,
           ValueReason.Other,
         );
         /**
@@ -1846,6 +1871,7 @@ export function isKnownMutableEffect(effect: Effect): boolean {
   switch (effect) {
     case Effect.Store:
     case Effect.ConditionallyMutate:
+    case Effect.ConditionallyMutateIterator:
     case Effect.Mutate: {
       return true;
     }
@@ -1949,7 +1975,7 @@ function getArgumentEffect(
         });
       }
       // effects[i] is Effect.Capture | Effect.Read | Effect.Store
-      return Effect.ConditionallyMutate;
+      return Effect.ConditionallyMutateIterator;
     }
   } else {
     return Effect.ConditionallyMutate;

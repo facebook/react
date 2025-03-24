@@ -230,6 +230,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
               case Effect.Capture:
               case Effect.Store:
               case Effect.ConditionallyMutate:
+              case Effect.ConditionallyMutateIterator:
               case Effect.Mutate: {
                 if (isMutable(instruction, operand)) {
                   reactiveIdentifiers.markReactive(operand);
