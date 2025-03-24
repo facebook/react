@@ -65,8 +65,6 @@ const UNTYPED_GLOBALS: Set<string> = new Set([
   'Int8Array',
   'Int16Array',
   'Int32Array',
-  'Map',
-  'Set',
   'WeakMap',
   'Uint8Array',
   'Uint8ClampedArray',
@@ -140,7 +138,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
         'from',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [
-            Effect.ConditionallyMutate,
+            Effect.ConditionallyMutateIterator,
             Effect.ConditionallyMutate,
             Effect.ConditionallyMutate,
           ],
@@ -466,7 +464,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       DEFAULT_SHAPES,
       [],
       {
-        positionalParams: [Effect.ConditionallyMutate],
+        positionalParams: [Effect.ConditionallyMutateIterator],
         restParam: null,
         returnType: {kind: 'Object', shapeId: BuiltInMapId},
         calleeEffect: Effect.Read,
@@ -482,7 +480,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       DEFAULT_SHAPES,
       [],
       {
-        positionalParams: [Effect.ConditionallyMutate],
+        positionalParams: [Effect.ConditionallyMutateIterator],
         restParam: null,
         returnType: {kind: 'Object', shapeId: BuiltInSetId},
         calleeEffect: Effect.Read,
