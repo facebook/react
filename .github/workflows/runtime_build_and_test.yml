@@ -493,6 +493,7 @@ jobs:
         # TODO: Migrate scripts to use `build` directory instead of `build2`
       - run: cp ./build.tgz ./build2.tgz
       - name: Archive build artifacts
+        id: upload
         uses: actions/upload-artifact@v4
         with:
           name: artifacts_combined
@@ -500,6 +501,10 @@ jobs:
             ./build.tgz
             ./build2.tgz
           if-no-files-found: error
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: artifacts_combined.zip
+          subject-digest: sha256:${{ steps.upload.outputs.artifact-digest }}
 
   check_error_codes:
     name: Search build artifacts for unminified errors
