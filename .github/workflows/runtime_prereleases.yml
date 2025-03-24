@@ -14,6 +14,8 @@ on:
         required: true
         type: string
     secrets:
+      GH_TOKEN:
+        required: true
       NPM_TOKEN:
         required: true
 
@@ -51,6 +53,6 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn --cwd scripts/release install --frozen-lockfile
       - run: |
-          scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}
+          GH_TOKEN=${{ secrets.GH_TOKEN }} scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}
           cp ./scripts/release/ci-npmrc ~/.npmrc
           scripts/release/publish.js --ci --tags ${{ inputs.dist_tag }}
