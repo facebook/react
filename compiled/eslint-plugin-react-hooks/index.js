@@ -16938,6 +16938,7 @@ var Effect;
     Effect["Freeze"] = "freeze";
     Effect["Read"] = "read";
     Effect["Capture"] = "capture";
+    Effect["ConditionallyMutateIterator"] = "mutate-iterator?";
     Effect["ConditionallyMutate"] = "mutate?";
     Effect["Mutate"] = "mutate";
     Effect["Store"] = "store";
@@ -16946,6 +16947,7 @@ const EffectSchema = zod.z.enum([
     Effect.Read,
     Effect.Mutate,
     Effect.ConditionallyMutate,
+    Effect.ConditionallyMutateIterator,
     Effect.Capture,
     Effect.Store,
     Effect.Freeze,
@@ -16955,6 +16957,7 @@ function isMutableEffect(effect, location) {
         case Effect.Capture:
         case Effect.Store:
         case Effect.ConditionallyMutate:
+        case Effect.ConditionallyMutateIterator:
         case Effect.Mutate: {
             return true;
         }
@@ -17048,6 +17051,12 @@ function isPrimitiveType(id) {
 }
 function isArrayType(id) {
     return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInArray';
+}
+function isMapType(id) {
+    return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInMap';
+}
+function isSetType(id) {
+    return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInSet';
 }
 function isPropsType(id) {
     return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInProps';
@@ -36491,8 +36500,6 @@ const UNTYPED_GLOBALS = new Set([
     'Int8Array',
     'Int16Array',
     'Int32Array',
-    'Map',
-    'Set',
     'WeakMap',
     'Uint8Array',
     'Uint8ClampedArray',
@@ -36546,7 +36553,7 @@ const TYPED_GLOBALS = [
                 'from',
                 addFunction(DEFAULT_SHAPES, [], {
                     positionalParams: [
-                        Effect.ConditionallyMutate,
+                        Effect.ConditionallyMutateIterator,
                         Effect.ConditionallyMutate,
                         Effect.ConditionallyMutate,
                     ],
@@ -36860,7 +36867,7 @@ const TYPED_GLOBALS = [
     [
         'Map',
         addFunction(DEFAULT_SHAPES, [], {
-            positionalParams: [Effect.ConditionallyMutate],
+            positionalParams: [Effect.ConditionallyMutateIterator],
             restParam: null,
             returnType: { kind: 'Object', shapeId: BuiltInMapId },
             calleeEffect: Effect.Read,
@@ -36870,7 +36877,7 @@ const TYPED_GLOBALS = [
     [
         'Set',
         addFunction(DEFAULT_SHAPES, [], {
-            positionalParams: [Effect.ConditionallyMutate],
+            positionalParams: [Effect.ConditionallyMutateIterator],
             restParam: null,
             returnType: { kind: 'Object', shapeId: BuiltInSetId },
             calleeEffect: Effect.Read,
@@ -45290,6 +45297,23 @@ class InferenceState {
                 }
                 break;
             }
+            case Effect.ConditionallyMutateIterator: {
+                if (valueKind.kind === ValueKind.Mutable ||
+                    valueKind.kind === ValueKind.Context) {
+                    if (isArrayType(place.identifier) ||
+                        isSetType(place.identifier) ||
+                        isMapType(place.identifier)) {
+                        effect = Effect.Capture;
+                    }
+                    else {
+                        effect = Effect.ConditionallyMutate;
+                    }
+                }
+                else {
+                    effect = Effect.Read;
+                }
+                break;
+            }
             case Effect.Mutate: {
                 effect = Effect.Mutate;
                 break;
@@ -45554,9 +45578,7 @@ function inferBlock(env, state, block, functionEffects) {
                     };
                 for (const element of instrValue.elements) {
                     if (element.kind === 'Spread') {
-                        state.referenceAndRecordEffects(freezeActions, element.place, isArrayType(element.place.identifier)
-                            ? Effect.Capture
-                            : Effect.ConditionallyMutate, ValueReason.Other);
+                        state.referenceAndRecordEffects(freezeActions, element.place, Effect.ConditionallyMutateIterator, ValueReason.Other);
                     }
                     else if (element.kind === 'Identifier') {
                         state.referenceAndRecordEffects(freezeActions, element, Effect.Capture, ValueReason.Other);
@@ -46038,7 +46060,11 @@ function inferBlock(env, state, block, functionEffects) {
                 const isMutable = kind === ValueKind.Mutable || kind === ValueKind.Context;
                 let effect;
                 let valueKind;
-                if (!isMutable || isArrayType(instrValue.collection.identifier)) {
+                const iterator = instrValue.collection.identifier;
+                if (!isMutable ||
+                    isArrayType(iterator) ||
+                    isMapType(iterator) ||
+                    isSetType(iterator)) {
                     effect = {
                         kind: Effect.Read,
                         reason: ValueReason.Other,
@@ -46065,7 +46091,7 @@ function inferBlock(env, state, block, functionEffects) {
                 break;
             }
             case 'IteratorNext': {
-                state.referenceAndRecordEffects(freezeActions, instrValue.iterator, Effect.ConditionallyMutate, ValueReason.Other);
+                state.referenceAndRecordEffects(freezeActions, instrValue.iterator, Effect.ConditionallyMutateIterator, ValueReason.Other);
                 state.referenceAndRecordEffects(freezeActions, instrValue.collection, Effect.Capture, ValueReason.Other);
                 state.initialize(instrValue, state.kind(instrValue.collection));
                 state.define(instr.lvalue, instrValue);
@@ -46168,6 +46194,7 @@ function isKnownMutableEffect(effect) {
     switch (effect) {
         case Effect.Store:
         case Effect.ConditionallyMutate:
+        case Effect.ConditionallyMutateIterator:
         case Effect.Mutate: {
             return true;
         }
@@ -46240,7 +46267,7 @@ function getArgumentEffect(signatureEffect, arg) {
                     loc: arg.place.loc,
                 });
             }
-            return Effect.ConditionallyMutate;
+            return Effect.ConditionallyMutateIterator;
         }
     }
     else {
@@ -47432,6 +47459,15 @@ function inferPlace(place, instrId, inferMutableRangeForStores) {
                 infer$1(place, instrId);
             }
             return;
+        case Effect.ConditionallyMutateIterator: {
+            const identifier = place.identifier;
+            if (!isArrayType(identifier) &&
+                !isSetType(identifier) &&
+                !isMapType(identifier)) {
+                infer$1(place, instrId);
+            }
+            return;
+        }
         case Effect.ConditionallyMutate:
         case Effect.Mutate: {
             infer$1(place, instrId);
@@ -48047,6 +48083,7 @@ function inferReactivePlaces(fn) {
                             case Effect.Capture:
                             case Effect.Store:
                             case Effect.ConditionallyMutate:
+                            case Effect.ConditionallyMutateIterator:
                             case Effect.Mutate: {
                                 if (isMutable(instruction, operand)) {
                                     reactiveIdentifiers.markReactive(operand);
