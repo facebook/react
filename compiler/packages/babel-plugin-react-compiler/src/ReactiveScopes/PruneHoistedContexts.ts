@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {CompilerError} from '..';
 import {
   DeclarationId,
   InstructionKind,
@@ -27,7 +28,17 @@ export function pruneHoistedContexts(fn: ReactiveFunction): void {
   visitReactiveFunction(fn, new Visitor(), hoistedIdentifiers);
 }
 
-type HoistedIdentifiers = Map<DeclarationId, InstructionKind>;
+const REWRITTEN_HOISTED_CONST: unique symbol = Symbol(
+  'REWRITTEN_HOISTED_CONST',
+);
+
+const REWRITTEN_HOISTED_LET: unique symbol = Symbol('REWRITTEN_HOISTED_LET');
+type HoistedIdentifiers = Map<
+  DeclarationId,
+  | InstructionKind
+  | typeof REWRITTEN_HOISTED_CONST
+  | typeof REWRITTEN_HOISTED_LET
+>;
 
 class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
   override transformInstruction(
@@ -68,31 +79,70 @@ class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
       return {kind: 'remove'};
     }
 
-    if (
-      instruction.value.kind === 'StoreContext' &&
-      state.has(instruction.value.lvalue.place.identifier.declarationId)
-    ) {
+    if (instruction.value.kind === 'StoreContext') {
       const kind = state.get(
         instruction.value.lvalue.place.identifier.declarationId,
-      )!;
-      return {
-        kind: 'replace',
-        value: {
-          kind: 'instruction',
-          instruction: {
-            ...instruction,
+      );
+      if (kind != null) {
+        CompilerError.invariant(kind !== REWRITTEN_HOISTED_CONST, {
+          reason: 'Expected exactly one store to a hoisted const variable',
+          loc: instruction.loc,
+        });
+        if (
+          kind === InstructionKind.Const ||
+          kind === InstructionKind.Function
+        ) {
+          state.set(
+            instruction.value.lvalue.place.identifier.declarationId,
+            REWRITTEN_HOISTED_CONST,
+          );
+          return {
+            kind: 'replace',
             value: {
-              ...instruction.value,
-              lvalue: {
-                ...instruction.value.lvalue,
-                kind,
+              kind: 'instruction',
+              instruction: {
+                ...instruction,
+                value: {
+                  ...instruction.value,
+                  lvalue: {
+                    ...instruction.value.lvalue,
+                    kind,
+                  },
+                  type: null,
+                  kind: 'StoreLocal',
+                },
               },
-              type: null,
-              kind: 'StoreLocal',
             },
-          },
-        },
-      };
+          };
+        } else if (kind !== REWRITTEN_HOISTED_LET) {
+          state.set(
+            instruction.value.lvalue.place.identifier.declarationId,
+            REWRITTEN_HOISTED_LET,
+          );
+          return {
+            kind: 'replace-many',
+            value: [
+              {
+                kind: 'instruction',
+                instruction: {
+                  id: instruction.id,
+                  lvalue: null,
+                  value: {
+                    kind: 'DeclareContext',
+                    lvalue: {
+                      kind: InstructionKind.Let,
+                      place: {...instruction.value.lvalue.place},
+                    },
+                    loc: instruction.value.loc,
+                  },
+                  loc: instruction.loc,
+                },
+              },
+              {kind: 'instruction', instruction},
+            ],
+          };
+        }
+      }
     }
 
     return {kind: 'keep'};
