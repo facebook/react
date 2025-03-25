@@ -228,7 +228,7 @@ function commitAppearingPairViewTransitions(placement: Fiber): void {
           }
           const name = props.name;
           const className: ?string = getViewTransitionClassName(
-            props.className,
+            props.default,
             props.share,
           );
           if (className !== 'none') {
@@ -267,7 +267,7 @@ export function commitEnterViewTransitions(
     const props: ViewTransitionProps = placement.memoizedProps;
     const name = getViewTransitionName(props, state);
     const className: ?string = getViewTransitionClassName(
-      props.className,
+      props.default,
       state.paired ? props.share : props.enter,
     );
     if (className !== 'none') {
@@ -337,7 +337,7 @@ function commitDeletedPairViewTransitions(deletion: Fiber): void {
           const pair = pairs.get(name);
           if (pair !== undefined) {
             const className: ?string = getViewTransitionClassName(
-              props.className,
+              props.default,
               props.share,
             );
             if (className !== 'none') {
@@ -389,7 +389,7 @@ export function commitExitViewTransitions(deletion: Fiber): void {
         ? appearingViewTransitions.get(name)
         : undefined;
     const className: ?string = getViewTransitionClassName(
-      props.className,
+      props.default,
       pair !== undefined ? props.share : props.exit,
     );
     if (className !== 'none') {
@@ -470,7 +470,7 @@ export function commitBeforeUpdateViewTransition(
   // a layout only change, then the "foo" class will be applied even though
   // it was not actually an update. Which is a bug.
   const className: ?string = getViewTransitionClassName(
-    newProps.className,
+    newProps.default,
     newProps.update,
   );
   if (className === 'none') {
@@ -495,7 +495,7 @@ export function commitNestedViewTransitions(changedParent: Fiber): void {
       const props: ViewTransitionProps = child.memoizedProps;
       const name = getViewTransitionName(props, child.stateNode);
       const className: ?string = getViewTransitionClassName(
-        props.className,
+        props.default,
         props.update,
       );
       if (className !== 'none') {
@@ -735,7 +735,7 @@ export function measureUpdateViewTransition(
   const oldName = getViewTransitionName(oldFiber.memoizedProps, state);
   // Whether it ends up having been updated or relayout we apply the update class name.
   const className: ?string = getViewTransitionClassName(
-    props.className,
+    props.default,
     props.update,
   );
   if (className === 'none') {
@@ -787,7 +787,7 @@ export function measureNestedViewTransitions(
       const state: ViewTransitionState = child.stateNode;
       const name = getViewTransitionName(props, state);
       const className: ?string = getViewTransitionClassName(
-        props.className,
+        props.default,
         props.update,
       );
       let previousMeasurements: null | Array<InstanceMeasurement>;

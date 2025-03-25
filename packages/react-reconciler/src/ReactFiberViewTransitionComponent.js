@@ -29,7 +29,7 @@ export type ViewTransitionClass = 'none' | string | ViewTransitionClassPerType;
 export type ViewTransitionProps = {
   name?: string,
   children?: ReactNodeList,
-  className?: ViewTransitionClass,
+  default?: ViewTransitionClass,
   enter?: ViewTransitionClass,
   exit?: ViewTransitionClass,
   share?: ViewTransitionClass,
