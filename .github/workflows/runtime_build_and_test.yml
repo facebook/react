@@ -818,7 +818,7 @@ jobs:
         # unverified artifact is not used. Additionally this workflow runs in the pull_request
         # trigger so only restricted permissions are available.
         run: |
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse ${{ github.event.pull_request.base.sha }}) ${{ (github.event.pull_request.head.repo.full_name != github.repository && '--no-verify') || ''}}
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse ${{ github.event.pull_request.base.sha }}) ${{ (github.event.pull_request.head.repo.full_name != github.repository && '--noVerify') || ''}}
           mv ./build ./base-build
       - name: Delete extraneous files
         # TODO: The `download-experimental-build` script copies the npm
