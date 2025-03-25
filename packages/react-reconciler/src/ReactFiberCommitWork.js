@@ -3095,25 +3095,6 @@ function commitPassiveMountOnFiber(
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectErrors = pushComponentEffectErrors();
 
-  // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
-  // render time. We do this after the fact in the passive effect to avoid the overhead of this
-  // getting in the way of the render characteristics and avoid the overhead of unwinding
-  // uncommitted renders.
-  if (
-    enableProfilerTimer &&
-    enableComponentPerformanceTrack &&
-    (finishedWork.mode & ProfileMode) !== NoMode &&
-    ((finishedWork.actualStartTime: any): number) > 0 &&
-    (finishedWork.flags & PerformedWork) !== NoFlags
-  ) {
-    logComponentRender(
-      finishedWork,
-      ((finishedWork.actualStartTime: any): number),
-      endTime,
-      inHydratedSubtree,
-    );
-  }
-
   const isViewTransitionEligible = enableViewTransition
     ? includesOnlyViewTransitionEligibleLanes(committedLanes)
     : false;
