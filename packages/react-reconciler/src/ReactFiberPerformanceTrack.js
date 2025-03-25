@@ -30,9 +30,6 @@ import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 const supportsUserTiming =
   enableProfilerTimer &&
-  typeof performance !== 'undefined' &&
-  // $FlowFixMe[method-unbinding]
-  typeof performance.mark === 'function' &&
   typeof console !== 'undefined' &&
   typeof console.timeStamp === 'function';
 
@@ -58,60 +55,44 @@ export function setCurrentTrackFromLanes(lanes: Lanes): void {
   currentTrack = getGroupNameOfHighestPriorityLane(lanes);
 }
 
-const blockingLaneMarker = {
-  startTime: 0.003,
-  detail: {
-    devtools: {
-      color: 'primary-light',
-      track: 'Blocking',
-      trackGroup: LANES_TRACK_GROUP,
-    },
-  },
-};
-
-const transitionLaneMarker = {
-  startTime: 0.003,
-  detail: {
-    devtools: {
-      color: 'primary-light',
-      track: 'Transition',
-      trackGroup: LANES_TRACK_GROUP,
-    },
-  },
-};
-
-const suspenseLaneMarker = {
-  startTime: 0.003,
-  detail: {
-    devtools: {
-      color: 'primary-light',
-      track: 'Suspense',
-      trackGroup: LANES_TRACK_GROUP,
-    },
-  },
-};
-
-const idleLaneMarker = {
-  startTime: 0.003,
-  detail: {
-    devtools: {
-      color: 'primary-light',
-      track: 'Idle',
-      trackGroup: LANES_TRACK_GROUP,
-    },
-  },
-};
-
 export function markAllLanesInOrder() {
   if (supportsUserTiming) {
     // Ensure we create all tracks in priority order. Currently performance.mark() are in
     // first insertion order but performance.measure() are in the reverse order. We can
     // always add the 0 time slot even if it's in the past. That's still considered for
     // ordering.
-    performance.mark('Blocking Track', blockingLaneMarker);
-    performance.mark('Transition Track', transitionLaneMarker);
-    performance.mark('Suspense Track', suspenseLaneMarker);
-    performance.mark('Idle Track', idleLaneMarker);
+    console.timeStamp(
+      'Blocking Track',
+      0.003,
+      0.003,
+      'Blocking',
+      LANES_TRACK_GROUP,
+      'primary-light',
+    );
+    console.timeStamp(
+      'Transition Track',
+      0.003,
+      0.003,
+      'Transition',
+      LANES_TRACK_GROUP,
+      'primary-light',
+    );
+    console.timeStamp(
+      'Suspense Track',
+      0.003,
+      0.003,
+      'Suspense',
+      LANES_TRACK_GROUP,
+      'primary-light',
+    );
+    console.timeStamp(
+      'Idle Track',
+      0.003,
+      0.003,
+      'Idle',
+      LANES_TRACK_GROUP,
+      'primary-light',
+    );
   }
 }
 

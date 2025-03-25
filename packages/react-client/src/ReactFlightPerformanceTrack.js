@@ -15,31 +15,24 @@ import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 const supportsUserTiming =
   enableProfilerTimer &&
-  typeof performance !== 'undefined' &&
-  // $FlowFixMe[method-unbinding]
-  typeof performance.mark === 'function' &&
   typeof console !== 'undefined' &&
   typeof console.timeStamp === 'function';
 
 const COMPONENTS_TRACK = 'Server Components ⚛';
-
-const componentsTrackMarker = {
-  startTime: 0.001,
-  detail: {
-    devtools: {
-      color: 'primary-light',
-      track: 'Primary',
-      trackGroup: COMPONENTS_TRACK,
-    },
-  },
-};
 
 export function markAllTracksInOrder() {
   if (supportsUserTiming) {
     // Ensure we create the Server Component track groups earlier than the Client Scheduler
     // and Client Components. We can always add the 0 time slot even if it's in the past.
     // That's still considered for ordering.
-    performance.mark('Server Components Track', componentsTrackMarker);
+    console.timeStamp(
+      'Server Components Track',
+      0.001,
+      0.001,
+      'Primary',
+      COMPONENTS_TRACK,
+      'primary-light',
+    );
   }
 }
 
