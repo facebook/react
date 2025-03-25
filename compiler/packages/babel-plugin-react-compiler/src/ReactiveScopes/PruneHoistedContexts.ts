@@ -7,6 +7,7 @@
 
 import {CompilerError} from '..';
 import {
+  convertHoistedLValueKind,
   DeclarationId,
   InstructionKind,
   ReactiveFunction,
@@ -50,37 +51,26 @@ class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
     /**
      * Remove hoisted declarations to preserve TDZ
      */
-    if (
-      instruction.value.kind === 'DeclareContext' &&
-      instruction.value.lvalue.kind === 'HoistedConst'
-    ) {
-      state.set(
-        instruction.value.lvalue.place.identifier.declarationId,
-        InstructionKind.Const,
+    if (instruction.value.kind === 'DeclareContext') {
+      const maybeNonHoisted = convertHoistedLValueKind(
+        instruction.value.lvalue.kind,
       );
-      return {kind: 'remove'};
-    }
-
-    if (
-      instruction.value.kind === 'DeclareContext' &&
-      instruction.value.lvalue.kind === 'HoistedLet'
-    ) {
-      state.set(
-        instruction.value.lvalue.place.identifier.declarationId,
-        InstructionKind.Let,
-      );
-      return {kind: 'remove'};
-    }
-
-    if (
-      instruction.value.kind === 'DeclareContext' &&
-      instruction.value.lvalue.kind === 'HoistedFunction'
-    ) {
-      state.set(
-        instruction.value.lvalue.place.identifier.declarationId,
-        InstructionKind.Function,
-      );
-      return {kind: 'remove'};
+      if (maybeNonHoisted != null) {
+        state.set(
+          instruction.value.lvalue.place.identifier.declarationId,
+          maybeNonHoisted,
+        );
+        return {kind: 'remove'};
+      }
+      if (instruction.value.lvalue.kind === 'Let') {
+        /**
+         * We don't expect const context variables to be hoisted
+         */
+        state.set(
+          instruction.value.lvalue.place.identifier.declarationId,
+          REWRITTEN_HOISTED_LET,
+        );
+      }
     }
 
     if (instruction.value.kind === 'StoreContext') {
