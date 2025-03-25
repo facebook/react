@@ -746,6 +746,27 @@ export enum InstructionKind {
   Function = 'Function',
 }
 
+export function convertHoistedLValueKind(
+  kind: InstructionKind,
+): InstructionKind | null {
+  switch (kind) {
+    case InstructionKind.HoistedLet:
+      return InstructionKind.Let;
+    case InstructionKind.HoistedConst:
+      return InstructionKind.Const;
+    case InstructionKind.HoistedFunction:
+      return InstructionKind.Function;
+    case InstructionKind.Let:
+    case InstructionKind.Const:
+    case InstructionKind.Function:
+    case InstructionKind.Reassign:
+    case InstructionKind.Catch:
+      return null;
+    default:
+      assertExhaustive(kind, 'Unexpected lvalue kind');
+  }
+}
+
 function _staticInvariantInstructionValueHasLocation(
   value: InstructionValue,
 ): SourceLocation {
