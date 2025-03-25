@@ -27,7 +27,7 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
     demandOption: true,
     type: 'string',
   },
-  'no-verify': {
+  noVerify: {
     describe: 'Skip verification',
     requiresArg: false,
     type: 'boolean',

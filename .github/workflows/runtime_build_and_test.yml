@@ -487,7 +487,7 @@ jobs:
         #
         # Note that this means that scripts/release/download-experimental-build.js must be run with
         # --no-verify when downloading a build from a fork.
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: github.ref_name == 'main' || github.event.pull_request.head.repo.full_name == github.repository
         with:
           subject-name: artifacts_combined.zip
           subject-digest: sha256:${{ steps.upload_artifacts_combined.outputs.artifact-digest }}
@@ -818,7 +818,7 @@ jobs:
         # unverified artifact is not used. Additionally this workflow runs in the pull_request
         # trigger so only restricted permissions are available.
         run: |
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse ${{ github.event.pull_request.base.sha }}) ${{ (github.event.pull_request.head.repo.full_name != github.repository && '--no-verify') || ''}}
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse ${{ github.event.pull_request.base.sha }}) ${{ (github.event.pull_request.head.repo.full_name != github.repository && '--noVerify') || ''}}
           mv ./build ./base-build
       - name: Delete extraneous files
         # TODO: The `download-experimental-build` script copies the npm
