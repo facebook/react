@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<5c76b092e0c981f96ca894e381ee593b>>
+ * @generated SignedSource<<2264e9839602043a41f1e13913b43b0f>>
  */
 
 import type {
@@ -84,8 +84,8 @@ export type ViewConfig = $ReadOnly<{
 }>;
 
 export type PartialViewConfig = $ReadOnly<{
-  bubblingEventTypes?: $PropertyType<ViewConfig, 'bubblingEventTypes'>,
-  directEventTypes?: $PropertyType<ViewConfig, 'directEventTypes'>,
+  bubblingEventTypes?: ViewConfig['bubblingEventTypes'],
+  directEventTypes?: ViewConfig['directEventTypes'],
   supportsRawText?: boolean,
   uiViewClassName: string,
   validAttributes?: PartialAttributeConfiguration,
