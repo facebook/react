@@ -178,11 +178,15 @@ function mergeLocation(l: SourceLocation, r: SourceLocation): SourceLocation {
     return l;
   } else {
     return {
+      filename: l.filename,
+      identifierName: l.identifierName,
       start: {
+        index: Math.min(l.start.index, r.start.index),
         line: Math.min(l.start.line, r.start.line),
         column: Math.min(l.start.column, r.start.column),
       },
       end: {
+        index: Math.max(l.end.index, r.end.index),
         line: Math.max(l.end.line, r.end.line),
         column: Math.max(l.end.column, r.end.column),
       },
@@ -202,7 +206,7 @@ export function inRange(
   return id >= range.start && id < range.end;
 }
 
-function mayAllocate(env: Environment, instruction: Instruction): boolean {
+function mayAllocate(_env: Environment, instruction: Instruction): boolean {
   const {value} = instruction;
   switch (value.kind) {
     case 'Destructure': {

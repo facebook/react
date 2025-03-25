@@ -40,10 +40,12 @@ export opaque type NoTimeout = mixed;
 export opaque type RendererInspectionConfig = mixed;
 export opaque type TransitionStatus = mixed;
 export opaque type FormInstance = mixed;
+export type RunningGestureTransition = mixed;
 export type ViewTransitionInstance = null | {name: string, ...};
 export opaque type InstanceMeasurement = mixed;
 export type EventResponder = any;
 export type GestureTimeline = any;
+export type FragmentInstanceType = null;
 
 export const rendererVersion = $$$config.rendererVersion;
 export const rendererPackageName = $$$config.rendererPackageName;
@@ -55,10 +57,12 @@ export const getChildHostContext = $$$config.getChildHostContext;
 export const prepareForCommit = $$$config.prepareForCommit;
 export const resetAfterCommit = $$$config.resetAfterCommit;
 export const createInstance = $$$config.createInstance;
+export const cloneMutableInstance = $$$config.cloneMutableInstance;
 export const appendInitialChild = $$$config.appendInitialChild;
 export const finalizeInitialChildren = $$$config.finalizeInitialChildren;
 export const shouldSetTextContent = $$$config.shouldSetTextContent;
 export const createTextInstance = $$$config.createTextInstance;
+export const cloneMutableTextInstance = $$$config.cloneMutableTextInstance;
 export const scheduleTimeout = $$$config.scheduleTimeout;
 export const cancelTimeout = $$$config.cancelTimeout;
 export const noTimeout = $$$config.noTimeout;
@@ -140,17 +144,31 @@ export const cancelRootViewTransitionName =
   $$$config.cancelRootViewTransitionName;
 export const restoreRootViewTransitionName =
   $$$config.restoreRootViewTransitionName;
+export const cloneRootViewTransitionContainer =
+  $$$config.cloneRootViewTransitionContainer;
+export const removeRootViewTransitionClone =
+  $$$config.removeRootViewTransitionClone;
 export const measureInstance = $$$config.measureInstance;
+export const measureClonedInstance = $$$config.measureClonedInstance;
 export const wasInstanceInViewport = $$$config.wasInstanceInViewport;
 export const hasInstanceChanged = $$$config.hasInstanceChanged;
 export const hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent;
 export const startViewTransition = $$$config.startViewTransition;
+export const startGestureTransition = $$$config.startGestureTransition;
+export const stopGestureTransition = $$$config.stopGestureTransition;
 export const getCurrentGestureOffset = $$$config.getCurrentGestureOffset;
 export const subscribeToGestureDirection =
   $$$config.subscribeToGestureDirection;
 export const createViewTransitionInstance =
   $$$config.createViewTransitionInstance;
 export const clearContainer = $$$config.clearContainer;
+export const createFragmentInstance = $$$config.createFragmentInstance;
+export const updateFragmentInstanceFiber =
+  $$$config.updateFragmentInstanceFiber;
+export const commitNewChildToFragmentInstance =
+  $$$config.commitNewChildToFragmentInstance;
+export const deleteChildFromFragmentInstance =
+  $$$config.deleteChildFromFragmentInstance;
 
 // -------------------
 //     Persistence

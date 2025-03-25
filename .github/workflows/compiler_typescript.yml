@@ -8,6 +8,8 @@ on:
       - compiler/**
       - .github/workflows/compiler_typescript.yml
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
@@ -46,8 +48,9 @@ jobs:
       - name: Restore cached node_modules
         uses: actions/cache@v4
         with:
-          path: "**/node_modules"
-          key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn workspace babel-plugin-react-compiler lint
 
@@ -66,8 +69,9 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn workspace babel-plugin-react-compiler jest
 
@@ -75,8 +79,8 @@ jobs:
     name: Test ${{ matrix.workspace_name }}
     needs: discover_yarn_workspaces
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         workspace_name: ${{ fromJSON(needs.discover_yarn_workspaces.outputs.matrix) }}
     steps:
@@ -90,7 +94,11 @@ jobs:
         uses: actions/cache@v4
         id: node_modules
         with:
-          path: "**/node_modules"
-          key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
+          path: |
+            **/node_modules
+          key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+      - run: xvfb-run -a yarn workspace ${{ matrix.workspace_name }} test
+        if: runner.os == 'Linux' && matrix.workspace_name == 'react-forgive'
       - run: yarn workspace ${{ matrix.workspace_name }} test
+        if: matrix.workspace_name != 'react-forgive'

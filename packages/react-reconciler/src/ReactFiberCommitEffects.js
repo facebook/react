@@ -11,6 +11,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {HookFlags} from './ReactHookEffectTags';
+import type {FragmentInstanceType} from './ReactFiberConfig';
 import {
   getViewTransitionName,
   type ViewTransitionState,
@@ -24,9 +25,11 @@ import {
   enableSchedulingProfiler,
   enableUseEffectCRUDOverload,
   enableViewTransition,
+  enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
+  Fragment,
   HostComponent,
   HostHoistable,
   HostSingleton,
@@ -48,6 +51,7 @@ import {
 import {
   getPublicInstance,
   createViewTransitionInstance,
+  createFragmentInstance,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -877,7 +881,7 @@ function commitAttachRef(finishedWork: Fiber) {
       case HostComponent:
         instanceToUse = getPublicInstance(finishedWork.stateNode);
         break;
-      case ViewTransitionComponent:
+      case ViewTransitionComponent: {
         if (enableViewTransition) {
           const instance: ViewTransitionState = finishedWork.stateNode;
           const props: ViewTransitionProps = finishedWork.memoizedProps;
@@ -886,6 +890,18 @@ function commitAttachRef(finishedWork: Fiber) {
             instance.ref = createViewTransitionInstance(name);
           }
           instanceToUse = instance.ref;
+          break;
+        }
+        instanceToUse = finishedWork.stateNode;
+        break;
+      }
+      case Fragment:
+        if (enableFragmentRefs) {
+          const instance: null | FragmentInstanceType = finishedWork.stateNode;
+          if (instance === null) {
+            finishedWork.stateNode = createFragmentInstance(finishedWork);
+          }
+          instanceToUse = finishedWork.stateNode;
           break;
         }
       // Fallthrough

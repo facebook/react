@@ -201,25 +201,24 @@ describe('ReactDOMFizzForm', () => {
     await act(async () => {
       ReactDOMClient.hydrateRoot(container, <App isClient={true} />);
     });
-    assertConsoleErrorDev(
-      [
-        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
-          "This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n" +
-          "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
-          "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
-          "- Date formatting in a user's locale which doesn't match the server.\n" +
-          '- External changing data without sending a snapshot of it along with the HTML.\n' +
-          '- Invalid HTML tag nesting.\n\n' +
-          'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n' +
-          'https://react.dev/link/hydration-mismatch\n\n' +
-          '  <App isClient={true}>\n' +
-          '    <form\n' +
-          '+     action="action"\n' +
-          '-     action="function"\n' +
-          '    >\n',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
+        "This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n" +
+        "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+        "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+        "- Date formatting in a user's locale which doesn't match the server.\n" +
+        '- External changing data without sending a snapshot of it along with the HTML.\n' +
+        '- Invalid HTML tag nesting.\n\n' +
+        'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n' +
+        'https://react.dev/link/hydration-mismatch\n\n' +
+        '  <App isClient={true}>\n' +
+        '    <form\n' +
+        '+     action="action"\n' +
+        '-     action="function"\n' +
+        '    >\n' +
+        '\n    in form (at **)' +
+        '\n    in App (at **)',
+    ]);
   });
 
   it('should ideally warn when passing a string during SSR and function during hydration', async () => {
@@ -386,47 +385,45 @@ describe('ReactDOMFizzForm', () => {
       'Cannot specify a formTarget for a button that specifies a function as a formAction. ' +
         'The function will always be executed in the same window.\n' +
         '    in input (at **)\n' +
-        (gate('enableOwnerStacks') ? '' : '    in form (at **)\n') +
         '    in App (at **)',
     ]);
     let root;
     await act(async () => {
       root = ReactDOMClient.hydrateRoot(container, <App />);
     });
-    assertConsoleErrorDev(
-      [
-        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
-          "This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n" +
-          "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
-          "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
-          "- Date formatting in a user's locale which doesn't match the server.\n" +
-          '- External changing data without sending a snapshot of it along with the HTML.\n' +
-          '- Invalid HTML tag nesting.\n\n' +
-          'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n' +
-          'https://react.dev/link/hydration-mismatch\n\n' +
-          '  <App>\n' +
-          '    <form\n' +
-          '      action={function action}\n' +
-          '      ref={{current:null}}\n' +
-          '+     method="DELETE"\n' +
-          '-     method={null}\n' +
-          '    >\n' +
-          '      <input\n' +
-          '        type="submit"\n' +
-          '        formAction={function action}\n' +
-          '        ref={{current:null}}\n' +
-          '+       formTarget="elsewhere"\n' +
-          '-       formTarget={null}\n' +
-          '      >\n' +
-          '      <button\n' +
-          '        formAction={function action}\n' +
-          '        ref={{current:null}}\n' +
-          '+       formEncType="text/plain"\n' +
-          '-       formEncType={null}\n' +
-          '      >\n',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
+        "This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n" +
+        "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+        "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+        "- Date formatting in a user's locale which doesn't match the server.\n" +
+        '- External changing data without sending a snapshot of it along with the HTML.\n' +
+        '- Invalid HTML tag nesting.\n\n' +
+        'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n' +
+        'https://react.dev/link/hydration-mismatch\n\n' +
+        '  <App>\n' +
+        '    <form\n' +
+        '      action={function action}\n' +
+        '      ref={{current:null}}\n' +
+        '+     method="DELETE"\n' +
+        '-     method={null}\n' +
+        '    >\n' +
+        '      <input\n' +
+        '        type="submit"\n' +
+        '        formAction={function action}\n' +
+        '        ref={{current:null}}\n' +
+        '+       formTarget="elsewhere"\n' +
+        '-       formTarget={null}\n' +
+        '      >\n' +
+        '      <button\n' +
+        '        formAction={function action}\n' +
+        '        ref={{current:null}}\n' +
+        '+       formEncType="text/plain"\n' +
+        '-       formEncType={null}\n' +
+        '      >\n' +
+        '\n    in input (at **)' +
+        '\n    in App (at **)',
+    ]);
     await act(async () => {
       root.render(<App isUpdate={true} />);
     });

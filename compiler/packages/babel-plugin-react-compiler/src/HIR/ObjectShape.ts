@@ -44,6 +44,7 @@ export function addFunction(
   properties: Iterable<[string, BuiltInType | PolyType]>,
   fn: Omit<FunctionSignature, 'hookKind'>,
   id: string | null = null,
+  isConstructor: boolean = false,
 ): FunctionType {
   const shapeId = id ?? createAnonId();
   addShape(registry, shapeId, properties, {
@@ -54,6 +55,7 @@ export function addFunction(
     kind: 'Function',
     return: fn.returnType,
     shapeId,
+    isConstructor,
   };
 }
 
@@ -73,6 +75,7 @@ export function addHook(
     kind: 'Function',
     return: fn.returnType,
     shapeId,
+    isConstructor: false,
   };
 }
 
@@ -198,6 +201,8 @@ export type ObjectShape = {
 export type ShapeRegistry = Map<string, ObjectShape>;
 export const BuiltInPropsId = 'BuiltInProps';
 export const BuiltInArrayId = 'BuiltInArray';
+export const BuiltInSetId = 'BuiltInSet';
+export const BuiltInMapId = 'BuiltInMap';
 export const BuiltInFunctionId = 'BuiltInFunction';
 export const BuiltInJsxId = 'BuiltInJsx';
 export const BuiltInObjectId = 'BuiltInObject';
@@ -451,6 +456,313 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
    */
 ]);
 
+/* Built-in Set shape */
+addObject(BUILTIN_SHAPES, BuiltInSetId, [
+  [
+    /**
+     * add(value)
+     * Parameters
+     *   value: the value of the element to add to the Set object.
+     * Returns the Set object with added value.
+     */
+    'add',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInSetId},
+      calleeEffect: Effect.Store,
+      // returnValueKind is technically dependent on the ValueKind of the set itself
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    /**
+     * clear()
+     * Parameters none
+     * Returns undefined
+     */
+    'clear',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    /**
+     * setInstance.delete(value)
+     * Returns true if value was already in Set; otherwise false.
+     */
+    'delete',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'has',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  ['size', PRIMITIVE_TYPE],
+  [
+    /**
+     * difference(other)
+     * Parameters
+     *   other: A Set object, or set-like object.
+     * Returns a new Set object containing elements in this set but not in the other set.
+     */
+    'difference',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInSetId},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    /**
+     * union(other)
+     * Parameters
+     *   other: A Set object, or set-like object.
+     * Returns a new Set object containing elements in either this set or the other set.
+     */
+    'union',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInSetId},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    /**
+     * symmetricalDifference(other)
+     * Parameters
+     *   other: A Set object, or set-like object.
+     * A new Set object containing elements which are in either this set or the other set, but not in both.
+     */
+    'symmetricalDifference',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInSetId},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    /**
+     * isSubsetOf(other)
+     * Parameters
+     *   other: A Set object, or set-like object.
+     * Returns true if all elements in this set are also in the other set, and false otherwise.
+     */
+    'isSubsetOf',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    /**
+     * isSupersetOf(other)
+     * Parameters
+     *  other: A Set object, or set-like object.
+     * Returns true if all elements in the other set are also in this set, and false otherwise.
+     */
+    'isSupersetOf',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    /**
+     * forEach(callbackFn)
+     * forEach(callbackFn, thisArg)
+     */
+    'forEach',
+    addFunction(BUILTIN_SHAPES, [], {
+      /**
+       * see Array.map explanation for why arguments are marked `ConditionallyMutate`
+       */
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Primitive,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  /**
+   * Iterators
+   */
+  [
+    'entries',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'keys',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'values',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+]);
+addObject(BUILTIN_SHAPES, BuiltInMapId, [
+  [
+    /**
+     * clear()
+     * Parameters none
+     * Returns undefined
+     */
+    'clear',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'delete',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'get',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'has',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    /**
+     * Params
+     *   key: the key of the element to add to the Map object. The key may be
+     *   any JavaScript type (any primitive value or any type of JavaScript
+     *   object).
+     *   value: the value of the element to add to the Map object.
+     * Returns the Map object.
+     */
+    'set',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Capture, Effect.Capture],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInMapId},
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  ['size', PRIMITIVE_TYPE],
+  [
+    'forEach',
+    addFunction(BUILTIN_SHAPES, [], {
+      /**
+       * see Array.map explanation for why arguments are marked `ConditionallyMutate`
+       */
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Primitive,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  /**
+   * Iterators
+   */
+  [
+    'entries',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'keys',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    'values',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+]);
+
 addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
   ['0', {kind: 'Poly'}],
   [
@@ -535,6 +847,30 @@ addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
   ['*', {kind: 'Object', shapeId: BuiltInRefValueId}],
 ]);
 
+/**
+ * MixedReadOnly =
+ *   | primitive
+ *   | simple objects (Record<string, MixedReadOnly>)
+ *   | Array<MixedReadOnly>
+ *
+ * APIs such as Relay — but also Flux and other data stores — often return a
+ * union of types with some interesting properties in terms of analysis.
+ *
+ * Given this constraint, if data came from Relay, then we should be able to
+ * infer things like `data.items.map(): Array`. That may seem like a leap at
+ * first but remember, we assume you're not patching builtins. Thus the only way
+ * data.items.map can exist and be a function, given the above set of data types
+ * and builtin JS methods, is if `data.items` was an Array, and `data.items.map`
+ * is therefore calling Array.prototype.map. Then we know that function returns
+ * an Array as well. This relies on the fact that map() is being called, so if
+ * data.items was some other type it would error at runtime - so it's sound.
+ *
+ * Note that this shape is currently only used for hook return values, which
+ * means that it's safe to type aliasing method-call return kinds as `Frozen`.
+ *
+ * Also note that all newly created arrays from method-calls (e.g. `.map`)
+ * have the appropriate mutable `BuiltInArray` shape
+ */
 addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
   [
     'toString',
@@ -544,6 +880,36 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
       returnType: PRIMITIVE_TYPE,
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'indexOf',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'includes',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'at',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInMixedReadonlyId},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Frozen,
     }),
   ],
   [
@@ -642,9 +1008,9 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
-      returnType: {kind: 'Poly'},
+      returnType: {kind: 'Object', shapeId: BuiltInMixedReadonlyId},
       calleeEffect: Effect.ConditionallyMutate,
-      returnValueKind: ValueKind.Mutable,
+      returnValueKind: ValueKind.Frozen,
       noAlias: true,
       mutableOnlyIfOperandsAreMutable: true,
     }),

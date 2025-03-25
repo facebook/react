@@ -3,6 +3,9 @@ import {hasOwnProperty} from '../Utils/utils';
 import {PluginOptions} from './Options';
 
 function hasModule(name: string): boolean {
+  if (typeof require === 'undefined') {
+    return false;
+  }
   try {
     return !!require.resolve(name);
   } catch (error: any) {

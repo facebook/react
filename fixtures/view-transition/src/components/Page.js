@@ -2,6 +2,9 @@ import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
   unstable_useSwipeTransition as useSwipeTransition,
+  useEffect,
+  useState,
+  useId,
 } from 'react';
 
 import SwipeRecognizer from './SwipeRecognizer';
@@ -37,6 +40,11 @@ function Component() {
   );
 }
 
+function Id() {
+  // This is just testing that Id inside a ViewTransition can hydrate correctly.
+  return <span id={useId()} />;
+}
+
 export default function Page({url, navigate}) {
   const [renderedUrl, startGesture] = useSwipeTransition('/?a', url, '/?b');
   const show = renderedUrl === '/?b';
@@ -53,75 +61,93 @@ export default function Page({url, navigate}) {
     navigate(show ? '/?a' : '/?b');
   }
 
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCounter(c => c + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const exclamation = (
     <ViewTransition name="exclamation" onShare={onTransition}>
       <span>!</span>
     </ViewTransition>
   );
   return (
-    <div>
-      <button
-        onClick={() => {
-          navigate(show ? '/?a' : '/?b');
-        }}>
-        {show ? 'A' : 'B'}
-      </button>
-      <ViewTransition className="none">
-        <div>
-          <ViewTransition className={transitions['slide-on-nav']}>
-            <h1>{!show ? 'A' : 'B'}</h1>
-          </ViewTransition>
-          <ViewTransition
-            className={{
-              'navigation-back': transitions['slide-right'],
-              'navigation-forward': transitions['slide-left'],
-            }}>
-            <h1>{!show ? 'A' : 'B'}</h1>
-          </ViewTransition>
-          {show ? (
-            <div>
-              {a}
-              {b}
-            </div>
-          ) : (
-            <div>
-              {b}
-              {a}
-            </div>
-          )}
-          <ViewTransition>
-            {show ? <div>hello{exclamation}</div> : <section>Loading</section>}
-          </ViewTransition>
-          <p>scroll me</p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <div className="swipe-recognizer">
-            <SwipeRecognizer
-              action={swipeAction}
-              gesture={startGesture}
-              direction={show ? 'left' : 'right'}>
-              Swipe me
-            </SwipeRecognizer>
+    <div className="swipe-recognizer">
+      <SwipeRecognizer
+        action={swipeAction}
+        gesture={startGesture}
+        direction={show ? 'left' : 'right'}>
+        <button
+          className="button"
+          onClick={() => {
+            navigate(url === '/?b' ? '/?a' : '/?b');
+          }}>
+          {url === '/?b' ? 'Goto A' : 'Goto B'}
+        </button>
+        <ViewTransition className="none">
+          <div>
+            <ViewTransition>
+              <div>
+                <ViewTransition className={transitions['slide-on-nav']}>
+                  <h1>{!show ? 'A' : 'B' + counter}</h1>
+                </ViewTransition>
+              </div>
+            </ViewTransition>
+            <ViewTransition
+              className={{
+                'navigation-back': transitions['slide-right'],
+                'navigation-forward': transitions['slide-left'],
+              }}>
+              <h1>{!show ? 'A' + counter : 'B'}</h1>
+            </ViewTransition>
+            {show ? (
+              <div>
+                {a}
+                {b}
+              </div>
+            ) : (
+              <div>
+                {b}
+                {a}
+              </div>
+            )}
+            <ViewTransition>
+              {show ? (
+                <div>hello{exclamation}</div>
+              ) : (
+                <section>Loading</section>
+              )}
+            </ViewTransition>
+            <p>
+              <Id />
+            </p>
+            {show ? null : (
+              <ViewTransition>
+                <div>world{exclamation}</div>
+              </ViewTransition>
+            )}
+            <Activity mode={show ? 'visible' : 'hidden'}>
+              <ViewTransition>
+                <div>!!</div>
+              </ViewTransition>
+            </Activity>
+            <p>these</p>
+            <p>rows</p>
+            <p>exist</p>
+            <p>to</p>
+            <p>test</p>
+            <p>scrolling</p>
+            <p>content</p>
+            <p>out</p>
+            <p>of</p>
+            <p>the</p>
+            <p>viewport</p>
+            {show ? <Component /> : null}
           </div>
-          <p></p>
-          <p></p>
-          {show ? null : (
-            <ViewTransition>
-              <div>world{exclamation}</div>
-            </ViewTransition>
-          )}
-          <Activity mode={show ? 'visible' : 'hidden'}>
-            <ViewTransition>
-              <div>!!</div>
-            </ViewTransition>
-          </Activity>
-          {show ? <Component /> : null}
-        </div>
-      </ViewTransition>
+        </ViewTransition>
+      </SwipeRecognizer>
     </div>
   );
 }

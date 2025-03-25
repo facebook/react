@@ -19,9 +19,12 @@ export {
   parsePluginOptions,
   OPT_OUT_DIRECTIVES,
   OPT_IN_DIRECTIVES,
+  ProgramContext,
   findDirectiveEnablingMemoization,
   findDirectiveDisablingMemoization,
   type CompilerPipelineValue,
+  type Logger,
+  type LoggerEvent,
   type PluginOptions,
 } from './Entrypoint';
 export {

@@ -33,11 +33,6 @@ export default function SwipeRecognizer({
     });
   }
   function onScrollEnd() {
-    if (activeGesture.current !== null) {
-      const cancelGesture = activeGesture.current;
-      activeGesture.current = null;
-      cancelGesture();
-    }
     let changed;
     const scrollElement = scrollRef.current;
     if (axis === 'x') {
@@ -59,6 +54,11 @@ export default function SwipeRecognizer({
     if (changed) {
       // Trigger side-effects
       startTransition(action);
+    }
+    if (activeGesture.current !== null) {
+      const cancelGesture = activeGesture.current;
+      activeGesture.current = null;
+      cancelGesture();
     }
   }
 
@@ -92,7 +92,6 @@ export default function SwipeRecognizer({
     width: axis === 'x' ? '100%' : null,
     height: axis === 'y' ? '100%' : null,
     overflow: 'scroll hidden',
-    touchAction: 'pan-' + direction,
     // Disable overscroll on Safari which moves the sticky content.
     // Unfortunately, this also means that we disable chaining. We should only disable
     // it if the parent is not scrollable in this axis.

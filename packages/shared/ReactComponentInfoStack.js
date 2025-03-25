@@ -11,14 +11,12 @@ import type {ReactComponentInfo} from 'shared/ReactTypes';
 
 import {describeBuiltInComponentFrame} from 'shared/ReactComponentStackFrame';
 
-import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
-
 import {formatOwnerStack} from 'shared/ReactOwnerStackFrames';
 
 export function getOwnerStackByComponentInfoInDev(
   componentInfo: ReactComponentInfo,
 ): string {
-  if (!enableOwnerStacks || !__DEV__) {
+  if (!__DEV__) {
     return '';
   }
   try {

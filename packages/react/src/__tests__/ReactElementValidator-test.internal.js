@@ -46,19 +46,11 @@ describe('ReactElementValidator', () => {
         ]),
       ),
     );
-    assertConsoleErrorDev(
-      gate(flags => flags.enableOwnerStacks)
-        ? [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the render method of `ComponentClass`. See https://react.dev/link/warning-keys for more information.\n' +
-              '    in ComponentClass (at **)',
-          ]
-        : [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the top-level render call using <ComponentClass>. See https://react.dev/link/warning-keys for more information.\n' +
-              '    in ComponentClass (at **)',
-          ],
-    );
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the render method of `ComponentClass`. See https://react.dev/link/warning-keys for more information.\n' +
+        '    in ComponentClass (at **)',
+    ]);
   });
 
   it('warns for keys for arrays of elements with owner info', async () => {
@@ -83,18 +75,10 @@ describe('ReactElementValidator', () => {
     await act(() => root.render(React.createElement(ComponentWrapper)));
     assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.' +
-        '\n\nCheck the render method of `' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? 'ComponentClass'
-          : 'InnerClass') +
-        '`. ' +
+        '\n\nCheck the render method of `ComponentClass`. ' +
         'It was passed a child from ComponentWrapper. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? '    in ComponentWrapper (at **)'
-          : '    in ComponentClass (at **)\n' +
-            '    in InnerClass (at **)\n' +
-            '    in ComponentWrapper (at **)'),
+        '    in ComponentWrapper (at **)',
     ]);
   });
 
@@ -109,16 +93,12 @@ describe('ReactElementValidator', () => {
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => root.render(<Anonymous>{divs}</Anonymous>));
     assertConsoleErrorDev([
-      gate(flags => flags.enableOwnerStacks)
-        ? // For owner stacks the parent being validated is the div.
-          'Each child in a list should have a unique ' +
-          '"key" prop.' +
-          '\n\nCheck the top-level render call using <div>. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in div (at **)'
-        : 'Each child in a list should have a unique ' +
-          '"key" prop. See https://react.dev/link/warning-keys for more information.\n' +
-          '    in div (at **)',
+      // For owner stacks the parent being validated is the div.
+      'Each child in a list should have a unique ' +
+        '"key" prop.' +
+        '\n\nCheck the top-level render call using <div>. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in div (at **)',
     ]);
   });
 
@@ -158,9 +138,6 @@ describe('ReactElementValidator', () => {
         'https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)\n' +
         '    in Component (at **)\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? ''
-          : '    in Parent (at **)\n') +
         '    in GrandParent (at **)',
     ]);
   });
@@ -206,35 +183,12 @@ describe('ReactElementValidator', () => {
     await act(() =>
       root.render(React.createElement(ComponentClass, null, iterable)),
     );
-    assertConsoleErrorDev(
-      gate(flag => flag.enableOwnerStacks)
-        ? [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the render method of `ComponentClass`. It was passed a child from div. ' +
-              'See https://react.dev/link/warning-keys for more information.\n' +
-              '    in ComponentClass (at **)',
-          ]
-        : // Since each pass generates a new element, it doesn't get marked as
-          // validated and it gets rechecked each time.
-          [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the top-level render call using <ComponentClass>. ' +
-              'See https://react.dev/link/warning-keys for more information.\n' +
-              '    in ComponentClass (at **)',
-
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the render method of `ComponentClass`. ' +
-              'See https://react.dev/link/warning-keys for more information.\n' +
-              '    in ComponentClass (at **)\n' +
-              '    in ComponentClass (at **)',
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the render method of `ComponentClass`. It was passed a child from div. ' +
-              'See https://react.dev/link/warning-keys for more information.\n' +
-              '    in ComponentClass (at **)\n' +
-              '    in div (at **)\n' +
-              '    in ComponentClass (at **)',
-          ],
-    );
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the render method of `ComponentClass`. It was passed a child from div. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in ComponentClass (at **)',
+    ]);
   });
 
   it('does not warns for arrays of elements with keys', () => {
@@ -373,13 +327,6 @@ describe('ReactElementValidator', () => {
     ];
     for (let i = 0; i < cases.length; i++) {
       await act(async () => root.render(cases[i][0]()));
-      assertConsoleErrorDev(
-        gate(flag => flag.enableOwnerStacks)
-          ? // We don't need these extra warnings because we already have the errors.
-            []
-          : [cases[i][1]],
-        {withoutStack: true},
-      );
     }
 
     expect(errors).toEqual(
@@ -468,21 +415,6 @@ describe('ReactElementValidator', () => {
         'or a class/function (for composite components) but got: null.' +
         (__DEV__ ? '\n\nCheck the render method of `ParentComp`.' : ''),
     );
-    assertConsoleErrorDev(
-      gate(flag => flag.enableOwnerStacks)
-        ? // We don't need these extra warnings because we already have the errors.
-          []
-        : [
-            'React.createElement: type is invalid -- expected a string ' +
-              '(for built-in components) or a class/function (for composite ' +
-              'components) but got: null.\n' +
-              '    in ParentComp (at **)',
-            'React.createElement: type is invalid -- expected a string ' +
-              '(for built-in components) or a class/function (for composite ' +
-              'components) but got: null.\n' +
-              '    in ParentComp (at **)',
-          ],
-    );
   });
 
   it('warns for fragments with illegal attributes', async () => {
@@ -495,9 +427,13 @@ describe('ReactElementValidator', () => {
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => root.render(React.createElement(Foo)));
     assertConsoleErrorDev([
-      'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
-        'can only have `key` and `children` props.\n' +
-        '    in Foo (at **)',
+      gate('enableFragmentRefs')
+        ? 'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
+          'can only have `key`, `ref`, and `children` props.\n' +
+          '    in Foo (at **)'
+        : 'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
+          'can only have `key` and `children` props.\n' +
+          '    in Foo (at **)',
     ]);
   });
 
@@ -559,18 +495,6 @@ describe('ReactElementValidator', () => {
   it('does not blow up on key warning with undefined type', () => {
     const Foo = undefined;
     void (<Foo>{[<div />]}</Foo>);
-    assertConsoleErrorDev(
-      gate(flags => flags.enableOwnerStacks)
-        ? []
-        : [
-            'React.jsx: type is invalid -- expected a string ' +
-              '(for built-in components) or a class/function (for composite ' +
-              'components) but got: undefined. You likely forgot to export your ' +
-              "component from the file it's defined in, or you might have mixed up " +
-              'default and named imports.',
-          ],
-      {withoutStack: true},
-    );
   });
 
   it('does not call lazy initializers eagerly', () => {
