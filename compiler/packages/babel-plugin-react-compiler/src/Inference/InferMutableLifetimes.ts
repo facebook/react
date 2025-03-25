@@ -6,6 +6,7 @@
  */
 
 import {
+  convertHoistedLValueKind,
   Effect,
   HIRFunction,
   Identifier,
@@ -176,9 +177,15 @@ export function inferMutableLifetimes(
       if (
         instr.value.kind === 'DeclareContext' ||
         (instr.value.kind === 'StoreContext' &&
-          instr.value.lvalue.kind !== InstructionKind.Reassign)
+          instr.value.lvalue.kind !== InstructionKind.Reassign &&
+          !contextVariableDeclarationInstructions.has(
+            instr.value.lvalue.place.identifier,
+          ))
       ) {
-        // Save declarations of context variables
+        /**
+         * Save declarations of context variables if they hasn't already been
+         * declared (due to hoisted declarations).
+         */
         contextVariableDeclarationInstructions.set(
           instr.value.lvalue.place.identifier,
           instr.id,
