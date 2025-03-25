@@ -49,7 +49,7 @@ export default function GeneralSettings(_: {}): React.Node {
     <div className={styles.Settings}>
       {isInternalFacebookBuild && (
         <div className={styles.Setting}>
-          This is an internal build of React DevTools for Meta.
+          This is an internal build of React DevTools for Meta
         </div>
       )}
 
