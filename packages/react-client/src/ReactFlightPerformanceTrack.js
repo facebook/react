@@ -104,7 +104,12 @@ export function logComponentErrored(
     const isPrimaryEnv = env === rootEnv;
     const entryName =
       isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
-    if (__DEV__) {
+    if (
+      __DEV__ &&
+      typeof performance !== 'undefined' &&
+      // $FlowFixMe[method-unbinding]
+      typeof performance.measure === 'function'
+    ) {
       const message =
         typeof error === 'object' &&
         error !== null &&

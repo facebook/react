@@ -151,7 +151,12 @@ export function logComponentErrored(
       // Skip
       return;
     }
-    if (__DEV__) {
+    if (
+      __DEV__ &&
+      typeof performance !== 'undefined' &&
+      // $FlowFixMe[method-unbinding]
+      typeof performance.measure === 'function'
+    ) {
       const properties = [];
       for (let i = 0; i < errors.length; i++) {
         const capturedValue = errors[i];
@@ -206,7 +211,12 @@ function logComponentEffectErrored(
       // Skip
       return;
     }
-    if (__DEV__) {
+    if (
+      __DEV__ &&
+      typeof performance !== 'undefined' &&
+      // $FlowFixMe[method-unbinding]
+      typeof performance.measure === 'function'
+    ) {
       const properties = [];
       for (let i = 0; i < errors.length; i++) {
         const capturedValue = errors[i];
@@ -538,7 +548,12 @@ export function logRecoveredRenderPhase(
   hydrationFailed: boolean,
 ): void {
   if (supportsUserTiming) {
-    if (__DEV__) {
+    if (
+      __DEV__ &&
+      typeof performance !== 'undefined' &&
+      // $FlowFixMe[method-unbinding]
+      typeof performance.measure === 'function'
+    ) {
       const properties = [];
       for (let i = 0; i < recoverableErrors.length; i++) {
         const capturedValue = recoverableErrors[i];
@@ -655,7 +670,12 @@ export function logCommitErrored(
   passive: boolean,
 ): void {
   if (supportsUserTiming) {
-    if (__DEV__) {
+    if (
+      __DEV__ &&
+      typeof performance !== 'undefined' &&
+      // $FlowFixMe[method-unbinding]
+      typeof performance.measure === 'function'
+    ) {
       const properties = [];
       for (let i = 0; i < errors.length; i++) {
         const capturedValue = errors[i];
