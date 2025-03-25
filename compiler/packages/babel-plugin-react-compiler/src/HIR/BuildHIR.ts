@@ -2412,7 +2412,9 @@ function lowerExpression(
     }
     case 'TSSatisfiesExpression':
     case 'TSAsExpression': {
-      let expr = exprPath as NodePath<t.TSAsExpression | t.TSSatisfiesExpression>;
+      let expr = exprPath as NodePath<
+        t.TSAsExpression | t.TSSatisfiesExpression
+      >;
       const typeAnnotation = expr.get('typeAnnotation');
       return {
         kind: 'TypeCastExpression',
