@@ -374,11 +374,8 @@ function useInsertionEffect(
 }
 
 function useEffect(
-  create: (() => (() => void) | void) | (() => {...} | void | null),
-  createDeps: Array<mixed> | void | null,
-  update?: ((resource: {...} | void | null) => void) | void,
-  updateDeps?: Array<mixed> | void | null,
-  destroy?: ((resource: {...} | void | null) => void) | void,
+  create: () => (() => void) | void,
+  deps: Array<mixed> | void | null,
 ): void {
   nextHook();
   hookLog.push({

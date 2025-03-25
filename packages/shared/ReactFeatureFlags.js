@@ -154,11 +154,6 @@ export const transitionLaneExpirationMs = 5000;
  */
 export const enableInfiniteRenderLoopDetection = false;
 
-/**
- * Experimental new hook for better managing resources in effects.
- */
-export const enableUseEffectCRUDOverload = false;
-
 export const enableFastAddPropertiesInDiffing = true;
 export const enableLazyPublicInstanceInFabric = false;
 

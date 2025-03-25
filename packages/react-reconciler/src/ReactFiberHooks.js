@@ -43,7 +43,6 @@ import {
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableUseEffectEventHook,
-  enableUseEffectCRUDOverload,
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
@@ -219,42 +218,15 @@ export type Hook = {
 // the additional memory and we can follow up with performance
 // optimizations later.
 type EffectInstance = {
-  resource: {...} | void | null,
-  destroy: void | (() => void) | ((resource: {...} | void | null) => void),
+  destroy: void | (() => void),
 };
 
-export const ResourceEffectIdentityKind: 0 = 0;
-export const ResourceEffectUpdateKind: 1 = 1;
-export type EffectKind =
-  | typeof ResourceEffectIdentityKind
-  | typeof ResourceEffectUpdateKind;
-export type Effect =
-  | SimpleEffect
-  | ResourceEffectIdentity
-  | ResourceEffectUpdate;
-export type SimpleEffect = {
+export type Effect = {
   tag: HookFlags,
   inst: EffectInstance,
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
   next: Effect,
-};
-export type ResourceEffectIdentity = {
-  resourceKind: typeof ResourceEffectIdentityKind,
-  tag: HookFlags,
-  inst: EffectInstance,
-  create: () => {...} | void | null,
-  deps: Array<mixed> | void | null,
-  next: Effect,
-};
-export type ResourceEffectUpdate = {
-  resourceKind: typeof ResourceEffectUpdateKind,
-  tag: HookFlags,
-  inst: EffectInstance,
-  update: ((resource: {...} | void | null) => void) | void,
-  deps: Array<mixed> | void | null,
-  next: Effect,
-  identity: ResourceEffectIdentity,
 };
 
 type StoreInstance<T> = {
@@ -372,23 +344,6 @@ function checkDepsAreArrayDev(deps: mixed): void {
           'specified, the final argument must be an array.',
         currentHookNameInDev,
         typeof deps,
-      );
-    }
-  }
-}
-
-function checkDepsAreNonEmptyArrayDev(deps: mixed): void {
-  if (__DEV__) {
-    if (
-      deps !== undefined &&
-      deps !== null &&
-      isArray(deps) &&
-      deps.length === 0
-    ) {
-      console.error(
-        '%s received a dependency array with no dependencies. When ' +
-          'specified, the dependency array must have at least one dependency.',
-        currentHookNameInDev,
       );
     }
   }
@@ -2540,53 +2495,17 @@ function pushSimpleEffect(
   tag: HookFlags,
   inst: EffectInstance,
   create: () => (() => void) | void,
-  createDeps: Array<mixed> | void | null,
-  update?: ((resource: {...} | void | null) => void) | void,
-  updateDeps?: Array<mixed> | void | null,
-  destroy?: ((resource: {...} | void | null) => void) | void,
+  deps: Array<mixed> | void | null,
 ): Effect {
   const effect: Effect = {
     tag,
     create,
-    deps: createDeps,
+    deps,
     inst,
     // Circular
     next: (null: any),
   };
   return pushEffectImpl(effect);
-}
-
-function pushResourceEffect(
-  identityTag: HookFlags,
-  updateTag: HookFlags,
-  inst: EffectInstance,
-  create: () => {...} | void | null,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: {...} | void | null) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-): Effect {
-  const effectIdentity: ResourceEffectIdentity = {
-    resourceKind: ResourceEffectIdentityKind,
-    tag: identityTag,
-    create,
-    deps: createDeps,
-    inst,
-    // Circular
-    next: (null: any),
-  };
-  pushEffectImpl(effectIdentity);
-
-  const effectUpdate: ResourceEffectUpdate = {
-    resourceKind: ResourceEffectUpdateKind,
-    tag: updateTag,
-    update,
-    deps: updateDeps,
-    inst,
-    identity: effectIdentity,
-    // Circular
-    next: (null: any),
-  };
-  return pushEffectImpl(effectUpdate);
 }
 
 function pushEffectImpl(effect: Effect): Effect {
@@ -2609,7 +2528,7 @@ function pushEffectImpl(effect: Effect): Effect {
 }
 
 function createEffectInstance(): EffectInstance {
-  return {destroy: undefined, resource: undefined};
+  return {destroy: undefined};
 }
 
 function mountRef<T>(initialValue: T): {current: T} {
@@ -2628,13 +2547,10 @@ function mountEffectImpl(
   fiberFlags: Flags,
   hookFlags: HookFlags,
   create: () => (() => void) | void,
-  createDeps: Array<mixed> | void | null,
-  update?: ((resource: {...} | void | null) => void) | void,
-  updateDeps?: Array<mixed> | void | null,
-  destroy?: ((resource: {...} | void | null) => void) | void,
+  deps: Array<mixed> | void | null,
 ): void {
   const hook = mountWorkInProgressHook();
-  const nextDeps = createDeps === undefined ? null : createDeps;
+  const nextDeps = deps === undefined ? null : deps;
   currentlyRenderingFiber.flags |= fiberFlags;
   hook.memoizedState = pushSimpleEffect(
     HookHasEffect | hookFlags,
@@ -2685,223 +2601,35 @@ function updateEffectImpl(
 }
 
 function mountEffect(
-  create: (() => (() => void) | void) | (() => {...} | void | null),
-  createDeps: Array<mixed> | void | null,
-  update?: ((resource: {...} | void | null) => void) | void,
-  updateDeps?: Array<mixed> | void | null,
-  destroy?: ((resource: {...} | void | null) => void) | void,
+  create: () => (() => void) | void,
+  deps: Array<mixed> | void | null,
 ): void {
   if (
     __DEV__ &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode &&
     (currentlyRenderingFiber.mode & NoStrictPassiveEffectsMode) === NoMode
   ) {
-    if (
-      enableUseEffectCRUDOverload &&
-      (typeof update === 'function' || typeof destroy === 'function')
-    ) {
-      mountResourceEffectImpl(
-        MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
-        HookPassive,
-        create,
-        createDeps,
-        update,
-        updateDeps,
-        destroy,
-      );
-    } else {
-      mountEffectImpl(
-        MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
-        HookPassive,
-        // $FlowFixMe[incompatible-call] @poteto it's not possible to narrow `create` without calling it.
-        create,
-        createDeps,
-      );
-    }
+    mountEffectImpl(
+      MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
+      HookPassive,
+      create,
+      deps,
+    );
   } else {
-    if (
-      enableUseEffectCRUDOverload &&
-      (typeof update === 'function' || typeof destroy === 'function')
-    ) {
-      mountResourceEffectImpl(
-        PassiveEffect | PassiveStaticEffect,
-        HookPassive,
-        create,
-        createDeps,
-        update,
-        updateDeps,
-        destroy,
-      );
-    } else {
-      mountEffectImpl(
-        PassiveEffect | PassiveStaticEffect,
-        HookPassive,
-        // $FlowFixMe[incompatible-call] @poteto it's not possible to narrow `create` without calling it.
-        create,
-        createDeps,
-      );
-    }
+    mountEffectImpl(
+      PassiveEffect | PassiveStaticEffect,
+      HookPassive,
+      create,
+      deps,
+    );
   }
 }
 
 function updateEffect(
-  create: (() => (() => void) | void) | (() => {...} | void | null),
-  createDeps: Array<mixed> | void | null,
-  update?: ((resource: {...} | void | null) => void) | void,
-  updateDeps?: Array<mixed> | void | null,
-  destroy?: ((resource: {...} | void | null) => void) | void,
+  create: () => (() => void) | void,
+  deps: Array<mixed> | void | null,
 ): void {
-  if (
-    enableUseEffectCRUDOverload &&
-    (typeof update === 'function' || typeof destroy === 'function')
-  ) {
-    updateResourceEffectImpl(
-      PassiveEffect,
-      HookPassive,
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy,
-    );
-  } else {
-    // $FlowFixMe[incompatible-call] @poteto it's not possible to narrow `create` without calling it.
-    updateEffectImpl(PassiveEffect, HookPassive, create, createDeps);
-  }
-}
-
-function mountResourceEffect(
-  create: () => {...} | void | null,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: {...} | void | null) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: {...} | void | null) => void) | void,
-) {
-  if (
-    __DEV__ &&
-    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode &&
-    (currentlyRenderingFiber.mode & NoStrictPassiveEffectsMode) === NoMode
-  ) {
-  } else {
-    mountResourceEffectImpl(
-      PassiveEffect | PassiveStaticEffect,
-      HookPassive,
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy,
-    );
-  }
-}
-
-function mountResourceEffectImpl(
-  fiberFlags: Flags,
-  hookFlags: HookFlags,
-  create: () => {...} | void | null,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: {...} | void | null) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: {...} | void | null) => void) | void,
-) {
-  const hook = mountWorkInProgressHook();
-  currentlyRenderingFiber.flags |= fiberFlags;
-  const inst = createEffectInstance();
-  inst.destroy = destroy;
-  hook.memoizedState = pushResourceEffect(
-    HookHasEffect | hookFlags,
-    hookFlags,
-    inst,
-    create,
-    createDeps,
-    update,
-    updateDeps,
-  );
-}
-
-function updateResourceEffect(
-  create: () => {...} | void | null,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: {...} | void | null) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: {...} | void | null) => void) | void,
-) {
-  updateResourceEffectImpl(
-    PassiveEffect,
-    HookPassive,
-    create,
-    createDeps,
-    update,
-    updateDeps,
-    destroy,
-  );
-}
-
-function updateResourceEffectImpl(
-  fiberFlags: Flags,
-  hookFlags: HookFlags,
-  create: () => {...} | void | null,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: {...} | void | null) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: {...} | void | null) => void) | void,
-) {
-  const hook = updateWorkInProgressHook();
-  const effect: Effect = hook.memoizedState;
-  const inst = effect.inst;
-  inst.destroy = destroy;
-
-  const nextCreateDeps = createDeps === undefined ? null : createDeps;
-  const nextUpdateDeps = updateDeps === undefined ? null : updateDeps;
-  let isCreateDepsSame: boolean;
-  let isUpdateDepsSame: boolean;
-
-  if (currentHook !== null) {
-    const prevEffect: Effect = currentHook.memoizedState;
-    if (nextCreateDeps !== null) {
-      let prevCreateDeps;
-      if (
-        prevEffect.resourceKind != null &&
-        prevEffect.resourceKind === ResourceEffectUpdateKind
-      ) {
-        prevCreateDeps =
-          prevEffect.identity.deps != null ? prevEffect.identity.deps : null;
-      } else {
-        throw new Error(
-          `Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React.`,
-        );
-      }
-      isCreateDepsSame = areHookInputsEqual(nextCreateDeps, prevCreateDeps);
-    }
-    if (nextUpdateDeps !== null) {
-      let prevUpdateDeps;
-      if (
-        prevEffect.resourceKind != null &&
-        prevEffect.resourceKind === ResourceEffectUpdateKind
-      ) {
-        prevUpdateDeps = prevEffect.deps != null ? prevEffect.deps : null;
-      } else {
-        throw new Error(
-          `Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React.`,
-        );
-      }
-      isUpdateDepsSame = areHookInputsEqual(nextUpdateDeps, prevUpdateDeps);
-    }
-  }
-
-  if (!(isCreateDepsSame && isUpdateDepsSame)) {
-    currentlyRenderingFiber.flags |= fiberFlags;
-  }
-
-  hook.memoizedState = pushResourceEffect(
-    isCreateDepsSame ? hookFlags : HookHasEffect | hookFlags,
-    isUpdateDepsSame ? hookFlags : HookHasEffect | hookFlags,
-    inst,
-    create,
-    nextCreateDeps,
-    update,
-    nextUpdateDeps,
-  );
+  updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
 function useEffectEventImpl<Args, Return, F: (...Array<Args>) => Return>(
@@ -4339,30 +4067,13 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: (() => (() => void) | void) | (() => {...} | void | null),
-      createDeps: Array<mixed> | void | null,
-      update?: ((resource: {...} | void | null) => void) | void,
-      updateDeps?: Array<mixed> | void | null,
-      destroy?: ((resource: {...} | void | null) => void) | void,
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useEffect';
       mountHookTypesDev();
-      if (
-        enableUseEffectCRUDOverload &&
-        (typeof update === 'function' || typeof destroy === 'function')
-      ) {
-        checkDepsAreNonEmptyArrayDev(updateDeps);
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      } else {
-        checkDepsAreArrayDev(createDeps);
-        return mountEffect(create, createDeps);
-      }
+      checkDepsAreArrayDev(deps);
+      return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -4540,28 +4251,12 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: (() => (() => void) | void) | (() => {...} | void | null),
-      createDeps: Array<mixed> | void | null,
-      update?: ((resource: {...} | void | null) => void) | void,
-      updateDeps?: Array<mixed> | void | null,
-      destroy?: ((resource: {...} | void | null) => void) | void,
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
-      if (
-        enableUseEffectCRUDOverload &&
-        (typeof update === 'function' || typeof destroy === 'function')
-      ) {
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      } else {
-        return mountEffect(create, createDeps);
-      }
+      return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -4735,28 +4430,12 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: (() => (() => void) | void) | (() => {...} | void | null),
-      createDeps: Array<mixed> | void | null,
-      update?: ((resource: {...} | void | null) => void) | void,
-      updateDeps?: Array<mixed> | void | null,
-      destroy?: ((resource: {...} | void | null) => void) | void,
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
-      if (
-        enableUseEffectCRUDOverload &&
-        (typeof update === 'function' || typeof destroy === 'function')
-      ) {
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      } else {
-        return updateEffect(create, createDeps);
-      }
+      return updateEffect(create, deps);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -4930,28 +4609,12 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: (() => (() => void) | void) | (() => {...} | void | null),
-      createDeps: Array<mixed> | void | null,
-      update?: ((resource: {...} | void | null) => void) | void,
-      updateDeps?: Array<mixed> | void | null,
-      destroy?: ((resource: {...} | void | null) => void) | void,
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
-      if (
-        enableUseEffectCRUDOverload &&
-        (typeof update === 'function' || typeof destroy === 'function')
-      ) {
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      } else {
-        return updateEffect(create, createDeps);
-      }
+      return updateEffect(create, deps);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -5131,29 +4794,13 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: (() => (() => void) | void) | (() => {...} | void | null),
-      createDeps: Array<mixed> | void | null,
-      update?: ((resource: {...} | void | null) => void) | void,
-      updateDeps?: Array<mixed> | void | null,
-      destroy?: ((resource: {...} | void | null) => void) | void,
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      if (
-        enableUseEffectCRUDOverload &&
-        (typeof update === 'function' || typeof destroy === 'function')
-      ) {
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      } else {
-        return mountEffect(create, createDeps);
-      }
+      return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -5352,29 +4999,13 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: (() => (() => void) | void) | (() => {...} | void | null),
-      createDeps: Array<mixed> | void | null,
-      update?: ((resource: {...} | void | null) => void) | void,
-      updateDeps?: Array<mixed> | void | null,
-      destroy?: ((resource: {...} | void | null) => void) | void,
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      if (
-        enableUseEffectCRUDOverload &&
-        (typeof update === 'function' || typeof destroy === 'function')
-      ) {
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      } else {
-        return updateEffect(create, createDeps);
-      }
+      return updateEffect(create, deps);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -5573,29 +5204,13 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: (() => (() => void) | void) | (() => {...} | void | null),
-      createDeps: Array<mixed> | void | null,
-      update?: ((resource: {...} | void | null) => void) | void,
-      updateDeps?: Array<mixed> | void | null,
-      destroy?: ((resource: {...} | void | null) => void) | void,
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      if (
-        enableUseEffectCRUDOverload &&
-        (typeof update === 'function' || typeof destroy === 'function')
-      ) {
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      } else {
-        return updateEffect(create, createDeps);
-      }
+      return updateEffect(create, deps);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
