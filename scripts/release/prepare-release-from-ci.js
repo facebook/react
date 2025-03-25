@@ -19,10 +19,10 @@ const run = async () => {
     const params = await parseParams();
     params.cwd = join(__dirname, '..', '..');
 
-    await downloadBuildArtifacts(
-      params.commit,
-      params.releaseChannel ?? process.env.RELEASE_CHANNEL
-    );
+    await downloadBuildArtifacts({
+      commit: params.commit,
+      releaseChannel: params.releaseChannel ?? process.env.RELEASE_CHANNEL,
+    });
 
     if (!params.skipTests) {
       await testPackagingFixture(params);
