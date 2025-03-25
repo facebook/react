@@ -82,7 +82,8 @@ describe('ReactServer', () => {
     expect(normalizeCodeLocInfo(componentStack)).toEqual(
       '\n    in Component (at **)' + '\n    in App (at **)',
     );
-    // FIXME: Should have a stack.
-    expect(normalizeCodeLocInfo(ownerStack)).toEqual(null);
+    expect(normalizeCodeLocInfo(ownerStack)).toEqual(
+      __DEV__ ? '\n    in App (at **)' : null,
+    );
   });
 });
