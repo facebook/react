@@ -109,6 +109,7 @@ import {
   ForceClientRender,
   DidCapture,
   AffectedParentLayout,
+  ViewTransitionNamedStatic,
 } from './ReactFiberFlags';
 import {
   commitStartTime,
@@ -254,6 +255,10 @@ import {
   pushMutationContext,
   popMutationContext,
 } from './ReactFiberMutationTracking';
+import {
+  trackNamedViewTransition,
+  untrackNamedViewTransition,
+} from './ReactFiberDuplicateViewTransitions';
 
 // Used during the commit phase to track the state of the Offscreen component stack.
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
@@ -738,6 +743,11 @@ function commitLayoutEffectOnFiber(
     }
     case ViewTransitionComponent: {
       if (enableViewTransition) {
+        if (__DEV__) {
+          if (flags & ViewTransitionNamedStatic) {
+            trackNamedViewTransition(finishedWork);
+          }
+        }
         recursivelyTraverseLayoutEffects(
           finishedRoot,
           finishedWork,
@@ -1551,11 +1561,34 @@ function commitDeletionEffectsOnFiber(
       }
       break;
     }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        if (__DEV__) {
+          if (deletedFiber.flags & ViewTransitionNamedStatic) {
+            untrackNamedViewTransition(deletedFiber);
+          }
+        }
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber,
+        );
+        return;
+      }
+      // Fallthrough
+    }
     case Fragment: {
       if (enableFragmentRefs) {
         if (!offscreenSubtreeWasHidden) {
           safelyDetachRef(deletedFiber, nearestMountedAncestor);
         }
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber,
+        );
+        return;
       }
       // Fallthrough
     }
@@ -2594,6 +2627,11 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
     }
     case ViewTransitionComponent: {
       if (enableViewTransition) {
+        if (__DEV__) {
+          if (finishedWork.flags & ViewTransitionNamedStatic) {
+            untrackNamedViewTransition(finishedWork);
+          }
+        }
         safelyDetachRef(finishedWork, finishedWork.return);
       }
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -2803,6 +2841,11 @@ export function reappearLayoutEffects(
           finishedWork,
           includeWorkInProgressEffects,
         );
+        if (__DEV__) {
+          if (flags & ViewTransitionNamedStatic) {
+            trackNamedViewTransition(finishedWork);
+          }
+        }
         safelyAttachRef(finishedWork, finishedWork.return);
         break;
       }
