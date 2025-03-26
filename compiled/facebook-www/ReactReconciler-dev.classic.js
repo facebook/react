@@ -2016,14 +2016,18 @@ __DEV__ &&
           fiber.serverTail.push(rejectedCandidate)));
     }
     function throwOnHydrationMismatch(fiber) {
-      var diff = "",
+      var fromText =
+          1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : !1,
+        diff = "",
         diffRoot = hydrationDiffRootDEV;
       null !== diffRoot &&
         ((hydrationDiffRootDEV = null), (diff = describeDiff(diffRoot)));
       queueHydrationError(
         createCapturedValueAtFiber(
           Error(
-            "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch" +
+            "Hydration failed because the server rendered " +
+              (fromText ? "text" : "HTML") +
+              " didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch" +
               diff
           ),
           fiber
@@ -2044,7 +2048,7 @@ __DEV__ &&
         fiber
       ) &&
         favorSafetyOverHydrationPerf &&
-        throwOnHydrationMismatch(fiber);
+        throwOnHydrationMismatch(fiber, !0);
     }
     function popToNextHostParent(fiber) {
       for (hydrationParentFiber = fiber.return; hydrationParentFiber; )
@@ -10397,7 +10401,7 @@ __DEV__ &&
                 newProps
               ) &&
                 favorSafetyOverHydrationPerf &&
-                throwOnHydrationMismatch(workInProgress);
+                throwOnHydrationMismatch(workInProgress, !0);
             } else
               workInProgress.stateNode = createTextInstance(
                 newProps,
@@ -20835,7 +20839,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-f134b399-20250326"
+        reconcilerVersion: "19.1.0-www-classic-3e88e97c-20250326"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

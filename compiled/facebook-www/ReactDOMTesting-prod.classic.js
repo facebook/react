@@ -1870,7 +1870,15 @@ var hydrationParentFiber = null,
   rootOrSingletonContext = !1,
   HydrationMismatchException = Error(formatProdErrorMessage(519));
 function throwOnHydrationMismatch(fiber) {
-  var error = Error(formatProdErrorMessage(418, ""));
+  var error = Error(
+    formatProdErrorMessage(
+      418,
+      1 < arguments.length && void 0 !== arguments[1] && arguments[1]
+        ? "text"
+        : "HTML",
+      ""
+    )
+  );
   queueHydrationError(createCapturedValueAtFiber(error, fiber));
   throw HydrationMismatchException;
 }
@@ -1947,7 +1955,9 @@ function prepareToHydrateHostInstance(fiber) {
       null != props.onClick && (instance.onclick = noop$1),
       (instance = !0))
     : (instance = !1);
-  !instance && favorSafetyOverHydrationPerf && throwOnHydrationMismatch(fiber);
+  !instance &&
+    favorSafetyOverHydrationPerf &&
+    throwOnHydrationMismatch(fiber, !0);
 }
 function popToNextHostParent(fiber) {
   for (hydrationParentFiber = fiber.return; hydrationParentFiber; )
@@ -8121,7 +8131,7 @@ function completeWork(current, workInProgress, renderLanes) {
               : !1;
           !current &&
             favorSafetyOverHydrationPerf &&
-            throwOnHydrationMismatch(workInProgress);
+            throwOnHydrationMismatch(workInProgress, !0);
         } else
           (current =
             getOwnerDocumentFromRootContainer(current).createTextNode(
@@ -19107,14 +19117,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2003 = React.version;
 if (
-  "19.1.0-www-classic-f134b399-20250326" !==
+  "19.1.0-www-classic-3e88e97c-20250326" !==
   isomorphicReactPackageVersion$jscomp$inline_2003
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2003,
-      "19.1.0-www-classic-f134b399-20250326"
+      "19.1.0-www-classic-3e88e97c-20250326"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19132,10 +19142,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2592 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-f134b399-20250326",
+  version: "19.1.0-www-classic-3e88e97c-20250326",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-f134b399-20250326"
+  reconcilerVersion: "19.1.0-www-classic-3e88e97c-20250326"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2593 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -19650,4 +19660,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-f134b399-20250326";
+exports.version = "19.1.0-www-classic-3e88e97c-20250326";

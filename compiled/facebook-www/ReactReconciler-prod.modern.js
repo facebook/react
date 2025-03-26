@@ -871,7 +871,15 @@ module.exports = function ($$$config) {
         : (HostTransitionContext._currentValue2 = NotPendingTransition));
   }
   function throwOnHydrationMismatch(fiber) {
-    var error = Error(formatProdErrorMessage(418, ""));
+    var error = Error(
+      formatProdErrorMessage(
+        418,
+        1 < arguments.length && void 0 !== arguments[1] && arguments[1]
+          ? "text"
+          : "HTML",
+        ""
+      )
+    );
     queueHydrationError(createCapturedValueAtFiber(error, fiber));
     throw HydrationMismatchException;
   }
@@ -885,7 +893,7 @@ module.exports = function ($$$config) {
       fiber
     ) &&
       favorSafetyOverHydrationPerf &&
-      throwOnHydrationMismatch(fiber);
+      throwOnHydrationMismatch(fiber, !0);
   }
   function popToNextHostParent(fiber) {
     for (hydrationParentFiber = fiber.return; hydrationParentFiber; )
@@ -6740,7 +6748,7 @@ module.exports = function ($$$config) {
               newProps
             ) &&
               favorSafetyOverHydrationPerf &&
-              throwOnHydrationMismatch(workInProgress);
+              throwOnHydrationMismatch(workInProgress, !0);
           } else
             workInProgress.stateNode = createTextInstance(
               newProps,
@@ -13404,7 +13412,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-f134b399-20250326"
+      reconcilerVersion: "19.1.0-www-modern-3e88e97c-20250326"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
