@@ -12121,20 +12121,10 @@ function commitPassiveMountOnFiber(
   endTime
 ) {
   var prevEffectStart = pushComponentEffectStart(),
-    prevEffectErrors = pushComponentEffectErrors();
-  enableComponentPerformanceTrack &&
-    0 !== (finishedWork.mode & 2) &&
-    0 < finishedWork.actualStartTime &&
-    0 !== (finishedWork.flags & 1) &&
-    logComponentRender(
-      finishedWork,
-      finishedWork.actualStartTime,
-      endTime,
-      inHydratedSubtree
-    );
-  var isViewTransitionEligible = enableViewTransition
-    ? (committedLanes & 335544064) === committedLanes
-    : !1;
+    prevEffectErrors = pushComponentEffectErrors(),
+    isViewTransitionEligible = enableViewTransition
+      ? (committedLanes & 335544064) === committedLanes
+      : !1;
   isViewTransitionEligible &&
     null === finishedWork.alternate &&
     null !== finishedWork.return &&
@@ -20650,14 +20640,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2149 = React.version;
 if (
-  "19.1.0-www-classic-4845e16c-20250325" !==
+  "19.1.0-www-classic-f9e1b160-20250325" !==
   isomorphicReactPackageVersion$jscomp$inline_2149
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2149,
-      "19.1.0-www-classic-4845e16c-20250325"
+      "19.1.0-www-classic-f9e1b160-20250325"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20675,10 +20665,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2151 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-4845e16c-20250325",
+  version: "19.1.0-www-classic-f9e1b160-20250325",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-4845e16c-20250325"
+  reconcilerVersion: "19.1.0-www-classic-f9e1b160-20250325"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2151.getLaneLabelMap = getLaneLabelMap),
@@ -21045,7 +21035,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-4845e16c-20250325";
+exports.version = "19.1.0-www-classic-f9e1b160-20250325";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

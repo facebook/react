@@ -14141,20 +14141,10 @@ __DEV__ &&
       endTime
     ) {
       var prevEffectStart = pushComponentEffectStart(),
-        prevEffectErrors = pushComponentEffectErrors();
-      enableComponentPerformanceTrack &&
-        (finishedWork.mode & 2) !== NoMode &&
-        0 < finishedWork.actualStartTime &&
-        0 !== (finishedWork.flags & 1) &&
-        logComponentRender(
-          finishedWork,
-          finishedWork.actualStartTime,
-          endTime,
-          inHydratedSubtree
-        );
-      var isViewTransitionEligible = enableViewTransition
-        ? (committedLanes & 335544064) === committedLanes
-        : !1;
+        prevEffectErrors = pushComponentEffectErrors(),
+        isViewTransitionEligible = enableViewTransition
+          ? (committedLanes & 335544064) === committedLanes
+          : !1;
       isViewTransitionEligible &&
         null === finishedWork.alternate &&
         null !== finishedWork.return &&
@@ -21121,7 +21111,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-4845e16c-20250325"
+        reconcilerVersion: "19.1.0-www-classic-f9e1b160-20250325"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
