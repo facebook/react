@@ -2085,6 +2085,7 @@ export function stopViewTransition(transition: RunningViewTransition) {
 interface ViewTransitionPseudoElementType extends Animatable {
   _scope: HTMLElement;
   _selector: string;
+  getComputedStyle(): CSSStyleDeclaration;
 }
 
 function ViewTransitionPseudoElement(
@@ -2137,6 +2138,14 @@ ViewTransitionPseudoElement.prototype.getAnimations = function (
     }
   }
   return result;
+};
+// $FlowFixMe[prop-missing]
+ViewTransitionPseudoElement.prototype.getComputedStyle = function (
+  this: ViewTransitionPseudoElementType,
+): CSSStyleDeclaration {
+  const scope = this._scope;
+  const selector = this._selector;
+  return getComputedStyle(scope, selector);
 };
 
 export function createViewTransitionInstance(
