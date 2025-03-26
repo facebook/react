@@ -13151,6 +13151,10 @@ __DEV__ &&
         captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
     }
+    function trackEnterViewTransitions(placement) {
+      if (30 === placement.tag || 0 !== (placement.subtreeFlags & 33554432))
+        shouldStartViewTransition = !0;
+    }
     function pushViewTransitionCancelableScope() {
       var prevChildren = viewTransitionCancelableChildren;
       viewTransitionCancelableChildren = null;
@@ -13181,7 +13185,6 @@ __DEV__ &&
     ) {
       for (var inViewport = !1; null !== child; ) {
         if (5 === child.tag) {
-          shouldStartViewTransition = !0;
           var instance = child.stateNode;
           if (null !== collectMeasurements) {
             var measurement = measureInstance(instance);
@@ -13189,6 +13192,7 @@ __DEV__ &&
             measurement.view && (inViewport = !0);
           } else
             inViewport || (measureInstance(instance).view && (inViewport = !0));
+          shouldStartViewTransition = !0;
           measurement = className;
           instance.style.viewTransitionName =
             0 === viewTransitionHostInstanceIdx
@@ -13681,7 +13685,8 @@ __DEV__ &&
           null === root.alternate &&
           0 !== (root.flags & 2)
         )
-          commitBeforeMutationEffects_complete(committedLanes);
+          committedLanes && trackEnterViewTransitions(root),
+            commitBeforeMutationEffects_complete(committedLanes);
         else {
           if (enableViewTransition && 22 === root.tag)
             if (
@@ -13697,6 +13702,7 @@ __DEV__ &&
               null !== JSCompiler_temp &&
               null !== JSCompiler_temp.memoizedState
             ) {
+              committedLanes && trackEnterViewTransitions(root);
               commitBeforeMutationEffects_complete(committedLanes);
               continue;
             }
@@ -30019,11 +30025,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-modern-3e88e97c-20250326" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-modern-4280563b-20250326" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-modern-3e88e97c-20250326\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-modern-4280563b-20250326\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30066,10 +30072,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-modern-3e88e97c-20250326",
+          version: "19.1.0-www-modern-4280563b-20250326",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-modern-3e88e97c-20250326"
+          reconcilerVersion: "19.1.0-www-modern-4280563b-20250326"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30833,5 +30839,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-modern-3e88e97c-20250326";
+    exports.version = "19.1.0-www-modern-4280563b-20250326";
   })();

@@ -7239,6 +7239,10 @@ function insertOrAppendPlacementNode(node, before, parent) {
 }
 var shouldStartViewTransition = !1,
   appearingViewTransitions = null;
+function trackEnterViewTransitions(placement) {
+  if (30 === placement.tag || 0 !== (placement.subtreeFlags & 33554432))
+    shouldStartViewTransition = !0;
+}
 function applyViewTransitionToHostInstancesRecursive(
   child,
   name,
@@ -7248,10 +7252,10 @@ function applyViewTransitionToHostInstancesRecursive(
 ) {
   for (var inViewport = !1; null !== child; ) {
     if (5 === child.tag)
-      (shouldStartViewTransition = !0),
-        null !== collectMeasurements
-          ? (collectMeasurements.push(null), (inViewport = !0))
-          : inViewport || (inViewport = !0);
+      null !== collectMeasurements
+        ? (collectMeasurements.push(null), (inViewport = !0))
+        : inViewport || (inViewport = !0),
+        (shouldStartViewTransition = !0);
     else if (22 !== child.tag || null === child.memoizedState)
       (30 === child.tag && stopAtNestedViewTransitions) ||
         (applyViewTransitionToHostInstancesRecursive(
@@ -7414,7 +7418,8 @@ function commitBeforeMutationEffects(root, firstChild, committedLanes) {
       null === committedLanes.alternate &&
       0 !== (committedLanes.flags & 2)
     )
-      commitBeforeMutationEffects_complete(root);
+      root && trackEnterViewTransitions(committedLanes),
+        commitBeforeMutationEffects_complete(root);
     else {
       if (enableViewTransition && 22 === committedLanes.tag)
         if (
@@ -7428,6 +7433,7 @@ function commitBeforeMutationEffects(root, firstChild, committedLanes) {
           commitBeforeMutationEffects_complete(root);
           continue;
         } else if (null !== deletions && null !== deletions.memoizedState) {
+          root && trackEnterViewTransitions(committedLanes);
           commitBeforeMutationEffects_complete(root);
           continue;
         }
@@ -11146,10 +11152,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1582 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-3e88e97c-20250326",
+  version: "19.1.0-www-classic-4280563b-20250326",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-3e88e97c-20250326"
+  reconcilerVersion: "19.1.0-www-classic-4280563b-20250326"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1583 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11175,4 +11181,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-3e88e97c-20250326";
+exports.version = "19.1.0-www-classic-4280563b-20250326";

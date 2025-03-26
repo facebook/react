@@ -7512,6 +7512,10 @@ module.exports = function ($$$config) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
   }
+  function trackEnterViewTransitions(placement) {
+    if (30 === placement.tag || 0 !== (placement.subtreeFlags & 33554432))
+      shouldStartViewTransition = !0;
+  }
   function pushViewTransitionCancelableScope() {
     var prevChildren = viewTransitionCancelableChildren;
     viewTransitionCancelableChildren = null;
@@ -7543,7 +7547,6 @@ module.exports = function ($$$config) {
     if (!supportsMutation) return !1;
     for (var inViewport = !1; null !== child; ) {
       if (5 === child.tag) {
-        shouldStartViewTransition = !0;
         var instance = child.stateNode;
         if (null !== collectMeasurements) {
           var measurement = measureInstance(instance);
@@ -7553,6 +7556,7 @@ module.exports = function ($$$config) {
           inViewport ||
             (wasInstanceInViewport(measureInstance(instance)) &&
               (inViewport = !0));
+        shouldStartViewTransition = !0;
         applyViewTransitionName(
           instance,
           0 === viewTransitionHostInstanceIdx
@@ -7911,7 +7915,8 @@ module.exports = function ($$$config) {
         null === committedLanes.alternate &&
         0 !== (committedLanes.flags & 2)
       )
-        commitBeforeMutationEffects_complete(root);
+        root && trackEnterViewTransitions(committedLanes),
+          commitBeforeMutationEffects_complete(root);
       else {
         if (enableViewTransition && 22 === committedLanes.tag)
           if (
@@ -7925,6 +7930,7 @@ module.exports = function ($$$config) {
             commitBeforeMutationEffects_complete(root);
             continue;
           } else if (null !== deletions && null !== deletions.memoizedState) {
+            root && trackEnterViewTransitions(committedLanes);
             commitBeforeMutationEffects_complete(root);
             continue;
           }
@@ -13412,7 +13418,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-3e88e97c-20250326"
+      reconcilerVersion: "19.1.0-www-modern-4280563b-20250326"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

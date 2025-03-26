@@ -9632,8 +9632,12 @@ function commitHostSingletonAcquisition(finishedWork) {
   }
 }
 var shouldStartViewTransition = !1,
-  appearingViewTransitions = null,
-  viewTransitionCancelableChildren = null;
+  appearingViewTransitions = null;
+function trackEnterViewTransitions(placement) {
+  if (30 === placement.tag || 0 !== (placement.subtreeFlags & 33554432))
+    shouldStartViewTransition = !0;
+}
+var viewTransitionCancelableChildren = null;
 function pushViewTransitionCancelableScope() {
   var prevChildren = viewTransitionCancelableChildren;
   viewTransitionCancelableChildren = null;
@@ -9665,7 +9669,6 @@ function applyViewTransitionToHostInstancesRecursive(
 ) {
   for (var inViewport = !1; null !== child; ) {
     if (5 === child.tag) {
-      shouldStartViewTransition = !0;
       var instance = child.stateNode;
       if (null !== collectMeasurements) {
         var measurement = measureInstance(instance);
@@ -9673,6 +9676,7 @@ function applyViewTransitionToHostInstancesRecursive(
         measurement.view && (inViewport = !0);
       } else
         inViewport || (measureInstance(instance).view && (inViewport = !0));
+      shouldStartViewTransition = !0;
       measurement = className;
       instance.style.viewTransitionName =
         0 === viewTransitionHostInstanceIdx
@@ -10124,7 +10128,8 @@ function commitBeforeMutationEffects(root, firstChild, committedLanes) {
       null === root.alternate &&
       0 !== (root.flags & 2)
     )
-      commitBeforeMutationEffects_complete(committedLanes);
+      committedLanes && trackEnterViewTransitions(root),
+        commitBeforeMutationEffects_complete(committedLanes);
     else {
       if (enableViewTransition && 22 === root.tag)
         if (((JSCompiler_temp = root.alternate), null !== root.memoizedState)) {
@@ -10138,6 +10143,7 @@ function commitBeforeMutationEffects(root, firstChild, committedLanes) {
           null !== JSCompiler_temp &&
           null !== JSCompiler_temp.memoizedState
         ) {
+          committedLanes && trackEnterViewTransitions(root);
           commitBeforeMutationEffects_complete(committedLanes);
           continue;
         }
@@ -20534,14 +20540,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2134 = React.version;
 if (
-  "19.1.0-www-classic-3e88e97c-20250326" !==
+  "19.1.0-www-classic-4280563b-20250326" !==
   isomorphicReactPackageVersion$jscomp$inline_2134
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2134,
-      "19.1.0-www-classic-3e88e97c-20250326"
+      "19.1.0-www-classic-4280563b-20250326"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20559,10 +20565,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2136 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-3e88e97c-20250326",
+  version: "19.1.0-www-classic-4280563b-20250326",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-3e88e97c-20250326"
+  reconcilerVersion: "19.1.0-www-classic-4280563b-20250326"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2136.getLaneLabelMap = getLaneLabelMap),
@@ -20929,7 +20935,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-3e88e97c-20250326";
+exports.version = "19.1.0-www-classic-4280563b-20250326";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
