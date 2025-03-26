@@ -129,11 +129,5 @@ export function getViewTransitionClassName(
   if (eventClassName == null) {
     return className;
   }
-  if (eventClassName === 'none') {
-    return eventClassName;
-  }
-  if (className != null && className !== 'none') {
-    return className + ' ' + eventClassName;
-  }
   return eventClassName;
 }
