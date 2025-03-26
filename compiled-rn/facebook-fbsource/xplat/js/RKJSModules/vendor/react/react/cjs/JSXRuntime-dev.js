@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b27943ede9c0776aa10bb6c60914dff3>>
+ * @generated SignedSource<<104130268ad56fa81e402a8d1868e3c1>>
  */
 
 "use strict";
@@ -287,13 +287,12 @@ __DEV__ &&
         (node._store.validated = 1);
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
-      React = require("react"),
-      renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
-      ownerStackLimit = dynamicFlagsUntyped.ownerStackLimit;
-    dynamicFlagsUntyped = Symbol.for("react.element");
-    var REACT_ELEMENT_TYPE = renameElementSymbol
+      React = require("react");
+    dynamicFlagsUntyped = dynamicFlagsUntyped.renameElementSymbol;
+    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = dynamicFlagsUntyped
         ? Symbol.for("react.transitional.element")
-        : dynamicFlagsUntyped,
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -333,7 +332,7 @@ __DEV__ &&
     exports.Fragment = REACT_FRAGMENT_TYPE;
     exports.jsx = function (type, config, maybeKey, source, self) {
       var trackActualOwner =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+        1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
         type,
         config,
@@ -349,7 +348,7 @@ __DEV__ &&
     };
     exports.jsxs = function (type, config, maybeKey, source, self) {
       var trackActualOwner =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+        1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
         type,
         config,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<172c913826773dc378e108be1e342cb0>>
+ * @generated SignedSource<<b74e7ac299922e84f8e73289cbe2ed09>>
  */
 
 "use strict";
@@ -287,13 +287,12 @@ __DEV__ &&
         (node._store.validated = 1);
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
-      React = require("react"),
-      renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
-      ownerStackLimit = dynamicFlagsUntyped.ownerStackLimit;
-    dynamicFlagsUntyped = Symbol.for("react.element");
-    var REACT_ELEMENT_TYPE = renameElementSymbol
+      React = require("react");
+    dynamicFlagsUntyped = dynamicFlagsUntyped.renameElementSymbol;
+    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = dynamicFlagsUntyped
         ? Symbol.for("react.transitional.element")
-        : dynamicFlagsUntyped,
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -340,7 +339,7 @@ __DEV__ &&
       self
     ) {
       var trackActualOwner =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+        1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
         type,
         config,

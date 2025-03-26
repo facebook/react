@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dfbe91befff7a6cd4994189226228eeb>>
+ * @generated SignedSource<<4a1b45674e783b8e0f9309e672c1c020>>
  */
 
 "use strict";
@@ -670,13 +670,12 @@ __DEV__ &&
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
     var dynamicFlags = require("ReactNativeInternalFeatureFlags"),
-      enableUseEffectCRUDOverload = dynamicFlags.enableUseEffectCRUDOverload,
-      renameElementSymbol = dynamicFlags.renameElementSymbol,
-      ownerStackLimit = dynamicFlags.ownerStackLimit;
-    dynamicFlags = Symbol.for("react.element");
-    var REACT_ELEMENT_TYPE = renameElementSymbol
+      enableUseEffectCRUDOverload = dynamicFlags.enableUseEffectCRUDOverload;
+    dynamicFlags = dynamicFlags.renameElementSymbol;
+    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = dynamicFlags
         ? Symbol.for("react.transitional.element")
-        : dynamicFlags,
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -689,9 +688,9 @@ __DEV__ &&
       REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy");
-    renameElementSymbol = Symbol.for("react.scope");
+    dynamicFlags = Symbol.for("react.scope");
     var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
-    dynamicFlags = Symbol.for("react.legacy_hidden");
+    REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.legacy_hidden");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
@@ -1121,8 +1120,7 @@ __DEV__ &&
             ? type.displayName || type.name || "Unknown"
             : type
         );
-      var propName =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+      var propName = 1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return ReactElement(
         type,
         key,
@@ -1186,7 +1184,7 @@ __DEV__ &&
     exports.isValidElement = isValidElement;
     exports.jsx = function (type, config, maybeKey, source, self) {
       var trackActualOwner =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+        1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
         type,
         config,
@@ -1209,7 +1207,7 @@ __DEV__ &&
       self
     ) {
       var trackActualOwner =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+        1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
         type,
         config,
@@ -1225,7 +1223,7 @@ __DEV__ &&
     };
     exports.jsxs = function (type, config, maybeKey, source, self) {
       var trackActualOwner =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+        1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
         type,
         config,
@@ -1303,8 +1301,8 @@ __DEV__ &&
       }
     };
     exports.unstable_Activity = REACT_ACTIVITY_TYPE;
-    exports.unstable_LegacyHidden = dynamicFlags;
-    exports.unstable_Scope = renameElementSymbol;
+    exports.unstable_LegacyHidden = REACT_LEGACY_ELEMENT_TYPE;
+    exports.unstable_Scope = dynamicFlags;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
@@ -1430,7 +1428,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-b59f1860-20250324";
+    exports.version = "19.1.0-native-fb-f99c9fea-20250326";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
