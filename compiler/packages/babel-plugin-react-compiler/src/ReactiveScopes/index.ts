@@ -14,7 +14,10 @@ export {extractScopeDeclarationsFromDestructuring} from './ExtractScopeDeclarati
 export {inferReactiveScopeVariables} from './InferReactiveScopeVariables';
 export {memoizeFbtAndMacroOperandsInSameScope} from './MemoizeFbtAndMacroOperandsInSameScope';
 export {mergeReactiveScopesThatInvalidateTogether} from './MergeReactiveScopesThatInvalidateTogether';
-export {printReactiveFunction} from './PrintReactiveFunction';
+export {
+  printReactiveFunction,
+  printReactiveFunctionWithOutlined,
+} from './PrintReactiveFunction';
 export {promoteUsedTemporaries} from './PromoteUsedTemporaries';
 export {propagateEarlyReturns} from './PropagateEarlyReturns';
 export {pruneAllReactiveScopes} from './PruneAllReactiveScopes';

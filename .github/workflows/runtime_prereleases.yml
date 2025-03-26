@@ -14,6 +14,8 @@ on:
         required: true
         type: string
     secrets:
+      GH_TOKEN:
+        required: true
       NPM_TOKEN:
         required: true
 
@@ -29,6 +31,9 @@ jobs:
   publish_prerelease:
     name: Publish prelease (${{ inputs.release_channel }}) ${{ inputs.commit_sha }} @${{ inputs.dist_tag }}
     runs-on: ubuntu-latest
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,8 +51,10 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd scripts/release install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: |
-          scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}
+          GH_TOKEN=${{ secrets.GH_TOKEN }} scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}
           cp ./scripts/release/ci-npmrc ~/.npmrc
           scripts/release/publish.js --ci --tags ${{ inputs.dist_tag }}
