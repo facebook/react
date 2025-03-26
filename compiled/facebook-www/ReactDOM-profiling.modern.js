@@ -10794,10 +10794,27 @@ function commitDeletionEffectsOnFiber(
       );
       offscreenSubtreeWasHidden = prevHostParent;
       break;
+    case 30:
+      if (enableViewTransition) {
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber
+        );
+        break;
+      }
     case 7:
-      enableFragmentRefs &&
-        (offscreenSubtreeWasHidden ||
-          safelyDetachRef(deletedFiber, nearestMountedAncestor));
+      if (enableFragmentRefs) {
+        offscreenSubtreeWasHidden ||
+          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber
+        );
+        break;
+      }
     default:
       recursivelyTraverseDeletionEffects(
         finishedRoot,
@@ -20438,14 +20455,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2139 = React.version;
 if (
-  "19.1.0-www-modern-f9e1b160-20250325" !==
+  "19.1.0-www-modern-8ac25e52-20250325" !==
   isomorphicReactPackageVersion$jscomp$inline_2139
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2139,
-      "19.1.0-www-modern-f9e1b160-20250325"
+      "19.1.0-www-modern-8ac25e52-20250325"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20463,10 +20480,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2141 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-f9e1b160-20250325",
+  version: "19.1.0-www-modern-8ac25e52-20250325",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-f9e1b160-20250325"
+  reconcilerVersion: "19.1.0-www-modern-8ac25e52-20250325"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2141.getLaneLabelMap = getLaneLabelMap),
@@ -20833,7 +20850,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-f9e1b160-20250325";
+exports.version = "19.1.0-www-modern-8ac25e52-20250325";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

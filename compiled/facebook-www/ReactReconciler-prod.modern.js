@@ -8730,10 +8730,27 @@ module.exports = function ($$$config) {
         );
         offscreenSubtreeWasHidden = prevHostParent;
         break;
+      case 30:
+        if (enableViewTransition) {
+          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+          recursivelyTraverseDeletionEffects(
+            finishedRoot,
+            nearestMountedAncestor,
+            deletedFiber
+          );
+          break;
+        }
       case 7:
-        enableFragmentRefs &&
-          (offscreenSubtreeWasHidden ||
-            safelyDetachRef(deletedFiber, nearestMountedAncestor));
+        if (enableFragmentRefs) {
+          offscreenSubtreeWasHidden ||
+            safelyDetachRef(deletedFiber, nearestMountedAncestor);
+          recursivelyTraverseDeletionEffects(
+            finishedRoot,
+            nearestMountedAncestor,
+            deletedFiber
+          );
+          break;
+        }
       default:
         recursivelyTraverseDeletionEffects(
           finishedRoot,
@@ -13529,7 +13546,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-f9e1b160-20250325"
+      reconcilerVersion: "19.1.0-www-modern-8ac25e52-20250325"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
