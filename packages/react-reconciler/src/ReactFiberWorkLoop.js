@@ -21,7 +21,11 @@ import type {
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
 import type {OffscreenInstance} from './ReactFiberActivityComponent';
-import type {Resource, ViewTransitionInstance} from './ReactFiberConfig';
+import type {
+  Resource,
+  ViewTransitionInstance,
+  RunningViewTransition,
+} from './ReactFiberConfig';
 import type {RootState} from './ReactFiberRoot';
 import {
   getViewTransitionName,
@@ -102,6 +106,7 @@ import {
   trackSchedulerEvent,
   startViewTransition,
   startGestureTransition,
+  stopViewTransition,
   createViewTransitionInstance,
 } from './ReactFiberConfig';
 
@@ -665,6 +670,7 @@ let pendingEffectsRemainingLanes: Lanes = NoLanes;
 let pendingEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
 let pendingRecoverableErrors: null | Array<CapturedValue<mixed>> = null;
+let pendingViewTransition: null | RunningViewTransition = null;
 let pendingViewTransitionEvents: Array<(types: Array<string>) => void> | null =
   null;
 let pendingTransitionTypes: null | TransitionTypes = null;
@@ -3504,7 +3510,7 @@ function commitRoot(
 
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
   if (enableViewTransition && willStartViewTransition) {
-    startViewTransition(
+    pendingViewTransition = startViewTransition(
       root.containerInfo,
       pendingTransitionTypes,
       flushMutationEffects,
@@ -3643,6 +3649,8 @@ function flushSpawnedWork(): void {
     return;
   }
   pendingEffectsStatus = NO_PENDING_EFFECTS;
+
+  pendingViewTransition = null; // The view transition has now fully started.
 
   // Tell Scheduler to yield at the end of the frame, so the browser has an
   // opportunity to paint.
@@ -3913,7 +3921,7 @@ function commitGestureOnRoot(
   pendingTransitionTypes = null;
   pendingEffectsStatus = PENDING_GESTURE_MUTATION_PHASE;
 
-  finishedGesture.running = startGestureTransition(
+  pendingViewTransition = finishedGesture.running = startGestureTransition(
     root.containerInfo,
     finishedGesture.provider,
     finishedGesture.rangeCurrent,
@@ -3973,6 +3981,8 @@ function flushGestureAnimations(): void {
   pendingFinishedWork = (null: any); // Clear for GC purposes.
   pendingEffectsLanes = NoLanes;
 
+  pendingViewTransition = null; // The view transition has now fully started.
+
   const prevTransition = ReactSharedInternals.T;
   ReactSharedInternals.T = null;
   const previousPriority = getCurrentUpdatePriority();
@@ -4023,8 +4033,27 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
   }
 }
 
+let didWarnAboutInterruptedViewTransitions = false;
+
 export function flushPendingEffects(wasDelayedCommit?: boolean): boolean {
   // Returns whether passive effects were flushed.
+  if (enableViewTransition && pendingViewTransition !== null) {
+    // If we forced a flush before the View Transition full started then we skip it.
+    // This ensures that we're not running a partial animation.
+    stopViewTransition(pendingViewTransition);
+    if (__DEV__) {
+      if (!didWarnAboutInterruptedViewTransitions) {
+        didWarnAboutInterruptedViewTransitions = true;
+        console.warn(
+          'A flushSync update cancelled a View Transition because it was called ' +
+            'while the View Transition was still preparing. To preserve the synchronous ' +
+            'semantics, React had to skip the View Transition. If you can, try to avoid ' +
+            "flushSync() in a scenario that's likely to interfere.",
+        );
+      }
+    }
+    pendingViewTransition = null;
+  }
   flushGestureMutations();
   flushGestureAnimations();
   flushMutationEffects();
