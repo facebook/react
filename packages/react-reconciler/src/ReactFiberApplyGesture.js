@@ -151,7 +151,7 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
             // and can stop searching (size reaches zero).
             pairs.delete(name);
             const className: ?string = getViewTransitionClassName(
-              props.className,
+              props.default,
               props.share,
             );
             if (className !== 'none') {
@@ -196,7 +196,7 @@ function trackEnterViewTransitions(deletion: Fiber): void {
         ? appearingViewTransitions.get(name)
         : undefined;
     const className: ?string = getViewTransitionClassName(
-      props.className,
+      props.default,
       pair !== undefined ? props.share : props.enter,
     );
     if (className !== 'none') {
@@ -259,7 +259,7 @@ function applyAppearingPairViewTransition(child: Fiber): void {
       // Note that this class name that doesn't actually really matter because the
       // "new" side will be the one that wins in practice.
       const className: ?string = getViewTransitionClassName(
-        props.className,
+        props.default,
         props.share,
       );
       if (className !== 'none') {
@@ -282,7 +282,7 @@ function applyExitViewTransition(placement: Fiber): void {
   const props: ViewTransitionProps = placement.memoizedProps;
   const name = getViewTransitionName(props, state);
   const className: ?string = getViewTransitionClassName(
-    props.className,
+    props.default,
     // Note that just because we don't have a pair yet doesn't mean we won't find one
     // later. However, that doesn't matter because if we do the class name that wins
     // is the one applied by the "new" side anyway.
@@ -307,7 +307,7 @@ function applyNestedViewTransition(child: Fiber): void {
   const props: ViewTransitionProps = child.memoizedProps;
   const name = getViewTransitionName(props, state);
   const className: ?string = getViewTransitionClassName(
-    props.className,
+    props.default,
     props.update,
   );
   if (className !== 'none') {
@@ -336,7 +336,7 @@ function applyUpdateViewTransition(current: Fiber, finishedWork: Fiber): void {
   // want the props from "current" since that's the class that would've won if
   // it was the normal direction. To preserve the same effect in either direction.
   const className: ?string = getViewTransitionClassName(
-    newProps.className,
+    newProps.default,
     newProps.update,
   );
   if (className === 'none') {

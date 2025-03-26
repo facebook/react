@@ -29,7 +29,7 @@ export type ViewTransitionClass = 'none' | string | ViewTransitionClassPerType;
 export type ViewTransitionProps = {
   name?: string,
   children?: ReactNodeList,
-  className?: ViewTransitionClass,
+  default?: ViewTransitionClass,
   enter?: ViewTransitionClass,
   exit?: ViewTransitionClass,
   share?: ViewTransitionClass,
@@ -128,12 +128,6 @@ export function getViewTransitionClassName(
   const eventClassName: ?string = getClassNameByType(eventClass);
   if (eventClassName == null) {
     return className;
-  }
-  if (eventClassName === 'none') {
-    return eventClassName;
-  }
-  if (className != null && className !== 'none') {
-    return className + ' ' + eventClassName;
   }
   return eventClassName;
 }
