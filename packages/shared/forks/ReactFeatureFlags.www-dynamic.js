@@ -35,7 +35,6 @@ export const enableSchedulingProfiler = __VARIANT__;
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
 export const enableSiblingPrerendering = __VARIANT__;
 
-export const enableUseEffectCRUDOverload = __VARIANT__;
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableViewTransition = __VARIANT__;
