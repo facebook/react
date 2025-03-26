@@ -998,6 +998,14 @@ function codegenTerminal(
           lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
           break;
         }
+        case 'StoreContext': {
+          CompilerError.throwTodo({
+            reason: 'Support non-trivial for..in inits',
+            description: null,
+            loc: terminal.init.loc,
+            suggestions: null,
+          });
+        }
         default:
           CompilerError.invariant(false, {
             reason: `Expected a StoreLocal or Destructure to be assigned to the collection`,
@@ -1089,6 +1097,14 @@ function codegenTerminal(
         case 'Destructure': {
           lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
           break;
+        }
+        case 'StoreContext': {
+          CompilerError.throwTodo({
+            reason: 'Support non-trivial for..of inits',
+            description: null,
+            loc: terminal.init.loc,
+            suggestions: null,
+          });
         }
         default:
           CompilerError.invariant(false, {

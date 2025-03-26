@@ -3595,31 +3595,40 @@ function lowerAssignment(
 
       let temporary;
       if (builder.isContextIdentifier(lvalue)) {
-        if (kind !== InstructionKind.Reassign && !isHoistedIdentifier) {
-          if (kind === InstructionKind.Const) {
-            builder.errors.push({
-              reason: `Expected \`const\` declaration not to be reassigned`,
-              severity: ErrorSeverity.InvalidJS,
-              loc: lvalue.node.loc ?? null,
-              suggestions: null,
-            });
-          }
-          lowerValueToTemporary(builder, {
-            kind: 'DeclareContext',
-            lvalue: {
-              kind: InstructionKind.Let,
-              place: {...place},
-            },
-            loc: place.loc,
+        if (kind === InstructionKind.Const && !isHoistedIdentifier) {
+          builder.errors.push({
+            reason: `Expected \`const\` declaration not to be reassigned`,
+            severity: ErrorSeverity.InvalidJS,
+            loc: lvalue.node.loc ?? null,
+            suggestions: null,
           });
         }
 
-        temporary = lowerValueToTemporary(builder, {
-          kind: 'StoreContext',
-          lvalue: {place: {...place}, kind: InstructionKind.Reassign},
-          value,
-          loc,
-        });
+        if (
+          kind !== InstructionKind.Const &&
+          kind !== InstructionKind.Reassign &&
+          kind !== InstructionKind.Let &&
+          kind !== InstructionKind.Function
+        ) {
+          builder.errors.push({
+            reason: `Unexpected context variable kind`,
+            severity: ErrorSeverity.InvalidJS,
+            loc: lvalue.node.loc ?? null,
+            suggestions: null,
+          });
+          temporary = lowerValueToTemporary(builder, {
+            kind: 'UnsupportedNode',
+            node: lvalueNode,
+            loc: lvalueNode.loc ?? GeneratedSource,
+          });
+        } else {
+          temporary = lowerValueToTemporary(builder, {
+            kind: 'StoreContext',
+            lvalue: {place: {...place}, kind},
+            value,
+            loc,
+          });
+        }
       } else {
         const typeAnnotation = lvalue.get('typeAnnotation');
         let type: t.FlowType | t.TSType | null;

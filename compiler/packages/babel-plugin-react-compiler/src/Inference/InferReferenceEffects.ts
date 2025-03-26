@@ -394,9 +394,13 @@ class InferenceState {
 
   freezeValues(values: Set<InstructionValue>, reason: Set<ValueReason>): void {
     for (const value of values) {
-      if (value.kind === 'DeclareContext') {
+      if (
+        value.kind === 'DeclareContext' ||
+        (value.kind === 'StoreContext' &&
+          value.lvalue.kind === InstructionKind.Let)
+      ) {
         /**
-         * Avoid freezing hoisted context declarations
+         * Avoid freezing context variable declarations, hoisted or otherwise
          * function Component() {
          *   const cb = useBar(() => foo(2)); // produces a hoisted context declaration
          *   const foo = useFoo();            // reassigns to the context variable
@@ -1591,6 +1595,14 @@ function inferBlock(
         );
 
         const lvalue = instr.lvalue;
+        if (instrValue.lvalue.kind !== InstructionKind.Reassign) {
+          state.initialize(instrValue, {
+            kind: ValueKind.Mutable,
+            reason: new Set([ValueReason.Other]),
+            context: new Set(),
+          });
+          state.define(instrValue.lvalue.place, instrValue);
+        }
         state.alias(lvalue, instrValue.value);
         lvalue.effect = Effect.Store;
         continuation = {kind: 'funeffects'};
