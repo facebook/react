@@ -5,7 +5,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
-    "directory": "packages/eslint-plugin-react-hooks"
+    "directory": "compiler/packages/eslint-plugin-react-hooks"
   },
   "files": [
     "LICENSE",
@@ -21,9 +21,11 @@
     "react"
   ],
   "scripts": {
-    "build:compiler": "cd ../../compiler && yarn workspace babel-plugin-react-compiler build",
+    "build:compiler": "yarn workspace babel-plugin-react-compiler build",
+    "build": "rimraf dist && tsup",
     "test": "yarn build:compiler && jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "watch": "yarn build --watch"
   },
   "license": "MIT",
   "bugs": {
@@ -48,6 +50,7 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.11.4",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/preset-typescript": "^7.26.0",
     "@babel/types": "^7.19.0",
     "@tsconfig/strictest": "^2.0.5",
@@ -60,6 +63,7 @@
     "@types/estree-jsx": "^1.0.5",
     "@types/node": "^20.2.5",
     "babel-eslint": "^10.0.3",
+    "babel-jest": "^29.7.0",
     "eslint-v7": "npm:eslint@^7.7.0",
     "eslint-v8": "npm:eslint@^8.57.1",
     "eslint-v9": "npm:eslint@^9.0.0",
