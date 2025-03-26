@@ -40,7 +40,6 @@ export const {
   enableComponentPerformanceTrack,
   enableScrollEndPolyfill,
   enableFragmentRefs,
-  ownerStackLimit,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -114,6 +113,8 @@ export const enableShallowPropDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
 
 export const enableSwipeTransition = false;
+
+export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
