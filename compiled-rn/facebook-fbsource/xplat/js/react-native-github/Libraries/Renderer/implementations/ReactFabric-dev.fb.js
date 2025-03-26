@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ae7e7cfecfe2ec3e34511dac69ca9365>>
+ * @generated SignedSource<<22f2ec2d256f9966ddcda945341b831e>>
  */
 
 "use strict";
@@ -3065,7 +3065,9 @@ __DEV__ &&
             0 !== (nextLanes & 3) && (mightHavePendingSyncWork = !0));
         root = next;
       }
-      flushSyncWorkAcrossRoots_impl(0, !1);
+      (pendingEffectsStatus !== NO_PENDING_EFFECTS &&
+        pendingEffectsStatus !== PENDING_PASSIVE_PHASE) ||
+        flushSyncWorkAcrossRoots_impl(0, !1);
     }
     function scheduleTaskForRootDuringMicrotask(root, currentTime) {
       for (
@@ -17054,10 +17056,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-313332d1-20250326",
+        version: "19.1.0-native-fb-a5297ece-20250326",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-313332d1-20250326"
+        reconcilerVersion: "19.1.0-native-fb-a5297ece-20250326"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

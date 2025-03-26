@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<be54a215e85f9160c4b79c01dfa2b1b1>>
+ * @generated SignedSource<<4bc94e59836a35eb7b5308c14978d8fd>>
  */
 
 /*
@@ -12761,7 +12761,8 @@ function processRootScheduleInMicrotask() {
       mightHavePendingSyncWork = !0;
     root = next;
   }
-  flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
+  (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
+    flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   for (
@@ -16631,14 +16632,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1892 = React.version;
 if (
-  "19.1.0-native-fb-313332d1-20250326" !==
+  "19.1.0-native-fb-a5297ece-20250326" !==
   isomorphicReactPackageVersion$jscomp$inline_1892
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1892,
-      "19.1.0-native-fb-313332d1-20250326"
+      "19.1.0-native-fb-a5297ece-20250326"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16660,10 +16661,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1899 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-313332d1-20250326",
+  version: "19.1.0-native-fb-a5297ece-20250326",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-313332d1-20250326",
+  reconcilerVersion: "19.1.0-native-fb-a5297ece-20250326",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$293 = 0;
@@ -16936,7 +16937,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-313332d1-20250326";
+exports.version = "19.1.0-native-fb-a5297ece-20250326";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

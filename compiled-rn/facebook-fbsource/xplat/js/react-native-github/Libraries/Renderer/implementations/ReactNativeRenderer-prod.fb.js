@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<42603b691e75ab14b02ef595cb5dcf33>>
+ * @generated SignedSource<<42d4ba7e1a72272bbf0a1bb487ed3f9f>>
  */
 
 "use strict";
@@ -2657,7 +2657,8 @@ function processRootScheduleInImmediateTask() {
         0 !== (nextLanes & 3) && (mightHavePendingSyncWork = !0));
     root = next;
   }
-  flushSyncWorkAcrossRoots_impl(0, !1);
+  (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
+    flushSyncWorkAcrossRoots_impl(0, !1);
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   for (
@@ -11003,11 +11004,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-313332d1-20250326" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-a5297ece-20250326" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-313332d1-20250326\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-a5297ece-20250326\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11056,10 +11057,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1282 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-313332d1-20250326",
+    version: "19.1.0-native-fb-a5297ece-20250326",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-313332d1-20250326"
+    reconcilerVersion: "19.1.0-native-fb-a5297ece-20250326"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1282.rendererConfig = extraDevToolsConfig);

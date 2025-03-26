@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<03012d1d5172bc7f325c5db3ff859fe2>>
+ * @generated SignedSource<<143e56c6d2a27a985995d07b3470a2f9>>
  */
 
 /*
@@ -12120,7 +12120,8 @@ function processRootScheduleInMicrotask() {
       mightHavePendingSyncWork = !0;
     root = next;
   }
-  flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
+  (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
+    flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   for (
@@ -15979,14 +15980,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1797 = React.version;
 if (
-  "19.1.0-native-fb-313332d1-20250326" !==
+  "19.1.0-native-fb-a5297ece-20250326" !==
   isomorphicReactPackageVersion$jscomp$inline_1797
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1797,
-      "19.1.0-native-fb-313332d1-20250326"
+      "19.1.0-native-fb-a5297ece-20250326"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16008,10 +16009,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2249 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-313332d1-20250326",
+  version: "19.1.0-native-fb-a5297ece-20250326",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-313332d1-20250326"
+  reconcilerVersion: "19.1.0-native-fb-a5297ece-20250326"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2250 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16269,4 +16270,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-313332d1-20250326";
+exports.version = "19.1.0-native-fb-a5297ece-20250326";

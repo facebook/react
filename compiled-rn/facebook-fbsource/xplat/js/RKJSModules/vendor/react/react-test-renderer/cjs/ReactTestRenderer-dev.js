@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e760830828def57d94125581e07e23e6>>
+ * @generated SignedSource<<3e099c689180992ecc71d5453b60c447>>
  */
 
 "use strict";
@@ -2183,7 +2183,9 @@ __DEV__ &&
             0 !== (nextLanes & 3) && (mightHavePendingSyncWork = !0));
         root = next;
       }
-      flushSyncWorkAcrossRoots_impl(0, !1);
+      (pendingEffectsStatus !== NO_PENDING_EFFECTS &&
+        pendingEffectsStatus !== PENDING_PASSIVE_PHASE) ||
+        flushSyncWorkAcrossRoots_impl(0, !1);
     }
     function scheduleTaskForRootDuringMicrotask(root, currentTime) {
       for (
@@ -15325,10 +15327,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-313332d1-20250326",
+        version: "19.1.0-native-fb-a5297ece-20250326",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-313332d1-20250326"
+        reconcilerVersion: "19.1.0-native-fb-a5297ece-20250326"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15473,5 +15475,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-313332d1-20250326";
+    exports.version = "19.1.0-native-fb-a5297ece-20250326";
   })();
