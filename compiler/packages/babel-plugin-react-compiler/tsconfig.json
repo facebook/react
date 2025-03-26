@@ -4,7 +4,7 @@
     "module": "ES2015",
     "moduleResolution": "Bundler",
     "rootDir": "src",
-    "outDir": "dist",
+    "noEmit": true,
     "jsx": "react-jsxdev",
     // weaken strictness from preset
     "importsNotUsedAsValues": "remove",
