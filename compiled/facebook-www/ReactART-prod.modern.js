@@ -1291,7 +1291,8 @@ function processRootScheduleInImmediateTask() {
         0 !== (nextLanes & 3) && (mightHavePendingSyncWork = !0));
     root = next;
   }
-  flushSyncWorkAcrossRoots_impl(0, !1);
+  (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
+    flushSyncWorkAcrossRoots_impl(0, !1);
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   var pendingLanes = root.pendingLanes,
@@ -6988,7 +6989,8 @@ function insertOrAppendPlacementNode(node, before, parent) {
     )
       insertOrAppendPlacementNode(node, before, parent), (node = node.sibling);
 }
-var appearingViewTransitions = null;
+var shouldStartViewTransition = !1,
+  appearingViewTransitions = null;
 function applyViewTransitionToHostInstancesRecursive(
   child,
   name,
@@ -6998,9 +7000,10 @@ function applyViewTransitionToHostInstancesRecursive(
 ) {
   for (var inViewport = !1; null !== child; ) {
     if (5 === child.tag)
-      null !== collectMeasurements
-        ? (collectMeasurements.push(null), (inViewport = !0))
-        : inViewport || (inViewport = !0);
+      (shouldStartViewTransition = !0),
+        null !== collectMeasurements
+          ? (collectMeasurements.push(null), (inViewport = !0))
+          : inViewport || (inViewport = !0);
     else if (22 !== child.tag || null === child.memoizedState)
       (30 === child.tag && stopAtNestedViewTransitions) ||
         (applyViewTransitionToHostInstancesRecursive(
@@ -10008,6 +10011,7 @@ function commitRoot(
           return null;
         }))
       : ((root.callbackNode = null), (root.callbackPriority = 0));
+    shouldStartViewTransition = !1;
     recoverableErrors = 0 !== (finishedWork.flags & 13878);
     if (0 !== (finishedWork.subtreeFlags & 13878) || recoverableErrors) {
       recoverableErrors = ReactSharedInternals.T;
@@ -10024,10 +10028,10 @@ function commitRoot(
           (ReactSharedInternals.T = recoverableErrors);
       }
     }
+    root = shouldStartViewTransition;
     pendingEffectsStatus = 1;
-    flushMutationEffects();
-    flushLayoutEffects();
-    flushSpawnedWork();
+    (enableViewTransition && root) ||
+      (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
   }
 }
 function flushMutationEffects() {
@@ -10855,10 +10859,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1555 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-25411461-20250326",
+  version: "19.1.0-www-modern-a5297ece-20250326",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-25411461-20250326"
+  reconcilerVersion: "19.1.0-www-modern-a5297ece-20250326"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1556 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10884,4 +10888,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-25411461-20250326";
+exports.version = "19.1.0-www-modern-a5297ece-20250326";

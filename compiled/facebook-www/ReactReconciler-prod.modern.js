@@ -1271,7 +1271,8 @@ module.exports = function ($$$config) {
         mightHavePendingSyncWork = !0;
       root = next;
     }
-    flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
+    (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
+      flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
   }
   function scheduleTaskForRootDuringMicrotask(root, currentTime) {
     var pendingLanes = root.pendingLanes,
@@ -11361,19 +11362,18 @@ module.exports = function ($$$config) {
       }
       finishedWork = shouldStartViewTransition;
       pendingEffectsStatus = 1;
-      (enableViewTransition &&
-        finishedWork &&
-        startViewTransition(
-          root.containerInfo,
-          pendingTransitionTypes,
-          flushMutationEffects,
-          flushLayoutEffects,
-          flushAfterMutationEffects,
-          flushSpawnedWork,
-          flushPassiveEffects,
-          reportViewTransitionError
-        )) ||
-        (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
+      enableViewTransition && finishedWork
+        ? (pendingViewTransition = startViewTransition(
+            root.containerInfo,
+            pendingTransitionTypes,
+            flushMutationEffects,
+            flushLayoutEffects,
+            flushAfterMutationEffects,
+            flushSpawnedWork,
+            flushPassiveEffects,
+            reportViewTransitionError
+          ))
+        : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
     }
   }
   function reportViewTransitionError(error) {
@@ -11447,6 +11447,7 @@ module.exports = function ($$$config) {
   function flushSpawnedWork() {
     if (4 === pendingEffectsStatus || 3 === pendingEffectsStatus) {
       pendingEffectsStatus = 0;
+      pendingViewTransition = null;
       requestPaint();
       var root = pendingEffectsRoot,
         finishedWork = pendingFinishedWork,
@@ -11540,6 +11541,10 @@ module.exports = function ($$$config) {
         ((root.pooledCache = null), releaseCache(remainingLanes)));
   }
   function flushPendingEffects(wasDelayedCommit) {
+    enableViewTransition &&
+      null !== pendingViewTransition &&
+      (stopViewTransition(pendingViewTransition),
+      (pendingViewTransition = null));
     flushMutationEffects();
     flushLayoutEffects();
     flushSpawnedWork();
@@ -12354,7 +12359,7 @@ module.exports = function ($$$config) {
     hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent,
     startViewTransition = $$$config.startViewTransition;
   $$$config.startGestureTransition;
-  $$$config.stopGestureTransition;
+  var stopViewTransition = $$$config.stopViewTransition;
   $$$config.getCurrentGestureOffset;
   $$$config.subscribeToGestureDirection;
   var createViewTransitionInstance = $$$config.createViewTransitionInstance,
@@ -13045,6 +13050,7 @@ module.exports = function ($$$config) {
     pendingEffectsRemainingLanes = 0,
     pendingPassiveTransitions = null,
     pendingRecoverableErrors = null,
+    pendingViewTransition = null,
     pendingViewTransitionEvents = null,
     pendingTransitionTypes = null,
     pendingDidIncludeRenderPhaseUpdate = !1,
@@ -13401,7 +13407,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-25411461-20250326"
+      reconcilerVersion: "19.1.0-www-modern-a5297ece-20250326"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

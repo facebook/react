@@ -2700,7 +2700,8 @@ function processRootScheduleInMicrotask() {
       mightHavePendingSyncWork = !0;
     root = next;
   }
-  flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
+  (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
+    flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   var pendingLanes = root.pendingLanes,
@@ -12813,6 +12814,7 @@ var legacyErrorBoundariesThatAlreadyFailed = null,
   pendingEffectsRenderEndTime = -0,
   pendingPassiveTransitions = null,
   pendingRecoverableErrors = null,
+  pendingViewTransition = null,
   pendingViewTransitionEvents = null,
   pendingTransitionTypes = null,
   pendingDidIncludeRenderPhaseUpdate = !1,
@@ -14138,19 +14140,18 @@ function commitRoot(
     }
     finishedWork = shouldStartViewTransition;
     pendingEffectsStatus = 1;
-    (enableViewTransition &&
-      finishedWork &&
-      startViewTransition(
-        root.containerInfo,
-        pendingTransitionTypes,
-        flushMutationEffects,
-        flushLayoutEffects,
-        flushAfterMutationEffects,
-        flushSpawnedWork,
-        flushPassiveEffects,
-        reportViewTransitionError
-      )) ||
-      (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
+    enableViewTransition && finishedWork
+      ? (pendingViewTransition = startViewTransition(
+          root.containerInfo,
+          pendingTransitionTypes,
+          flushMutationEffects,
+          flushLayoutEffects,
+          flushAfterMutationEffects,
+          flushSpawnedWork,
+          flushPassiveEffects,
+          reportViewTransitionError
+        ))
+      : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
   }
 }
 function reportViewTransitionError(error) {
@@ -14348,6 +14349,7 @@ function flushLayoutEffects() {
 function flushSpawnedWork() {
   if (4 === pendingEffectsStatus || 3 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
+    pendingViewTransition = null;
     requestPaint();
     var root = pendingEffectsRoot,
       finishedWork = pendingFinishedWork,
@@ -14457,6 +14459,9 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects(wasDelayedCommit) {
+  enableViewTransition &&
+    null !== pendingViewTransition &&
+    (pendingViewTransition.skipTransition(), (pendingViewTransition = null));
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -16143,20 +16148,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1882 = 0;
-  i$jscomp$inline_1882 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1882++
+  var i$jscomp$inline_1884 = 0;
+  i$jscomp$inline_1884 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1884++
 ) {
-  var eventName$jscomp$inline_1883 =
-      simpleEventPluginEvents[i$jscomp$inline_1882],
-    domEventName$jscomp$inline_1884 =
-      eventName$jscomp$inline_1883.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1885 =
-      eventName$jscomp$inline_1883[0].toUpperCase() +
-      eventName$jscomp$inline_1883.slice(1);
+  var eventName$jscomp$inline_1885 =
+      simpleEventPluginEvents[i$jscomp$inline_1884],
+    domEventName$jscomp$inline_1886 =
+      eventName$jscomp$inline_1885.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1887 =
+      eventName$jscomp$inline_1885[0].toUpperCase() +
+      eventName$jscomp$inline_1885.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1884,
-    "on" + capitalizedEvent$jscomp$inline_1885
+    domEventName$jscomp$inline_1886,
+    "on" + capitalizedEvent$jscomp$inline_1887
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -18371,9 +18376,9 @@ function startViewTransition(
         (ownerDocument.__reactViewTransition = null);
       passiveCallback();
     });
-    return !0;
+    return transition;
   } catch (x) {
-    return !1;
+    return mutationCallback(), layoutCallback(), spawnedWorkCallback(), null;
   }
 }
 function ViewTransitionPseudoElement(pseudo, name) {
@@ -20315,16 +20320,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2122 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2124 = React.version;
 if (
-  "19.1.0-www-modern-25411461-20250326" !==
-  isomorphicReactPackageVersion$jscomp$inline_2122
+  "19.1.0-www-modern-a5297ece-20250326" !==
+  isomorphicReactPackageVersion$jscomp$inline_2124
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2122,
-      "19.1.0-www-modern-25411461-20250326"
+      isomorphicReactPackageVersion$jscomp$inline_2124,
+      "19.1.0-www-modern-a5297ece-20250326"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20340,27 +20345,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2124 = {
+var internals$jscomp$inline_2126 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-25411461-20250326",
+  version: "19.1.0-www-modern-a5297ece-20250326",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-25411461-20250326"
+  reconcilerVersion: "19.1.0-www-modern-a5297ece-20250326"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2124.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2124.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2126.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2126.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2677 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2679 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2677.isDisabled &&
-    hook$jscomp$inline_2677.supportsFiber
+    !hook$jscomp$inline_2679.isDisabled &&
+    hook$jscomp$inline_2679.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2677.inject(
-        internals$jscomp$inline_2124
+      (rendererID = hook$jscomp$inline_2679.inject(
+        internals$jscomp$inline_2126
       )),
-        (injectedHook = hook$jscomp$inline_2677);
+        (injectedHook = hook$jscomp$inline_2679);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -20712,7 +20717,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-25411461-20250326";
+exports.version = "19.1.0-www-modern-a5297ece-20250326";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

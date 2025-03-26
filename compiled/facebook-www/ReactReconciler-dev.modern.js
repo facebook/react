@@ -2812,7 +2812,9 @@ __DEV__ &&
           mightHavePendingSyncWork = !0;
         root = next;
       }
-      flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
+      (pendingEffectsStatus !== NO_PENDING_EFFECTS &&
+        pendingEffectsStatus !== PENDING_PASSIVE_PHASE) ||
+        flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
     }
     function scheduleTaskForRootDuringMicrotask(root, currentTime) {
       var pendingLanes = root.pendingLanes,
@@ -16436,19 +16438,18 @@ __DEV__ &&
         }
         finishedWork = shouldStartViewTransition;
         pendingEffectsStatus = PENDING_MUTATION_PHASE;
-        (enableViewTransition &&
-          finishedWork &&
-          startViewTransition(
-            root.containerInfo,
-            pendingTransitionTypes,
-            flushMutationEffects,
-            flushLayoutEffects,
-            flushAfterMutationEffects,
-            flushSpawnedWork,
-            flushPassiveEffects,
-            reportViewTransitionError
-          )) ||
-          (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
+        enableViewTransition && finishedWork
+          ? (pendingViewTransition = startViewTransition(
+              root.containerInfo,
+              pendingTransitionTypes,
+              flushMutationEffects,
+              flushLayoutEffects,
+              flushAfterMutationEffects,
+              flushSpawnedWork,
+              flushPassiveEffects,
+              reportViewTransitionError
+            ))
+          : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
       }
     }
     function reportViewTransitionError(error) {
@@ -16553,6 +16554,7 @@ __DEV__ &&
         pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE
       ) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
+        pendingViewTransition = null;
         requestPaint();
         var root = pendingEffectsRoot,
           finishedWork = pendingFinishedWork,
@@ -16684,6 +16686,15 @@ __DEV__ &&
           ((root.pooledCache = null), releaseCache(remainingLanes)));
     }
     function flushPendingEffects(wasDelayedCommit) {
+      enableViewTransition &&
+        null !== pendingViewTransition &&
+        (stopViewTransition(pendingViewTransition),
+        didWarnAboutInterruptedViewTransitions ||
+          ((didWarnAboutInterruptedViewTransitions = !0),
+          console.warn(
+            "A flushSync update cancelled a View Transition because it was called while the View Transition was still preparing. To preserve the synchronous semantics, React had to skip the View Transition. If you can, try to avoid flushSync() in a scenario that's likely to interfere."
+          )),
+        (pendingViewTransition = null));
       flushMutationEffects();
       flushLayoutEffects();
       flushSpawnedWork();
@@ -17995,7 +18006,7 @@ __DEV__ &&
       hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent,
       startViewTransition = $$$config.startViewTransition;
     $$$config.startGestureTransition;
-    $$$config.stopGestureTransition;
+    var stopViewTransition = $$$config.stopViewTransition;
     $$$config.getCurrentGestureOffset;
     $$$config.subscribeToGestureDirection;
     var createViewTransitionInstance = $$$config.createViewTransitionInstance,
@@ -20050,6 +20061,7 @@ __DEV__ &&
       pendingEffectsRenderEndTime = -0,
       pendingPassiveTransitions = null,
       pendingRecoverableErrors = null,
+      pendingViewTransition = null,
       pendingViewTransitionEvents = null,
       pendingTransitionTypes = null,
       pendingDidIncludeRenderPhaseUpdate = !1,
@@ -20063,6 +20075,7 @@ __DEV__ &&
       nestedPassiveUpdateCount = 0,
       rootWithPassiveNestedUpdates = null,
       isRunningInsertionEffect = !1,
+      didWarnAboutInterruptedViewTransitions = !1,
       didWarnStateUpdateForNotYetMountedComponent = null,
       didWarnAboutUpdateInRender = !1;
     var didWarnAboutUpdateInRenderForAnotherComponent = new Set();
@@ -20592,7 +20605,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-25411461-20250326"
+        reconcilerVersion: "19.1.0-www-modern-a5297ece-20250326"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

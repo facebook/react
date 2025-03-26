@@ -2661,7 +2661,9 @@ __DEV__ &&
             0 !== (nextLanes & 3) && (mightHavePendingSyncWork = !0));
         root = next;
       }
-      flushSyncWorkAcrossRoots_impl(0, !1);
+      (pendingEffectsStatus !== NO_PENDING_EFFECTS &&
+        pendingEffectsStatus !== PENDING_PASSIVE_PHASE) ||
+        flushSyncWorkAcrossRoots_impl(0, !1);
     }
     function scheduleTaskForRootDuringMicrotask(root, currentTime) {
       var pendingLanes = root.pendingLanes,
@@ -10427,9 +10429,10 @@ __DEV__ &&
     ) {
       for (var inViewport = !1; null !== child; ) {
         if (5 === child.tag)
-          null !== collectMeasurements
-            ? (collectMeasurements.push(null), (inViewport = !0))
-            : inViewport || (inViewport = !0);
+          (shouldStartViewTransition = !0),
+            null !== collectMeasurements
+              ? (collectMeasurements.push(null), (inViewport = !0))
+              : inViewport || (inViewport = !0);
         else if (22 !== child.tag || null === child.memoizedState)
           (30 === child.tag && stopAtNestedViewTransitions) ||
             (applyViewTransitionToHostInstancesRecursive(
@@ -14562,6 +14565,7 @@ __DEV__ &&
                 completedRenderEndTime,
                 commitStartTime
               ));
+        shouldStartViewTransition = !1;
         suspendedCommitReason = 0 !== (finishedWork.flags & 13878);
         if (
           0 !== (finishedWork.subtreeFlags & 13878) ||
@@ -14581,10 +14585,11 @@ __DEV__ &&
               (ReactSharedInternals.T = suspendedCommitReason);
           }
         }
+        root = shouldStartViewTransition;
         pendingEffectsStatus = PENDING_MUTATION_PHASE;
-        flushMutationEffects();
-        flushLayoutEffects();
-        flushSpawnedWork();
+        enableViewTransition && root
+          ? (pendingViewTransition = null)
+          : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
       }
     }
     function flushMutationEffects() {
@@ -14671,6 +14676,7 @@ __DEV__ &&
         pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE
       ) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
+        pendingViewTransition = null;
         requestPaint();
         var root = pendingEffectsRoot,
           finishedWork = pendingFinishedWork,
@@ -14830,6 +14836,14 @@ __DEV__ &&
           ((root.pooledCache = null), releaseCache(remainingLanes)));
     }
     function flushPendingEffects(wasDelayedCommit) {
+      enableViewTransition &&
+        null !== pendingViewTransition &&
+        (didWarnAboutInterruptedViewTransitions ||
+          ((didWarnAboutInterruptedViewTransitions = !0),
+          console.warn(
+            "A flushSync update cancelled a View Transition because it was called while the View Transition was still preparing. To preserve the synchronous semantics, React had to skip the View Transition. If you can, try to avoid flushSync() in a scenario that's likely to interfere."
+          )),
+        (pendingViewTransition = null));
       flushMutationEffects();
       flushLayoutEffects();
       flushSpawnedWork();
@@ -17826,6 +17840,7 @@ __DEV__ &&
       didWarnAboutUndefinedSnapshotBeforeUpdate = null;
     didWarnAboutUndefinedSnapshotBeforeUpdate = new Set();
     var viewTransitionMutationContext = !1,
+      shouldStartViewTransition = !1,
       appearingViewTransitions = null,
       mountedNamedViewTransitions = new Map(),
       didWarnAboutName = {},
@@ -17928,6 +17943,7 @@ __DEV__ &&
       pendingEffectsRenderEndTime = -0,
       pendingPassiveTransitions = null,
       pendingRecoverableErrors = null,
+      pendingViewTransition = null,
       pendingViewTransitionEvents = null,
       pendingTransitionTypes = null,
       pendingDidIncludeRenderPhaseUpdate = !1,
@@ -17941,6 +17957,7 @@ __DEV__ &&
       nestedPassiveUpdateCount = 0,
       rootWithPassiveNestedUpdates = null,
       isRunningInsertionEffect = !1,
+      didWarnAboutInterruptedViewTransitions = !1,
       didWarnStateUpdateForNotYetMountedComponent = null,
       didWarnAboutUpdateInRender = !1;
     var didWarnAboutUpdateInRenderForAnotherComponent = new Set();
@@ -18164,10 +18181,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-25411461-20250326",
+        version: "19.1.0-www-classic-a5297ece-20250326",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-25411461-20250326"
+        reconcilerVersion: "19.1.0-www-classic-a5297ece-20250326"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18201,7 +18218,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-classic-25411461-20250326";
+    exports.version = "19.1.0-www-classic-a5297ece-20250326";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
