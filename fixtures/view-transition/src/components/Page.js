@@ -2,6 +2,7 @@ import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
   unstable_useSwipeTransition as useSwipeTransition,
+  useLayoutEffect,
   useEffect,
   useState,
   useId,
@@ -67,6 +68,16 @@ export default function Page({url, navigate}) {
     const timer = setInterval(() => setCounter(c => c + 1), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useLayoutEffect(() => {
+    // Calling a default update should not interrupt ViewTransitions but
+    // a flushSync will.
+    // Promise.resolve().then(() => {
+    //   flushSync(() => {
+    setCounter(c => c + 10);
+    //  });
+    // });
+  }, [show]);
 
   const exclamation = (
     <ViewTransition name="exclamation" onShare={onTransition}>
