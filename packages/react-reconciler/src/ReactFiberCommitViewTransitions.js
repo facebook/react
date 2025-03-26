@@ -67,6 +67,20 @@ export function trackAppearingViewTransition(
   appearingViewTransitions.set(name, state);
 }
 
+export function trackEnterViewTransitions(placement: Fiber): void {
+  if (
+    placement.tag === ViewTransitionComponent ||
+    (placement.subtreeFlags & ViewTransitionStatic) !== NoFlags
+  ) {
+    // If an inserted or appearing Fiber is a ViewTransition component or has one as
+    // an immediate child, then that will trigger as an "Enter" in future passes.
+    // We don't do anything else for that case in the "before mutation" phase but we
+    // still have to mark it as needing to call startViewTransition if nothing else
+    // updates.
+    shouldStartViewTransition = true;
+  }
+}
+
 // We can't cancel view transition children until we know that their parent also
 // don't need to transition.
 export let viewTransitionCancelableChildren: null | Array<
@@ -119,7 +133,6 @@ function applyViewTransitionToHostInstancesRecursive(
   let inViewport = false;
   while (child !== null) {
     if (child.tag === HostComponent) {
-      shouldStartViewTransition = true;
       const instance: Instance = child.stateNode;
       if (collectMeasurements !== null) {
         const measurement = measureInstance(instance);
@@ -132,6 +145,7 @@ function applyViewTransitionToHostInstancesRecursive(
           inViewport = true;
         }
       }
+      shouldStartViewTransition = true;
       applyViewTransitionName(
         instance,
         viewTransitionHostInstanceIdx === 0
