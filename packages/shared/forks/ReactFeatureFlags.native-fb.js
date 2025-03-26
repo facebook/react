@@ -25,7 +25,6 @@ export const {
   enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
-  enableUseEffectCRUDOverload,
   passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering,
   enableFastAddPropertiesInDiffing,
