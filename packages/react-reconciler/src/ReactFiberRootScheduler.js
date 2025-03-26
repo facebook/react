@@ -48,7 +48,6 @@ import {
   hasPendingCommitEffects,
   isWorkLoopSuspendedOnData,
   performWorkOnRoot,
-  isPreparingViewTransition,
 } from './ReactFiberWorkLoop';
 import {LegacyRoot} from './ReactRootTags';
 import {
@@ -314,7 +313,7 @@ function processRootScheduleInMicrotask() {
   // If we're in the middle of a View Transition async sequence, we don't want to
   // interrupt that sequence. Instead, we'll flush any remaining work when it
   // completes.
-  if (!isPreparingViewTransition()) {
+  if (!hasPendingCommitEffects()) {
     flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
   }
 }
