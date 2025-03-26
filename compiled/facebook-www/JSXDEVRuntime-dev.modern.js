@@ -310,8 +310,7 @@ __DEV__ &&
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-      enableViewTransition = dynamicFeatureFlags.enableViewTransition,
-      ownerStackLimit = dynamicFeatureFlags.ownerStackLimit;
+      enableViewTransition = dynamicFeatureFlags.enableViewTransition;
     dynamicFeatureFlags = Symbol.for("react.element");
     var REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")
@@ -364,7 +363,7 @@ __DEV__ &&
       self
     ) {
       var trackActualOwner =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+        1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
         type,
         config,

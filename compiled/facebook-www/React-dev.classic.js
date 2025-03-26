@@ -694,8 +694,7 @@ __DEV__ &&
       enableUseEffectCRUDOverload =
         dynamicFeatureFlags.enableUseEffectCRUDOverload,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-      enableViewTransition = dynamicFeatureFlags.enableViewTransition,
-      ownerStackLimit = dynamicFeatureFlags.ownerStackLimit;
+      enableViewTransition = dynamicFeatureFlags.enableViewTransition;
     dynamicFeatureFlags = Symbol.for("react.element");
     var REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")
@@ -1202,8 +1201,7 @@ __DEV__ &&
             ? type.displayName || type.name || "Unknown"
             : type
         );
-      var propName =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+      var propName = 1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return ReactElement(
         type,
         key,
@@ -1267,7 +1265,7 @@ __DEV__ &&
     exports.isValidElement = isValidElement;
     exports.jsx = function (type, config, maybeKey, source, self) {
       var trackActualOwner =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+        1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
         type,
         config,
@@ -1290,7 +1288,7 @@ __DEV__ &&
       self
     ) {
       var trackActualOwner =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+        1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
         type,
         config,
@@ -1306,7 +1304,7 @@ __DEV__ &&
     };
     exports.jsxs = function (type, config, maybeKey, source, self) {
       var trackActualOwner =
-        ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+        1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
       return jsxDEVImpl(
         type,
         config,
@@ -1537,7 +1535,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-www-classic-8ac25e52-20250325";
+    exports.version = "19.1.0-www-classic-f99c9fea-20250326";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
