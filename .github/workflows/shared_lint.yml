@@ -29,6 +29,7 @@ jobs:
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
+        id: node_modules
         with:
           path: |
             **/node_modules
@@ -36,6 +37,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn prettier-check
 
   eslint:
@@ -50,6 +52,7 @@ jobs:
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
+        id: node_modules
         with:
           path: |
             **/node_modules
@@ -57,6 +60,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: node ./scripts/tasks/eslint
 
   check_license:
@@ -71,6 +75,7 @@ jobs:
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
+        id: node_modules
         with:
           path: |
             **/node_modules
@@ -78,6 +83,7 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: ./scripts/ci/check_license.sh
 
   test_print_warnings:
@@ -92,6 +98,7 @@ jobs:
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
+        id: node_modules
         with:
           path: |
             **/node_modules
@@ -99,4 +106,5 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: ./scripts/ci/test_print_warnings.sh
