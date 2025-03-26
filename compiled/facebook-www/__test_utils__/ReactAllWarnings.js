@@ -67,6 +67,7 @@ export default [
   "<%s /> is using incorrect casing. Use PascalCase for React components, or lowercase for HTML elements.",
   "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace.",
   "<SuspenseList tail=\"%s\" /> is only valid if revealOrder is \"forwards\" or \"backwards\". Did you mean to specify revealOrder=\"forwards\"?",
+  "<ViewTransition> doesn't accept a \"className\" prop. It has been renamed to \"default\".\n-   <ViewTransition className=%s>\n+   <ViewTransition default=%s>",
   "A button can only specify a formAction along with type=\"submit\" or no type.",
   "A cache instance was released after it was already freed. This likely indicates a bug in React.",
   "A cache instance was retained after it was already freed. This likely indicates a bug in React.",

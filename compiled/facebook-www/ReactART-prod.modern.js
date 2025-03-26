@@ -989,13 +989,7 @@ function getClassNameByType(classByType) {
 function getViewTransitionClassName(defaultClass, eventClass) {
   defaultClass = getClassNameByType(defaultClass);
   eventClass = getClassNameByType(eventClass);
-  return null == eventClass
-    ? defaultClass
-    : "none" === eventClass
-      ? eventClass
-      : null != defaultClass && "none" !== defaultClass
-        ? defaultClass + " " + eventClass
-        : eventClass;
+  return null == eventClass ? defaultClass : eventClass;
 }
 function is(x, y) {
   return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -7034,7 +7028,7 @@ function commitDeletedPairViewTransitions(deletion) {
               var pair = pairs.get(name);
               if (void 0 !== pair) {
                 var className = getViewTransitionClassName(
-                  props.className,
+                  props.default,
                   props.share
                 );
                 "none" !== className &&
@@ -7069,7 +7063,7 @@ function commitExitViewTransitions(deletion) {
           ? appearingViewTransitions.get(name)
           : void 0,
       className = getViewTransitionClassName(
-        props.className,
+        props.default,
         void 0 !== pair ? props.share : props.exit
       );
     "none" !== className &&
@@ -7101,7 +7095,7 @@ function commitNestedViewTransitions(changedParent) {
     if (30 === changedParent.tag) {
       var props = changedParent.memoizedProps,
         name = getViewTransitionName(props, changedParent.stateNode);
-      props = getViewTransitionClassName(props.className, props.update);
+      props = getViewTransitionClassName(props.default, props.update);
       if ("none" !== props) {
         var collectMeasurements = (changedParent.memoizedState = []);
         applyViewTransitionToHostInstancesRecursive(
@@ -7280,7 +7274,7 @@ function commitBeforeMutationEffects_complete(
               current.stateNode
             )),
             (flags = fiber.memoizedProps),
-            (flags = getViewTransitionClassName(flags.className, flags.update)),
+            (flags = getViewTransitionClassName(flags.default, flags.update)),
             "none" !== flags &&
               ((JSCompiler_temp = current.memoizedState = []),
               applyViewTransitionToHostInstancesRecursive(
@@ -10859,10 +10853,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1555 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-a5297ece-20250326",
+  version: "19.1.0-www-modern-e0c99c4e-20250326",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-a5297ece-20250326"
+  reconcilerVersion: "19.1.0-www-modern-e0c99c4e-20250326"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1556 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10888,4 +10882,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-a5297ece-20250326";
+exports.version = "19.1.0-www-modern-e0c99c4e-20250326";

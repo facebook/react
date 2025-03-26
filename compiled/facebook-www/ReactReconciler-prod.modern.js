@@ -985,13 +985,7 @@ module.exports = function ($$$config) {
   function getViewTransitionClassName(defaultClass, eventClass) {
     defaultClass = getClassNameByType(defaultClass);
     eventClass = getClassNameByType(eventClass);
-    return null == eventClass
-      ? defaultClass
-      : "none" === eventClass
-        ? eventClass
-        : null != defaultClass && "none" !== defaultClass
-          ? defaultClass + " " + eventClass
-          : eventClass;
+    return null == eventClass ? defaultClass : eventClass;
   }
   function is(x, y) {
     return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -7598,7 +7592,7 @@ module.exports = function ($$$config) {
             if (null == props.name || "auto" === props.name)
               throw Error(formatProdErrorMessage(544));
             var name = props.name;
-            props = getViewTransitionClassName(props.className, props.share);
+            props = getViewTransitionClassName(props.default, props.share);
             "none" !== props &&
               (applyViewTransitionToHostInstances(
                 placement.child,
@@ -7618,7 +7612,7 @@ module.exports = function ($$$config) {
         props = placement.memoizedProps,
         name = getViewTransitionName(props, state),
         className = getViewTransitionClassName(
-          props.className,
+          props.default,
           state.paired ? props.share : props.enter
         );
       "none" !== className
@@ -7657,7 +7651,7 @@ module.exports = function ($$$config) {
                 var pair = pairs.get(name);
                 if (void 0 !== pair) {
                   var className = getViewTransitionClassName(
-                    props.className,
+                    props.default,
                     props.share
                   );
                   "none" !== className &&
@@ -7696,7 +7690,7 @@ module.exports = function ($$$config) {
             ? appearingViewTransitions.get(name)
             : void 0,
         className = getViewTransitionClassName(
-          props.className,
+          props.default,
           void 0 !== pair ? props.share : props.exit
         );
       "none" !== className &&
@@ -7729,7 +7723,7 @@ module.exports = function ($$$config) {
       if (30 === changedParent.tag) {
         var props = changedParent.memoizedProps,
           name = getViewTransitionName(props, changedParent.stateNode);
-        props = getViewTransitionClassName(props.className, props.update);
+        props = getViewTransitionClassName(props.default, props.update);
         "none" !== props &&
           applyViewTransitionToHostInstances(
             changedParent.child,
@@ -7851,7 +7845,7 @@ module.exports = function ($$$config) {
         var props = changedParent.memoizedProps,
           state = changedParent.stateNode,
           name = getViewTransitionName(props, state),
-          className = getViewTransitionClassName(props.className, props.update);
+          className = getViewTransitionClassName(props.default, props.update);
         if (gesture) {
           state = state.clones;
           var previousMeasurements =
@@ -8026,10 +8020,7 @@ module.exports = function ($$$config) {
                 current.stateNode
               )),
               (flags = fiber.memoizedProps),
-              (flags = getViewTransitionClassName(
-                flags.className,
-                flags.update
-              )),
+              (flags = getViewTransitionClassName(flags.default, flags.update)),
               "none" !== flags &&
                 applyViewTransitionToHostInstances(
                   current.child,
@@ -9216,7 +9207,7 @@ module.exports = function ($$$config) {
           root = getViewTransitionName(props, state);
           state = getViewTransitionName(current.memoizedProps, state);
           var className = getViewTransitionClassName(
-            props.className,
+            props.default,
             props.update
           );
           "none" === className
@@ -13407,7 +13398,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-a5297ece-20250326"
+      reconcilerVersion: "19.1.0-www-modern-e0c99c4e-20250326"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

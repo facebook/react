@@ -2177,13 +2177,7 @@ __DEV__ &&
     function getViewTransitionClassName(defaultClass, eventClass) {
       defaultClass = getClassNameByType(defaultClass);
       eventClass = getClassNameByType(eventClass);
-      return null == eventClass
-        ? defaultClass
-        : "none" === eventClass
-          ? eventClass
-          : null != defaultClass && "none" !== defaultClass
-            ? defaultClass + " " + eventClass
-            : eventClass;
+      return null == eventClass ? defaultClass : eventClass;
     }
     function is(x, y) {
       return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -9678,6 +9672,19 @@ __DEV__ &&
               }
               isHydrating && pushMaterializedTreeId(workInProgress);
             }
+            if (void 0 !== pendingProps.className) {
+              var example =
+                "string" === typeof pendingProps.className
+                  ? JSON.stringify(pendingProps.className)
+                  : "{...}";
+              didWarnAboutClassNameOnViewTransition[example] ||
+                ((didWarnAboutClassNameOnViewTransition[example] = !0),
+                console.error(
+                  '<ViewTransition> doesn\'t accept a "className" prop. It has been renamed to "default".\n-   <ViewTransition className=%s>\n+   <ViewTransition default=%s>',
+                  example,
+                  example
+                ));
+            }
             null !== current && current.memoizedProps.name !== pendingProps.name
               ? (workInProgress.flags |= 4194816)
               : markRef(current, workInProgress);
@@ -11699,7 +11706,7 @@ __DEV__ &&
                   "Found a pair with an auto name. This is a bug in React."
                 );
               var name = props.name;
-              props = getViewTransitionClassName(props.className, props.share);
+              props = getViewTransitionClassName(props.default, props.share);
               "none" !== props &&
                 (applyViewTransitionToHostInstances(
                   placement.child,
@@ -11719,7 +11726,7 @@ __DEV__ &&
           props = placement.memoizedProps,
           name = getViewTransitionName(props, state),
           className = getViewTransitionClassName(
-            props.className,
+            props.default,
             state.paired ? props.share : props.enter
           );
         "none" !== className
@@ -11758,7 +11765,7 @@ __DEV__ &&
                   var pair = pairs.get(name);
                   if (void 0 !== pair) {
                     var className = getViewTransitionClassName(
-                      props.className,
+                      props.default,
                       props.share
                     );
                     "none" !== className &&
@@ -11797,7 +11804,7 @@ __DEV__ &&
               ? appearingViewTransitions.get(name)
               : void 0,
           className = getViewTransitionClassName(
-            props.className,
+            props.default,
             void 0 !== pair ? props.share : props.exit
           );
         "none" !== className &&
@@ -11830,7 +11837,7 @@ __DEV__ &&
         if (30 === changedParent.tag) {
           var props = changedParent.memoizedProps,
             name = getViewTransitionName(props, changedParent.stateNode);
-          props = getViewTransitionClassName(props.className, props.update);
+          props = getViewTransitionClassName(props.default, props.update);
           "none" !== props &&
             applyViewTransitionToHostInstances(
               changedParent.child,
@@ -11952,10 +11959,7 @@ __DEV__ &&
           var props = changedParent.memoizedProps,
             state = changedParent.stateNode,
             name = getViewTransitionName(props, state),
-            className = getViewTransitionClassName(
-              props.className,
-              props.update
-            );
+            className = getViewTransitionClassName(props.default, props.update);
           if (gesture) {
             state = state.clones;
             var previousMeasurements =
@@ -12158,7 +12162,7 @@ __DEV__ &&
                 )),
                 (current = current.memoizedProps),
                 (current = getViewTransitionClassName(
-                  current.className,
+                  current.default,
                   current.update
                 )),
                 "none" !== current &&
@@ -13523,7 +13527,7 @@ __DEV__ &&
             root = getViewTransitionName(props, state);
             state = getViewTransitionName(current.memoizedProps, state);
             var className = getViewTransitionClassName(
-              props.className,
+              props.default,
               props.update
             );
             "none" === className
@@ -20152,6 +20156,7 @@ __DEV__ &&
     var didWarnAboutRevealOrder = {};
     var didWarnAboutTailOptions = {};
     var didWarnAboutDefaultPropsOnFunctionComponent = {};
+    var didWarnAboutClassNameOnViewTransition = {};
     var updateLegacyHiddenComponent = updateOffscreenComponent,
       SUSPENDED_MARKER = {
         dehydrated: null,
@@ -20824,7 +20829,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-a5297ece-20250326"
+        reconcilerVersion: "19.1.0-www-classic-e0c99c4e-20250326"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -1974,13 +1974,7 @@ __DEV__ &&
     function getViewTransitionClassName(defaultClass, eventClass) {
       defaultClass = getClassNameByType(defaultClass);
       eventClass = getClassNameByType(eventClass);
-      return null == eventClass
-        ? defaultClass
-        : "none" === eventClass
-          ? eventClass
-          : null != defaultClass && "none" !== defaultClass
-            ? defaultClass + " " + eventClass
-            : eventClass;
+      return null == eventClass ? defaultClass : eventClass;
     }
     function is(x, y) {
       return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -9003,6 +8997,18 @@ __DEV__ &&
                     nextCache.toString(32) +
                     "\u00bb"),
                   (prevSibling.autoName = nextProps)),
+              void 0 !== returnFiber.className &&
+                ((prevSibling =
+                  "string" === typeof returnFiber.className
+                    ? JSON.stringify(returnFiber.className)
+                    : "{...}"),
+                didWarnAboutClassNameOnViewTransition[prevSibling] ||
+                  ((didWarnAboutClassNameOnViewTransition[prevSibling] = !0),
+                  console.error(
+                    '<ViewTransition> doesn\'t accept a "className" prop. It has been renamed to "default".\n-   <ViewTransition className=%s>\n+   <ViewTransition default=%s>',
+                    prevSibling,
+                    prevSibling
+                  ))),
               null !== current &&
               current.memoizedProps.name !== returnFiber.name
                 ? (workInProgress.flags |= 4194816)
@@ -10463,7 +10469,7 @@ __DEV__ &&
                   var pair = pairs.get(name);
                   if (void 0 !== pair) {
                     var className = getViewTransitionClassName(
-                      props.className,
+                      props.default,
                       props.share
                     );
                     "none" !== className &&
@@ -10498,7 +10504,7 @@ __DEV__ &&
               ? appearingViewTransitions.get(name)
               : void 0,
           className = getViewTransitionClassName(
-            props.className,
+            props.default,
             void 0 !== pair ? props.share : props.exit
           );
         "none" !== className &&
@@ -10530,7 +10536,7 @@ __DEV__ &&
         if (30 === changedParent.tag) {
           var props = changedParent.memoizedProps,
             name = getViewTransitionName(props, changedParent.stateNode);
-          props = getViewTransitionClassName(props.className, props.update);
+          props = getViewTransitionClassName(props.default, props.update);
           if ("none" !== props) {
             var collectMeasurements = (changedParent.memoizedState = []);
             applyViewTransitionToHostInstancesRecursive(
@@ -10732,7 +10738,7 @@ __DEV__ &&
                 )),
                 (current = current.memoizedProps),
                 (current = getViewTransitionClassName(
-                  current.className,
+                  current.default,
                   current.update
                 )),
                 "none" !== current &&
@@ -17828,6 +17834,7 @@ __DEV__ &&
     var didWarnAboutRevealOrder = {};
     var didWarnAboutTailOptions = {};
     var didWarnAboutDefaultPropsOnFunctionComponent = {};
+    var didWarnAboutClassNameOnViewTransition = {};
     var updateLegacyHiddenComponent = updateOffscreenComponent,
       SUSPENDED_MARKER = {
         dehydrated: null,
@@ -18181,10 +18188,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-a5297ece-20250326",
+        version: "19.1.0-www-classic-e0c99c4e-20250326",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-a5297ece-20250326"
+        reconcilerVersion: "19.1.0-www-classic-e0c99c4e-20250326"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18218,7 +18225,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-classic-a5297ece-20250326";
+    exports.version = "19.1.0-www-classic-e0c99c4e-20250326";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

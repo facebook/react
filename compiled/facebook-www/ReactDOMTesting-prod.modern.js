@@ -1904,13 +1904,7 @@ function getClassNameByType(classByType) {
 function getViewTransitionClassName(defaultClass, eventClass) {
   defaultClass = getClassNameByType(defaultClass);
   eventClass = getClassNameByType(eventClass);
-  return null == eventClass
-    ? defaultClass
-    : "none" === eventClass
-      ? eventClass
-      : null != defaultClass && "none" !== defaultClass
-        ? defaultClass + " " + eventClass
-        : eventClass;
+  return null == eventClass ? defaultClass : eventClass;
 }
 function is(x, y) {
   return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -8737,7 +8731,7 @@ function commitAppearingPairViewTransitions(placement) {
           if (null == props.name || "auto" === props.name)
             throw Error(formatProdErrorMessage(544));
           var name = props.name;
-          props = getViewTransitionClassName(props.className, props.share);
+          props = getViewTransitionClassName(props.default, props.share);
           "none" !== props &&
             (applyViewTransitionToHostInstances(
               placement.child,
@@ -8757,7 +8751,7 @@ function commitEnterViewTransitions(placement, gesture) {
       props = placement.memoizedProps,
       name = getViewTransitionName(props, state),
       className = getViewTransitionClassName(
-        props.className,
+        props.default,
         state.paired ? props.share : props.enter
       );
     "none" !== className
@@ -8796,7 +8790,7 @@ function commitDeletedPairViewTransitions(deletion) {
               var pair = pairs.get(name);
               if (void 0 !== pair) {
                 var className = getViewTransitionClassName(
-                  props.className,
+                  props.default,
                   props.share
                 );
                 "none" !== className &&
@@ -8832,7 +8826,7 @@ function commitExitViewTransitions(deletion) {
           ? appearingViewTransitions.get(name)
           : void 0,
       className = getViewTransitionClassName(
-        props.className,
+        props.default,
         void 0 !== pair ? props.share : props.exit
       );
     "none" !== className &&
@@ -8865,7 +8859,7 @@ function commitNestedViewTransitions(changedParent) {
     if (30 === changedParent.tag) {
       var props = changedParent.memoizedProps,
         name = getViewTransitionName(props, changedParent.stateNode);
-      props = getViewTransitionClassName(props.className, props.update);
+      props = getViewTransitionClassName(props.default, props.update);
       "none" !== props &&
         applyViewTransitionToHostInstances(
           changedParent.child,
@@ -8999,7 +8993,7 @@ function measureNestedViewTransitions(changedParent, gesture) {
       var props = changedParent.memoizedProps,
         state = changedParent.stateNode,
         name = getViewTransitionName(props, state),
-        className = getViewTransitionClassName(props.className, props.update);
+        className = getViewTransitionClassName(props.default, props.update);
       if (gesture) {
         state = state.clones;
         var previousMeasurements =
@@ -9271,7 +9265,7 @@ function commitBeforeMutationEffects_complete(
               current.stateNode
             )),
             (flags = fiber.memoizedProps),
-            (flags = getViewTransitionClassName(flags.className, flags.update)),
+            (flags = getViewTransitionClassName(flags.default, flags.update)),
             "none" !== flags &&
               applyViewTransitionToHostInstances(
                 current.child,
@@ -10531,10 +10525,7 @@ function commitAfterMutationEffectsOnFiber(finishedWork, root) {
           state = finishedWork.stateNode;
         root = getViewTransitionName(props, state);
         state = getViewTransitionName(current.memoizedProps, state);
-        var className = getViewTransitionClassName(
-          props.className,
-          props.update
-        );
+        var className = getViewTransitionClassName(props.default, props.update);
         "none" === className
           ? (current = !1)
           : ((props = current.memoizedState),
@@ -18836,14 +18827,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1993 = React.version;
 if (
-  "19.1.0-www-modern-a5297ece-20250326" !==
+  "19.1.0-www-modern-e0c99c4e-20250326" !==
   isomorphicReactPackageVersion$jscomp$inline_1993
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1993,
-      "19.1.0-www-modern-a5297ece-20250326"
+      "19.1.0-www-modern-e0c99c4e-20250326"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18861,10 +18852,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2574 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-a5297ece-20250326",
+  version: "19.1.0-www-modern-e0c99c4e-20250326",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-a5297ece-20250326"
+  reconcilerVersion: "19.1.0-www-modern-e0c99c4e-20250326"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2575 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -19379,4 +19370,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-a5297ece-20250326";
+exports.version = "19.1.0-www-modern-e0c99c4e-20250326";
