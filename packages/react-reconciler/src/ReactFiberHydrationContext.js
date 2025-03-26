@@ -308,7 +308,7 @@ export const HydrationMismatchException: mixed = new Error(
     "userspace. If you're seeing this, it's likely a bug in React.",
 );
 
-function throwOnHydrationMismatch(fiber: Fiber) {
+function throwOnHydrationMismatch(fiber: Fiber, fromText = false) {
   let diff = '';
   if (__DEV__) {
     // Consume the diff root for this mismatch.
@@ -320,7 +320,8 @@ function throwOnHydrationMismatch(fiber: Fiber) {
     }
   }
   const error = new Error(
-    "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n" +
+    `Hydration failed because the server rendered ${fromText ? 'text' : 'HTML'} didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+` +
       '\n' +
       "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
       "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
@@ -481,7 +482,7 @@ function prepareToHydrateHostInstance(
     fiber,
   );
   if (!didHydrate && favorSafetyOverHydrationPerf) {
-    throwOnHydrationMismatch(fiber);
+    throwOnHydrationMismatch(fiber, true);
   }
 }
 
@@ -547,7 +548,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
     parentProps,
   );
   if (!didHydrate && favorSafetyOverHydrationPerf) {
-    throwOnHydrationMismatch(fiber);
+    throwOnHydrationMismatch(fiber, true);
   }
 }
 

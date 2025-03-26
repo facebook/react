@@ -3897,7 +3897,7 @@ describe('ReactDOMServerPartialHydration', () => {
       });
     });
     assertLog([
-      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      "onRecoverableError: Hydration failed because the server rendered text didn't match the client.",
     ]);
   });
 
@@ -3936,7 +3936,7 @@ describe('ReactDOMServerPartialHydration', () => {
       );
     });
     assertLog([
-      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      "onRecoverableError: Hydration failed because the server rendered text didn't match the client.",
     ]);
   });
 });

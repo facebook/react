@@ -320,7 +320,7 @@ describe('rendering React components at document', () => {
       assertLog(
         favorSafetyOverHydrationPerf
           ? [
-              "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+              "onRecoverableError: Hydration failed because the server rendered text didn't match the client.",
             ]
           : [],
       );
