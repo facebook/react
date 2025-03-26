@@ -691,8 +691,6 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableUseEffectCRUDOverload =
-        dynamicFeatureFlags.enableUseEffectCRUDOverload,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition;
     dynamicFeatureFlags = Symbol.for("react.element");
@@ -1457,34 +1455,12 @@ __DEV__ &&
     exports.useDeferredValue = function (value, initialValue) {
       return resolveDispatcher().useDeferredValue(value, initialValue);
     };
-    exports.useEffect = function (
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    ) {
+    exports.useEffect = function (create, deps) {
       null == create &&
         console.warn(
           "React Hook useEffect requires an effect callback. Did you forget to pass a callback to the hook?"
         );
-      var dispatcher = resolveDispatcher();
-      if (
-        enableUseEffectCRUDOverload &&
-        ("function" === typeof update || "function" === typeof destroy)
-      )
-        return dispatcher.useEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy
-        );
-      if ("function" === typeof update)
-        throw Error(
-          "useEffect CRUD overload is not enabled in this build of React."
-        );
-      return dispatcher.useEffect(create, createDeps);
+      return resolveDispatcher().useEffect(create, deps);
     };
     exports.useId = function () {
       return resolveDispatcher().useId();
@@ -1535,7 +1511,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-www-classic-f99c9fea-20250326";
+    exports.version = "19.1.0-www-classic-313332d1-20250326";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

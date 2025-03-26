@@ -20,7 +20,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableUseEffectCRUDOverload = dynamicFeatureFlags.enableUseEffectCRUDOverload,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
@@ -585,24 +584,8 @@ exports.useDebugValue = function () {};
 exports.useDeferredValue = function (value, initialValue) {
   return ReactSharedInternals.H.useDeferredValue(value, initialValue);
 };
-exports.useEffect = function (create, createDeps, update, updateDeps, destroy) {
-  var dispatcher = ReactSharedInternals.H;
-  if (
-    enableUseEffectCRUDOverload &&
-    ("function" === typeof update || "function" === typeof destroy)
-  )
-    return dispatcher.useEffect(
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    );
-  if ("function" === typeof update)
-    throw Error(
-      "useEffect CRUD overload is not enabled in this build of React."
-    );
-  return dispatcher.useEffect(create, createDeps);
+exports.useEffect = function (create, deps) {
+  return ReactSharedInternals.H.useEffect(create, deps);
 };
 exports.useId = function () {
   return ReactSharedInternals.H.useId();
@@ -645,7 +628,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.1.0-www-modern-f99c9fea-20250326";
+exports.version = "19.1.0-www-modern-313332d1-20250326";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
