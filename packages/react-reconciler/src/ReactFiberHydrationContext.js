@@ -308,7 +308,7 @@ export const HydrationMismatchException: mixed = new Error(
     "userspace. If you're seeing this, it's likely a bug in React.",
 );
 
-function throwOnHydrationMismatch(fiber: Fiber, fromText = false) {
+function throwOnHydrationMismatch(fiber: Fiber, fromText: boolean = false) {
   let diff = '';
   if (__DEV__) {
     // Consume the diff root for this mismatch.
