@@ -989,7 +989,13 @@ function getClassNameByType(classByType) {
 function getViewTransitionClassName(defaultClass, eventClass) {
   defaultClass = getClassNameByType(defaultClass);
   eventClass = getClassNameByType(eventClass);
-  return null == eventClass ? defaultClass : eventClass;
+  return null == eventClass
+    ? "auto" === defaultClass
+      ? null
+      : defaultClass
+    : "auto" === eventClass
+      ? null
+      : eventClass;
 }
 function is(x, y) {
   return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -10853,10 +10859,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1555 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-e0c99c4e-20250326",
+  version: "19.1.0-www-modern-fceb0f80-20250326",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-e0c99c4e-20250326"
+  reconcilerVersion: "19.1.0-www-modern-fceb0f80-20250326"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1556 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10882,4 +10888,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-e0c99c4e-20250326";
+exports.version = "19.1.0-www-modern-fceb0f80-20250326";

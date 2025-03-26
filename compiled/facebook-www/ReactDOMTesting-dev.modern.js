@@ -3746,7 +3746,13 @@ __DEV__ &&
     function getViewTransitionClassName(defaultClass, eventClass) {
       defaultClass = getClassNameByType(defaultClass);
       eventClass = getClassNameByType(eventClass);
-      return null == eventClass ? defaultClass : eventClass;
+      return null == eventClass
+        ? "auto" === defaultClass
+          ? null
+          : defaultClass
+        : "auto" === eventClass
+          ? null
+          : eventClass;
     }
     function is(x, y) {
       return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -30006,11 +30012,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-modern-e0c99c4e-20250326" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-modern-fceb0f80-20250326" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-modern-e0c99c4e-20250326\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-modern-fceb0f80-20250326\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30053,10 +30059,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-modern-e0c99c4e-20250326",
+          version: "19.1.0-www-modern-fceb0f80-20250326",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-modern-e0c99c4e-20250326"
+          reconcilerVersion: "19.1.0-www-modern-fceb0f80-20250326"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30820,5 +30826,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-modern-e0c99c4e-20250326";
+    exports.version = "19.1.0-www-modern-fceb0f80-20250326";
   })();

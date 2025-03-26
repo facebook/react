@@ -2083,7 +2083,13 @@ __DEV__ &&
     function getViewTransitionClassName(defaultClass, eventClass) {
       defaultClass = getClassNameByType(defaultClass);
       eventClass = getClassNameByType(eventClass);
-      return null == eventClass ? defaultClass : eventClass;
+      return null == eventClass
+        ? "auto" === defaultClass
+          ? null
+          : defaultClass
+        : "auto" === eventClass
+          ? null
+          : eventClass;
     }
     function is(x, y) {
       return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -20610,7 +20616,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-e0c99c4e-20250326"
+        reconcilerVersion: "19.1.0-www-modern-fceb0f80-20250326"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
