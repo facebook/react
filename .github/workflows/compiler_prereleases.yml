@@ -51,6 +51,7 @@ jobs:
             **/node_modules
           key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Publish packages to npm
         run: |
           cp ./scripts/release/ci-npmrc ~/.npmrc
