@@ -74,8 +74,6 @@ export const enableObjectFiber = false;
 export const enableShallowPropDiffing = false;
 export const enableSiblingPrerendering = true;
 
-export const enableUseEffectCRUDOverload = false;
-
 export const enableHydrationLaneScheduling = true;
 
 export const enableYieldingBeforePassive = false;
