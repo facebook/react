@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4a1b45674e783b8e0f9309e672c1c020>>
+ * @generated SignedSource<<fc3234f89cf6270b6ddddc6eb9c1efa7>>
  */
 
 "use strict";
@@ -669,11 +669,10 @@ __DEV__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-    var dynamicFlags = require("ReactNativeInternalFeatureFlags"),
-      enableUseEffectCRUDOverload = dynamicFlags.enableUseEffectCRUDOverload;
-    dynamicFlags = dynamicFlags.renameElementSymbol;
-    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-      REACT_ELEMENT_TYPE = dynamicFlags
+    var renameElementSymbol =
+        require("ReactNativeInternalFeatureFlags").renameElementSymbol,
+      REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")
         : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -688,7 +687,7 @@ __DEV__ &&
       REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy");
-    dynamicFlags = Symbol.for("react.scope");
+    renameElementSymbol = Symbol.for("react.scope");
     var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
     REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.legacy_hidden");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
@@ -1302,7 +1301,7 @@ __DEV__ &&
     };
     exports.unstable_Activity = REACT_ACTIVITY_TYPE;
     exports.unstable_LegacyHidden = REACT_LEGACY_ELEMENT_TYPE;
-    exports.unstable_Scope = dynamicFlags;
+    exports.unstable_Scope = renameElementSymbol;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
@@ -1350,34 +1349,12 @@ __DEV__ &&
     exports.useDeferredValue = function (value, initialValue) {
       return resolveDispatcher().useDeferredValue(value, initialValue);
     };
-    exports.useEffect = function (
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    ) {
+    exports.useEffect = function (create, deps) {
       null == create &&
         console.warn(
           "React Hook useEffect requires an effect callback. Did you forget to pass a callback to the hook?"
         );
-      var dispatcher = resolveDispatcher();
-      if (
-        enableUseEffectCRUDOverload &&
-        ("function" === typeof update || "function" === typeof destroy)
-      )
-        return dispatcher.useEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy
-        );
-      if ("function" === typeof update)
-        throw Error(
-          "useEffect CRUD overload is not enabled in this build of React."
-        );
-      return dispatcher.useEffect(create, createDeps);
+      return resolveDispatcher().useEffect(create, deps);
     };
     exports.useId = function () {
       return resolveDispatcher().useId();
@@ -1428,7 +1405,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-f99c9fea-20250326";
+    exports.version = "19.1.0-native-fb-313332d1-20250326";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

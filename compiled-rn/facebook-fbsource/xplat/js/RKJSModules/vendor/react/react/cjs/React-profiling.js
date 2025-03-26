@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<44d5694b7462f543e037547c349b5951>>
+ * @generated SignedSource<<8a180acb9a04b50800b4e10c8356b675>>
  */
 
 "use strict";
@@ -15,9 +15,8 @@
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
-  enableUseEffectCRUDOverload = dynamicFlagsUntyped.enableUseEffectCRUDOverload,
-  renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
+var renameElementSymbol =
+    require("ReactNativeInternalFeatureFlags").renameElementSymbol,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
     ? Symbol.for("react.transitional.element")
@@ -551,24 +550,8 @@ exports.useDebugValue = function () {};
 exports.useDeferredValue = function (value, initialValue) {
   return ReactSharedInternals.H.useDeferredValue(value, initialValue);
 };
-exports.useEffect = function (create, createDeps, update, updateDeps, destroy) {
-  var dispatcher = ReactSharedInternals.H;
-  if (
-    enableUseEffectCRUDOverload &&
-    ("function" === typeof update || "function" === typeof destroy)
-  )
-    return dispatcher.useEffect(
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    );
-  if ("function" === typeof update)
-    throw Error(
-      "useEffect CRUD overload is not enabled in this build of React."
-    );
-  return dispatcher.useEffect(create, createDeps);
+exports.useEffect = function (create, deps) {
+  return ReactSharedInternals.H.useEffect(create, deps);
 };
 exports.useId = function () {
   return ReactSharedInternals.H.useId();
@@ -611,7 +594,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.1.0-native-fb-f99c9fea-20250326";
+exports.version = "19.1.0-native-fb-313332d1-20250326";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
