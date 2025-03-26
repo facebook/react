@@ -422,11 +422,16 @@ export function startViewTransition(
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
   errorCallback: mixed => void,
-): boolean {
-  return false;
+): null | RunningViewTransition {
+  mutationCallback();
+  layoutCallback();
+  // Skip afterMutationCallback(). We don't need it since we're not animating.
+  spawnedWorkCallback();
+  // Skip passiveCallback(). Spawned work will schedule a task.
+  return null;
 }
 
-export type RunningGestureTransition = null;
+export type RunningViewTransition = null;
 
 export function startGestureTransition(
   rootContainer: Container,
@@ -437,13 +442,13 @@ export function startGestureTransition(
   mutationCallback: () => void,
   animateCallback: () => void,
   errorCallback: mixed => void,
-): RunningGestureTransition {
+): null | RunningViewTransition {
   mutationCallback();
   animateCallback();
   return null;
 }
 
-export function stopGestureTransition(transition: RunningGestureTransition) {}
+export function stopViewTransition(transition: RunningViewTransition) {}
 
 export type ViewTransitionInstance = null | {name: string, ...};
 

@@ -538,14 +538,16 @@ export function hasInstanceAffectedParent(
 }
 
 export function startViewTransition() {
-  return false;
+  return null;
 }
 
-export type RunningGestureTransition = null;
+export type RunningViewTransition = null;
 
-export function startGestureTransition() {}
+export function startGestureTransition() {
+  return null;
+}
 
-export function stopGestureTransition(transition: RunningGestureTransition) {}
+export function stopViewTransition(transition: RunningViewTransition) {}
 
 export type ViewTransitionInstance = null | {name: string, ...};
 

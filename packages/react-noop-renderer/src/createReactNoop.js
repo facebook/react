@@ -93,7 +93,7 @@ export type TransitionStatus = mixed;
 
 export type FormInstance = Instance;
 
-export type RunningGestureTransition = null;
+export type RunningViewTransition = null;
 
 export type ViewTransitionInstance = null | {name: string, ...};
 
@@ -826,12 +826,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           rootContainer: Container,
           transitionTypes: null | TransitionTypes,
           mutationCallback: () => void,
-          afterMutationCallback: () => void,
           layoutCallback: () => void,
+          afterMutationCallback: () => void,
+          spawnedWorkCallback: () => void,
           passiveCallback: () => mixed,
           errorCallback: mixed => void,
-        ): boolean {
-          return false;
+        ): null | RunningViewTransition {
+          mutationCallback();
+          layoutCallback();
+          // Skip afterMutationCallback(). We don't need it since we're not animating.
+          spawnedWorkCallback();
+          // Skip passiveCallback(). Spawned work will schedule a task.
+          return null;
         },
 
         startGestureTransition(
@@ -843,13 +849,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           mutationCallback: () => void,
           animateCallback: () => void,
           errorCallback: mixed => void,
-        ): RunningGestureTransition {
+        ): null | RunningViewTransition {
           mutationCallback();
           animateCallback();
           return null;
         },
 
-        stopGestureTransition(transition: RunningGestureTransition) {},
+        stopViewTransition(transition: RunningViewTransition) {},
 
         createViewTransitionInstance(name: string): ViewTransitionInstance {
           return null;

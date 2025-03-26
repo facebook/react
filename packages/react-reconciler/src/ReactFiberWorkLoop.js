@@ -3503,9 +3503,7 @@ function commitRoot(
   }
 
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
-  const startedViewTransition =
-    enableViewTransition &&
-    willStartViewTransition &&
+  if (enableViewTransition && willStartViewTransition) {
     startViewTransition(
       root.containerInfo,
       pendingTransitionTypes,
@@ -3516,7 +3514,7 @@ function commitRoot(
       flushPassiveEffects,
       reportViewTransitionError,
     );
-  if (!startedViewTransition) {
+  } else {
     // Flush synchronously.
     flushMutationEffects();
     flushLayoutEffects();
