@@ -67,6 +67,20 @@ export function trackAppearingViewTransition(
   appearingViewTransitions.set(name, state);
 }
 
+export function trackEnterViewTransitions(placement: Fiber): void {
+  if (
+    placement.tag === ViewTransitionComponent ||
+    (placement.subtreeFlags & ViewTransitionStatic) !== NoFlags
+  ) {
+    // If an inserted or appearing Fiber is a ViewTransition component or has one as
+    // an immediate child, then that will trigger as an "Enter" in future passes.
+    // We don't do anything else for that case in the "before mutation" phase but we
+    // still have to mark it as needing to call startViewTransition if nothing else
+    // updates.
+    shouldStartViewTransition = true;
+  }
+}
+
 // We can't cancel view transition children until we know that their parent also
 // don't need to transition.
 export let viewTransitionCancelableChildren: null | Array<
@@ -119,7 +133,6 @@ function applyViewTransitionToHostInstancesRecursive(
   let inViewport = false;
   while (child !== null) {
     if (child.tag === HostComponent) {
-      shouldStartViewTransition = true;
       const instance: Instance = child.stateNode;
       if (collectMeasurements !== null) {
         const measurement = measureInstance(instance);
@@ -132,6 +145,7 @@ function applyViewTransitionToHostInstancesRecursive(
           inViewport = true;
         }
       }
+      shouldStartViewTransition = true;
       applyViewTransitionName(
         instance,
         viewTransitionHostInstanceIdx === 0
@@ -228,7 +242,7 @@ function commitAppearingPairViewTransitions(placement: Fiber): void {
           }
           const name = props.name;
           const className: ?string = getViewTransitionClassName(
-            props.className,
+            props.default,
             props.share,
           );
           if (className !== 'none') {
@@ -267,7 +281,7 @@ export function commitEnterViewTransitions(
     const props: ViewTransitionProps = placement.memoizedProps;
     const name = getViewTransitionName(props, state);
     const className: ?string = getViewTransitionClassName(
-      props.className,
+      props.default,
       state.paired ? props.share : props.enter,
     );
     if (className !== 'none') {
@@ -337,7 +351,7 @@ function commitDeletedPairViewTransitions(deletion: Fiber): void {
           const pair = pairs.get(name);
           if (pair !== undefined) {
             const className: ?string = getViewTransitionClassName(
-              props.className,
+              props.default,
               props.share,
             );
             if (className !== 'none') {
@@ -389,7 +403,7 @@ export function commitExitViewTransitions(deletion: Fiber): void {
         ? appearingViewTransitions.get(name)
         : undefined;
     const className: ?string = getViewTransitionClassName(
-      props.className,
+      props.default,
       pair !== undefined ? props.share : props.exit,
     );
     if (className !== 'none') {
@@ -470,7 +484,7 @@ export function commitBeforeUpdateViewTransition(
   // a layout only change, then the "foo" class will be applied even though
   // it was not actually an update. Which is a bug.
   const className: ?string = getViewTransitionClassName(
-    newProps.className,
+    newProps.default,
     newProps.update,
   );
   if (className === 'none') {
@@ -495,7 +509,7 @@ export function commitNestedViewTransitions(changedParent: Fiber): void {
       const props: ViewTransitionProps = child.memoizedProps;
       const name = getViewTransitionName(props, child.stateNode);
       const className: ?string = getViewTransitionClassName(
-        props.className,
+        props.default,
         props.update,
       );
       if (className !== 'none') {
@@ -735,7 +749,7 @@ export function measureUpdateViewTransition(
   const oldName = getViewTransitionName(oldFiber.memoizedProps, state);
   // Whether it ends up having been updated or relayout we apply the update class name.
   const className: ?string = getViewTransitionClassName(
-    props.className,
+    props.default,
     props.update,
   );
   if (className === 'none') {
@@ -787,7 +801,7 @@ export function measureNestedViewTransitions(
       const state: ViewTransitionState = child.stateNode;
       const name = getViewTransitionName(props, state);
       const className: ?string = getViewTransitionClassName(
-        props.className,
+        props.default,
         props.update,
       );
       let previousMeasurements: null | Array<InstanceMeasurement>;

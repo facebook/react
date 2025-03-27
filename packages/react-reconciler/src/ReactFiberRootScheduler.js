@@ -310,7 +310,12 @@ function processRootScheduleInMicrotask() {
 
   // At the end of the microtask, flush any pending synchronous work. This has
   // to come at the end, because it does actual rendering work that might throw.
-  flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
+  // If we're in the middle of a View Transition async sequence, we don't want to
+  // interrupt that sequence. Instead, we'll flush any remaining work when it
+  // completes.
+  if (!hasPendingCommitEffects()) {
+    flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
+  }
 }
 
 function scheduleTaskForRootDuringMicrotask(

@@ -746,6 +746,27 @@ export enum InstructionKind {
   Function = 'Function',
 }
 
+export function convertHoistedLValueKind(
+  kind: InstructionKind,
+): InstructionKind | null {
+  switch (kind) {
+    case InstructionKind.HoistedLet:
+      return InstructionKind.Let;
+    case InstructionKind.HoistedConst:
+      return InstructionKind.Const;
+    case InstructionKind.HoistedFunction:
+      return InstructionKind.Function;
+    case InstructionKind.Let:
+    case InstructionKind.Const:
+    case InstructionKind.Function:
+    case InstructionKind.Reassign:
+    case InstructionKind.Catch:
+      return null;
+    default:
+      assertExhaustive(kind, 'Unexpected lvalue kind');
+  }
+}
+
 function _staticInvariantInstructionValueHasLocation(
   value: InstructionValue,
 ): SourceLocation {
@@ -880,8 +901,20 @@ export type InstructionValue =
   | StoreLocal
   | {
       kind: 'StoreContext';
+      /**
+       * StoreContext kinds:
+       * Reassign: context variable reassignment in source
+       * Const:    const declaration + assignment in source
+       *           ('const' context vars are ones whose declarations are hoisted)
+       * Let:      let declaration + assignment in source
+       * Function: function declaration in source (similar to `const`)
+       */
       lvalue: {
-        kind: InstructionKind.Reassign;
+        kind:
+          | InstructionKind.Reassign
+          | InstructionKind.Const
+          | InstructionKind.Let
+          | InstructionKind.Function;
         place: Place;
       };
       value: Place;

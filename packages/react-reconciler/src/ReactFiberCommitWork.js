@@ -235,6 +235,7 @@ import {
   commitFragmentInstanceInsertionEffects,
 } from './ReactFiberCommitHostEffects';
 import {
+  trackEnterViewTransitions,
   commitEnterViewTransitions,
   commitExitViewTransitions,
   commitBeforeUpdateViewTransition,
@@ -338,6 +339,9 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
       // to trigger updates of any nested view transitions and we shouldn't
       // have any other before mutation effects since snapshot effects are
       // only applied to updates. TODO: Model this using only flags.
+      if (isViewTransitionEligible) {
+        trackEnterViewTransitions(fiber);
+      }
       commitBeforeMutationEffects_complete(isViewTransitionEligible);
       continue;
     }
@@ -367,6 +371,9 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
           // to trigger updates of any nested view transitions and we shouldn't
           // have any other before mutation effects since snapshot effects are
           // only applied to updates. TODO: Model this using only flags.
+          if (isViewTransitionEligible) {
+            trackEnterViewTransitions(fiber);
+          }
           commitBeforeMutationEffects_complete(isViewTransitionEligible);
           continue;
         }

@@ -2,6 +2,7 @@ import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
   unstable_useSwipeTransition as useSwipeTransition,
+  useLayoutEffect,
   useEffect,
   useState,
   useId,
@@ -32,7 +33,7 @@ const b = (
 function Component() {
   return (
     <ViewTransition
-      className={
+      default={
         transitions['enter-slide-right'] + ' ' + transitions['exit-slide-left']
       }>
       <p className="roboto-font">Slide In from Left, Slide Out to Right</p>
@@ -68,6 +69,16 @@ export default function Page({url, navigate}) {
     return () => clearInterval(timer);
   }, []);
 
+  useLayoutEffect(() => {
+    // Calling a default update should not interrupt ViewTransitions but
+    // a flushSync will.
+    // Promise.resolve().then(() => {
+    //   flushSync(() => {
+    setCounter(c => c + 10);
+    //  });
+    // });
+  }, [show]);
+
   const exclamation = (
     <ViewTransition name="exclamation" onShare={onTransition}>
       <span>!</span>
@@ -86,17 +97,17 @@ export default function Page({url, navigate}) {
           }}>
           {url === '/?b' ? 'Goto A' : 'Goto B'}
         </button>
-        <ViewTransition className="none">
+        <ViewTransition default="none">
           <div>
             <ViewTransition>
               <div>
-                <ViewTransition className={transitions['slide-on-nav']}>
+                <ViewTransition default={transitions['slide-on-nav']}>
                   <h1>{!show ? 'A' : 'B' + counter}</h1>
                 </ViewTransition>
               </div>
             </ViewTransition>
             <ViewTransition
-              className={{
+              default={{
                 'navigation-back': transitions['slide-right'],
                 'navigation-forward': transitions['slide-left'],
               }}>

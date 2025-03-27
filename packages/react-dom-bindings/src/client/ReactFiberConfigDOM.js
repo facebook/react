@@ -1687,7 +1687,7 @@ export function startViewTransition(
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
   errorCallback: mixed => void,
-): boolean {
+): null | RunningViewTransition {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
       ? (rootContainer: any)
@@ -1764,7 +1764,7 @@ export function startViewTransition(
       }
       passiveCallback();
     });
-    return true;
+    return transition;
   } catch (x) {
     // We use the error as feature detection.
     // The only thing that should throw is if startViewTransition is missing
@@ -1772,11 +1772,17 @@ export function startViewTransition(
     // I.e. it's before the View Transitions v2 spec. We only support View
     // Transitions v2 otherwise we fallback to not animating to ensure that
     // we're not animating with the wrong animation mapped.
-    return false;
+    // Flush remaining work synchronously.
+    mutationCallback();
+    layoutCallback();
+    // Skip afterMutationCallback(). We don't need it since we're not animating.
+    spawnedWorkCallback();
+    // Skip passiveCallback(). Spawned work will schedule a task.
+    return null;
   }
 }
 
-export type RunningGestureTransition = {
+export type RunningViewTransition = {
   skipTransition(): void,
   ...
 };
@@ -1900,7 +1906,7 @@ export function startGestureTransition(
   mutationCallback: () => void,
   animateCallback: () => void,
   errorCallback: mixed => void,
-): null | RunningGestureTransition {
+): null | RunningViewTransition {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
       ? (rootContainer: any)
@@ -2072,13 +2078,14 @@ export function startGestureTransition(
   }
 }
 
-export function stopGestureTransition(transition: RunningGestureTransition) {
+export function stopViewTransition(transition: RunningViewTransition) {
   transition.skipTransition();
 }
 
 interface ViewTransitionPseudoElementType extends Animatable {
   _scope: HTMLElement;
   _selector: string;
+  getComputedStyle(): CSSStyleDeclaration;
 }
 
 function ViewTransitionPseudoElement(
@@ -2131,6 +2138,14 @@ ViewTransitionPseudoElement.prototype.getAnimations = function (
     }
   }
   return result;
+};
+// $FlowFixMe[prop-missing]
+ViewTransitionPseudoElement.prototype.getComputedStyle = function (
+  this: ViewTransitionPseudoElementType,
+): CSSStyleDeclaration {
+  const scope = this._scope;
+  const selector = this._selector;
+  return getComputedStyle(scope, selector);
 };
 
 export function createViewTransitionInstance(

@@ -4664,7 +4664,7 @@ describe('ReactDOMFizzServer', () => {
     // client-side rendering.
     await clientResolve();
     await waitForAll([
-      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      "onRecoverableError: Hydration failed because the server rendered text didn't match the client.",
     ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -4712,7 +4712,7 @@ describe('ReactDOMFizzServer', () => {
       },
     });
     await waitForAll([
-      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      "onRecoverableError: Hydration failed because the server rendered text didn't match the client.",
     ]);
 
     expect(getVisibleChildren(container)).toEqual(
@@ -10179,7 +10179,7 @@ describe('ReactDOMFizzServer', () => {
       );
       expect(recoverableErrors).toEqual([
         expect.stringContaining(
-          "Hydration failed because the server rendered HTML didn't match the client.",
+          "Hydration failed because the server rendered text didn't match the client.",
         ),
       ]);
     } else {
