@@ -11,6 +11,7 @@ import {fromZodError} from 'zod-validation-error';
 import {CompilerError} from '../CompilerError';
 import {
   CompilationMode,
+  defaultOptions,
   Logger,
   PanicThresholdOptions,
   parsePluginOptions,
@@ -779,6 +780,7 @@ export function parseConfigPragmaForTests(
   const environment = parseConfigPragmaEnvironmentForTest(pragma);
   let compilationMode: CompilationMode = defaults.compilationMode;
   let panicThreshold: PanicThresholdOptions = 'all_errors';
+  let noEmit: boolean = defaultOptions.noEmit;
   for (const token of pragma.split(' ')) {
     if (!token.startsWith('@')) {
       continue;
@@ -804,12 +806,17 @@ export function parseConfigPragmaForTests(
         panicThreshold = 'none';
         break;
       }
+      case '@noEmit': {
+        noEmit = true;
+        break;
+      }
     }
   }
   return parsePluginOptions({
     environment,
     compilationMode,
     panicThreshold,
+    noEmit,
   });
 }
 
@@ -852,6 +859,7 @@ export class Environment {
   programContext: ProgramContext;
   hasFireRewrite: boolean;
   hasInferredEffect: boolean;
+  inferredEffectLocations: Set<SourceLocation> = new Set();
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;

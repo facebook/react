@@ -187,7 +187,6 @@ function makePluginOptions(
     },
     logger,
     gating,
-    noEmit: false,
     eslintSuppressionRules,
     flowSuppressions,
     ignoreUseNoForget,
