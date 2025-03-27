@@ -37381,6 +37381,7 @@ class Environment {
         _Environment_nextScope.set(this, 0);
         _Environment_scope.set(this, void 0);
         _Environment_outlinedFunctions.set(this, []);
+        this.inferredEffectLocations = new Set();
         _Environment_contextIdentifiers.set(this, void 0);
         _Environment_hoistedIdentifiers.set(this, void 0);
         __classPrivateFieldSet(this, _Environment_scope, scope, "f");
@@ -42169,6 +42170,7 @@ function codegenReactiveFunction(cx, fn) {
         outlined: [],
         hasFireRewrite: fn.env.hasFireRewrite,
         hasInferredEffect: fn.env.hasInferredEffect,
+        inferredEffectLocations: fn.env.inferredEffectLocations,
     });
 }
 class CountMemoBlockVisitor extends ReactiveFunctionVisitor {
@@ -48286,6 +48288,7 @@ function inferEffectDependencies(fn) {
                         });
                         value.args.push(Object.assign(Object.assign({}, depsPlace), { effect: Effect.Freeze }));
                         rewriteInstrs.set(instr.id, newInstructions);
+                        fn.env.inferredEffectLocations.add(callee.loc);
                     }
                     else if (loadGlobals.has(value.args[0].identifier.id)) {
                         newInstructions.push({
@@ -48296,6 +48299,7 @@ function inferEffectDependencies(fn) {
                         });
                         value.args.push(Object.assign(Object.assign({}, depsPlace), { effect: Effect.Freeze }));
                         rewriteInstrs.set(instr.id, newInstructions);
+                        fn.env.inferredEffectLocations.add(callee.loc);
                     }
                 }
             }
@@ -54378,6 +54382,7 @@ function compileProgram(program, pass) {
         ArrowFunctionExpression: traverseFunction,
     }, Object.assign(Object.assign({}, pass), { opts: Object.assign(Object.assign({}, pass.opts), pass.opts), filename: (_b = pass.filename) !== null && _b !== void 0 ? _b : null }));
     const retryErrors = [];
+    const inferredEffectLocations = new Set();
     const processFn = (fn, fnType) => {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         let optInDirectives = [];
@@ -54462,6 +54467,10 @@ function compileProgram(program, pass) {
         if (!pass.opts.noEmit) {
             return compileResult.compiledFn;
         }
+        for (const loc of compileResult.compiledFn.inferredEffectLocations) {
+            if (loc !== GeneratedSource)
+                inferredEffectLocations.add(loc);
+        }
         return null;
     };
     while (queue.length !== 0) {
@@ -54516,7 +54525,7 @@ function compileProgram(program, pass) {
     if (compiledFns.length > 0) {
         addImportsToProgram(program, programContext);
     }
-    return { retryErrors };
+    return { retryErrors, inferredEffectLocations };
 }
 function shouldSkipCompilation(program, pass) {
     if (pass.opts.sources) {
@@ -55190,7 +55199,10 @@ function assertValidEffectImportReference(numArgs, paths, context) {
         const parent = path.parentPath;
         if (parent != null && parent.isCallExpression()) {
             const args = parent.get('arguments');
-            if (args.length === numArgs) {
+            const maybeCalleeLoc = path.node.loc;
+            const hasInferredEffect = maybeCalleeLoc != null &&
+                context.inferredEffectLocations.has(maybeCalleeLoc);
+            if (args.length === numArgs && !hasInferredEffect) {
                 const maybeErrorDiagnostic = matchCompilerDiagnostic(path, context.transformErrors);
                 throwInvalidReact({
                     reason: '[InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. ' +
@@ -55219,7 +55231,7 @@ function assertValidFireImportReference(paths, context) {
         }, context);
     }
 }
-function validateNoUntransformedReferences(path, filename, logger, env, transformErrors) {
+function validateNoUntransformedReferences(path, filename, logger, env, compileResult) {
     const moduleLoadChecks = new Map();
     if (env.enableFire) {
         for (const module of Environment.knownReactModules) {
@@ -55234,7 +55246,7 @@ function validateNoUntransformedReferences(path, filename, logger, env, transfor
         }
     }
     if (moduleLoadChecks.size > 0) {
-        transformProgram(path, moduleLoadChecks, filename, logger, transformErrors);
+        transformProgram(path, moduleLoadChecks, filename, logger, compileResult);
     }
 }
 function validateImportSpecifier(specifier, importSpecifierChecks, state) {
@@ -55294,13 +55306,15 @@ function validateNamespacedImport(specifier, importSpecifierChecks, state) {
         checkFn(references, state);
     }
 }
-function transformProgram(path, moduleLoadChecks, filename, logger, transformErrors) {
+function transformProgram(path, moduleLoadChecks, filename, logger, compileResult) {
+    var _a, _b;
     const traversalState = {
         shouldInvalidateScopes: true,
         program: path,
         filename,
         logger,
-        transformErrors,
+        transformErrors: (_a = compileResult === null || compileResult === void 0 ? void 0 : compileResult.retryErrors) !== null && _a !== void 0 ? _a : [],
+        inferredEffectLocations: (_b = compileResult === null || compileResult === void 0 ? void 0 : compileResult.inferredEffectLocations) !== null && _b !== void 0 ? _b : new Set(),
     };
     path.traverse({
         ImportDeclaration(path) {
@@ -55336,7 +55350,7 @@ function BabelPluginReactCompiler(_babel) {
         visitor: {
             Program: {
                 enter(prog, pass) {
-                    var _a, _b, _c, _d, _e;
+                    var _a, _b, _c, _d;
                     const filename = (_a = pass.filename) !== null && _a !== void 0 ? _a : 'unknown';
                     if (ENABLE_REACT_COMPILER_TIMINGS === true) {
                         performance.mark(`${filename}:start`, {
@@ -55359,7 +55373,7 @@ function BabelPluginReactCompiler(_babel) {
                         comments: (_c = pass.file.ast.comments) !== null && _c !== void 0 ? _c : [],
                         code: pass.file.code,
                     });
-                    validateNoUntransformedReferences(prog, (_d = pass.filename) !== null && _d !== void 0 ? _d : null, opts.logger, opts.environment, (_e = result === null || result === void 0 ? void 0 : result.retryErrors) !== null && _e !== void 0 ? _e : []);
+                    validateNoUntransformedReferences(prog, (_d = pass.filename) !== null && _d !== void 0 ? _d : null, opts.logger, opts.environment, result);
                     if (ENABLE_REACT_COMPILER_TIMINGS === true) {
                         performance.mark(`${filename}:end`, {
                             detail: 'BabelPlugin:Program:end',
