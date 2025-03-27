@@ -2113,7 +2113,7 @@ function codegenInstructionValue(
     }
     case 'TypeCastExpression': {
       if (t.isTSType(instrValue.typeAnnotation)) {
-        if (t.isTSSatisfiesExpression(instrValue.typeAnnotation)) {
+        if (instrValue.typeAnnotationKind === 'satisfies') {
           value = t.tsSatisfiesExpression(
             codegenPlaceToExpression(cx, instrValue.value),
             instrValue.typeAnnotation,
