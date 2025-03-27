@@ -30,6 +30,7 @@ import {
   findProgramSuppressions,
   suppressionsToCompilerError,
 } from './Suppression';
+import {GeneratedSource} from '../HIR';
 
 export type CompilerPass = {
   opts: PluginOptions;
@@ -267,8 +268,9 @@ function isFilePartOfSources(
   return false;
 }
 
-type CompileProgramResult = {
+export type CompileProgramResult = {
   retryErrors: Array<{fn: BabelFn; error: CompilerError}>;
+  inferredEffectLocations: Set<t.SourceLocation>;
 };
 /**
  * `compileProgram` is directly invoked by the react-compiler babel plugin, so
@@ -369,6 +371,7 @@ export function compileProgram(
     },
   );
   const retryErrors: Array<{fn: BabelFn; error: CompilerError}> = [];
+  const inferredEffectLocations = new Set<t.SourceLocation>();
   const processFn = (
     fn: BabelFn,
     fnType: ReactFunctionType,
@@ -509,6 +512,14 @@ export function compileProgram(
     if (!pass.opts.noEmit) {
       return compileResult.compiledFn;
     }
+    /**
+     * inferEffectDependencies + noEmit is currently only used for linting. In
+     * this mode, add source locations for where the compiler *can* infer effect
+     * dependencies.
+     */
+    for (const loc of compileResult.compiledFn.inferredEffectLocations) {
+      if (loc !== GeneratedSource) inferredEffectLocations.add(loc);
+    }
     return null;
   };
 
@@ -587,7 +598,7 @@ export function compileProgram(
   if (compiledFns.length > 0) {
     addImportsToProgram(program, programContext);
   }
-  return {retryErrors};
+  return {retryErrors, inferredEffectLocations};
 }
 
 function shouldSkipCompilation(
