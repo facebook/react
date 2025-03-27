@@ -31,3 +31,5 @@ const configs = {
 };
 
 export {configs, rules, meta};
+
+export default {configs, rules, meta};
