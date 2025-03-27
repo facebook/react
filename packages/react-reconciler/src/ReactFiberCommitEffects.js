@@ -234,6 +234,11 @@ export function commitHookEffectListMount(
             }
           }
         }
+
+        if (!effect.next) {
+          break
+        }
+
         effect = effect.next;
       } while (effect !== firstEffect);
     }
@@ -290,6 +295,11 @@ export function commitHookEffectListUnmount(
             }
           }
         }
+
+        if (!effect.next) {
+          break
+        }
+
         effect = effect.next;
       } while (effect !== firstEffect);
     }
