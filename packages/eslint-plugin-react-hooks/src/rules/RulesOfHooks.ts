@@ -10,6 +10,63 @@ import type {Rule, Scope} from 'eslint';
 import type {CallExpression, DoWhileStatement, Node} from 'estree';
 
 /**
+ * We track React imports to differentiate genuine "use()" from
+ * other arbitrary calls named "use" in non-React code.
+ */
+let importedUseFromReact = false;
+let reactAliases = new Set<string>();
+
+function resetImportFlags() {
+  importedUseFromReact = false;
+  reactAliases.clear();
+}
+
+function scanForReactImports(context: Rule.RuleContext) {
+  const body = context.getSourceCode().ast.body;
+  for (const node of body) {
+    if (node.type === 'ImportDeclaration' && node.source.value === 'react') {
+      for (const spec of node.specifiers) {
+        if (
+          spec.type === 'ImportDefaultSpecifier' ||
+          spec.type === 'ImportNamespaceSpecifier'
+        ) {
+          reactAliases.add(spec.local.name);
+        } else if (spec.type === 'ImportSpecifier') {
+          if (spec.imported.name === 'use') {
+            importedUseFromReact = true;
+          }
+        }
+      }
+      reactAliases.add('React');
+    } else if (
+      node.type === 'VariableDeclaration' &&
+      node.declarations.length === 1 &&
+      node.declarations[0].init?.type === 'CallExpression' &&
+      node.declarations[0].init.callee.type === 'Identifier' &&
+      node.declarations[0].init.callee.name === 'require' &&
+      node.declarations[0].init.arguments[0]?.type === 'Literal' &&
+      node.declarations[0].init.arguments[0].value === 'react'
+    ) {
+      const decl = node.declarations[0].id;
+      if (decl.type === 'Identifier') {
+        reactAliases.add(decl.name);
+      } else if (decl.type === 'ObjectPattern') {
+        for (const prop of decl.properties) {
+          if (
+            prop.type === 'Property' &&
+            prop.key.type === 'Identifier' &&
+            prop.key.name === 'use'
+          ) {
+            importedUseFromReact = true;
+          }
+        }
+        reactAliases.add('React');
+      }
+    }
+  }
+}
+
+/**
  * Catch all identifiers that begin with "use" followed by an uppercase Latin
  * character to exclude identifiers like "user".
  */
@@ -23,6 +80,9 @@ function isHookName(s: string): boolean {
  */
 function isHook(node: Node): boolean {
   if (node.type === 'Identifier') {
+    if (node.name === 'use') {
+      return importedUseFromReact;
+    }
     return isHookName(node.name);
   } else if (
     node.type === 'MemberExpression' &&
@@ -30,8 +90,7 @@ function isHook(node: Node): boolean {
     isHook(node.property)
   ) {
     const obj = node.object;
-    const isPascalCaseNameSpace = /^[A-Z].*/;
-    return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
+    return obj.type === 'Identifier' && reactAliases.has(obj.name);
   } else {
     return false;
   }
@@ -185,6 +244,11 @@ const rule = {
           };
 
     return {
+      Program() {
+        resetImportFlags();
+        scanForReactImports(context);
+      },
+
       // Maintain code segment path stack as we traverse.
       onCodePathSegmentStart: segment => codePathSegmentStack.push(segment),
       onCodePathSegmentEnd: () => codePathSegmentStack.pop(),
