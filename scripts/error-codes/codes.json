@@ -537,5 +537,7 @@
   "549": "Cannot start a gesture with a disconnected AnimationTimeline.",
   "550": "useSwipeTransition is not yet supported in react-art.",
   "551": "useSwipeTransition is not yet supported in React Native.",
-  "552": "Cannot use a useSwipeTransition() in a detached root."
+  "552": "Cannot use a useSwipeTransition() in a detached root.",
+  "553": "Expected to find a host node. This is a bug in React.",
+  "554": "FragmentInstance.scrollIntoView() does not support scrollIntoViewOptions. Use the alignToTop boolean instead."
 }

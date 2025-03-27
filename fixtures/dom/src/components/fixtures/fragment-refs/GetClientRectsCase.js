@@ -2,7 +2,7 @@ import TestCase from '../../TestCase';
 import Fixture from '../../Fixture';
 
 const React = window.React;
-const {Fragment, useEffect, useRef, useState} = React;
+const {Fragment, useRef, useState} = React;
 
 export default function GetClientRectsCase() {
   const fragmentRef = useRef(null);
