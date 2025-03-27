@@ -405,6 +405,55 @@ export function getFragmentParentHostFiber(fiber: Fiber): null | Fiber {
   return null;
 }
 
+export function getFragmentInstanceSiblings(
+  fiber: Fiber,
+): [Fiber | null, Fiber | null] {
+  const result = [null, null];
+  const parentHostFiber = getFragmentParentHostFiber(fiber);
+  if (parentHostFiber === null) {
+    return result;
+  }
+
+  findFragmentInstanceSiblings(result, fiber, parentHostFiber.child);
+  return result;
+}
+
+function findFragmentInstanceSiblings(
+  result: [Fiber | null, Fiber | null],
+  self: Fiber,
+  child: null | Fiber,
+  foundSelf: boolean = false,
+): boolean {
+  while (child !== null) {
+    if (child === self) {
+      foundSelf = true;
+      if (child.sibling) {
+        child = child.sibling;
+      } else {
+        return true;
+      }
+    }
+    if (child.tag === HostComponent) {
+      if (foundSelf) {
+        result[1] = child;
+        return true;
+      } else {
+        result[0] = child;
+      }
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip hidden subtrees
+    } else {
+      if (findFragmentInstanceSiblings(result, self, child.child, foundSelf)) {
+        return true;
+      }
+    }
+    child = child.sibling;
+  }
+  return false;
+}
 export function getInstanceFromHostFiber<I>(fiber: Fiber): I {
   switch (fiber.tag) {
     case HostComponent:
