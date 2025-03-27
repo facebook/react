@@ -2113,10 +2113,17 @@ function codegenInstructionValue(
     }
     case 'TypeCastExpression': {
       if (t.isTSType(instrValue.typeAnnotation)) {
-        value = t.tsAsExpression(
-          codegenPlaceToExpression(cx, instrValue.value),
-          instrValue.typeAnnotation,
-        );
+        if (t.isTSSatisfiesExpression(instrValue.typeAnnotation)) {
+          value = t.tsSatisfiesExpression(
+            codegenPlaceToExpression(cx, instrValue.value),
+            instrValue.typeAnnotation,
+          );
+        } else {
+          value = t.tsAsExpression(
+            codegenPlaceToExpression(cx, instrValue.value),
+            instrValue.typeAnnotation,
+          );
+        }
       } else {
         value = t.typeCastExpression(
           codegenPlaceToExpression(cx, instrValue.value),
