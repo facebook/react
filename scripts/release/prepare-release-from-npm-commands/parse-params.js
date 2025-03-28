@@ -56,6 +56,7 @@ module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
 
   splitCommaParams(params.skipPackages);
+  splitCommaParams(params.onlyPackages);
 
   return params;
 };
