@@ -8,7 +8,7 @@
     "directory": "packages/react-server-dom-fb"
   },
   "dependencies": {
-    "scheduler": "^0.25.0"
+    "scheduler": "^0.26.0"
   },
   "peerDependencies": {
     "react": "^18.0.0",
