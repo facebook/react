@@ -322,6 +322,7 @@ export let didWarnAboutReassigningProps: boolean;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
 let didWarnAboutDefaultPropsOnFunctionComponent;
+let didWarnAboutClassNameOnViewTransition;
 
 if (__DEV__) {
   didWarnAboutBadClass = ({}: {[string]: boolean});
@@ -332,6 +333,7 @@ if (__DEV__) {
   didWarnAboutRevealOrder = ({}: {[empty]: boolean});
   didWarnAboutTailOptions = ({}: {[string]: boolean});
   didWarnAboutDefaultPropsOnFunctionComponent = ({}: {[string]: boolean});
+  didWarnAboutClassNameOnViewTransition = ({}: {[string]: boolean});
 }
 
 export function reconcileChildren(
@@ -3293,6 +3295,25 @@ function updateViewTransition(
     assignViewTransitionAutoName(pendingProps, instance);
     if (getIsHydrating()) {
       pushMaterializedTreeId(workInProgress);
+    }
+  }
+  if (__DEV__) {
+    // $FlowFixMe[prop-missing]
+    if (pendingProps.className !== undefined) {
+      const example =
+        typeof pendingProps.className === 'string'
+          ? JSON.stringify(pendingProps.className)
+          : '{...}';
+      if (!didWarnAboutClassNameOnViewTransition[example]) {
+        didWarnAboutClassNameOnViewTransition[example] = true;
+        console.error(
+          '<ViewTransition> doesn\'t accept a "className" prop. It has been renamed to "default".\n' +
+            '-   <ViewTransition className=%s>\n' +
+            '+   <ViewTransition default=%s>',
+          example,
+          example,
+        );
+      }
     }
   }
   if (current !== null && current.memoizedProps.name !== pendingProps.name) {

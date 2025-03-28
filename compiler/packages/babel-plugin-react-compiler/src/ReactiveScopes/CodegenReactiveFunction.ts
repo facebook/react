@@ -104,6 +104,7 @@ export type CodegenFunction = {
    * This is true if the compiler has compiled inferred effect dependencies
    */
   hasInferredEffect: boolean;
+  inferredEffectLocations: Set<SourceLocation>;
 
   /**
    * This is true if the compiler has compiled a fire to a useFire call
@@ -389,6 +390,7 @@ function codegenReactiveFunction(
     outlined: [],
     hasFireRewrite: fn.env.hasFireRewrite,
     hasInferredEffect: fn.env.hasInferredEffect,
+    inferredEffectLocations: fn.env.inferredEffectLocations,
   });
 }
 
@@ -2113,10 +2115,17 @@ function codegenInstructionValue(
     }
     case 'TypeCastExpression': {
       if (t.isTSType(instrValue.typeAnnotation)) {
-        value = t.tsAsExpression(
-          codegenPlaceToExpression(cx, instrValue.value),
-          instrValue.typeAnnotation,
-        );
+        if (instrValue.typeAnnotationKind === 'satisfies') {
+          value = t.tsSatisfiesExpression(
+            codegenPlaceToExpression(cx, instrValue.value),
+            instrValue.typeAnnotation,
+          );
+        } else {
+          value = t.tsAsExpression(
+            codegenPlaceToExpression(cx, instrValue.value),
+            instrValue.typeAnnotation,
+          );
+        }
       } else {
         value = t.typeCastExpression(
           codegenPlaceToExpression(cx, instrValue.value),

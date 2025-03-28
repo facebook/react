@@ -109,6 +109,7 @@ import {
   ForceClientRender,
   DidCapture,
   AffectedParentLayout,
+  ViewTransitionNamedStatic,
 } from './ReactFiberFlags';
 import {
   commitStartTime,
@@ -234,6 +235,7 @@ import {
   commitFragmentInstanceInsertionEffects,
 } from './ReactFiberCommitHostEffects';
 import {
+  trackEnterViewTransitions,
   commitEnterViewTransitions,
   commitExitViewTransitions,
   commitBeforeUpdateViewTransition,
@@ -254,6 +256,10 @@ import {
   pushMutationContext,
   popMutationContext,
 } from './ReactFiberMutationTracking';
+import {
+  trackNamedViewTransition,
+  untrackNamedViewTransition,
+} from './ReactFiberDuplicateViewTransitions';
 
 // Used during the commit phase to track the state of the Offscreen component stack.
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
@@ -333,6 +339,9 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
       // to trigger updates of any nested view transitions and we shouldn't
       // have any other before mutation effects since snapshot effects are
       // only applied to updates. TODO: Model this using only flags.
+      if (isViewTransitionEligible) {
+        trackEnterViewTransitions(fiber);
+      }
       commitBeforeMutationEffects_complete(isViewTransitionEligible);
       continue;
     }
@@ -362,6 +371,9 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
           // to trigger updates of any nested view transitions and we shouldn't
           // have any other before mutation effects since snapshot effects are
           // only applied to updates. TODO: Model this using only flags.
+          if (isViewTransitionEligible) {
+            trackEnterViewTransitions(fiber);
+          }
           commitBeforeMutationEffects_complete(isViewTransitionEligible);
           continue;
         }
@@ -738,6 +750,11 @@ function commitLayoutEffectOnFiber(
     }
     case ViewTransitionComponent: {
       if (enableViewTransition) {
+        if (__DEV__) {
+          if (flags & ViewTransitionNamedStatic) {
+            trackNamedViewTransition(finishedWork);
+          }
+        }
         recursivelyTraverseLayoutEffects(
           finishedRoot,
           finishedWork,
@@ -1551,11 +1568,34 @@ function commitDeletionEffectsOnFiber(
       }
       break;
     }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        if (__DEV__) {
+          if (deletedFiber.flags & ViewTransitionNamedStatic) {
+            untrackNamedViewTransition(deletedFiber);
+          }
+        }
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber,
+        );
+        return;
+      }
+      // Fallthrough
+    }
     case Fragment: {
       if (enableFragmentRefs) {
         if (!offscreenSubtreeWasHidden) {
           safelyDetachRef(deletedFiber, nearestMountedAncestor);
         }
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber,
+        );
+        return;
       }
       // Fallthrough
     }
@@ -2594,6 +2634,11 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
     }
     case ViewTransitionComponent: {
       if (enableViewTransition) {
+        if (__DEV__) {
+          if (finishedWork.flags & ViewTransitionNamedStatic) {
+            untrackNamedViewTransition(finishedWork);
+          }
+        }
         safelyDetachRef(finishedWork, finishedWork.return);
       }
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -2803,6 +2848,11 @@ export function reappearLayoutEffects(
           finishedWork,
           includeWorkInProgressEffects,
         );
+        if (__DEV__) {
+          if (flags & ViewTransitionNamedStatic) {
+            trackNamedViewTransition(finishedWork);
+          }
+        }
         safelyAttachRef(finishedWork, finishedWork.return);
         break;
       }
@@ -3094,25 +3144,6 @@ function commitPassiveMountOnFiber(
 ): void {
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectErrors = pushComponentEffectErrors();
-
-  // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
-  // render time. We do this after the fact in the passive effect to avoid the overhead of this
-  // getting in the way of the render characteristics and avoid the overhead of unwinding
-  // uncommitted renders.
-  if (
-    enableProfilerTimer &&
-    enableComponentPerformanceTrack &&
-    (finishedWork.mode & ProfileMode) !== NoMode &&
-    ((finishedWork.actualStartTime: any): number) > 0 &&
-    (finishedWork.flags & PerformedWork) !== NoFlags
-  ) {
-    logComponentRender(
-      finishedWork,
-      ((finishedWork.actualStartTime: any): number),
-      endTime,
-      inHydratedSubtree,
-    );
-  }
 
   const isViewTransitionEligible = enableViewTransition
     ? includesOnlyViewTransitionEligibleLanes(committedLanes)
