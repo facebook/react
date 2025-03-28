@@ -1,4 +1,4 @@
-## 19.1.0 (March 27, 2025)
+## 19.1.0 (March 28, 2025)
 
 ### Owner Stack
 * An Owner Stack is a development-only stack trace that helps identify which components are responsible for rendering a particular component. An Owner Stack is distinct from a Component Stack, which shows the hierarchy of components leading to an error.
