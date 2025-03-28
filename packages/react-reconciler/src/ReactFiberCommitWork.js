@@ -283,6 +283,7 @@ export let shouldFireAfterActiveInstanceBlur: boolean = false;
 // Used during the commit phase to track whether a parent ViewTransition component
 // might have been affected by any mutations / relayouts below.
 let viewTransitionContextChanged: boolean = false;
+let rootViewTransitionAffected: boolean = false;
 
 export function commitBeforeMutationEffects(
   root: FiberRoot,
@@ -1750,6 +1751,8 @@ export function commitMutationEffects(
   inProgressLanes = committedLanes;
   inProgressRoot = root;
 
+  rootViewTransitionAffected = false;
+
   resetComponentEffectTimers();
 
   commitMutationEffectsOnFiber(finishedWork, root, committedLanes);
@@ -2068,6 +2071,7 @@ function commitMutationEffectsOnFiber(
       break;
     }
     case HostPortal: {
+      const prevMutationContext = pushMutationContext();
       if (supportsResources) {
         const previousHoistableRoot = currentHoistableRoot;
         currentHoistableRoot = getHoistableRoot(
@@ -2080,6 +2084,14 @@ function commitMutationEffectsOnFiber(
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork, lanes);
       }
+      if (viewTransitionMutationContext) {
+        // A Portal doesn't necessarily exist within the context of this subtree.
+        // Ideally we would track which React ViewTransition component nests the container
+        // but that's costly. Instead, we treat each Portal as if it's a new React root.
+        // Therefore any leaked mutation means that the root should animate.
+        rootViewTransitionAffected = true;
+      }
+      popMutationContext(prevMutationContext);
 
       if (flags & Update) {
         if (supportsPersistence) {
@@ -2432,7 +2444,7 @@ function commitAfterMutationEffectsOnFiber(
       viewTransitionContextChanged = false;
       pushViewTransitionCancelableScope();
       recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
-      if (!viewTransitionContextChanged) {
+      if (!viewTransitionContextChanged && !rootViewTransitionAffected) {
         // If we didn't leak any resizing out to the root, we don't have to transition
         // the root itself. This means that we can now safely cancel any cancellations
         // that bubbled all the way up.
@@ -2454,6 +2466,20 @@ function commitAfterMutationEffectsOnFiber(
     }
     case HostComponent: {
       recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
+      break;
+    }
+    case HostPortal: {
+      const prevContextChanged = viewTransitionContextChanged;
+      viewTransitionContextChanged = false;
+      recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
+      if (viewTransitionContextChanged) {
+        // A Portal doesn't necessarily exist within the context of this subtree.
+        // Ideally we would track which React ViewTransition component nests the container
+        // but that's costly. Instead, we treat each Portal as if it's a new React root.
+        // Therefore any leaked resize of a child could affect the root so the root should animate.
+        rootViewTransitionAffected = true;
+      }
+      viewTransitionContextChanged = prevContextChanged;
       break;
     }
     case OffscreenComponent: {
