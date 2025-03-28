@@ -75,6 +75,7 @@ export default function InspectedElementView({
           <InspectedElementBadges
             hocDisplayNames={element.hocDisplayNames}
             compiledWithForget={element.compiledWithForget}
+            nativeTag={inspectedElement.nativeTag}
           />
         </div>
 
