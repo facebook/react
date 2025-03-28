@@ -21,15 +21,19 @@ import {getIsHydrating} from './ReactFiberHydrationContext';
 import {getTreeId} from './ReactFiberTreeContext';
 
 export type ViewTransitionClassPerType = {
-  [transitionType: 'default' | string]: 'none' | string,
+  [transitionType: 'default' | string]: 'none' | 'auto' | string,
 };
 
-export type ViewTransitionClass = 'none' | string | ViewTransitionClassPerType;
+export type ViewTransitionClass =
+  | 'none'
+  | 'auto'
+  | string
+  | ViewTransitionClassPerType;
 
 export type ViewTransitionProps = {
   name?: string,
   children?: ReactNodeList,
-  className?: ViewTransitionClass,
+  default?: ViewTransitionClass,
   enter?: ViewTransitionClass,
   exit?: ViewTransitionClass,
   share?: ViewTransitionClass,
@@ -127,13 +131,10 @@ export function getViewTransitionClassName(
   const className: ?string = getClassNameByType(defaultClass);
   const eventClassName: ?string = getClassNameByType(eventClass);
   if (eventClassName == null) {
-    return className;
+    return className === 'auto' ? null : className;
   }
-  if (eventClassName === 'none') {
-    return eventClassName;
-  }
-  if (className != null && className !== 'none') {
-    return className + ' ' + eventClassName;
+  if (eventClassName === 'auto') {
+    return null;
   }
   return eventClassName;
 }

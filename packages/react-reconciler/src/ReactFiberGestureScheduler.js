@@ -8,10 +8,7 @@
  */
 
 import type {FiberRoot} from './ReactInternalTypes';
-import type {
-  GestureTimeline,
-  RunningGestureTransition,
-} from './ReactFiberConfig';
+import type {GestureTimeline, RunningViewTransition} from './ReactFiberConfig';
 
 import {
   GestureLane,
@@ -21,7 +18,7 @@ import {
 import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
 import {
   subscribeToGestureDirection,
-  stopGestureTransition,
+  stopViewTransition,
 } from './ReactFiberConfig';
 
 // This type keeps track of any scheduled or active gestures.
@@ -33,7 +30,7 @@ export type ScheduledGesture = {
   rangeCurrent: number, // The starting offset along the timeline.
   rangeNext: number, // The end along the timeline where the next state is reached.
   cancel: () => void, // Cancel the subscription to direction change.
-  running: null | RunningGestureTransition, // Used to cancel the running transition after we're done.
+  running: null | RunningViewTransition, // Used to cancel the running transition after we're done.
   prev: null | ScheduledGesture, // The previous scheduled gesture in the queue for this root.
   next: null | ScheduledGesture, // The next scheduled gesture in the queue for this root.
 };
@@ -144,7 +141,7 @@ export function cancelScheduledGesture(
       } else {
         gesture.running = null;
         // If there's no work scheduled so we can stop the View Transition right away.
-        stopGestureTransition(runningTransition);
+        stopViewTransition(runningTransition);
       }
     }
   }
@@ -183,7 +180,7 @@ export function stopCompletedGestures(root: FiberRoot) {
   root.stoppingGestures = null;
   while (gesture !== null) {
     if (gesture.running !== null) {
-      stopGestureTransition(gesture.running);
+      stopViewTransition(gesture.running);
       gesture.running = null;
     }
     const nextGesture = gesture.next;

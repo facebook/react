@@ -73,7 +73,7 @@ export default function BabelPluginReactCompiler(
             pass.filename ?? null,
             opts.logger,
             opts.environment,
-            result?.retryErrors ?? [],
+            result,
           );
           if (ENABLE_REACT_COMPILER_TIMINGS === true) {
             performance.mark(`${filename}:end`, {
