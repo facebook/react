@@ -211,7 +211,7 @@ export function getNodeFromInstance(inst: Fiber): Instance | TextInstance {
 }
 
 export function getFiberCurrentPropsFromNode(
-  node: Instance | TextInstance | SuspenseInstance,
+  node: Container | Instance | TextInstance | SuspenseInstance,
 ): Props {
   return (node: any)[internalPropsKey] || null;
 }
