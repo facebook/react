@@ -49,6 +49,7 @@ const paramDefinitions = [
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
   splitCommaParams(params.skipPackages);
+  splitCommaParams(params.onlyPackages);
   splitCommaParams(params.tags);
   params.tags.forEach(tag => {
     switch (tag) {
