@@ -910,13 +910,21 @@ export type InstructionValue =
       value: Place;
       loc: SourceLocation;
     }
-  | {
+  | ({
       kind: 'TypeCastExpression';
       value: Place;
-      typeAnnotation: t.FlowType | t.TSType;
       type: Type;
       loc: SourceLocation;
-    }
+    } & (
+      | {
+          typeAnnotation: t.FlowType;
+          typeAnnotationKind: 'cast';
+        }
+      | {
+          typeAnnotation: t.TSType;
+          typeAnnotationKind: 'as' | 'satisfies';
+        }
+    ))
   | JsxExpression
   | {
       kind: 'ObjectExpression';
