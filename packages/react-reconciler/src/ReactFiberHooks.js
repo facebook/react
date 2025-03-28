@@ -226,7 +226,7 @@ export type Effect = {
   inst: EffectInstance,
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
-  next: Effect,
+  next?: Effect,
 };
 
 type StoreInstance<T> = {
