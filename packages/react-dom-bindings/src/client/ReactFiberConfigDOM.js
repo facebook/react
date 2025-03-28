@@ -30,6 +30,7 @@ import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 import {NotPending} from '../shared/ReactDOMFormActions';
 
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
+import {runWithFiberInDEV} from 'react-reconciler/src/ReactCurrentFiber';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
@@ -43,6 +44,8 @@ export {
 import {
   precacheFiberNode,
   updateFiberProps,
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
   getClosestInstanceFromNode,
   getFiberFromScopeInstance,
   getInstanceFromNode as getInstanceFromNodeDOMTree,
@@ -821,10 +824,51 @@ export function appendChild(
   }
 }
 
+function warnForReactChildrenConflict(container: Container): void {
+  if (__DEV__) {
+    if ((container: any).__reactWarnedAboutChildrenConflict) {
+      return;
+    }
+    const props = getFiberCurrentPropsFromNode(container);
+    if (props !== null) {
+      const fiber = getInstanceFromNode(container);
+      if (fiber !== null) {
+        if (
+          typeof props.children === 'string' ||
+          typeof props.children === 'number'
+        ) {
+          (container: any).__reactWarnedAboutChildrenConflict = true;
+          // Run the warning with the Fiber of the container for context of where the children are specified.
+          // We could also maybe use the Portal. The current execution context is the child being added.
+          runWithFiberInDEV(fiber, () => {
+            console.error(
+              'Cannot use a ref on a React element as a container to `createRoot` or `createPortal` ' +
+                'if that element also sets "children" text content using React. It should be a leaf with no children. ' +
+                "Otherwise it's ambiguous which children should be used.",
+            );
+          });
+        } else if (props.dangerouslySetInnerHTML != null) {
+          (container: any).__reactWarnedAboutChildrenConflict = true;
+          runWithFiberInDEV(fiber, () => {
+            console.error(
+              'Cannot use a ref on a React element as a container to `createRoot` or `createPortal` ' +
+                'if that element also sets "dangerouslySetInnerHTML" using React. It should be a leaf with no children. ' +
+                "Otherwise it's ambiguous which children should be used.",
+            );
+          });
+        }
+      }
+    }
+  }
+}
+
 export function appendChildToContainer(
   container: Container,
   child: Instance | TextInstance,
 ): void {
+  if (__DEV__) {
+    warnForReactChildrenConflict(container);
+  }
   let parentNode: DocumentFragment | Element;
   if (container.nodeType === DOCUMENT_NODE) {
     parentNode = (container: any).body;
@@ -888,6 +932,9 @@ export function insertInContainerBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
+  if (__DEV__) {
+    warnForReactChildrenConflict(container);
+  }
   let parentNode: DocumentFragment | Element;
   if (container.nodeType === DOCUMENT_NODE) {
     parentNode = (container: any).body;
