@@ -117,16 +117,7 @@ const run = async ({cwd, packages, version, ci}, versionsMap) => {
     // A separate "React version" is used for the embedded renderer version to support DevTools,
     // since it needs to distinguish between different version ranges of React.
     // We need to replace it as well as the "next" version number.
-    const buildInfoPath = join(nodeModulesPath, 'react', 'build-info.json');
-    const {reactVersion} = await readJson(buildInfoPath);
-
-    if (!reactVersion) {
-      console.error(
-        theme`{error Unsupported or invalid build metadata in} {path build/node_modules/react/build-info.json}` +
-          theme`{error . This could indicate that you have specified an outdated "next" version.}`
-      );
-      process.exit(1);
-    }
+    const reactVersion = version;
 
     // We print the diff to the console for review,
     // but it can be large so let's also write it to disk.
@@ -151,10 +142,6 @@ const run = async ({cwd, packages, version, ci}, versionsMap) => {
         // Replace all "next" version numbers (e.g. header @license).
         while (afterContents.indexOf(version) >= 0) {
           afterContents = afterContents.replace(version, newStableVersion);
-        }
-        // Replace inline renderer version numbers (e.g. shared/ReactVersion).
-        while (afterContents.indexOf(reactVersion) >= 0) {
-          afterContents = afterContents.replace(reactVersion, newStableVersion);
         }
         if (beforeContents !== afterContents) {
           numFilesModified++;
