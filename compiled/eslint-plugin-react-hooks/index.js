@@ -31354,6 +31354,19 @@ function lowerExpression(builder, exprPath) {
                 kind: 'TypeCastExpression',
                 value: lowerExpressionToTemporary(builder, expr.get('expression')),
                 typeAnnotation: typeAnnotation.node,
+                typeAnnotationKind: 'cast',
+                type: lowerType(typeAnnotation.node),
+                loc: exprLoc,
+            };
+        }
+        case 'TSSatisfiesExpression': {
+            let expr = exprPath;
+            const typeAnnotation = expr.get('typeAnnotation');
+            return {
+                kind: 'TypeCastExpression',
+                value: lowerExpressionToTemporary(builder, expr.get('expression')),
+                typeAnnotation: typeAnnotation.node,
+                typeAnnotationKind: 'satisfies',
                 type: lowerType(typeAnnotation.node),
                 loc: exprLoc,
             };
@@ -31365,6 +31378,7 @@ function lowerExpression(builder, exprPath) {
                 kind: 'TypeCastExpression',
                 value: lowerExpressionToTemporary(builder, expr.get('expression')),
                 typeAnnotation: typeAnnotation.node,
+                typeAnnotationKind: 'as',
                 type: lowerType(typeAnnotation.node),
                 loc: exprLoc,
             };
@@ -43346,7 +43360,12 @@ function codegenInstructionValue(cx, instrValue) {
         }
         case 'TypeCastExpression': {
             if (libExports.isTSType(instrValue.typeAnnotation)) {
-                value = libExports.tsAsExpression(codegenPlaceToExpression(cx, instrValue.value), instrValue.typeAnnotation);
+                if (instrValue.typeAnnotationKind === 'satisfies') {
+                    value = libExports.tsSatisfiesExpression(codegenPlaceToExpression(cx, instrValue.value), instrValue.typeAnnotation);
+                }
+                else {
+                    value = libExports.tsAsExpression(codegenPlaceToExpression(cx, instrValue.value), instrValue.typeAnnotation);
+                }
             }
             else {
                 value = libExports.typeCastExpression(codegenPlaceToExpression(cx, instrValue.value), libExports.typeAnnotation(instrValue.typeAnnotation));
