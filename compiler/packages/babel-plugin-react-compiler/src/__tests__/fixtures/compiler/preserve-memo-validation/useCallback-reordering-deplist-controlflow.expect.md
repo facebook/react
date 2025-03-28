@@ -47,8 +47,7 @@ function Foo(t0) {
   if ($[0] !== arr1 || $[1] !== arr2 || $[2] !== foo) {
     const x = [arr1];
 
-    let y;
-    y = [];
+    let y = [];
 
     getVal1 = _temp;
 

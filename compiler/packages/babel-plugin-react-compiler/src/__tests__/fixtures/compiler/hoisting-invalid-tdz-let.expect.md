@@ -30,8 +30,7 @@ function Foo() {
     getX = () => x;
     console.log(getX());
 
-    let x;
-    x = 4;
+    let x = 4;
     x = x + 5;
     $[0] = getX;
   } else {
