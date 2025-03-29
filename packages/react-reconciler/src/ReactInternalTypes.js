@@ -280,7 +280,7 @@ type BaseFiberRootProperties = {
 
   formState: ReactFormState<any, any> | null,
 
-  // enableSwipeTransition only
+  // enableGestureTransition only
   pendingGestures: null | ScheduledGesture,
   stoppingGestures: null | ScheduledGesture,
   gestureClone: null | Instance,

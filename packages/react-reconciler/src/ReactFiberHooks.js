@@ -42,7 +42,7 @@ import {
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
-  enableSwipeTransition,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -165,7 +165,7 @@ export type Update<S, A> = {
   hasEagerState: boolean,
   eagerState: S | null,
   next: Update<S, A>,
-  gesture: null | ScheduledGesture, // enableSwipeTransition
+  gesture: null | ScheduledGesture, // enableGestureTransition
 };
 
 export type UpdateQueue<S, A> = {
@@ -1374,7 +1374,7 @@ function updateReducerImpl<S, A>(
         ? !isSubsetOfLanes(getWorkInProgressRootRenderLanes(), updateLane)
         : !isSubsetOfLanes(renderLanes, updateLane);
 
-      if (enableSwipeTransition && updateLane === GestureLane) {
+      if (enableGestureTransition && updateLane === GestureLane) {
         // This is a gesture optimistic update. It should only be considered as part of the
         // rendered state while rendering the gesture lane and if the rendering the associated
         // ScheduledGesture.
@@ -2159,7 +2159,7 @@ function runActionStateAction<S, P>(
     // This is a fork of startTransition
     const prevTransition = ReactSharedInternals.T;
     const currentTransition: Transition = ({}: any);
-    if (enableSwipeTransition) {
+    if (enableGestureTransition) {
       currentTransition.gesture = null;
     }
     if (enableTransitionTracing) {
@@ -3041,7 +3041,7 @@ function startTransition<S>(
 
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
-  if (enableSwipeTransition) {
+  if (enableGestureTransition) {
     currentTransition.gesture = null;
   }
   if (enableTransitionTracing) {
@@ -3269,7 +3269,7 @@ export function requestFormReset(formFiber: Fiber) {
           'fix, move to an action, or wrap with startTransition.',
       );
     }
-  } else if (enableSwipeTransition && transition.gesture) {
+  } else if (enableGestureTransition && transition.gesture) {
     throw new Error(
       'Cannot requestFormReset() inside a startGestureTransition. ' +
         'There should be no side-effects associated with starting a ' +
@@ -3646,7 +3646,7 @@ function dispatchOptimisticSetState<S, A>(
   // For regular Transitions an optimistic update commits synchronously.
   // For gesture Transitions an optimistic update commits on the GestureLane.
   const lane =
-    enableSwipeTransition && transition !== null && transition.gesture
+    enableGestureTransition && transition !== null && transition.gesture
       ? GestureLane
       : SyncLane;
   const update: Update<S, A> = {
@@ -3687,7 +3687,7 @@ function dispatchOptimisticSetState<S, A>(
       scheduleUpdateOnFiber(root, fiber, lane);
       // Optimistic updates are always synchronous, so we don't need to call
       // entangleTransitionUpdate here.
-      if (enableSwipeTransition && transition !== null) {
+      if (enableGestureTransition && transition !== null) {
         const provider = transition.gesture;
         if (provider !== null) {
           // If this was a gesture, ensure we have a scheduled gesture and that

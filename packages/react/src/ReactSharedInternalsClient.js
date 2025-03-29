@@ -15,7 +15,7 @@ import type {GestureProvider, GestureOptions} from 'shared/ReactTypes';
 
 import {
   enableViewTransition,
-  enableSwipeTransition,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 
 export type SharedStateClient = {
@@ -58,7 +58,7 @@ const ReactSharedInternals: SharedStateClient = ({
   T: null,
   S: null,
 }: any);
-if (enableSwipeTransition) {
+if (enableGestureTransition) {
   ReactSharedInternals.G = null;
 }
 if (enableViewTransition) {

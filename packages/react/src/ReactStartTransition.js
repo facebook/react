@@ -18,13 +18,13 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {
   enableTransitionTracing,
-  enableSwipeTransition,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 
 import reportGlobalError from 'shared/reportGlobalError';
 
 export type Transition = {
-  gesture: null | GestureProvider, // enableSwipeTransition
+  gesture: null | GestureProvider, // enableGestureTransition
   name: null | string, // enableTransitionTracing only
   startTime: number, // enableTransitionTracing only
   _updatedFibers: Set<Fiber>, // DEV-only
@@ -37,7 +37,7 @@ export function startTransition(
 ): void {
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
-  if (enableSwipeTransition) {
+  if (enableGestureTransition) {
     currentTransition.gesture = null;
   }
   if (enableTransitionTracing) {
@@ -76,10 +76,10 @@ export function startGestureTransition(
   scope: () => void,
   options?: GestureOptions & StartTransitionOptions,
 ): () => void {
-  if (!enableSwipeTransition) {
+  if (!enableGestureTransition) {
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'startGestureTransition should not be exported when the enableSwipeTransition flag is off.',
+      'startGestureTransition should not be exported when the enableGestureTransition flag is off.',
     );
   }
   if (provider == null) {
@@ -92,7 +92,7 @@ export function startGestureTransition(
   }
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
-  if (enableSwipeTransition) {
+  if (enableGestureTransition) {
     currentTransition.gesture = provider;
   }
   if (enableTransitionTracing) {

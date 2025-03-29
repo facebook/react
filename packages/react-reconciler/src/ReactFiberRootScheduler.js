@@ -20,7 +20,7 @@ import {
   enableComponentPerformanceTrack,
   enableSiblingPrerendering,
   enableYieldingBeforePassive,
-  enableSwipeTransition,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   NoLane,
@@ -214,7 +214,7 @@ function flushSyncWorkAcrossRoots_impl(
           );
           if (
             (includesSyncLane(nextLanes) ||
-              (enableSwipeTransition && isGestureRender(nextLanes))) &&
+              (enableGestureTransition && isGestureRender(nextLanes))) &&
             !checkIfRootIsPrerendering(root, nextLanes)
           ) {
             // This root has pending sync work. Flush it now.
@@ -300,7 +300,7 @@ function processRootScheduleInMicrotask() {
         // Common case: we're not treating any extra lanes as synchronous, so we
         // can just check if the next lanes are sync.
         includesSyncLane(nextLanes) ||
-        (enableSwipeTransition && isGestureRender(nextLanes))
+        (enableGestureTransition && isGestureRender(nextLanes))
       ) {
         mightHavePendingSyncWork = true;
       }
