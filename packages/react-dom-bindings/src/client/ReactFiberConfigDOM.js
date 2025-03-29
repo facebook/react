@@ -1358,7 +1358,9 @@ export function cloneRootViewTransitionContainer(
 
   const containerParent = containerInstance.parentNode;
   if (containerParent === null) {
-    throw new Error('Cannot use a useSwipeTransition() in a detached root.');
+    throw new Error(
+      'Cannot use a startGestureTransition() on a detached root.',
+    );
   }
 
   const clone: HTMLElement = containerInstance.cloneNode(false);
@@ -1464,7 +1466,9 @@ export function removeRootViewTransitionClone(
   }
   const containerParent = containerInstance.parentNode;
   if (containerParent === null) {
-    throw new Error('Cannot use a useSwipeTransition() in a detached root.');
+    throw new Error(
+      'Cannot use a startGestureTransition() on a detached root.',
+    );
   }
   // We assume that the clone is still within the same parent.
   containerParent.removeChild(clone);

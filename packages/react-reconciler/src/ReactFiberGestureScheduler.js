@@ -17,10 +17,7 @@ import {
   includesTransitionLane,
 } from './ReactFiberLane';
 import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
-import {
-  getCurrentGestureOffset,
-  stopViewTransition,
-} from './ReactFiberConfig';
+import {getCurrentGestureOffset, stopViewTransition} from './ReactFiberConfig';
 
 // This type keeps track of any scheduled or active gestures.
 export type ScheduledGesture = {
