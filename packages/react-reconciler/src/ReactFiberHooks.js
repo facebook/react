@@ -3232,8 +3232,8 @@ function ensureFormComponentIsStateful(formFiber: Fiber) {
 export function requestFormReset(formFiber: Fiber) {
   const transition = requestCurrentTransition();
 
-  if (__DEV__) {
-    if (transition === null) {
+  if (transition === null) {
+    if (__DEV__) {
       // An optimistic update occurred, but startTransition is not on the stack.
       // The form reset will be scheduled at default (sync) priority, which
       // is probably not what the user intended. Most likely because the
@@ -3248,6 +3248,13 @@ export function requestFormReset(formFiber: Fiber) {
           'fix, move to an action, or wrap with startTransition.',
       );
     }
+  } else if (enableSwipeTransition && transition.gesture) {
+    throw new Error(
+      'Cannot requestFormReset() inside a startGestureTransition. ' +
+        'There should be no side-effects associated with starting a ' +
+        'Gesture until its Action is invoked. Move side-effects to the ' +
+        'Action instead.',
+    );
   }
 
   const stateHook = ensureFormComponentIsStateful(formFiber);
@@ -3613,9 +3620,14 @@ function dispatchOptimisticSetState<S, A>(
     }
   }
 
+  // For regular Transitions an optimistic update commits synchronously.
+  // For gesture Transitions an optimistic update commits on the GestureLane.
+  const lane =
+    enableSwipeTransition && transition !== null && transition.gesture
+      ? GestureLane
+      : SyncLane;
   const update: Update<S, A> = {
-    // An optimistic update commits synchronously.
-    lane: SyncLane,
+    lane: lane,
     // After committing, the optimistic update is "reverted" using the same
     // lane as the transition it's associated with.
     revertLane: requestTransitionLane(transition),
