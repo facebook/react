@@ -14,10 +14,10 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
+import type {Transition} from 'react/src/ReactStartTransition';
 import type {
   PendingTransitionCallbacks,
   PendingBoundaries,
-  Transition,
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
 import type {OffscreenInstance} from './ReactFiberActivityComponent';

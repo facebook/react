@@ -15,6 +15,12 @@ import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 
 import reportGlobalError from 'shared/reportGlobalError';
 
+export type Transition = {
+  name: string, // enableTransitionTracing only
+  startTime: number, // enableTransitionTracing only
+  ...
+};
+
 export function startTransition(
   scope: () => void,
   options?: StartTransitionOptions,

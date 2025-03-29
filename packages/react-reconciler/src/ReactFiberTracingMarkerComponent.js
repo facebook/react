@@ -12,6 +12,7 @@ import type {
   Fiber,
   FiberRoot,
 } from './ReactInternalTypes';
+import type {Transition} from 'react/src/ReactStartTransition';
 import type {OffscreenInstance} from './ReactFiberActivityComponent';
 import type {StackCursor} from './ReactFiberStack';
 
@@ -34,13 +35,6 @@ export type PendingTransitionCallbacks = {
     {aborts: Array<TransitionAbort>, transitions: Set<Transition>},
   > | null,
   markerComplete: Map<string, Set<Transition>> | null,
-};
-
-// TODO: Unclear to me why these are separate types
-export type Transition = {
-  name: string,
-  startTime: number,
-  ...
 };
 
 export type BatchConfigTransition = {

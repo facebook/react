@@ -11,10 +11,8 @@ import type {Thenable} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {StackCursor} from './ReactFiberStack';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
-import type {
-  BatchConfigTransition,
-  Transition,
-} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
+import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 
 import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberConfig';
