@@ -31,13 +31,14 @@ export type ScheduledGesture = {
   rangePrevious: number, // The end along the timeline where the previous state is reached.
   rangeCurrent: number, // The starting offset along the timeline.
   rangeNext: number, // The end along the timeline where the next state is reached.
-  cancel: () => void, // Cancel the subscription to direction change.
+  cancel: () => void, // Cancel the subscription to direction change. // TODO: Delete this.
   running: null | RunningViewTransition, // Used to cancel the running transition after we're done.
   prev: null | ScheduledGesture, // The previous scheduled gesture in the queue for this root.
   next: null | ScheduledGesture, // The next scheduled gesture in the queue for this root.
 };
 
-export function scheduleGesture(
+// TODO: Delete this when deleting useSwipeTransition.
+export function scheduleGestureLegacy(
   root: FiberRoot,
   provider: GestureTimeline,
   initialDirection: boolean,
@@ -96,6 +97,43 @@ export function scheduleGesture(
     rangeCurrent: rangeCurrent,
     rangeNext: rangeNext,
     cancel: cancel,
+    running: null,
+    prev: prev,
+    next: null,
+  };
+  if (prev === null) {
+    root.pendingGestures = gesture;
+  } else {
+    prev.next = gesture;
+  }
+  ensureRootIsScheduled(root);
+  return gesture;
+}
+
+export function scheduleGesture(
+  root: FiberRoot,
+  provider: GestureTimeline,
+): ScheduledGesture {
+  let prev = root.pendingGestures;
+  while (prev !== null) {
+    if (prev.provider === provider) {
+      // Existing instance found.
+      return prev;
+    }
+    const next = prev.next;
+    if (next === null) {
+      break;
+    }
+    prev = next;
+  }
+  const gesture: ScheduledGesture = {
+    provider: provider,
+    count: 0,
+    direction: false,
+    rangePrevious: -1,
+    rangeCurrent: -1,
+    rangeNext: -1,
+    cancel: () => {}, // TODO: Delete this with useSwipeTransition.
     running: null,
     prev: prev,
     next: null,

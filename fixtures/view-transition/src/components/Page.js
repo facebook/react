@@ -1,7 +1,6 @@
 import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
-  unstable_useSwipeTransition as useSwipeTransition,
   useLayoutEffect,
   useEffect,
   useState,
@@ -48,7 +47,6 @@ function Id() {
 }
 
 export default function Page({url, navigate}) {
-  const [, startGesture] = useSwipeTransition('/?a', url, '/?b');
   const [renderedUrl, optimisticNavigate] = useOptimistic(
     url,
     (state, direction) => {
@@ -95,13 +93,7 @@ export default function Page({url, navigate}) {
     <div className="swipe-recognizer">
       <SwipeRecognizer
         action={swipeAction}
-        gesture={(direction, timeline, options) => {
-          optimisticNavigate(direction);
-          const cancel = startGesture(timeline, options);
-          Promise.resolve().then(() => {
-            cancel(); // This is kept alive by the SwipeRecognizer.
-          });
-        }}
+        gesture={optimisticNavigate}
         direction={show ? 'left' : 'right'}>
         <button
           className="button"
