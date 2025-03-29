@@ -927,8 +927,6 @@ export function scheduleUpdateOnFiber(
           transition.startTime = now();
         }
 
-        // $FlowFixMe[prop-missing]: The BatchConfigTransition and Transition types are incompatible but was previously untyped and thus uncaught
-        // $FlowFixMe[incompatible-call]: "
         addTransitionToLanesMap(root, transition, lane);
       }
     }

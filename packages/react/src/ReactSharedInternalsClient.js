@@ -9,14 +9,14 @@
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
-import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent';
+import type {Transition} from './ReactStartTransition';
 import type {TransitionTypes} from './ReactTransitionType';
 
 export type SharedStateClient = {
   H: null | Dispatcher, // ReactCurrentDispatcher for Hooks
   A: null | AsyncDispatcher, // ReactCurrentCache for Cache
-  T: null | BatchConfigTransition, // ReactCurrentBatchConfig for Transitions
-  S: null | ((BatchConfigTransition, mixed) => void), // onStartTransitionFinish
+  T: null | Transition, // ReactCurrentBatchConfig for Transitions
+  S: null | ((Transition, mixed) => void), // onStartTransitionFinish
   V: null | TransitionTypes, // Pending Transition Types for the Next Transition
 
   // DEV-only

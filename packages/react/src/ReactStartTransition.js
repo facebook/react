@@ -6,8 +6,9 @@
  *
  * @flow
  */
-import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent';
+
 import type {StartTransitionOptions} from 'shared/ReactTypes';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
@@ -16,8 +17,9 @@ import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 import reportGlobalError from 'shared/reportGlobalError';
 
 export type Transition = {
-  name: string, // enableTransitionTracing only
+  name: null | string, // enableTransitionTracing only
   startTime: number, // enableTransitionTracing only
+  _updatedFibers: Set<Fiber>, // DEV-only
   ...
 };
 
@@ -26,19 +28,16 @@ export function startTransition(
   options?: StartTransitionOptions,
 ) {
   const prevTransition = ReactSharedInternals.T;
-  const currentTransition: BatchConfigTransition = {};
-  ReactSharedInternals.T = currentTransition;
-
+  const currentTransition: Transition = ({}: any);
+  if (enableTransitionTracing) {
+    currentTransition.name =
+      options !== undefined && options.name !== undefined ? options.name : null;
+    currentTransition.startTime = -1; // TODO: This should read the timestamp.
+  }
   if (__DEV__) {
     currentTransition._updatedFibers = new Set();
   }
-
-  if (enableTransitionTracing) {
-    if (options !== undefined && options.name !== undefined) {
-      currentTransition.name = options.name;
-      currentTransition.startTime = -1;
-    }
-  }
+  ReactSharedInternals.T = currentTransition;
 
   try {
     const returnValue = scope();
@@ -62,8 +61,8 @@ export function startTransition(
 }
 
 function warnAboutTransitionSubscriptions(
-  prevTransition: BatchConfigTransition | null,
-  currentTransition: BatchConfigTransition,
+  prevTransition: Transition | null,
+  currentTransition: Transition,
 ) {
   if (__DEV__) {
     if (prevTransition === null && currentTransition._updatedFibers) {

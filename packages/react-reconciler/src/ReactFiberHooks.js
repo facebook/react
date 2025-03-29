@@ -149,7 +149,7 @@ import {
   SuspenseActionException,
 } from './ReactFiberThenable';
 import type {ThenableState} from './ReactFiberThenable';
-import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
 import {
   peekEntangledActionLane,
   peekEntangledActionThenable,
@@ -2137,11 +2137,15 @@ function runActionStateAction<S, P>(
 
     // This is a fork of startTransition
     const prevTransition = ReactSharedInternals.T;
-    const currentTransition: BatchConfigTransition = {};
-    ReactSharedInternals.T = currentTransition;
-    if (__DEV__) {
-      ReactSharedInternals.T._updatedFibers = new Set();
+    const currentTransition: Transition = ({}: any);
+    if (enableTransitionTracing) {
+      currentTransition.name = null;
+      currentTransition.startTime = -1;
     }
+    if (__DEV__) {
+      currentTransition._updatedFibers = new Set();
+    }
+    ReactSharedInternals.T = currentTransition;
     try {
       const returnValue = action(prevState, payload);
       const onStartTransitionFinish = ReactSharedInternals.S;
@@ -3012,7 +3016,15 @@ function startTransition<S>(
   );
 
   const prevTransition = ReactSharedInternals.T;
-  const currentTransition: BatchConfigTransition = {};
+  const currentTransition: Transition = ({}: any);
+  if (enableTransitionTracing) {
+    currentTransition.name =
+      options !== undefined && options.name !== undefined ? options.name : null;
+    currentTransition.startTime = now();
+  }
+  if (__DEV__) {
+    currentTransition._updatedFibers = new Set();
+  }
 
   // We don't really need to use an optimistic update here, because we
   // schedule a second "revert" update below (which we use to suspend the
@@ -3022,17 +3034,6 @@ function startTransition<S>(
   // share the same lane.
   ReactSharedInternals.T = currentTransition;
   dispatchOptimisticSetState(fiber, false, queue, pendingState);
-
-  if (enableTransitionTracing) {
-    if (options !== undefined && options.name !== undefined) {
-      currentTransition.name = options.name;
-      currentTransition.startTime = now();
-    }
-  }
-
-  if (__DEV__) {
-    currentTransition._updatedFibers = new Set();
-  }
 
   try {
     const returnValue = callback();

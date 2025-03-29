@@ -12,7 +12,6 @@ import type {Lanes} from './ReactFiberLane';
 import type {StackCursor} from './ReactFiberStack';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
 import type {Transition} from 'react/src/ReactStartTransition';
-import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 
 import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberConfig';
@@ -55,7 +54,7 @@ export const NoTransition = null;
 // reconciler. Leaving this for a future PR.
 const prevOnStartTransitionFinish = ReactSharedInternals.S;
 ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
-  transition: BatchConfigTransition,
+  transition: Transition,
   returnValue: mixed,
 ) {
   if (
@@ -79,7 +78,7 @@ ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
   }
 };
 
-export function requestCurrentTransition(): BatchConfigTransition | null {
+export function requestCurrentTransition(): Transition | null {
   return ReactSharedInternals.T;
 }
 
