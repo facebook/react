@@ -49,7 +49,7 @@ function Component(props) {
   } else {
     t2 = $[4];
   }
-  useEffect(t2, [t1, props]);
+  useEffect(t2, [props]);
   return null;
 }
 
