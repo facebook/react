@@ -1,0 +1,128 @@
+WHATWG
+HTML: The Living Standard
+Edition for Web Developers — Last Updated 28 March 2025
+
+Search. Press '/'
+Table of contents
+1Introduction
+1.1Is this HTML5?
+1.2Background
+1.3Audience
+1.4Scope
+1.5History
+1.6Design notes
+1.7HTML vs XML syntax
+1.8Structure of this specification
+1.9A quick introduction to HTML
+1.10Conformance requirements for authors
+1.11Suggested reading
+2Common infrastructure
+2.1Terminology
+2.2Policy-controlled features
+2.3Common microsyntaxes
+2.4URLs
+2.5Common DOM interfaces
+2.6Safe passing of structured data
+3Semantics, structure, and APIs of HTML documents
+3.1Documents
+3.2Elements
+4The elements of HTML
+4.1The document element
+4.2Document metadata
+4.3Sections
+4.4Grouping content
+4.5Text-level semantics
+4.6Links
+4.7Edits
+4.8Embedded content
+4.9Tabular data
+4.10Forms
+4.11Interactive elements
+4.12Scripting
+4.13Custom elements
+4.14Common idioms without dedicated elements
+4.15Disabled elements
+5Microdata
+5.1Introduction
+5.2Encoding microdata
+5.3Sample microdata vocabularies
+6User interaction
+6.1The hidden attribute
+6.2Page visibility
+6.3Inert subtrees
+6.4Tracking user activation
+6.5Activation behavior of elements
+6.6Focus
+6.7Assigning keyboard shortcuts
+6.8Editing
+6.9Find-in-page
+6.10Close requests and close watchers
+6.11Drag and drop
+6.12The popover attribute
+7Loading web pages
+7.1Supporting concepts
+7.2APIs related to navigation and session history
+7.3Infrastructure for sequences of documents
+7.4Navigation and session history
+7.5Document lifecycle
+7.6The `X-Frame-Options` header
+7.7The `Refresh` header
+7.8Browser user interface considerations
+8Web application APIs
+8.1Scripting
+8.2The WindowOrWorkerGlobalScope mixin
+8.3Base64 utility methods
+8.4Dynamic markup insertion
+8.5DOM parsing and serialization APIs
+8.6Timers
+8.7Microtask queuing
+8.8User prompts
+8.9System state and capabilities
+8.10Images
+8.11Animation frames
+9Communication
+9.1The MessageEvent interface
+9.2Server-sent events
+9.3Cross-document messaging
+9.4Channel messaging
+9.5Broadcasting to other browsing contexts
+10Web workers
+10.1Introduction
+10.2Infrastructure
+10.3APIs available to workers
+11Worklets
+11.1Introduction
+11.2Examples
+11.3Infrastructure
+12Web storage
+12.1Introduction
+12.2The API
+12.3Privacy
+12.4Security
+13The HTML syntax
+13.1Writing HTML documents
+13.2Named character references
+14The XML syntax
+15Obsolete features
+15.1Obsolete but conforming features
+15.2Non-conforming features
+Index
+Elements
+Element content categories
+Attributes
+Element interfaces
+All interfaces
+Events
+HTTP headers
+MIME types
+References
+Acknowledgments
+Intellectual property rights
+About this specification
+This specification is like no other — it has been processed with you, the humble web developer, in mind.
+
+The focus of this specification is readability and ease of access. Unlike the full HTML Standard, this "developer's edition" removes information that only browser vendors need know. It is automatically produced from the full specification by our build tooling, and thus always in sync with the latest developments in HTML.
+
+To read about its conception, construction, and future, read the original press release, and the blog post about its relaunch.
+
+Finally, feel free to contribute on GitHub to make this edition better for everyone!
