@@ -17,7 +17,6 @@ import type {
   Awaited,
   ReactComponentInfo,
   ReactDebugInfo,
-  StartGesture,
 } from 'shared/ReactTypes';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -61,8 +60,7 @@ export type HookType =
   | 'useCacheRefresh'
   | 'useOptimistic'
   | 'useFormState'
-  | 'useActionState'
-  | 'useSwipeTransition';
+  | 'useActionState';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -446,12 +444,6 @@ export type Dispatcher = {
     initialState: Awaited<S>,
     permalink?: string,
   ) => [Awaited<S>, (P) => void, boolean],
-  // TODO: Non-nullable once `enableSwipeTransition` is on everywhere.
-  useSwipeTransition?: <T>(
-    previous: T,
-    current: T,
-    next: T,
-  ) => [T, StartGesture],
 };
 
 export type AsyncDispatcher = {
