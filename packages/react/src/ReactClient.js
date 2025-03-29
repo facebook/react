@@ -60,7 +60,7 @@ import {
   useSwipeTransition,
 } from './ReactHooks';
 import ReactSharedInternals from './ReactSharedInternalsClient';
-import {startTransition} from './ReactStartTransition';
+import {startTransition, startGestureTransition} from './ReactStartTransition';
 import {addTransitionType} from './ReactTransitionType';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
@@ -128,6 +128,7 @@ export {
   REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
   addTransitionType as unstable_addTransitionType,
   // enableSwipeTransition
+  startGestureTransition as unstable_startGestureTransition,
   useSwipeTransition as unstable_useSwipeTransition,
   // DEV-only
   useId,

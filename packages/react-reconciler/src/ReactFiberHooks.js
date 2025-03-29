@@ -2138,6 +2138,9 @@ function runActionStateAction<S, P>(
     // This is a fork of startTransition
     const prevTransition = ReactSharedInternals.T;
     const currentTransition: Transition = ({}: any);
+    if (enableSwipeTransition) {
+      currentTransition.gesture = null;
+    }
     if (enableTransitionTracing) {
       currentTransition.name = null;
       currentTransition.startTime = -1;
@@ -3017,6 +3020,9 @@ function startTransition<S>(
 
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
+  if (enableSwipeTransition) {
+    currentTransition.gesture = null;
+  }
   if (enableTransitionTracing) {
     currentTransition.name =
       options !== undefined && options.name !== undefined ? options.name : null;
