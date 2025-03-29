@@ -19,6 +19,7 @@ import Toggle from './Toggle';
 import ErrorBoundaries from './ErrorBoundaries';
 import PartiallyStrictApp from './PartiallyStrictApp';
 import SuspenseTree from './SuspenseTree';
+import TraceUpdateRepro from './TraceUpdateRepro';
 import {ignoreErrors, ignoreLogs, ignoreWarnings} from './console';
 
 import './styles.css';
@@ -112,6 +113,7 @@ function mountTestApp() {
   mountApp(SuspenseTree);
   mountApp(DeeplyNestedComponents);
   mountApp(Iframe);
+  mountApp(TraceUpdateRepro);
 
   if (shouldRenderLegacy) {
     mountLegacyApp(PartiallyStrictApp);
