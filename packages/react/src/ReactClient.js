@@ -57,7 +57,6 @@ import {
   use,
   useOptimistic,
   useActionState,
-  useSwipeTransition,
 } from './ReactHooks';
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition, startGestureTransition} from './ReactStartTransition';
@@ -129,7 +128,6 @@ export {
   addTransitionType as unstable_addTransitionType,
   // enableSwipeTransition
   startGestureTransition as unstable_startGestureTransition,
-  useSwipeTransition as unstable_useSwipeTransition,
   // DEV-only
   useId,
   act,
