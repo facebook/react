@@ -13,7 +13,7 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
-import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
 
 import {requestTransitionLane} from './ReactFiberRootScheduler';
 import {NoLane} from './ReactFiberLane';
@@ -46,7 +46,7 @@ let currentEntangledLane: Lane = NoLane;
 let currentEntangledActionThenable: Thenable<void> | null = null;
 
 export function entangleAsyncAction<S>(
-  transition: BatchConfigTransition,
+  transition: Transition,
   thenable: Thenable<S>,
 ): Thenable<S> {
   // `thenable` is the return value of the async action scope function. Create
