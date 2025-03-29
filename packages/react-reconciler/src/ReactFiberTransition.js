@@ -20,7 +20,7 @@ import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 import {
   enableTransitionTracing,
-  enableSwipeTransition,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
@@ -106,7 +106,7 @@ function chainGestureCancellation(
   };
 }
 
-if (enableSwipeTransition) {
+if (enableGestureTransition) {
   const prevOnStartGestureTransitionFinish = ReactSharedInternals.G;
   ReactSharedInternals.G = function onStartGestureTransitionFinishForReconciler(
     transition: Transition,

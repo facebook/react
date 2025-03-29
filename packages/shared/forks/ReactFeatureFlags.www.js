@@ -111,7 +111,7 @@ export const enableShallowPropDiffing = false;
 
 export const enableLazyPublicInstanceInFabric = false;
 
-export const enableSwipeTransition = false;
+export const enableGestureTransition = false;
 
 export const ownerStackLimit = 1e4;
 

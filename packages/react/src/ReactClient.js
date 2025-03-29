@@ -126,7 +126,7 @@ export {
   // enableViewTransition
   REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
   addTransitionType as unstable_addTransitionType,
-  // enableSwipeTransition
+  // enableGestureTransition
   startGestureTransition as unstable_startGestureTransition,
   // DEV-only
   useId,
