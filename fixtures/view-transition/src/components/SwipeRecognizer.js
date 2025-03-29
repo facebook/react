@@ -33,15 +33,14 @@ export default function SwipeRecognizer({
       source: scrollRef.current,
       axis: axis,
     });
-    const options = {
-      range: [0, direction === 'left' || direction === 'up' ? 100 : 0, 100],
-    };
     activeGesture.current = startGestureTransition(
       scrollTimeline,
       () => {
-        gesture(direction, scrollTimeline, options);
+        gesture(direction);
       },
-      options
+      {
+        range: [0, direction === 'left' || direction === 'up' ? 100 : 0, 100],
+      }
     );
   }
   function onScrollEnd() {

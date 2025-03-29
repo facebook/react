@@ -163,6 +163,7 @@ import {callComponentInDEV} from './ReactFiberCallUserSpace';
 
 import {
   scheduleGesture,
+  scheduleGestureLegacy,
   cancelScheduledGesture,
 } from './ReactFiberGestureScheduler';
 
@@ -3653,20 +3654,27 @@ function dispatchOptimisticSetState<S, A>(
       }
     }
   } else {
-    const root = enqueueConcurrentHookUpdate(fiber, queue, update, SyncLane);
+    const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
       // NOTE: The optimistic update implementation assumes that the transition
       // will never be attempted before the optimistic update. This currently
       // holds because the optimistic update is always synchronous. If we ever
       // change that, we'll need to account for this.
-      startUpdateTimerByLane(SyncLane);
-      scheduleUpdateOnFiber(root, fiber, SyncLane);
+      startUpdateTimerByLane(lane);
+      scheduleUpdateOnFiber(root, fiber, lane);
       // Optimistic updates are always synchronous, so we don't need to call
       // entangleTransitionUpdate here.
+      if (enableSwipeTransition && transition !== null) {
+        const provider = transition.gesture;
+        if (provider !== null) {
+          // If this was a gesture, ensure we have a scheduled gesture on the.
+          scheduleGesture(root, provider);
+        }
+      }
     }
   }
 
-  markUpdateInDevTools(fiber, SyncLane, action);
+  markUpdateInDevTools(fiber, lane, action);
 }
 
 function isRenderPhaseUpdate(fiber: Fiber): boolean {
@@ -3787,7 +3795,7 @@ function startGesture(
             ? false
             : // If no option is specified, imply from the values specified.
               queue.initialDirection;
-  const scheduledGesture = scheduleGesture(
+  const scheduledGesture = scheduleGestureLegacy(
     root,
     gestureTimeline,
     initialDirection,
