@@ -8,6 +8,7 @@
  */
 
 import type {FiberRoot} from './ReactInternalTypes';
+import type {GestureOptions} from 'shared/ReactTypes';
 import type {GestureTimeline, RunningViewTransition} from './ReactFiberConfig';
 
 import {
@@ -18,6 +19,7 @@ import {
 import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
 import {
   subscribeToGestureDirection,
+  getCurrentGestureOffset,
   stopViewTransition,
 } from './ReactFiberConfig';
 
@@ -105,6 +107,63 @@ export function scheduleGesture(
   }
   ensureRootIsScheduled(root);
   return gesture;
+}
+
+export function startScheduledGesture(
+  root: FiberRoot,
+  gestureTimeline: GestureTimeline,
+  gestureOptions: ?GestureOptions,
+): null | ScheduledGesture {
+  const currentOffset = getCurrentGestureOffset(gestureTimeline);
+  const range = gestureOptions && gestureOptions.range;
+  const rangePrevious: number = range ? range[0] : 0; // If no range is provider we assume it's the starting point of the range.
+  const rangeCurrent: number = range ? range[1] : currentOffset;
+  const rangeNext: number = range ? range[2] : 100; // If no range is provider we assume it's the starting point of the range.
+  if (__DEV__) {
+    if (
+      (rangePrevious > rangeCurrent && rangeNext > rangeCurrent) ||
+      (rangePrevious < rangeCurrent && rangeNext < rangeCurrent)
+    ) {
+      console.error(
+        'The range of a gesture needs "previous" and "next" to be on either side of ' +
+          'the "current" offset. Both cannot be above current and both cannot be below current.',
+      );
+    }
+  }
+  const isFlippedDirection = rangePrevious > rangeNext;
+  const initialDirection =
+    // If a range is specified we can imply initial direction if it's not the current
+    // value such as if the gesture starts after it has already moved.
+    currentOffset < rangeCurrent
+      ? isFlippedDirection
+      : currentOffset > rangeCurrent
+        ? !isFlippedDirection
+        : // Otherwise, look for an explicit option.
+          gestureOptions
+          ? gestureOptions.direction === 'next'
+          : false;
+
+  let prev = root.pendingGestures;
+  while (prev !== null) {
+    if (prev.provider === gestureTimeline) {
+      // Existing instance found.
+      prev.count++;
+      // Update the options.
+      prev.direction = initialDirection;
+      prev.rangePrevious = rangePrevious;
+      prev.rangeCurrent = rangeCurrent;
+      prev.rangeNext = rangeNext;
+      return prev;
+    }
+    const next = prev.next;
+    if (next === null) {
+      break;
+    }
+    prev = next;
+  }
+  // No scheduled gestures. It must mean nothing for this renderer updated but
+  // some other renderer might have updated.
+  return null;
 }
 
 export function cancelScheduledGesture(
