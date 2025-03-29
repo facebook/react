@@ -92,7 +92,7 @@ export const enableHalt = __EXPERIMENTAL__;
 
 export const enableViewTransition = __EXPERIMENTAL__;
 
-export const enableSwipeTransition = __EXPERIMENTAL__;
+export const enableGestureTransition = __EXPERIMENTAL__;
 
 export const enableScrollEndPolyfill = __EXPERIMENTAL__;
 

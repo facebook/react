@@ -30,8 +30,8 @@ import type {
 } from './ReactFiberActivityComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {RootState} from './ReactFiberRoot';
+import type {Transition} from 'react/src/ReactStartTransition';
 import type {
-  Transition,
   TracingMarkerInstance,
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
