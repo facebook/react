@@ -8,7 +8,7 @@
  */
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Transition} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with

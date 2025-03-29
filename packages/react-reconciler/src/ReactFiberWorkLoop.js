@@ -14,10 +14,10 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
+import type {Transition} from 'react/src/ReactStartTransition';
 import type {
   PendingTransitionCallbacks,
   PendingBoundaries,
-  Transition,
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
 import type {OffscreenInstance} from './ReactFiberActivityComponent';
@@ -753,6 +753,16 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
   const transition = requestCurrentTransition();
   if (transition !== null) {
+    if (enableSwipeTransition) {
+      if (transition.gesture) {
+        throw new Error(
+          'Cannot setState on regular state inside a startGestureTransition. ' +
+            'Gestures can only update the useOptimistic() hook. There should be no ' +
+            'side-effects associated with starting a Gesture until its Action is ' +
+            'invoked. Move side-effects to the Action instead.',
+        );
+      }
+    }
     if (__DEV__) {
       if (!transition._updatedFibers) {
         transition._updatedFibers = new Set();
@@ -927,8 +937,6 @@ export function scheduleUpdateOnFiber(
           transition.startTime = now();
         }
 
-        // $FlowFixMe[prop-missing]: The BatchConfigTransition and Transition types are incompatible but was previously untyped and thus uncaught
-        // $FlowFixMe[incompatible-call]: "
         addTransitionToLanesMap(root, transition, lane);
       }
     }

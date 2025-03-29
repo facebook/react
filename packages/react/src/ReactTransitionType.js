@@ -8,14 +8,18 @@
  */
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {enableViewTransition} from 'shared/ReactFeatureFlags';
 
 export type TransitionTypes = Array<string>;
 
 export function addTransitionType(type: string): void {
-  const pendingTransitionTypes: null | TransitionTypes = ReactSharedInternals.V;
-  if (pendingTransitionTypes === null) {
-    ReactSharedInternals.V = [type];
-  } else if (pendingTransitionTypes.indexOf(type) === -1) {
-    pendingTransitionTypes.push(type);
+  if (enableViewTransition) {
+    const pendingTransitionTypes: null | TransitionTypes =
+      ReactSharedInternals.V;
+    if (pendingTransitionTypes === null) {
+      ReactSharedInternals.V = [type];
+    } else if (pendingTransitionTypes.indexOf(type) === -1) {
+      pendingTransitionTypes.push(type);
+    }
   }
 }

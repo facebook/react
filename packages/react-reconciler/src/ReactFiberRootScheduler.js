@@ -10,7 +10,7 @@
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lane, Lanes} from './ReactFiberLane';
 import type {PriorityLevel} from 'scheduler/src/SchedulerPriorities';
-import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
 
 import {
   disableLegacyMode,
@@ -83,7 +83,7 @@ import {
 // A linked list of all the roots with pending work. In an idiomatic app,
 // there's only a single root, but we do support multi root apps, hence this
 // extra complexity. But this module is optimized for the single root case.
-let firstScheduledRoot: FiberRoot | null = null;
+export let firstScheduledRoot: FiberRoot | null = null;
 let lastScheduledRoot: FiberRoot | null = null;
 
 // Used to prevent redundant mircotasks from being scheduled.
@@ -635,7 +635,7 @@ export function requestTransitionLane(
   // This argument isn't used, it's only here to encourage the caller to
   // check that it's inside a transition before calling this function.
   // TODO: Make this non-nullable. Requires a tweak to useOptimistic.
-  transition: BatchConfigTransition | null,
+  transition: Transition | null,
 ): Lane {
   // The algorithm for assigning an update to a lane should be stable for all
   // updates at the same priority within the same event. To do this, the

@@ -10,10 +10,8 @@
 import type {ReactNodeList, OffscreenMode, Wakeable} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {SpawnedCachePool} from './ReactFiberCacheComponent';
-import type {
-  Transition,
-  TracingMarkerInstance,
-} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {RetryQueue} from './ReactFiberSuspenseComponent';
 
 export type OffscreenProps = {
