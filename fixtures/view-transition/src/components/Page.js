@@ -51,7 +51,7 @@ function Id() {
 }
 
 export default function Page({url, navigate}) {
-  const [_renderedUrl, startGesture] = useSwipeTransition('/?a', url, '/?b');
+  const [, startGesture] = useSwipeTransition('/?a', url, '/?b');
   const [renderedUrl, optimisticNavigate] = useOptimistic(
     url,
     (state, direction) => {
@@ -117,7 +117,10 @@ export default function Page({url, navigate}) {
         action={swipeAction}
         gesture={(direction, timeline, options) => {
           optimisticNavigate(direction);
-          return startGesture(timeline, options);
+          const cancel = startGesture(timeline, options);
+          Promise.resolve().then(() => {
+            cancel(); // This is kept alive by the SwipeRecognizer.
+          });
         }}
         direction={show ? 'left' : 'right'}>
         <button

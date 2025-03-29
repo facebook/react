@@ -36,10 +36,10 @@ export default function SwipeRecognizer({
     const options = {
       range: [0, direction === 'left' || direction === 'up' ? 100 : 0, 100],
     };
-    startGestureTransition(
+    activeGesture.current = startGestureTransition(
       scrollTimeline,
       () => {
-        activeGesture.current = gesture(direction, scrollTimeline, options);
+        gesture(direction, scrollTimeline, options);
       },
       options
     );

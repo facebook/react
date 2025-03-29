@@ -16,6 +16,7 @@ import type {Lanes} from './ReactFiberLane';
 import type {StackCursor} from './ReactFiberStack';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
 import type {Transition} from 'react/src/ReactStartTransition';
+import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 import {
   enableTransitionTracing,
@@ -36,6 +37,11 @@ import {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {entangleAsyncAction} from './ReactFiberAsyncAction';
 import {startAsyncTransitionTimer} from './ReactProfilerTimer';
+import {firstScheduledRoot} from './ReactFiberRootScheduler';
+import {
+  startScheduledGesture,
+  cancelScheduledGesture,
+} from './ReactFiberGestureScheduler';
 
 export const NoTransition = null;
 
@@ -85,6 +91,21 @@ ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
   }
 };
 
+function chainGestureCancellation(
+  root: FiberRoot,
+  scheduledGesture: ScheduledGesture,
+  prevCancel: null | (() => void),
+): () => void {
+  return function cancelGesture(): void {
+    if (scheduledGesture !== null) {
+      cancelScheduledGesture(root, scheduledGesture);
+    }
+    if (prevCancel !== null) {
+      prevCancel();
+    }
+  };
+}
+
 if (enableSwipeTransition) {
   const prevOnStartGestureTransitionFinish = ReactSharedInternals.G;
   ReactSharedInternals.G = function onStartGestureTransitionFinishForReconciler(
@@ -92,20 +113,35 @@ if (enableSwipeTransition) {
     provider: GestureProvider,
     options: ?GestureOptions,
   ): () => void {
-    // TODO
-    let prevCancel = null;
+    let cancel = null;
     if (prevOnStartGestureTransitionFinish !== null) {
-      prevCancel = prevOnStartGestureTransitionFinish(
+      cancel = prevOnStartGestureTransitionFinish(
         transition,
         provider,
         options,
       );
     }
-    return function cancelGesture() {
-      // TODO
-      if (prevCancel !== null) {
-        prevCancel();
+    // For every root that has work scheduled, check if there's a ScheduledGesture
+    // matching this provider and if so, increase its ref count so its retained by
+    // this cancellation callback. We could add the roots to a temporary array as
+    // we schedule them inside the callback to keep track of them. There's a slight
+    // nuance here which is that if there's more than one root scheduled with the
+    // same provider, but it doesn't update in this callback, then we still update
+    // its options and retain it until this cancellation releases. The idea being
+    // that it's conceptually started globally.
+    let root = firstScheduledRoot;
+    while (root !== null) {
+      const scheduledGesture = startScheduledGesture(root, provider, options);
+      if (scheduledGesture !== null) {
+        cancel = chainGestureCancellation(root, scheduledGesture, cancel);
       }
+      root = root.next;
+    }
+    if (cancel !== null) {
+      return cancel;
+    }
+    return function cancelGesture(): void {
+      // Nothing was scheduled but it could've been scheduled by another renderer.
     };
   };
 }
