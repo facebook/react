@@ -501,14 +501,6 @@ export function getCurrentGestureOffset(provider: GestureTimeline): number {
   return 0;
 }
 
-export function subscribeToGestureDirection(
-  provider: GestureTimeline,
-  currentOffset: number,
-  directionCallback: (direction: boolean) => void,
-): () => void {
-  return () => {};
-}
-
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
   // noop
 }

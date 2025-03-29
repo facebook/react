@@ -157,8 +157,6 @@ export const startViewTransition = $$$config.startViewTransition;
 export const startGestureTransition = $$$config.startGestureTransition;
 export const stopViewTransition = $$$config.stopViewTransition;
 export const getCurrentGestureOffset = $$$config.getCurrentGestureOffset;
-export const subscribeToGestureDirection =
-  $$$config.subscribeToGestureDirection;
 export const createViewTransitionInstance =
   $$$config.createViewTransitionInstance;
 export const clearContainer = $$$config.clearContainer;

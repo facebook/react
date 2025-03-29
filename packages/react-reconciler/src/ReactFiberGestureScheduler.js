@@ -18,7 +18,6 @@ import {
 } from './ReactFiberLane';
 import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
 import {
-  subscribeToGestureDirection,
   getCurrentGestureOffset,
   stopViewTransition,
 } from './ReactFiberConfig';
@@ -31,7 +30,6 @@ export type ScheduledGesture = {
   rangePrevious: number, // The end along the timeline where the previous state is reached.
   rangeCurrent: number, // The starting offset along the timeline.
   rangeNext: number, // The end along the timeline where the next state is reached.
-  cancel: () => void, // Cancel the subscription to direction change. // TODO: Delete this.
   running: null | RunningViewTransition, // Used to cancel the running transition after we're done.
   prev: null | ScheduledGesture, // The previous scheduled gesture in the queue for this root.
   next: null | ScheduledGesture, // The next scheduled gesture in the queue for this root.
@@ -60,7 +58,6 @@ export function scheduleGesture(
     rangePrevious: -1,
     rangeCurrent: -1,
     rangeNext: -1,
-    cancel: () => {}, // TODO: Delete this with useSwipeTransition.
     running: null,
     prev: prev,
     next: null,
@@ -137,8 +134,6 @@ export function cancelScheduledGesture(
 ): void {
   gesture.count--;
   if (gesture.count === 0) {
-    const cancelDirectionSubscription = gesture.cancel;
-    cancelDirectionSubscription();
     // Delete the scheduled gesture from the pending queue.
     deleteScheduledGesture(root, gesture);
     // TODO: If we're currently rendering this gesture, we need to restart the render
