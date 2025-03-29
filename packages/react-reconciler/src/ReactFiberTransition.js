@@ -7,13 +7,20 @@
  * @flow
  */
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Thenable} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  GestureProvider,
+  GestureOptions,
+} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {StackCursor} from './ReactFiberStack';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
 import type {Transition} from 'react/src/ReactStartTransition';
 
-import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableTransitionTracing,
+  enableSwipeTransition,
+} from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {
@@ -77,6 +84,31 @@ ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
     prevOnStartTransitionFinish(transition, returnValue);
   }
 };
+
+if (enableSwipeTransition) {
+  const prevOnStartGestureTransitionFinish = ReactSharedInternals.G;
+  ReactSharedInternals.G = function onStartGestureTransitionFinishForReconciler(
+    transition: Transition,
+    provider: GestureProvider,
+    options: ?GestureOptions,
+  ): () => void {
+    // TODO
+    let prevCancel = null;
+    if (prevOnStartGestureTransitionFinish !== null) {
+      prevCancel = prevOnStartGestureTransitionFinish(
+        transition,
+        provider,
+        options,
+      );
+    }
+    return function cancelGesture() {
+      // TODO
+      if (prevCancel !== null) {
+        prevCancel();
+      }
+    };
+  };
+}
 
 export function requestCurrentTransition(): Transition | null {
   return ReactSharedInternals.T;

@@ -11,12 +11,19 @@ import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Transition} from './ReactStartTransition';
 import type {TransitionTypes} from './ReactTransitionType';
+import type {GestureProvider, GestureOptions} from 'shared/ReactTypes';
+
+import {
+  enableViewTransition,
+  enableSwipeTransition,
+} from 'shared/ReactFeatureFlags';
 
 export type SharedStateClient = {
   H: null | Dispatcher, // ReactCurrentDispatcher for Hooks
   A: null | AsyncDispatcher, // ReactCurrentCache for Cache
   T: null | Transition, // ReactCurrentBatchConfig for Transitions
   S: null | ((Transition, mixed) => void), // onStartTransitionFinish
+  G: null | ((Transition, GestureProvider, ?GestureOptions) => () => void), // onStartGestureTransitionFinish
   V: null | TransitionTypes, // Pending Transition Types for the Next Transition
 
   // DEV-only
@@ -50,8 +57,13 @@ const ReactSharedInternals: SharedStateClient = ({
   A: null,
   T: null,
   S: null,
-  V: null,
 }: any);
+if (enableSwipeTransition) {
+  ReactSharedInternals.G = null;
+}
+if (enableViewTransition) {
+  ReactSharedInternals.V = null;
+}
 
 if (__DEV__) {
   ReactSharedInternals.actQueue = null;
