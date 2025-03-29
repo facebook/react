@@ -38,9 +38,15 @@ export default function SwipeRecognizer({
       () => {
         gesture(direction);
       },
-      {
-        range: [0, direction === 'left' || direction === 'up' ? 100 : 0, 100],
-      }
+      direction === 'left' || direction === 'up'
+        ? {
+            rangeStart: 100,
+            rangeEnd: 0,
+          }
+        : {
+            rangeStart: 0,
+            rangeEnd: 100,
+          }
     );
   }
   function onScrollEnd() {

@@ -3932,10 +3932,8 @@ function commitGestureOnRoot(
   pendingViewTransition = finishedGesture.running = startGestureTransition(
     root.containerInfo,
     finishedGesture.provider,
-    finishedGesture.rangeCurrent,
-    finishedGesture.direction
-      ? finishedGesture.rangeNext
-      : finishedGesture.rangePrevious,
+    finishedGesture.rangeStart,
+    finishedGesture.rangeEnd,
     pendingTransitionTypes,
     flushGestureMutations,
     flushGestureAnimations,
