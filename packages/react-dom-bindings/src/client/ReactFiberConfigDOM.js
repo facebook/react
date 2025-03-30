@@ -1943,6 +1943,7 @@ export function startGestureTransition(
           const timing = effect.getTiming();
           const duration =
             typeof timing.duration === 'number' ? timing.duration : 0;
+          // TODO: Consider interation count higher than 1.
           const durationWithDelay = timing.delay + duration;
           if (durationWithDelay > longestDuration) {
             longestDuration = durationWithDelay;
@@ -2003,10 +2004,19 @@ export function startGestureTransition(
           const timing = effect.getTiming();
           const duration =
             typeof timing.duration === 'number' ? timing.duration : 0;
-          const adjustedRangeStart =
+          let adjustedRangeStart =
             rangeEnd - (duration + timing.delay) * durationToRangeMultipler;
-          const adjustedRangeEnd =
+          let adjustedRangeEnd =
             rangeEnd - timing.delay * durationToRangeMultipler;
+          if (
+            timing.direction === 'reverse' ||
+            timing.direction === 'alternate-reverse'
+          ) {
+            // This animation was originally in reverse so we have to play it in flipped range.
+            const temp = adjustedRangeStart;
+            adjustedRangeStart = adjustedRangeEnd;
+            adjustedRangeEnd = temp;
+          }
           animateGesture(
             effect.getKeyframes(),
             // $FlowFixMe: Always documentElement atm.
