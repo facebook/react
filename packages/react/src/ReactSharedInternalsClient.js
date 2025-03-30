@@ -39,6 +39,9 @@ export type SharedStateClient = {
   // ReactCurrentActQueue
   actQueue: null | Array<RendererTask>,
 
+  // When zero this means we're outside an async startTransition.
+  asyncTransitions: number,
+
   // Used to reproduce behavior of `batchedUpdates` in legacy mode.
   isBatchingLegacy: boolean,
   didScheduleLegacyUpdate: boolean,
@@ -75,6 +78,7 @@ if (enableViewTransition) {
 
 if (__DEV__) {
   ReactSharedInternals.actQueue = null;
+  ReactSharedInternals.asyncTransitions = 0;
   ReactSharedInternals.isBatchingLegacy = false;
   ReactSharedInternals.didScheduleLegacyUpdate = false;
   ReactSharedInternals.didUsePromise = false;

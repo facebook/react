@@ -45,6 +45,25 @@ export function addTransitionType(type: string): void {
         pendingTransitionTypes = pendingGestureTransitionTypes = [];
       }
     } else {
+      if (__DEV__) {
+        if (
+          ReactSharedInternals.T === null &&
+          ReactSharedInternals.asyncTransitions === 0
+        ) {
+          if (enableGestureTransition) {
+            console.error(
+              'addTransitionType can only be called inside a `startTransition()` ' +
+                'or `startGestureTransition()` callback. ' +
+                'It must be associated with a specific Transition.',
+            );
+          } else {
+            console.error(
+              'addTransitionType can only be called inside a `startTransition()` ' +
+                'callback. It must be associated with a specific Transition.',
+            );
+          }
+        }
+      }
       // Otherwise we're either inside a synchronous startTransition
       // or in the async gap of one, which we track globally.
       pendingTransitionTypes = ReactSharedInternals.V;

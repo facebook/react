@@ -37,6 +37,12 @@ export type Transition = {
   ...
 };
 
+function releaseAsyncTransition() {
+  if (__DEV__) {
+    ReactSharedInternals.asyncTransitions--;
+  }
+}
+
 export function startTransition(
   scope: () => void,
   options?: StartTransitionOptions,
@@ -67,6 +73,11 @@ export function startTransition(
       returnValue !== null &&
       typeof returnValue.then === 'function'
     ) {
+      if (__DEV__) {
+        // Keep track of the number of async transitions still running so we can warn.
+        ReactSharedInternals.asyncTransitions++;
+        returnValue.then(releaseAsyncTransition, releaseAsyncTransition);
+      }
       returnValue.then(noop, reportGlobalError);
     }
   } catch (error) {
