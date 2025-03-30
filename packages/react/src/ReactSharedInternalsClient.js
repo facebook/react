@@ -18,19 +18,20 @@ import {
   enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 
+type onStartTransitionFinish = (Transition, mixed) => void;
+type onStartGestureTransitionFinish = (
+  Transition,
+  GestureProvider,
+  ?GestureOptions,
+  transitionTypes: null | TransitionTypes,
+) => () => void;
+
 export type SharedStateClient = {
   H: null | Dispatcher, // ReactCurrentDispatcher for Hooks
   A: null | AsyncDispatcher, // ReactCurrentCache for Cache
   T: null | Transition, // ReactCurrentBatchConfig for Transitions
-  S: null | ((Transition, mixed) => void), // onStartTransitionFinish
-  G:
-    | null
-    | ((
-        Transition,
-        GestureProvider,
-        ?GestureOptions,
-        transitionTypes: null | TransitionTypes,
-      ) => () => void), // onStartGestureTransitionFinish
+  S: null | onStartTransitionFinish,
+  G: null | onStartGestureTransitionFinish,
   V: null | TransitionTypes, // Pending Transition Types for the Next Transition
 
   // DEV-only
