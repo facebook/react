@@ -3925,8 +3925,7 @@ function commitGestureOnRoot(
     setCurrentUpdatePriority(previousPriority);
     ReactSharedInternals.T = prevTransition;
   }
-  // TODO: Collect transition types.
-  pendingTransitionTypes = null;
+  pendingTransitionTypes = finishedGesture.types;
   pendingEffectsStatus = PENDING_GESTURE_MUTATION_PHASE;
 
   pendingViewTransition = finishedGesture.running = startGestureTransition(

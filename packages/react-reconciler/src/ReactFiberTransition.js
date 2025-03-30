@@ -134,7 +134,12 @@ if (enableGestureTransition) {
     // that it's conceptually started globally.
     let root = firstScheduledRoot;
     while (root !== null) {
-      const scheduledGesture = startScheduledGesture(root, provider, options);
+      const scheduledGesture = startScheduledGesture(
+        root,
+        provider,
+        options,
+        transitionTypes,
+      );
       if (scheduledGesture !== null) {
         cancel = chainGestureCancellation(root, scheduledGesture, cancel);
       }
