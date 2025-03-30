@@ -1,4 +1,5 @@
 import React, {
+  unstable_addTransitionType as addTransitionType,
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
   useLayoutEffect,
@@ -113,7 +114,12 @@ export default function Page({url, navigate}) {
     <div className="swipe-recognizer">
       <SwipeRecognizer
         action={swipeAction}
-        gesture={optimisticNavigate}
+        gesture={direction => {
+          addTransitionType(
+            direction === 'left' ? 'navigation-forward' : 'navigation-back'
+          );
+          optimisticNavigate(direction);
+        }}
         direction={show ? 'left' : 'right'}>
         <button
           className="button"
