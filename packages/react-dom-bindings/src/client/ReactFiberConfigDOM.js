@@ -1876,6 +1876,7 @@ function animateGesture(
     // keyframe. Otherwise it applies to every keyframe.
     moveOldFrameIntoViewport(keyframes[0]);
   }
+  // TODO: Reverse the reverse if the original direction is reverse.
   const reverse = rangeStart > rangeEnd;
   targetElement.animate(keyframes, {
     pseudoElement: pseudoElement,
@@ -1886,7 +1887,7 @@ function animateGesture(
     // from scroll bouncing.
     easing: 'linear',
     // We fill in both direction for overscroll.
-    fill: 'both',
+    fill: 'both', // TODO: Should we preserve the fill instead?
     // We play all gestures in reverse, except if we're in reverse direction
     // in which case we need to play it in reverse of the reverse.
     direction: reverse ? 'normal' : 'reverse',
@@ -1931,18 +1932,32 @@ export function startGestureTransition(
       // up if they exist later.
       const foundGroups: Set<string> = new Set();
       const foundNews: Set<string> = new Set();
+      // Collect the longest duration of any view-transition animation including delay.
+      let longestDuration = 0;
       for (let i = 0; i < animations.length; i++) {
+        const effect: KeyframeEffect = (animations[i].effect: any);
         // $FlowFixMe
-        const pseudoElement: ?string = animations[i].effect.pseudoElement;
+        const pseudoElement: ?string = effect.pseudoElement;
         if (pseudoElement == null) {
-        } else if (pseudoElement.startsWith('::view-transition-group')) {
-          foundGroups.add(pseudoElement.slice(23));
-        } else if (pseudoElement.startsWith('::view-transition-new')) {
-          // TODO: This is not really a sufficient detection because if the new
-          // pseudo element might exist but have animations disabled on it.
-          foundNews.add(pseudoElement.slice(21));
+        } else if (pseudoElement.startsWith('::view-transition')) {
+          const timing = effect.getTiming();
+          const duration =
+            typeof timing.duration === 'number' ? timing.duration : 0;
+          const durationWithDelay = timing.delay + duration;
+          if (durationWithDelay > longestDuration) {
+            longestDuration = durationWithDelay;
+          }
+          if (pseudoElement.startsWith('::view-transition-group')) {
+            foundGroups.add(pseudoElement.slice(23));
+          } else if (pseudoElement.startsWith('::view-transition-new')) {
+            // TODO: This is not really a sufficient detection because if the new
+            // pseudo element might exist but have animations disabled on it.
+            foundNews.add(pseudoElement.slice(21));
+          }
         }
       }
+      const durationToRangeMultipler =
+        (rangeEnd - rangeStart) / longestDuration;
       for (let i = 0; i < animations.length; i++) {
         const anim = animations[i];
         if (anim.playState !== 'running') {
@@ -1982,14 +1997,24 @@ export function startGestureTransition(
             }
             // TODO: If this has only an old state and no new state,
           }
+          // Adjust the range based on how long the animation would've ran as time based.
+          // Since we're running animations in reverse from how they normally would run,
+          // therefore the timing is from the rangeEnd to the start.
+          const timing = effect.getTiming();
+          const duration =
+            typeof timing.duration === 'number' ? timing.duration : 0;
+          const adjustedRangeStart =
+            rangeEnd - (duration + timing.delay) * durationToRangeMultipler;
+          const adjustedRangeEnd =
+            rangeEnd - timing.delay * durationToRangeMultipler;
           animateGesture(
             effect.getKeyframes(),
             // $FlowFixMe: Always documentElement atm.
             effect.target,
             pseudoElement,
             timeline,
-            rangeStart,
-            rangeEnd,
+            adjustedRangeStart,
+            adjustedRangeEnd,
             isGeneratedGroupAnim,
             isExitGroupAnim,
           );
