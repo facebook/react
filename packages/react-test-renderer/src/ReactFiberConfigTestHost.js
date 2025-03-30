@@ -172,6 +172,21 @@ export function createInstance(
   };
 }
 
+export function cloneMutableInstance(
+  instance: Instance,
+  keepChildren: boolean,
+): Instance {
+  return {
+    type: instance.type,
+    props: instance.props,
+    isHidden: instance.isHidden,
+    children: keepChildren ? instance.children : [],
+    internalInstanceHandle: null,
+    rootContainerInstance: instance.rootContainerInstance,
+    tag: 'INSTANCE',
+  };
+}
+
 export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
@@ -206,6 +221,16 @@ export function createTextInstance(
   return {
     text,
     isHidden: false,
+    tag: 'TEXT',
+  };
+}
+
+export function cloneMutableTextInstance(
+  textInstance: TextInstance,
+): TextInstance {
+  return {
+    text: textInstance.text,
+    isHidden: textInstance.isHidden,
     tag: 'TEXT',
   };
 }
@@ -337,9 +362,34 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
   // Noop
 }
 
+export function cloneRootViewTransitionContainer(
+  rootContainer: Container,
+): Instance {
+  return {
+    type: 'ROOT',
+    props: {},
+    isHidden: false,
+    children: [],
+    internalInstanceHandle: null,
+    rootContainerInstance: rootContainer,
+    tag: 'INSTANCE',
+  };
+}
+
+export function removeRootViewTransitionClone(
+  rootContainer: Container,
+  clone: Instance,
+): void {
+  // Noop since it was never inserted anywhere.
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
+  return null;
+}
+
+export function measureClonedInstance(instance: Instance): InstanceMeasurement {
   return null;
 }
 
@@ -371,24 +421,34 @@ export function startViewTransition(
   afterMutationCallback: () => void,
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
-): boolean {
-  return false;
+  errorCallback: mixed => void,
+): null | RunningViewTransition {
+  mutationCallback();
+  layoutCallback();
+  // Skip afterMutationCallback(). We don't need it since we're not animating.
+  spawnedWorkCallback();
+  // Skip passiveCallback(). Spawned work will schedule a task.
+  return null;
 }
 
-export type RunningGestureTransition = null;
+export type RunningViewTransition = null;
 
 export function startGestureTransition(
   rootContainer: Container,
+  timeline: GestureTimeline,
+  rangeStart: number,
+  rangeEnd: number,
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   animateCallback: () => void,
-): RunningGestureTransition {
+  errorCallback: mixed => void,
+): null | RunningViewTransition {
   mutationCallback();
   animateCallback();
   return null;
 }
 
-export function stopGestureTransition(transition: RunningGestureTransition) {}
+export function stopViewTransition(transition: RunningViewTransition) {}
 
 export type ViewTransitionInstance = null | {name: string, ...};
 
@@ -396,6 +456,35 @@ export function createViewTransitionInstance(
   name: string,
 ): ViewTransitionInstance {
   return null;
+}
+
+export type FragmentInstanceType = null;
+
+export function createFragmentInstance(
+  fragmentFiber: Object,
+): FragmentInstanceType {
+  return null;
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Object,
+  instance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function commitNewChildToFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // noop
+}
+
+export function deleteChildFromFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
 }
 
 export function getInstanceFromNode(mockNode: Object): Object | null {

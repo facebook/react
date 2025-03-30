@@ -751,7 +751,6 @@ describe('ReactDOMFiber', () => {
         '    in Parent (at **)',
       'Component uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-        (gate('enableOwnerStacks') ? '' : '    in Component (at **)\n') +
         '    in Parent (at **)',
     ]);
     expect(container.innerHTML).toBe('');

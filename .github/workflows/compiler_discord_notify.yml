@@ -7,9 +7,14 @@ on:
       - compiler/**
       - .github/workflows/compiler_**.yml
 
+permissions: {}
+
 jobs:
   check_maintainer:
     uses: facebook/react/.github/workflows/shared_check_maintainer.yml@main
+    permissions:
+      # Used by check_maintainer
+      contents: read
     with:
       actor: ${{ github.event.pull_request.user.login }}
 
@@ -19,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Discord Webhook Action
-        uses: tsickert/discord-webhook@v6.0.0
+        uses: tsickert/discord-webhook@86dc739f3f165f16dadc5666051c367efa1692f4
         with:
           webhook-url: ${{ secrets.COMPILER_DISCORD_WEBHOOK_URL }}
           embed-author-name: ${{ github.event.pull_request.user.login }}

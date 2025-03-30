@@ -29,7 +29,6 @@ export const {
   enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
-  enableUseEffectCRUDOverload,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
@@ -37,13 +36,13 @@ export const {
   transitionLaneExpirationMs,
   enableFastAddPropertiesInDiffing,
   enableViewTransition,
+  enableComponentPerformanceTrack,
+  enableScrollEndPolyfill,
+  enableFragmentRefs,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
 // It's not used anywhere in production yet.
-
-// Can remove these two
-export const enableOwnerStacks = true;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
@@ -64,8 +63,6 @@ export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
 
 export const enableHydrationLaneScheduling = true;
-
-export const enableComponentPerformanceTrack = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -115,6 +112,8 @@ export const enableShallowPropDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
 
 export const enableSwipeTransition = false;
+
+export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

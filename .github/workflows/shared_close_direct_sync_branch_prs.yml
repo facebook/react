@@ -5,6 +5,8 @@ on:
     branches:
       - 'builds/facebook-**'
 
+permissions: {}
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
   # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
@@ -13,6 +15,9 @@ env:
 jobs:
   close_pr:
     runs-on: ubuntu-latest
+    permissions:
+      # Used to create a review and close PRs
+      pull-requests: write
     steps:
       - name: Close PR
         uses: actions/github-script@v7

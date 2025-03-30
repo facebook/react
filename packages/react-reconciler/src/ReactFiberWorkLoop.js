@@ -21,7 +21,11 @@ import type {
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
 import type {OffscreenInstance} from './ReactFiberActivityComponent';
-import type {Resource, ViewTransitionInstance} from './ReactFiberConfig';
+import type {
+  Resource,
+  ViewTransitionInstance,
+  RunningViewTransition,
+} from './ReactFiberConfig';
 import type {RootState} from './ReactFiberRoot';
 import {
   getViewTransitionName,
@@ -49,6 +53,7 @@ import {
   enableViewTransition,
   enableSwipeTransition,
 } from 'shared/ReactFeatureFlags';
+import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
 
@@ -101,6 +106,7 @@ import {
   trackSchedulerEvent,
   startViewTransition,
   startGestureTransition,
+  stopViewTransition,
   createViewTransitionInstance,
 } from './ReactFiberConfig';
 
@@ -228,6 +234,7 @@ import {
   invokePassiveEffectUnmountInDEV,
   accumulateSuspenseyCommit,
 } from './ReactFiberCommitWork';
+import {resetShouldStartViewTransition} from './ReactFiberCommitViewTransitions';
 import {shouldStartViewTransition} from './ReactFiberCommitViewTransitions';
 import {
   insertDestinationClones,
@@ -663,6 +670,7 @@ let pendingEffectsRemainingLanes: Lanes = NoLanes;
 let pendingEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
 let pendingRecoverableErrors: null | Array<CapturedValue<mixed>> = null;
+let pendingViewTransition: null | RunningViewTransition = null;
 let pendingViewTransitionEvents: Array<(types: Array<string>) => void> | null =
   null;
 let pendingTransitionTypes: null | TransitionTypes = null;
@@ -1983,6 +1991,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   finishQueueingConcurrentUpdates();
 
   if (__DEV__) {
+    resetOwnerStackLimit();
+
     ReactStrictModeWarnings.discardPendingWarnings();
   }
 
@@ -3449,6 +3459,8 @@ function commitRoot(
     }
   }
 
+  resetShouldStartViewTransition();
+
   // The commit phase is broken into several sub-phases. We do a separate pass
   // of the effect list for each phase: all mutation effects come before all
   // layout effects, and so on.
@@ -3497,10 +3509,8 @@ function commitRoot(
   }
 
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
-  const startedViewTransition =
-    enableViewTransition &&
-    willStartViewTransition &&
-    startViewTransition(
+  if (enableViewTransition && willStartViewTransition) {
+    pendingViewTransition = startViewTransition(
       root.containerInfo,
       pendingTransitionTypes,
       flushMutationEffects,
@@ -3508,14 +3518,25 @@ function commitRoot(
       flushAfterMutationEffects,
       flushSpawnedWork,
       flushPassiveEffects,
+      reportViewTransitionError,
     );
-  if (!startedViewTransition) {
+  } else {
     // Flush synchronously.
     flushMutationEffects();
     flushLayoutEffects();
     // Skip flushAfterMutationEffects
     flushSpawnedWork();
   }
+}
+
+function reportViewTransitionError(error: mixed) {
+  // Report errors that happens while preparing a View Transition.
+  if (pendingEffectsStatus === NO_PENDING_EFFECTS) {
+    return;
+  }
+  const root = pendingEffectsRoot;
+  const onRecoverableError = root.onRecoverableError;
+  onRecoverableError(error, makeErrorInfo(null));
 }
 
 function flushAfterMutationEffects(): void {
@@ -3628,6 +3649,8 @@ function flushSpawnedWork(): void {
     return;
   }
   pendingEffectsStatus = NO_PENDING_EFFECTS;
+
+  pendingViewTransition = null; // The view transition has now fully started.
 
   // Tell Scheduler to yield at the end of the frame, so the browser has an
   // opportunity to paint.
@@ -3898,15 +3921,24 @@ function commitGestureOnRoot(
   pendingTransitionTypes = null;
   pendingEffectsStatus = PENDING_GESTURE_MUTATION_PHASE;
 
-  finishedGesture.running = startGestureTransition(
+  pendingViewTransition = finishedGesture.running = startGestureTransition(
     root.containerInfo,
+    finishedGesture.provider,
+    finishedGesture.rangeCurrent,
+    finishedGesture.direction
+      ? finishedGesture.rangeNext
+      : finishedGesture.rangePrevious,
     pendingTransitionTypes,
     flushGestureMutations,
     flushGestureAnimations,
+    reportViewTransitionError,
   );
 }
 
 function flushGestureMutations(): void {
+  if (!enableSwipeTransition) {
+    return;
+  }
   if (pendingEffectsStatus !== PENDING_GESTURE_MUTATION_PHASE) {
     return;
   }
@@ -3933,6 +3965,9 @@ function flushGestureMutations(): void {
 }
 
 function flushGestureAnimations(): void {
+  if (!enableSwipeTransition) {
+    return;
+  }
   // If we get canceled before we start we might not have applied
   // mutations yet. We need to apply them first.
   flushGestureMutations();
@@ -3945,6 +3980,8 @@ function flushGestureAnimations(): void {
   pendingEffectsRoot = (null: any); // Clear for GC purposes.
   pendingFinishedWork = (null: any); // Clear for GC purposes.
   pendingEffectsLanes = NoLanes;
+
+  pendingViewTransition = null; // The view transition has now fully started.
 
   const prevTransition = ReactSharedInternals.T;
   ReactSharedInternals.T = null;
@@ -3996,8 +4033,27 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
   }
 }
 
+let didWarnAboutInterruptedViewTransitions = false;
+
 export function flushPendingEffects(wasDelayedCommit?: boolean): boolean {
   // Returns whether passive effects were flushed.
+  if (enableViewTransition && pendingViewTransition !== null) {
+    // If we forced a flush before the View Transition full started then we skip it.
+    // This ensures that we're not running a partial animation.
+    stopViewTransition(pendingViewTransition);
+    if (__DEV__) {
+      if (!didWarnAboutInterruptedViewTransitions) {
+        didWarnAboutInterruptedViewTransitions = true;
+        console.warn(
+          'A flushSync update cancelled a View Transition because it was called ' +
+            'while the View Transition was still preparing. To preserve the synchronous ' +
+            'semantics, React had to skip the View Transition. If you can, try to avoid ' +
+            "flushSync() in a scenario that's likely to interfere.",
+        );
+      }
+    }
+    pendingViewTransition = null;
+  }
   flushGestureMutations();
   flushGestureAnimations();
   flushMutationEffects();

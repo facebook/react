@@ -10,17 +10,72 @@
 'use strict';
 
 let React;
+let Suspense;
+let Activity;
+let ViewTransition;
 let ReactNoop;
 let waitForAll;
 
 describe('ReactFragment', () => {
+  let didCatchErrors = [];
+  let rootCaughtErrors = [];
+  let SomethingThatErrors;
+  let CatchingBoundary;
+  let onCaughtError;
+
   beforeEach(function () {
     jest.resetModules();
 
     React = require('react');
+    Suspense = React.Suspense;
+    Activity = React.unstable_Activity;
+    ViewTransition = React.unstable_ViewTransition;
     ReactNoop = require('react-noop-renderer');
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+
+    didCatchErrors = [];
+    rootCaughtErrors = [];
+
+    onCaughtError = function (error, errorInfo) {
+      rootCaughtErrors.push(
+        error.message,
+        normalizeCodeLocInfo(errorInfo.componentStack),
+        React.captureOwnerStack
+          ? normalizeCodeLocInfo(React.captureOwnerStack())
+          : null,
+      );
+    };
+
+    SomethingThatErrors = () => {
+      throw new Error('uh oh');
+    };
+
+    // eslint-disable-next-line no-shadow
+    CatchingBoundary = class CatchingBoundary extends React.Component {
+      constructor() {
+        super();
+        this.state = {};
+      }
+
+      static getDerivedStateFromError(error) {
+        return {errored: true};
+      }
+
+      componentDidCatch(err, errInfo) {
+        didCatchErrors.push(
+          err.message,
+          normalizeCodeLocInfo(errInfo.componentStack),
+        );
+      }
+
+      render() {
+        if (this.state.errored) {
+          return null;
+        }
+        return this.props.children;
+      }
+    };
   });
 
   function componentStack(components) {
@@ -38,21 +93,7 @@ describe('ReactFragment', () => {
     );
   }
 
-  it('retains component stacks when rethrowing an error', async () => {
-    function Foo() {
-      return (
-        <RethrowingBoundary>
-          <Bar />
-        </RethrowingBoundary>
-      );
-    }
-    function Bar() {
-      return <SomethingThatErrors />;
-    }
-    function SomethingThatErrors() {
-      throw new Error('uh oh');
-    }
-
+  it('retains component and owner stacks when rethrowing an error', async () => {
     class RethrowingBoundary extends React.Component {
       static getDerivedStateFromError(error) {
         throw error;
@@ -63,33 +104,26 @@ describe('ReactFragment', () => {
       }
     }
 
-    const errors = [];
-    class CatchingBoundary extends React.Component {
-      constructor() {
-        super();
-        this.state = {};
-      }
-      static getDerivedStateFromError(error) {
-        return {errored: true};
-      }
-      componentDidCatch(err, errInfo) {
-        errors.push(err.message, normalizeCodeLocInfo(errInfo.componentStack));
-      }
-      render() {
-        if (this.state.errored) {
-          return null;
-        }
-        return this.props.children;
-      }
+    function Foo() {
+      return (
+        <RethrowingBoundary>
+          <Bar />
+        </RethrowingBoundary>
+      );
+    }
+    function Bar() {
+      return <SomethingThatErrors />;
     }
 
-    ReactNoop.render(
+    ReactNoop.createRoot({
+      onCaughtError,
+    }).render(
       <CatchingBoundary>
         <Foo />
       </CatchingBoundary>,
     );
     await waitForAll([]);
-    expect(errors).toEqual([
+    expect(didCatchErrors).toEqual([
       'uh oh',
       componentStack([
         'SomethingThatErrors',
@@ -99,67 +133,7 @@ describe('ReactFragment', () => {
         'CatchingBoundary',
       ]),
     ]);
-  });
-
-  it('retains owner stacks when rethrowing an error', async () => {
-    function Foo() {
-      return (
-        <RethrowingBoundary>
-          <Bar />
-        </RethrowingBoundary>
-      );
-    }
-    function Bar() {
-      return <SomethingThatErrors />;
-    }
-    function SomethingThatErrors() {
-      throw new Error('uh oh');
-    }
-
-    class RethrowingBoundary extends React.Component {
-      static getDerivedStateFromError(error) {
-        throw error;
-      }
-
-      render() {
-        return this.props.children;
-      }
-    }
-
-    const errors = [];
-    class CatchingBoundary extends React.Component {
-      constructor() {
-        super();
-        this.state = {};
-      }
-      static getDerivedStateFromError(error) {
-        return {errored: true};
-      }
-      render() {
-        if (this.state.errored) {
-          return null;
-        }
-        return this.props.children;
-      }
-    }
-
-    ReactNoop.createRoot({
-      onCaughtError(error, errorInfo) {
-        errors.push(
-          error.message,
-          normalizeCodeLocInfo(errorInfo.componentStack),
-          React.captureOwnerStack
-            ? normalizeCodeLocInfo(React.captureOwnerStack())
-            : null,
-        );
-      },
-    }).render(
-      <CatchingBoundary>
-        <Foo />
-      </CatchingBoundary>,
-    );
-    await waitForAll([]);
-    expect(errors).toEqual([
+    expect(rootCaughtErrors).toEqual([
       'uh oh',
       componentStack([
         'SomethingThatErrors',
@@ -168,9 +142,171 @@ describe('ReactFragment', () => {
         'Foo',
         'CatchingBoundary',
       ]),
-      gate(flags => flags.enableOwnerStacks) && __DEV__
-        ? componentStack(['Bar', 'Foo'])
-        : null,
+      __DEV__ ? componentStack(['Bar', 'Foo']) : null,
+    ]);
+  });
+
+  it('includes built-in for Suspense', async () => {
+    ReactNoop.createRoot({
+      onCaughtError,
+    }).render(
+      <CatchingBoundary>
+        <Suspense>
+          <SomethingThatErrors />
+        </Suspense>
+      </CatchingBoundary>,
+    );
+    await waitForAll([]);
+    expect(didCatchErrors).toEqual([
+      'uh oh',
+      componentStack(['SomethingThatErrors', 'Suspense', 'CatchingBoundary']),
+    ]);
+    expect(rootCaughtErrors).toEqual([
+      'uh oh',
+      componentStack(['SomethingThatErrors', 'Suspense', 'CatchingBoundary']),
+      __DEV__ ? componentStack(['SomethingThatErrors']) : null,
+    ]);
+  });
+
+  // @gate enableActivity
+  it('includes built-in for Activity', async () => {
+    ReactNoop.createRoot({
+      onCaughtError,
+    }).render(
+      <CatchingBoundary>
+        <Activity>
+          <SomethingThatErrors />
+        </Activity>
+      </CatchingBoundary>,
+    );
+    await waitForAll([]);
+    expect(didCatchErrors).toEqual([
+      'uh oh',
+      componentStack(['SomethingThatErrors', 'Activity', 'CatchingBoundary']),
+    ]);
+    expect(rootCaughtErrors).toEqual([
+      'uh oh',
+      componentStack(['SomethingThatErrors', 'Activity', 'CatchingBoundary']),
+      __DEV__ ? componentStack(['SomethingThatErrors']) : null,
+    ]);
+  });
+
+  // @gate enableViewTransition
+  it('includes built-in for ViewTransition', async () => {
+    ReactNoop.createRoot({
+      onCaughtError,
+    }).render(
+      <CatchingBoundary>
+        <ViewTransition>
+          <SomethingThatErrors />
+        </ViewTransition>
+      </CatchingBoundary>,
+    );
+    await waitForAll([]);
+    expect(didCatchErrors).toEqual([
+      'uh oh',
+      componentStack([
+        'SomethingThatErrors',
+        'ViewTransition',
+        'CatchingBoundary',
+      ]),
+    ]);
+    expect(rootCaughtErrors).toEqual([
+      'uh oh',
+      componentStack([
+        'SomethingThatErrors',
+        'ViewTransition',
+        'CatchingBoundary',
+      ]),
+      __DEV__ ? componentStack(['SomethingThatErrors']) : null,
+    ]);
+  });
+
+  it('includes built-in for Lazy', async () => {
+    // Lazy component throws
+    const LazyComponent = React.lazy(() => {
+      throw new Error('uh oh');
+    });
+
+    ReactNoop.createRoot({
+      onCaughtError,
+    }).render(
+      <CatchingBoundary>
+        <LazyComponent />
+      </CatchingBoundary>,
+    );
+    await waitForAll([]);
+    expect(didCatchErrors).toEqual([
+      'uh oh',
+      componentStack(['Lazy', 'CatchingBoundary']),
+    ]);
+    expect(rootCaughtErrors).toEqual([
+      'uh oh',
+      componentStack(['Lazy', 'CatchingBoundary']),
+      __DEV__ ? '' : null, // No owner stack
+    ]);
+  });
+
+  // @gate enableSuspenseList
+  it('includes built-in for SuspenseList', async () => {
+    const SuspenseList = React.unstable_SuspenseList;
+
+    ReactNoop.createRoot({
+      onCaughtError,
+    }).render(
+      <CatchingBoundary>
+        <SuspenseList>
+          <SomethingThatErrors />
+        </SuspenseList>
+      </CatchingBoundary>,
+    );
+    await waitForAll([]);
+    expect(didCatchErrors).toEqual([
+      'uh oh',
+      componentStack([
+        'SomethingThatErrors',
+        'SuspenseList',
+        'CatchingBoundary',
+      ]),
+    ]);
+    expect(rootCaughtErrors).toEqual([
+      'uh oh',
+      componentStack([
+        'SomethingThatErrors',
+        'SuspenseList',
+        'CatchingBoundary',
+      ]),
+      __DEV__ ? componentStack(['SomethingThatErrors']) : null,
+    ]);
+  });
+
+  it('does not include built-in for Fragment', async () => {
+    ReactNoop.createRoot({
+      onCaughtError,
+    }).render(
+      <CatchingBoundary>
+        <>
+          <SomethingThatErrors />
+        </>
+      </CatchingBoundary>,
+    );
+    await waitForAll([]);
+    expect(didCatchErrors).toEqual([
+      'uh oh',
+      componentStack([
+        'SomethingThatErrors',
+        // No Fragment
+        'CatchingBoundary',
+      ]),
+    ]);
+    expect(rootCaughtErrors).toEqual([
+      'uh oh',
+      componentStack([
+        'SomethingThatErrors',
+        // No Fragment
+        'CatchingBoundary',
+      ]),
+      __DEV__ ? componentStack(['SomethingThatErrors']) : null,
     ]);
   });
 });

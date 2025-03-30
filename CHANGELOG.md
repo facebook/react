@@ -1,3 +1,50 @@
+## 19.1.0 (March 28, 2025)
+
+### Owner Stack
+
+An Owner Stack is a string representing the components that are directly responsible for rendering a particular component. You can log Owner Stacks when debugging or use Owner Stacks to enhance error overlays or other development tools. Owner Stacks are only available in development builds. Component Stacks in production are unchanged.
+
+* An Owner Stack is a development-only stack trace that helps identify which components are responsible for rendering a particular component. An Owner Stack is distinct from a Component Stacks, which shows the hierarchy of components leading to an error.
+* The [captureOwnerStack API](https://react.dev/reference/react/captureOwnerStack) is only available in development mode and returns a Owner Stack, if available. The API can be used to enhance error overlays or log component relationships when debugging. [#29923](https://github.com/facebook/react/pull/29923), [#32353](https://github.com/facebook/react/pull/32353), [#30306](https://github.com/facebook/react/pull/30306),
+[#32538](https://github.com/facebook/react/pull/32538), [#32529](https://github.com/facebook/react/pull/32529), [#32538](https://github.com/facebook/react/pull/32538)
+
+### React
+* Enhanced support for Suspense boundaries to be used anywhere, including the client, server, and during hydration. [#32069](https://github.com/facebook/react/pull/32069), [#32163](https://github.com/facebook/react/pull/32163), [#32224](https://github.com/facebook/react/pull/32224), [#32252](https://github.com/facebook/react/pull/32252)
+* Reduced unnecessary client rendering through improved hydration scheduling [#31751](https://github.com/facebook/react/pull/31751)
+* Increased priority of client rendered Suspense boundaries [#31776](https://github.com/facebook/react/pull/31776)
+* Fixed frozen fallback states by rendering unfinished Suspense boundaries on the client. [#31620](https://github.com/facebook/react/pull/31620)
+* Reduced garbage collection pressure by improving Suspense boundary retries. [#31667](https://github.com/facebook/react/pull/31667)
+* Fixed erroneous “Waiting for Paint” log when the passive effect phase was not delayed [#31526](https://github.com/facebook/react/pull/31526)
+* Fixed a regression causing key warnings for flattened positional children in development mode. [#32117](https://github.com/facebook/react/pull/32117)
+* Updated `useId` to use valid CSS selectors, changing format from `:r123:` to `«r123»`. [#32001](https://github.com/facebook/react/pull/32001)
+* Added a dev-only warning for null/undefined created in useEffect, useInsertionEffect, and useLayoutEffect. [#32355](https://github.com/facebook/react/pull/32355)
+* Fixed a bug where dev-only methods were exported in production builds. React.act is no longer available in production builds. [#32200](https://github.com/facebook/react/pull/32200)
+* Improved consistency across prod and dev to improve compatibility with Google Closure Complier and bindings [#31808](https://github.com/facebook/react/pull/31808)
+* Improve passive effect scheduling for consistent task yielding. [#31785](https://github.com/facebook/react/pull/31785)
+* Fixed asserts in React Native when passChildrenWhenCloningPersistedNodes is enabled for OffscreenComponent rendering. [#32528](https://github.com/facebook/react/pull/32528)
+* Fixed component name resolution for Portal [#32640](https://github.com/facebook/react/pull/32640)
+* Added support for beforetoggle and toggle events on the dialog element. #32479 [#32479](https://github.com/facebook/react/pull/32479)
+
+### React DOM
+* Fixed double warning when the `href` attribute is an empty string [#31783](https://github.com/facebook/react/pull/31783)
+ * Fixed an edge case where `getHoistableRoot()` didn’t work properly when the container was a Document [#32321](https://github.com/facebook/react/pull/32321)
+* Removed support for using HTML comments (e.g. `<!-- -->`) as a DOM container. [#32250](https://github.com/facebook/react/pull/32250)
+* Added support for `<script>` and `<template>` tags to be nested within `<select>` tags. [#31837](https://github.com/facebook/react/pull/31837)
+* Fixed responsive images to be preloaded as HTML instead of headers [#32445](https://github.com/facebook/react/pull/32445)
+
+### use-sync-external-store
+* Added `exports` field to `package.json` for `use-sync-external-store` to support various entrypoints. [#25231](https://github.com/facebook/react/pull/25231)
+
+### React Server Components
+* Added `unstable_prerender`, a new experimental API for prerendering React Server Components on the server [#31724](https://github.com/facebook/react/pull/31724)
+* Fixed an issue where streams would hang when receiving new chunks after a global error [#31840](https://github.com/facebook/react/pull/31840), [#31851](https://github.com/facebook/react/pull/31851)
+* Fixed an issue where pending chunks were counted twice. [#31833](https://github.com/facebook/react/pull/31833)
+* Added support for streaming in edge environments [#31852](https://github.com/facebook/react/pull/31852)
+* Added support for sending custom error names from a server so that they are available in the client for console replaying. [#32116](https://github.com/facebook/react/pull/32116)
+* Updated the server component wire format to remove IDs for hints and console.log because they have no return value [#31671](https://github.com/facebook/react/pull/31671)
+* Exposed `registerServerReference` in client builds to handle server references in different environments. [#32534](https://github.com/facebook/react/pull/32534)
+* Added react-server-dom-parcel package which integrates Server Components with the [Parcel bundler](https://parceljs.org/) [#31725](https://github.com/facebook/react/pull/31725), [#32132](https://github.com/facebook/react/pull/32132), [#31799](https://github.com/facebook/react/pull/31799), [#32294](https://github.com/facebook/react/pull/32294), [#31741](https://github.com/facebook/react/pull/31741)
+
 ## 19.0.0 (December 5, 2024)
 
 Below is a list of all new features, APIs, deprecations, and breaking changes. Read [React 19 release post](https://react.dev/blog/2024/04/25/react-19) and [React 19 upgrade guide](https://react.dev/blog/2024/04/25/react-19-upgrade-guide) for more information.

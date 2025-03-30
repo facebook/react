@@ -391,8 +391,7 @@ describe('ReactDOMForm', () => {
         '> <form action={function outerAction}>\n' +
         '    <input>\n' +
         '>   <form action={function innerAction} ref={{current:null}}>\n' +
-        '\n    in form (at **)' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in form (at **)'),
+        '\n    in form (at **)',
     ]);
 
     await submit(ref.current);
@@ -588,8 +587,7 @@ describe('ReactDOMForm', () => {
       'Cannot specify a "name" prop for a button that specifies a function as a formAction. ' +
         'React needs it to encode which action should be invoked. ' +
         'It will get overridden.\n' +
-        '    in input (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in form (at **)'),
+        '    in input (at **)',
     ]);
 
     await submit(inputRef.current);
@@ -1971,7 +1969,6 @@ describe('ReactDOMForm', () => {
         'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
         'For details, see https://react.dev/link/attribute-behavior \n' +
         '    in button (at **)\n' +
-        (gate('enableOwnerStacks') ? '' : '    in form (at **)\n') +
         '    in App (at **)',
     ]);
     await submit(buttonRef.current);
