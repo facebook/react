@@ -17,6 +17,7 @@ import type {StackCursor} from './ReactFiberStack';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
 import type {Transition} from 'react/src/ReactStartTransition';
 import type {ScheduledGesture} from './ReactFiberGestureScheduler';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import {
   enableTransitionTracing,
@@ -112,6 +113,7 @@ if (enableGestureTransition) {
     transition: Transition,
     provider: GestureProvider,
     options: ?GestureOptions,
+    transitionTypes: null | TransitionTypes,
   ): () => void {
     let cancel = null;
     if (prevOnStartGestureTransitionFinish !== null) {
@@ -119,6 +121,7 @@ if (enableGestureTransition) {
         transition,
         provider,
         options,
+        transitionTypes,
       );
     }
     // For every root that has work scheduled, check if there's a ScheduledGesture

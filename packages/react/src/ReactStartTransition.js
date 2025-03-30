@@ -21,6 +21,12 @@ import {
   enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 
+import {
+  pendingGestureTransitionTypes,
+  pushPendingGestureTransitionTypes,
+  popPendingGestureTransitionTypes,
+} from './ReactTransitionType';
+
 import reportGlobalError from 'shared/reportGlobalError';
 
 export type Transition = {
@@ -105,6 +111,8 @@ export function startGestureTransition(
   }
   ReactSharedInternals.T = currentTransition;
 
+  const prevTransitionTypes = pushPendingGestureTransitionTypes();
+
   try {
     const returnValue = scope();
     if (__DEV__) {
@@ -118,17 +126,20 @@ export function startGestureTransition(
         );
       }
     }
+    const transitionTypes = pendingGestureTransitionTypes;
     const onStartGestureTransitionFinish = ReactSharedInternals.G;
     if (onStartGestureTransitionFinish !== null) {
       return onStartGestureTransitionFinish(
         currentTransition,
         provider,
         options,
+        transitionTypes,
       );
     }
   } catch (error) {
     reportGlobalError(error);
   } finally {
+    popPendingGestureTransitionTypes(prevTransitionTypes);
     ReactSharedInternals.T = prevTransition;
   }
   return function cancelGesture() {

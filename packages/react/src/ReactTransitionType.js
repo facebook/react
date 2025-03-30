@@ -19,15 +19,34 @@ export type TransitionTypes = Array<string>;
 // for this state. Instead, we track it in isomorphic and pass it to the renderer.
 export let pendingGestureTransitionTypes: null | TransitionTypes = null;
 
+export function pushPendingGestureTransitionTypes(): null | TransitionTypes {
+  const prev = pendingGestureTransitionTypes;
+  pendingGestureTransitionTypes = null;
+  return prev;
+}
+
+export function popPendingGestureTransitionTypes(
+  prev: null | TransitionTypes,
+): void {
+  pendingGestureTransitionTypes = prev;
+}
+
 export function addTransitionType(type: string): void {
   if (enableViewTransition) {
-    let pendingTransitionTypes: null | TransitionTypes = null;
+    let pendingTransitionTypes: null | TransitionTypes;
     if (
       enableGestureTransition &&
       ReactSharedInternals.T !== null &&
       ReactSharedInternals.T.gesture !== null
     ) {
+      // We're inside a startGestureTransition which is always sync.
+      pendingTransitionTypes = pendingGestureTransitionTypes;
+      if (pendingTransitionTypes === null) {
+        pendingTransitionTypes = pendingGestureTransitionTypes = [];
+      }
     } else {
+      // Otherwise we're either inside a synchronous startTransition
+      // or in the async gap of one, which we track globally.
       pendingTransitionTypes = ReactSharedInternals.V;
       if (pendingTransitionTypes === null) {
         pendingTransitionTypes = ReactSharedInternals.V = [];

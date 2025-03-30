@@ -23,7 +23,14 @@ export type SharedStateClient = {
   A: null | AsyncDispatcher, // ReactCurrentCache for Cache
   T: null | Transition, // ReactCurrentBatchConfig for Transitions
   S: null | ((Transition, mixed) => void), // onStartTransitionFinish
-  G: null | ((Transition, GestureProvider, ?GestureOptions) => () => void), // onStartGestureTransitionFinish
+  G:
+    | null
+    | ((
+        Transition,
+        GestureProvider,
+        ?GestureOptions,
+        transitionTypes: null | TransitionTypes,
+      ) => () => void), // onStartGestureTransitionFinish
   V: null | TransitionTypes, // Pending Transition Types for the Next Transition
 
   // DEV-only
