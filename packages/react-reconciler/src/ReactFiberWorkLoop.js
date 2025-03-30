@@ -358,6 +358,7 @@ import {
   deleteScheduledGesture,
   stopCompletedGestures,
 } from './ReactFiberGestureScheduler';
+import {claimQueuedTransitionTypes} from './ReactFiberTransitionTypes';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -3404,11 +3405,7 @@ function commitRoot(
     pendingViewTransitionEvents = null;
     if (includesOnlyViewTransitionEligibleLanes(lanes)) {
       // Claim any pending Transition Types for this commit.
-      // This means that multiple roots committing independent View Transitions
-      // 1) end up staggered because we can only have one at a time.
-      // 2) only the first one gets all the Transition Types.
-      pendingTransitionTypes = ReactSharedInternals.V;
-      ReactSharedInternals.V = null;
+      pendingTransitionTypes = claimQueuedTransitionTypes();
       passiveSubtreeMask = PassiveTransitionMask;
     } else {
       pendingTransitionTypes = null;

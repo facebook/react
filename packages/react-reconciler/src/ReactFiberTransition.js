@@ -17,7 +17,6 @@ import type {StackCursor} from './ReactFiberStack';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
 import type {Transition} from 'react/src/ReactStartTransition';
 import type {ScheduledGesture} from './ReactFiberGestureScheduler';
-import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import {
   enableTransitionTracing,
@@ -34,6 +33,7 @@ import {
   retainCache,
   CacheContext,
 } from './ReactFiberCacheComponent';
+import {queueTransitionTypes} from './ReactFiberTransitionTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {entangleAsyncAction} from './ReactFiberAsyncAction';
@@ -87,6 +87,7 @@ ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
     const thenable: Thenable<mixed> = (returnValue: any);
     entangleAsyncAction(transition, thenable);
   }
+  queueTransitionTypes(transition.types);
   if (prevOnStartTransitionFinish !== null) {
     prevOnStartTransitionFinish(transition, returnValue);
   }
@@ -113,7 +114,6 @@ if (enableGestureTransition) {
     transition: Transition,
     provider: GestureProvider,
     options: ?GestureOptions,
-    transitionTypes: null | TransitionTypes,
   ): () => void {
     let cancel = null;
     if (prevOnStartGestureTransitionFinish !== null) {
@@ -121,7 +121,6 @@ if (enableGestureTransition) {
         transition,
         provider,
         options,
-        transitionTypes,
       );
     }
     // For every root that has work scheduled, check if there's a ScheduledGesture
@@ -138,7 +137,7 @@ if (enableGestureTransition) {
         root,
         provider,
         options,
-        transitionTypes,
+        transition.types,
       );
       if (scheduledGesture !== null) {
         cancel = chainGestureCancellation(root, scheduledGesture, cancel);

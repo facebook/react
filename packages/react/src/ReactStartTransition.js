@@ -13,23 +13,20 @@ import type {
   GestureProvider,
   GestureOptions,
 } from 'shared/ReactTypes';
+import type {TransitionTypes} from './ReactTransitionType';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {
   enableTransitionTracing,
+  enableViewTransition,
   enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
-
-import {
-  pendingGestureTransitionTypes,
-  pushPendingGestureTransitionTypes,
-  popPendingGestureTransitionTypes,
-} from './ReactTransitionType';
 
 import reportGlobalError from 'shared/reportGlobalError';
 
 export type Transition = {
+  types: null | TransitionTypes, // enableViewTransition
   gesture: null | GestureProvider, // enableGestureTransition
   name: null | string, // enableTransitionTracing only
   startTime: number, // enableTransitionTracing only
@@ -49,6 +46,9 @@ export function startTransition(
 ): void {
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
+  if (enableViewTransition) {
+    currentTransition.types = null;
+  }
   if (enableGestureTransition) {
     currentTransition.gesture = null;
   }
@@ -109,6 +109,9 @@ export function startGestureTransition(
   }
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
+  if (enableViewTransition) {
+    currentTransition.types = null;
+  }
   if (enableGestureTransition) {
     currentTransition.gesture = provider;
   }
@@ -121,8 +124,6 @@ export function startGestureTransition(
     currentTransition._updatedFibers = new Set();
   }
   ReactSharedInternals.T = currentTransition;
-
-  const prevTransitionTypes = pushPendingGestureTransitionTypes();
 
   try {
     const returnValue = scope();
@@ -137,20 +138,17 @@ export function startGestureTransition(
         );
       }
     }
-    const transitionTypes = pendingGestureTransitionTypes;
     const onStartGestureTransitionFinish = ReactSharedInternals.G;
     if (onStartGestureTransitionFinish !== null) {
       return onStartGestureTransitionFinish(
         currentTransition,
         provider,
         options,
-        transitionTypes,
       );
     }
   } catch (error) {
     reportGlobalError(error);
   } finally {
-    popPendingGestureTransitionTypes(prevTransitionTypes);
     ReactSharedInternals.T = prevTransition;
   }
   return function cancelGesture() {

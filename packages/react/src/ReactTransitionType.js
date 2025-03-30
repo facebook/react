@@ -12,44 +12,24 @@ import {
   enableViewTransition,
   enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
+import {startTransition} from './ReactStartTransition';
 
 export type TransitionTypes = Array<string>;
 
-// This one is only available synchronously so we don't need to use ReactSharedInternals
-// for this state. Instead, we track it in isomorphic and pass it to the renderer.
-export let pendingGestureTransitionTypes: null | TransitionTypes = null;
-
-export function pushPendingGestureTransitionTypes(): null | TransitionTypes {
-  const prev = pendingGestureTransitionTypes;
-  pendingGestureTransitionTypes = null;
-  return prev;
-}
-
-export function popPendingGestureTransitionTypes(
-  prev: null | TransitionTypes,
-): void {
-  pendingGestureTransitionTypes = prev;
-}
-
 export function addTransitionType(type: string): void {
   if (enableViewTransition) {
-    let pendingTransitionTypes: null | TransitionTypes;
-    if (
-      enableGestureTransition &&
-      ReactSharedInternals.T !== null &&
-      ReactSharedInternals.T.gesture !== null
-    ) {
-      // We're inside a startGestureTransition which is always sync.
-      pendingTransitionTypes = pendingGestureTransitionTypes;
-      if (pendingTransitionTypes === null) {
-        pendingTransitionTypes = pendingGestureTransitionTypes = [];
+    const transition = ReactSharedInternals.T;
+    if (transition !== null) {
+      const transitionTypes = transition.types;
+      if (transitionTypes === null) {
+        transition.types = [type];
+      } else if (transitionTypes.indexOf(type) === -1) {
+        transitionTypes.push(type);
       }
     } else {
+      // We're in the async gap. Simulate an implicit startTransition around it.
       if (__DEV__) {
-        if (
-          ReactSharedInternals.T === null &&
-          ReactSharedInternals.asyncTransitions === 0
-        ) {
+        if (ReactSharedInternals.asyncTransitions === 0) {
           if (enableGestureTransition) {
             console.error(
               'addTransitionType can only be called inside a `startTransition()` ' +
@@ -64,15 +44,7 @@ export function addTransitionType(type: string): void {
           }
         }
       }
-      // Otherwise we're either inside a synchronous startTransition
-      // or in the async gap of one, which we track globally.
-      pendingTransitionTypes = ReactSharedInternals.V;
-      if (pendingTransitionTypes === null) {
-        pendingTransitionTypes = ReactSharedInternals.V = [];
-      }
-    }
-    if (pendingTransitionTypes.indexOf(type) === -1) {
-      pendingTransitionTypes.push(type);
+      startTransition(addTransitionType.bind(null, type));
     }
   }
 }

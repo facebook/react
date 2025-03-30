@@ -42,6 +42,7 @@ import {
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
+  enableViewTransition,
   enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -2159,6 +2160,9 @@ function runActionStateAction<S, P>(
     // This is a fork of startTransition
     const prevTransition = ReactSharedInternals.T;
     const currentTransition: Transition = ({}: any);
+    if (enableViewTransition) {
+      currentTransition.types = null;
+    }
     if (enableGestureTransition) {
       currentTransition.gesture = null;
     }
@@ -3052,6 +3056,9 @@ function startTransition<S>(
 
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
+  if (enableViewTransition) {
+    currentTransition.types = null;
+  }
   if (enableGestureTransition) {
     currentTransition.gesture = null;
   }
