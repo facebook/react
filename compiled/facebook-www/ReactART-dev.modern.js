@@ -10111,6 +10111,12 @@ __DEV__ &&
         captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
     }
+    function pushMutationContext() {
+      if (!enableViewTransition) return !1;
+      var prev = viewTransitionMutationContext;
+      viewTransitionMutationContext = !1;
+      return prev;
+    }
     function trackHostMutation() {
       enableViewTransition && (viewTransitionMutationContext = !0);
     }
@@ -11419,8 +11425,10 @@ __DEV__ &&
           root.effectDuration += popNestedEffectDurations(flags);
           break;
         case 4:
+          flags = pushMutationContext();
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
+          enableViewTransition && (viewTransitionMutationContext = flags);
           break;
         case 12:
           flags = pushNestedEffectDurations();
@@ -11575,10 +11583,7 @@ __DEV__ &&
               (offscreenSubtreeWasHidden ||
                 null === current ||
                 safelyDetachRef(current, current.return)),
-            enableViewTransition
-              ? ((flags = viewTransitionMutationContext),
-                (viewTransitionMutationContext = !1))
-              : (flags = !1),
+            (flags = pushMutationContext()),
             recursivelyTraverseMutationEffects(root, finishedWork, lanes),
             commitReconciliationEffects(finishedWork),
             enableViewTransition &&
@@ -17972,10 +17977,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-ef4bc8b4-20250328",
+        version: "19.2.0-www-modern-95671b4e-20250331",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-ef4bc8b4-20250328"
+        reconcilerVersion: "19.2.0-www-modern-95671b4e-20250331"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18009,7 +18014,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-modern-ef4bc8b4-20250328";
+    exports.version = "19.2.0-www-modern-95671b4e-20250331";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

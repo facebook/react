@@ -1025,6 +1025,12 @@ __DEV__ &&
       console.error("Invalid attribute name: `%s`", attributeName);
       return !1;
     }
+    function pushMutationContext() {
+      if (!enableViewTransition) return !1;
+      var prev = viewTransitionMutationContext;
+      viewTransitionMutationContext = !1;
+      return prev;
+    }
     function trackHostMutation() {
       enableViewTransition && (viewTransitionMutationContext = !0);
     }
@@ -14870,13 +14876,13 @@ __DEV__ &&
               safelyDetachRef(current, current.return));
           flags & 64 &&
             offscreenSubtreeIsHidden &&
-            ((current = finishedWork.updateQueue),
-            null !== current &&
-              ((flags = current.callbacks),
-              null !== flags &&
-                ((root = current.shared.hiddenCallbacks),
-                (current.shared.hiddenCallbacks =
-                  null === root ? flags : root.concat(flags)))));
+            ((flags = finishedWork.updateQueue),
+            null !== flags &&
+              ((current = flags.callbacks),
+              null !== current &&
+                ((root = flags.shared.hiddenCallbacks),
+                (flags.shared.hiddenCallbacks =
+                  null === root ? current : root.concat(current)))));
           break;
         case 26:
           var hoistableRoot = currentHoistableRoot;
@@ -14895,10 +14901,10 @@ __DEV__ &&
               if (null === flags)
                 if (null === finishedWork.stateNode) {
                   a: {
-                    current = finishedWork.type;
-                    flags = finishedWork.memoizedProps;
+                    flags = finishedWork.type;
+                    current = finishedWork.memoizedProps;
                     root = hoistableRoot.ownerDocument || hoistableRoot;
-                    b: switch (current) {
+                    b: switch (flags) {
                       case "title":
                         lanes = root.getElementsByTagName("title")[0];
                         if (
@@ -14908,15 +14914,15 @@ __DEV__ &&
                           lanes.namespaceURI === SVG_NAMESPACE ||
                           lanes.hasAttribute("itemprop")
                         )
-                          (lanes = root.createElement(current)),
+                          (lanes = root.createElement(flags)),
                             root.head.insertBefore(
                               lanes,
                               root.querySelector("head > title")
                             );
-                        setInitialProperties(lanes, current, flags);
+                        setInitialProperties(lanes, flags, current);
                         lanes[internalInstanceKey] = finishedWork;
                         markNodeAsHoistable(lanes);
-                        current = lanes;
+                        flags = lanes;
                         break a;
                       case "link":
                         if (
@@ -14924,29 +14930,31 @@ __DEV__ &&
                             "link",
                             "href",
                             root
-                          ).get(current + (flags.href || "")))
+                          ).get(flags + (current.href || "")))
                         )
                           for (var i = 0; i < hoistableRoot.length; i++)
                             if (
                               ((lanes = hoistableRoot[i]),
                               lanes.getAttribute("href") ===
-                                (null == flags.href || "" === flags.href
+                                (null == current.href || "" === current.href
                                   ? null
-                                  : flags.href) &&
+                                  : current.href) &&
                                 lanes.getAttribute("rel") ===
-                                  (null == flags.rel ? null : flags.rel) &&
+                                  (null == current.rel ? null : current.rel) &&
                                 lanes.getAttribute("title") ===
-                                  (null == flags.title ? null : flags.title) &&
-                                lanes.getAttribute("crossorigin") ===
-                                  (null == flags.crossOrigin
+                                  (null == current.title
                                     ? null
-                                    : flags.crossOrigin))
+                                    : current.title) &&
+                                lanes.getAttribute("crossorigin") ===
+                                  (null == current.crossOrigin
+                                    ? null
+                                    : current.crossOrigin))
                             ) {
                               hoistableRoot.splice(i, 1);
                               break b;
                             }
-                        lanes = root.createElement(current);
-                        setInitialProperties(lanes, current, flags);
+                        lanes = root.createElement(flags);
+                        setInitialProperties(lanes, flags, current);
                         root.head.appendChild(lanes);
                         break;
                       case "meta":
@@ -14955,53 +14963,55 @@ __DEV__ &&
                             "meta",
                             "content",
                             root
-                          ).get(current + (flags.content || "")))
+                          ).get(flags + (current.content || "")))
                         )
                           for (i = 0; i < hoistableRoot.length; i++)
                             if (
                               ((lanes = hoistableRoot[i]),
                               checkAttributeStringCoercion(
-                                flags.content,
+                                current.content,
                                 "content"
                               ),
                               lanes.getAttribute("content") ===
-                                (null == flags.content
+                                (null == current.content
                                   ? null
-                                  : "" + flags.content) &&
+                                  : "" + current.content) &&
                                 lanes.getAttribute("name") ===
-                                  (null == flags.name ? null : flags.name) &&
+                                  (null == current.name
+                                    ? null
+                                    : current.name) &&
                                 lanes.getAttribute("property") ===
-                                  (null == flags.property
+                                  (null == current.property
                                     ? null
-                                    : flags.property) &&
+                                    : current.property) &&
                                 lanes.getAttribute("http-equiv") ===
-                                  (null == flags.httpEquiv
+                                  (null == current.httpEquiv
                                     ? null
-                                    : flags.httpEquiv) &&
+                                    : current.httpEquiv) &&
                                 lanes.getAttribute("charset") ===
-                                  (null == flags.charSet
+                                  (null == current.charSet
                                     ? null
-                                    : flags.charSet))
+                                    : current.charSet))
                             ) {
                               hoistableRoot.splice(i, 1);
                               break b;
                             }
-                        lanes = root.createElement(current);
-                        setInitialProperties(lanes, current, flags);
+                        lanes = root.createElement(flags);
+                        setInitialProperties(lanes, flags, current);
                         root.head.appendChild(lanes);
                         break;
                       default:
                         throw Error(
                           'getNodesForType encountered a type it did not expect: "' +
-                            current +
+                            flags +
                             '". This is a bug in React.'
                         );
                     }
                     lanes[internalInstanceKey] = finishedWork;
                     markNodeAsHoistable(lanes);
-                    current = lanes;
+                    flags = lanes;
                   }
-                  finishedWork.stateNode = current;
+                  finishedWork.stateNode = flags;
                 } else
                   mountHoistable(
                     hoistableRoot,
@@ -15138,6 +15148,7 @@ __DEV__ &&
           root.effectDuration += popNestedEffectDurations(hoistableRoot);
           break;
         case 4:
+          flags = pushMutationContext();
           current = currentHoistableRoot;
           currentHoistableRoot = getHoistableRoot(
             finishedWork.stateNode.containerInfo
@@ -15145,13 +15156,15 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           currentHoistableRoot = current;
+          viewTransitionMutationContext && (rootViewTransitionAffected = !0);
+          enableViewTransition && (viewTransitionMutationContext = flags);
           break;
         case 12:
-          current = pushNestedEffectDurations();
+          flags = pushNestedEffectDurations();
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           finishedWork.stateNode.effectDuration +=
-            bubbleNestedEffectDurations(current);
+            bubbleNestedEffectDurations(flags);
           break;
         case 13:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -15177,10 +15190,10 @@ __DEV__ &&
             } catch (error) {
               captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
-            current = finishedWork.updateQueue;
-            null !== current &&
+            flags = finishedWork.updateQueue;
+            null !== flags &&
               ((finishedWork.updateQueue = null),
-              attachSuspenseRetryListeners(finishedWork, current));
+              attachSuspenseRetryListeners(finishedWork, flags));
           }
           break;
         case 22:
@@ -15270,21 +15283,21 @@ __DEV__ &&
               root = root.sibling;
             }
           flags & 4 &&
-            ((current = finishedWork.updateQueue),
-            null !== current &&
-              ((flags = current.retryQueue),
-              null !== flags &&
-                ((current.retryQueue = null),
-                attachSuspenseRetryListeners(finishedWork, flags))));
+            ((flags = finishedWork.updateQueue),
+            null !== flags &&
+              ((current = flags.retryQueue),
+              null !== current &&
+                ((flags.retryQueue = null),
+                attachSuspenseRetryListeners(finishedWork, current))));
           break;
         case 19:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           flags & 4 &&
-            ((current = finishedWork.updateQueue),
-            null !== current &&
+            ((flags = finishedWork.updateQueue),
+            null !== flags &&
               ((finishedWork.updateQueue = null),
-              attachSuspenseRetryListeners(finishedWork, current)));
+              attachSuspenseRetryListeners(finishedWork, flags)));
           break;
         case 30:
           enableViewTransition &&
@@ -15292,10 +15305,7 @@ __DEV__ &&
               (offscreenSubtreeWasHidden ||
                 null === current ||
                 safelyDetachRef(current, current.return)),
-            enableViewTransition
-              ? ((flags = viewTransitionMutationContext),
-                (viewTransitionMutationContext = !1))
-              : (flags = !1),
+            (flags = pushMutationContext()),
             recursivelyTraverseMutationEffects(root, finishedWork, lanes),
             commitReconciliationEffects(finishedWork),
             enableViewTransition &&
@@ -15378,7 +15388,7 @@ __DEV__ &&
             viewTransitionContextChanged = !1;
             pushViewTransitionCancelableScope();
             recursivelyTraverseAfterMutationEffects(root, finishedWork);
-            if (!viewTransitionContextChanged) {
+            if (!viewTransitionContextChanged && !rootViewTransitionAffected) {
               finishedWork = viewTransitionCancelableChildren;
               if (null !== finishedWork)
                 for (var i = 0; i < finishedWork.length; i += 3) {
@@ -15427,6 +15437,13 @@ __DEV__ &&
           case 5:
             recursivelyTraverseAfterMutationEffects(root, finishedWork);
             break;
+          case 4:
+            i = viewTransitionContextChanged;
+            viewTransitionContextChanged = !1;
+            recursivelyTraverseAfterMutationEffects(root, finishedWork);
+            viewTransitionContextChanged && (rootViewTransitionAffected = !0);
+            viewTransitionContextChanged = i;
+            break;
           case 22:
             null === finishedWork.memoizedState &&
               (null !== current.memoizedState
@@ -15448,12 +15465,12 @@ __DEV__ &&
               props.update
             );
             "none" === className
-              ? (current = !1)
+              ? (root = !1)
               : ((props = current.memoizedState),
                 (current.memoizedState = null),
                 (current = finishedWork.child),
                 (viewTransitionHostInstanceIdx = 0),
-                (current = measureViewTransitionHostInstancesRecursive(
+                (root = measureViewTransitionHostInstancesRecursive(
                   finishedWork,
                   current,
                   root,
@@ -15465,7 +15482,7 @@ __DEV__ &&
                 viewTransitionHostInstanceIdx !==
                   (null === props ? 0 : props.length) &&
                   (finishedWork.flags |= 32));
-            0 !== (finishedWork.flags & 4) && current
+            0 !== (finishedWork.flags & 4) && root
               ? (scheduleViewTransitionEvent(
                   finishedWork,
                   finishedWork.memoizedProps.onUpdate
@@ -18626,6 +18643,7 @@ __DEV__ &&
           try {
             inProgressLanes = lanes;
             inProgressRoot = root;
+            rootViewTransitionAffected = !1;
             resetComponentEffectTimers();
             commitMutationEffectsOnFiber(finishedWork, root, lanes);
             inProgressRoot = inProgressLanes = null;
@@ -29110,6 +29128,7 @@ __DEV__ &&
       focusedInstanceHandle = null,
       shouldFireAfterActiveInstanceBlur = !1,
       viewTransitionContextChanged = !1,
+      rootViewTransitionAffected = !1,
       hostParent = null,
       hostParentIsContainer = !1,
       currentHoistableRoot = null,
@@ -30239,11 +30258,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-classic-ef4bc8b4-20250328" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-classic-95671b4e-20250331" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-classic-ef4bc8b4-20250328\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-classic-95671b4e-20250331\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30286,10 +30305,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-classic-ef4bc8b4-20250328",
+          version: "19.2.0-www-classic-95671b4e-20250331",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-classic-ef4bc8b4-20250328"
+          reconcilerVersion: "19.2.0-www-classic-95671b4e-20250331"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -31053,5 +31072,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-classic-ef4bc8b4-20250328";
+    exports.version = "19.2.0-www-classic-95671b4e-20250331";
   })();

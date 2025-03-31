@@ -7176,6 +7176,12 @@ function commitProfilerPostCommit(
   }
 }
 var viewTransitionMutationContext = !1;
+function pushMutationContext() {
+  if (!enableViewTransition) return !1;
+  var prev = viewTransitionMutationContext;
+  viewTransitionMutationContext = !1;
+  return prev;
+}
 function trackHostMutation() {
   enableViewTransition && (viewTransitionMutationContext = !0);
 }
@@ -8128,15 +8134,19 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         (offscreenSubtreeWasHidden ||
           null === current ||
           safelyDetachRef(current, current.return));
-      flags & 64 &&
+      if (
+        flags & 64 &&
         offscreenSubtreeIsHidden &&
         ((finishedWork = finishedWork.updateQueue),
         null !== finishedWork &&
-          ((flags = finishedWork.callbacks),
-          null !== flags &&
-            ((current = finishedWork.shared.hiddenCallbacks),
-            (finishedWork.shared.hiddenCallbacks =
-              null === current ? flags : current.concat(flags)))));
+          ((flags = finishedWork.callbacks), null !== flags))
+      ) {
+        var existingHiddenCallbacks = finishedWork.shared.hiddenCallbacks;
+        finishedWork.shared.hiddenCallbacks =
+          null === existingHiddenCallbacks
+            ? flags
+            : existingHiddenCallbacks.concat(flags);
+      }
       break;
     case 26:
     case 27:
@@ -8155,10 +8165,11 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         }
       if (flags & 4 && null != finishedWork.stateNode) {
         flags = finishedWork.memoizedProps;
-        current = null !== current ? current.memoizedProps : flags;
+        existingHiddenCallbacks =
+          null !== current ? current.memoizedProps : flags;
         try {
           var instance = finishedWork.stateNode;
-          instance._applyProps(instance, flags, current);
+          instance._applyProps(instance, flags, existingHiddenCallbacks);
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -8182,8 +8193,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       commitReconciliationEffects(finishedWork);
       break;
     case 4:
+      flags = pushMutationContext();
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
+      enableViewTransition && (viewTransitionMutationContext = flags);
       break;
     case 12:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -8193,13 +8206,14 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
       if (finishedWork.child.flags & 8192) {
-        var isShowingFallback = null !== finishedWork.memoizedState;
-        current = null !== current && null !== current.memoizedState;
+        existingHiddenCallbacks = null !== finishedWork.memoizedState;
+        var wasShowingFallback =
+          null !== current && null !== current.memoizedState;
         alwaysThrottleRetries
-          ? isShowingFallback !== current &&
+          ? existingHiddenCallbacks !== wasShowingFallback &&
             (globalMostRecentFallbackTime = now())
-          : isShowingFallback &&
-            !current &&
+          : existingHiddenCallbacks &&
+            !wasShowingFallback &&
             (globalMostRecentFallbackTime = now());
       }
       if (flags & 4) {
@@ -8253,13 +8267,13 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             if (null === current) {
               lanes = current = root;
               try {
-                if (((isShowingFallback = lanes.stateNode), instance))
-                  isShowingFallback.hide();
-                else {
-                  var props = lanes.memoizedProps;
-                  (null == props.visible || props.visible) &&
-                    lanes.stateNode.show();
-                }
+                (existingHiddenCallbacks = lanes.stateNode),
+                  instance
+                    ? existingHiddenCallbacks.hide()
+                    : ((wasShowingFallback = lanes.memoizedProps),
+                      (null == wasShowingFallback.visible ||
+                        wasShowingFallback.visible) &&
+                        lanes.stateNode.show());
               } catch (error) {
                 captureCommitPhaseError(lanes, lanes.return, error);
               }
@@ -8296,10 +8310,13 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       flags & 4 &&
         ((flags = finishedWork.updateQueue),
         null !== flags &&
-          ((current = flags.retryQueue),
-          null !== current &&
+          ((existingHiddenCallbacks = flags.retryQueue),
+          null !== existingHiddenCallbacks &&
             ((flags.retryQueue = null),
-            attachSuspenseRetryListeners(finishedWork, current))));
+            attachSuspenseRetryListeners(
+              finishedWork,
+              existingHiddenCallbacks
+            ))));
       break;
     case 19:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -8316,10 +8333,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           (offscreenSubtreeWasHidden ||
             null === current ||
             safelyDetachRef(current, current.return)),
-        enableViewTransition
-          ? ((flags = viewTransitionMutationContext),
-            (viewTransitionMutationContext = !1))
-          : (flags = !1),
+        (flags = pushMutationContext()),
         recursivelyTraverseMutationEffects(root, finishedWork, lanes),
         commitReconciliationEffects(finishedWork),
         enableViewTransition &&
@@ -8802,14 +8816,14 @@ function commitPassiveMountOnFiber(
         );
       break;
     case 22:
-      var instance$122 = finishedWork.stateNode,
-        current$123 = finishedWork.alternate;
+      var instance$123 = finishedWork.stateNode,
+        current$124 = finishedWork.alternate;
       null !== finishedWork.memoizedState
         ? (isViewTransitionEligible &&
-            null !== current$123 &&
-            null === current$123.memoizedState &&
-            restoreEnterOrExitViewTransitions(current$123),
-          instance$122._visibility & 2
+            null !== current$124 &&
+            null === current$124.memoizedState &&
+            restoreEnterOrExitViewTransitions(current$124),
+          instance$123._visibility & 2
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
                 finishedWork,
@@ -8821,17 +8835,17 @@ function commitPassiveMountOnFiber(
                 finishedWork
               ))
         : (isViewTransitionEligible &&
-            null !== current$123 &&
-            null !== current$123.memoizedState &&
+            null !== current$124 &&
+            null !== current$124.memoizedState &&
             restoreEnterOrExitViewTransitions(finishedWork),
-          instance$122._visibility & 2
+          instance$123._visibility & 2
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
                 finishedWork,
                 committedLanes,
                 committedTransitions
               )
-            : ((instance$122._visibility |= 2),
+            : ((instance$123._visibility |= 2),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -8841,9 +8855,9 @@ function commitPassiveMountOnFiber(
               )));
       flags & 2048 &&
         commitOffscreenPassiveMountEffects(
-          current$123,
+          current$124,
           finishedWork,
-          instance$122
+          instance$123
         );
       break;
     case 24:
@@ -8931,9 +8945,9 @@ function recursivelyTraverseReconnectPassiveEffects(
           );
         break;
       case 22:
-        var instance$125 = finishedWork.stateNode;
+        var instance$126 = finishedWork.stateNode;
         null !== finishedWork.memoizedState
-          ? instance$125._visibility & 2
+          ? instance$126._visibility & 2
             ? recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -8945,7 +8959,7 @@ function recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork
               )
-          : ((instance$125._visibility |= 2),
+          : ((instance$126._visibility |= 2),
             recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
               finishedWork,
@@ -8958,7 +8972,7 @@ function recursivelyTraverseReconnectPassiveEffects(
           commitOffscreenPassiveMountEffects(
             finishedWork.alternate,
             finishedWork,
-            instance$125
+            instance$126
           );
         break;
       case 24:
@@ -9907,8 +9921,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$137) {
-      handleThrow(root, thrownValue$137);
+    } catch (thrownValue$138) {
+      handleThrow(root, thrownValue$138);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -10023,8 +10037,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrentByScheduler();
       break;
-    } catch (thrownValue$139) {
-      handleThrow(root, thrownValue$139);
+    } catch (thrownValue$140) {
+      handleThrow(root, thrownValue$140);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -11152,10 +11166,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1582 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-ef4bc8b4-20250328",
+  version: "19.2.0-www-classic-95671b4e-20250331",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-ef4bc8b4-20250328"
+  reconcilerVersion: "19.2.0-www-classic-95671b4e-20250331"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1583 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11181,4 +11195,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-ef4bc8b4-20250328";
+exports.version = "19.2.0-www-classic-95671b4e-20250331";

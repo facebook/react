@@ -11156,6 +11156,12 @@ __DEV__ &&
         captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
     }
+    function pushMutationContext() {
+      if (!enableViewTransition) return !1;
+      var prev = viewTransitionMutationContext;
+      viewTransitionMutationContext = !1;
+      return prev;
+    }
     function trackHostMutation() {
       enableViewTransition && (viewTransitionMutationContext = !0);
     }
@@ -13070,16 +13076,19 @@ __DEV__ &&
           root.effectDuration += popNestedEffectDurations(hoistableRoot);
           break;
         case 4:
+          current = pushMutationContext();
           supportsResources
-            ? ((current = currentHoistableRoot),
+            ? ((hoistableRoot = currentHoistableRoot),
               (currentHoistableRoot = getHoistableRoot(
                 finishedWork.stateNode.containerInfo
               )),
               recursivelyTraverseMutationEffects(root, finishedWork, lanes),
               commitReconciliationEffects(finishedWork),
-              (currentHoistableRoot = current))
+              (currentHoistableRoot = hoistableRoot))
             : (recursivelyTraverseMutationEffects(root, finishedWork, lanes),
               commitReconciliationEffects(finishedWork));
+          viewTransitionMutationContext && (rootViewTransitionAffected = !0);
+          enableViewTransition && (viewTransitionMutationContext = current);
           flags & 4 &&
             supportsPersistence &&
             commitHostPortalContainerChildren(
@@ -13241,10 +13250,7 @@ __DEV__ &&
               (offscreenSubtreeWasHidden ||
                 null === current ||
                 safelyDetachRef(current, current.return)),
-            enableViewTransition
-              ? ((flags = viewTransitionMutationContext),
-                (viewTransitionMutationContext = !1))
-              : (flags = !1),
+            (flags = pushMutationContext()),
             recursivelyTraverseMutationEffects(root, finishedWork, lanes),
             commitReconciliationEffects(finishedWork),
             enableViewTransition &&
@@ -13328,7 +13334,7 @@ __DEV__ &&
             viewTransitionContextChanged = !1;
             pushViewTransitionCancelableScope();
             recursivelyTraverseAfterMutationEffects(root, finishedWork);
-            if (!viewTransitionContextChanged) {
+            if (!viewTransitionContextChanged && !rootViewTransitionAffected) {
               finishedWork = viewTransitionCancelableChildren;
               if (null !== finishedWork)
                 for (var i = 0; i < finishedWork.length; i += 3)
@@ -13343,6 +13349,13 @@ __DEV__ &&
             break;
           case 5:
             recursivelyTraverseAfterMutationEffects(root, finishedWork);
+            break;
+          case 4:
+            i = viewTransitionContextChanged;
+            viewTransitionContextChanged = !1;
+            recursivelyTraverseAfterMutationEffects(root, finishedWork);
+            viewTransitionContextChanged && (rootViewTransitionAffected = !0);
+            viewTransitionContextChanged = i;
             break;
           case 22:
             null === finishedWork.memoizedState &&
@@ -16508,6 +16521,7 @@ __DEV__ &&
           try {
             (inProgressLanes = lanes),
               (inProgressRoot = root),
+              (rootViewTransitionAffected = !1),
               resetComponentEffectTimers(),
               commitMutationEffectsOnFiber(finishedWork, root, lanes),
               (inProgressRoot = inProgressLanes = null),
@@ -19982,6 +19996,7 @@ __DEV__ &&
       focusedInstanceHandle = null,
       shouldFireAfterActiveInstanceBlur = !1,
       viewTransitionContextChanged = !1,
+      rootViewTransitionAffected = !1,
       hostParent = null,
       hostParentIsContainer = !1,
       currentHoistableRoot = null,
@@ -20626,7 +20641,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-ef4bc8b4-20250328"
+        reconcilerVersion: "19.2.0-www-modern-95671b4e-20250331"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
