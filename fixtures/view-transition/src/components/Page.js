@@ -6,7 +6,9 @@ import React, {
   useEffect,
   useState,
   useId,
+  startTransition,
 } from 'react';
+import {createPortal} from 'react-dom';
 
 import SwipeRecognizer from './SwipeRecognizer';
 
@@ -78,6 +80,23 @@ export default function Page({url, navigate}) {
     //  });
     // });
   }, [show]);
+
+  const [showModal, setShowModal] = useState(false);
+  const portal = showModal ? (
+    createPortal(
+      <div className="portal">
+        Portal: {!show ? 'A' : 'B'}
+        <ViewTransition>
+          <div>{!show ? 'A' : 'B'}</div>
+        </ViewTransition>
+      </div>,
+      document.body
+    )
+  ) : (
+    <button onClick={() => startTransition(() => setShowModal(true))}>
+      Show Modal
+    </button>
+  );
 
   const exclamation = (
     <ViewTransition name="exclamation" onShare={onTransition}>
@@ -153,6 +172,7 @@ export default function Page({url, navigate}) {
             <p>content</p>
             <p>out</p>
             <p>of</p>
+            {portal}
             <p>the</p>
             <p>viewport</p>
             {show ? <Component /> : null}
