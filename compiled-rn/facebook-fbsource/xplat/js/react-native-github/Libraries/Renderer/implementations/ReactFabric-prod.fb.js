@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a39e8dd4e42dfc1b54563cee31a52a40>>
+ * @generated SignedSource<<4e4ad8b7fe2e3bde8938559750d07f10>>
  */
 
 "use strict";
@@ -4458,7 +4458,10 @@ function runActionStateAction(actionQueue, node) {
     } catch (error) {
       onActionError(actionQueue, node, error);
     } finally {
-      ReactSharedInternals.T = prevTransition;
+      null !== prevTransition &&
+        null !== currentTransition.types &&
+        (prevTransition.types = currentTransition.types),
+        (ReactSharedInternals.T = prevTransition);
     }
   } else
     try {
@@ -4780,6 +4783,9 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
     );
   } finally {
     (currentUpdatePriority = previousPriority),
+      null !== prevTransition &&
+        null !== currentTransition.types &&
+        (prevTransition.types = currentTransition.types),
       (ReactSharedInternals.T = prevTransition);
   }
 }
@@ -10913,10 +10919,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1219 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-deca9652-20250401",
+    version: "19.2.0-native-fb-7a728dff-20250401",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-deca9652-20250401"
+    reconcilerVersion: "19.2.0-native-fb-7a728dff-20250401"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1219.rendererConfig = extraDevToolsConfig);

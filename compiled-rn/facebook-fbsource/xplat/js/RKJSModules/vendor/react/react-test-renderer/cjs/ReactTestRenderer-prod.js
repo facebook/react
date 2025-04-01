@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<057867c0df278df9e67193cd8509a56b>>
+ * @generated SignedSource<<b7c7145adbf380709cd30c96188a4ac9>>
  */
 
 "use strict";
@@ -3217,7 +3217,10 @@ function runActionStateAction(actionQueue, node) {
     } catch (error) {
       onActionError(actionQueue, node, error);
     } finally {
-      ReactSharedInternals.T = prevTransition;
+      null !== prevTransition &&
+        null !== currentTransition.types &&
+        (prevTransition.types = currentTransition.types),
+        (ReactSharedInternals.T = prevTransition);
     }
   } else
     try {
@@ -3539,6 +3542,9 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
     );
   } finally {
     (currentUpdatePriority = previousPriority),
+      null !== prevTransition &&
+        null !== currentTransition.types &&
+        (prevTransition.types = currentTransition.types),
       (ReactSharedInternals.T = prevTransition);
   }
 }
@@ -9698,10 +9704,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1412 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-deca9652-20250401",
+  version: "19.2.0-native-fb-7a728dff-20250401",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-deca9652-20250401"
+  reconcilerVersion: "19.2.0-native-fb-7a728dff-20250401"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1413 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9837,4 +9843,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-deca9652-20250401";
+exports.version = "19.2.0-native-fb-7a728dff-20250401";

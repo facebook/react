@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0f4c8767519cc94620a43283674d9459>>
+ * @generated SignedSource<<457f1857f1c8161b3ea5bdf58be186e1>>
  */
 
 "use strict";
@@ -506,7 +506,10 @@ exports.startTransition = function (scope) {
   } catch (error) {
     reportGlobalError(error);
   } finally {
-    ReactSharedInternals.T = prevTransition;
+    null !== prevTransition &&
+      null !== currentTransition.types &&
+      (prevTransition.types = currentTransition.types),
+      (ReactSharedInternals.T = prevTransition);
   }
 };
 exports.unstable_Activity = REACT_ACTIVITY_TYPE;
@@ -584,4 +587,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-native-fb-deca9652-20250401";
+exports.version = "19.2.0-native-fb-7a728dff-20250401";

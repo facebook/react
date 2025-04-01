@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d5cb178ae8f1714285a289464ec2c608>>
+ * @generated SignedSource<<a7902921ceb6e91d9a2f66c1a03e82ca>>
  */
 
 "use strict";
@@ -510,7 +510,10 @@ exports.startTransition = function (scope) {
   } catch (error) {
     reportGlobalError(error);
   } finally {
-    ReactSharedInternals.T = prevTransition;
+    null !== prevTransition &&
+      null !== currentTransition.types &&
+      (prevTransition.types = currentTransition.types),
+      (ReactSharedInternals.T = prevTransition);
   }
 };
 exports.unstable_Activity = REACT_ACTIVITY_TYPE;
@@ -588,7 +591,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-native-fb-deca9652-20250401";
+exports.version = "19.2.0-native-fb-7a728dff-20250401";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
