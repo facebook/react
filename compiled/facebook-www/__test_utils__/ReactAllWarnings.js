@@ -294,7 +294,6 @@ export default [
   "The provided `%s` option is an unsupported type %s. This value must be coerced to a string before using it here.",
   "The provided `%s` prop is an unsupported type %s. This value must be coerced to a string before using it here.",
   "The provided key is an unsupported type %s. This value must be coerced to a string before using it here.",
-  "The range of a gesture needs \"previous\" and \"next\" to be on either side of the \"current\" offset. Both cannot be above current and both cannot be below current.",
   "The result of getServerSnapshot should be cached to avoid an infinite loop",
   "The result of getSnapshot should be cached to avoid an infinite loop",
   "The seed argument is not enabled outside experimental channels.",
