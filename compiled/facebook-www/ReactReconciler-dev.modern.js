@@ -18055,7 +18055,6 @@ __DEV__ &&
     $$$config.startGestureTransition;
     var stopViewTransition = $$$config.stopViewTransition;
     $$$config.getCurrentGestureOffset;
-    $$$config.subscribeToGestureDirection;
     var createViewTransitionInstance = $$$config.createViewTransitionInstance,
       clearContainer = $$$config.clearContainer,
       createFragmentInstance = $$$config.createFragmentInstance,
@@ -20654,7 +20653,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-b286430c-20250331"
+        reconcilerVersion: "19.2.0-www-modern-0a7cf20b-20250401"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -391,12 +391,12 @@ export default [
   "ref.measureLayout must be called with a node handle or a ref to a native component.",
   "requestFormReset was called outside a transition or action. To fix, move to an action, or wrap with startTransition.",
   "sendAccessibilityEvent was called with a ref that isn't a native component. Use React.forwardRef to get access to the underlying native component",
+  "startGestureTransition() caused something to mutate <%s>. This is not possible in the current implementation. Make sure that the swipe doesn't update any state which causes <%s> to change.",
+  "startGestureTransition() caused something to mutate or relayout the root. This currently requires a clone of the whole document. Make sure to add a <ViewTransition> directly around an absolutely positioned DOM node to minimize the impact of any changes caused by the Gesture Transition.",
+  "startGestureTransition() caused something to render a new <%s>. This is not possible in the current implementation. Make sure that the swipe doesn't mount any new <%s> elements.",
   "unmountComponentAtNode was removed in React 19. Use root.unmount() instead.",
   "unmountComponentAtNode(): The node you're attempting to unmount was rendered by React and is not a top-level container. %s",
   "unmountComponentAtNode(): The node you're attempting to unmount was rendered by another copy of React.",
   "useInsertionEffect must not schedule updates.",
-  "useOptimistic is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release.",
-  "useSwipeTransition() caused something to mutate <%s>. This is not possible in the current implementation. Make sure that the swipe doesn't update any state which causes <%s> to change.",
-  "useSwipeTransition() caused something to mutate or relayout the root. This currently requires a clone of the whole document. Make sure to add a <ViewTransition> directly around an absolutely positioned DOM node to minimize the impact of any changes caused by the Swipe Transition.",
-  "useSwipeTransition() caused something to render a new <%s>. This is not possible in the current implementation. Make sure that the swipe doesn't mount any new <%s> elements."
+  "useOptimistic is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release."
 ];

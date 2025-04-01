@@ -12679,7 +12679,6 @@ module.exports = function ($$$config) {
   $$$config.startGestureTransition;
   var stopViewTransition = $$$config.stopViewTransition;
   $$$config.getCurrentGestureOffset;
-  $$$config.subscribeToGestureDirection;
   var createViewTransitionInstance = $$$config.createViewTransitionInstance,
     clearContainer = $$$config.clearContainer,
     createFragmentInstance = $$$config.createFragmentInstance,
@@ -13729,7 +13728,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-b286430c-20250331"
+      reconcilerVersion: "19.2.0-www-classic-0a7cf20b-20250401"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
