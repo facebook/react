@@ -90,7 +90,7 @@ function runBabelPluginReactCompiler(
   });
   if (result?.code == null) {
     throw new Error(
-      `Expected BabelPluginReactForget to codegen successfully, got: ${result}`,
+      `Expected BabelPluginReactCompiler to codegen successfully, got: ${result}`,
     );
   }
   return result;
