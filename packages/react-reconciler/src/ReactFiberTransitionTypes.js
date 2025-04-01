@@ -14,9 +14,9 @@ import {enableViewTransition} from 'shared/ReactFeatureFlags';
 
 export function queueTransitionTypes(
   root: FiberRoot,
-  transitionTypes: null | TransitionTypes,
+  transitionTypes: TransitionTypes,
 ): void {
-  if (enableViewTransition && transitionTypes !== null) {
+  if (enableViewTransition) {
     // TODO: We should really store transitionTypes per lane in a LaneMap on
     // the root. Then merge it when we commit. We currently assume that all
     // Transitions are entangled.
@@ -31,6 +31,31 @@ export function queueTransitionTypes(
       }
     }
   }
+}
+
+// Store all types while we're entangled with an async Transition.
+export let entangledTransitionTypes: null | TransitionTypes = null;
+
+export function entangleAsyncTransitionTypes(
+  transitionTypes: TransitionTypes,
+): void {
+  if (enableViewTransition) {
+    let queued = entangledTransitionTypes;
+    if (queued === null) {
+      queued = entangledTransitionTypes = [];
+    }
+    for (let i = 0; i < transitionTypes.length; i++) {
+      const transitionType = transitionTypes[i];
+      if (queued.indexOf(transitionType) === -1) {
+        queued.push(transitionType);
+      }
+    }
+  }
+}
+
+export function clearEntangledAsyncTransitionTypes() {
+  // Called when all Async Actions are done.
+  entangledTransitionTypes = null;
 }
 
 export function claimQueuedTransitionTypes(
