@@ -1,4 +1,9 @@
-import React, {useRef, useEffect, startTransition} from 'react';
+import React, {
+  useRef,
+  useEffect,
+  startTransition,
+  unstable_startGestureTransition as startGestureTransition,
+} from 'react';
 
 // Example of a Component that can recognize swipe gestures using a ScrollTimeline
 // without scrolling its own content. Allowing it to be used as an inert gesture
@@ -28,9 +33,15 @@ export default function SwipeRecognizer({
       source: scrollRef.current,
       axis: axis,
     });
-    activeGesture.current = gesture(scrollTimeline, {
-      range: [0, direction === 'left' || direction === 'up' ? 100 : 0, 100],
-    });
+    activeGesture.current = startGestureTransition(
+      scrollTimeline,
+      () => {
+        gesture(direction);
+      },
+      {
+        range: [0, direction === 'left' || direction === 'up' ? 100 : 0, 100],
+      }
+    );
   }
   function onScrollEnd() {
     let changed;

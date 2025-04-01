@@ -163,6 +163,7 @@ import {callComponentInDEV} from './ReactFiberCallUserSpace';
 
 import {
   scheduleGesture,
+  scheduleGestureLegacy,
   cancelScheduledGesture,
 } from './ReactFiberGestureScheduler';
 
@@ -173,6 +174,7 @@ export type Update<S, A> = {
   hasEagerState: boolean,
   eagerState: S | null,
   next: Update<S, A>,
+  gesture: null | ScheduledGesture, // enableSwipeTransition
 };
 
 export type UpdateQueue<S, A> = {
@@ -1377,9 +1379,34 @@ function updateReducerImpl<S, A>(
       // Check if this update was made while the tree was hidden. If so, then
       // it's not a "base" update and we should disregard the extra base lanes
       // that were added to renderLanes when we entered the Offscreen tree.
-      const shouldSkipUpdate = isHiddenUpdate
+      let shouldSkipUpdate = isHiddenUpdate
         ? !isSubsetOfLanes(getWorkInProgressRootRenderLanes(), updateLane)
         : !isSubsetOfLanes(renderLanes, updateLane);
+
+      if (enableSwipeTransition && updateLane === GestureLane) {
+        // This is a gesture optimistic update. It should only be considered as part of the
+        // rendered state while rendering the gesture lane and if the rendering the associated
+        // ScheduledGesture.
+        const scheduledGesture = update.gesture;
+        if (scheduledGesture !== null) {
+          if (scheduledGesture.count === 0) {
+            // This gesture has already been cancelled. We can clean up this update.
+            update = update.next;
+            continue;
+          } else if (!isGestureRender(renderLanes)) {
+            shouldSkipUpdate = true;
+          } else {
+            const root: FiberRoot | null = getWorkInProgressRoot();
+            if (root === null) {
+              throw new Error(
+                'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+              );
+            }
+            // We assume that the currently rendering gesture is the one first in the queue.
+            shouldSkipUpdate = root.pendingGestures !== scheduledGesture;
+          }
+        }
+      }
 
       if (shouldSkipUpdate) {
         // Priority is insufficient. Skip this update. If this is the first
@@ -1388,6 +1415,7 @@ function updateReducerImpl<S, A>(
         const clone: Update<S, A> = {
           lane: updateLane,
           revertLane: update.revertLane,
+          gesture: update.gesture,
           action: update.action,
           hasEagerState: update.hasEagerState,
           eagerState: update.eagerState,
@@ -1423,6 +1451,7 @@ function updateReducerImpl<S, A>(
               // this will never be skipped by the check above.
               lane: NoLane,
               revertLane: NoLane,
+              gesture: null,
               action: update.action,
               hasEagerState: update.hasEagerState,
               eagerState: update.eagerState,
@@ -1466,6 +1495,7 @@ function updateReducerImpl<S, A>(
               // Reuse the same revertLane so we know when the transition
               // has finished.
               revertLane: update.revertLane,
+              gesture: null, // If it commits, it's no longer a gesture update.
               action: update.action,
               hasEagerState: update.hasEagerState,
               eagerState: update.eagerState,
@@ -2138,6 +2168,9 @@ function runActionStateAction<S, P>(
     // This is a fork of startTransition
     const prevTransition = ReactSharedInternals.T;
     const currentTransition: Transition = ({}: any);
+    if (enableSwipeTransition) {
+      currentTransition.gesture = null;
+    }
     if (enableTransitionTracing) {
       currentTransition.name = null;
       currentTransition.startTime = -1;
@@ -3017,6 +3050,9 @@ function startTransition<S>(
 
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
+  if (enableSwipeTransition) {
+    currentTransition.gesture = null;
+  }
   if (enableTransitionTracing) {
     currentTransition.name =
       options !== undefined && options.name !== undefined ? options.name : null;
@@ -3226,8 +3262,8 @@ function ensureFormComponentIsStateful(formFiber: Fiber) {
 export function requestFormReset(formFiber: Fiber) {
   const transition = requestCurrentTransition();
 
-  if (__DEV__) {
-    if (transition === null) {
+  if (transition === null) {
+    if (__DEV__) {
       // An optimistic update occurred, but startTransition is not on the stack.
       // The form reset will be scheduled at default (sync) priority, which
       // is probably not what the user intended. Most likely because the
@@ -3242,6 +3278,13 @@ export function requestFormReset(formFiber: Fiber) {
           'fix, move to an action, or wrap with startTransition.',
       );
     }
+  } else if (enableSwipeTransition && transition.gesture) {
+    throw new Error(
+      'Cannot requestFormReset() inside a startGestureTransition. ' +
+        'There should be no side-effects associated with starting a ' +
+        'Gesture until its Action is invoked. Move side-effects to the ' +
+        'Action instead.',
+    );
   }
 
   const stateHook = ensureFormComponentIsStateful(formFiber);
@@ -3441,6 +3484,7 @@ function dispatchReducerAction<S, A>(
   const update: Update<S, A> = {
     lane,
     revertLane: NoLane,
+    gesture: null,
     action,
     hasEagerState: false,
     eagerState: null,
@@ -3500,6 +3544,7 @@ function dispatchSetStateInternal<S, A>(
   const update: Update<S, A> = {
     lane,
     revertLane: NoLane,
+    gesture: null,
     action,
     hasEagerState: false,
     eagerState: null,
@@ -3607,12 +3652,18 @@ function dispatchOptimisticSetState<S, A>(
     }
   }
 
+  // For regular Transitions an optimistic update commits synchronously.
+  // For gesture Transitions an optimistic update commits on the GestureLane.
+  const lane =
+    enableSwipeTransition && transition !== null && transition.gesture
+      ? GestureLane
+      : SyncLane;
   const update: Update<S, A> = {
-    // An optimistic update commits synchronously.
-    lane: SyncLane,
+    lane: lane,
     // After committing, the optimistic update is "reverted" using the same
     // lane as the transition it's associated with.
     revertLane: requestTransitionLane(transition),
+    gesture: null,
     action,
     hasEagerState: false,
     eagerState: null,
@@ -3635,20 +3686,28 @@ function dispatchOptimisticSetState<S, A>(
       }
     }
   } else {
-    const root = enqueueConcurrentHookUpdate(fiber, queue, update, SyncLane);
+    const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
       // NOTE: The optimistic update implementation assumes that the transition
       // will never be attempted before the optimistic update. This currently
       // holds because the optimistic update is always synchronous. If we ever
       // change that, we'll need to account for this.
-      startUpdateTimerByLane(SyncLane);
-      scheduleUpdateOnFiber(root, fiber, SyncLane);
+      startUpdateTimerByLane(lane);
+      scheduleUpdateOnFiber(root, fiber, lane);
       // Optimistic updates are always synchronous, so we don't need to call
       // entangleTransitionUpdate here.
+      if (enableSwipeTransition && transition !== null) {
+        const provider = transition.gesture;
+        if (provider !== null) {
+          // If this was a gesture, ensure we have a scheduled gesture and that
+          // we associate this update with this specific gesture instance.
+          update.gesture = scheduleGesture(root, provider);
+        }
+      }
     }
   }
 
-  markUpdateInDevTools(fiber, SyncLane, action);
+  markUpdateInDevTools(fiber, lane, action);
 }
 
 function isRenderPhaseUpdate(fiber: Fiber): boolean {
@@ -3769,7 +3828,7 @@ function startGesture(
             ? false
             : // If no option is specified, imply from the values specified.
               queue.initialDirection;
-  const scheduledGesture = scheduleGesture(
+  const scheduledGesture = scheduleGestureLegacy(
     root,
     gestureTimeline,
     initialDirection,

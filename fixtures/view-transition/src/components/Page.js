@@ -1,13 +1,14 @@
 import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
-  unstable_useSwipeTransition as useSwipeTransition,
   useLayoutEffect,
   useEffect,
   useState,
   useId,
+  useOptimistic,
   startTransition,
 } from 'react';
+
 import {createPortal} from 'react-dom';
 
 import SwipeRecognizer from './SwipeRecognizer';
@@ -49,7 +50,12 @@ function Id() {
 }
 
 export default function Page({url, navigate}) {
-  const [renderedUrl, startGesture] = useSwipeTransition('/?a', url, '/?b');
+  const [renderedUrl, optimisticNavigate] = useOptimistic(
+    url,
+    (state, direction) => {
+      return direction === 'left' ? '/?a' : '/?b';
+    }
+  );
   const show = renderedUrl === '/?b';
   function onTransition(viewTransition, types) {
     const keyframes = [
@@ -107,7 +113,7 @@ export default function Page({url, navigate}) {
     <div className="swipe-recognizer">
       <SwipeRecognizer
         action={swipeAction}
-        gesture={startGesture}
+        gesture={optimisticNavigate}
         direction={show ? 'left' : 'right'}>
         <button
           className="button"
