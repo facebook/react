@@ -11,6 +11,7 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import {enableViewTransition} from 'shared/ReactFeatureFlags';
+import {includesTransitionLane} from './ReactFiberLane';
 
 export function queueTransitionTypes(
   root: FiberRoot,
@@ -20,14 +21,16 @@ export function queueTransitionTypes(
     // TODO: We should really store transitionTypes per lane in a LaneMap on
     // the root. Then merge it when we commit. We currently assume that all
     // Transitions are entangled.
-    let queued = root.transitionTypes;
-    if (queued === null) {
-      queued = root.transitionTypes = [];
-    }
-    for (let i = 0; i < transitionTypes.length; i++) {
-      const transitionType = transitionTypes[i];
-      if (queued.indexOf(transitionType) === -1) {
-        queued.push(transitionType);
+    if (includesTransitionLane(root.pendingLanes)) {
+      let queued = root.transitionTypes;
+      if (queued === null) {
+        queued = root.transitionTypes = [];
+      }
+      for (let i = 0; i < transitionTypes.length; i++) {
+        const transitionType = transitionTypes[i];
+        if (queued.indexOf(transitionType) === -1) {
+          queued.push(transitionType);
+        }
       }
     }
   }
