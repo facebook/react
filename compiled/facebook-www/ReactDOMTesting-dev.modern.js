@@ -19798,15 +19798,9 @@ __DEV__ &&
       this.formState = formState;
       enableViewTransition && (this.transitionTypes = null);
       this.incompleteTransitions = new Map();
-      if (enableTransitionTracing)
-        for (
-          this.transitionCallbacks = null,
-            containerInfo = this.transitionLanes = [],
-            tag = 0;
-          31 > tag;
-          tag++
-        )
-          containerInfo.push(null);
+      enableTransitionTracing &&
+        ((this.transitionCallbacks = null),
+        (this.transitionLanes = createLaneMap(null)));
       this.passiveEffectDuration = this.effectDuration = -0;
       this.memoizedUpdaters = new Set();
       containerInfo = this.pendingUpdatersLaneMap = [];
@@ -30151,11 +30145,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-7a728dff-20250401" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-450f8df8-20250401" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-7a728dff-20250401\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-450f8df8-20250401\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30198,10 +30192,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-7a728dff-20250401",
+          version: "19.2.0-www-modern-450f8df8-20250401",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-7a728dff-20250401"
+          reconcilerVersion: "19.2.0-www-modern-450f8df8-20250401"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30965,5 +30959,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-7a728dff-20250401";
+    exports.version = "19.2.0-www-modern-450f8df8-20250401";
   })();

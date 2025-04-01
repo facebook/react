@@ -15910,15 +15910,9 @@ __DEV__ &&
       this.formState = formState;
       enableViewTransition && (this.transitionTypes = null);
       this.incompleteTransitions = new Map();
-      if (enableTransitionTracing)
-        for (
-          this.transitionCallbacks = null,
-            containerInfo = this.transitionLanes = [],
-            tag = 0;
-          31 > tag;
-          tag++
-        )
-          containerInfo.push(null);
+      enableTransitionTracing &&
+        ((this.transitionCallbacks = null),
+        (this.transitionLanes = createLaneMap(null)));
       this.passiveEffectDuration = this.effectDuration = -0;
       this.memoizedUpdaters = new Set();
       containerInfo = this.pendingUpdatersLaneMap = [];
@@ -18284,10 +18278,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-7a728dff-20250401",
+        version: "19.2.0-www-classic-450f8df8-20250401",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-7a728dff-20250401"
+        reconcilerVersion: "19.2.0-www-classic-450f8df8-20250401"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18321,7 +18315,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-7a728dff-20250401";
+    exports.version = "19.2.0-www-classic-450f8df8-20250401";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -17972,15 +17972,9 @@ __DEV__ &&
       this.formState = formState;
       enableViewTransition && (this.transitionTypes = null);
       this.incompleteTransitions = new Map();
-      if (enableTransitionTracing)
-        for (
-          this.transitionCallbacks = null,
-            containerInfo = this.transitionLanes = [],
-            tag = 0;
-          31 > tag;
-          tag++
-        )
-          containerInfo.push(null);
+      enableTransitionTracing &&
+        ((this.transitionCallbacks = null),
+        (this.transitionLanes = createLaneMap(null)));
       this.passiveEffectDuration = this.effectDuration = -0;
       this.memoizedUpdaters = new Set();
       containerInfo = this.pendingUpdatersLaneMap = [];
@@ -20940,7 +20934,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-7a728dff-20250401"
+        reconcilerVersion: "19.2.0-www-classic-450f8df8-20250401"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

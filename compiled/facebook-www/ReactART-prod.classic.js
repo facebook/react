@@ -11033,15 +11033,9 @@ function FiberRootNode(
   this.formState = formState;
   enableViewTransition && (this.transitionTypes = null);
   this.incompleteTransitions = new Map();
-  if (enableTransitionTracing)
-    for (
-      this.transitionCallbacks = null,
-        containerInfo = this.transitionLanes = [],
-        tag = 0;
-      31 > tag;
-      tag++
-    )
-      containerInfo.push(null);
+  enableTransitionTracing &&
+    ((this.transitionCallbacks = null),
+    (this.transitionLanes = createLaneMap(null)));
 }
 function updateContainerSync(element, container, parentComponent, callback) {
   var current = container.current;
@@ -11223,10 +11217,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1589 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-7a728dff-20250401",
+  version: "19.2.0-www-classic-450f8df8-20250401",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-7a728dff-20250401"
+  reconcilerVersion: "19.2.0-www-classic-450f8df8-20250401"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1590 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11252,4 +11246,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-classic-7a728dff-20250401";
+exports.version = "19.2.0-www-classic-450f8df8-20250401";

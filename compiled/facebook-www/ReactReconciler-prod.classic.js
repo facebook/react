@@ -12426,15 +12426,9 @@ module.exports = function ($$$config) {
     this.formState = formState;
     enableViewTransition && (this.transitionTypes = null);
     this.incompleteTransitions = new Map();
-    if (enableTransitionTracing)
-      for (
-        this.transitionCallbacks = null,
-          containerInfo = this.transitionLanes = [],
-          tag = 0;
-        31 > tag;
-        tag++
-      )
-        containerInfo.push(null);
+    enableTransitionTracing &&
+      ((this.transitionCallbacks = null),
+      (this.transitionLanes = createLaneMap(null)));
   }
   function createFiberRoot(
     containerInfo,
@@ -13776,7 +13770,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-7a728dff-20250401"
+      reconcilerVersion: "19.2.0-www-classic-450f8df8-20250401"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
