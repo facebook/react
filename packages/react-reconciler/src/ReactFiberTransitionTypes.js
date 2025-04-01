@@ -7,20 +7,22 @@
  * @flow
  */
 
+import type {FiberRoot} from './ReactInternalTypes';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import {enableViewTransition} from 'shared/ReactFeatureFlags';
 
-let queuedTransitionTypes: null | TransitionTypes = null;
-
 export function queueTransitionTypes(
+  root: FiberRoot,
   transitionTypes: null | TransitionTypes,
 ): void {
-  // Currently, we assume that all Transitions are batched together into a global single commit.
   if (enableViewTransition && transitionTypes !== null) {
-    let queued = queuedTransitionTypes;
+    // TODO: We should really store transitionTypes per lane in a LaneMap on
+    // the root. Then merge it when we commit. We currently assume that all
+    // Transitions are entangled.
+    let queued = root.transitionTypes;
     if (queued === null) {
-      queued = queuedTransitionTypes = [];
+      queued = root.transitionTypes = [];
     }
     for (let i = 0; i < transitionTypes.length; i++) {
       const transitionType = transitionTypes[i];
@@ -31,8 +33,10 @@ export function queueTransitionTypes(
   }
 }
 
-export function claimQueuedTransitionTypes(): null | TransitionTypes {
-  const claimed = queuedTransitionTypes;
-  queuedTransitionTypes = null;
+export function claimQueuedTransitionTypes(
+  root: FiberRoot,
+): null | TransitionTypes {
+  const claimed = root.transitionTypes;
+  root.transitionTypes = null;
   return claimed;
 }

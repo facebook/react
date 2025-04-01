@@ -20,6 +20,7 @@ import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 import {
   enableTransitionTracing,
+  enableViewTransition,
   enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberConfig';
@@ -87,7 +88,17 @@ ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
     const thenable: Thenable<mixed> = (returnValue: any);
     entangleAsyncAction(transition, thenable);
   }
-  queueTransitionTypes(transition.types);
+  if (enableViewTransition && transition.types !== null) {
+    // Within this Transition we should've now scheduled any roots we have updates
+    // to work on. If there are no updates on a root, then the Transition type won't
+    // be applied to that root.
+    // TODO: The exception is if we're to an async action, the updates might come in later.
+    let root = firstScheduledRoot;
+    while (root !== null) {
+      queueTransitionTypes(root, transition.types);
+      root = root.next;
+    }
+  }
   if (prevOnStartTransitionFinish !== null) {
     prevOnStartTransitionFinish(transition, returnValue);
   }

@@ -33,6 +33,7 @@ import {
   enableUpdaterTracking,
   enableTransitionTracing,
   disableLegacyMode,
+  enableViewTransition,
   enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue';
@@ -97,6 +98,10 @@ function FiberRootNode(
   }
 
   this.formState = formState;
+
+  if (enableViewTransition) {
+    this.transitionTypes = null;
+  }
 
   if (enableGestureTransition) {
     this.pendingGestures = null;

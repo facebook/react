@@ -18,6 +18,7 @@ import type {
   ReactComponentInfo,
   ReactDebugInfo,
 } from 'shared/ReactTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
@@ -280,6 +281,8 @@ type BaseFiberRootProperties = {
 
   formState: ReactFormState<any, any> | null,
 
+  // enableViewTransition only
+  transitionTypes: null | TransitionTypes, // TODO: Make this a LaneMap.
   // enableGestureTransition only
   pendingGestures: null | ScheduledGesture,
   stoppingGestures: null | ScheduledGesture,
