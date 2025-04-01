@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<35664ff785a9394f02e484a760881e70>>
+ * @generated SignedSource<<166056d65d189674241a8801252bec1a>>
  */
 
 "use strict";
@@ -581,6 +581,9 @@ __DEV__ &&
     function useMemoCache(size) {
       return resolveDispatcher().useMemoCache(size);
     }
+    function releaseAsyncTransition() {
+      ReactSharedInternals.asyncTransitions--;
+    }
     function noop() {}
     function enqueueTask(task) {
       if (null === enqueueTaskImpl)
@@ -752,6 +755,7 @@ __DEV__ &&
         T: null,
         S: null,
         actQueue: null,
+        asyncTransitions: 0,
         isBatchingLegacy: !1,
         didScheduleLegacyUpdate: !1,
         didUsePromise: !1,
@@ -1283,7 +1287,9 @@ __DEV__ &&
         "object" === typeof returnValue &&
           null !== returnValue &&
           "function" === typeof returnValue.then &&
-          returnValue.then(noop, reportGlobalError);
+          (ReactSharedInternals.asyncTransitions++,
+          returnValue.then(releaseAsyncTransition, releaseAsyncTransition),
+          returnValue.then(noop, reportGlobalError));
       } catch (error) {
         reportGlobalError(error);
       } finally {
@@ -1398,7 +1404,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-native-fb-b286430c-20250331";
+    exports.version = "19.2.0-native-fb-deca9652-20250401";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

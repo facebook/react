@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3270a8734c7100839b0ca2338ec83b9b>>
+ * @generated SignedSource<<b4996ca2e22cf7fabe9fedb10bde6da2>>
  */
 
 "use strict";
@@ -5790,7 +5790,9 @@ __DEV__ &&
       null !== returnValue &&
       "object" === typeof returnValue &&
       "function" === typeof returnValue.then
-        ? (returnValue.then(
+        ? (ReactSharedInternals.asyncTransitions++,
+          returnValue.then(releaseAsyncTransition, releaseAsyncTransition),
+          returnValue.then(
             function (nextState) {
               onActionSuccess(actionQueue, node, nextState);
             },
@@ -6139,6 +6141,9 @@ __DEV__ &&
       workInProgressRootSkippedLanes |= hook;
       return prevValue;
     }
+    function releaseAsyncTransition() {
+      ReactSharedInternals.asyncTransitions--;
+    }
     function startTransition(
       fiber,
       queue,
@@ -6166,6 +6171,8 @@ __DEV__ &&
           "object" === typeof returnValue &&
           "function" === typeof returnValue.then
         ) {
+          ReactSharedInternals.asyncTransitions++;
+          returnValue.then(releaseAsyncTransition, releaseAsyncTransition);
           var thenableForFinishedState = chainThenableValue(
             returnValue,
             finishedState
@@ -17062,10 +17069,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-b286430c-20250331",
+        version: "19.2.0-native-fb-deca9652-20250401",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-b286430c-20250331"
+        reconcilerVersion: "19.2.0-native-fb-deca9652-20250401"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

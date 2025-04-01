@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0f997af839477abfb06357471441bf7b>>
+ * @generated SignedSource<<68792b2d85d582c6c1e24ebfc0346720>>
  */
 
 "use strict";
@@ -4895,7 +4895,9 @@ __DEV__ &&
       null !== returnValue &&
       "object" === typeof returnValue &&
       "function" === typeof returnValue.then
-        ? (returnValue.then(
+        ? (ReactSharedInternals.asyncTransitions++,
+          returnValue.then(releaseAsyncTransition, releaseAsyncTransition),
+          returnValue.then(
             function (nextState) {
               onActionSuccess(actionQueue, node, nextState);
             },
@@ -5244,6 +5246,9 @@ __DEV__ &&
       workInProgressRootSkippedLanes |= hook;
       return prevValue;
     }
+    function releaseAsyncTransition() {
+      ReactSharedInternals.asyncTransitions--;
+    }
     function startTransition(
       fiber,
       queue,
@@ -5271,6 +5276,8 @@ __DEV__ &&
           "object" === typeof returnValue &&
           "function" === typeof returnValue.then
         ) {
+          ReactSharedInternals.asyncTransitions++;
+          returnValue.then(releaseAsyncTransition, releaseAsyncTransition);
           var thenableForFinishedState = chainThenableValue(
             returnValue,
             finishedState
@@ -15333,10 +15340,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-b286430c-20250331",
+        version: "19.2.0-native-fb-deca9652-20250401",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-b286430c-20250331"
+        reconcilerVersion: "19.2.0-native-fb-deca9652-20250401"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15481,5 +15488,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-b286430c-20250331";
+    exports.version = "19.2.0-native-fb-deca9652-20250401";
   })();
