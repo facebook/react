@@ -2219,6 +2219,11 @@ function handleActionReturnValue<S, P>(
     typeof returnValue.then === 'function'
   ) {
     const thenable = ((returnValue: any): Thenable<Awaited<S>>);
+    if (__DEV__) {
+      // Keep track of the number of async transitions still running so we can warn.
+      ReactSharedInternals.asyncTransitions++;
+      thenable.then(releaseAsyncTransition, releaseAsyncTransition);
+    }
     // Attach a listener to read the return state of the action. As soon as
     // this resolves, we can run the next action in the sequence.
     thenable.then(
@@ -3026,6 +3031,12 @@ function updateDeferredValueImpl<T>(
   }
 }
 
+function releaseAsyncTransition() {
+  if (__DEV__) {
+    ReactSharedInternals.asyncTransitions--;
+  }
+}
+
 function startTransition<S>(
   fiber: Fiber,
   queue: UpdateQueue<S | Thenable<S>, BasicStateAction<S | Thenable<S>>>,
@@ -3083,6 +3094,11 @@ function startTransition<S>(
       typeof returnValue.then === 'function'
     ) {
       const thenable = ((returnValue: any): Thenable<mixed>);
+      if (__DEV__) {
+        // Keep track of the number of async transitions still running so we can warn.
+        ReactSharedInternals.asyncTransitions++;
+        thenable.then(releaseAsyncTransition, releaseAsyncTransition);
+      }
       // Create a thenable that resolves to `finishedState` once the async
       // action has completed.
       const thenableForFinishedState = chainThenableValue(
