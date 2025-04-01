@@ -557,10 +557,10 @@ exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
 exports.unstable_addTransitionType = function (type) {
   if (enableViewTransition) {
     var pendingTransitionTypes = ReactSharedInternals.V;
-    null === pendingTransitionTypes
-      ? (ReactSharedInternals.V = [type])
-      : -1 === pendingTransitionTypes.indexOf(type) &&
-        pendingTransitionTypes.push(type);
+    null === pendingTransitionTypes &&
+      (pendingTransitionTypes = ReactSharedInternals.V = []);
+    -1 === pendingTransitionTypes.indexOf(type) &&
+      pendingTransitionTypes.push(type);
   }
 };
 exports.unstable_getCacheForType = function (resourceType) {
@@ -631,7 +631,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-www-classic-8b2046d0-20250401";
+exports.version = "19.2.0-www-classic-0b1a9e90-20250401";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
