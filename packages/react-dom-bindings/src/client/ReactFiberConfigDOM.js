@@ -2258,25 +2258,10 @@ export function getCurrentGestureOffset(provider: GestureTimeline): number {
   return typeof time === 'number' ? time : time.value;
 }
 
-type EventListenerOptionsOrUseCapture =
-  | boolean
-  | {
-      capture?: boolean,
-      once?: boolean,
-      passive?: boolean,
-      signal?: AbortSignal,
-      ...
-    };
-
 type StoredEventListener = {
   type: string,
   listener: EventListener,
   optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
-};
-
-type FocusOptions = {
-  preventScroll?: boolean,
-  focusVisible?: boolean,
 };
 
 export type FragmentInstanceType = {
