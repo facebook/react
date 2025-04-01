@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<52d7bdfa5ac37b90f8a3635f89046ba6>>
+ * @generated SignedSource<<5a9d902743d3e713cc8e738e5df57a88>>
  */
 
 "use strict";
@@ -85,7 +85,7 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
-  ReactSharedInternals = { H: null, A: null, T: null, S: null, V: null },
+  ReactSharedInternals = { H: null, A: null, T: null, S: null },
   hasOwnProperty = Object.prototype.hasOwnProperty;
 function ReactElement(type, key, self, source, owner, props) {
   self = props.ref;
@@ -515,13 +515,7 @@ exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
 exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
-exports.unstable_addTransitionType = function (type) {
-  var pendingTransitionTypes = ReactSharedInternals.V;
-  null === pendingTransitionTypes
-    ? (ReactSharedInternals.V = [type])
-    : -1 === pendingTransitionTypes.indexOf(type) &&
-      pendingTransitionTypes.push(type);
-};
+exports.unstable_addTransitionType = function () {};
 exports.unstable_getCacheForType = function (resourceType) {
   var dispatcher = ReactSharedInternals.A;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
@@ -590,4 +584,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-native-fb-d3b8ff6e-20250331";
+exports.version = "19.2.0-native-fb-b286430c-20250331";
