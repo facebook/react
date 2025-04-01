@@ -865,14 +865,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           return 0;
         },
 
-        subscribeToGestureDirection(
-          provider: GestureTimeline,
-          currentOffset: number,
-          directionCallback: (direction: boolean) => void,
-        ): () => void {
-          return () => {};
-        },
-
         resetTextContent(instance: Instance): void {
           instance.text = null;
         },

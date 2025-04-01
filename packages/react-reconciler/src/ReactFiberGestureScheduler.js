@@ -17,11 +17,7 @@ import {
   includesTransitionLane,
 } from './ReactFiberLane';
 import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
-import {
-  subscribeToGestureDirection,
-  getCurrentGestureOffset,
-  stopViewTransition,
-} from './ReactFiberConfig';
+import {getCurrentGestureOffset, stopViewTransition} from './ReactFiberConfig';
 
 // This type keeps track of any scheduled or active gestures.
 export type ScheduledGesture = {
@@ -31,84 +27,10 @@ export type ScheduledGesture = {
   rangePrevious: number, // The end along the timeline where the previous state is reached.
   rangeCurrent: number, // The starting offset along the timeline.
   rangeNext: number, // The end along the timeline where the next state is reached.
-  cancel: () => void, // Cancel the subscription to direction change. // TODO: Delete this.
   running: null | RunningViewTransition, // Used to cancel the running transition after we're done.
   prev: null | ScheduledGesture, // The previous scheduled gesture in the queue for this root.
   next: null | ScheduledGesture, // The next scheduled gesture in the queue for this root.
 };
-
-// TODO: Delete this when deleting useSwipeTransition.
-export function scheduleGestureLegacy(
-  root: FiberRoot,
-  provider: GestureTimeline,
-  initialDirection: boolean,
-  rangePrevious: number,
-  rangeCurrent: number,
-  rangeNext: number,
-): ScheduledGesture {
-  let prev = root.pendingGestures;
-  while (prev !== null) {
-    if (prev.provider === provider) {
-      // Existing instance found.
-      prev.count++;
-      return prev;
-    }
-    const next = prev.next;
-    if (next === null) {
-      break;
-    }
-    prev = next;
-  }
-  const isFlippedDirection = rangePrevious > rangeNext;
-  // Add new instance to the end of the queue.
-  const cancel = subscribeToGestureDirection(
-    provider,
-    rangeCurrent,
-    (direction: boolean) => {
-      if (isFlippedDirection) {
-        direction = !direction;
-      }
-      if (gesture.direction !== direction) {
-        gesture.direction = direction;
-        if (gesture.prev === null && root.pendingGestures !== gesture) {
-          // This gesture is not in the schedule, meaning it was already rendered.
-          // We need to rerender in the new direction. Insert it into the first slot
-          // in case other gestures are queued after the on-going one.
-          const existing = root.pendingGestures;
-          gesture.next = existing;
-          if (existing !== null) {
-            existing.prev = gesture;
-          }
-          root.pendingGestures = gesture;
-          // Schedule the lane on the root. The Fibers will already be marked as
-          // long as the gesture is active on that Hook.
-          root.pendingLanes |= GestureLane;
-          ensureRootIsScheduled(root);
-        }
-        // TODO: If we're currently rendering this gesture, we need to restart it.
-      }
-    },
-  );
-  const gesture: ScheduledGesture = {
-    provider: provider,
-    count: 1,
-    direction: initialDirection,
-    rangePrevious: rangePrevious,
-    rangeCurrent: rangeCurrent,
-    rangeNext: rangeNext,
-    cancel: cancel,
-    running: null,
-    prev: prev,
-    next: null,
-  };
-  if (prev === null) {
-    root.pendingGestures = gesture;
-  } else {
-    prev.next = gesture;
-  }
-  ensureRootIsScheduled(root);
-  return gesture;
-}
 
 export function scheduleGesture(
   root: FiberRoot,
@@ -133,7 +55,6 @@ export function scheduleGesture(
     rangePrevious: -1,
     rangeCurrent: -1,
     rangeNext: -1,
-    cancel: () => {}, // TODO: Delete this with useSwipeTransition.
     running: null,
     prev: prev,
     next: null,
@@ -210,8 +131,6 @@ export function cancelScheduledGesture(
 ): void {
   gesture.count--;
   if (gesture.count === 0) {
-    const cancelDirectionSubscription = gesture.cancel;
-    cancelDirectionSubscription();
     // Delete the scheduled gesture from the pending queue.
     deleteScheduledGesture(root, gesture);
     // TODO: If we're currently rendering this gesture, we need to restart the render

@@ -16,7 +16,6 @@ import type {
   Usable,
   ReactCustomFormAction,
   Awaited,
-  StartGesture,
 } from 'shared/ReactTypes';
 
 import type {ResumableState} from './ReactFizzConfig';
@@ -39,10 +38,7 @@ import {
 } from './ReactFizzConfig';
 import {createFastHash} from './ReactServerStreamConfig';
 
-import {
-  enableUseEffectEventHook,
-  enableSwipeTransition,
-} from 'shared/ReactFeatureFlags';
+import {enableUseEffectEventHook} from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
   REACT_CONTEXT_TYPE,
@@ -799,19 +795,6 @@ function useMemoCache(size: number): Array<mixed> {
   return data;
 }
 
-function unsupportedStartGesture() {
-  throw new Error('startGesture cannot be called during server rendering.');
-}
-
-function useSwipeTransition<T>(
-  previous: T,
-  current: T,
-  next: T,
-): [T, StartGesture] {
-  resolveCurrentlyRenderingComponent();
-  return [current, unsupportedStartGesture];
-}
-
 function noop(): void {}
 
 function clientHookNotSupported() {
@@ -879,11 +862,6 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
 
 if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = useEffectEvent;
-}
-if (enableSwipeTransition) {
-  HooksDispatcher.useSwipeTransition = supportsClientAPIs
-    ? useSwipeTransition
-    : clientHookNotSupported;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);
