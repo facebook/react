@@ -17,6 +17,7 @@ import type {StackCursor} from './ReactFiberStack';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
 import type {Transition} from 'react/src/ReactStartTransition';
 import type {ScheduledGesture} from './ReactFiberGestureScheduler';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import {
   enableTransitionTracing,
@@ -112,6 +113,7 @@ if (enableGestureTransition) {
     transition: Transition,
     provider: GestureProvider,
     options: ?GestureOptions,
+    transitionTypes: null | TransitionTypes,
   ): () => void {
     let cancel = null;
     if (prevOnStartGestureTransitionFinish !== null) {
@@ -119,6 +121,7 @@ if (enableGestureTransition) {
         transition,
         provider,
         options,
+        transitionTypes,
       );
     }
     // For every root that has work scheduled, check if there's a ScheduledGesture
@@ -131,7 +134,12 @@ if (enableGestureTransition) {
     // that it's conceptually started globally.
     let root = firstScheduledRoot;
     while (root !== null) {
-      const scheduledGesture = startScheduledGesture(root, provider, options);
+      const scheduledGesture = startScheduledGesture(
+        root,
+        provider,
+        options,
+        transitionTypes,
+      );
       if (scheduledGesture !== null) {
         cancel = chainGestureCancellation(root, scheduledGesture, cancel);
       }

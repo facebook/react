@@ -10,6 +10,7 @@
 import type {FiberRoot} from './ReactInternalTypes';
 import type {GestureOptions} from 'shared/ReactTypes';
 import type {GestureTimeline, RunningViewTransition} from './ReactFiberConfig';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import {
   GestureLane,
@@ -25,6 +26,7 @@ export type ScheduledGesture = {
   count: number, // The number of times this same provider has been started.
   rangeStart: number, // The percentage along the timeline where the "current" state starts.
   rangeEnd: number, // The percentage along the timeline where the "destination" state is reached.
+  types: null | TransitionTypes, // Any addTransitionType call made during startGestureTransition.
   running: null | RunningViewTransition, // Used to cancel the running transition after we're done.
   prev: null | ScheduledGesture, // The previous scheduled gesture in the queue for this root.
   next: null | ScheduledGesture, // The next scheduled gesture in the queue for this root.
@@ -51,6 +53,7 @@ export function scheduleGesture(
     count: 0,
     rangeStart: 0, // Uninitialized
     rangeEnd: 100, // Uninitialized
+    types: null,
     running: null,
     prev: prev,
     next: null,
@@ -68,6 +71,7 @@ export function startScheduledGesture(
   root: FiberRoot,
   gestureTimeline: GestureTimeline,
   gestureOptions: ?GestureOptions,
+  transitionTypes: null | TransitionTypes,
 ): null | ScheduledGesture {
   const rangeStart =
     gestureOptions && gestureOptions.rangeStart != null
@@ -87,6 +91,18 @@ export function startScheduledGesture(
       // Update the options.
       prev.rangeStart = rangeStart;
       prev.rangeEnd = rangeEnd;
+      if (transitionTypes !== null) {
+        let scheduledTypes = prev.types;
+        if (scheduledTypes === null) {
+          scheduledTypes = prev.types = [];
+        }
+        for (let i = 0; i < transitionTypes.length; i++) {
+          const transitionType = transitionTypes[i];
+          if (scheduledTypes.indexOf(transitionType) === -1) {
+            scheduledTypes.push(transitionType);
+          }
+        }
+      }
       return prev;
     }
     const next = prev.next;

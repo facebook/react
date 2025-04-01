@@ -22,7 +22,7 @@ import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue'
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
-import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';

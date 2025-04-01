@@ -31,7 +31,7 @@ import {
   getViewTransitionName,
   type ViewTransitionState,
 } from './ReactFiberViewTransitionComponent';
-import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import {
   enableCreateEventHandleAPI,
@@ -3925,8 +3925,7 @@ function commitGestureOnRoot(
     setCurrentUpdatePriority(previousPriority);
     ReactSharedInternals.T = prevTransition;
   }
-  // TODO: Collect transition types.
-  pendingTransitionTypes = null;
+  pendingTransitionTypes = finishedGesture.types;
   pendingEffectsStatus = PENDING_GESTURE_MUTATION_PHASE;
 
   pendingViewTransition = finishedGesture.running = startGestureTransition(

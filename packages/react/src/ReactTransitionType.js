@@ -8,17 +8,51 @@
  */
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableViewTransition} from 'shared/ReactFeatureFlags';
+import {
+  enableViewTransition,
+  enableGestureTransition,
+} from 'shared/ReactFeatureFlags';
 
 export type TransitionTypes = Array<string>;
 
+// This one is only available synchronously so we don't need to use ReactSharedInternals
+// for this state. Instead, we track it in isomorphic and pass it to the renderer.
+export let pendingGestureTransitionTypes: null | TransitionTypes = null;
+
+export function pushPendingGestureTransitionTypes(): null | TransitionTypes {
+  const prev = pendingGestureTransitionTypes;
+  pendingGestureTransitionTypes = null;
+  return prev;
+}
+
+export function popPendingGestureTransitionTypes(
+  prev: null | TransitionTypes,
+): void {
+  pendingGestureTransitionTypes = prev;
+}
+
 export function addTransitionType(type: string): void {
   if (enableViewTransition) {
-    const pendingTransitionTypes: null | TransitionTypes =
-      ReactSharedInternals.V;
-    if (pendingTransitionTypes === null) {
-      ReactSharedInternals.V = [type];
-    } else if (pendingTransitionTypes.indexOf(type) === -1) {
+    let pendingTransitionTypes: null | TransitionTypes;
+    if (
+      enableGestureTransition &&
+      ReactSharedInternals.T !== null &&
+      ReactSharedInternals.T.gesture !== null
+    ) {
+      // We're inside a startGestureTransition which is always sync.
+      pendingTransitionTypes = pendingGestureTransitionTypes;
+      if (pendingTransitionTypes === null) {
+        pendingTransitionTypes = pendingGestureTransitionTypes = [];
+      }
+    } else {
+      // Otherwise we're either inside a synchronous startTransition
+      // or in the async gap of one, which we track globally.
+      pendingTransitionTypes = ReactSharedInternals.V;
+      if (pendingTransitionTypes === null) {
+        pendingTransitionTypes = ReactSharedInternals.V = [];
+      }
+    }
+    if (pendingTransitionTypes.indexOf(type) === -1) {
       pendingTransitionTypes.push(type);
     }
   }

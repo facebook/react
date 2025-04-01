@@ -8,7 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
