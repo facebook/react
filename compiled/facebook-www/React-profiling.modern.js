@@ -21,6 +21,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
+  enableViewTransition = dynamicFeatureFlags.enableViewTransition,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
     ? Symbol.for("react.transitional.element")
@@ -94,8 +95,9 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
-  ReactSharedInternals = { H: null, A: null, T: null, S: null, V: null },
-  hasOwnProperty = Object.prototype.hasOwnProperty;
+  ReactSharedInternals = { H: null, A: null, T: null, S: null };
+enableViewTransition && (ReactSharedInternals.V = null);
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 function ReactElement(type, key, self, source, owner, props) {
   self = props.ref;
   return {
@@ -553,11 +555,13 @@ exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
 exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
 exports.unstable_addTransitionType = function (type) {
-  var pendingTransitionTypes = ReactSharedInternals.V;
-  null === pendingTransitionTypes
-    ? (ReactSharedInternals.V = [type])
-    : -1 === pendingTransitionTypes.indexOf(type) &&
-      pendingTransitionTypes.push(type);
+  if (enableViewTransition) {
+    var pendingTransitionTypes = ReactSharedInternals.V;
+    null === pendingTransitionTypes
+      ? (ReactSharedInternals.V = [type])
+      : -1 === pendingTransitionTypes.indexOf(type) &&
+        pendingTransitionTypes.push(type);
+  }
 };
 exports.unstable_getCacheForType = function (resourceType) {
   var dispatcher = ReactSharedInternals.A;
@@ -627,7 +631,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-www-modern-d3b8ff6e-20250331";
+exports.version = "19.2.0-www-modern-b286430c-20250331";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

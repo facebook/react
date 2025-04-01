@@ -124,6 +124,7 @@ export default [
   "Cannot update a component (`%s`) while rendering a different component (`%s`). To locate the bad setState() call inside `%s`, follow the stack trace as described in https://react.dev/link/setstate-in-render",
   "Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state.",
   "Cannot update the \"is\" prop after it has been initialized.",
+  "Cannot use an async function in startGestureTransition. It must be able to start immediately.",
   "Changing the name of a tracing marker after mount is not supported. To remount the tracing marker, pass it a new key.",
   "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo().",
   "Detected a large number of updates inside startTransition. If this is due to a subscription please re-write it to use React provided hooks. Otherwise concurrent mode guarantees are off the table.",

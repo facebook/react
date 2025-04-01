@@ -4479,6 +4479,7 @@ __DEV__ &&
                   {
                     lane: 0,
                     revertLane: 0,
+                    gesture: null,
                     action: update.action,
                     hasEagerState: update.hasEagerState,
                     eagerState: update.eagerState,
@@ -4495,6 +4496,7 @@ __DEV__ &&
               (updateLane = {
                 lane: 0,
                 revertLane: update.revertLane,
+                gesture: null,
                 action: update.action,
                 hasEagerState: update.hasEagerState,
                 eagerState: update.eagerState,
@@ -4516,6 +4518,7 @@ __DEV__ &&
             (revertLane = {
               lane: updateLane,
               revertLane: update.revertLane,
+              gesture: update.gesture,
               action: update.action,
               hasEagerState: update.hasEagerState,
               eagerState: update.eagerState,
@@ -5342,6 +5345,7 @@ __DEV__ &&
       var update = {
         lane: args,
         revertLane: 0,
+        gesture: null,
         action: action,
         hasEagerState: !1,
         eagerState: null,
@@ -5367,6 +5371,7 @@ __DEV__ &&
       var update = {
         lane: lane,
         revertLane: 0,
+        gesture: null,
         action: action,
         hasEagerState: !1,
         eagerState: null,
@@ -5423,6 +5428,7 @@ __DEV__ &&
       action = {
         lane: 2,
         revertLane: requestTransitionLane(),
+        gesture: null,
         action: action,
         hasEagerState: !1,
         eagerState: null,
@@ -15031,10 +15037,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-d3b8ff6e-20250331",
+        version: "19.2.0-www-classic-b286430c-20250331",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-d3b8ff6e-20250331"
+        reconcilerVersion: "19.2.0-www-classic-b286430c-20250331"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15169,5 +15175,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-classic-d3b8ff6e-20250331";
+    exports.version = "19.2.0-www-classic-b286430c-20250331";
   })();

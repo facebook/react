@@ -3146,6 +3146,7 @@ module.exports = function ($$$config) {
                 {
                   lane: 0,
                   revertLane: 0,
+                  gesture: null,
                   action: update.action,
                   hasEagerState: update.hasEagerState,
                   eagerState: update.eagerState,
@@ -3162,6 +3163,7 @@ module.exports = function ($$$config) {
             (updateLane = {
               lane: 0,
               revertLane: update.revertLane,
+              gesture: null,
               action: update.action,
               hasEagerState: update.hasEagerState,
               eagerState: update.eagerState,
@@ -3183,6 +3185,7 @@ module.exports = function ($$$config) {
           (revertLane = {
             lane: updateLane,
             revertLane: update.revertLane,
+            gesture: update.gesture,
             action: update.action,
             hasEagerState: update.hasEagerState,
             eagerState: update.eagerState,
@@ -3867,6 +3870,7 @@ module.exports = function ($$$config) {
     action = {
       lane: lane,
       revertLane: 0,
+      gesture: null,
       action: action,
       hasEagerState: !1,
       eagerState: null,
@@ -3887,6 +3891,7 @@ module.exports = function ($$$config) {
     var update = {
       lane: lane,
       revertLane: 0,
+      gesture: null,
       action: action,
       hasEagerState: !1,
       eagerState: null,
@@ -3933,6 +3938,7 @@ module.exports = function ($$$config) {
     action = {
       lane: 2,
       revertLane: requestTransitionLane(),
+      gesture: null,
       action: action,
       hasEagerState: !1,
       eagerState: null,
@@ -13723,7 +13729,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-d3b8ff6e-20250331"
+      reconcilerVersion: "19.2.0-www-classic-b286430c-20250331"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

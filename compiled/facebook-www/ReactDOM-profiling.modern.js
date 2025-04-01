@@ -4475,6 +4475,7 @@ function updateReducerImpl(hook, current, reducer) {
               {
                 lane: 0,
                 revertLane: 0,
+                gesture: null,
                 action: update.action,
                 hasEagerState: update.hasEagerState,
                 eagerState: update.eagerState,
@@ -4491,6 +4492,7 @@ function updateReducerImpl(hook, current, reducer) {
           (updateLane = {
             lane: 0,
             revertLane: update.revertLane,
+            gesture: null,
             action: update.action,
             hasEagerState: update.hasEagerState,
             eagerState: update.eagerState,
@@ -4512,6 +4514,7 @@ function updateReducerImpl(hook, current, reducer) {
         (revertLane = {
           lane: updateLane,
           revertLane: update.revertLane,
+          gesture: update.gesture,
           action: update.action,
           hasEagerState: update.hasEagerState,
           eagerState: update.eagerState,
@@ -5231,6 +5234,7 @@ function dispatchReducerAction(fiber, queue, action) {
   action = {
     lane: lane,
     revertLane: 0,
+    gesture: null,
     action: action,
     hasEagerState: !1,
     eagerState: null,
@@ -5255,6 +5259,7 @@ function dispatchSetStateInternal(fiber, queue, action, lane) {
   var update = {
     lane: lane,
     revertLane: 0,
+    gesture: null,
     action: action,
     hasEagerState: !1,
     eagerState: null,
@@ -5296,6 +5301,7 @@ function dispatchOptimisticSetState(fiber, throwIfDuringRender, queue, action) {
   action = {
     lane: 2,
     revertLane: requestTransitionLane(),
+    gesture: null,
     action: action,
     hasEagerState: !1,
     eagerState: null,
@@ -20358,14 +20364,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2125 = React.version;
 if (
-  "19.2.0-www-modern-d3b8ff6e-20250331" !==
+  "19.2.0-www-modern-b286430c-20250331" !==
   isomorphicReactPackageVersion$jscomp$inline_2125
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2125,
-      "19.2.0-www-modern-d3b8ff6e-20250331"
+      "19.2.0-www-modern-b286430c-20250331"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20383,10 +20389,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2127 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-d3b8ff6e-20250331",
+  version: "19.2.0-www-modern-b286430c-20250331",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-d3b8ff6e-20250331"
+  reconcilerVersion: "19.2.0-www-modern-b286430c-20250331"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2127.getLaneLabelMap = getLaneLabelMap),
@@ -20753,7 +20759,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-d3b8ff6e-20250331";
+exports.version = "19.2.0-www-modern-b286430c-20250331";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

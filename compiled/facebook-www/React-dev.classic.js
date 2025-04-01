@@ -768,21 +768,16 @@ __DEV__ &&
     fnName.isPureReactComponent = !0;
     var isArrayImpl = Array.isArray,
       REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
-      ReactSharedInternals = {
-        H: null,
-        A: null,
-        T: null,
-        S: null,
-        V: null,
-        actQueue: null,
-        isBatchingLegacy: !1,
-        didScheduleLegacyUpdate: !1,
-        didUsePromise: !1,
-        thrownErrors: [],
-        getCurrentStack: null,
-        recentlyCreatedOwnerStacks: 0
-      },
-      hasOwnProperty = Object.prototype.hasOwnProperty,
+      ReactSharedInternals = { H: null, A: null, T: null, S: null };
+    enableViewTransition && (ReactSharedInternals.V = null);
+    ReactSharedInternals.actQueue = null;
+    ReactSharedInternals.isBatchingLegacy = !1;
+    ReactSharedInternals.didScheduleLegacyUpdate = !1;
+    ReactSharedInternals.didUsePromise = !1;
+    ReactSharedInternals.thrownErrors = [];
+    ReactSharedInternals.getCurrentStack = null;
+    ReactSharedInternals.recentlyCreatedOwnerStacks = 0;
+    var hasOwnProperty = Object.prototype.hasOwnProperty,
       createTask = console.createTask
         ? console.createTask
         : function () {
@@ -1411,11 +1406,13 @@ __DEV__ &&
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
     exports.unstable_addTransitionType = function (type) {
-      var pendingTransitionTypes = ReactSharedInternals.V;
-      null === pendingTransitionTypes
-        ? (ReactSharedInternals.V = [type])
-        : -1 === pendingTransitionTypes.indexOf(type) &&
-          pendingTransitionTypes.push(type);
+      if (enableViewTransition) {
+        var pendingTransitionTypes = ReactSharedInternals.V;
+        null === pendingTransitionTypes
+          ? (ReactSharedInternals.V = [type])
+          : -1 === pendingTransitionTypes.indexOf(type) &&
+            pendingTransitionTypes.push(type);
+      }
     };
     exports.unstable_getCacheForType = function (resourceType) {
       var dispatcher = ReactSharedInternals.A;
@@ -1510,7 +1507,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-www-classic-d3b8ff6e-20250331";
+    exports.version = "19.2.0-www-classic-b286430c-20250331";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
