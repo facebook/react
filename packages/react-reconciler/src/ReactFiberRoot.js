@@ -112,10 +112,7 @@ function FiberRootNode(
   this.incompleteTransitions = new Map();
   if (enableTransitionTracing) {
     this.transitionCallbacks = null;
-    const transitionLanesMap = (this.transitionLanes = []);
-    for (let i = 0; i < TotalLanes; i++) {
-      transitionLanesMap.push(null);
-    }
+    this.transitionLanes = createLaneMap(null);
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
