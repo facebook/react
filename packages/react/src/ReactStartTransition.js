@@ -13,23 +13,20 @@ import type {
   GestureProvider,
   GestureOptions,
 } from 'shared/ReactTypes';
+import type {TransitionTypes} from './ReactTransitionType';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {
   enableTransitionTracing,
+  enableViewTransition,
   enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
-
-import {
-  pendingGestureTransitionTypes,
-  pushPendingGestureTransitionTypes,
-  popPendingGestureTransitionTypes,
-} from './ReactTransitionType';
 
 import reportGlobalError from 'shared/reportGlobalError';
 
 export type Transition = {
+  types: null | TransitionTypes, // enableViewTransition
   gesture: null | GestureProvider, // enableGestureTransition
   name: null | string, // enableTransitionTracing only
   startTime: number, // enableTransitionTracing only
@@ -49,6 +46,17 @@ export function startTransition(
 ): void {
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
+  if (enableViewTransition) {
+    currentTransition.types =
+      prevTransition !== null
+        ? // If we're a nested transition, we should use the same set as the parent
+          // since we're conceptually always joined into the same entangled transition.
+          // In practice, this only matters if we add transition types in the inner
+          // without setting state. In that case, the inner transition can finish
+          // without waiting for the outer.
+          prevTransition.types
+        : null;
+  }
   if (enableGestureTransition) {
     currentTransition.gesture = null;
   }
@@ -84,6 +92,24 @@ export function startTransition(
     reportGlobalError(error);
   } finally {
     warnAboutTransitionSubscriptions(prevTransition, currentTransition);
+    if (prevTransition !== null && currentTransition.types !== null) {
+      // If we created a new types set in the inner transition, we transfer it to the parent
+      // since they should share the same set. They're conceptually entangled.
+      if (__DEV__) {
+        if (
+          prevTransition.types !== null &&
+          prevTransition.types !== currentTransition.types
+        ) {
+          // Just assert that assumption holds that we're not overriding anything.
+          console.error(
+            'We expected inner Transitions to have transferred the outer types set and ' +
+              'that you cannot add to the outer Transition while inside the inner.' +
+              'This is a bug in React.',
+          );
+        }
+      }
+      prevTransition.types = currentTransition.types;
+    }
     ReactSharedInternals.T = prevTransition;
   }
 }
@@ -109,6 +135,9 @@ export function startGestureTransition(
   }
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
+  if (enableViewTransition) {
+    currentTransition.types = null;
+  }
   if (enableGestureTransition) {
     currentTransition.gesture = provider;
   }
@@ -121,8 +150,6 @@ export function startGestureTransition(
     currentTransition._updatedFibers = new Set();
   }
   ReactSharedInternals.T = currentTransition;
-
-  const prevTransitionTypes = pushPendingGestureTransitionTypes();
 
   try {
     const returnValue = scope();
@@ -137,20 +164,17 @@ export function startGestureTransition(
         );
       }
     }
-    const transitionTypes = pendingGestureTransitionTypes;
     const onStartGestureTransitionFinish = ReactSharedInternals.G;
     if (onStartGestureTransitionFinish !== null) {
       return onStartGestureTransitionFinish(
         currentTransition,
         provider,
         options,
-        transitionTypes,
       );
     }
   } catch (error) {
     reportGlobalError(error);
   } finally {
-    popPendingGestureTransitionTypes(prevTransitionTypes);
     ReactSharedInternals.T = prevTransition;
   }
   return function cancelGesture() {

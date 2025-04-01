@@ -10,20 +10,15 @@
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Transition} from './ReactStartTransition';
-import type {TransitionTypes} from './ReactTransitionType';
 import type {GestureProvider, GestureOptions} from 'shared/ReactTypes';
 
-import {
-  enableViewTransition,
-  enableGestureTransition,
-} from 'shared/ReactFeatureFlags';
+import {enableGestureTransition} from 'shared/ReactFeatureFlags';
 
 type onStartTransitionFinish = (Transition, mixed) => void;
 type onStartGestureTransitionFinish = (
   Transition,
   GestureProvider,
   ?GestureOptions,
-  transitionTypes: null | TransitionTypes,
 ) => () => void;
 
 export type SharedStateClient = {
@@ -32,7 +27,6 @@ export type SharedStateClient = {
   T: null | Transition, // ReactCurrentBatchConfig for Transitions
   S: null | onStartTransitionFinish,
   G: null | onStartGestureTransitionFinish,
-  V: null | TransitionTypes, // Pending Transition Types for the Next Transition
 
   // DEV-only
 
@@ -71,9 +65,6 @@ const ReactSharedInternals: SharedStateClient = ({
 }: any);
 if (enableGestureTransition) {
   ReactSharedInternals.G = null;
-}
-if (enableViewTransition) {
-  ReactSharedInternals.V = null;
 }
 
 if (__DEV__) {

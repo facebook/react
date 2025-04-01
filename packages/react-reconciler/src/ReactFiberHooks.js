@@ -42,6 +42,7 @@ import {
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
+  enableViewTransition,
   enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -2159,6 +2160,17 @@ function runActionStateAction<S, P>(
     // This is a fork of startTransition
     const prevTransition = ReactSharedInternals.T;
     const currentTransition: Transition = ({}: any);
+    if (enableViewTransition) {
+      currentTransition.types =
+        prevTransition !== null
+          ? // If we're a nested transition, we should use the same set as the parent
+            // since we're conceptually always joined into the same entangled transition.
+            // In practice, this only matters if we add transition types in the inner
+            // without setting state. In that case, the inner transition can finish
+            // without waiting for the outer.
+            prevTransition.types
+          : null;
+    }
     if (enableGestureTransition) {
       currentTransition.gesture = null;
     }
@@ -2180,6 +2192,24 @@ function runActionStateAction<S, P>(
     } catch (error) {
       onActionError(actionQueue, node, error);
     } finally {
+      if (prevTransition !== null && currentTransition.types !== null) {
+        // If we created a new types set in the inner transition, we transfer it to the parent
+        // since they should share the same set. They're conceptually entangled.
+        if (__DEV__) {
+          if (
+            prevTransition.types !== null &&
+            prevTransition.types !== currentTransition.types
+          ) {
+            // Just assert that assumption holds that we're not overriding anything.
+            console.error(
+              'We expected inner Transitions to have transferred the outer types set and ' +
+                'that you cannot add to the outer Transition while inside the inner.' +
+                'This is a bug in React.',
+            );
+          }
+        }
+        prevTransition.types = currentTransition.types;
+      }
       ReactSharedInternals.T = prevTransition;
 
       if (__DEV__) {
@@ -3052,6 +3082,17 @@ function startTransition<S>(
 
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
+  if (enableViewTransition) {
+    currentTransition.types =
+      prevTransition !== null
+        ? // If we're a nested transition, we should use the same set as the parent
+          // since we're conceptually always joined into the same entangled transition.
+          // In practice, this only matters if we add transition types in the inner
+          // without setting state. In that case, the inner transition can finish
+          // without waiting for the outer.
+          prevTransition.types
+        : null;
+  }
   if (enableGestureTransition) {
     currentTransition.gesture = null;
   }
@@ -3137,6 +3178,24 @@ function startTransition<S>(
   } finally {
     setCurrentUpdatePriority(previousPriority);
 
+    if (prevTransition !== null && currentTransition.types !== null) {
+      // If we created a new types set in the inner transition, we transfer it to the parent
+      // since they should share the same set. They're conceptually entangled.
+      if (__DEV__) {
+        if (
+          prevTransition.types !== null &&
+          prevTransition.types !== currentTransition.types
+        ) {
+          // Just assert that assumption holds that we're not overriding anything.
+          console.error(
+            'We expected inner Transitions to have transferred the outer types set and ' +
+              'that you cannot add to the outer Transition while inside the inner.' +
+              'This is a bug in React.',
+          );
+        }
+      }
+      prevTransition.types = currentTransition.types;
+    }
     ReactSharedInternals.T = prevTransition;
 
     if (__DEV__) {

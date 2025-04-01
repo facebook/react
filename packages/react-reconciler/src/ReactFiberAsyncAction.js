@@ -25,6 +25,7 @@ import {
   enableComponentPerformanceTrack,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
+import {clearEntangledAsyncTransitionTypes} from './ReactFiberTransitionTypes';
 
 // If there are multiple, concurrent async actions, they are entangled. All
 // transition updates that occur while the async action is still in progress
@@ -84,6 +85,7 @@ function pingEngtangledActionScope() {
         clearAsyncTransitionTimer();
       }
     }
+    clearEntangledAsyncTransitionTypes();
     if (currentEntangledListeners !== null) {
       // All the actions have finished. Close the entangled async action scope
       // and notify all the listeners.
