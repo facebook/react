@@ -1197,6 +1197,21 @@ module.exports = function ($$$config) {
         cache.controller.abort();
       });
   }
+  function queueTransitionTypes(root, transitionTypes) {
+    if (enableViewTransition && 0 !== (root.pendingLanes & 4194048)) {
+      var queued = root.transitionTypes;
+      null === queued && (queued = root.transitionTypes = []);
+      for (root = 0; root < transitionTypes.length; root++) {
+        var transitionType = transitionTypes[root];
+        -1 === queued.indexOf(transitionType) && queued.push(transitionType);
+      }
+    }
+  }
+  function claimQueuedTransitionTypes(root) {
+    var claimed = root.transitionTypes;
+    root.transitionTypes = null;
+    return claimed;
+  }
   function ensureRootIsScheduled(root) {
     root !== lastScheduledRoot &&
       null === root.next &&
@@ -1428,7 +1443,7 @@ module.exports = function ($$$config) {
   function pingEngtangledActionScope() {
     if (
       0 === --currentEntangledPendingCount &&
-      null !== currentEntangledListeners
+      ((entangledTransitionTypes = null), null !== currentEntangledListeners)
     ) {
       null !== currentEntangledActionThenable &&
         (currentEntangledActionThenable.status = "fulfilled");
@@ -2990,7 +3005,7 @@ module.exports = function ($$$config) {
       var newBaseQueueFirst = (baseFirst = null),
         newBaseQueueLast = null,
         update = current,
-        didReadFromEntangledAsyncAction$56 = !1;
+        didReadFromEntangledAsyncAction$57 = !1;
       do {
         var updateLane = update.lane & -536870913;
         if (
@@ -3012,11 +3027,11 @@ module.exports = function ($$$config) {
                   next: null
                 }),
               updateLane === currentEntangledLane &&
-                (didReadFromEntangledAsyncAction$56 = !0);
+                (didReadFromEntangledAsyncAction$57 = !0);
           else if ((renderLanes & revertLane) === revertLane) {
             update = update.next;
             revertLane === currentEntangledLane &&
-              (didReadFromEntangledAsyncAction$56 = !0);
+              (didReadFromEntangledAsyncAction$57 = !0);
             continue;
           } else
             (updateLane = {
@@ -3064,7 +3079,7 @@ module.exports = function ($$$config) {
       if (
         !objectIs(pendingQueue, hook.memoizedState) &&
         ((didReceiveUpdate = !0),
-        didReadFromEntangledAsyncAction$56 &&
+        didReadFromEntangledAsyncAction$57 &&
           ((reducer = currentEntangledActionThenable), null !== reducer))
       )
         throw reducer;
@@ -3251,6 +3266,9 @@ module.exports = function ($$$config) {
     if (node.isTransition) {
       var prevTransition = ReactSharedInternals.T,
         currentTransition = {};
+      enableViewTransition &&
+        (currentTransition.types =
+          null !== prevTransition ? prevTransition.types : null);
       enableTransitionTracing &&
         ((currentTransition.name = null), (currentTransition.startTime = -1));
       ReactSharedInternals.T = currentTransition;
@@ -3263,14 +3281,17 @@ module.exports = function ($$$config) {
       } catch (error) {
         onActionError(actionQueue, node, error);
       } finally {
-        ReactSharedInternals.T = prevTransition;
+        null !== prevTransition &&
+          null !== currentTransition.types &&
+          (prevTransition.types = currentTransition.types),
+          (ReactSharedInternals.T = prevTransition);
       }
     } else
       try {
         (prevTransition = action(prevState, payload)),
           handleActionReturnValue(actionQueue, node, prevTransition);
-      } catch (error$60) {
-        onActionError(actionQueue, node, error$60);
+      } catch (error$61) {
+        onActionError(actionQueue, node, error$61);
       }
   }
   function handleActionReturnValue(actionQueue, node, returnValue) {
@@ -3613,6 +3634,9 @@ module.exports = function ($$$config) {
     );
     var prevTransition = ReactSharedInternals.T,
       currentTransition = {};
+    enableViewTransition &&
+      (currentTransition.types =
+        null !== prevTransition ? prevTransition.types : null);
     enableTransitionTracing &&
       ((currentTransition.name =
         void 0 !== options && void 0 !== options.name ? options.name : null),
@@ -3655,6 +3679,9 @@ module.exports = function ($$$config) {
       );
     } finally {
       setCurrentUpdatePriority(previousPriority),
+        null !== prevTransition &&
+          null !== currentTransition.types &&
+          (prevTransition.types = currentTransition.types),
         (ReactSharedInternals.T = prevTransition);
     }
   }
@@ -3902,9 +3929,9 @@ module.exports = function ($$$config) {
       (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
     ) {
       newProps === baseProps && (newProps = assign({}, newProps));
-      for (var propName$62 in Component)
-        void 0 === newProps[propName$62] &&
-          (newProps[propName$62] = Component[propName$62]);
+      for (var propName$63 in Component)
+        void 0 === newProps[propName$63] &&
+          (newProps[propName$63] = Component[propName$63]);
     }
     return newProps;
   }
@@ -6331,44 +6358,44 @@ module.exports = function ($$$config) {
         needsVisibilityToggle = needsVisibilityToggle.sibling;
       }
     else if (supportsPersistence)
-      for (var node$105 = workInProgress.child; null !== node$105; ) {
-        if (5 === node$105.tag) {
-          var instance = node$105.stateNode;
+      for (var node$106 = workInProgress.child; null !== node$106; ) {
+        if (5 === node$106.tag) {
+          var instance = node$106.stateNode;
           needsVisibilityToggle &&
             isHidden &&
             (instance = cloneHiddenInstance(
               instance,
-              node$105.type,
-              node$105.memoizedProps
+              node$106.type,
+              node$106.memoizedProps
             ));
           appendInitialChild(parent, instance);
-        } else if (6 === node$105.tag)
-          (instance = node$105.stateNode),
+        } else if (6 === node$106.tag)
+          (instance = node$106.stateNode),
             needsVisibilityToggle &&
               isHidden &&
               (instance = cloneHiddenTextInstance(
                 instance,
-                node$105.memoizedProps
+                node$106.memoizedProps
               )),
             appendInitialChild(parent, instance);
-        else if (4 !== node$105.tag)
-          if (22 === node$105.tag && null !== node$105.memoizedState)
-            (instance = node$105.child),
-              null !== instance && (instance.return = node$105),
-              appendAllChildren(parent, node$105, !0, !0);
-          else if (null !== node$105.child) {
-            node$105.child.return = node$105;
-            node$105 = node$105.child;
+        else if (4 !== node$106.tag)
+          if (22 === node$106.tag && null !== node$106.memoizedState)
+            (instance = node$106.child),
+              null !== instance && (instance.return = node$106),
+              appendAllChildren(parent, node$106, !0, !0);
+          else if (null !== node$106.child) {
+            node$106.child.return = node$106;
+            node$106 = node$106.child;
             continue;
           }
-        if (node$105 === workInProgress) break;
-        for (; null === node$105.sibling; ) {
-          if (null === node$105.return || node$105.return === workInProgress)
+        if (node$106 === workInProgress) break;
+        for (; null === node$106.sibling; ) {
+          if (null === node$106.return || node$106.return === workInProgress)
             return;
-          node$105 = node$105.return;
+          node$106 = node$106.return;
         }
-        node$105.sibling.return = node$105.return;
-        node$105 = node$105.sibling;
+        node$106.sibling.return = node$106.return;
+        node$106 = node$106.sibling;
       }
   }
   function appendAllChildrenToContainer(
@@ -6438,31 +6465,31 @@ module.exports = function ($$$config) {
       current.memoizedProps !== newProps && markUpdate(workInProgress);
     else if (supportsPersistence) {
       var currentInstance = current.stateNode,
-        oldProps$108 = current.memoizedProps;
+        oldProps$109 = current.memoizedProps;
       if (
         (current = doesRequireClone(current, workInProgress)) ||
-        oldProps$108 !== newProps
+        oldProps$109 !== newProps
       ) {
         var currentHostContext = contextStackCursor.current;
-        oldProps$108 = cloneInstance(
+        oldProps$109 = cloneInstance(
           currentInstance,
           type,
-          oldProps$108,
+          oldProps$109,
           newProps,
           !current,
           null
         );
-        oldProps$108 === currentInstance
+        oldProps$109 === currentInstance
           ? (workInProgress.stateNode = currentInstance)
           : (finalizeInitialChildren(
-              oldProps$108,
+              oldProps$109,
               type,
               newProps,
               currentHostContext
             ) && markUpdate(workInProgress),
-            (workInProgress.stateNode = oldProps$108),
+            (workInProgress.stateNode = oldProps$109),
             current
-              ? appendAllChildren(oldProps$108, workInProgress, !1, !1)
+              ? appendAllChildren(oldProps$109, workInProgress, !1, !1)
               : markUpdate(workInProgress));
       } else workInProgress.stateNode = currentInstance;
     }
@@ -6513,15 +6540,15 @@ module.exports = function ($$$config) {
           break;
         case "collapsed":
           lastTailNode = renderState.tail;
-          for (var lastTailNode$110 = null; null !== lastTailNode; )
+          for (var lastTailNode$111 = null; null !== lastTailNode; )
             null !== lastTailNode.alternate &&
-              (lastTailNode$110 = lastTailNode),
+              (lastTailNode$111 = lastTailNode),
               (lastTailNode = lastTailNode.sibling);
-          null === lastTailNode$110
+          null === lastTailNode$111
             ? hasRenderedATailFallback || null === renderState.tail
               ? (renderState.tail = null)
               : (renderState.tail.sibling = null)
-            : (lastTailNode$110.sibling = null);
+            : (lastTailNode$111.sibling = null);
       }
   }
   function bubbleProperties(completedWork) {
@@ -6531,19 +6558,19 @@ module.exports = function ($$$config) {
       newChildLanes = 0,
       subtreeFlags = 0;
     if (didBailout)
-      for (var child$111 = completedWork.child; null !== child$111; )
-        (newChildLanes |= child$111.lanes | child$111.childLanes),
-          (subtreeFlags |= child$111.subtreeFlags & 65011712),
-          (subtreeFlags |= child$111.flags & 65011712),
-          (child$111.return = completedWork),
-          (child$111 = child$111.sibling);
+      for (var child$112 = completedWork.child; null !== child$112; )
+        (newChildLanes |= child$112.lanes | child$112.childLanes),
+          (subtreeFlags |= child$112.subtreeFlags & 65011712),
+          (subtreeFlags |= child$112.flags & 65011712),
+          (child$112.return = completedWork),
+          (child$112 = child$112.sibling);
     else
-      for (child$111 = completedWork.child; null !== child$111; )
-        (newChildLanes |= child$111.lanes | child$111.childLanes),
-          (subtreeFlags |= child$111.subtreeFlags),
-          (subtreeFlags |= child$111.flags),
-          (child$111.return = completedWork),
-          (child$111 = child$111.sibling);
+      for (child$112 = completedWork.child; null !== child$112; )
+        (newChildLanes |= child$112.lanes | child$112.childLanes),
+          (subtreeFlags |= child$112.subtreeFlags),
+          (subtreeFlags |= child$112.flags),
+          (child$112.return = completedWork),
+          (child$112 = child$112.sibling);
     completedWork.subtreeFlags |= subtreeFlags;
     completedWork.childLanes = newChildLanes;
     return didBailout;
@@ -6821,11 +6848,11 @@ module.exports = function ($$$config) {
             null !== newProps.alternate.memoizedState &&
             null !== newProps.alternate.memoizedState.cachePool &&
             (nextResource = newProps.alternate.memoizedState.cachePool.pool);
-          var cache$125 = null;
+          var cache$126 = null;
           null !== newProps.memoizedState &&
             null !== newProps.memoizedState.cachePool &&
-            (cache$125 = newProps.memoizedState.cachePool.pool);
-          cache$125 !== nextResource && (newProps.flags |= 2048);
+            (cache$126 = newProps.memoizedState.cachePool.pool);
+          cache$126 !== nextResource && (newProps.flags |= 2048);
         }
         renderLanes !== current &&
           (enableTransitionTracing && (workInProgress.child.flags |= 2048),
@@ -6861,8 +6888,8 @@ module.exports = function ($$$config) {
         if (null === nextResource)
           return bubbleProperties(workInProgress), null;
         newProps = 0 !== (workInProgress.flags & 128);
-        cache$125 = nextResource.rendering;
-        if (null === cache$125)
+        cache$126 = nextResource.rendering;
+        if (null === cache$126)
           if (newProps) cutOffTailIfNeeded(nextResource, !1);
           else {
             if (
@@ -6870,11 +6897,11 @@ module.exports = function ($$$config) {
               (null !== current && 0 !== (current.flags & 128))
             )
               for (current = workInProgress.child; null !== current; ) {
-                cache$125 = findFirstSuspended(current);
-                if (null !== cache$125) {
+                cache$126 = findFirstSuspended(current);
+                if (null !== cache$126) {
                   workInProgress.flags |= 128;
                   cutOffTailIfNeeded(nextResource, !1);
-                  current = cache$125.updateQueue;
+                  current = cache$126.updateQueue;
                   workInProgress.updateQueue = current;
                   scheduleRetryEffect(workInProgress, current);
                   workInProgress.subtreeFlags = 0;
@@ -6903,7 +6930,7 @@ module.exports = function ($$$config) {
           }
         else {
           if (!newProps)
-            if (((current = findFirstSuspended(cache$125)), null !== current)) {
+            if (((current = findFirstSuspended(cache$126)), null !== current)) {
               if (
                 ((workInProgress.flags |= 128),
                 (newProps = !0),
@@ -6913,7 +6940,7 @@ module.exports = function ($$$config) {
                 cutOffTailIfNeeded(nextResource, !0),
                 null === nextResource.tail &&
                   "hidden" === nextResource.tailMode &&
-                  !cache$125.alternate &&
+                  !cache$126.alternate &&
                   !isHydrating)
               )
                 return bubbleProperties(workInProgress), null;
@@ -6926,13 +6953,13 @@ module.exports = function ($$$config) {
                 cutOffTailIfNeeded(nextResource, !1),
                 (workInProgress.lanes = 4194304));
           nextResource.isBackwards
-            ? ((cache$125.sibling = workInProgress.child),
-              (workInProgress.child = cache$125))
+            ? ((cache$126.sibling = workInProgress.child),
+              (workInProgress.child = cache$126))
             : ((current = nextResource.last),
               null !== current
-                ? (current.sibling = cache$125)
-                : (workInProgress.child = cache$125),
-              (nextResource.last = cache$125));
+                ? (current.sibling = cache$126)
+                : (workInProgress.child = cache$126),
+              (nextResource.last = cache$126));
         }
         if (null !== nextResource.tail)
           return (
@@ -7301,8 +7328,8 @@ module.exports = function ($$$config) {
       else if ("function" === typeof ref)
         try {
           ref(null);
-        } catch (error$144) {
-          captureCommitPhaseError(current, nearestMountedAncestor, error$144);
+        } catch (error$145) {
+          captureCommitPhaseError(current, nearestMountedAncestor, error$145);
         }
       else ref.current = null;
   }
@@ -8113,11 +8140,11 @@ module.exports = function ($$$config) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$142) {
+            } catch (error$143) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$142
+                error$143
               );
             }
           }
@@ -9153,25 +9180,25 @@ module.exports = function ($$$config) {
                 break;
               }
             case 5:
-              var parent$145 = hostParentFiber.stateNode;
+              var parent$146 = hostParentFiber.stateNode;
               hostParentFiber.flags & 32 &&
-                (resetTextContent(parent$145), (hostParentFiber.flags &= -33));
-              var before$146 = getHostSibling(finishedWork);
+                (resetTextContent(parent$146), (hostParentFiber.flags &= -33));
+              var before$147 = getHostSibling(finishedWork);
               insertOrAppendPlacementNode(
                 finishedWork,
-                before$146,
-                parent$145,
+                before$147,
+                parent$146,
                 parentFragmentInstances
               );
               break;
             case 3:
             case 4:
-              var parent$147 = hostParentFiber.stateNode.containerInfo,
-                before$148 = getHostSibling(finishedWork);
+              var parent$148 = hostParentFiber.stateNode.containerInfo,
+                before$149 = getHostSibling(finishedWork);
               insertOrAppendPlacementNodeIntoContainer(
                 finishedWork,
-                before$148,
-                parent$147,
+                before$149,
+                parent$148,
                 parentFragmentInstances
               );
               break;
@@ -9720,14 +9747,14 @@ module.exports = function ($$$config) {
           );
         break;
       case 22:
-        var instance$161 = finishedWork.stateNode,
-          current$162 = finishedWork.alternate;
+        var instance$162 = finishedWork.stateNode,
+          current$163 = finishedWork.alternate;
         null !== finishedWork.memoizedState
           ? (isViewTransitionEligible &&
-              null !== current$162 &&
-              null === current$162.memoizedState &&
-              restoreEnterOrExitViewTransitions(current$162),
-            instance$161._visibility & 2
+              null !== current$163 &&
+              null === current$163.memoizedState &&
+              restoreEnterOrExitViewTransitions(current$163),
+            instance$162._visibility & 2
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
@@ -9739,17 +9766,17 @@ module.exports = function ($$$config) {
                   finishedWork
                 ))
           : (isViewTransitionEligible &&
-              null !== current$162 &&
-              null !== current$162.memoizedState &&
+              null !== current$163 &&
+              null !== current$163.memoizedState &&
               restoreEnterOrExitViewTransitions(finishedWork),
-            instance$161._visibility & 2
+            instance$162._visibility & 2
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
                   committedLanes,
                   committedTransitions
                 )
-              : ((instance$161._visibility |= 2),
+              : ((instance$162._visibility |= 2),
                 recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -9759,9 +9786,9 @@ module.exports = function ($$$config) {
                 )));
         flags & 2048 &&
           commitOffscreenPassiveMountEffects(
-            current$162,
+            current$163,
             finishedWork,
-            instance$161
+            instance$162
           );
         break;
       case 24:
@@ -9856,9 +9883,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$165 = finishedWork.stateNode;
+          var instance$166 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$165._visibility & 2
+            ? instance$166._visibility & 2
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -9870,7 +9897,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-            : ((instance$165._visibility |= 2),
+            : ((instance$166._visibility |= 2),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -9883,7 +9910,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$165
+              instance$166
             );
           break;
         case 24:
@@ -11003,8 +11030,8 @@ module.exports = function ($$$config) {
         workLoopSync();
         exitStatus = workInProgressRootExitStatus;
         break;
-      } catch (thrownValue$181) {
-        handleThrow(root, thrownValue$181);
+      } catch (thrownValue$182) {
+        handleThrow(root, thrownValue$182);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -11125,8 +11152,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrentByScheduler();
         break;
-      } catch (thrownValue$183) {
-        handleThrow(root, thrownValue$183);
+      } catch (thrownValue$184) {
+        handleThrow(root, thrownValue$184);
       }
     while (1);
     lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -11366,8 +11393,7 @@ module.exports = function ($$$config) {
       enableViewTransition
         ? ((pendingViewTransitionEvents = null),
           (lanes & 335544064) === lanes
-            ? ((pendingTransitionTypes = ReactSharedInternals.V),
-              (ReactSharedInternals.V = null),
+            ? ((pendingTransitionTypes = claimQueuedTransitionTypes(root)),
               (recoverableErrors = 10262))
             : ((pendingTransitionTypes = null), (recoverableErrors = 10256)))
         : (recoverableErrors = 10256);
@@ -12149,6 +12175,7 @@ module.exports = function ($$$config) {
     this.pooledCacheLanes = 0;
     this.hydrationCallbacks = null;
     this.formState = formState;
+    enableViewTransition && (this.transitionTypes = null);
     this.incompleteTransitions = new Map();
     if (enableTransitionTracing)
       for (
@@ -12547,6 +12574,7 @@ module.exports = function ($$$config) {
       _currentValue2: null,
       _threadCount: 0
     },
+    entangledTransitionTypes = null,
     firstScheduledRoot = null,
     lastScheduledRoot = null,
     didScheduleMicrotask = !1,
@@ -12563,6 +12591,26 @@ module.exports = function ($$$config) {
       null !== returnValue &&
       "function" === typeof returnValue.then &&
       entangleAsyncAction(transition, returnValue);
+    if (enableViewTransition) {
+      if (null !== entangledTransitionTypes)
+        for (var root = firstScheduledRoot; null !== root; )
+          queueTransitionTypes(root, entangledTransitionTypes),
+            (root = root.next);
+      root = transition.types;
+      if (null !== root) {
+        for (var root$22 = firstScheduledRoot; null !== root$22; )
+          queueTransitionTypes(root$22, root), (root$22 = root$22.next);
+        if (0 !== currentEntangledLane && enableViewTransition) {
+          root$22 = entangledTransitionTypes;
+          null === root$22 && (root$22 = entangledTransitionTypes = []);
+          for (var i = 0; i < root.length; i++) {
+            var transitionType = root[i];
+            -1 === root$22.indexOf(transitionType) &&
+              root$22.push(transitionType);
+          }
+        }
+      }
+    }
     null !== prevOnStartTransitionFinish &&
       prevOnStartTransitionFinish(transition, returnValue);
   };
@@ -13445,7 +13493,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-0b1a9e90-20250401"
+      reconcilerVersion: "19.2.0-www-modern-7a728dff-20250401"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

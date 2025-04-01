@@ -598,7 +598,72 @@ __DEV__ &&
     function useMemoCache(size) {
       return resolveDispatcher().useMemoCache(size);
     }
+    function releaseAsyncTransition() {
+      ReactSharedInternals.asyncTransitions--;
+    }
+    function startTransition(scope, options) {
+      var prevTransition = ReactSharedInternals.T,
+        currentTransition = {};
+      enableViewTransition &&
+        (currentTransition.types =
+          null !== prevTransition ? prevTransition.types : null);
+      enableTransitionTracing &&
+        ((currentTransition.name =
+          void 0 !== options && void 0 !== options.name ? options.name : null),
+        (currentTransition.startTime = -1));
+      currentTransition._updatedFibers = new Set();
+      ReactSharedInternals.T = currentTransition;
+      try {
+        var returnValue = scope(),
+          onStartTransitionFinish = ReactSharedInternals.S;
+        null !== onStartTransitionFinish &&
+          onStartTransitionFinish(currentTransition, returnValue);
+        "object" === typeof returnValue &&
+          null !== returnValue &&
+          "function" === typeof returnValue.then &&
+          (ReactSharedInternals.asyncTransitions++,
+          returnValue.then(releaseAsyncTransition, releaseAsyncTransition),
+          returnValue.then(noop, reportGlobalError));
+      } catch (error) {
+        reportGlobalError(error);
+      } finally {
+        null === prevTransition &&
+          currentTransition._updatedFibers &&
+          ((scope = currentTransition._updatedFibers.size),
+          currentTransition._updatedFibers.clear(),
+          10 < scope &&
+            console.warn(
+              "Detected a large number of updates inside startTransition. If this is due to a subscription please re-write it to use React provided hooks. Otherwise concurrent mode guarantees are off the table."
+            )),
+          null !== prevTransition &&
+            null !== currentTransition.types &&
+            (null !== prevTransition.types &&
+              prevTransition.types !== currentTransition.types &&
+              console.error(
+                "We expected inner Transitions to have transferred the outer types set and that you cannot add to the outer Transition while inside the inner.This is a bug in React."
+              ),
+            (prevTransition.types = currentTransition.types)),
+          (ReactSharedInternals.T = prevTransition);
+      }
+    }
     function noop() {}
+    function addTransitionType(type) {
+      if (enableViewTransition) {
+        var transition = ReactSharedInternals.T;
+        if (null !== transition) {
+          var transitionTypes = transition.types;
+          null === transitionTypes
+            ? (transition.types = [type])
+            : -1 === transitionTypes.indexOf(type) &&
+              transitionTypes.push(type);
+        } else
+          0 === ReactSharedInternals.asyncTransitions &&
+            console.error(
+              "addTransitionType can only be called inside a `startTransition()` callback. It must be associated with a specific Transition."
+            ),
+            startTransition(addTransitionType.bind(null, type));
+      }
+    }
     function enqueueTask(task) {
       if (null === enqueueTaskImpl)
         try {
@@ -768,16 +833,21 @@ __DEV__ &&
     fnName.isPureReactComponent = !0;
     var isArrayImpl = Array.isArray,
       REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
-      ReactSharedInternals = { H: null, A: null, T: null, S: null };
-    enableViewTransition && (ReactSharedInternals.V = null);
-    ReactSharedInternals.actQueue = null;
-    ReactSharedInternals.isBatchingLegacy = !1;
-    ReactSharedInternals.didScheduleLegacyUpdate = !1;
-    ReactSharedInternals.didUsePromise = !1;
-    ReactSharedInternals.thrownErrors = [];
-    ReactSharedInternals.getCurrentStack = null;
-    ReactSharedInternals.recentlyCreatedOwnerStacks = 0;
-    var hasOwnProperty = Object.prototype.hasOwnProperty,
+      ReactSharedInternals = {
+        H: null,
+        A: null,
+        T: null,
+        S: null,
+        actQueue: null,
+        asyncTransitions: 0,
+        isBatchingLegacy: !1,
+        didScheduleLegacyUpdate: !1,
+        didUsePromise: !1,
+        thrownErrors: [],
+        getCurrentStack: null,
+        recentlyCreatedOwnerStacks: 0
+      },
+      hasOwnProperty = Object.prototype.hasOwnProperty,
       createTask = console.createTask
         ? console.createTask
         : function () {
@@ -1367,53 +1437,14 @@ __DEV__ &&
       });
       return compare;
     };
-    exports.startTransition = function (scope, options) {
-      var prevTransition = ReactSharedInternals.T,
-        currentTransition = {};
-      enableTransitionTracing &&
-        ((currentTransition.name =
-          void 0 !== options && void 0 !== options.name ? options.name : null),
-        (currentTransition.startTime = -1));
-      currentTransition._updatedFibers = new Set();
-      ReactSharedInternals.T = currentTransition;
-      try {
-        var returnValue = scope(),
-          onStartTransitionFinish = ReactSharedInternals.S;
-        null !== onStartTransitionFinish &&
-          onStartTransitionFinish(currentTransition, returnValue);
-        "object" === typeof returnValue &&
-          null !== returnValue &&
-          "function" === typeof returnValue.then &&
-          returnValue.then(noop, reportGlobalError);
-      } catch (error) {
-        reportGlobalError(error);
-      } finally {
-        null === prevTransition &&
-          currentTransition._updatedFibers &&
-          ((scope = currentTransition._updatedFibers.size),
-          currentTransition._updatedFibers.clear(),
-          10 < scope &&
-            console.warn(
-              "Detected a large number of updates inside startTransition. If this is due to a subscription please re-write it to use React provided hooks. Otherwise concurrent mode guarantees are off the table."
-            )),
-          (ReactSharedInternals.T = prevTransition);
-      }
-    };
+    exports.startTransition = startTransition;
     exports.unstable_Activity = REACT_ACTIVITY_TYPE;
     exports.unstable_LegacyHidden = dynamicFeatureFlags;
     exports.unstable_Scope = renameElementSymbol;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
-    exports.unstable_addTransitionType = function (type) {
-      if (enableViewTransition) {
-        var pendingTransitionTypes = ReactSharedInternals.V;
-        null === pendingTransitionTypes &&
-          (pendingTransitionTypes = ReactSharedInternals.V = []);
-        -1 === pendingTransitionTypes.indexOf(type) &&
-          pendingTransitionTypes.push(type);
-      }
-    };
+    exports.unstable_addTransitionType = addTransitionType;
     exports.unstable_getCacheForType = function (resourceType) {
       var dispatcher = ReactSharedInternals.A;
       return dispatcher
@@ -1507,7 +1538,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-www-modern-0b1a9e90-20250401";
+    exports.version = "19.2.0-www-modern-7a728dff-20250401";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -95,9 +95,8 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
-  ReactSharedInternals = { H: null, A: null, T: null, S: null };
-enableViewTransition && (ReactSharedInternals.V = null);
-var hasOwnProperty = Object.prototype.hasOwnProperty;
+  ReactSharedInternals = { H: null, A: null, T: null, S: null },
+  hasOwnProperty = Object.prototype.hasOwnProperty;
 function ReactElement(type, key, self, source, owner, props) {
   self = props.ref;
   return {
@@ -359,7 +358,47 @@ var reportGlobalError =
         }
         console.error(error);
       };
+function startTransition(scope, options) {
+  var prevTransition = ReactSharedInternals.T,
+    currentTransition = {};
+  enableViewTransition &&
+    (currentTransition.types =
+      null !== prevTransition ? prevTransition.types : null);
+  enableTransitionTracing &&
+    ((currentTransition.name =
+      void 0 !== options && void 0 !== options.name ? options.name : null),
+    (currentTransition.startTime = -1));
+  ReactSharedInternals.T = currentTransition;
+  try {
+    var returnValue = scope(),
+      onStartTransitionFinish = ReactSharedInternals.S;
+    null !== onStartTransitionFinish &&
+      onStartTransitionFinish(currentTransition, returnValue);
+    "object" === typeof returnValue &&
+      null !== returnValue &&
+      "function" === typeof returnValue.then &&
+      returnValue.then(noop, reportGlobalError);
+  } catch (error) {
+    reportGlobalError(error);
+  } finally {
+    null !== prevTransition &&
+      null !== currentTransition.types &&
+      (prevTransition.types = currentTransition.types),
+      (ReactSharedInternals.T = prevTransition);
+  }
+}
 function noop() {}
+function addTransitionType(type) {
+  if (enableViewTransition) {
+    var transition = ReactSharedInternals.T;
+    if (null !== transition) {
+      var transitionTypes = transition.types;
+      null === transitionTypes
+        ? (transition.types = [type])
+        : -1 === transitionTypes.indexOf(type) && transitionTypes.push(type);
+    } else startTransition(addTransitionType.bind(null, type));
+  }
+}
 var ReactCompilerRuntime = { __proto__: null, c: useMemoCache };
 exports.Children = {
   map: mapChildren,
@@ -525,44 +564,14 @@ exports.memo = function (type, compare) {
     compare: void 0 === compare ? null : compare
   };
 };
-exports.startTransition = function (scope, options) {
-  var prevTransition = ReactSharedInternals.T,
-    currentTransition = {};
-  enableTransitionTracing &&
-    ((currentTransition.name =
-      void 0 !== options && void 0 !== options.name ? options.name : null),
-    (currentTransition.startTime = -1));
-  ReactSharedInternals.T = currentTransition;
-  try {
-    var returnValue = scope(),
-      onStartTransitionFinish = ReactSharedInternals.S;
-    null !== onStartTransitionFinish &&
-      onStartTransitionFinish(currentTransition, returnValue);
-    "object" === typeof returnValue &&
-      null !== returnValue &&
-      "function" === typeof returnValue.then &&
-      returnValue.then(noop, reportGlobalError);
-  } catch (error) {
-    reportGlobalError(error);
-  } finally {
-    ReactSharedInternals.T = prevTransition;
-  }
-};
+exports.startTransition = startTransition;
 exports.unstable_Activity = REACT_ACTIVITY_TYPE;
 exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
 exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
 exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
-exports.unstable_addTransitionType = function (type) {
-  if (enableViewTransition) {
-    var pendingTransitionTypes = ReactSharedInternals.V;
-    null === pendingTransitionTypes &&
-      (pendingTransitionTypes = ReactSharedInternals.V = []);
-    -1 === pendingTransitionTypes.indexOf(type) &&
-      pendingTransitionTypes.push(type);
-  }
-};
+exports.unstable_addTransitionType = addTransitionType;
 exports.unstable_getCacheForType = function (resourceType) {
   var dispatcher = ReactSharedInternals.A;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
@@ -631,7 +640,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-www-modern-0b1a9e90-20250401";
+exports.version = "19.2.0-www-modern-7a728dff-20250401";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
