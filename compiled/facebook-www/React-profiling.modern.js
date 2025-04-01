@@ -526,12 +526,11 @@ exports.memo = function (type, compare) {
 exports.startTransition = function (scope, options) {
   var prevTransition = ReactSharedInternals.T,
     currentTransition = {};
-  ReactSharedInternals.T = currentTransition;
   enableTransitionTracing &&
-    void 0 !== options &&
-    void 0 !== options.name &&
-    ((currentTransition.name = options.name),
+    ((currentTransition.name =
+      void 0 !== options && void 0 !== options.name ? options.name : null),
     (currentTransition.startTime = -1));
+  ReactSharedInternals.T = currentTransition;
   try {
     var returnValue = scope(),
       onStartTransitionFinish = ReactSharedInternals.S;
@@ -628,7 +627,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-www-modern-95671b4e-20250331";
+exports.version = "19.2.0-www-modern-d3b8ff6e-20250331";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

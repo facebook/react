@@ -4277,6 +4277,8 @@ function runActionStateAction(actionQueue, node) {
   if (node.isTransition) {
     var prevTransition = ReactSharedInternals.T,
       currentTransition = {};
+    enableTransitionTracing &&
+      ((currentTransition.name = null), (currentTransition.startTime = -1));
     ReactSharedInternals.T = currentTransition;
     try {
       var returnValue = action(prevState, payload),
@@ -4652,13 +4654,12 @@ function startTransition(
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
   var prevTransition = ReactSharedInternals.T,
     currentTransition = {};
+  enableTransitionTracing &&
+    ((currentTransition.name =
+      void 0 !== options && void 0 !== options.name ? options.name : null),
+    (currentTransition.startTime = now()));
   ReactSharedInternals.T = currentTransition;
   dispatchOptimisticSetState(fiber, !1, queue, pendingState);
-  enableTransitionTracing &&
-    void 0 !== options &&
-    void 0 !== options.name &&
-    ((currentTransition.name = options.name),
-    (currentTransition.startTime = now()));
   try {
     var returnValue = callback(),
       onStartTransitionFinish = ReactSharedInternals.S;
@@ -5586,7 +5587,8 @@ function processTransitionCallbacks(pendingTransitions, endTime, callbacks) {
     null !== transitionStart &&
       null != onTransitionStart &&
       transitionStart.forEach(function (transition) {
-        return onTransitionStart(transition.name, transition.startTime);
+        null != transition.name &&
+          onTransitionStart(transition.name, transition.startTime);
       });
     transitionStart = pendingTransitions.markerProgress;
     var onMarkerProgress = callbacks.onMarkerProgress;
@@ -5599,13 +5601,14 @@ function processTransitionCallbacks(pendingTransitions, endTime, callbacks) {
               ? Array.from(markerInstance.pendingBoundaries.values())
               : [];
           markerInstance.transitions.forEach(function (transition) {
-            onMarkerProgress(
-              transition.name,
-              markerName,
-              transition.startTime,
-              endTime,
-              pending
-            );
+            null != transition.name &&
+              onMarkerProgress(
+                transition.name,
+                markerName,
+                transition.startTime,
+                endTime,
+                pending
+              );
           });
         }
       });
@@ -5615,12 +5618,13 @@ function processTransitionCallbacks(pendingTransitions, endTime, callbacks) {
       null != onMarkerComplete &&
       transitionStart.forEach(function (transitions, markerName) {
         transitions.forEach(function (transition) {
-          onMarkerComplete(
-            transition.name,
-            markerName,
-            transition.startTime,
-            endTime
-          );
+          null != transition.name &&
+            onMarkerComplete(
+              transition.name,
+              markerName,
+              transition.startTime,
+              endTime
+            );
         });
       });
     transitionStart = pendingTransitions.markerIncomplete;
@@ -5649,6 +5653,7 @@ function processTransitionCallbacks(pendingTransitions, endTime, callbacks) {
             }
           });
           0 < filteredAborts.length &&
+            null != transition.name &&
             onMarkerIncomplete(
               transition.name,
               markerName,
@@ -5662,23 +5667,21 @@ function processTransitionCallbacks(pendingTransitions, endTime, callbacks) {
     null != onTransitionProgress &&
       null !== transitionStart &&
       transitionStart.forEach(function (pending, transition) {
-        onTransitionProgress(
-          transition.name,
-          transition.startTime,
-          endTime,
-          Array.from(pending.values())
-        );
+        null != transition.name &&
+          onTransitionProgress(
+            transition.name,
+            transition.startTime,
+            endTime,
+            Array.from(pending.values())
+          );
       });
     pendingTransitions = pendingTransitions.transitionComplete;
     var onTransitionComplete = callbacks.onTransitionComplete;
     null !== pendingTransitions &&
       null != onTransitionComplete &&
       pendingTransitions.forEach(function (transition) {
-        return onTransitionComplete(
-          transition.name,
-          transition.startTime,
-          endTime
-        );
+        null != transition.name &&
+          onTransitionComplete(transition.name, transition.startTime, endTime);
       });
   }
 }
@@ -18824,14 +18827,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1975 = React.version;
 if (
-  "19.2.0-www-classic-95671b4e-20250331" !==
+  "19.2.0-www-classic-d3b8ff6e-20250331" !==
   isomorphicReactPackageVersion$jscomp$inline_1975
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1975,
-      "19.2.0-www-classic-95671b4e-20250331"
+      "19.2.0-www-classic-d3b8ff6e-20250331"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18849,10 +18852,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2559 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-95671b4e-20250331",
+  version: "19.2.0-www-classic-d3b8ff6e-20250331",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-95671b4e-20250331"
+  reconcilerVersion: "19.2.0-www-classic-d3b8ff6e-20250331"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2560 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -19216,4 +19219,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-95671b4e-20250331";
+exports.version = "19.2.0-www-classic-d3b8ff6e-20250331";

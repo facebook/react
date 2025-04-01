@@ -7182,8 +7182,10 @@ __DEV__ &&
       if (node.isTransition) {
         var prevTransition = ReactSharedInternals.T,
           currentTransition = {};
+        enableTransitionTracing &&
+          ((currentTransition.name = null), (currentTransition.startTime = -1));
+        currentTransition._updatedFibers = new Set();
         ReactSharedInternals.T = currentTransition;
-        ReactSharedInternals.T._updatedFibers = new Set();
         try {
           var returnValue = action(prevState, payload),
             onStartTransitionFinish = ReactSharedInternals.S;
@@ -7666,14 +7668,13 @@ __DEV__ &&
           : ContinuousEventPriority;
       var prevTransition = ReactSharedInternals.T,
         currentTransition = {};
-      ReactSharedInternals.T = currentTransition;
-      dispatchOptimisticSetState(fiber, !1, queue, pendingState);
       enableTransitionTracing &&
-        void 0 !== options &&
-        void 0 !== options.name &&
-        ((currentTransition.name = options.name),
+        ((currentTransition.name =
+          void 0 !== options && void 0 !== options.name ? options.name : null),
         (currentTransition.startTime = now$1()));
       currentTransition._updatedFibers = new Set();
+      ReactSharedInternals.T = currentTransition;
+      dispatchOptimisticSetState(fiber, !1, queue, pendingState);
       try {
         var returnValue = callback(),
           onStartTransitionFinish = ReactSharedInternals.S;
@@ -8493,7 +8494,8 @@ __DEV__ &&
         null !== transitionStart &&
           null != onTransitionStart &&
           transitionStart.forEach(function (transition) {
-            return onTransitionStart(transition.name, transition.startTime);
+            null != transition.name &&
+              onTransitionStart(transition.name, transition.startTime);
           });
         transitionStart = pendingTransitions.markerProgress;
         var onMarkerProgress = callbacks.onMarkerProgress;
@@ -8506,13 +8508,14 @@ __DEV__ &&
                   ? Array.from(markerInstance.pendingBoundaries.values())
                   : [];
               markerInstance.transitions.forEach(function (transition) {
-                onMarkerProgress(
-                  transition.name,
-                  markerName,
-                  transition.startTime,
-                  endTime,
-                  pending
-                );
+                null != transition.name &&
+                  onMarkerProgress(
+                    transition.name,
+                    markerName,
+                    transition.startTime,
+                    endTime,
+                    pending
+                  );
               });
             }
           });
@@ -8522,12 +8525,13 @@ __DEV__ &&
           null != onMarkerComplete &&
           transitionStart.forEach(function (transitions, markerName) {
             transitions.forEach(function (transition) {
-              onMarkerComplete(
-                transition.name,
-                markerName,
-                transition.startTime,
-                endTime
-              );
+              null != transition.name &&
+                onMarkerComplete(
+                  transition.name,
+                  markerName,
+                  transition.startTime,
+                  endTime
+                );
             });
           });
         transitionStart = pendingTransitions.markerIncomplete;
@@ -8556,6 +8560,7 @@ __DEV__ &&
                 }
               });
               0 < filteredAborts.length &&
+                null != transition.name &&
                 onMarkerIncomplete(
                   transition.name,
                   markerName,
@@ -8569,23 +8574,25 @@ __DEV__ &&
         null != onTransitionProgress &&
           null !== transitionStart &&
           transitionStart.forEach(function (pending, transition) {
-            onTransitionProgress(
-              transition.name,
-              transition.startTime,
-              endTime,
-              Array.from(pending.values())
-            );
+            null != transition.name &&
+              onTransitionProgress(
+                transition.name,
+                transition.startTime,
+                endTime,
+                Array.from(pending.values())
+              );
           });
         pendingTransitions = pendingTransitions.transitionComplete;
         var onTransitionComplete = callbacks.onTransitionComplete;
         null !== pendingTransitions &&
           null != onTransitionComplete &&
           pendingTransitions.forEach(function (transition) {
-            return onTransitionComplete(
-              transition.name,
-              transition.startTime,
-              endTime
-            );
+            null != transition.name &&
+              onTransitionComplete(
+                transition.name,
+                transition.startTime,
+                endTime
+              );
           });
       }
     }
@@ -29723,11 +29730,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-95671b4e-20250331" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-d3b8ff6e-20250331" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-95671b4e-20250331\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-d3b8ff6e-20250331\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -29770,10 +29777,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-95671b4e-20250331",
+          version: "19.2.0-www-modern-d3b8ff6e-20250331",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-95671b4e-20250331"
+          reconcilerVersion: "19.2.0-www-modern-d3b8ff6e-20250331"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30371,7 +30378,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-95671b4e-20250331";
+    exports.version = "19.2.0-www-modern-d3b8ff6e-20250331";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
