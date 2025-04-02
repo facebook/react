@@ -2303,7 +2303,7 @@ __DEV__ &&
         ((reusableLaneDevToolDetails.color = "secondary-light"),
         (reusableLaneOptions.start = startTime),
         (reusableLaneOptions.end = endTime),
-        performance.measure("Suspended", reusableLaneOptions));
+        performance.measure("Suspended on CSS", reusableLaneOptions));
     }
     function logCommitErrored(startTime, endTime, errors, passive) {
       if (supportsUserTiming) {
@@ -15170,7 +15170,7 @@ __DEV__ &&
           default:
             if (((startTime = yieldStartTime), supportsUserTiming)) {
               var yieldDuration = yieldEndTime - startTime;
-              1 > yieldDuration ||
+              3 > yieldDuration ||
                 ((reusableComponentDevToolDetails.color =
                   5 > yieldDuration
                     ? "primary-light"
@@ -15684,7 +15684,11 @@ __DEV__ &&
               (reusableLaneOptions.start = previousRenderStartTime),
               (reusableLaneOptions.end = renderStartTime$jscomp$0),
               performance.measure(
-                isSpawnedUpdate ? "Cascade" : "Blocked",
+                isSpawnedUpdate
+                  ? "Cascading Update"
+                  : 5 < renderStartTime$jscomp$0 - previousRenderStartTime
+                    ? "Update Blocked"
+                    : "Update",
                 reusableLaneOptions
               )));
           blockingSuspendedTime = blockingUpdateTime = -1.1;
@@ -15749,7 +15753,12 @@ __DEV__ &&
               ((reusableLaneDevToolDetails.color = "primary-light"),
               (reusableLaneOptions.start = endTime),
               (reusableLaneOptions.end = renderStartTime$jscomp$0),
-              performance.measure("Blocked", reusableLaneOptions))),
+              performance.measure(
+                5 < renderStartTime$jscomp$0 - endTime
+                  ? "Update Blocked"
+                  : "Update",
+                reusableLaneOptions
+              ))),
           (transitionSuspendedTime =
             transitionUpdateTime =
             transitionStartTime =
@@ -20715,7 +20724,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-040f8286-20250402"
+        reconcilerVersion: "19.2.0-www-modern-b2f63657-20250402"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

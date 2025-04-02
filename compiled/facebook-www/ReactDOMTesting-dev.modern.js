@@ -3972,7 +3972,7 @@ __DEV__ &&
         ((reusableLaneDevToolDetails.color = "secondary-light"),
         (reusableLaneOptions.start = startTime),
         (reusableLaneOptions.end = endTime),
-        performance.measure("Suspended", reusableLaneOptions));
+        performance.measure("Suspended on CSS", reusableLaneOptions));
     }
     function logCommitErrored(startTime, endTime, errors, passive) {
       if (supportsUserTiming) {
@@ -17084,7 +17084,7 @@ __DEV__ &&
           default:
             if (((startTime = yieldStartTime), supportsUserTiming)) {
               var yieldDuration = yieldEndTime - startTime;
-              1 > yieldDuration ||
+              3 > yieldDuration ||
                 ((reusableComponentDevToolDetails.color =
                   5 > yieldDuration
                     ? "primary-light"
@@ -17608,7 +17608,11 @@ __DEV__ &&
               (reusableLaneOptions.start = previousRenderStartTime),
               (reusableLaneOptions.end = renderStartTime$jscomp$0),
               performance.measure(
-                isSpawnedUpdate ? "Cascade" : "Blocked",
+                isSpawnedUpdate
+                  ? "Cascading Update"
+                  : 5 < renderStartTime$jscomp$0 - previousRenderStartTime
+                    ? "Update Blocked"
+                    : "Update",
                 reusableLaneOptions
               )));
           blockingSuspendedTime = blockingUpdateTime = -1.1;
@@ -17673,7 +17677,12 @@ __DEV__ &&
               ((reusableLaneDevToolDetails.color = "primary-light"),
               (reusableLaneOptions.start = endTime),
               (reusableLaneOptions.end = renderStartTime$jscomp$0),
-              performance.measure("Blocked", reusableLaneOptions))),
+              performance.measure(
+                5 < renderStartTime$jscomp$0 - endTime
+                  ? "Update Blocked"
+                  : "Update",
+                reusableLaneOptions
+              ))),
           (transitionSuspendedTime =
             transitionUpdateTime =
             transitionStartTime =
@@ -30145,11 +30154,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-040f8286-20250402" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-b2f63657-20250402" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-040f8286-20250402\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-b2f63657-20250402\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30192,10 +30201,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-040f8286-20250402",
+          version: "19.2.0-www-modern-b2f63657-20250402",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-040f8286-20250402"
+          reconcilerVersion: "19.2.0-www-modern-b2f63657-20250402"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30959,5 +30968,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-040f8286-20250402";
+    exports.version = "19.2.0-www-modern-b2f63657-20250402";
   })();
