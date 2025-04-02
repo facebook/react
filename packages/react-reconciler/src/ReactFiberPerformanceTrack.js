@@ -284,7 +284,7 @@ export function logComponentEffect(
 export function logYieldTime(startTime: number, endTime: number): void {
   if (supportsUserTiming) {
     const yieldDuration = endTime - startTime;
-    if (yieldDuration < 1) {
+    if (yieldDuration < 3) {
       // Skip sub-millisecond yields. This happens all the time and is not interesting.
       return;
     }
@@ -299,6 +299,10 @@ export function logYieldTime(startTime: number, endTime: number): void {
             : 'error';
     reusableComponentOptions.start = startTime;
     reusableComponentOptions.end = endTime;
+    // This get logged in the components track if we don't commit which leaves them
+    // hanging by themselves without context. It's a useful indicator for why something
+    // might be starving this render though.
+    // TODO: Considering adding these to a queue and only logging them if we commit.
     performance.measure('Blocked', reusableComponentOptions);
   }
 }
@@ -365,7 +369,11 @@ export function logBlockingStart(
       reusableLaneOptions.start = updateTime;
       reusableLaneOptions.end = renderStartTime;
       performance.measure(
-        isSpawnedUpdate ? 'Cascade' : 'Blocked',
+        isSpawnedUpdate
+          ? 'Cascading Update'
+          : renderStartTime - updateTime > 5
+            ? 'Update Blocked'
+            : 'Update',
         reusableLaneOptions,
       );
     }
@@ -411,7 +419,10 @@ export function logTransitionStart(
       reusableLaneDevToolDetails.color = 'primary-light';
       reusableLaneOptions.start = updateTime;
       reusableLaneOptions.end = renderStartTime;
-      performance.measure('Blocked', reusableLaneOptions);
+      performance.measure(
+        renderStartTime - updateTime > 5 ? 'Update Blocked' : 'Update',
+        reusableLaneOptions,
+      );
     }
   }
 }
@@ -588,7 +599,9 @@ export function logSuspendedCommitPhase(
     reusableLaneDevToolDetails.color = 'secondary-light';
     reusableLaneOptions.start = startTime;
     reusableLaneOptions.end = endTime;
-    performance.measure('Suspended', reusableLaneOptions);
+    // TODO: Make this conditionally "Suspended on Images" or both when we add Suspensey Images.
+    // TODO: This might also be Suspended while waiting on a View Transition.
+    performance.measure('Suspended on CSS', reusableLaneOptions);
   }
 }
 
