@@ -369,7 +369,11 @@ export function logBlockingStart(
       reusableLaneOptions.start = updateTime;
       reusableLaneOptions.end = renderStartTime;
       performance.measure(
-        isSpawnedUpdate ? 'Cascade' : 'Blocked',
+        isSpawnedUpdate
+          ? 'Cascading Update'
+          : renderStartTime - updateTime > 5
+            ? 'Update Blocked'
+            : 'Update',
         reusableLaneOptions,
       );
     }
@@ -415,7 +419,10 @@ export function logTransitionStart(
       reusableLaneDevToolDetails.color = 'primary-light';
       reusableLaneOptions.start = updateTime;
       reusableLaneOptions.end = renderStartTime;
-      performance.measure('Blocked', reusableLaneOptions);
+      performance.measure(
+        renderStartTime - updateTime > 5 ? 'Update Blocked' : 'Update',
+        reusableLaneOptions,
+      );
     }
   }
 }
