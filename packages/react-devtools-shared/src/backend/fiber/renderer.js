@@ -808,6 +808,27 @@ function getPublicInstance(instance: HostInstance): HostInstance {
   return instance;
 }
 
+function getNativeTag(instance: HostInstance): number | null {
+  if (typeof instance !== 'object' || instance === null) {
+    return null;
+  }
+
+  // Modern. Fabric.
+  if (
+    instance.canonical != null &&
+    typeof instance.canonical.nativeTag === 'number'
+  ) {
+    return instance.canonical.nativeTag;
+  }
+
+  // Legacy.  Paper.
+  if (typeof instance._nativeTag === 'number') {
+    return instance._nativeTag;
+  }
+
+  return null;
+}
+
 function aquireHostInstance(
   nearestInstance: DevToolsInstance,
   hostInstance: HostInstance,
@@ -4298,6 +4319,11 @@ export function attach(
       componentLogsEntry = fiberToComponentLogsMap.get(fiber.alternate);
     }
 
+    let nativeTag = null;
+    if (elementType === ElementTypeHostComponent) {
+      nativeTag = getNativeTag(fiber.stateNode);
+    }
+
     return {
       id: fiberInstance.id,
 
@@ -4364,6 +4390,8 @@ export function attach(
       rendererVersion: renderer.version,
 
       plugins,
+
+      nativeTag,
     };
   }
 
@@ -4457,6 +4485,8 @@ export function attach(
       rendererVersion: renderer.version,
 
       plugins,
+
+      nativeTag: null,
     };
   }
 
