@@ -1802,6 +1802,12 @@ export function startViewTransition(
         }
       } finally {
         // Continue the reset of the work.
+        // If the error happened in the snapshot phase before the update callback
+        // was invoked, then we need to first finish the mutation and layout phases.
+        // If they're already invoked it's still safe to call them due the status check.
+        mutationCallback();
+        layoutCallback();
+        // Skip afterMutationCallback() since we're not animating.
         spawnedWorkCallback();
       }
     };
@@ -2137,7 +2143,13 @@ export function startGestureTransition(
         }
       } finally {
         // Continue the reset of the work.
-        readyCallback();
+        // If the error happened in the snapshot phase before the update callback
+        // was invoked, then we need to first finish the mutation and layout phases.
+        // If they're already invoked it's still safe to call them due the status check.
+        mutationCallback();
+        // Skip readyCallback() and go straight to animateCallbck() since we're not animating.
+        // animateCallback() is still required to restore states.
+        animateCallback();
       }
     };
     transition.ready.then(readyForAnimations, handleError);
