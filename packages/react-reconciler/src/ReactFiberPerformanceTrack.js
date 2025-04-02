@@ -238,9 +238,18 @@ export function logComponentErrored(
       // $FlowFixMe[method-unbinding]
       typeof performance.measure === 'function'
     ) {
+      let debugTask: ?ConsoleTask = null;
       const properties = [];
       for (let i = 0; i < errors.length; i++) {
         const capturedValue = errors[i];
+        if (debugTask == null && capturedValue.source !== null) {
+          // If the captured value has a source Fiber, use its debugTask for
+          // the stack instead of the error boundary's stack. So you can find
+          // which component errored since we don't show the errored render tree.
+          // TODO: Ideally we should instead, store the failed fibers and log the
+          // whole subtree including the component that errored.
+          debugTask = capturedValue.source._debugTask;
+        }
         const error = capturedValue.value;
         const message =
           typeof error === 'object' &&
@@ -251,6 +260,11 @@ export function logComponentErrored(
             : // eslint-disable-next-line react-internal/safe-string-coercion
               String(error);
         properties.push(['Error', message]);
+      }
+      if (debugTask == null) {
+        // If the captured values don't have a debug task, fallback to the
+        // error boundary itself.
+        debugTask = fiber._debugTask;
       }
       const options = {
         start: startTime,
@@ -267,7 +281,6 @@ export function logComponentErrored(
           },
         },
       };
-      const debugTask = fiber._debugTask;
       if (__DEV__ && debugTask) {
         debugTask.run(
           // $FlowFixMe[method-unbinding]
