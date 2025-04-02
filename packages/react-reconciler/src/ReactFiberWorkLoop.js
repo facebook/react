@@ -262,6 +262,7 @@ import {
 import {
   blockingClampTime,
   blockingUpdateTime,
+  blockingUpdateTask,
   blockingEventTime,
   blockingEventType,
   blockingEventIsRepeat,
@@ -270,6 +271,7 @@ import {
   transitionClampTime,
   transitionStartTime,
   transitionUpdateTime,
+  transitionUpdateTask,
   transitionEventTime,
   transitionEventType,
   transitionEventIsRepeat,
@@ -1912,6 +1914,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         blockingSpawnedUpdate,
         renderStartTime,
         lanes,
+        blockingUpdateTask,
       );
       clearBlockingTimers();
     }
@@ -1948,6 +1951,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         transitionEventType,
         transitionEventIsRepeat,
         renderStartTime,
+        transitionUpdateTask,
       );
       clearTransitionTimers();
     }
