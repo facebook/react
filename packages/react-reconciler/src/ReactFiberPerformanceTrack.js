@@ -284,7 +284,7 @@ export function logComponentEffect(
 export function logYieldTime(startTime: number, endTime: number): void {
   if (supportsUserTiming) {
     const yieldDuration = endTime - startTime;
-    if (yieldDuration < 1) {
+    if (yieldDuration < 3) {
       // Skip sub-millisecond yields. This happens all the time and is not interesting.
       return;
     }
@@ -299,6 +299,10 @@ export function logYieldTime(startTime: number, endTime: number): void {
             : 'error';
     reusableComponentOptions.start = startTime;
     reusableComponentOptions.end = endTime;
+    // This get logged in the components track if we don't commit which leaves them
+    // hanging by themselves without context. It's a useful indicator for why something
+    // might be starving this render though.
+    // TODO: Considering adding these to a queue and only logging them if we commit.
     performance.measure('Blocked', reusableComponentOptions);
   }
 }
