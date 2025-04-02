@@ -42,7 +42,8 @@ class ClientReferenceDependency extends ModuleDependency {
 // without the client runtime so it's the first time in the loading sequence
 // you might want them.
 const clientImportName = 'react-server-dom-webpack/client';
-const clientFileName = require.resolve('../client.browser.js');
+const clientFileNameOnClient = require.resolve('../client.browser.js');
+const clientFileNameOnServer = require.resolve('../client.node.js');
 
 type ClientReferenceSearchPath = {
   directory: string,
@@ -68,15 +69,13 @@ export default class ReactFlightWebpackPlugin {
   chunkName: string;
   clientManifestFilename: string;
   serverConsumerManifestFilename: string;
+  isServer: boolean;
 
   constructor(options: Options) {
     if (!options || typeof options.isServer !== 'boolean') {
       throw new Error(
         PLUGIN_NAME + ': You must specify the isServer option as a boolean.',
       );
-    }
-    if (options.isServer) {
-      throw new Error('TODO: Implement the server compiler.');
     }
     if (!options.clientReferences) {
       this.clientReferences = [
@@ -103,8 +102,12 @@ export default class ReactFlightWebpackPlugin {
     } else {
       this.chunkName = 'client[index]';
     }
+    this.isServer = options.isServer;
+    const defaultClientManifestFilename = options.isServer
+      ? 'react-server-client-manifest.json'
+      : 'react-client-manifest.json';
     this.clientManifestFilename =
-      options.clientManifestFilename || 'react-client-manifest.json';
+      options.clientManifestFilename || defaultClientManifestFilename;
     this.serverConsumerManifestFilename =
       options.serverConsumerManifestFilename || 'react-ssr-manifest.json';
   }
@@ -162,6 +165,9 @@ export default class ReactFlightWebpackPlugin {
           parser.hooks.program.tap(PLUGIN_NAME, () => {
             const module = parser.state.module;
 
+            const clientFileName = _this.isServer
+              ? clientFileNameOnServer
+              : clientFileNameOnClient;
             if (module.resource !== clientFileName) {
               return;
             }
@@ -305,6 +311,11 @@ export default class ReactFlightWebpackPlugin {
                   chunks,
                   name: '*',
                 };
+
+                if (_this.isServer) {
+                  return;
+                }
+
                 ssrExports['*'] = {
                   specifier: href,
                   name: '*',
@@ -372,11 +383,13 @@ export default class ReactFlightWebpackPlugin {
             _this.clientManifestFilename,
             new sources.RawSource(clientOutput, false),
           );
-          const ssrOutput = JSON.stringify(ssrBundleConfig, null, 2);
-          compilation.emitAsset(
-            _this.serverConsumerManifestFilename,
-            new sources.RawSource(ssrOutput, false),
-          );
+          if (!_this.isServer) {
+            const ssrOutput = JSON.stringify(ssrBundleConfig, null, 2);
+            compilation.emitAsset(
+              _this.serverConsumerManifestFilename,
+              new sources.RawSource(ssrOutput, false),
+            );
+          }
         },
       );
     });
