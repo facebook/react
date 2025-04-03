@@ -433,33 +433,21 @@ function updateForwardRef(
   }
 
   // The rest is a fork of updateFunctionComponent
-  let nextChildren;
-  let hasId;
   prepareToReadContext(workInProgress, renderLanes);
   if (enableSchedulingProfiler) {
     markComponentRenderStarted(workInProgress);
   }
-  if (__DEV__) {
-    nextChildren = renderWithHooks(
-      current,
-      workInProgress,
-      render,
-      propsWithoutRef,
-      ref,
-      renderLanes,
-    );
-    hasId = checkDidRenderIdHook();
-  } else {
-    nextChildren = renderWithHooks(
-      current,
-      workInProgress,
-      render,
-      propsWithoutRef,
-      ref,
-      renderLanes,
-    );
-    hasId = checkDidRenderIdHook();
-  }
+
+  const nextChildren = renderWithHooks(
+    current,
+    workInProgress,
+    render,
+    propsWithoutRef,
+    ref,
+    renderLanes,
+  );
+  const hasId = checkDidRenderIdHook();
+
   if (enableSchedulingProfiler) {
     markComponentRenderStopped();
   }
