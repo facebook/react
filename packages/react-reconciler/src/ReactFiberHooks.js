@@ -1847,6 +1847,8 @@ function updateStoreInstance<T>(
   // snapsho and getSnapshot values to bail out. We need to check one more time.
   if (checkIfSnapshotChanged(inst)) {
     // Force a re-render.
+    // We intentionally don't log update times and stacks here because this
+    // was not an external trigger but rather an internal one.
     forceStoreRerender(fiber);
   }
 }
@@ -1861,6 +1863,7 @@ function subscribeToStore<T>(
     // read from the store.
     if (checkIfSnapshotChanged(inst)) {
       // Force a re-render.
+      startUpdateTimerByLane(SyncLane, 'updateSyncExternalStore()');
       forceStoreRerender(fiber);
     }
   };
