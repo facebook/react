@@ -3345,13 +3345,31 @@ export function attach(
       fiberInstance.firstChild = null;
     }
     try {
-      if (nextFiber.tag === HostHoistable) {
+      if (
+        nextFiber.tag === HostHoistable &&
+        prevFiber.memoizedState !== nextFiber.memoizedState
+      ) {
         const nearestInstance = reconcilingParent;
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
         releaseHostResource(nearestInstance, prevFiber.memoizedState);
         aquireHostResource(nearestInstance, nextFiber.memoizedState);
+      } else if (
+        (nextFiber.tag === HostComponent ||
+          nextFiber.tag === HostText ||
+          nextFiber.tag === HostSingleton) &&
+        prevFiber.stateNode !== nextFiber.stateNode
+      ) {
+        // In persistent mode, it's possible for the stateNode to update with
+        // a new clone. In that case we need to release the old one and aquire
+        // new one instead.
+        const nearestInstance = reconcilingParent;
+        if (nearestInstance === null) {
+          throw new Error('Did not expect a host hoistable to be the root');
+        }
+        releaseHostInstance(nearestInstance, prevFiber.stateNode);
+        aquireHostInstance(nearestInstance, nextFiber.stateNode);
       }
 
       const isSuspense = nextFiber.tag === SuspenseComponent;
