@@ -132,6 +132,10 @@ import {
   logComponentRender,
   logComponentErrored,
   logComponentEffect,
+  logComponentMount,
+  logComponentUnmount,
+  logComponentReappeared,
+  logComponentDisappeared,
 } from './ReactFiberPerformanceTrack';
 import {ConcurrentMode, NoMode, ProfileMode} from './ReactTypeOfMode';
 import {deferHiddenCallbacks} from './ReactFiberClassUpdateQueue';

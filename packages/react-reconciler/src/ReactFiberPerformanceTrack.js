@@ -123,6 +123,52 @@ export function markAllLanesInOrder() {
   }
 }
 
+function logComponentTrigger(
+  fiber: Fiber,
+  startTime: number,
+  endTime: number,
+  trigger: string,
+) {
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'warning';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure(trigger, reusableComponentOptions);
+  }
+}
+
+export function logComponentMount(
+  fiber: Fiber,
+  startTime: number,
+  endTime: number,
+): void {
+  logComponentTrigger(fiber, startTime, endTime, 'Mount');
+}
+
+export function logComponentUnmount(
+  fiber: Fiber,
+  startTime: number,
+  endTime: number,
+): void {
+  logComponentTrigger(fiber, startTime, endTime, 'Unmount');
+}
+
+export function logComponentReappeared(
+  fiber: Fiber,
+  startTime: number,
+  endTime: number,
+): void {
+  logComponentTrigger(fiber, startTime, endTime, 'Reconnect');
+}
+
+export function logComponentDisappeared(
+  fiber: Fiber,
+  startTime: number,
+  endTime: number,
+): void {
+  logComponentTrigger(fiber, startTime, endTime, 'Disconnect');
+}
+
 export function logComponentRender(
   fiber: Fiber,
   startTime: number,
