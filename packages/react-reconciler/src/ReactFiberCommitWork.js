@@ -2282,6 +2282,22 @@ function commitMutationEffectsOnFiber(
             ) {
               // Disappear the layout effects of all the children
               recursivelyTraverseDisappearLayoutEffects(finishedWork);
+
+              if (
+                enableProfilerTimer &&
+                enableProfilerCommitHooks &&
+                enableComponentPerformanceTrack &&
+                (finishedWork.mode & ProfileMode) !== NoMode &&
+                componentEffectStartTime >= 0 &&
+                componentEffectEndTime >= 0 &&
+                componentEffectEndTime - componentEffectStartTime > 0.05
+              ) {
+                logComponentDisappeared(
+                  finishedWork,
+                  componentEffectStartTime,
+                  componentEffectEndTime,
+                );
+              }
             }
           }
         }
@@ -4368,7 +4384,24 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
         // effects. Then if the tree reappears before the delay has elapsed, we
         // can skip toggling the effects entirely.
         instance._visibility &= ~OffscreenPassiveEffectsConnected;
+
         recursivelyTraverseDisconnectPassiveEffects(finishedWork);
+
+        if (
+          enableProfilerTimer &&
+          enableProfilerCommitHooks &&
+          enableComponentPerformanceTrack &&
+          (finishedWork.mode & ProfileMode) !== NoMode &&
+          componentEffectStartTime >= 0 &&
+          componentEffectEndTime >= 0 &&
+          componentEffectEndTime - componentEffectStartTime > 0.05
+        ) {
+          logComponentDisappeared(
+            finishedWork,
+            componentEffectStartTime,
+            componentEffectEndTime,
+          );
+        }
       } else {
         recursivelyTraversePassiveUnmountEffects(finishedWork);
       }
@@ -4413,12 +4446,34 @@ function recursivelyTraverseDisconnectPassiveEffects(parentFiber: Fiber): void {
     if (deletions !== null) {
       for (let i = 0; i < deletions.length; i++) {
         const childToDelete = deletions[i];
+        const prevEffectStart = pushComponentEffectStart();
+
         // TODO: Convert this to use recursion
         nextEffect = childToDelete;
         commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
           childToDelete,
           parentFiber,
         );
+
+        if (
+          enableProfilerTimer &&
+          enableProfilerCommitHooks &&
+          enableComponentPerformanceTrack &&
+          (childToDelete.mode & ProfileMode) !== NoMode &&
+          componentEffectStartTime >= 0 &&
+          componentEffectEndTime >= 0 &&
+          componentEffectEndTime - componentEffectStartTime > 0.05
+        ) {
+          // While this is inside the disconnect path. This is a deletion within the
+          // disconnected tree. We currently log this for deletions in the mutation
+          // phase since it's shared by the disappear path.
+          logComponentUnmount(
+            childToDelete,
+            componentEffectStartTime,
+            componentEffectEndTime,
+          );
+        }
+        popComponentEffectStart(prevEffectStart);
       }
     }
     detachAlternateSiblings(parentFiber);
