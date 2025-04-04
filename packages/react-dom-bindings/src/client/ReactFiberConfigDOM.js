@@ -103,6 +103,7 @@ import {
   disableLegacyMode,
   enableMoveBefore,
   disableCommentsAsDOMContainers,
+  enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -145,6 +146,9 @@ export type Props = {
   is?: string,
   size?: number,
   multiple?: boolean,
+  src?: string,
+  loading?: 'eager' | 'lazy',
+  onLoad?: (event: any) => void,
   ...
 };
 type RawProps = {
@@ -4974,7 +4978,18 @@ export function isHostHoistableType(
 }
 
 export function maySuspendCommit(type: Type, props: Props): boolean {
-  return false;
+  if (!enableSuspenseyImages) {
+    return false;
+  }
+  // Suspensey images are the default, unless you opt-out of with either
+  // loading="lazy" or onLoad={...} which implies you're ok waiting.
+  return (
+    type === 'img' &&
+    props.src != null &&
+    props.src !== '' &&
+    props.onLoad == null &&
+    props.loading !== 'lazy'
+  );
 }
 
 export function mayResourceSuspendCommit(resource: Resource): boolean {
@@ -4985,7 +5000,13 @@ export function mayResourceSuspendCommit(resource: Resource): boolean {
 }
 
 export function preloadInstance(type: Type, props: Props): boolean {
-  return true;
+  // We don't need to preload Suspensey images because the browser will
+  // load them early once we set the src.
+  // We indicate that all images are not yet loaded and if they're able
+  // to hit cache we let the decode() do that. Even if we did maintain
+  // our own cache to know this, it's not a guarantee that the browser
+  // keeps it in decoded memory.
+  return false;
 }
 
 export function preloadResource(resource: Resource): boolean {
