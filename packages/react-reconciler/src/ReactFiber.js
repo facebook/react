@@ -41,6 +41,7 @@ import {
   disableLegacyMode,
   enableObjectFiber,
   enableViewTransition,
+  enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -89,6 +90,7 @@ import {
   StrictLegacyMode,
   StrictEffectsMode,
   NoStrictPassiveEffectsMode,
+  SuspenseyImagesMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -875,6 +877,11 @@ export function createFiberFromViewTransition(
   lanes: Lanes,
   key: null | string,
 ): Fiber {
+  if (!enableSuspenseyImages) {
+    // Render a ViewTransition component opts into SuspenseyImages mode even
+    // when the flag is off.
+    mode |= SuspenseyImagesMode;
+  }
   const fiber = createFiber(ViewTransitionComponent, pendingProps, key, mode);
   fiber.elementType = REACT_VIEW_TRANSITION_TYPE;
   fiber.lanes = lanes;
