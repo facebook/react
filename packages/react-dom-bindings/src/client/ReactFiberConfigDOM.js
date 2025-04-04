@@ -104,6 +104,7 @@ import {
   enableMoveBefore,
   disableCommentsAsDOMContainers,
   enableSuspenseyImages,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -4979,7 +4980,7 @@ export function isHostHoistableType(
 }
 
 export function maySuspendCommit(type: Type, props: Props): boolean {
-  if (!enableSuspenseyImages) {
+  if (!enableSuspenseyImages && !enableViewTransition) {
     return false;
   }
   // Suspensey images are the default, unless you opt-out of with either
@@ -5073,7 +5074,7 @@ export function suspendInstance(
   type: Type,
   props: Props,
 ): void {
-  if (!enableSuspenseyImages) {
+  if (!enableSuspenseyImages && !enableViewTransition) {
     return;
   }
   if (suspendedState === null) {
