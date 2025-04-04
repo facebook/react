@@ -596,6 +596,10 @@ export function maySuspendCommit(type, props) {
   return false;
 }
 
+export function maySuspendCommitOnUpdate(type, oldProps, newProps) {
+  return false;
+}
+
 export function preloadInstance(type, props) {
   // Return true to indicate it's already loaded
   return true;

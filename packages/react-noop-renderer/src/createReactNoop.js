@@ -624,6 +624,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return type === 'suspensey-thing' && typeof props.src === 'string';
     },
 
+    maySuspendCommitOnUpdate(
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+    ): boolean {
+      // Asks whether it's possible for this combination of type and props
+      // to ever need to suspend. This is different from asking whether it's
+      // currently ready because even if it's ready now, it might get purged
+      // from the cache later.
+      return type === 'suspensey-thing' && typeof newProps.src === 'string';
+    },
+
     mayResourceSuspendCommit(resource: mixed): boolean {
       throw new Error(
         'Resources are not implemented for React Noop yet. This method should not be called',

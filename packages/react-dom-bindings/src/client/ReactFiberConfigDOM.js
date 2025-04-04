@@ -147,6 +147,7 @@ export type Props = {
   size?: number,
   multiple?: boolean,
   src?: string,
+  srcSet?: string,
   loading?: 'eager' | 'lazy',
   onLoad?: (event: any) => void,
   ...
@@ -773,9 +774,9 @@ export function commitMount(
       // only need to assign one. And Safari just never triggers a new load event which means this technique
       // is already a noop regardless of which properties are assigned. We should revisit if browsers update
       // this heuristic in the future.
-      if ((newProps: any).src) {
+      if (newProps.src) {
         ((domElement: any): HTMLImageElement).src = (newProps: any).src;
-      } else if ((newProps: any).srcSet) {
+      } else if (newProps.srcSet) {
         ((domElement: any): HTMLImageElement).srcset = (newProps: any).srcSet;
       }
       return;
@@ -4989,6 +4990,17 @@ export function maySuspendCommit(type: Type, props: Props): boolean {
     props.src !== '' &&
     props.onLoad == null &&
     props.loading !== 'lazy'
+  );
+}
+
+export function maySuspendCommitOnUpdate(
+  type: Type,
+  oldProps: Props,
+  newProps: Props,
+): boolean {
+  return (
+    maySuspendCommit(type, newProps) &&
+    (newProps.src !== oldProps.src || newProps.srcSet !== oldProps.srcSet)
   );
 }
 
