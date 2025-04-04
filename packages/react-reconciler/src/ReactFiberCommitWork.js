@@ -3711,6 +3711,31 @@ function commitPassiveMountOnFiber(
             includeWorkInProgressEffects,
             endTime,
           );
+
+          if (
+            enableProfilerTimer &&
+            enableProfilerCommitHooks &&
+            enableComponentPerformanceTrack &&
+            (finishedWork.mode & ProfileMode) !== NoMode &&
+            !inHydratedSubtree
+          ) {
+            // Log the reappear in the render phase.
+            const startTime = ((finishedWork.actualStartTime: any): number);
+            if (endTime - startTime > 0.05) {
+              logComponentReappeared(finishedWork, startTime, endTime);
+            }
+            if (
+              componentEffectStartTime >= 0 &&
+              componentEffectEndTime >= 0 &&
+              componentEffectEndTime - componentEffectStartTime > 0.05
+            ) {
+              logComponentReappeared(
+                finishedWork,
+                componentEffectStartTime,
+                componentEffectEndTime,
+              );
+            }
+          }
         }
       }
 
@@ -3791,18 +3816,38 @@ function commitPassiveMountOnFiber(
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
     enableComponentPerformanceTrack &&
-    (finishedWork.mode & ProfileMode) !== NoMode &&
-    componentEffectStartTime >= 0 &&
-    componentEffectEndTime >= 0 &&
-    componentEffectDuration > 0.05
+    (finishedWork.mode & ProfileMode) !== NoMode
   ) {
-    logComponentEffect(
-      finishedWork,
-      componentEffectStartTime,
-      componentEffectEndTime,
-      componentEffectDuration,
-      componentEffectErrors,
-    );
+    const isMount =
+      !inHydratedSubtree &&
+      finishedWork.alternate === null &&
+      finishedWork.return !== null &&
+      finishedWork.return.alternate !== null;
+    if (isMount) {
+      // Log the mount in the render phase.
+      const startTime = ((finishedWork.actualStartTime: any): number);
+      if (endTime - startTime > 0.05) {
+        logComponentMount(finishedWork, startTime, endTime);
+      }
+    }
+    if (componentEffectStartTime >= 0 && componentEffectEndTime >= 0) {
+      if (componentEffectDuration > 0.05) {
+        logComponentEffect(
+          finishedWork,
+          componentEffectStartTime,
+          componentEffectEndTime,
+          componentEffectDuration,
+          componentEffectErrors,
+        );
+      }
+      if (isMount && componentEffectEndTime - componentEffectStartTime > 0.05) {
+        logComponentMount(
+          finishedWork,
+          componentEffectStartTime,
+          componentEffectEndTime,
+        );
+      }
+    }
   }
 
   popComponentEffectStart(prevEffectStart);
