@@ -116,6 +116,8 @@ import {
   preparePortalMount,
   prepareScopeUpdate,
   maySuspendCommit,
+  maySuspendCommitOnUpdate,
+  maySuspendCommitInSyncRender,
   mayResourceSuspendCommit,
   preloadInstance,
   preloadResource,
@@ -167,6 +169,7 @@ import {
   includesSomeLane,
   mergeLanes,
   claimNextRetryLane,
+  includesOnlySuspenseyCommitEligibleLanes,
 } from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber';
 import {createScopeInstance} from './ReactFiberScope';
@@ -547,10 +550,16 @@ function updateHostComponent(
 function preloadInstanceAndSuspendIfNeeded(
   workInProgress: Fiber,
   type: Type,
-  props: Props,
+  oldProps: null | Props,
+  newProps: Props,
   renderLanes: Lanes,
 ) {
-  if (!maySuspendCommit(type, props)) {
+  const maySuspend =
+    oldProps === null
+      ? maySuspendCommit(type, newProps)
+      : maySuspendCommitOnUpdate(type, oldProps, newProps);
+
+  if (!maySuspend) {
     // If this flag was set previously, we can remove it. The flag
     // represents whether this particular set of props might ever need to
     // suspend. The safest thing to do is for maySuspendCommit to always
@@ -568,15 +577,25 @@ function preloadInstanceAndSuspendIfNeeded(
   // loaded yet.
   workInProgress.flags |= MaySuspendCommit;
 
-  // preload the instance if necessary. Even if this is an urgent render there
-  // could be benefits to preloading early.
-  // @TODO we should probably do the preload in begin work
-  const isReady = preloadInstance(type, props);
-  if (!isReady) {
-    if (shouldRemainOnPreviousScreen()) {
-      workInProgress.flags |= ShouldSuspendCommit;
+  if (
+    includesOnlySuspenseyCommitEligibleLanes(renderLanes) ||
+    maySuspendCommitInSyncRender(type, newProps)
+  ) {
+    // preload the instance if necessary. Even if this is an urgent render there
+    // could be benefits to preloading early.
+    // @TODO we should probably do the preload in begin work
+    const isReady = preloadInstance(workInProgress.stateNode, type, newProps);
+    if (!isReady) {
+      if (shouldRemainOnPreviousScreen()) {
+        workInProgress.flags |= ShouldSuspendCommit;
+      } else {
+        suspendCommit();
+      }
     } else {
-      suspendCommit();
+      // Even if we're ready we suspend the commit and check again in the pre-commit
+      // phase if we need to suspend anyway. Such as if it's delayed on decoding or
+      // if it was dropped from the cache while rendering due to pressure.
+      workInProgress.flags |= ShouldSuspendCommit;
     }
   }
 }
@@ -1104,6 +1123,7 @@ function completeWork(
             preloadInstanceAndSuspendIfNeeded(
               workInProgress,
               type,
+              null,
               newProps,
               renderLanes,
             );
@@ -1137,10 +1157,10 @@ function completeWork(
               return null;
             }
           } else {
+            const oldProps = current.memoizedProps;
             // This is an Instance
             // We may have props to update on the Hoistable instance.
             if (supportsMutation) {
-              const oldProps = current.memoizedProps;
               if (oldProps !== newProps) {
                 markUpdate(workInProgress);
               }
@@ -1160,6 +1180,7 @@ function completeWork(
             preloadInstanceAndSuspendIfNeeded(
               workInProgress,
               type,
+              oldProps,
               newProps,
               renderLanes,
             );
@@ -1323,6 +1344,7 @@ function completeWork(
       preloadInstanceAndSuspendIfNeeded(
         workInProgress,
         workInProgress.type,
+        current === null ? null : current.memoizedProps,
         workInProgress.pendingProps,
         renderLanes,
       );

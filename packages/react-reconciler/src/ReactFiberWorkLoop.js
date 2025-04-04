@@ -1467,7 +1467,7 @@ function commitRootWhenReady(
     // transaction, so it track state in its own module scope.
     // This will also track any newly added or appearing ViewTransition
     // components for the purposes of forming pairs.
-    accumulateSuspenseyCommit(finishedWork);
+    accumulateSuspenseyCommit(finishedWork, lanes);
     if (isViewTransitionEligible || isGestureTransition) {
       // If we're stopping gestures we don't have to wait for any pending
       // view transition. We'll stop it when we commit.
@@ -2638,7 +2638,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
                 const props = hostFiber.pendingProps;
                 const isReady = resource
                   ? preloadResource(resource)
-                  : preloadInstance(type, props);
+                  : preloadInstance(hostFiber.stateNode, type, props);
                 if (isReady) {
                   // The data resolved. Resume the work loop as if nothing
                   // suspended. Unlike when a user component suspends, we don't

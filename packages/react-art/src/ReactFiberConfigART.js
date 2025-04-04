@@ -596,6 +596,14 @@ export function maySuspendCommit(type, props) {
   return false;
 }
 
+export function maySuspendCommitOnUpdate(type, oldProps, newProps) {
+  return false;
+}
+
+export function maySuspendCommitInSyncRender(type, props) {
+  return false;
+}
+
 export function preloadInstance(type, props) {
   // Return true to indicate it's already loaded
   return true;
@@ -603,7 +611,7 @@ export function preloadInstance(type, props) {
 
 export function startSuspendingCommit() {}
 
-export function suspendInstance(type, props) {}
+export function suspendInstance(instance, type, props) {}
 
 export function suspendOnActiveViewTransition(container) {}
 

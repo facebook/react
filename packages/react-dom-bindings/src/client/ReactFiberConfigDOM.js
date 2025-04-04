@@ -103,6 +103,7 @@ import {
   disableLegacyMode,
   enableMoveBefore,
   disableCommentsAsDOMContainers,
+  enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -145,6 +146,10 @@ export type Props = {
   is?: string,
   size?: number,
   multiple?: boolean,
+  src?: string,
+  srcSet?: string,
+  loading?: 'eager' | 'lazy',
+  onLoad?: (event: any) => void,
   ...
 };
 type RawProps = {
@@ -769,9 +774,9 @@ export function commitMount(
       // only need to assign one. And Safari just never triggers a new load event which means this technique
       // is already a noop regardless of which properties are assigned. We should revisit if browsers update
       // this heuristic in the future.
-      if ((newProps: any).src) {
+      if (newProps.src) {
         ((domElement: any): HTMLImageElement).src = (newProps: any).src;
-      } else if ((newProps: any).srcSet) {
+      } else if (newProps.srcSet) {
         ((domElement: any): HTMLImageElement).srcset = (newProps: any).srcSet;
       }
       return;
@@ -4974,6 +4979,36 @@ export function isHostHoistableType(
 }
 
 export function maySuspendCommit(type: Type, props: Props): boolean {
+  if (!enableSuspenseyImages) {
+    return false;
+  }
+  // Suspensey images are the default, unless you opt-out of with either
+  // loading="lazy" or onLoad={...} which implies you're ok waiting.
+  return (
+    type === 'img' &&
+    props.src != null &&
+    props.src !== '' &&
+    props.onLoad == null &&
+    props.loading !== 'lazy'
+  );
+}
+
+export function maySuspendCommitOnUpdate(
+  type: Type,
+  oldProps: Props,
+  newProps: Props,
+): boolean {
+  return (
+    maySuspendCommit(type, newProps) &&
+    (newProps.src !== oldProps.src || newProps.srcSet !== oldProps.srcSet)
+  );
+}
+
+export function maySuspendCommitInSyncRender(
+  type: Type,
+  props: Props,
+): boolean {
+  // TODO: Allow sync lanes to suspend too with an opt-in.
   return false;
 }
 
@@ -4984,8 +5019,17 @@ export function mayResourceSuspendCommit(resource: Resource): boolean {
   );
 }
 
-export function preloadInstance(type: Type, props: Props): boolean {
-  return true;
+export function preloadInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): boolean {
+  // We don't need to preload Suspensey images because the browser will
+  // load them early once we set the src.
+  // If we return true here, we'll still get a suspendInstance call in the
+  // pre-commit phase to determine if we still need to decode the image or
+  // if was dropped from cache. This just avoids rendering Suspense fallback.
+  return !!(instance: any).complete;
 }
 
 export function preloadResource(resource: Resource): boolean {
@@ -5022,8 +5066,38 @@ export function startSuspendingCommit(): void {
   };
 }
 
-export function suspendInstance(type: Type, props: Props): void {
-  return;
+const SUSPENSEY_IMAGE_TIMEOUT = 500;
+
+export function suspendInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): void {
+  if (!enableSuspenseyImages) {
+    return;
+  }
+  if (suspendedState === null) {
+    throw new Error(
+      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
+    );
+  }
+  const state = suspendedState;
+  if (
+    // $FlowFixMe[prop-missing]
+    typeof instance.decode === 'function' &&
+    typeof setTimeout === 'function'
+  ) {
+    // If this browser supports decode() API, we use it to suspend waiting on the image.
+    // The loading should have already started at this point, so it should be enough to
+    // just call decode() which should also wait for the data to finish loading.
+    state.count++;
+    const ping = onUnsuspend.bind(state);
+    Promise.race([
+      // $FlowFixMe[prop-missing]
+      instance.decode(),
+      new Promise(resolve => setTimeout(resolve, SUSPENSEY_IMAGE_TIMEOUT)),
+    ]).then(ping, ping);
+  }
 }
 
 export function suspendResource(

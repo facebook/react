@@ -637,6 +637,14 @@ export function includesOnlyViewTransitionEligibleLanes(lanes: Lanes): boolean {
   return (lanes & (TransitionLanes | RetryLanes | IdleLane)) === lanes;
 }
 
+export function includesOnlySuspenseyCommitEligibleLanes(
+  lanes: Lanes,
+): boolean {
+  return (
+    (lanes & (TransitionLanes | RetryLanes | IdleLane | GestureLane)) === lanes
+  );
+}
+
 export function includesBlockingLane(lanes: Lanes): boolean {
   const SyncDefaultLanes =
     InputContinuousHydrationLane |
