@@ -2809,8 +2809,14 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   this: FragmentInstanceType,
   otherNode: Instance,
 ): number {
+  const parentHostInstance = getFragmentParentHostInstance(this._fragmentFiber);
+  if (parentHostInstance === null) {
+    return Node.DOCUMENT_POSITION_DISCONNECTED;
+  }
+
   const children: Array<Instance> = [];
   traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+
   if (children.length === 0) {
     return (
       Node.DOCUMENT_POSITION_DISCONNECTED |
