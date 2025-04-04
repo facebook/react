@@ -5019,14 +5019,17 @@ export function mayResourceSuspendCommit(resource: Resource): boolean {
   );
 }
 
-export function preloadInstance(type: Type, props: Props): boolean {
+export function preloadInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): boolean {
   // We don't need to preload Suspensey images because the browser will
   // load them early once we set the src.
-  // We indicate that all images are not yet loaded and if they're able
-  // to hit cache we let the decode() do that. Even if we did maintain
-  // our own cache to know this, it's not a guarantee that the browser
-  // keeps it in decoded memory.
-  return false;
+  // If we return true here, we'll still get a suspendInstance call in the
+  // pre-commit phase to determine if we still need to decode the image or
+  // if was dropped from cache. This just avoids rendering Suspense fallback.
+  return !!(instance: any).complete;
 }
 
 export function preloadResource(resource: Resource): boolean {

@@ -584,13 +584,18 @@ function preloadInstanceAndSuspendIfNeeded(
     // preload the instance if necessary. Even if this is an urgent render there
     // could be benefits to preloading early.
     // @TODO we should probably do the preload in begin work
-    const isReady = preloadInstance(type, newProps);
+    const isReady = preloadInstance(workInProgress.stateNode, type, newProps);
     if (!isReady) {
       if (shouldRemainOnPreviousScreen()) {
         workInProgress.flags |= ShouldSuspendCommit;
       } else {
         suspendCommit();
       }
+    } else {
+      // Even if we're ready we suspend the commit and check again in the pre-commit
+      // phase if we need to suspend anyway. Such as if it's delayed on decoding or
+      // if it was dropped from the cache while rendering due to pressure.
+      workInProgress.flags |= ShouldSuspendCommit;
     }
   }
 }

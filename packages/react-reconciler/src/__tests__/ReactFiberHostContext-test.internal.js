@@ -103,7 +103,7 @@ describe('ReactFiberHostContext', () => {
       maySuspendCommitInSyncRender(type, props) {
         return false;
       },
-      preloadInstance(type, props) {
+      preloadInstance(instance, type, props) {
         return true;
       },
       startSuspendingCommit() {},

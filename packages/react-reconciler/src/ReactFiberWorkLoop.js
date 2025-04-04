@@ -2638,7 +2638,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
                 const props = hostFiber.pendingProps;
                 const isReady = resource
                   ? preloadResource(resource)
-                  : preloadInstance(type, props);
+                  : preloadInstance(hostFiber.stateNode, type, props);
                 if (isReady) {
                   // The data resolved. Resume the work loop as if nothing
                   // suspended. Unlike when a user component suspends, we don't

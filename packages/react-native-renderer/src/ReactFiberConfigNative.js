@@ -750,7 +750,11 @@ export function maySuspendCommitInSyncRender(
   return false;
 }
 
-export function preloadInstance(type: Type, props: Props): boolean {
+export function preloadInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): boolean {
   // Return false to indicate it's already loaded
   return true;
 }

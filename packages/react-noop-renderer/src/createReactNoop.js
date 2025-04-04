@@ -654,7 +654,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       );
     },
 
-    preloadInstance(type: string, props: Props): boolean {
+    preloadInstance(instance: Instance, type: string, props: Props): boolean {
       if (type !== 'suspensey-thing' || typeof props.src !== 'string') {
         throw new Error('Attempted to preload unexpected instance: ' + type);
       }
