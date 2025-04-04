@@ -645,9 +645,9 @@ export function logSuspendedCommitPhase(
     reusableLaneDevToolDetails.color = 'secondary-light';
     reusableLaneOptions.start = startTime;
     reusableLaneOptions.end = endTime;
-    // TODO: Make this conditionally "Suspended on Images" or both when we add Suspensey Images.
+    // TODO: Include the exact reason and URLs of what resources suspended.
     // TODO: This might also be Suspended while waiting on a View Transition.
-    performance.measure('Suspended on CSS', reusableLaneOptions);
+    performance.measure('Suspended on CSS or Images', reusableLaneOptions);
   }
 }
 
