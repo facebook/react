@@ -637,7 +637,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       // to ever need to suspend. This is different from asking whether it's
       // currently ready because even if it's ready now, it might get purged
       // from the cache later.
-      return type === 'suspensey-thing' && typeof newProps.src === 'string';
+      return (
+        type === 'suspensey-thing' &&
+        typeof newProps.src === 'string' &&
+        newProps.src !== oldProps.src
+      );
+    },
+
+    maySuspendCommitInSyncRender(type: string, props: Props): boolean {
+      return true;
     },
 
     mayResourceSuspendCommit(resource: mixed): boolean {

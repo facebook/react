@@ -117,6 +117,7 @@ import {
   prepareScopeUpdate,
   maySuspendCommit,
   maySuspendCommitOnUpdate,
+  maySuspendCommitInSyncRender,
   mayResourceSuspendCommit,
   preloadInstance,
   preloadResource,
@@ -576,8 +577,10 @@ function preloadInstanceAndSuspendIfNeeded(
   // loaded yet.
   workInProgress.flags |= MaySuspendCommit;
 
-  // TODO: Allow sync lanes to suspend too with an opt-in.
-  if (includesOnlySuspenseyCommitEligibleLanes(renderLanes)) {
+  if (
+    includesOnlySuspenseyCommitEligibleLanes(renderLanes) ||
+    maySuspendCommitInSyncRender(type, newProps)
+  ) {
     // preload the instance if necessary. Even if this is an urgent render there
     // could be benefits to preloading early.
     // @TODO we should probably do the preload in begin work

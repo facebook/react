@@ -600,6 +600,10 @@ export function maySuspendCommitOnUpdate(type, oldProps, newProps) {
   return false;
 }
 
+export function maySuspendCommitInSyncRender(type, props) {
+  return false;
+}
+
 export function preloadInstance(type, props) {
   // Return true to indicate it's already loaded
   return true;

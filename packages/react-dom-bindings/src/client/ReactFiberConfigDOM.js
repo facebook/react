@@ -5004,6 +5004,14 @@ export function maySuspendCommitOnUpdate(
   );
 }
 
+export function maySuspendCommitInSyncRender(
+  type: Type,
+  props: Props,
+): boolean {
+  // TODO: Allow sync lanes to suspend too with an opt-in.
+  return false;
+}
+
 export function mayResourceSuspendCommit(resource: Resource): boolean {
   return (
     resource.type === 'stylesheet' &&

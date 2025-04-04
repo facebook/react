@@ -163,6 +163,7 @@ import {
   mountHoistable,
   unmountHoistable,
   prepareToCommitHoistables,
+  maySuspendCommitInSyncRender,
   suspendInstance,
   suspendResource,
   resetFormInstance,
@@ -4321,7 +4322,10 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber, committedLanes: Lanes) {
           const type = fiber.type;
           const props = fiber.memoizedProps;
           // TODO: Allow sync lanes to suspend too with an opt-in.
-          if (includesOnlySuspenseyCommitEligibleLanes(committedLanes)) {
+          if (
+            includesOnlySuspenseyCommitEligibleLanes(committedLanes) ||
+            maySuspendCommitInSyncRender(type, props)
+          ) {
             suspendInstance(instance, type, props);
           }
         }
@@ -4335,7 +4339,10 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber, committedLanes: Lanes) {
         const type = fiber.type;
         const props = fiber.memoizedProps;
         // TODO: Allow sync lanes to suspend too with an opt-in.
-        if (includesOnlySuspenseyCommitEligibleLanes(committedLanes)) {
+        if (
+          includesOnlySuspenseyCommitEligibleLanes(committedLanes) ||
+          maySuspendCommitInSyncRender(type, props)
+        ) {
           suspendInstance(instance, type, props);
         }
       }

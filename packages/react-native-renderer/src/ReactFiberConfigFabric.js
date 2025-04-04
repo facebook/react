@@ -585,6 +585,13 @@ export function maySuspendCommitOnUpdate(
   return false;
 }
 
+export function maySuspendCommitInSyncRender(
+  type: Type,
+  props: Props,
+): boolean {
+  return false;
+}
+
 export function preloadInstance(type: Type, props: Props): boolean {
   return true;
 }

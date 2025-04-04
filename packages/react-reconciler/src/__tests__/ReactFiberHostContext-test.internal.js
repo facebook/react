@@ -100,6 +100,9 @@ describe('ReactFiberHostContext', () => {
       maySuspendCommitOnUpdate(type, oldProps, newProps) {
         return false;
       },
+      maySuspendCommitInSyncRender(type, props) {
+        return false;
+      },
       preloadInstance(type, props) {
         return true;
       },
