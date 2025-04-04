@@ -2329,6 +2329,7 @@ FragmentInstance.prototype.addEventListener = function (
     listeners.push({type, listener, optionsOrUseCapture});
     traverseFragmentInstance(
       this._fragmentFiber,
+      false,
       addEventListenerToChild,
       type,
       listener,
@@ -2360,6 +2361,7 @@ FragmentInstance.prototype.removeEventListener = function (
   if (typeof listeners !== 'undefined' && listeners.length > 0) {
     traverseFragmentInstance(
       this._fragmentFiber,
+      false,
       removeEventListenerFromChild,
       type,
       listener,
@@ -2392,6 +2394,7 @@ FragmentInstance.prototype.focus = function (
 ): void {
   traverseFragmentInstance(
     this._fragmentFiber,
+    false,
     setFocusIfFocusable,
     focusOptions,
   );
@@ -2402,7 +2405,12 @@ FragmentInstance.prototype.focusLast = function (
   focusOptions?: FocusOptions,
 ): void {
   const children: Array<Instance> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  traverseFragmentInstance(
+    this._fragmentFiber,
+    false,
+    collectChildren,
+    children,
+  );
   for (let i = children.length - 1; i >= 0; i--) {
     const child = children[i];
     if (setFocusIfFocusable(child, focusOptions)) {
@@ -2423,6 +2431,7 @@ FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
   //   does not contain document.activeElement
   traverseFragmentInstance(
     this._fragmentFiber,
+    false,
     blurActiveElementWithinFragment,
   );
 };
@@ -2445,7 +2454,7 @@ FragmentInstance.prototype.observeUsing = function (
     this._observers = new Set();
   }
   this._observers.add(observer);
-  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
+  traverseFragmentInstance(this._fragmentFiber, false, observeChild, observer);
 };
 function observeChild(
   child: Instance,
@@ -2468,7 +2477,12 @@ FragmentInstance.prototype.unobserveUsing = function (
     }
   } else {
     this._observers.delete(observer);
-    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
+    traverseFragmentInstance(
+      this._fragmentFiber,
+      false,
+      unobserveChild,
+      observer,
+    );
   }
 };
 function unobserveChild(
@@ -2483,7 +2497,12 @@ FragmentInstance.prototype.getClientRects = function (
   this: FragmentInstanceType,
 ): Array<DOMRect> {
   const rects: Array<DOMRect> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectClientRects, rects);
+  traverseFragmentInstance(
+    this._fragmentFiber,
+    true,
+    collectClientRects,
+    rects,
+  );
   return rects;
 };
 function collectClientRects(child: Instance, rects: Array<DOMRect>): boolean {
@@ -2516,7 +2535,12 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   }
 
   const children: Array<Instance> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  traverseFragmentInstance(
+    this._fragmentFiber,
+    true,
+    collectChildren,
+    children,
+  );
 
   if (children.length === 0) {
     // If the fragment has no children, we can use the parent and

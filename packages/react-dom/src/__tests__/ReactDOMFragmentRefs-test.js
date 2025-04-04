@@ -11,6 +11,8 @@
 
 let React;
 let ReactDOMClient;
+let ReactDOM;
+let createPortal;
 let act;
 let container;
 let Fragment;
@@ -31,6 +33,8 @@ describe('FragmentRefs', () => {
     Fragment = React.Fragment;
     Activity = React.unstable_Activity;
     ReactDOMClient = require('react-dom/client');
+    ReactDOM = require('react-dom');
+    createPortal = ReactDOM.createPortal;
     act = require('internal-test-utils').act;
     const IntersectionMocks = require('./utils/IntersectionMocks');
     mockIntersectionObserver = IntersectionMocks.mockIntersectionObserver;
@@ -609,6 +613,39 @@ describe('FragmentRefs', () => {
       fragmentRef.current.removeEventListener('click', logClick);
       childA.click();
       expect(logs).toEqual([]);
+    });
+
+    // @gate enableFragmentRefs
+    it('applies event listeners to portaled children', async () => {
+      const fragmentRef = React.createRef();
+      const childARef = React.createRef();
+      const childBRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test() {
+        return (
+          <Fragment ref={fragmentRef}>
+            <div id="child-a" ref={childARef} />
+            {createPortal(<div id="child-b" ref={childBRef} />, document.body)}
+          </Fragment>
+        );
+      }
+
+      await act(() => {
+        root.render(<Test />);
+      });
+
+      const logs = [];
+      fragmentRef.current.addEventListener('click', e => {
+        logs.push(e.target.id);
+      });
+
+      childARef.current.click();
+      expect(logs).toEqual(['child-a']);
+
+      logs.length = 0;
+      childBRef.current.click();
+      expect(logs).toEqual(['child-b']);
     });
 
     describe('with activity', () => {
@@ -1269,7 +1306,7 @@ describe('FragmentRefs', () => {
           <div ref={containerRef}>
             {mount && (
               <Fragment ref={fragmentRef}>
-                <div></div>
+                <div />
               </Fragment>
             )}
           </div>
@@ -1304,6 +1341,52 @@ describe('FragmentRefs', () => {
           contains: false,
           containedBy: false,
           disconnected: true,
+          implementationSpecific: false,
+        },
+      );
+    });
+
+    // @gate enableFragmentRefs
+    it('handles portaled elements', async () => {
+      const fragmentRef = React.createRef();
+      const portaledSiblingRef = React.createRef();
+      const portaledChildRef = React.createRef();
+
+      function Test() {
+        return (
+          <div>
+            {createPortal(<div ref={portaledSiblingRef} />, document.body)}
+            <Fragment ref={fragmentRef}>
+              {createPortal(<div ref={portaledChildRef} />, document.body)}
+              <div />
+            </Fragment>
+          </div>
+        );
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => root.render(<Test />));
+
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(portaledSiblingRef.current),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(portaledChildRef.current),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
           implementationSpecific: false,
         },
       );
