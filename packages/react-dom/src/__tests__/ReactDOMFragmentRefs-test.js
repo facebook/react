@@ -969,24 +969,16 @@ describe('FragmentRefs', () => {
 
   describe('compareDocumentPosition', () => {
     function expectPosition(position, spec) {
-      expect((position & Node.DOCUMENT_POSITION_PRECEDING) !== 0).toBe(
-        spec.preceding,
-      );
-      expect((position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0).toBe(
-        spec.following,
-      );
-      expect((position & Node.DOCUMENT_POSITION_CONTAINS) !== 0).toBe(
-        spec.contains,
-      );
-      expect((position & Node.DOCUMENT_POSITION_CONTAINED_BY) !== 0).toBe(
-        spec.containedBy,
-      );
-      expect((position & Node.DOCUMENT_POSITION_DISCONNECTED) !== 0).toBe(
-        spec.disconnected,
-      );
-      expect(
-        (position & Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC) !== 0,
-      ).toBe(spec.implementationSpecific);
+      const positionResult = {
+        following: (position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
+        preceding: (position & Node.DOCUMENT_POSITION_PRECEDING) !== 0,
+        contains: (position & Node.DOCUMENT_POSITION_CONTAINS) !== 0,
+        containedBy: (position & Node.DOCUMENT_POSITION_CONTAINED_BY) !== 0,
+        disconnected: (position & Node.DOCUMENT_POSITION_DISCONNECTED) !== 0,
+        implementationSpecific:
+          (position & Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC) !== 0,
+      };
+      expect(positionResult).toEqual(spec);
     }
     // @gate enableFragmentRefs
     it('returns the relationship between the fragment instance and a given node', async () => {
@@ -1262,6 +1254,57 @@ describe('FragmentRefs', () => {
           containedBy: false,
           disconnected: true,
           implementationSpecific: true,
+        },
+      );
+    });
+
+    // @gate enableFragmentRefs
+    it('returns disconnected for comparison with an unmounted fragment instance', async () => {
+      const fragmentRef = React.createRef();
+      const containerRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test({mount}) {
+        return (
+          <div ref={containerRef}>
+            {mount && (
+              <Fragment ref={fragmentRef}>
+                <div></div>
+              </Fragment>
+            )}
+          </div>
+        );
+      }
+
+      await act(() => root.render(<Test mount={true} />));
+
+      const fragmentHandle = fragmentRef.current;
+
+      expectPosition(
+        fragmentHandle.compareDocumentPosition(containerRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: true,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      await act(() => {
+        root.render(<Test mount={false} />);
+      });
+
+      expectPosition(
+        fragmentHandle.compareDocumentPosition(containerRef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: true,
+          implementationSpecific: false,
         },
       );
     });
