@@ -1193,7 +1193,7 @@ describe('FragmentRefs', () => {
     });
 
     // @gate enableFragmentRefs
-    it('returns disconnected and implementation specific for any comparison with empty fragment instances', async () => {
+    it('handles empty fragment instances', async () => {
       const fragmentRef = React.createRef();
       const beforeRef = React.createRef();
       const afterRef = React.createRef();
@@ -1215,34 +1215,34 @@ describe('FragmentRefs', () => {
       expectPosition(
         fragmentRef.current.compareDocumentPosition(document.body),
         {
-          preceding: false,
+          preceding: true,
           following: false,
-          contains: false,
+          contains: true,
           containedBy: false,
-          disconnected: true,
-          implementationSpecific: true,
+          disconnected: false,
+          implementationSpecific: false,
         },
       );
       expectPosition(
         fragmentRef.current.compareDocumentPosition(beforeRef.current),
         {
-          preceding: false,
+          preceding: true,
           following: false,
           contains: false,
           containedBy: false,
-          disconnected: true,
-          implementationSpecific: true,
+          disconnected: false,
+          implementationSpecific: false,
         },
       );
       expectPosition(
         fragmentRef.current.compareDocumentPosition(afterRef.current),
         {
           preceding: false,
-          following: false,
+          following: true,
           contains: false,
           containedBy: false,
-          disconnected: true,
-          implementationSpecific: true,
+          disconnected: false,
+          implementationSpecific: false,
         },
       );
       expectPosition(
@@ -1250,10 +1250,10 @@ describe('FragmentRefs', () => {
         {
           preceding: false,
           following: false,
-          contains: false,
+          contains: true,
           containedBy: false,
-          disconnected: true,
-          implementationSpecific: true,
+          disconnected: false,
+          implementationSpecific: false,
         },
       );
     });
