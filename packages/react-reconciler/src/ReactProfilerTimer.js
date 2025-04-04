@@ -272,7 +272,6 @@ export function pushComponentEffectStart(): number {
   }
   const prevEffectStart = componentEffectStartTime;
   componentEffectStartTime = -1.1; // Track the next start.
-  componentEffectDuration = -0; // Reset component level duration.
   return prevEffectStart;
 }
 
@@ -284,6 +283,26 @@ export function popComponentEffectStart(prevEffectStart: number): void {
   if (prevEffectStart >= 0) {
     // Otherwise, we restore the previous parent's start time.
     componentEffectStartTime = prevEffectStart;
+  }
+}
+
+export function pushComponentEffectDuration(): number {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return 0;
+  }
+  const prevEffectDuration = componentEffectDuration;
+  componentEffectDuration = -0; // Reset component level duration.
+  return prevEffectDuration;
+}
+
+export function popComponentEffectDuration(prevEffectDuration: number): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+  // If the parent component didn't have a start time, we let this current time persist.
+  if (prevEffectDuration >= 0) {
+    // Otherwise, we restore the previous parent's start time.
+    componentEffectDuration = prevEffectDuration;
   }
 }
 
