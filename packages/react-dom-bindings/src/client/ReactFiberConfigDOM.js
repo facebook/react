@@ -5055,11 +5055,39 @@ export function startSuspendingCommit(): void {
   };
 }
 
+const SUSPENSEY_IMAGE_TIMEOUT = 500;
+
 export function suspendInstance(
   instance: Instance,
   type: Type,
   props: Props,
-): void {}
+): void {
+  if (!enableSuspenseyImages) {
+    return;
+  }
+  if (suspendedState === null) {
+    throw new Error(
+      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
+    );
+  }
+  const state = suspendedState;
+  if (
+    // $FlowFixMe[prop-missing]
+    typeof instance.decode === 'function' &&
+    typeof setTimeout === 'function'
+  ) {
+    // If this browser supports decode() API, we use it to suspend waiting on the image.
+    // The loading should have already started at this point, so it should be enough to
+    // just call decode() which should also wait for the data to finish loading.
+    state.count++;
+    const ping = onUnsuspend.bind(state);
+    Promise.race([
+      // $FlowFixMe[prop-missing]
+      instance.decode(),
+      new Promise(resolve => setTimeout(resolve, SUSPENSEY_IMAGE_TIMEOUT)),
+    ]).then(ping, ping);
+  }
+}
 
 export function suspendResource(
   hoistableRoot: HoistableRoot,
