@@ -291,6 +291,25 @@ export let shouldFireAfterActiveInstanceBlur: boolean = false;
 let viewTransitionContextChanged: boolean = false;
 let rootViewTransitionAffected: boolean = false;
 
+function isHydratingParent(current: Fiber, finishedWork: Fiber): boolean {
+  if (finishedWork.tag === SuspenseComponent) {
+    const prevState: SuspenseState | null = current.memoizedState;
+    const nextState: SuspenseState | null = finishedWork.memoizedState;
+    return (
+      prevState !== null &&
+      prevState.dehydrated !== null &&
+      (nextState === null || nextState.dehydrated === null)
+    );
+  } else if (finishedWork.tag === HostRoot) {
+    return (
+      (current.memoizedState: RootState).isDehydrated &&
+      (finishedWork.flags & ForceClientRender) === NoFlags
+    );
+  } else {
+    return false;
+  }
+}
+
 export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
@@ -833,11 +852,17 @@ function commitLayoutEffectOnFiber(
       finishedWork.return.alternate !== null &&
       componentEffectEndTime - componentEffectStartTime > 0.05
     ) {
-      logComponentMount(
-        finishedWork,
-        componentEffectStartTime,
-        componentEffectEndTime,
+      const isHydration = isHydratingParent(
+        finishedWork.return.alternate,
+        finishedWork.return,
       );
+      if (!isHydration) {
+        logComponentMount(
+          finishedWork,
+          componentEffectStartTime,
+          componentEffectEndTime,
+        );
+      }
     }
   }
 
@@ -2478,11 +2503,17 @@ function commitMutationEffectsOnFiber(
       finishedWork.return.alternate !== null &&
       componentEffectEndTime - componentEffectStartTime > 0.05
     ) {
-      logComponentMount(
-        finishedWork,
-        componentEffectStartTime,
-        componentEffectEndTime,
+      const isHydration = isHydratingParent(
+        finishedWork.return.alternate,
+        finishedWork.return,
       );
+      if (!isHydration) {
+        logComponentMount(
+          finishedWork,
+          componentEffectStartTime,
+          componentEffectEndTime,
+        );
+      }
     }
   }
 
