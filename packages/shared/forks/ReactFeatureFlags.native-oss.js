@@ -74,6 +74,7 @@ export const enableGestureTransition = false;
 export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
+export const enableSuspenseyImages = false;
 export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefs = false;
