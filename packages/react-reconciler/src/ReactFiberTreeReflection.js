@@ -348,16 +348,25 @@ export function doesFiberContain(
 export function traverseFragmentInstance<I, A, B, C>(
   fragmentFiber: Fiber,
   fn: (I, A, B, C) => boolean,
+  skipPortals: boolean,
   a: A,
   b: B,
   c: C,
 ): void {
-  traverseFragmentInstanceChildren(fragmentFiber.child, fn, a, b, c);
+  traverseFragmentInstanceChildren(
+    fragmentFiber.child,
+    skipPortals,
+    fn,
+    a,
+    b,
+    c,
+  );
 }
 
 function traverseFragmentInstanceChildren<I, A, B, C>(
   child: Fiber | null,
   fn: (I, A, B, C) => boolean,
+  skipPortals: boolean,
   a: A,
   b: B,
   c: C,
@@ -372,8 +381,10 @@ function traverseFragmentInstanceChildren<I, A, B, C>(
       child.memoizedState !== null
     ) {
       // Skip hidden subtrees
+    } else if (skipPortals && child.tag === HostPortal) {
+      // Skip portals
     } else {
-      traverseFragmentInstanceChildren(child.child, fn, a, b, c);
+      traverseFragmentInstanceChildren(child.child, skipPortals, fn, a, b, c);
     }
     child = child.sibling;
   }
@@ -396,7 +407,7 @@ export function getFragmentParentHostInstance(fiber: Fiber): null | Instance {
 
 export function getNextSiblingHostInstance(fiber: Fiber): null | Instance {
   let nextSibling = null;
-  traverseFragmentInstanceChildren(fiber.sibling, instance => {
+  traverseFragmentInstanceChildren(fiber.sibling, true, instance => {
     nextSibling = instance;
     return true;
   });
