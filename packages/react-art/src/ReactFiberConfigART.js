@@ -607,7 +607,7 @@ export function preloadInstance(type, props) {
 
 export function startSuspendingCommit() {}
 
-export function suspendInstance(type, props) {}
+export function suspendInstance(instance, type, props) {}
 
 export function suspendOnActiveViewTransition(container) {}
 

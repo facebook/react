@@ -320,7 +320,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     suspenseyCommitSubscription = null;
   }
 
-  function suspendInstance(type: string, props: Props): void {
+  function suspendInstance(
+    instance: Instance,
+    type: string,
+    props: Props,
+  ): void {
     const src = props.src;
     if (type === 'suspensey-thing' && typeof src === 'string') {
       // Attach a listener to the suspensey thing and create a subscription

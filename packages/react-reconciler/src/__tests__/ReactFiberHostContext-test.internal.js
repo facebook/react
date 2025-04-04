@@ -104,7 +104,7 @@ describe('ReactFiberHostContext', () => {
         return true;
       },
       startSuspendingCommit() {},
-      suspendInstance(type, props) {},
+      suspendInstance(instance, type, props) {},
       suspendOnActiveViewTransition(container) {},
       waitForCommitToBeReady() {
         return null;

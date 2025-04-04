@@ -4308,9 +4308,10 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
             fiber.memoizedProps,
           );
         } else {
+          const instance = fiber.stateNode;
           const type = fiber.type;
           const props = fiber.memoizedProps;
-          suspendInstance(type, props);
+          suspendInstance(instance, type, props);
         }
       }
       break;
@@ -4318,9 +4319,10 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
     case HostComponent: {
       recursivelyAccumulateSuspenseyCommit(fiber);
       if (fiber.flags & suspenseyCommitFlag) {
+        const instance = fiber.stateNode;
         const type = fiber.type;
         const props = fiber.memoizedProps;
-        suspendInstance(type, props);
+        suspendInstance(instance, type, props);
       }
       break;
     }

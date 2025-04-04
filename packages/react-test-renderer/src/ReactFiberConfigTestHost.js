@@ -552,7 +552,11 @@ export function preloadInstance(type: Type, props: Props): boolean {
 
 export function startSuspendingCommit(): void {}
 
-export function suspendInstance(type: Type, props: Props): void {}
+export function suspendInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): void {}
 
 export function suspendOnActiveViewTransition(container: Container): void {}
 

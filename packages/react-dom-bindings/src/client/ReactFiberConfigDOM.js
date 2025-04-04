@@ -5055,9 +5055,11 @@ export function startSuspendingCommit(): void {
   };
 }
 
-export function suspendInstance(type: Type, props: Props): void {
-  return;
-}
+export function suspendInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): void {}
 
 export function suspendResource(
   hoistableRoot: HoistableRoot,
