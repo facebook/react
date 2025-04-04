@@ -2688,11 +2688,18 @@ __DEV__ &&
     function pushComponentEffectStart() {
       var prevEffectStart = componentEffectStartTime;
       componentEffectStartTime = -1.1;
-      componentEffectDuration = -0;
       return prevEffectStart;
     }
     function popComponentEffectStart(prevEffectStart) {
       0 <= prevEffectStart && (componentEffectStartTime = prevEffectStart);
+    }
+    function pushComponentEffectDuration() {
+      var prevEffectDuration = componentEffectDuration;
+      componentEffectDuration = -0;
+      return prevEffectDuration;
+    }
+    function popComponentEffectDuration(prevEffectDuration) {
+      0 <= prevEffectDuration && (componentEffectDuration = prevEffectDuration);
     }
     function pushComponentEffectErrors() {
       var prevErrors = componentEffectErrors;
@@ -12090,6 +12097,7 @@ __DEV__ &&
     }
     function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
         flags = finishedWork.flags;
       switch (finishedWork.tag) {
@@ -12301,6 +12309,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function abortRootTransitions(
@@ -12541,6 +12550,9 @@ __DEV__ &&
               err
             ));
         }
+      var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
+        prevEffectErrors = pushComponentEffectErrors();
       switch (deletedFiber.tag) {
         case 26:
           if (supportsResources) {
@@ -12776,6 +12788,21 @@ __DEV__ &&
             deletedFiber
           );
       }
+      enableComponentPerformanceTrack &&
+        (deletedFiber.mode & 2) !== NoMode &&
+        0 <= componentEffectStartTime &&
+        0 <= componentEffectEndTime &&
+        0.05 < componentEffectDuration &&
+        logComponentEffect(
+          deletedFiber,
+          componentEffectStartTime,
+          componentEffectEndTime,
+          componentEffectDuration,
+          componentEffectErrors
+        );
+      popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
+      componentEffectErrors = prevEffectErrors;
     }
     function commitSuspenseHydrationCallbacks(finishedRoot, finishedWork) {
       if (supportsHydration && null === finishedWork.memoizedState) {
@@ -12904,6 +12931,7 @@ __DEV__ &&
     }
     function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
         current = finishedWork.alternate,
         flags = finishedWork.flags;
@@ -13351,6 +13379,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function commitReconciliationEffects(finishedWork) {
@@ -13480,6 +13509,7 @@ __DEV__ &&
     }
     function disappearLayoutEffects(finishedWork) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors();
       switch (finishedWork.tag) {
         case 0:
@@ -13549,6 +13579,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
@@ -13563,6 +13594,7 @@ __DEV__ &&
       includeWorkInProgressEffects
     ) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
         flags = finishedWork.flags;
       switch (finishedWork.tag) {
@@ -13716,6 +13748,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function recursivelyTraverseReappearLayoutEffects(
@@ -13872,6 +13905,7 @@ __DEV__ &&
       endTime
     ) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
         isViewTransitionEligible = enableViewTransition
           ? (committedLanes & 335544064) === committedLanes
@@ -13933,7 +13967,7 @@ __DEV__ &&
           );
           break;
         case 3:
-          var prevEffectDuration = pushNestedEffectDurations(),
+          var prevProfilerEffectDuration = pushNestedEffectDurations(),
             wasInHydratedSubtree = inHydratedSubtree;
           enableComponentPerformanceTrack &&
             (inHydratedSubtree =
@@ -14011,8 +14045,9 @@ __DEV__ &&
             );
             clearTransitionsForLanes(finishedRoot, committedLanes);
           }
-          finishedRoot.passiveEffectDuration +=
-            popNestedEffectDurations(prevEffectDuration);
+          finishedRoot.passiveEffectDuration += popNestedEffectDurations(
+            prevProfilerEffectDuration
+          );
           break;
         case 12:
           flags & 2048
@@ -14048,16 +14083,16 @@ __DEV__ &&
               null !== finishedWork.alternate
                 ? finishedWork.alternate.memoizedState
                 : null),
-            (prevEffectDuration = finishedWork.memoizedState),
+            (prevProfilerEffectDuration = finishedWork.memoizedState),
             null === flags ||
             null === flags.dehydrated ||
-            (null !== prevEffectDuration &&
-              null !== prevEffectDuration.dehydrated)
+            (null !== prevProfilerEffectDuration &&
+              null !== prevProfilerEffectDuration.dehydrated)
               ? (inHydratedSubtree = !1)
-              : ((prevEffectDuration = finishedWork.deletions),
-                null !== prevEffectDuration &&
-                0 < prevEffectDuration.length &&
-                18 === prevEffectDuration[0].tag
+              : ((prevProfilerEffectDuration = finishedWork.deletions),
+                null !== prevProfilerEffectDuration &&
+                0 < prevProfilerEffectDuration.length &&
+                18 === prevProfilerEffectDuration[0].tag
                   ? ((inHydratedSubtree = !1),
                     (flags = flags.hydrationErrors),
                     null !== flags &&
@@ -14094,14 +14129,14 @@ __DEV__ &&
             );
           break;
         case 22:
-          prevEffectDuration = finishedWork.stateNode;
+          prevProfilerEffectDuration = finishedWork.stateNode;
           wasInHydratedSubtree = finishedWork.alternate;
           null !== finishedWork.memoizedState
             ? (isViewTransitionEligible &&
                 null !== wasInHydratedSubtree &&
                 null === wasInHydratedSubtree.memoizedState &&
                 restoreEnterOrExitViewTransitions(wasInHydratedSubtree),
-              prevEffectDuration._visibility & 2
+              prevProfilerEffectDuration._visibility & 2
                 ? recursivelyTraversePassiveMountEffects(
                     finishedRoot,
                     finishedWork,
@@ -14120,7 +14155,7 @@ __DEV__ &&
                 null !== wasInHydratedSubtree &&
                 null !== wasInHydratedSubtree.memoizedState &&
                 restoreEnterOrExitViewTransitions(finishedWork),
-              prevEffectDuration._visibility & 2
+              prevProfilerEffectDuration._visibility & 2
                 ? recursivelyTraversePassiveMountEffects(
                     finishedRoot,
                     finishedWork,
@@ -14128,7 +14163,7 @@ __DEV__ &&
                     committedTransitions,
                     endTime
                   )
-                : ((prevEffectDuration._visibility |= 2),
+                : ((prevProfilerEffectDuration._visibility |= 2),
                   recursivelyTraverseReconnectPassiveEffects(
                     finishedRoot,
                     finishedWork,
@@ -14141,7 +14176,7 @@ __DEV__ &&
             commitOffscreenPassiveMountEffects(
               wasInHydratedSubtree,
               finishedWork,
-              prevEffectDuration
+              prevProfilerEffectDuration
             );
           break;
         case 24:
@@ -14207,6 +14242,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function recursivelyTraverseReconnectPassiveEffects(
@@ -14252,6 +14288,7 @@ __DEV__ &&
       endTime
     ) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors();
       enableComponentPerformanceTrack &&
         (finishedWork.mode & 2) !== NoMode &&
@@ -14382,6 +14419,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function recursivelyTraverseAtomicPassiveEffects(
@@ -14573,6 +14611,7 @@ __DEV__ &&
     }
     function commitPassiveUnmountOnFiber(finishedWork) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors();
       switch (finishedWork.tag) {
         case 0:
@@ -14587,23 +14626,23 @@ __DEV__ &&
             );
           break;
         case 3:
-          var prevEffectDuration = pushNestedEffectDurations();
+          var prevProfilerEffectDuration = pushNestedEffectDurations();
           recursivelyTraversePassiveUnmountEffects(finishedWork);
           finishedWork.stateNode.passiveEffectDuration +=
-            popNestedEffectDurations(prevEffectDuration);
+            popNestedEffectDurations(prevProfilerEffectDuration);
           break;
         case 12:
-          prevEffectDuration = pushNestedEffectDurations();
+          prevProfilerEffectDuration = pushNestedEffectDurations();
           recursivelyTraversePassiveUnmountEffects(finishedWork);
           finishedWork.stateNode.passiveEffectDuration +=
-            bubbleNestedEffectDurations(prevEffectDuration);
+            bubbleNestedEffectDurations(prevProfilerEffectDuration);
           break;
         case 22:
-          prevEffectDuration = finishedWork.stateNode;
+          prevProfilerEffectDuration = finishedWork.stateNode;
           null !== finishedWork.memoizedState &&
-          prevEffectDuration._visibility & 2 &&
+          prevProfilerEffectDuration._visibility & 2 &&
           (null === finishedWork.return || 13 !== finishedWork.return.tag)
-            ? ((prevEffectDuration._visibility &= -3),
+            ? ((prevProfilerEffectDuration._visibility &= -3),
               recursivelyTraverseDisconnectPassiveEffects(finishedWork))
             : recursivelyTraversePassiveUnmountEffects(finishedWork);
           break;
@@ -14623,6 +14662,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function recursivelyTraverseDisconnectPassiveEffects(parentFiber) {
@@ -14644,6 +14684,9 @@ __DEV__ &&
           (parentFiber = parentFiber.sibling);
     }
     function disconnectPassiveEffect(finishedWork) {
+      var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
+        prevEffectErrors = pushComponentEffectErrors();
       switch (finishedWork.tag) {
         case 0:
         case 11:
@@ -14664,6 +14707,21 @@ __DEV__ &&
         default:
           recursivelyTraverseDisconnectPassiveEffects(finishedWork);
       }
+      enableComponentPerformanceTrack &&
+        (finishedWork.mode & 2) !== NoMode &&
+        0 <= componentEffectStartTime &&
+        0 <= componentEffectEndTime &&
+        0.05 < componentEffectDuration &&
+        logComponentEffect(
+          finishedWork,
+          componentEffectStartTime,
+          componentEffectEndTime,
+          componentEffectDuration,
+          componentEffectErrors
+        );
+      popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
+      componentEffectErrors = prevEffectErrors;
     }
     function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
       deletedSubtreeRoot,
@@ -14674,6 +14732,7 @@ __DEV__ &&
           current = fiber,
           nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
           prevEffectStart = pushComponentEffectStart(),
+          prevEffectDuration = pushComponentEffectDuration(),
           prevEffectErrors = pushComponentEffectErrors();
         switch (current.tag) {
           case 0:
@@ -14765,6 +14824,7 @@ __DEV__ &&
             componentEffectErrors
           );
         popComponentEffectStart(prevEffectStart);
+        popComponentEffectDuration(prevEffectDuration);
         componentEffectErrors = prevEffectErrors;
         current = fiber.child;
         if (null !== current) (current.return = fiber), (nextEffect = current);
@@ -14772,18 +14832,18 @@ __DEV__ &&
           a: for (fiber = deletedSubtreeRoot; null !== nextEffect; ) {
             current = nextEffect;
             prevEffectStart = current.sibling;
-            prevEffectErrors = current.return;
+            prevEffectDuration = current.return;
             detachFiberAfterEffects(current);
             if (current === fiber) {
               nextEffect = null;
               break a;
             }
             if (null !== prevEffectStart) {
-              prevEffectStart.return = prevEffectErrors;
+              prevEffectStart.return = prevEffectDuration;
               nextEffect = prevEffectStart;
               break a;
             }
-            nextEffect = prevEffectErrors;
+            nextEffect = prevEffectDuration;
           }
       }
     }
@@ -20724,7 +20784,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-b2f63657-20250402"
+        reconcilerVersion: "19.2.0-www-modern-c0f08ae7-20250403"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

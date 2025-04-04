@@ -2446,11 +2446,18 @@ __DEV__ &&
     function pushComponentEffectStart() {
       var prevEffectStart = componentEffectStartTime;
       componentEffectStartTime = -1.1;
-      componentEffectDuration = -0;
       return prevEffectStart;
     }
     function popComponentEffectStart(prevEffectStart) {
       0 <= prevEffectStart && (componentEffectStartTime = prevEffectStart);
+    }
+    function pushComponentEffectDuration() {
+      var prevEffectDuration = componentEffectDuration;
+      componentEffectDuration = -0;
+      return prevEffectDuration;
+    }
+    function popComponentEffectDuration(prevEffectDuration) {
+      0 <= prevEffectDuration && (componentEffectDuration = prevEffectDuration);
     }
     function pushComponentEffectErrors() {
       var prevErrors = componentEffectErrors;
@@ -10663,6 +10670,7 @@ __DEV__ &&
     }
     function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
         flags = finishedWork.flags;
       switch (finishedWork.tag) {
@@ -10864,6 +10872,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function abortRootTransitions(
@@ -11101,6 +11110,9 @@ __DEV__ &&
               err
             ));
         }
+      var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
+        prevEffectErrors = pushComponentEffectErrors();
       switch (deletedFiber.tag) {
         case 26:
         case 27:
@@ -11272,6 +11284,21 @@ __DEV__ &&
             deletedFiber
           );
       }
+      enableComponentPerformanceTrack &&
+        0 !== (deletedFiber.mode & 2) &&
+        0 <= componentEffectStartTime &&
+        0 <= componentEffectEndTime &&
+        0.05 < componentEffectDuration &&
+        logComponentEffect(
+          deletedFiber,
+          componentEffectStartTime,
+          componentEffectEndTime,
+          componentEffectDuration,
+          componentEffectErrors
+        );
+      popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
+      componentEffectErrors = prevEffectErrors;
     }
     function getRetryCache(finishedWork) {
       switch (finishedWork.tag) {
@@ -11360,6 +11387,7 @@ __DEV__ &&
     }
     function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
         current = finishedWork.alternate,
         flags = finishedWork.flags;
@@ -11679,6 +11707,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function commitReconciliationEffects(finishedWork) {
@@ -11701,6 +11730,7 @@ __DEV__ &&
     }
     function disappearLayoutEffects(finishedWork) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors();
       switch (finishedWork.tag) {
         case 0:
@@ -11761,6 +11791,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
@@ -11775,6 +11806,7 @@ __DEV__ &&
       includeWorkInProgressEffects
     ) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
         flags = finishedWork.flags;
       switch (finishedWork.tag) {
@@ -11914,6 +11946,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function recursivelyTraverseReappearLayoutEffects(
@@ -12069,6 +12102,7 @@ __DEV__ &&
       endTime
     ) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
         isViewTransitionEligible = enableViewTransition
           ? (committedLanes & 335544064) === committedLanes
@@ -12394,6 +12428,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function recursivelyTraverseReconnectPassiveEffects(
@@ -12439,6 +12474,7 @@ __DEV__ &&
       endTime
     ) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors();
       enableComponentPerformanceTrack &&
         0 !== (finishedWork.mode & 2) &&
@@ -12569,6 +12605,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function recursivelyTraverseAtomicPassiveEffects(
@@ -12746,6 +12783,7 @@ __DEV__ &&
     }
     function commitPassiveUnmountOnFiber(finishedWork) {
       var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors();
       switch (finishedWork.tag) {
         case 0:
@@ -12760,23 +12798,23 @@ __DEV__ &&
             );
           break;
         case 3:
-          var prevEffectDuration = pushNestedEffectDurations();
+          var prevProfilerEffectDuration = pushNestedEffectDurations();
           recursivelyTraversePassiveUnmountEffects(finishedWork);
           finishedWork.stateNode.passiveEffectDuration +=
-            popNestedEffectDurations(prevEffectDuration);
+            popNestedEffectDurations(prevProfilerEffectDuration);
           break;
         case 12:
-          prevEffectDuration = pushNestedEffectDurations();
+          prevProfilerEffectDuration = pushNestedEffectDurations();
           recursivelyTraversePassiveUnmountEffects(finishedWork);
           finishedWork.stateNode.passiveEffectDuration +=
-            bubbleNestedEffectDurations(prevEffectDuration);
+            bubbleNestedEffectDurations(prevProfilerEffectDuration);
           break;
         case 22:
-          prevEffectDuration = finishedWork.stateNode;
+          prevProfilerEffectDuration = finishedWork.stateNode;
           null !== finishedWork.memoizedState &&
-          prevEffectDuration._visibility & 2 &&
+          prevProfilerEffectDuration._visibility & 2 &&
           (null === finishedWork.return || 13 !== finishedWork.return.tag)
-            ? ((prevEffectDuration._visibility &= -3),
+            ? ((prevProfilerEffectDuration._visibility &= -3),
               recursivelyTraverseDisconnectPassiveEffects(finishedWork))
             : recursivelyTraversePassiveUnmountEffects(finishedWork);
           break;
@@ -12796,6 +12834,7 @@ __DEV__ &&
           componentEffectErrors
         );
       popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
     }
     function recursivelyTraverseDisconnectPassiveEffects(parentFiber) {
@@ -12817,6 +12856,9 @@ __DEV__ &&
           (parentFiber = parentFiber.sibling);
     }
     function disconnectPassiveEffect(finishedWork) {
+      var prevEffectStart = pushComponentEffectStart(),
+        prevEffectDuration = pushComponentEffectDuration(),
+        prevEffectErrors = pushComponentEffectErrors();
       switch (finishedWork.tag) {
         case 0:
         case 11:
@@ -12837,6 +12879,21 @@ __DEV__ &&
         default:
           recursivelyTraverseDisconnectPassiveEffects(finishedWork);
       }
+      enableComponentPerformanceTrack &&
+        0 !== (finishedWork.mode & 2) &&
+        0 <= componentEffectStartTime &&
+        0 <= componentEffectEndTime &&
+        0.05 < componentEffectDuration &&
+        logComponentEffect(
+          finishedWork,
+          componentEffectStartTime,
+          componentEffectEndTime,
+          componentEffectDuration,
+          componentEffectErrors
+        );
+      popComponentEffectStart(prevEffectStart);
+      popComponentEffectDuration(prevEffectDuration);
+      componentEffectErrors = prevEffectErrors;
     }
     function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
       deletedSubtreeRoot,
@@ -12847,6 +12904,7 @@ __DEV__ &&
           current = fiber,
           nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
           prevEffectStart = pushComponentEffectStart(),
+          prevEffectDuration = pushComponentEffectDuration(),
           prevEffectErrors = pushComponentEffectErrors();
         switch (current.tag) {
           case 0:
@@ -12938,6 +12996,7 @@ __DEV__ &&
             componentEffectErrors
           );
         popComponentEffectStart(prevEffectStart);
+        popComponentEffectDuration(prevEffectDuration);
         componentEffectErrors = prevEffectErrors;
         current = fiber.child;
         if (null !== current) (current.return = fiber), (nextEffect = current);
@@ -12945,18 +13004,18 @@ __DEV__ &&
           a: for (fiber = deletedSubtreeRoot; null !== nextEffect; ) {
             current = nextEffect;
             prevEffectStart = current.sibling;
-            prevEffectErrors = current.return;
+            prevEffectDuration = current.return;
             detachFiberAfterEffects(current);
             if (current === fiber) {
               nextEffect = null;
               break a;
             }
             if (null !== prevEffectStart) {
-              prevEffectStart.return = prevEffectErrors;
+              prevEffectStart.return = prevEffectDuration;
               nextEffect = prevEffectStart;
               break a;
             }
-            nextEffect = prevEffectErrors;
+            nextEffect = prevEffectDuration;
           }
       }
     }
@@ -18059,10 +18118,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-b2f63657-20250402",
+        version: "19.2.0-www-modern-c0f08ae7-20250403",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-b2f63657-20250402"
+        reconcilerVersion: "19.2.0-www-modern-c0f08ae7-20250403"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18096,7 +18155,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-b2f63657-20250402";
+    exports.version = "19.2.0-www-modern-c0f08ae7-20250403";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
