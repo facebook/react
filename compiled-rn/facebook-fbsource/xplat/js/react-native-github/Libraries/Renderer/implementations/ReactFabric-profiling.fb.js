@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<59192c2a43cd0ba8b20dd28493448d0f>>
+ * @generated SignedSource<<04ee9d95a8de2b50d94456f65eb308a3>>
  */
 
 "use strict";
@@ -2485,7 +2485,8 @@ function releaseCache(cache) {
 var now = Scheduler.unstable_now,
   commitStartTime = -0,
   profilerStartTime = -1.1,
-  profilerEffectDuration = -0;
+  profilerEffectDuration = -0,
+  componentEffectStartTime = -1.1;
 function pushNestedEffectDurations() {
   var prevEffectDuration = profilerEffectDuration;
   profilerEffectDuration = 0;
@@ -2500,6 +2501,14 @@ function bubbleNestedEffectDurations(prevEffectDuration) {
   var elapsedTime = profilerEffectDuration;
   profilerEffectDuration += prevEffectDuration;
   return elapsedTime;
+}
+function pushComponentEffectStart() {
+  var prevEffectStart = componentEffectStartTime;
+  componentEffectStartTime = -1.1;
+  return prevEffectStart;
+}
+function popComponentEffectStart(prevEffectStart) {
+  0 <= prevEffectStart && (componentEffectStartTime = prevEffectStart);
 }
 var currentUpdateIsNested = !1,
   nestedUpdateScheduled = !1;
@@ -2531,6 +2540,8 @@ function recordEffectDuration() {
 }
 function startEffectTimer() {
   profilerStartTime = now();
+  0 > componentEffectStartTime &&
+    (componentEffectStartTime = profilerStartTime);
 }
 function transferActualDuration(fiber) {
   for (var child = fiber.child; child; )
@@ -8516,7 +8527,8 @@ function commitBeforeMutationEffects(root, firstChild) {
       }
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
-  var flags = finishedWork.flags;
+  var prevEffectStart = pushComponentEffectStart(),
+    flags = finishedWork.flags;
   switch (finishedWork.tag) {
     case 0:
     case 11:
@@ -8668,6 +8680,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     default:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
   }
+  popComponentEffectStart(prevEffectStart);
 }
 function detachFiberAfterEffects(fiber) {
   var alternate = fiber.alternate;
@@ -8703,6 +8716,7 @@ function commitDeletionEffectsOnFiber(
     try {
       injectedHook.onCommitFiberUnmount(rendererID, deletedFiber);
     } catch (err) {}
+  var prevEffectStart = pushComponentEffectStart();
   switch (deletedFiber.tag) {
     case 26:
     case 27:
@@ -8800,6 +8814,7 @@ function commitDeletionEffectsOnFiber(
         deletedFiber
       );
   }
+  popComponentEffectStart(prevEffectStart);
 }
 function getRetryCache(finishedWork) {
   switch (finishedWork.tag) {
@@ -8842,25 +8857,30 @@ function attachSuspenseRetryListeners(finishedWork, wakeables) {
     }
   });
 }
-function recursivelyTraverseMutationEffects(root, parentFiber) {
+function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber) {
   var deletions = parentFiber.deletions;
   if (null !== deletions)
     for (var i = 0; i < deletions.length; i++) {
-      var childToDelete = deletions[i];
-      commitDeletionEffectsOnFiber(root, parentFiber, childToDelete);
-      var alternate = childToDelete.alternate;
-      null !== alternate && (alternate.return = null);
+      var childToDelete = deletions[i],
+        root = root$jscomp$0,
+        returnFiber = parentFiber,
+        prevEffectStart = pushComponentEffectStart();
+      commitDeletionEffectsOnFiber(root, returnFiber, childToDelete);
+      popComponentEffectStart(prevEffectStart);
+      root = childToDelete.alternate;
+      null !== root && (root.return = null);
       childToDelete.return = null;
     }
   if (
     parentFiber.subtreeFlags & (enablePersistedModeClonedFlag ? 13886 : 13878)
   )
     for (parentFiber = parentFiber.child; null !== parentFiber; )
-      commitMutationEffectsOnFiber(parentFiber, root),
+      commitMutationEffectsOnFiber(parentFiber, root$jscomp$0),
         (parentFiber = parentFiber.sibling);
 }
 function commitMutationEffectsOnFiber(finishedWork, root) {
-  var current = finishedWork.alternate,
+  var prevEffectStart = pushComponentEffectStart(),
+    current = finishedWork.alternate,
     flags = finishedWork.flags;
   switch (finishedWork.tag) {
     case 0:
@@ -9017,6 +9037,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork),
         commitReconciliationEffects(finishedWork);
   }
+  popComponentEffectStart(prevEffectStart);
 }
 function commitReconciliationEffects(finishedWork) {
   var flags = finishedWork.flags;
@@ -9031,7 +9052,8 @@ function recursivelyTraverseLayoutEffects(root, parentFiber) {
 }
 function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
   for (parentFiber = parentFiber.child; null !== parentFiber; ) {
-    var finishedWork = parentFiber;
+    var finishedWork = parentFiber,
+      prevEffectStart = pushComponentEffectStart();
     switch (finishedWork.tag) {
       case 0:
       case 11:
@@ -9067,6 +9089,7 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
       default:
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
     }
+    popComponentEffectStart(prevEffectStart);
     parentFiber = parentFiber.sibling;
   }
 }
@@ -9081,6 +9104,7 @@ function recursivelyTraverseReappearLayoutEffects(
     var current = parentFiber.alternate,
       finishedRoot = finishedRoot$jscomp$0,
       finishedWork = parentFiber,
+      prevEffectStart = pushComponentEffectStart(),
       flags = finishedWork.flags;
     switch (finishedWork.tag) {
       case 0:
@@ -9190,6 +9214,7 @@ function recursivelyTraverseReappearLayoutEffects(
           includeWorkInProgressEffects
         );
     }
+    popComponentEffectStart(prevEffectStart);
     parentFiber = parentFiber.sibling;
   }
 }
@@ -9237,7 +9262,8 @@ function commitPassiveMountOnFiber(
   committedLanes,
   committedTransitions
 ) {
-  var flags = finishedWork.flags;
+  var prevEffectStart = pushComponentEffectStart(),
+    flags = finishedWork.flags;
   switch (finishedWork.tag) {
     case 0:
     case 11:
@@ -9382,6 +9408,7 @@ function commitPassiveMountOnFiber(
         committedTransitions
       );
   }
+  popComponentEffectStart(prevEffectStart);
 }
 function recursivelyTraverseReconnectPassiveEffects(
   finishedRoot$jscomp$0,
@@ -9397,6 +9424,7 @@ function recursivelyTraverseReconnectPassiveEffects(
       finishedWork = parentFiber,
       committedLanes = committedLanes$jscomp$0,
       committedTransitions = committedTransitions$jscomp$0,
+      prevEffectStart = pushComponentEffectStart(),
       flags = finishedWork.flags;
     switch (finishedWork.tag) {
       case 0:
@@ -9473,6 +9501,7 @@ function recursivelyTraverseReconnectPassiveEffects(
           includeWorkInProgressEffects
         );
     }
+    popComponentEffectStart(prevEffectStart);
     parentFiber = parentFiber.sibling;
   }
 }
@@ -9561,12 +9590,14 @@ function recursivelyTraversePassiveUnmountEffects(parentFiber) {
   if (0 !== (parentFiber.flags & 16)) {
     if (null !== deletions)
       for (var i = 0; i < deletions.length; i++) {
-        var childToDelete = deletions[i];
+        var childToDelete = deletions[i],
+          prevEffectStart = pushComponentEffectStart();
         nextEffect = childToDelete;
         commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
           childToDelete,
           parentFiber
         );
+        popComponentEffectStart(prevEffectStart);
       }
     detachAlternateSiblings(parentFiber);
   }
@@ -9576,6 +9607,7 @@ function recursivelyTraversePassiveUnmountEffects(parentFiber) {
         (parentFiber = parentFiber.sibling);
 }
 function commitPassiveUnmountOnFiber(finishedWork) {
+  var prevEffectStart = pushComponentEffectStart();
   switch (finishedWork.tag) {
     case 0:
     case 11:
@@ -9609,23 +9641,27 @@ function commitPassiveUnmountOnFiber(finishedWork) {
     default:
       recursivelyTraversePassiveUnmountEffects(finishedWork);
   }
+  popComponentEffectStart(prevEffectStart);
 }
 function recursivelyTraverseDisconnectPassiveEffects(parentFiber) {
   var deletions = parentFiber.deletions;
   if (0 !== (parentFiber.flags & 16)) {
     if (null !== deletions)
       for (var i = 0; i < deletions.length; i++) {
-        var childToDelete = deletions[i];
+        var childToDelete = deletions[i],
+          prevEffectStart = pushComponentEffectStart();
         nextEffect = childToDelete;
         commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
           childToDelete,
           parentFiber
         );
+        popComponentEffectStart(prevEffectStart);
       }
     detachAlternateSiblings(parentFiber);
   }
   for (parentFiber = parentFiber.child; null !== parentFiber; ) {
     deletions = parentFiber;
+    i = pushComponentEffectStart();
     switch (deletions.tag) {
       case 0:
       case 11:
@@ -9634,23 +9670,26 @@ function recursivelyTraverseDisconnectPassiveEffects(parentFiber) {
         recursivelyTraverseDisconnectPassiveEffects(deletions);
         break;
       case 22:
-        i = deletions.stateNode;
-        i._visibility & 2 &&
-          ((i._visibility &= -3),
+        childToDelete = deletions.stateNode;
+        childToDelete._visibility & 2 &&
+          ((childToDelete._visibility &= -3),
           recursivelyTraverseDisconnectPassiveEffects(deletions));
         break;
       default:
         recursivelyTraverseDisconnectPassiveEffects(deletions);
     }
+    popComponentEffectStart(i);
     parentFiber = parentFiber.sibling;
   }
 }
 function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
   deletedSubtreeRoot,
-  nearestMountedAncestor
+  nearestMountedAncestor$jscomp$0
 ) {
   for (; null !== nextEffect; ) {
-    var fiber = nextEffect;
+    var fiber = nextEffect,
+      nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
+      prevEffectStart = pushComponentEffectStart();
     switch (fiber.tag) {
       case 0:
       case 11:
@@ -9659,32 +9698,31 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
         break;
       case 23:
       case 22:
-        if (
-          null !== fiber.memoizedState &&
-          null !== fiber.memoizedState.cachePool
-        ) {
-          var cache = fiber.memoizedState.cachePool.pool;
-          null != cache && cache.refCount++;
-        }
+        null !== fiber.memoizedState &&
+          null !== fiber.memoizedState.cachePool &&
+          ((nearestMountedAncestor = fiber.memoizedState.cachePool.pool),
+          null != nearestMountedAncestor && nearestMountedAncestor.refCount++);
         break;
       case 24:
         releaseCache(fiber.memoizedState.cache);
     }
-    cache = fiber.child;
-    if (null !== cache) (cache.return = fiber), (nextEffect = cache);
+    popComponentEffectStart(prevEffectStart);
+    prevEffectStart = fiber.child;
+    if (null !== prevEffectStart)
+      (prevEffectStart.return = fiber), (nextEffect = prevEffectStart);
     else
       a: for (fiber = deletedSubtreeRoot; null !== nextEffect; ) {
-        cache = nextEffect;
-        var sibling = cache.sibling,
-          returnFiber = cache.return;
-        detachFiberAfterEffects(cache);
-        if (cache === fiber) {
+        prevEffectStart = nextEffect;
+        nearestMountedAncestor = prevEffectStart.sibling;
+        var returnFiber = prevEffectStart.return;
+        detachFiberAfterEffects(prevEffectStart);
+        if (prevEffectStart === fiber) {
           nextEffect = null;
           break a;
         }
-        if (null !== sibling) {
-          sibling.return = returnFiber;
-          nextEffect = sibling;
+        if (null !== nearestMountedAncestor) {
+          nearestMountedAncestor.return = returnFiber;
+          nextEffect = nearestMountedAncestor;
           break a;
         }
         nextEffect = returnFiber;
@@ -10680,6 +10718,7 @@ function flushMutationEffects() {
       try {
         (inProgressLanes = lanes),
           (inProgressRoot = root),
+          (componentEffectStartTime = -1.1),
           commitMutationEffectsOnFiber(finishedWork, root),
           (inProgressRoot = inProgressLanes = null);
       } finally {
@@ -10713,6 +10752,7 @@ function flushLayoutEffects() {
           injectedProfilingHooks.markLayoutEffectsStarted(lanes),
           (inProgressLanes = lanes),
           (inProgressRoot = root),
+          (componentEffectStartTime = -1.1),
           commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork),
           (inProgressRoot = inProgressLanes = null),
           null !== injectedProfilingHooks &&
@@ -10845,10 +10885,14 @@ function flushPassiveEffects() {
       injectedProfilingHooks.markPassiveEffectsStarted(lanes);
     var prevExecutionContext = executionContext;
     executionContext |= 4;
-    commitPassiveUnmountOnFiber(root$jscomp$0.current);
+    var finishedWork = root$jscomp$0.current;
+    componentEffectStartTime = -1.1;
+    commitPassiveUnmountOnFiber(finishedWork);
+    var finishedWork$jscomp$0 = root$jscomp$0.current;
+    componentEffectStartTime = -1.1;
     commitPassiveMountOnFiber(
       root$jscomp$0,
-      root$jscomp$0.current,
+      finishedWork$jscomp$0,
       lanes,
       renderPriority
     );
@@ -11570,16 +11614,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1312 = {
+  internals$jscomp$inline_1317 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-c0f08ae7-20250403",
+    version: "19.2.0-native-fb-efb22d88-20250404",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-c0f08ae7-20250403"
+    reconcilerVersion: "19.2.0-native-fb-efb22d88-20250404"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1312.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1312.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1317.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1317.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$155 = 0;
     31 > index$155;
@@ -11591,20 +11635,20 @@ internals$jscomp$inline_1312.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1312.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1317.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1591 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1596 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1591.isDisabled &&
-    hook$jscomp$inline_1591.supportsFiber
+    !hook$jscomp$inline_1596.isDisabled &&
+    hook$jscomp$inline_1596.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1591.inject(
-        internals$jscomp$inline_1312
+      (rendererID = hook$jscomp$inline_1596.inject(
+        internals$jscomp$inline_1317
       )),
-        (injectedHook = hook$jscomp$inline_1591);
+        (injectedHook = hook$jscomp$inline_1596);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
