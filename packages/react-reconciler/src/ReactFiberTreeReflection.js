@@ -393,3 +393,12 @@ export function getFragmentParentHostInstance(fiber: Fiber): null | Instance {
 
   return null;
 }
+
+export function getNextSiblingHostInstance(fiber: Fiber): null | Instance {
+  let nextSibling = null;
+  traverseFragmentInstanceChildren(fiber.sibling, instance => {
+    nextSibling = instance;
+    return true;
+  });
+  return nextSibling;
+}

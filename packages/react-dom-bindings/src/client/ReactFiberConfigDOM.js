@@ -61,6 +61,7 @@ import {
 import {
   traverseFragmentInstance,
   getFragmentParentHostInstance,
+  getNextSiblingHostInstance,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {detachDeletedInstance};
@@ -2818,10 +2819,32 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
 
   if (children.length === 0) {
-    return (
-      Node.DOCUMENT_POSITION_DISCONNECTED |
-      Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
-    );
+    // If the fragment has no children, we can use the parent and
+    // siblings to determine a position.
+    if (parentHostInstance === otherNode) {
+      return Node.DOCUMENT_POSITION_CONTAINS;
+    }
+    const parentResult = parentHostInstance.compareDocumentPosition(otherNode);
+    if (parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+      // otherNode is one of the fragment's siblings. Use the next
+      // sibling to determine if its preceding or following.
+      const nextSiblingInstance = getNextSiblingHostInstance(
+        this._fragmentFiber,
+      );
+      if (nextSiblingInstance === null) {
+        return Node.DOCUMENT_POSITION_PRECEDING;
+      }
+      if (
+        nextSiblingInstance === otherNode ||
+        nextSiblingInstance.compareDocumentPosition(otherNode) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ) {
+        return Node.DOCUMENT_POSITION_FOLLOWING;
+      } else {
+        return Node.DOCUMENT_POSITION_PRECEDING;
+      }
+    }
+    return parentResult;
   }
 
   const firstElement = children[0];
