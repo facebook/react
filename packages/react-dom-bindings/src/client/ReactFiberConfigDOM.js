@@ -2295,6 +2295,7 @@ export type FragmentInstanceType = {
     listener: EventListener,
     optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
   ): void,
+  dispatchEvent(event: Event): boolean,
   focus(focusOptions?: FocusOptions): void,
   focusLast(focusOptions?: FocusOptions): void,
   blur(): void,
@@ -2304,6 +2305,7 @@ export type FragmentInstanceType = {
   getRootNode(getRootNodeOptions?: {
     composed: boolean,
   }): Document | ShadowRoot | FragmentInstanceType,
+  compareDocumentPosition(otherNode: Instance): number,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -2388,6 +2390,23 @@ function removeEventListenerFromChild(
   child.removeEventListener(type, listener, optionsOrUseCapture);
   return false;
 }
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.dispatchEvent = function (
+  this: FragmentInstanceType,
+  event: Event,
+): boolean {
+  const parentHostInstance = getFragmentParentHostInstance(this._fragmentFiber);
+  if (parentHostInstance === null) {
+    if (__DEV__) {
+      console.error(
+        'You are attempting to dispatch an event on a disconnected ' +
+          'FragmentInstance. No event was dispatched.',
+      );
+    }
+    return true;
+  }
+  return parentHostInstance.dispatchEvent(event);
+};
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.focus = function (
   this: FragmentInstanceType,
@@ -2507,6 +2526,41 @@ FragmentInstance.prototype.getRootNode = function (
     // $FlowFixMe[incompatible-cast] Flow expects Node
     (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
   return rootNode;
+};
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.compareDocumentPosition = function (
+  this: FragmentInstanceType,
+  otherNode: Instance,
+): number {
+  const children: Array<Instance> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  if (children.length === 0) {
+    return (
+      Node.DOCUMENT_POSITION_DISCONNECTED |
+      Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
+    );
+  }
+
+  const firstElement = children[0];
+  const lastElement = children[children.length - 1];
+  const firstResult = firstElement.compareDocumentPosition(otherNode);
+  const lastResult = lastElement.compareDocumentPosition(otherNode);
+  let result;
+
+  // If otherNode is a child of the Fragment, it should only be
+  // Node.DOCUMENT_POSITION_CONTAINED_BY
+  if (
+    (firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
+      lastResult & Node.DOCUMENT_POSITION_PRECEDING) ||
+    otherNode === firstElement ||
+    otherNode === lastElement
+  ) {
+    result = Node.DOCUMENT_POSITION_CONTAINED_BY;
+  } else {
+    result = firstResult;
+  }
+
+  return result;
 };
 
 function normalizeListenerOptions(
