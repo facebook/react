@@ -3754,7 +3754,7 @@ module.exports = function ($$$config) {
         objectIs(hook, prevValue) || (didReceiveUpdate = !0),
         hook
       );
-    if (0 === (renderLanes & 42))
+    if (0 === (renderLanes & 42) || 0 !== (renderLanes & 1073741824))
       return (didReceiveUpdate = !0), (hook.memoizedState = value);
     hook = requestDeferredLane();
     currentlyRenderingFiber.lanes |= hook;
@@ -13799,7 +13799,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-efb22d88-20250404"
+      reconcilerVersion: "19.2.0-www-classic-6a7650c7-20250405"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

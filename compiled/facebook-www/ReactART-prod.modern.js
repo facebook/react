@@ -3577,7 +3577,7 @@ function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
       objectIs(hook, prevValue) || (didReceiveUpdate = !0),
       hook
     );
-  if (0 === (renderLanes & 42))
+  if (0 === (renderLanes & 42) || 0 !== (renderLanes & 1073741824))
     return (didReceiveUpdate = !0), (hook.memoizedState = value);
   hook = requestDeferredLane();
   currentlyRenderingFiber.lanes |= hook;
@@ -10930,10 +10930,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1566 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-efb22d88-20250404",
+  version: "19.2.0-www-modern-6a7650c7-20250405",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-efb22d88-20250404"
+  reconcilerVersion: "19.2.0-www-modern-6a7650c7-20250405"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1567 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10959,4 +10959,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-efb22d88-20250404";
+exports.version = "19.2.0-www-modern-6a7650c7-20250405";
