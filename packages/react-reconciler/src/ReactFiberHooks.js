@@ -3033,7 +3033,9 @@ function updateDeferredValueImpl<T>(
       return resultValue;
     }
 
-    const shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes);
+    const shouldDeferValue =
+      !includesOnlyNonUrgentLanes(renderLanes) &&
+      !includesSomeLane(renderLanes, DeferredLane);
     if (shouldDeferValue) {
       // This is an urgent update. Since the value has changed, keep using the
       // previous value and spawn a deferred render to update it later.
