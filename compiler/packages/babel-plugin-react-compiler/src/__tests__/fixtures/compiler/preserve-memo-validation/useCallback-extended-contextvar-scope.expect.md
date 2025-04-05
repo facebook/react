@@ -65,8 +65,7 @@ function useBar(t0, cond) {
   } else {
     t1 = $[0];
   }
-  let x;
-  x = useIdentity(t1);
+  let x = useIdentity(t1);
   if (cond) {
     x = b;
   }
