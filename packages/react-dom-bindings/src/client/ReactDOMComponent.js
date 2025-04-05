@@ -565,7 +565,10 @@ function setProp(
           );
         }
         const nextHtml: any = value.__html;
-        if (nextHtml != null) {
+        if (
+          nextHtml != null &&
+          (prevValue == null || prevValue.__html !== nextHtml)
+        ) {
           if (props.children != null) {
             throw new Error(
               'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
