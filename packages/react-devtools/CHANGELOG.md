@@ -392,7 +392,7 @@ May 5, 2022
 
 * Fixed potential undefined error in `TreeContext` reducer ([bvaughn](https://github.com/bvaughn) in [#24501](https://github.com/facebook/react/pull/24501))
 * Fix error where Profiler sometimes incorrectlyed reported that a `forwardRef` did not render ([lunaruan](https://github.com/lunaruan) in [#24494](https://github.com/facebook/react/pull/24494))
-* Fix regex for `formateWithStyles` function ([lunaruan](https://github.com/lunaruan) in [#24486](https://github.com/facebook/react/pull/24486))
+* Fix regex for `formatWithStyles` function ([lunaruan](https://github.com/lunaruan) in [#24486](https://github.com/facebook/react/pull/24486))
 * Fixed wrong method call for LRU cache ([bvaughn](https://github.com/bvaughn) in [#24477](https://github.com/facebook/react/pull/24477))
 * Synchronize implementations of second render logging ([billyjanitsch](https://github.com/billyjanitsch) in [#24381](https://github.com/facebook/react/pull/24381))
 * Don't stringify objects for console log second render ([lunaruan](https://github.com/lunaruan) in [#24373](https://github.com/facebook/react/pull/24373))
@@ -502,7 +502,7 @@ Because React Native embeds a copy of the React DevTools "backend" ([`react-devt
 
 #### Bugfix
 * DevTools should inject itself for XHTML pages too (not just HTML) ([@bvaughn](https://github.com/bvaughn) in [#22932](https://github.com/facebook/react/pull/22932))
-* Don't restore profiling data if we're profling ([@eps1lon](https://github.com/eps1lon) in [#22753](https://github.com/facebook/react/pull/22753))
+* Don't restore profiling data if we're profiling ([@eps1lon](https://github.com/eps1lon) in [#22753](https://github.com/facebook/react/pull/22753))
 * DevTools should properly report re-renders due to (use)context changes ([@bvaughn](https://github.com/bvaughn) in [#22746](https://github.com/facebook/react/pull/22746))
 * Filter empty commits (all Fibers bailed out) from Profiler ([@bvaughn](https://github.com/bvaughn) in [#22745](https://github.com/facebook/react/pull/22745))
 * Accept json file in import fileinput ([@jyash97](https://github.com/jyash97) in [#22717](https://github.com/facebook/react/pull/22717))
