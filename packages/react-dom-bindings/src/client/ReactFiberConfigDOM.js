@@ -1237,12 +1237,17 @@ export function applyViewTransitionName(
     // if they have display: block children. We try to work around this bug in the
     // simple case by converting it automatically to display: inline-block.
     // https://bugs.webkit.org/show_bug.cgi?id=290923
-    if (countClientRects(instance.getClientRects()) === 1) {
+    const rects = instance.getClientRects();
+    if (countClientRects(rects) === 1) {
       // If the instance has a single client rect, that means that it can be
-      // expressed as a display: inline-block. This will cause layout thrash
-      // but we live with it since inline view transitions are unusual.
+      // expressed as a display: inline-block or block.
+      // This will cause layout thrash but we live with it since inline view transitions
+      // are unusual.
       const style = instance.style;
-      style.display = 'inline-block';
+      // If there's literally only one rect, then it's likely on a single line like an
+      // inline-block. If it's multiple rects but all but one of them are empty it's
+      // likely because it's a single block that caused a line break.
+      style.display = rects.length === 1 ? 'inline-block' : 'block';
       // Margin doesn't apply to inline so should be zero. However, padding top/bottom
       // applies to inline-block positioning which we can offset by setting the margin
       // to the negative padding to get it back into original position.
