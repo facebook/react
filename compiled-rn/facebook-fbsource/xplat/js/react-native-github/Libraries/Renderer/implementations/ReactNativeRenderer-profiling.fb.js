@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4c1626e25eaee115230cd25944d7cf54>>
+ * @generated SignedSource<<d154f4f68e0b2a6935c1c05fb22cb71b>>
  */
 
 "use strict";
@@ -5046,7 +5046,7 @@ function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
       objectIs(hook, prevValue) || (didReceiveUpdate = !0),
       hook
     );
-  if (0 === (renderLanes & 42))
+  if (0 === (renderLanes & 42) || 0 !== (renderLanes & 1073741824))
     return (didReceiveUpdate = !0), (hook.memoizedState = value);
   hook = requestDeferredLane();
   currentlyRenderingFiber.lanes |= hook;
@@ -11711,11 +11711,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-efb22d88-20250404" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-6a7650c7-20250405" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-efb22d88-20250404\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-6a7650c7-20250405\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11764,10 +11764,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1380 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-efb22d88-20250404",
+    version: "19.2.0-native-fb-6a7650c7-20250405",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-efb22d88-20250404"
+    reconcilerVersion: "19.2.0-native-fb-6a7650c7-20250405"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1380.rendererConfig = extraDevToolsConfig);

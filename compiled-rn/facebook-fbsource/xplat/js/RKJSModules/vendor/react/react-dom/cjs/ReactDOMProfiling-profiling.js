@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cfc6357d7ba2d65960ac4500c11de855>>
+ * @generated SignedSource<<c1c7f1f6152a02405a57ad3e92157e95>>
  */
 
 /*
@@ -5473,7 +5473,7 @@ function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
       objectIs(hook, prevValue) || (didReceiveUpdate = !0),
       hook
     );
-  if (0 === (renderLanes & 42))
+  if (0 === (renderLanes & 42) || 0 !== (renderLanes & 1073741824))
     return (didReceiveUpdate = !0), (hook.memoizedState = value);
   hook = requestDeferredLane();
   currentlyRenderingFiber.lanes |= hook;
@@ -16712,14 +16712,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1887 = React.version;
 if (
-  "19.2.0-native-fb-efb22d88-20250404" !==
+  "19.2.0-native-fb-6a7650c7-20250405" !==
   isomorphicReactPackageVersion$jscomp$inline_1887
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1887,
-      "19.2.0-native-fb-efb22d88-20250404"
+      "19.2.0-native-fb-6a7650c7-20250405"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16741,10 +16741,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1894 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-efb22d88-20250404",
+  version: "19.2.0-native-fb-6a7650c7-20250405",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-efb22d88-20250404",
+  reconcilerVersion: "19.2.0-native-fb-6a7650c7-20250405",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$294 = 0;
@@ -17017,7 +17017,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-efb22d88-20250404";
+exports.version = "19.2.0-native-fb-6a7650c7-20250405";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

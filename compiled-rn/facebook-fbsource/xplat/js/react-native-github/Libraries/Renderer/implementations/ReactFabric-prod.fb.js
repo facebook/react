@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<48b980b93d76d19321726d20ef5bb9ea>>
+ * @generated SignedSource<<1fddbcfc2db02f03a74cf130afab7ca0>>
  */
 
 "use strict";
@@ -4732,7 +4732,7 @@ function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
       objectIs(hook, prevValue) || (didReceiveUpdate = !0),
       hook
     );
-  if (0 === (renderLanes & 42))
+  if (0 === (renderLanes & 42) || 0 !== (renderLanes & 1073741824))
     return (didReceiveUpdate = !0), (hook.memoizedState = value);
   hook = requestDeferredLane();
   currentlyRenderingFiber.lanes |= hook;
@@ -10919,10 +10919,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1222 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-efb22d88-20250404",
+    version: "19.2.0-native-fb-6a7650c7-20250405",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-efb22d88-20250404"
+    reconcilerVersion: "19.2.0-native-fb-6a7650c7-20250405"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1222.rendererConfig = extraDevToolsConfig);
