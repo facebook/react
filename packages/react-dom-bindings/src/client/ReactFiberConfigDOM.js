@@ -59,6 +59,7 @@ import {
 import {
   traverseFragmentInstance,
   getFragmentParentHostInstance,
+  getNextSiblingHostInstance,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {detachDeletedInstance};
@@ -2304,6 +2305,7 @@ export type FragmentInstanceType = {
   getRootNode(getRootNodeOptions?: {
     composed: boolean,
   }): Document | ShadowRoot | FragmentInstanceType,
+  compareDocumentPosition(otherNode: Instance): number,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -2332,6 +2334,7 @@ FragmentInstance.prototype.addEventListener = function (
     listeners.push({type, listener, optionsOrUseCapture});
     traverseFragmentInstance(
       this._fragmentFiber,
+      false,
       addEventListenerToChild,
       type,
       listener,
@@ -2363,6 +2366,7 @@ FragmentInstance.prototype.removeEventListener = function (
   if (typeof listeners !== 'undefined' && listeners.length > 0) {
     traverseFragmentInstance(
       this._fragmentFiber,
+      false,
       removeEventListenerFromChild,
       type,
       listener,
@@ -2395,6 +2399,7 @@ FragmentInstance.prototype.focus = function (
 ): void {
   traverseFragmentInstance(
     this._fragmentFiber,
+    false,
     setFocusIfFocusable,
     focusOptions,
   );
@@ -2405,7 +2410,12 @@ FragmentInstance.prototype.focusLast = function (
   focusOptions?: FocusOptions,
 ): void {
   const children: Array<Instance> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  traverseFragmentInstance(
+    this._fragmentFiber,
+    false,
+    collectChildren,
+    children,
+  );
   for (let i = children.length - 1; i >= 0; i--) {
     const child = children[i];
     if (setFocusIfFocusable(child, focusOptions)) {
@@ -2426,6 +2436,7 @@ FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
   //   does not contain document.activeElement
   traverseFragmentInstance(
     this._fragmentFiber,
+    false,
     blurActiveElementWithinFragment,
   );
 };
@@ -2448,7 +2459,7 @@ FragmentInstance.prototype.observeUsing = function (
     this._observers = new Set();
   }
   this._observers.add(observer);
-  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
+  traverseFragmentInstance(this._fragmentFiber, false, observeChild, observer);
 };
 function observeChild(
   child: Instance,
@@ -2471,7 +2482,12 @@ FragmentInstance.prototype.unobserveUsing = function (
     }
   } else {
     this._observers.delete(observer);
-    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
+    traverseFragmentInstance(
+      this._fragmentFiber,
+      false,
+      unobserveChild,
+      observer,
+    );
   }
 };
 function unobserveChild(
@@ -2486,7 +2502,12 @@ FragmentInstance.prototype.getClientRects = function (
   this: FragmentInstanceType,
 ): Array<DOMRect> {
   const rects: Array<DOMRect> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectClientRects, rects);
+  traverseFragmentInstance(
+    this._fragmentFiber,
+    true,
+    collectClientRects,
+    rects,
+  );
   return rects;
 };
 function collectClientRects(child: Instance, rects: Array<DOMRect>): boolean {
@@ -2507,6 +2528,74 @@ FragmentInstance.prototype.getRootNode = function (
     // $FlowFixMe[incompatible-cast] Flow expects Node
     (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
   return rootNode;
+};
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.compareDocumentPosition = function (
+  this: FragmentInstanceType,
+  otherNode: Instance,
+): number {
+  const parentHostInstance = getFragmentParentHostInstance(this._fragmentFiber);
+  if (parentHostInstance === null) {
+    return Node.DOCUMENT_POSITION_DISCONNECTED;
+  }
+
+  const children: Array<Instance> = [];
+  traverseFragmentInstance(
+    this._fragmentFiber,
+    true,
+    collectChildren,
+    children,
+  );
+
+  if (children.length === 0) {
+    // If the fragment has no children, we can use the parent and
+    // siblings to determine a position.
+    if (parentHostInstance === otherNode) {
+      return Node.DOCUMENT_POSITION_CONTAINS;
+    }
+    const parentResult = parentHostInstance.compareDocumentPosition(otherNode);
+    if (parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+      // otherNode is one of the fragment's siblings. Use the next
+      // sibling to determine if its preceding or following.
+      const nextSiblingInstance = getNextSiblingHostInstance(
+        this._fragmentFiber,
+      );
+      if (nextSiblingInstance === null) {
+        return Node.DOCUMENT_POSITION_PRECEDING;
+      }
+      if (
+        nextSiblingInstance === otherNode ||
+        nextSiblingInstance.compareDocumentPosition(otherNode) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ) {
+        return Node.DOCUMENT_POSITION_FOLLOWING;
+      } else {
+        return Node.DOCUMENT_POSITION_PRECEDING;
+      }
+    }
+    return parentResult;
+  }
+
+  const firstElement = children[0];
+  const lastElement = children[children.length - 1];
+  const firstResult = firstElement.compareDocumentPosition(otherNode);
+  const lastResult = lastElement.compareDocumentPosition(otherNode);
+  let result;
+
+  // If otherNode is a child of the Fragment, it should only be
+  // Node.DOCUMENT_POSITION_CONTAINED_BY
+  if (
+    (firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
+      lastResult & Node.DOCUMENT_POSITION_PRECEDING) ||
+    otherNode === firstElement ||
+    otherNode === lastElement
+  ) {
+    result = Node.DOCUMENT_POSITION_CONTAINED_BY;
+  } else {
+    result = firstResult;
+  }
+
+  return result;
 };
 
 function normalizeListenerOptions(
