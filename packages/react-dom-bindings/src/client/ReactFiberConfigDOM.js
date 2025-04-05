@@ -137,6 +137,11 @@ export type Props = {
     'view-transition-name'?: string,
     viewTransitionClass?: string,
     'view-transition-class'?: string,
+    margin?: string,
+    marginTop?: string,
+    'margin-top'?: string,
+    marginBottom?: string,
+    'margin-bottom'?: string,
     ...
   },
   bottom?: null | number,
@@ -1161,6 +1166,59 @@ export function unhideTextInstance(
   textInstance.nodeValue = text;
 }
 
+function warnForBlockInsideInline(instance: HTMLElement) {
+  if (__DEV__) {
+    let nextNode = instance.firstChild;
+    outer: while (nextNode != null) {
+      let node: Node = nextNode;
+      if (
+        node.nodeType === ELEMENT_NODE &&
+        getComputedStyle((node: any)).display === 'block'
+      ) {
+        console.error(
+          "You're about to start a <ViewTransition> around a display: inline " +
+            'element <%s>, which itself has a display: block element <%s> inside it. ' +
+            'This might trigger a bug in Safari which causes the View Transition to ' +
+            'be skipped with a duplicate name error.\n' +
+            'https://bugs.webkit.org/show_bug.cgi?id=290923',
+          instance.tagName.toLocaleLowerCase(),
+          (node: any).tagName.toLocaleLowerCase(),
+        );
+        break;
+      }
+      if (node.firstChild != null) {
+        nextNode = node.firstChild;
+        continue;
+      }
+      if (node === instance) {
+        break;
+      }
+      while (node.nextSibling == null) {
+        if (node.parentNode == null || node.parentNode === instance) {
+          break;
+        }
+        node = node.parentNode;
+      }
+      nextNode = node.nextSibling;
+    }
+  }
+}
+
+function countClientRects(rects: Array<ClientRect>): number {
+  if (rects.length === 1) {
+    return 1;
+  }
+  // Count non-zero rects.
+  let count = 0;
+  for (let i = 0; i < rects.length; i++) {
+    const rect = rects[i];
+    if (rect.width > 0 && rect.height > 0) {
+      count++;
+    }
+  }
+  return count;
+}
+
 export function applyViewTransitionName(
   instance: Instance,
   name: string,
@@ -1173,6 +1231,34 @@ export function applyViewTransitionName(
     // $FlowFixMe[prop-missing]
     instance.style.viewTransitionClass = className;
   }
+  const computedStyle = getComputedStyle(instance);
+  if (computedStyle.display === 'inline') {
+    // WebKit has a bug where assigning a name to display: inline elements errors
+    // if they have display: block children. We try to work around this bug in the
+    // simple case by converting it automatically to display: inline-block.
+    // https://bugs.webkit.org/show_bug.cgi?id=290923
+    const rects = instance.getClientRects();
+    if (countClientRects(rects) === 1) {
+      // If the instance has a single client rect, that means that it can be
+      // expressed as a display: inline-block or block.
+      // This will cause layout thrash but we live with it since inline view transitions
+      // are unusual.
+      const style = instance.style;
+      // If there's literally only one rect, then it's likely on a single line like an
+      // inline-block. If it's multiple rects but all but one of them are empty it's
+      // likely because it's a single block that caused a line break.
+      style.display = rects.length === 1 ? 'inline-block' : 'block';
+      // Margin doesn't apply to inline so should be zero. However, padding top/bottom
+      // applies to inline-block positioning which we can offset by setting the margin
+      // to the negative padding to get it back into original position.
+      style.marginTop = '-' + computedStyle.paddingTop;
+      style.marginBottom = '-' + computedStyle.paddingBottom;
+    } else {
+      // This case cannot be easily fixed if it has blocks but it's also fine if
+      // it doesn't have blocks. So we only warn in DEV about this being an issue.
+      warnForBlockInsideInline(instance);
+    }
+  }
 }
 
 export function restoreViewTransitionName(
@@ -1180,6 +1266,7 @@ export function restoreViewTransitionName(
   props: Props,
 ): void {
   instance = ((instance: any): HTMLElement);
+  const style = instance.style;
   const styleProp = props[STYLE];
   const viewTransitionName =
     styleProp != null
@@ -1190,7 +1277,7 @@ export function restoreViewTransitionName(
           : null
       : null;
   // $FlowFixMe[prop-missing]
-  instance.style.viewTransitionName =
+  style.viewTransitionName =
     viewTransitionName == null || typeof viewTransitionName === 'boolean'
       ? ''
       : // The value would've errored already if it wasn't safe.
@@ -1205,12 +1292,39 @@ export function restoreViewTransitionName(
           : null
       : null;
   // $FlowFixMe[prop-missing]
-  instance.style.viewTransitionClass =
+  style.viewTransitionClass =
     viewTransitionClass == null || typeof viewTransitionClass === 'boolean'
       ? ''
       : // The value would've errored already if it wasn't safe.
         // eslint-disable-next-line react-internal/safe-string-coercion
         ('' + viewTransitionClass).trim();
+  if (style.display === 'inline-block') {
+    // We might have overridden the style. Reset it to what it should be.
+    if (styleProp == null) {
+      style.display = style.margin = '';
+    } else {
+      const display = styleProp.display;
+      style.display =
+        display == null || typeof display === 'boolean' ? '' : display;
+      const margin = styleProp.margin;
+      if (margin != null) {
+        style.margin = margin;
+      } else {
+        const marginTop = styleProp.hasOwnProperty('marginTop')
+          ? styleProp.marginTop
+          : styleProp['margin-top'];
+        style.marginTop =
+          marginTop == null || typeof marginTop === 'boolean' ? '' : marginTop;
+        const marginBottom = styleProp.hasOwnProperty('marginBottom')
+          ? styleProp.marginBottom
+          : styleProp['margin-bottom'];
+        style.marginBottom =
+          marginBottom == null || typeof marginBottom === 'boolean'
+            ? ''
+            : marginBottom;
+      }
+    }
+  }
 }
 
 export function cancelViewTransitionName(

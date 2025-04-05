@@ -834,18 +834,18 @@ function insertDestinationClonesOfFiber(
       }
 
       if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
+        appendChild(hostParentClone, clone);
+        unhideInstance(clone, finishedWork.memoizedProps);
         recursivelyInsertClones(
           finishedWork,
           clone,
           null,
           CLONE_APPEARING_PAIR,
         );
-        appendChild(hostParentClone, clone);
-        unhideInstance(clone, finishedWork.memoizedProps);
         trackHostMutation();
       } else {
-        recursivelyInsertClones(finishedWork, clone, null, visitPhase);
         appendChild(hostParentClone, clone);
+        recursivelyInsertClones(finishedWork, clone, null, visitPhase);
       }
       if (parentViewTransition !== null) {
         if (parentViewTransition.clones === null) {
