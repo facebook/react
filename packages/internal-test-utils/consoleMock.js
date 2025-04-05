@@ -6,6 +6,7 @@
  */
 
 /* eslint-disable react-internal/no-production-logging */
+
 const chalk = require('chalk');
 const util = require('util');
 const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
@@ -38,24 +39,15 @@ const patchConsoleMethod = (methodName, logged) => {
       (methodName === 'error' || methodName === 'warn')
     ) {
       const React = require('react');
+
+      // Ideally we could remove this check, but we have some tests like
+      // useSyncExternalStoreShared-test that tests against React 17,
+      // which doesn't have the captureOwnerStack method.
       if (React.captureOwnerStack) {
-        // enableOwnerStacks enabled. When it's always on, we can assume this case.
         const stack = React.captureOwnerStack();
         if (stack) {
           format += '%s';
           args.push(stack);
-        }
-      } else {
-        // Otherwise we have to use internals to emulate parent stacks.
-        const ReactSharedInternals =
-          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
-          React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-        if (ReactSharedInternals && ReactSharedInternals.getCurrentStack) {
-          const stack = ReactSharedInternals.getCurrentStack();
-          if (stack !== '') {
-            format += '%s';
-            args.push(stack);
-          }
         }
       }
     }

@@ -20,7 +20,10 @@ import {
   TRANSITION_END,
 } from './DOMEventNames';
 
-import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableCreateEventHandleAPI,
+  enableScrollEndPolyfill,
+} from 'shared/ReactFeatureFlags';
 
 export const topLevelEventsToReactNames: Map<DOMEventName, string | null> =
   new Map();
@@ -100,12 +103,15 @@ const simpleEventPluginEvents = [
   'touchStart',
   'volumeChange',
   'scroll',
-  'scrollEnd',
   'toggle',
   'touchMove',
   'waiting',
   'wheel',
 ];
+
+if (!enableScrollEndPolyfill) {
+  simpleEventPluginEvents.push('scrollEnd');
+}
 
 if (enableCreateEventHandleAPI) {
   // Special case: these two events don't have on* React handler

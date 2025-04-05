@@ -1455,6 +1455,11 @@ function lowerObjectPropertyKey(
       kind: 'identifier',
       name: key.node.name,
     };
+  } else if (key.isNumericLiteral()) {
+    return {
+      kind: 'identifier',
+      name: String(key.node.value),
+    };
   }
 
   builder.errors.push({
@@ -1909,16 +1914,31 @@ function lowerExpression(
 
       if (operator === '=') {
         const left = expr.get('left');
-        return lowerAssignment(
-          builder,
-          left.node.loc ?? GeneratedSource,
-          InstructionKind.Reassign,
-          left,
-          lowerExpressionToTemporary(builder, expr.get('right')),
-          left.isArrayPattern() || left.isObjectPattern()
-            ? 'Destructure'
-            : 'Assignment',
-        );
+        if (left.isLVal()) {
+          return lowerAssignment(
+            builder,
+            left.node.loc ?? GeneratedSource,
+            InstructionKind.Reassign,
+            left,
+            lowerExpressionToTemporary(builder, expr.get('right')),
+            left.isArrayPattern() || left.isObjectPattern()
+              ? 'Destructure'
+              : 'Assignment',
+          );
+        } else {
+          /**
+           * OptionalMemberExpressions as the left side of an AssignmentExpression are Stage 1 and
+           * not supported by React Compiler yet.
+           */
+          builder.errors.push({
+            reason: `(BuildHIR::lowerExpression) Unsupported syntax on the left side of an AssignmentExpression`,
+            description: `Expected an LVal, got: ${left.type}`,
+            severity: ErrorSeverity.Todo,
+            loc: left.node.loc ?? null,
+            suggestions: null,
+          });
+          return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
+        }
       }
 
       const operators: {
@@ -2091,7 +2111,7 @@ function lowerExpression(
           propName = namePath.node.name;
           if (propName.indexOf(':') !== -1) {
             builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name \`${name}\``,
+              reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name \`${propName}\``,
               severity: ErrorSeverity.Todo,
               loc: namePath.node.loc ?? null,
               suggestions: null,
@@ -2386,6 +2406,19 @@ function lowerExpression(
         kind: 'TypeCastExpression',
         value: lowerExpressionToTemporary(builder, expr.get('expression')),
         typeAnnotation: typeAnnotation.node,
+        typeAnnotationKind: 'cast',
+        type: lowerType(typeAnnotation.node),
+        loc: exprLoc,
+      };
+    }
+    case 'TSSatisfiesExpression': {
+      let expr = exprPath as NodePath<t.TSSatisfiesExpression>;
+      const typeAnnotation = expr.get('typeAnnotation');
+      return {
+        kind: 'TypeCastExpression',
+        value: lowerExpressionToTemporary(builder, expr.get('expression')),
+        typeAnnotation: typeAnnotation.node,
+        typeAnnotationKind: 'satisfies',
         type: lowerType(typeAnnotation.node),
         loc: exprLoc,
       };
@@ -2397,6 +2430,7 @@ function lowerExpression(
         kind: 'TypeCastExpression',
         value: lowerExpressionToTemporary(builder, expr.get('expression')),
         typeAnnotation: typeAnnotation.node,
+        typeAnnotationKind: 'as',
         type: lowerType(typeAnnotation.node),
         loc: exprLoc,
       };

@@ -10,6 +10,7 @@ import * as React from 'react';
 import {expectLogsAndClear, log} from './expectLogs';
 
 function Counter(props) {
+  'use memo';
   let value = props.value;
   let a = value++;
   expect(a).toBe(props.value); // postfix

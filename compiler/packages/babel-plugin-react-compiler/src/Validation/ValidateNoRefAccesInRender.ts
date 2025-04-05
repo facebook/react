@@ -99,9 +99,11 @@ class Env extends Map<IdentifierId, RefAccessType> {
   }
 }
 
-export function validateNoRefAccessInRender(fn: HIRFunction): void {
+export function validateNoRefAccessInRender(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const env = new Env();
-  validateNoRefAccessInRenderImpl(fn, env).unwrap();
+  return validateNoRefAccessInRenderImpl(fn, env).map(_ => undefined);
 }
 
 function refTypeOfType(place: Place): RefAccessType {

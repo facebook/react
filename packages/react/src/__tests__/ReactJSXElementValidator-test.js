@@ -49,13 +49,9 @@ describe('ReactJSXElementValidator', () => {
       root.render(<Component>{[<Component />, <Component />]}</Component>);
     });
     assertConsoleErrorDev([
-      gate(flags => flags.enableOwnerStacks)
-        ? 'Each child in a list should have a unique "key" prop.\n\n' +
-          'Check the render method of `Component`. See https://react.dev/link/warning-keys for more information.\n' +
-          '    in Component (at **)'
-        : 'Each child in a list should have a unique "key" prop.\n\n' +
-          'Check the top-level render call using <Component>. See https://react.dev/link/warning-keys for more information.\n' +
-          '    in Component (at **)',
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the render method of `Component`. See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Component (at **)',
     ]);
   });
 
@@ -79,17 +75,9 @@ describe('ReactJSXElementValidator', () => {
     });
     assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.' +
-        '\n\nCheck the render method of `' +
-        (gate(flag => flag.enableOwnerStacks)
-          ? 'Component'
-          : 'InnerComponent') +
-        '`. ' +
+        '\n\nCheck the render method of `Component`. ' +
         'It was passed a child from ComponentWrapper. See https://react.dev/link/warning-keys for more information.\n' +
-        (gate(flag => flag.enableOwnerStacks)
-          ? '    in ComponentWrapper (at **)'
-          : '    in Component (at **)\n' +
-            '    in InnerComponent (at **)\n' +
-            '    in ComponentWrapper (at **)'),
+        '    in ComponentWrapper (at **)',
     ]);
   });
 
@@ -112,34 +100,12 @@ describe('ReactJSXElementValidator', () => {
     await act(() => {
       root.render(<Component>{iterable}</Component>);
     });
-    assertConsoleErrorDev(
-      gate(flag => flag.enableOwnerStacks)
-        ? [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the render method of `Component`. It was passed a child from div. ' +
-              'See https://react.dev/link/warning-keys for more information.\n' +
-              '    in Component (at **)',
-          ]
-        : // Since each pass generates a new element, it doesn't get marked as
-          // validated and it gets rechecked each time.
-          [
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the top-level render call using <Component>. ' +
-              'See https://react.dev/link/warning-keys for more information.\n' +
-              '    in Component (at **)',
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the render method of `Component`. ' +
-              'See https://react.dev/link/warning-keys for more information.\n' +
-              '    in Component (at **)\n' +
-              '    in Component (at **)',
-            'Each child in a list should have a unique "key" prop.\n\n' +
-              'Check the render method of `Component`. It was passed a child from div. ' +
-              'See https://react.dev/link/warning-keys for more information.\n' +
-              '    in Component (at **)\n' +
-              '    in div (at **)\n' +
-              '    in Component (at **)',
-          ],
-    );
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the render method of `Component`. It was passed a child from div. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Component (at **)',
+    ]);
   });
 
   it('does not warn for arrays of elements with keys', async () => {
@@ -255,9 +221,13 @@ describe('ReactJSXElementValidator', () => {
       root.render(<Foo />);
     });
     assertConsoleErrorDev([
-      'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
-        'can only have `key` and `children` props.\n' +
-        '    in Foo (at **)',
+      gate('enableFragmentRefs')
+        ? 'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
+          'can only have `key`, `ref`, and `children` props.\n' +
+          '    in Foo (at **)'
+        : 'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
+          'can only have `key` and `children` props.\n' +
+          '    in Foo (at **)',
     ]);
   });
 
@@ -280,11 +250,15 @@ describe('ReactJSXElementValidator', () => {
     await act(() => {
       root.render(<Foo />);
     });
-    assertConsoleErrorDev([
-      'Invalid prop `ref` supplied to `React.Fragment`.' +
-        ' React.Fragment can only have `key` and `children` props.\n' +
-        '    in Foo (at **)',
-    ]);
+    assertConsoleErrorDev(
+      gate('enableFragmentRefs')
+        ? []
+        : [
+            'Invalid prop `ref` supplied to `React.Fragment`.' +
+              ' React.Fragment can only have `key` and `children` props.\n' +
+              '    in Foo (at **)',
+          ],
+    );
   });
 
   it('does not warn for fragments of multiple elements without keys', async () => {

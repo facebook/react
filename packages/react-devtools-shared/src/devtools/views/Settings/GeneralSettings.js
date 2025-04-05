@@ -12,6 +12,7 @@ import {useContext, useMemo} from 'react';
 import {SettingsContext} from './SettingsContext';
 import {StoreContext} from '../context';
 import {CHANGE_LOG_URL} from 'react-devtools-shared/src/devtools/constants';
+import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 
 import styles from './SettingsShared.css';
 
@@ -46,6 +47,12 @@ export default function GeneralSettings(_: {}): React.Node {
 
   return (
     <div className={styles.Settings}>
+      {isInternalFacebookBuild && (
+        <div className={styles.Setting}>
+          This is an internal build of React DevTools for Meta
+        </div>
+      )}
+
       <div className={styles.Setting}>
         <div className={styles.RadioLabel}>Theme</div>
         <select

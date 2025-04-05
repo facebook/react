@@ -19,7 +19,9 @@ import BabelPluginReactCompiler, {
   PluginOptions,
   CompilerPipelineValue,
   parsePluginOptions,
-} from 'babel-plugin-react-compiler/src';
+  printReactiveFunctionWithOutlined,
+  printFunctionWithOutlined,
+} from 'babel-plugin-react-compiler';
 import clsx from 'clsx';
 import invariant from 'invariant';
 import {useSnackbar} from 'notistack';
@@ -41,8 +43,6 @@ import {
   default as Output,
   PrintedCompilerPipelineValue,
 } from './Output';
-import {printFunctionWithOutlined} from 'babel-plugin-react-compiler/src/HIR/PrintHIR';
-import {printReactiveFunctionWithOutlined} from 'babel-plugin-react-compiler/src/ReactiveScopes/PrintReactiveFunction';
 import {transformFromAstSync} from '@babel/core';
 
 function parseInput(

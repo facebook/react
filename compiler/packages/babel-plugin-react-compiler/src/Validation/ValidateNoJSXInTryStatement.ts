@@ -7,6 +7,7 @@
 
 import {CompilerError, ErrorSeverity} from '..';
 import {BlockId, HIRFunction} from '../HIR';
+import {Result} from '../Utils/Result';
 import {retainWhere} from '../Utils/utils';
 
 /**
@@ -19,7 +20,9 @@ import {retainWhere} from '../Utils/utils';
  * created within a try block. JSX is allowed within a catch statement, unless that catch
  * is itself nested inside an outer try.
  */
-export function validateNoJSXInTryStatement(fn: HIRFunction): void {
+export function validateNoJSXInTryStatement(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const activeTryBlocks: Array<BlockId> = [];
   const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
@@ -46,7 +49,5 @@ export function validateNoJSXInTryStatement(fn: HIRFunction): void {
       activeTryBlocks.push(block.terminal.handler);
     }
   }
-  if (errors.hasErrors()) {
-    throw errors;
-  }
+  return errors.asResult();
 }

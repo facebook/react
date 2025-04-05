@@ -11,8 +11,6 @@ jest.mock('shared/ReactFeatureFlags', () => {
     'shared/forks/ReactFeatureFlags.native-fb.js'
   );
 
-  actual.enableOwnerStacks = __VARIANT__;
-
   // Lots of tests use these, but we don't want to expose it to RN.
   // Ideally, tests for xplat wouldn't use react-dom, but many of our tests do.
   // Since the xplat tests run with the www entry points, some of these flags
@@ -23,6 +21,9 @@ jest.mock('shared/ReactFeatureFlags', () => {
   actual.enableLegacyHidden = true;
   actual.enableScopeAPI = true;
   actual.enableTaint = false;
+
+  // Some value that doesn't impact existing tests
+  actual.ownerStackLimit = __VARIANT__ ? 500 : 1e4;
 
   return actual;
 });

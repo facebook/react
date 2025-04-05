@@ -20,6 +20,8 @@ function shim(...args: any): empty {
 
 // Mutation (when unsupported)
 export const supportsMutation = false;
+export const cloneMutableInstance = shim;
+export const cloneMutableTextInstance = shim;
 export const appendChild = shim;
 export const appendChildToContainer = shim;
 export const commitTextUpdate = shim;
@@ -40,14 +42,19 @@ export const restoreViewTransitionName = shim;
 export const cancelViewTransitionName = shim;
 export const cancelRootViewTransitionName = shim;
 export const restoreRootViewTransitionName = shim;
+export const cloneRootViewTransitionContainer = shim;
+export const removeRootViewTransitionClone = shim;
 export type InstanceMeasurement = null;
 export const measureInstance = shim;
+export const measureClonedInstance = shim;
 export const wasInstanceInViewport = shim;
 export const hasInstanceChanged = shim;
 export const hasInstanceAffectedParent = shim;
 export const startViewTransition = shim;
+export type RunningViewTransition = null;
+export const startGestureTransition = shim;
+export const stopViewTransition = shim;
 export type ViewTransitionInstance = null | {name: string, ...};
 export const createViewTransitionInstance = shim;
 export type GestureTimeline = any;
 export const getCurrentGestureOffset = shim;
-export const subscribeToGestureDirection = shim;

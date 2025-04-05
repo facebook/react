@@ -1,4 +1,9 @@
-import React, {useRef, useEffect, startTransition} from 'react';
+import React, {
+  useRef,
+  useEffect,
+  startTransition,
+  unstable_startGestureTransition as startGestureTransition,
+} from 'react';
 
 // Example of a Component that can recognize swipe gestures using a ScrollTimeline
 // without scrolling its own content. Allowing it to be used as an inert gesture
@@ -28,16 +33,23 @@ export default function SwipeRecognizer({
       source: scrollRef.current,
       axis: axis,
     });
-    activeGesture.current = gesture(scrollTimeline, {
-      range: [0, direction === 'left' || direction === 'up' ? 100 : 0, 100],
-    });
+    activeGesture.current = startGestureTransition(
+      scrollTimeline,
+      () => {
+        gesture(direction);
+      },
+      direction === 'left' || direction === 'up'
+        ? {
+            rangeStart: 100,
+            rangeEnd: 0,
+          }
+        : {
+            rangeStart: 0,
+            rangeEnd: 100,
+          }
+    );
   }
   function onScrollEnd() {
-    if (activeGesture.current !== null) {
-      const cancelGesture = activeGesture.current;
-      activeGesture.current = null;
-      cancelGesture();
-    }
     let changed;
     const scrollElement = scrollRef.current;
     if (axis === 'x') {
@@ -59,6 +71,11 @@ export default function SwipeRecognizer({
     if (changed) {
       // Trigger side-effects
       startTransition(action);
+    }
+    if (activeGesture.current !== null) {
+      const cancelGesture = activeGesture.current;
+      activeGesture.current = null;
+      cancelGesture();
     }
   }
 
@@ -92,7 +109,6 @@ export default function SwipeRecognizer({
     width: axis === 'x' ? '100%' : null,
     height: axis === 'y' ? '100%' : null,
     overflow: 'scroll hidden',
-    touchAction: 'pan-' + direction,
     // Disable overscroll on Safari which moves the sticky content.
     // Unfortunately, this also means that we disable chaining. We should only disable
     // it if the parent is not scrollable in this axis.

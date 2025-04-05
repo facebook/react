@@ -28,6 +28,7 @@ import {
   ElementTypeSuspenseList,
   ElementTypeTracingMarker,
   ElementTypeViewTransition,
+  ElementTypeActivity,
   ElementTypeVirtual,
   StrictMode,
 } from 'react-devtools-shared/src/frontend/types';
@@ -385,6 +386,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: 29,
       ViewTransitionComponent: 30, // Experimental
+      ActivityComponent: 31,
     };
   } else if (gte(version, '17.0.0-alpha')) {
     ReactTypeOfWork = {
@@ -421,6 +423,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
@@ -457,6 +460,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
@@ -493,6 +497,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: -1, // Removed
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   } else {
     ReactTypeOfWork = {
@@ -529,6 +534,7 @@ export function getInternalReactConstants(version: string): {
       YieldComponent: 9,
       Throw: -1, // Doesn't exist yet
       ViewTransitionComponent: -1, // Doesn't exist yet
+      ActivityComponent: -1, // Doesn't exist yet
     };
   }
   // **********************************************************
@@ -572,6 +578,7 @@ export function getInternalReactConstants(version: string): {
     TracingMarkerComponent,
     Throw,
     ViewTransitionComponent,
+    ActivityComponent,
   } = ReactTypeOfWork;
 
   function resolveFiberType(type: any): $FlowFixMe {
@@ -622,6 +629,8 @@ export function getInternalReactConstants(version: string): {
     }
 
     switch (tag) {
+      case ActivityComponent:
+        return 'Activity';
       case CacheComponent:
         return 'Cache';
       case ClassComponent:
@@ -799,6 +808,27 @@ function getPublicInstance(instance: HostInstance): HostInstance {
   return instance;
 }
 
+function getNativeTag(instance: HostInstance): number | null {
+  if (typeof instance !== 'object' || instance === null) {
+    return null;
+  }
+
+  // Modern. Fabric.
+  if (
+    instance.canonical != null &&
+    typeof instance.canonical.nativeTag === 'number'
+  ) {
+    return instance.canonical.nativeTag;
+  }
+
+  // Legacy.  Paper.
+  if (typeof instance._nativeTag === 'number') {
+    return instance._nativeTag;
+  }
+
+  return null;
+}
+
 function aquireHostInstance(
   nearestInstance: DevToolsInstance,
   hostInstance: HostInstance,
@@ -892,6 +922,7 @@ export function attach(
     StrictModeBits,
   } = getInternalReactConstants(version);
   const {
+    ActivityComponent,
     CacheComponent,
     ClassComponent,
     ContextConsumer,
@@ -1565,6 +1596,8 @@ export function attach(
     const {type, tag} = fiber;
 
     switch (tag) {
+      case ActivityComponent:
+        return ElementTypeActivity;
       case ClassComponent:
       case IncompleteClassComponent:
         return ElementTypeClass;
@@ -3312,13 +3345,31 @@ export function attach(
       fiberInstance.firstChild = null;
     }
     try {
-      if (nextFiber.tag === HostHoistable) {
+      if (
+        nextFiber.tag === HostHoistable &&
+        prevFiber.memoizedState !== nextFiber.memoizedState
+      ) {
         const nearestInstance = reconcilingParent;
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
         releaseHostResource(nearestInstance, prevFiber.memoizedState);
         aquireHostResource(nearestInstance, nextFiber.memoizedState);
+      } else if (
+        (nextFiber.tag === HostComponent ||
+          nextFiber.tag === HostText ||
+          nextFiber.tag === HostSingleton) &&
+        prevFiber.stateNode !== nextFiber.stateNode
+      ) {
+        // In persistent mode, it's possible for the stateNode to update with
+        // a new clone. In that case we need to release the old one and aquire
+        // new one instead.
+        const nearestInstance = reconcilingParent;
+        if (nearestInstance === null) {
+          throw new Error('Did not expect a host hoistable to be the root');
+        }
+        releaseHostInstance(nearestInstance, prevFiber.stateNode);
+        aquireHostInstance(nearestInstance, nextFiber.stateNode);
       }
 
       const isSuspense = nextFiber.tag === SuspenseComponent;
@@ -4286,6 +4337,11 @@ export function attach(
       componentLogsEntry = fiberToComponentLogsMap.get(fiber.alternate);
     }
 
+    let nativeTag = null;
+    if (elementType === ElementTypeHostComponent) {
+      nativeTag = getNativeTag(fiber.stateNode);
+    }
+
     return {
       id: fiberInstance.id,
 
@@ -4352,6 +4408,8 @@ export function attach(
       rendererVersion: renderer.version,
 
       plugins,
+
+      nativeTag,
     };
   }
 
@@ -4445,6 +4503,8 @@ export function attach(
       rendererVersion: renderer.version,
 
       plugins,
+
+      nativeTag: null,
     };
   }
 

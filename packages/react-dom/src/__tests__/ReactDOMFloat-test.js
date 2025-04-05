@@ -529,8 +529,7 @@ describe('ReactDOMFloat', () => {
         '>   <template>\n' +
         '    ...\n' +
         '\n' +
-        '    in template (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in html (at **)'),
+        '    in template (at **)',
     ]);
 
     root.render(
@@ -555,8 +554,7 @@ describe('ReactDOMFloat', () => {
         '    <body>\n' +
         '>   <style>\n' +
         '\n' +
-        '    in style (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in html (at **)'),
+        '    in style (at **)',
     ]);
 
     root.render(
@@ -596,8 +594,7 @@ describe('ReactDOMFloat', () => {
         '    <body>\n' +
         '>   <script href="foo">\n' +
         '\n' +
-        '    in script (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in html (at **)'),
+        '    in script (at **)',
     ]);
 
     root.render(
@@ -2269,21 +2266,11 @@ body {
         'spell it as lowercase `nonstandardattr` instead. If you accidentally passed it from a ' +
         'parent component, remove it from the DOM element.\n' +
         '    in link (at **)\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in div (at **)\n' +
-            '    in body (at **)\n' +
-            '    in html (at **)\n') +
         '    in App (at **)',
       'Invalid values for props `shouldnotincludefunctions`, `norsymbols` on <link> tag. ' +
         'Either remove them from the element, or pass a string or number value to keep them in the DOM. ' +
         'For details, see https://react.dev/link/attribute-behavior \n' +
         '    in link (at **)\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in div (at **)\n' +
-            '    in body (at **)\n' +
-            '    in html (at **)\n') +
         '    in App (at **)',
     ]);
 
@@ -2642,8 +2629,7 @@ body {
         '> <html>\n' +
         '>   <meta itemProp="foo">' +
         '\n' +
-        '\n    in meta (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in html (at **)'),
+        '\n    in meta (at **)',
     ]);
   });
 
@@ -2668,8 +2654,7 @@ body {
         '> <html>\n' +
         '>   <title itemProp="foo">' +
         '\n' +
-        '\n    in title (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in html (at **)'),
+        '\n    in title (at **)',
     ]);
   });
 
@@ -2694,8 +2679,7 @@ body {
         '> <html>\n' +
         '>   <style itemProp="foo">' +
         '\n' +
-        '\n    in style (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in html (at **)'),
+        '\n    in style (at **)',
     ]);
   });
 
@@ -2720,8 +2704,7 @@ body {
         '> <html>\n' +
         '>   <link itemProp="foo">\n' +
         '\n' +
-        '    in link (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in html (at **)'),
+        '    in link (at **)',
     ]);
   });
 
@@ -2746,8 +2729,7 @@ body {
         '> <html>\n' +
         '>   <script itemProp="foo">\n' +
         '\n' +
-        '    in script (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in html (at **)'),
+        '    in script (at **)',
     ]);
   });
 
@@ -3378,27 +3360,29 @@ body {
     });
     await waitForAll([]);
 
-    // Although the commit suspended, a preload was inserted.
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="preload" href="foo" as="style" />
-        </head>
-        <body>loading...</body>
-      </html>,
-    );
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      // Although the commit suspended, a preload was inserted.
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preload" href="foo" as="style" />
+          </head>
+          <body>loading...</body>
+        </html>,
+      );
 
-    loadPreloads(['foo']);
-    assertLog(['load preload: foo']);
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
-        </head>
-        <body>loading...</body>
-      </html>,
-    );
+      loadPreloads(['foo']);
+      assertLog(['load preload: foo']);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+          </head>
+          <body>loading...</body>
+        </html>,
+      );
+    }
 
     loadStylesheets(['foo']);
     assertLog(['load stylesheet: foo']);
@@ -3428,35 +3412,36 @@ body {
       );
     });
     await waitForAll([]);
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="bar" as="style" />
-        </head>
-        <body>
-          <div style="display: none;">hello</div>loading...
-        </body>
-      </html>,
-    );
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preload" href="bar" as="style" />
+          </head>
+          <body>
+            <div style="display: none;">hello</div>loading...
+          </body>
+        </html>,
+      );
 
-    loadPreloads(['bar']);
-    assertLog(['load preload: bar']);
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="stylesheet" href="bar" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="bar" as="style" />
-        </head>
-        <body>
-          <div style="display: none;">hello</div>loading...
-        </body>
-      </html>,
-    );
-
+      loadPreloads(['bar']);
+      assertLog(['load preload: bar']);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preload" href="bar" as="style" />
+          </head>
+          <body>
+            <div style="display: none;">hello</div>loading...
+          </body>
+        </html>,
+      );
+    }
     loadStylesheets(['bar']);
     assertLog(['load stylesheet: bar']);
     expect(getMeaningfulChildren(document)).toEqual(
@@ -4844,9 +4829,6 @@ body {
       'React encountered a hoistable style tag for the same href as a preload: "foo". ' +
         'When using a style tag to inline styles you should not also preload it as a stylsheet.\n' +
         '    in style (at **)\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in body (at **)\n' + '    in html (at **)\n') +
         '    in App (at **)',
     ]);
 
@@ -7753,64 +7735,43 @@ body {
             'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
             '`precedence` prop ensure there is a non-empty string `href` prop as well, ' +
             'otherwise remove the `precedence` prop.\n' +
-            '    in link (at **)' +
-            (gate('enableOwnerStacks')
-              ? ''
-              : '\n    in body (at **)' + '\n    in html (at **)'),
+            '    in link (at **)',
           'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and ' +
             'expected the `href` prop to be a non-empty string but ecountered an empty string instead. ' +
             'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
             '`precedence` prop ensure there is a non-empty string `href` prop as well, ' +
             'otherwise remove the `precedence` prop.\n' +
-            '    in link (at **)' +
-            (gate('enableOwnerStacks')
-              ? ''
-              : '\n    in body (at **)' + '\n    in html (at **)'),
+            '    in link (at **)',
           'An empty string ("") was passed to the href attribute. ' +
             'To fix this, either do not render the element at all or ' +
             'pass null to href instead of an empty string.\n' +
-            '    in link (at **)' +
-            (gate('enableOwnerStacks')
-              ? ''
-              : '\n    in body (at **)' + '\n    in html (at **)'),
+            '    in link (at **)',
           'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and ' +
             '`onLoad` and `onError` props. The presence of loading and error handlers indicates ' +
             'an intent to manage the stylesheet loading state from your from your Component code ' +
             'and React will not hoist or deduplicate this stylesheet. ' +
             'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
             '`precedence` prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.\n' +
-            '    in link (at **)' +
-            (gate('enableOwnerStacks')
-              ? ''
-              : '\n    in body (at **)' + '\n    in html (at **)'),
+            '    in link (at **)',
           'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and ' +
             '`onLoad` prop. The presence of loading and error handlers indicates an intent to ' +
             'manage the stylesheet loading state from your from your Component code and ' +
             'React will not hoist or deduplicate this stylesheet. ' +
             'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
             '`precedence` prop remove the `onLoad` prop, otherwise remove the `precedence` prop.\n' +
-            '    in link (at **)' +
-            (gate('enableOwnerStacks')
-              ? ''
-              : '\n    in body (at **)' + '\n    in html (at **)'),
+            '    in link (at **)',
           'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and `onError` prop. ' +
             'The presence of loading and error handlers indicates an intent to manage the stylesheet loading state ' +
             'from your from your Component code and React will not hoist or deduplicate this stylesheet. ' +
             'If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` ' +
             'prop remove the `onError` prop, otherwise remove the `precedence` prop.\n' +
-            '    in link (at **)' +
-            (gate('enableOwnerStacks')
-              ? ''
-              : '\n    in body (at **)' + '\n    in html (at **)'),
+            '    in link (at **)',
           'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and a `disabled` prop. ' +
             'The presence of the `disabled` prop indicates an intent to manage the stylesheet active state from ' +
             'your from your Component code and React will not hoist or deduplicate this stylesheet. ' +
             'If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` ' +
             'prop remove the `disabled` prop, otherwise remove the `precedence` prop.\n' +
-            '    in link (at **)' +
-            (gate('enableOwnerStacks')
-              ? ''
-              : '\n    in body (at **)' + '\n    in html (at **)'),
+            '    in link (at **)',
         ].filter(Boolean),
       );
 
@@ -7836,8 +7797,7 @@ body {
           'loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. ' +
           'If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` ' +
           'prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.\n' +
-          '    in body (at **)' +
-          (gate('enableOwnerStacks') ? '' : '\n    in html (at **)'),
+          '    in body (at **)',
       ]);
     });
 
@@ -8429,10 +8389,7 @@ background-color: green;
           'using the `precedence` prop to not have any spaces but ecountered spaces instead. ' +
           'using spaces in this prop will cause hydration of this style to fail on the client. ' +
           'The href for the <style> where this ocurred is "foo bar".\n' +
-          '    in style (at **)' +
-          (gate('enableOwnerStacks')
-            ? ''
-            : '\n    in body (at **)' + '\n    in html (at **)'),
+          '    in style (at **)',
       ]);
     });
 

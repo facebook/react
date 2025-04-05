@@ -13,7 +13,7 @@
 // Use __VARIANT__ to simulate a GK. The tests will be run twice: once
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
-export const alwaysThrottleRetries = true;
+export const alwaysThrottleRetries = __VARIANT__;
 export const disableDefaultPropsExceptForClasses = __VARIANT__;
 export const disableLegacyContextForFunctionComponents = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
@@ -35,10 +35,12 @@ export const enableSchedulingProfiler = __VARIANT__;
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
 export const enableSiblingPrerendering = __VARIANT__;
 
-export const enableUseEffectCRUDOverload = __VARIANT__;
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableViewTransition = __VARIANT__;
+export const enableComponentPerformanceTrack = __VARIANT__;
+export const enableScrollEndPolyfill = __VARIANT__;
+export const enableFragmentRefs = __VARIANT__;
 
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these

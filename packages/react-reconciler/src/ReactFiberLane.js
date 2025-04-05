@@ -8,7 +8,7 @@
  */
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Transition} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
@@ -635,6 +635,14 @@ export function includesOnlyHydrationOrOffscreenLanes(lanes: Lanes): boolean {
 
 export function includesOnlyViewTransitionEligibleLanes(lanes: Lanes): boolean {
   return (lanes & (TransitionLanes | RetryLanes | IdleLane)) === lanes;
+}
+
+export function includesOnlySuspenseyCommitEligibleLanes(
+  lanes: Lanes,
+): boolean {
+  return (
+    (lanes & (TransitionLanes | RetryLanes | IdleLane | GestureLane)) === lanes
+  );
 }
 
 export function includesBlockingLane(lanes: Lanes): boolean {

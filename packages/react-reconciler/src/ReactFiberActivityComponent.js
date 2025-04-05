@@ -10,11 +10,8 @@
 import type {ReactNodeList, OffscreenMode, Wakeable} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {SpawnedCachePool} from './ReactFiberCacheComponent';
-import type {Fiber} from './ReactInternalTypes';
-import type {
-  Transition,
-  TracingMarkerInstance,
-} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {RetryQueue} from './ReactFiberSuspenseComponent';
 
 export type OffscreenProps = {
@@ -47,25 +44,11 @@ export type OffscreenQueue = {
 type OffscreenVisibility = number;
 
 export const OffscreenVisible = /*                     */ 0b001;
-export const OffscreenDetached = /*                    */ 0b010;
-export const OffscreenPassiveEffectsConnected = /*     */ 0b100;
+export const OffscreenPassiveEffectsConnected = /*     */ 0b010;
 
 export type OffscreenInstance = {
-  _pendingVisibility: OffscreenVisibility,
   _visibility: OffscreenVisibility,
   _pendingMarkers: Set<TracingMarkerInstance> | null,
   _transitions: Set<Transition> | null,
   _retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,
-
-  // Represents the current Offscreen fiber
-  _current: Fiber | null,
-  detach: () => void,
-  attach: () => void,
 };
-
-export function isOffscreenManual(offscreenFiber: Fiber): boolean {
-  return (
-    offscreenFiber.memoizedProps !== null &&
-    offscreenFiber.memoizedProps.mode === 'manual'
-  );
-}

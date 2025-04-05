@@ -25,16 +25,12 @@ export const {
   enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
-  enableUseEffectCRUDOverload,
   passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering,
   enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric,
+  renameElementSymbol,
 } = dynamicFlags;
-
-// These two can be removed
-export const enableOwnerStacks = true;
-export const enableRemoveConsolePatches = true;
 
 // The rest of the flags are static for better dead code elimination.
 export const disableClientCache = true;
@@ -77,7 +73,6 @@ export const enableTrustedTypesIntegration = false;
 export const enableUpdaterTracking = __PROFILE__;
 export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
-export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
@@ -85,7 +80,11 @@ export const enableHydrationLaneScheduling = true;
 export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
-export const enableSwipeTransition = false;
+export const enableGestureTransition = false;
+export const enableScrollEndPolyfill = true;
+export const enableSuspenseyImages = false;
+export const enableFragmentRefs = false;
+export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

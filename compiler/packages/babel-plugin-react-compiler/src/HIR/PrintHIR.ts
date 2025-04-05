@@ -330,6 +330,9 @@ function printObjectPropertyKey(key: ObjectPropertyKey): string {
     case 'computed': {
       return `[${printPlace(key.name)}]`;
     }
+    case 'number': {
+      return String(key.name);
+    }
   }
 }
 
