@@ -248,7 +248,7 @@ function createVirtualInstance(
 type DevToolsInstance = FiberInstance | VirtualInstance | FilteredFiberInstance;
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
-type getTypeSymbolType = (type: any) => symbol | number;
+type getTypeSymbolType = (type: any) => symbol | string | number;
 
 type ReactPriorityLevelsType = {
   ImmediatePriority: number,
@@ -541,13 +541,12 @@ export function getInternalReactConstants(version: string): {
   // End of copied code.
   // **********************************************************
 
-  function getTypeSymbol(type: any): symbol | number {
+  function getTypeSymbol(type: any): symbol | string | number {
     const symbolOrNumber =
       typeof type === 'object' && type !== null ? type.$$typeof : type;
 
     return typeof symbolOrNumber === 'symbol'
-      ? // $FlowFixMe[incompatible-return] `toString()` doesn't match the type signature?
-        symbolOrNumber.toString()
+      ? symbolOrNumber.toString()
       : symbolOrNumber;
   }
 
