@@ -10269,7 +10269,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate __DEV__
   it('warns when it encounters a mismatched nonce on a style', async () => {
     CSPnonce = 'R4nd0m';
     await act(() => {
