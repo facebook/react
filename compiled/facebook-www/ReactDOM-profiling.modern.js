@@ -12302,7 +12302,8 @@ function commitPassiveMountOnFiber(
                 0 !== (finishedWork.mode & 2) &&
                 !inHydratedSubtree &&
                 ((finishedRoot = finishedWork.actualStartTime),
-                0.05 < endTime - finishedRoot &&
+                0 <= finishedRoot &&
+                  0.05 < endTime - finishedRoot &&
                   logComponentReappeared(finishedWork, finishedRoot, endTime),
                 0 <= componentEffectStartTime &&
                   0 <= componentEffectEndTime &&
@@ -12374,7 +12375,8 @@ function commitPassiveMountOnFiber(
         null !== finishedWork.return.alternate)
     )
       (committedLanes = finishedWork.actualStartTime),
-        0.05 < endTime - committedLanes &&
+        0 <= committedLanes &&
+          0.05 < endTime - committedLanes &&
           logComponentTrigger(finishedWork, committedLanes, endTime, "Mount");
     0 <= componentEffectStartTime &&
       0 <= componentEffectEndTime &&
@@ -20698,14 +20700,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2161 = React.version;
 if (
-  "19.2.0-www-modern-365c031f-20250407" !==
+  "19.2.0-www-modern-33661467-20250407" !==
   isomorphicReactPackageVersion$jscomp$inline_2161
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2161,
-      "19.2.0-www-modern-365c031f-20250407"
+      "19.2.0-www-modern-33661467-20250407"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20723,10 +20725,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2163 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-365c031f-20250407",
+  version: "19.2.0-www-modern-33661467-20250407",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-365c031f-20250407"
+  reconcilerVersion: "19.2.0-www-modern-33661467-20250407"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2163.getLaneLabelMap = getLaneLabelMap),
@@ -21093,7 +21095,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-365c031f-20250407";
+exports.version = "19.2.0-www-modern-33661467-20250407";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

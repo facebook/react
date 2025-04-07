@@ -14472,7 +14472,8 @@ __DEV__ &&
                     (finishedWork.mode & 2) !== NoMode &&
                     !inHydratedSubtree &&
                     ((finishedRoot = finishedWork.actualStartTime),
-                    0.05 < endTime - finishedRoot &&
+                    0 <= finishedRoot &&
+                      0.05 < endTime - finishedRoot &&
                       logComponentReappeared(
                         finishedWork,
                         finishedRoot,
@@ -14553,7 +14554,8 @@ __DEV__ &&
             null !== finishedWork.return.alternate)
         )
           (committedLanes = finishedWork.actualStartTime),
-            0.05 < endTime - committedLanes &&
+            0 <= committedLanes &&
+              0.05 < endTime - committedLanes &&
               logComponentTrigger(
                 finishedWork,
                 committedLanes,
@@ -21207,7 +21209,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-365c031f-20250407"
+        reconcilerVersion: "19.2.0-www-classic-33661467-20250407"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

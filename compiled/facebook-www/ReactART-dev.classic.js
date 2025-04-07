@@ -12650,7 +12650,8 @@ __DEV__ &&
                     0 !== (finishedWork.mode & 2) &&
                     !inHydratedSubtree &&
                     ((finishedRoot = finishedWork.actualStartTime),
-                    0.05 < endTime - finishedRoot &&
+                    0 <= finishedRoot &&
+                      0.05 < endTime - finishedRoot &&
                       logComponentReappeared(
                         finishedWork,
                         finishedRoot,
@@ -12724,7 +12725,8 @@ __DEV__ &&
             null !== finishedWork.return.alternate)
         )
           (committedLanes = finishedWork.actualStartTime),
-            0.05 < endTime - committedLanes &&
+            0 <= committedLanes &&
+              0.05 < endTime - committedLanes &&
               logComponentTrigger(
                 finishedWork,
                 committedLanes,
@@ -18524,10 +18526,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-365c031f-20250407",
+        version: "19.2.0-www-classic-33661467-20250407",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-365c031f-20250407"
+        reconcilerVersion: "19.2.0-www-classic-33661467-20250407"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18561,7 +18563,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-365c031f-20250407";
+    exports.version = "19.2.0-www-classic-33661467-20250407";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
