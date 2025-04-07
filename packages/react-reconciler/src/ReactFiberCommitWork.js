@@ -3756,7 +3756,7 @@ function commitPassiveMountOnFiber(
           ) {
             // Log the reappear in the render phase.
             const startTime = ((finishedWork.actualStartTime: any): number);
-            if (endTime - startTime > 0.05) {
+            if (startTime >= 0 && endTime - startTime > 0.05) {
               logComponentReappeared(finishedWork, startTime, endTime);
             }
             if (
@@ -3861,7 +3861,7 @@ function commitPassiveMountOnFiber(
     if (isMount) {
       // Log the mount in the render phase.
       const startTime = ((finishedWork.actualStartTime: any): number);
-      if (endTime - startTime > 0.05) {
+      if (startTime >= 0 && endTime - startTime > 0.05) {
         logComponentMount(finishedWork, startTime, endTime);
       }
     }
