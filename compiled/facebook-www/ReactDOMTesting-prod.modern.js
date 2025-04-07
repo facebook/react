@@ -8775,12 +8775,13 @@ function applyViewTransitionToHostInstancesRecursive(
       } else
         inViewport || (measureInstance(instance).view && (inViewport = !0));
       shouldStartViewTransition = !0;
-      measurement = className;
-      instance.style.viewTransitionName =
+      applyViewTransitionName(
+        instance,
         0 === viewTransitionHostInstanceIdx
           ? name
-          : name + "_" + viewTransitionHostInstanceIdx;
-      null != measurement && (instance.style.viewTransitionClass = measurement);
+          : name + "_" + viewTransitionHostInstanceIdx,
+        className
+      );
       viewTransitionHostInstanceIdx++;
     } else if (22 !== child.tag || null === child.memoizedState)
       (30 === child.tag && stopAtNestedViewTransitions) ||
@@ -9049,14 +9050,13 @@ function measureViewTransitionHostInstancesRecursive(
         nextMeasurement && (parentViewTransition.flags |= 32);
       } else parentViewTransition.flags |= 32;
       0 !== (parentViewTransition.flags & 4) &&
-        ((nextMeasurement = instance),
-        (previousMeasurement = className),
-        (nextMeasurement.style.viewTransitionName =
+        applyViewTransitionName(
+          instance,
           0 === viewTransitionHostInstanceIdx
             ? newName
-            : newName + "_" + viewTransitionHostInstanceIdx),
-        null != previousMeasurement &&
-          (nextMeasurement.style.viewTransitionClass = previousMeasurement));
+            : newName + "_" + viewTransitionHostInstanceIdx,
+          className
+        );
       (inViewport && 0 !== (parentViewTransition.flags & 4)) ||
         (null === viewTransitionCancelableChildren &&
           (viewTransitionCancelableChildren = []),
@@ -14724,20 +14724,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1755 = 0;
-  i$jscomp$inline_1755 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1755++
+  var i$jscomp$inline_1749 = 0;
+  i$jscomp$inline_1749 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1749++
 ) {
-  var eventName$jscomp$inline_1756 =
-      simpleEventPluginEvents[i$jscomp$inline_1755],
-    domEventName$jscomp$inline_1757 =
-      eventName$jscomp$inline_1756.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1758 =
-      eventName$jscomp$inline_1756[0].toUpperCase() +
-      eventName$jscomp$inline_1756.slice(1);
+  var eventName$jscomp$inline_1750 =
+      simpleEventPluginEvents[i$jscomp$inline_1749],
+    domEventName$jscomp$inline_1751 =
+      eventName$jscomp$inline_1750.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1752 =
+      eventName$jscomp$inline_1750[0].toUpperCase() +
+      eventName$jscomp$inline_1750.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1757,
-    "on" + capitalizedEvent$jscomp$inline_1758
+    domEventName$jscomp$inline_1751,
+    "on" + capitalizedEvent$jscomp$inline_1752
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16774,7 +16774,27 @@ function clearSuspenseBoundary(parentInstance, suspenseInstance) {
   } while (node);
   retryIfBlockedOn(suspenseInstance);
 }
+function applyViewTransitionName(instance, name, className) {
+  instance.style.viewTransitionName = name;
+  null != className && (instance.style.viewTransitionClass = className);
+  name = getComputedStyle(instance);
+  if ("inline" === name.display) {
+    className = instance.getClientRects();
+    if (1 === className.length) var JSCompiler_inline_result = 1;
+    else
+      for (var i = (JSCompiler_inline_result = 0); i < className.length; i++) {
+        var rect = className[i];
+        0 < rect.width && 0 < rect.height && JSCompiler_inline_result++;
+      }
+    1 === JSCompiler_inline_result &&
+      ((instance = instance.style),
+      (instance.display = 1 === className.length ? "inline-block" : "block"),
+      (instance.marginTop = "-" + name.paddingTop),
+      (instance.marginBottom = "-" + name.paddingBottom));
+  }
+}
 function restoreViewTransitionName(instance, props) {
+  instance = instance.style;
   props = props.style;
   var viewTransitionName =
     null != props
@@ -16784,11 +16804,11 @@ function restoreViewTransitionName(instance, props) {
           ? props["view-transition-name"]
           : null
       : null;
-  instance.style.viewTransitionName =
+  instance.viewTransitionName =
     null == viewTransitionName || "boolean" === typeof viewTransitionName
       ? ""
       : ("" + viewTransitionName).trim();
-  props =
+  viewTransitionName =
     null != props
       ? props.hasOwnProperty("viewTransitionClass")
         ? props.viewTransitionClass
@@ -16796,8 +16816,34 @@ function restoreViewTransitionName(instance, props) {
           ? props["view-transition-class"]
           : null
       : null;
-  instance.style.viewTransitionClass =
-    null == props || "boolean" === typeof props ? "" : ("" + props).trim();
+  instance.viewTransitionClass =
+    null == viewTransitionName || "boolean" === typeof viewTransitionName
+      ? ""
+      : ("" + viewTransitionName).trim();
+  "inline-block" === instance.display &&
+    (null == props
+      ? (instance.display = instance.margin = "")
+      : ((viewTransitionName = props.display),
+        (instance.display =
+          null == viewTransitionName || "boolean" === typeof viewTransitionName
+            ? ""
+            : viewTransitionName),
+        (viewTransitionName = props.margin),
+        null != viewTransitionName
+          ? (instance.margin = viewTransitionName)
+          : ((viewTransitionName = props.hasOwnProperty("marginTop")
+              ? props.marginTop
+              : props["margin-top"]),
+            (instance.marginTop =
+              null == viewTransitionName ||
+              "boolean" === typeof viewTransitionName
+                ? ""
+                : viewTransitionName),
+            (props = props.hasOwnProperty("marginBottom")
+              ? props.marginBottom
+              : props["margin-bottom"]),
+            (instance.marginBottom =
+              null == props || "boolean" === typeof props ? "" : props))));
 }
 function restoreRootViewTransitionName(rootContainer) {
   rootContainer =
@@ -17752,26 +17798,26 @@ function getResource(type, currentProps, pendingProps, currentResource) {
         "string" === typeof pendingProps.precedence
       ) {
         type = getStyleKey(pendingProps.href);
-        var styles$281 = getResourcesFromRoot(
+        var styles$282 = getResourcesFromRoot(
             JSCompiler_inline_result
           ).hoistableStyles,
-          resource$282 = styles$281.get(type);
-        resource$282 ||
+          resource$283 = styles$282.get(type);
+        resource$283 ||
           ((JSCompiler_inline_result =
             JSCompiler_inline_result.ownerDocument || JSCompiler_inline_result),
-          (resource$282 = {
+          (resource$283 = {
             type: "stylesheet",
             instance: null,
             count: 0,
             state: { loading: 0, preload: null }
           }),
-          styles$281.set(type, resource$282),
-          (styles$281 = JSCompiler_inline_result.querySelector(
+          styles$282.set(type, resource$283),
+          (styles$282 = JSCompiler_inline_result.querySelector(
             getStylesheetSelectorFromKey(type)
           )) &&
-            !styles$281._p &&
-            ((resource$282.instance = styles$281),
-            (resource$282.state.loading = 5)),
+            !styles$282._p &&
+            ((resource$283.instance = styles$282),
+            (resource$283.state.loading = 5)),
           preloadPropsMap.has(type) ||
             ((pendingProps = {
               rel: "preload",
@@ -17784,16 +17830,16 @@ function getResource(type, currentProps, pendingProps, currentResource) {
               referrerPolicy: pendingProps.referrerPolicy
             }),
             preloadPropsMap.set(type, pendingProps),
-            styles$281 ||
+            styles$282 ||
               preloadStylesheet(
                 JSCompiler_inline_result,
                 type,
                 pendingProps,
-                resource$282.state
+                resource$283.state
               )));
         if (currentProps && null === currentResource)
           throw Error(formatProdErrorMessage(528, ""));
-        return resource$282;
+        return resource$283;
       }
       if (currentProps && null !== currentResource)
         throw Error(formatProdErrorMessage(529, ""));
@@ -17890,37 +17936,37 @@ function acquireResource(hoistableRoot, resource, props) {
         return (resource.instance = instance);
       case "stylesheet":
         styleProps = getStyleKey(props.href);
-        var instance$287 = hoistableRoot.querySelector(
+        var instance$288 = hoistableRoot.querySelector(
           getStylesheetSelectorFromKey(styleProps)
         );
-        if (instance$287)
+        if (instance$288)
           return (
             (resource.state.loading |= 4),
-            (resource.instance = instance$287),
-            markNodeAsHoistable(instance$287),
-            instance$287
+            (resource.instance = instance$288),
+            markNodeAsHoistable(instance$288),
+            instance$288
           );
         instance = stylesheetPropsFromRawProps(props);
         (styleProps = preloadPropsMap.get(styleProps)) &&
           adoptPreloadPropsForStylesheet(instance, styleProps);
-        instance$287 = (
+        instance$288 = (
           hoistableRoot.ownerDocument || hoistableRoot
         ).createElement("link");
-        markNodeAsHoistable(instance$287);
-        var linkInstance = instance$287;
+        markNodeAsHoistable(instance$288);
+        var linkInstance = instance$288;
         linkInstance._p = new Promise(function (resolve, reject) {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
         });
-        setInitialProperties(instance$287, "link", instance);
+        setInitialProperties(instance$288, "link", instance);
         resource.state.loading |= 4;
-        insertStylesheet(instance$287, props.precedence, hoistableRoot);
-        return (resource.instance = instance$287);
+        insertStylesheet(instance$288, props.precedence, hoistableRoot);
+        return (resource.instance = instance$288);
       case "script":
-        instance$287 = getScriptKey(props.src);
+        instance$288 = getScriptKey(props.src);
         if (
           (styleProps = hoistableRoot.querySelector(
-            getScriptSelectorFromKey(instance$287)
+            getScriptSelectorFromKey(instance$288)
           ))
         )
           return (
@@ -17929,7 +17975,7 @@ function acquireResource(hoistableRoot, resource, props) {
             styleProps
           );
         instance = props;
-        if ((styleProps = preloadPropsMap.get(instance$287)))
+        if ((styleProps = preloadPropsMap.get(instance$288)))
           (instance = assign({}, props)),
             adoptPreloadPropsForScript(instance, styleProps);
         hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
@@ -18934,16 +18980,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1995 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1994 = React.version;
 if (
-  "19.2.0-www-modern-6a7650c7-20250405" !==
-  isomorphicReactPackageVersion$jscomp$inline_1995
+  "19.2.0-www-modern-365c031f-20250407" !==
+  isomorphicReactPackageVersion$jscomp$inline_1994
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1995,
-      "19.2.0-www-modern-6a7650c7-20250405"
+      isomorphicReactPackageVersion$jscomp$inline_1994,
+      "19.2.0-www-modern-365c031f-20250407"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18959,24 +19005,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2576 = {
+var internals$jscomp$inline_2575 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-6a7650c7-20250405",
+  version: "19.2.0-www-modern-365c031f-20250407",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-6a7650c7-20250405"
+  reconcilerVersion: "19.2.0-www-modern-365c031f-20250407"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2577 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2576 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2577.isDisabled &&
-    hook$jscomp$inline_2577.supportsFiber
+    !hook$jscomp$inline_2576.isDisabled &&
+    hook$jscomp$inline_2576.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2577.inject(
-        internals$jscomp$inline_2576
+      (rendererID = hook$jscomp$inline_2576.inject(
+        internals$jscomp$inline_2575
       )),
-        (injectedHook = hook$jscomp$inline_2577);
+        (injectedHook = hook$jscomp$inline_2576);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -19479,4 +19525,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-6a7650c7-20250405";
+exports.version = "19.2.0-www-modern-365c031f-20250407";
