@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<18d0107213b347f0b8d51a335717da4f>>
+ * @generated SignedSource<<3d3a073564d0e01acb06ca8aa9d3f083>>
  */
 
 /*
@@ -12399,20 +12399,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1535 = 0;
-  i$jscomp$inline_1535 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1535++
+  var i$jscomp$inline_1544 = 0;
+  i$jscomp$inline_1544 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1544++
 ) {
-  var eventName$jscomp$inline_1536 =
-      simpleEventPluginEvents[i$jscomp$inline_1535],
-    domEventName$jscomp$inline_1537 =
-      eventName$jscomp$inline_1536.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1538 =
-      eventName$jscomp$inline_1536[0].toUpperCase() +
-      eventName$jscomp$inline_1536.slice(1);
+  var eventName$jscomp$inline_1545 =
+      simpleEventPluginEvents[i$jscomp$inline_1544],
+    domEventName$jscomp$inline_1546 =
+      eventName$jscomp$inline_1545.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1547 =
+      eventName$jscomp$inline_1545[0].toUpperCase() +
+      eventName$jscomp$inline_1545.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1537,
-    "on" + capitalizedEvent$jscomp$inline_1538
+    domEventName$jscomp$inline_1546,
+    "on" + capitalizedEvent$jscomp$inline_1547
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14776,26 +14776,26 @@ function getResource(type, currentProps, pendingProps, currentResource) {
         "string" === typeof pendingProps.precedence
       ) {
         type = getStyleKey(pendingProps.href);
-        var styles$256 = getResourcesFromRoot(
+        var styles$257 = getResourcesFromRoot(
             JSCompiler_inline_result
           ).hoistableStyles,
-          resource$257 = styles$256.get(type);
-        resource$257 ||
+          resource$258 = styles$257.get(type);
+        resource$258 ||
           ((JSCompiler_inline_result =
             JSCompiler_inline_result.ownerDocument || JSCompiler_inline_result),
-          (resource$257 = {
+          (resource$258 = {
             type: "stylesheet",
             instance: null,
             count: 0,
             state: { loading: 0, preload: null }
           }),
-          styles$256.set(type, resource$257),
-          (styles$256 = JSCompiler_inline_result.querySelector(
+          styles$257.set(type, resource$258),
+          (styles$257 = JSCompiler_inline_result.querySelector(
             getStylesheetSelectorFromKey(type)
           )) &&
-            !styles$256._p &&
-            ((resource$257.instance = styles$256),
-            (resource$257.state.loading = 5)),
+            !styles$257._p &&
+            ((resource$258.instance = styles$257),
+            (resource$258.state.loading = 5)),
           preloadPropsMap.has(type) ||
             ((pendingProps = {
               rel: "preload",
@@ -14808,16 +14808,16 @@ function getResource(type, currentProps, pendingProps, currentResource) {
               referrerPolicy: pendingProps.referrerPolicy
             }),
             preloadPropsMap.set(type, pendingProps),
-            styles$256 ||
+            styles$257 ||
               preloadStylesheet(
                 JSCompiler_inline_result,
                 type,
                 pendingProps,
-                resource$257.state
+                resource$258.state
               )));
         if (currentProps && null === currentResource)
           throw Error(formatProdErrorMessage(528, ""));
-        return resource$257;
+        return resource$258;
       }
       if (currentProps && null !== currentResource)
         throw Error(formatProdErrorMessage(529, ""));
@@ -14914,37 +14914,37 @@ function acquireResource(hoistableRoot, resource, props) {
         return (resource.instance = instance);
       case "stylesheet":
         styleProps = getStyleKey(props.href);
-        var instance$262 = hoistableRoot.querySelector(
+        var instance$263 = hoistableRoot.querySelector(
           getStylesheetSelectorFromKey(styleProps)
         );
-        if (instance$262)
+        if (instance$263)
           return (
             (resource.state.loading |= 4),
-            (resource.instance = instance$262),
-            markNodeAsHoistable(instance$262),
-            instance$262
+            (resource.instance = instance$263),
+            markNodeAsHoistable(instance$263),
+            instance$263
           );
         instance = stylesheetPropsFromRawProps(props);
         (styleProps = preloadPropsMap.get(styleProps)) &&
           adoptPreloadPropsForStylesheet(instance, styleProps);
-        instance$262 = (
+        instance$263 = (
           hoistableRoot.ownerDocument || hoistableRoot
         ).createElement("link");
-        markNodeAsHoistable(instance$262);
-        var linkInstance = instance$262;
+        markNodeAsHoistable(instance$263);
+        var linkInstance = instance$263;
         linkInstance._p = new Promise(function (resolve, reject) {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
         });
-        setInitialProperties(instance$262, "link", instance);
+        setInitialProperties(instance$263, "link", instance);
         resource.state.loading |= 4;
-        insertStylesheet(instance$262, props.precedence, hoistableRoot);
-        return (resource.instance = instance$262);
+        insertStylesheet(instance$263, props.precedence, hoistableRoot);
+        return (resource.instance = instance$263);
       case "script":
-        instance$262 = getScriptKey(props.src);
+        instance$263 = getScriptKey(props.src);
         if (
           (styleProps = hoistableRoot.querySelector(
-            getScriptSelectorFromKey(instance$262)
+            getScriptSelectorFromKey(instance$263)
           ))
         )
           return (
@@ -14953,7 +14953,7 @@ function acquireResource(hoistableRoot, resource, props) {
             styleProps
           );
         instance = props;
-        if ((styleProps = preloadPropsMap.get(instance$262)))
+        if ((styleProps = preloadPropsMap.get(instance$263)))
           (instance = assign({}, props)),
             adoptPreloadPropsForScript(instance, styleProps);
         hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
@@ -16002,16 +16002,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1789 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1798 = React.version;
 if (
-  "19.2.0-native-fb-6a7650c7-20250405" !==
-  isomorphicReactPackageVersion$jscomp$inline_1789
+  "19.2.0-native-fb-365c031f-20250407" !==
+  isomorphicReactPackageVersion$jscomp$inline_1798
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1789,
-      "19.2.0-native-fb-6a7650c7-20250405"
+      isomorphicReactPackageVersion$jscomp$inline_1798,
+      "19.2.0-native-fb-365c031f-20250407"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16031,24 +16031,24 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2239 = {
+var internals$jscomp$inline_2254 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-6a7650c7-20250405",
+  version: "19.2.0-native-fb-365c031f-20250407",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-6a7650c7-20250405"
+  reconcilerVersion: "19.2.0-native-fb-365c031f-20250407"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2240 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2255 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2240.isDisabled &&
-    hook$jscomp$inline_2240.supportsFiber
+    !hook$jscomp$inline_2255.isDisabled &&
+    hook$jscomp$inline_2255.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2240.inject(
-        internals$jscomp$inline_2239
+      (rendererID = hook$jscomp$inline_2255.inject(
+        internals$jscomp$inline_2254
       )),
-        (injectedHook = hook$jscomp$inline_2240);
+        (injectedHook = hook$jscomp$inline_2255);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -16140,4 +16140,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-6a7650c7-20250405";
+exports.version = "19.2.0-native-fb-365c031f-20250407";
