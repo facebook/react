@@ -146,7 +146,7 @@ export type Props = {
   is?: string,
   size?: number,
   multiple?: boolean,
-  src?: string,
+  src?: string | Blob | MediaSource | MediaStream, // TODO: Response
   srcSet?: string,
   loading?: 'eager' | 'lazy',
   onLoad?: (event: any) => void,
