@@ -29,6 +29,8 @@ import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import {NotPending} from '../shared/ReactDOMFormActions';
 
+import {setSrcObject} from './ReactDOMSrcObject';
+
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 import {runWithFiberInDEV} from 'react-reconciler/src/ReactCurrentFiber';
 
@@ -104,6 +106,7 @@ import {
   enableMoveBefore,
   disableCommentsAsDOMContainers,
   enableSuspenseyImages,
+  enableSrcObject,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -775,7 +778,23 @@ export function commitMount(
       // is already a noop regardless of which properties are assigned. We should revisit if browsers update
       // this heuristic in the future.
       if (newProps.src) {
-        ((domElement: any): HTMLImageElement).src = (newProps: any).src;
+        const src = (newProps: any).src;
+        if (enableSrcObject && typeof src === 'object') {
+          // For object src, we can't just set the src again to the same blob URL because it might have
+          // already revoked if it loaded before this. However, we can create a new blob URL and set that.
+          // This is relatively cheap since the blob is already in memory but this might cause some
+          // duplicated work.
+          // TODO: We could maybe detect if load hasn't fired yet and if so reuse the URL.
+          try {
+            setSrcObject(domElement, type, src);
+            return;
+          } catch (x) {
+            // If URL.createObjectURL() errors, it was probably some other object type
+            // that should be toString:ed instead, so we just fall-through to the normal
+            // path.
+          }
+        }
+        ((domElement: any): HTMLImageElement).src = src;
       } else if (newProps.srcSet) {
         ((domElement: any): HTMLImageElement).srcset = (newProps: any).srcSet;
       }
