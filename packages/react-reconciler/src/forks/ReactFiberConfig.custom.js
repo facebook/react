@@ -88,6 +88,9 @@ export const shouldAttemptEagerTransition =
 export const detachDeletedInstance = $$$config.detachDeletedInstance;
 export const requestPostPaintCallback = $$$config.requestPostPaintCallback;
 export const maySuspendCommit = $$$config.maySuspendCommit;
+export const maySuspendCommitOnUpdate = $$$config.maySuspendCommitOnUpdate;
+export const maySuspendCommitInSyncRender =
+  $$$config.maySuspendCommitInSyncRender;
 export const preloadInstance = $$$config.preloadInstance;
 export const startSuspendingCommit = $$$config.startSuspendingCommit;
 export const suspendInstance = $$$config.suspendInstance;
@@ -157,8 +160,6 @@ export const startViewTransition = $$$config.startViewTransition;
 export const startGestureTransition = $$$config.startGestureTransition;
 export const stopViewTransition = $$$config.stopViewTransition;
 export const getCurrentGestureOffset = $$$config.getCurrentGestureOffset;
-export const subscribeToGestureDirection =
-  $$$config.subscribeToGestureDirection;
 export const createViewTransitionInstance =
   $$$config.createViewTransitionInstance;
 export const clearContainer = $$$config.clearContainer;

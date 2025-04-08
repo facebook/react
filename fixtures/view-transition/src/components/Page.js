@@ -1,12 +1,16 @@
 import React, {
+  unstable_addTransitionType as addTransitionType,
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
-  unstable_useSwipeTransition as useSwipeTransition,
   useLayoutEffect,
   useEffect,
   useState,
   useId,
+  useOptimistic,
+  startTransition,
 } from 'react';
+
+import {createPortal} from 'react-dom';
 
 import SwipeRecognizer from './SwipeRecognizer';
 
@@ -37,6 +41,12 @@ function Component() {
         transitions['enter-slide-right'] + ' ' + transitions['exit-slide-left']
       }>
       <p className="roboto-font">Slide In from Left, Slide Out to Right</p>
+      <p>
+        <img
+          src="https://react.dev/_next/image?url=%2Fimages%2Fteam%2Fsebmarkbage.jpg&w=3840&q=75"
+          width="300"
+        />
+      </p>
     </ViewTransition>
   );
 }
@@ -47,7 +57,12 @@ function Id() {
 }
 
 export default function Page({url, navigate}) {
-  const [renderedUrl, startGesture] = useSwipeTransition('/?a', url, '/?b');
+  const [renderedUrl, optimisticNavigate] = useOptimistic(
+    url,
+    (state, direction) => {
+      return direction === 'left' ? '/?a' : '/?b';
+    }
+  );
   const show = renderedUrl === '/?b';
   function onTransition(viewTransition, types) {
     const keyframes = [
@@ -79,16 +94,40 @@ export default function Page({url, navigate}) {
     // });
   }, [show]);
 
+  const [showModal, setShowModal] = useState(false);
+  const portal = showModal ? (
+    createPortal(
+      <div className="portal">
+        Portal: {!show ? 'A' : 'B'}
+        <ViewTransition>
+          <div>{!show ? 'A' : 'B'}</div>
+        </ViewTransition>
+      </div>,
+      document.body
+    )
+  ) : (
+    <button onClick={() => startTransition(() => setShowModal(true))}>
+      Show Modal
+    </button>
+  );
+
   const exclamation = (
     <ViewTransition name="exclamation" onShare={onTransition}>
-      <span>!</span>
+      <span>
+        <div>!</div>
+      </span>
     </ViewTransition>
   );
   return (
     <div className="swipe-recognizer">
       <SwipeRecognizer
         action={swipeAction}
-        gesture={startGesture}
+        gesture={direction => {
+          addTransitionType(
+            direction === 'left' ? 'navigation-forward' : 'navigation-back'
+          );
+          optimisticNavigate(direction);
+        }}
         direction={show ? 'left' : 'right'}>
         <button
           className="button"
@@ -153,6 +192,7 @@ export default function Page({url, navigate}) {
             <p>content</p>
             <p>out</p>
             <p>of</p>
+            {portal}
             <p>the</p>
             <p>viewport</p>
             {show ? <Component /> : null}

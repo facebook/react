@@ -146,7 +146,7 @@ function subscribeFilterFile(
   state: RunnerState,
   onChange: (state: RunnerState) => void,
 ) {
-  watcher.subscribe(process.cwd(), async (err, events) => {
+  watcher.subscribe(PROJECT_ROOT, async (err, events) => {
     if (err) {
       console.error(err);
       process.exit(1);

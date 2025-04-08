@@ -8,7 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
@@ -501,14 +501,6 @@ export function getCurrentGestureOffset(provider: GestureTimeline): number {
   return 0;
 }
 
-export function subscribeToGestureDirection(
-  provider: GestureTimeline,
-  currentOffset: number,
-  directionCallback: (direction: boolean) => void,
-): () => void {
-  return () => {};
-}
-
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
   // noop
 }
@@ -545,14 +537,37 @@ export function maySuspendCommit(type: Type, props: Props): boolean {
   return false;
 }
 
-export function preloadInstance(type: Type, props: Props): boolean {
+export function maySuspendCommitOnUpdate(
+  type: Type,
+  oldProps: Props,
+  newProps: Props,
+): boolean {
+  return false;
+}
+
+export function maySuspendCommitInSyncRender(
+  type: Type,
+  props: Props,
+): boolean {
+  return false;
+}
+
+export function preloadInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): boolean {
   // Return true to indicate it's already loaded
   return true;
 }
 
 export function startSuspendingCommit(): void {}
 
-export function suspendInstance(type: Type, props: Props): void {}
+export function suspendInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): void {}
 
 export function suspendOnActiveViewTransition(container: Container): void {}
 

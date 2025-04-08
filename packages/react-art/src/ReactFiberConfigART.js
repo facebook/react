@@ -560,15 +560,7 @@ export function createViewTransitionInstance(
 export type GestureTimeline = null;
 
 export function getCurrentGestureOffset(provider: GestureTimeline): number {
-  throw new Error('useSwipeTransition is not yet supported in react-art.');
-}
-
-export function subscribeToGestureDirection(
-  provider: GestureTimeline,
-  currentOffset: number,
-  directionCallback: (direction: boolean) => void,
-): () => void {
-  throw new Error('useSwipeTransition is not yet supported in react-art.');
+  throw new Error('startGestureTransition is not yet supported in react-art.');
 }
 
 export function clearContainer(container) {
@@ -604,6 +596,14 @@ export function maySuspendCommit(type, props) {
   return false;
 }
 
+export function maySuspendCommitOnUpdate(type, oldProps, newProps) {
+  return false;
+}
+
+export function maySuspendCommitInSyncRender(type, props) {
+  return false;
+}
+
 export function preloadInstance(type, props) {
   // Return true to indicate it's already loaded
   return true;
@@ -611,7 +611,7 @@ export function preloadInstance(type, props) {
 
 export function startSuspendingCommit() {}
 
-export function suspendInstance(type, props) {}
+export function suspendInstance(instance, type, props) {}
 
 export function suspendOnActiveViewTransition(container) {}
 

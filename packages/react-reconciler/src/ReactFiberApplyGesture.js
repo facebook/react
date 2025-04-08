@@ -412,7 +412,7 @@ function recursivelyInsertNewFiber(
           // had any effect.
           if (finishedWork.flags & Update) {
             console.error(
-              'useSwipeTransition() caused something to render a new <%s>. ' +
+              'startGestureTransition() caused something to render a new <%s>. ' +
                 'This is not possible in the current implementation. ' +
                 "Make sure that the swipe doesn't mount any new <%s> elements.",
               finishedWork.type,
@@ -789,7 +789,7 @@ function insertDestinationClonesOfFiber(
               commitUpdate(instance, type, oldProps, newProps, finishedWork);
               if (viewTransitionMutationContext) {
                 console.error(
-                  'useSwipeTransition() caused something to mutate <%s>. ' +
+                  'startGestureTransition() caused something to mutate <%s>. ' +
                     'This is not possible in the current implementation. ' +
                     "Make sure that the swipe doesn't update any state which " +
                     'causes <%s> to change.',
@@ -834,18 +834,18 @@ function insertDestinationClonesOfFiber(
       }
 
       if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
+        appendChild(hostParentClone, clone);
+        unhideInstance(clone, finishedWork.memoizedProps);
         recursivelyInsertClones(
           finishedWork,
           clone,
           null,
           CLONE_APPEARING_PAIR,
         );
-        appendChild(hostParentClone, clone);
-        unhideInstance(clone, finishedWork.memoizedProps);
         trackHostMutation();
       } else {
-        recursivelyInsertClones(finishedWork, clone, null, visitPhase);
         appendChild(hostParentClone, clone);
+        recursivelyInsertClones(finishedWork, clone, null, visitPhase);
       }
       if (parentViewTransition !== null) {
         if (parentViewTransition.clones === null) {
@@ -977,10 +977,10 @@ export function insertDestinationClones(
       if (!didWarnForRootClone) {
         didWarnForRootClone = true;
         console.warn(
-          'useSwipeTransition() caused something to mutate or relayout the root. ' +
+          'startGestureTransition() caused something to mutate or relayout the root. ' +
             'This currently requires a clone of the whole document. Make sure to ' +
             'add a <ViewTransition> directly around an absolutely positioned DOM node ' +
-            'to minimize the impact of any changes caused by the Swipe Transition.',
+            'to minimize the impact of any changes caused by the Gesture Transition.',
         );
       }
     }
