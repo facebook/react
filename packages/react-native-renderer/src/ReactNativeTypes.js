@@ -147,6 +147,7 @@ export type RenderRootOptions = {
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  unstable_strictMode?: boolean,
 };
 
 /**

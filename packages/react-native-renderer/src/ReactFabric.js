@@ -119,6 +119,7 @@ function render(
     let onUncaughtError = nativeOnUncaughtError;
     let onCaughtError = nativeOnCaughtError;
     let onRecoverableError = defaultOnRecoverableError;
+    let isStrictMode = false;
 
     if (options && options.onUncaughtError !== undefined) {
       onUncaughtError = options.onUncaughtError;
@@ -128,6 +129,9 @@ function render(
     }
     if (options && options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
+    }
+    if (options && options.unstable_strictMode !== undefined) {
+      isStrictMode = options.unstable_strictMode;
     }
 
     const publicRootInstance = createPublicRootInstance(containerTag);
@@ -142,7 +146,7 @@ function render(
       rootInstance,
       concurrentRoot ? ConcurrentRoot : LegacyRoot,
       null,
-      false,
+      isStrictMode,
       null,
       '',
       onUncaughtError,
