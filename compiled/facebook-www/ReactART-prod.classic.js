@@ -10891,7 +10891,8 @@ function createFiberFromTypeAndProps(
       case REACT_VIEW_TRANSITION_TYPE:
         if (enableViewTransition)
           return (
-            (type = createFiber(30, pendingProps, key, mode)),
+            (type = mode | 32),
+            (type = createFiber(30, pendingProps, key, type)),
             (type.elementType = REACT_VIEW_TRANSITION_TYPE),
             (type.lanes = lanes),
             (type.stateNode = {
@@ -11217,10 +11218,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1593 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-ea05b750-20250408",
+  version: "19.2.0-www-classic-8da36d05-20250408",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-ea05b750-20250408"
+  reconcilerVersion: "19.2.0-www-classic-8da36d05-20250408"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1594 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11246,4 +11247,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-classic-ea05b750-20250408";
+exports.version = "19.2.0-www-classic-8da36d05-20250408";

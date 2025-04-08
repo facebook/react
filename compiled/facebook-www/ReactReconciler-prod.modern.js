@@ -6502,9 +6502,10 @@ module.exports = function ($$$config) {
     renderLanes
   ) {
     if (
-      null === oldProps
+      0 !== (workInProgress.mode & 32) &&
+      (null === oldProps
         ? maySuspendCommit(type, newProps)
-        : maySuspendCommitOnUpdate(type, oldProps, newProps)
+        : maySuspendCommitOnUpdate(type, oldProps, newProps))
     ) {
       if (
         ((workInProgress.flags |= 16777216),
@@ -12058,7 +12059,8 @@ module.exports = function ($$$config) {
         case REACT_VIEW_TRANSITION_TYPE:
           if (enableViewTransition)
             return (
-              (type = createFiber(30, pendingProps, key, mode)),
+              (type = mode | 32),
+              (type = createFiber(30, pendingProps, key, type)),
               (type.elementType = REACT_VIEW_TRANSITION_TYPE),
               (type.lanes = lanes),
               (type.stateNode = {
@@ -13516,7 +13518,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-ea05b750-20250408"
+      reconcilerVersion: "19.2.0-www-modern-8da36d05-20250408"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
