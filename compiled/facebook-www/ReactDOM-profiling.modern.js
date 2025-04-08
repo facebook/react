@@ -16477,20 +16477,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1916 = 0;
-  i$jscomp$inline_1916 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1916++
+  var i$jscomp$inline_1917 = 0;
+  i$jscomp$inline_1917 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1917++
 ) {
-  var eventName$jscomp$inline_1917 =
-      simpleEventPluginEvents[i$jscomp$inline_1916],
-    domEventName$jscomp$inline_1918 =
-      eventName$jscomp$inline_1917.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1919 =
-      eventName$jscomp$inline_1917[0].toUpperCase() +
-      eventName$jscomp$inline_1917.slice(1);
+  var eventName$jscomp$inline_1918 =
+      simpleEventPluginEvents[i$jscomp$inline_1917],
+    domEventName$jscomp$inline_1919 =
+      eventName$jscomp$inline_1918.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1920 =
+      eventName$jscomp$inline_1918[0].toUpperCase() +
+      eventName$jscomp$inline_1918.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1918,
-    "on" + capitalizedEvent$jscomp$inline_1919
+    domEventName$jscomp$inline_1919,
+    "on" + capitalizedEvent$jscomp$inline_1920
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -20698,16 +20698,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2161 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2162 = React.version;
 if (
-  "19.2.0-www-modern-33661467-20250407" !==
-  isomorphicReactPackageVersion$jscomp$inline_2161
+  "19.2.0-www-modern-ea05b750-20250408" !==
+  isomorphicReactPackageVersion$jscomp$inline_2162
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2161,
-      "19.2.0-www-modern-33661467-20250407"
+      isomorphicReactPackageVersion$jscomp$inline_2162,
+      "19.2.0-www-modern-ea05b750-20250408"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20723,27 +20723,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2163 = {
+var internals$jscomp$inline_2164 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-33661467-20250407",
+  version: "19.2.0-www-modern-ea05b750-20250408",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-33661467-20250407"
+  reconcilerVersion: "19.2.0-www-modern-ea05b750-20250408"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2163.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2163.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2164.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2164.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2733 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2734 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2733.isDisabled &&
-    hook$jscomp$inline_2733.supportsFiber
+    !hook$jscomp$inline_2734.isDisabled &&
+    hook$jscomp$inline_2734.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2733.inject(
-        internals$jscomp$inline_2163
+      (rendererID = hook$jscomp$inline_2734.inject(
+        internals$jscomp$inline_2164
       )),
-        (injectedHook = hook$jscomp$inline_2733);
+        (injectedHook = hook$jscomp$inline_2734);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -21095,7 +21095,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-33661467-20250407";
+exports.version = "19.2.0-www-modern-ea05b750-20250408";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

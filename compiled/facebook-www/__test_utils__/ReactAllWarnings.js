@@ -210,6 +210,8 @@ export default [
   "Only plain objects can be passed to Server Functions from the Client. Objects with symbol properties like %s are not supported.%s",
   "Only plain objects can be passed to Server Functions from the Client. Objects with toJSON methods are not supported. Convert it manually to a simple value before passing it to props.%s",
   "Pass a `value` prop if you set dangerouslyInnerHTML so React knows which value should be selected.",
+  "Passing Blob, MediaSource or MediaStream to <%s src> is not supported.",
+  "Passing Blob, MediaSource or MediaStream to <source src> is not supported. Pass it directly to <img src>, <video src> or <audio src> instead.",
   "Popping the context provider did not return back to the original snapshot. This is a bug in React.",
   "Profiler must specify an \"id\" of type `string` as a prop. Received the type `%s` instead.",
   "React Context Providers cannot be passed to Server Functions from the Client.%s",
