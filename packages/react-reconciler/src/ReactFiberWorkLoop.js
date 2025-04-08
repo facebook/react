@@ -856,7 +856,7 @@ export function scheduleViewTransitionEvent(
       let instance = state.ref;
       if (instance === null) {
         instance = state.ref = createViewTransitionInstance(
-          getViewTransitionName(fiber.memoizedProps, state),
+          getViewTransitionName(fiber),
         );
       }
       if (pendingViewTransitionEvents === null) {
