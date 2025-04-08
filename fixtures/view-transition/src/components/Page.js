@@ -113,7 +113,9 @@ export default function Page({url, navigate}) {
 
   const exclamation = (
     <ViewTransition name="exclamation" onShare={onTransition}>
-      <span>!</span>
+      <span>
+        <div>!</div>
+      </span>
     </ViewTransition>
   );
   return (
