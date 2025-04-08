@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactNodeList, ReactCustomFormAction} from 'shared/ReactTypes';
+import type {
+  ReactNodeList,
+  ReactCustomFormAction,
+  Thenable,
+} from 'shared/ReactTypes';
 import type {
   CrossOriginEnum,
   PreloadImplOptions,
@@ -27,7 +31,10 @@ import {
 
 import {Children} from 'react';
 
-import {enableFizzExternalRuntime} from 'shared/ReactFeatureFlags';
+import {
+  enableFizzExternalRuntime,
+  enableSrcObject,
+} from 'shared/ReactFeatureFlags';
 
 import type {
   Destination,
@@ -42,6 +49,7 @@ import {
   writeChunkAndReturn,
   stringToChunk,
   stringToPrecomputedChunk,
+  readAsDataURL,
 } from 'react-server/src/ReactServerStreamConfig';
 import {
   resolveRequest,
@@ -1214,6 +1222,47 @@ function pushFormActionAttribute(
   return formData;
 }
 
+let blobCache: null | WeakMap<Blob, Thenable<string>> = null;
+
+function pushSrcObjectAttribute(
+  target: Array<Chunk | PrecomputedChunk>,
+  blob: Blob,
+): void {
+  // Throwing a Promise style suspense read of the Blob content.
+  if (blobCache === null) {
+    blobCache = new WeakMap();
+  }
+  const suspenseCache: WeakMap<Blob, Thenable<string>> = blobCache;
+  let thenable = suspenseCache.get(blob);
+  if (thenable === undefined) {
+    thenable = ((readAsDataURL(blob): any): Thenable<string>);
+    thenable.then(
+      result => {
+        (thenable: any).status = 'fulfilled';
+        (thenable: any).value = result;
+      },
+      error => {
+        (thenable: any).status = 'rejected';
+        (thenable: any).reason = error;
+      },
+    );
+    suspenseCache.set(blob, thenable);
+  }
+  if (thenable.status === 'rejected') {
+    throw thenable.reason;
+  } else if (thenable.status !== 'fulfilled') {
+    throw thenable;
+  }
+  const url = thenable.value;
+  target.push(
+    attributeSeparator,
+    stringToChunk('src'),
+    attributeAssign,
+    stringToChunk(escapeTextForBrowser(url)),
+    attributeEnd,
+  );
+}
+
 function pushAttribute(
   target: Array<Chunk | PrecomputedChunk>,
   name: string,
@@ -1243,7 +1292,15 @@ function pushAttribute(
       pushStyleAttribute(target, value);
       return;
     }
-    case 'src':
+    case 'src': {
+      if (enableSrcObject && typeof value === 'object' && value !== null) {
+        if (typeof Blob === 'function' && value instanceof Blob) {
+          pushSrcObjectAttribute(target, value);
+          return;
+        }
+      }
+      // Fallthrough to general urls
+    }
     case 'href': {
       if (value === '') {
         if (__DEV__) {

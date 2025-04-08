@@ -10,10 +10,15 @@
 
 'use strict';
 
+// Polyfills for test environment
+global.ReadableStream =
+  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.TextEncoder = require('util').TextEncoder;
+
 describe('ReactDOMSrcObject', () => {
   let React;
   let ReactDOMClient;
-  // let ReactDOMServer;
+  let ReactDOMFizzServer;
   let act;
   let container;
   let assertConsoleErrorDev;
@@ -23,7 +28,7 @@ describe('ReactDOMSrcObject', () => {
 
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    // ReactDOMServer = require('react-dom/server');
+    ReactDOMFizzServer = require('react-dom/server.edge');
     act = require('internal-test-utils').act;
 
     assertConsoleErrorDev =
@@ -127,5 +132,41 @@ describe('ReactDOMSrcObject', () => {
     expect(audioRef.current.firstChild.src).toContain('[object%20Blob]'); // toString:ed
     expect(pictureRef.current.firstChild.src).not.toMatch(/^blob:/);
     expect(pictureRef.current.firstChild.src).toContain('[object%20Blob]'); // toString:ed
+  });
+
+  async function readContent(stream) {
+    const reader = stream.getReader();
+    let content = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        return content;
+      }
+      content += Buffer.from(value).toString('utf8');
+    }
+  }
+
+  // @gate enableSrcObject
+  it('can SSR a Blob as an img src', async () => {
+    const blob = new Blob([new Uint8Array([69, 230, 156, 181, 68, 75])], {
+      type: 'image/jpeg',
+    });
+
+    const ref = React.createRef();
+
+    function App() {
+      return <img src={blob} ref={ref} />;
+    }
+
+    const stream = await ReactDOMFizzServer.renderToReadableStream(<App />);
+    container.innerHTML = await readContent(stream);
+
+    expect(container.firstChild.src).toBe('data:image/jpeg;base64,ReactURL');
+
+    await act(() => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+
+    expect(container.firstChild.src).toBe('data:image/jpeg;base64,ReactURL');
   });
 });
