@@ -47,6 +47,7 @@ import {
   updateTextarea,
   restoreControlledTextareaState,
 } from './ReactDOMTextarea';
+import {setSrcObject} from './ReactDOMSrcObject';
 import {validateTextNesting} from './validateDOMNesting';
 import {track} from './inputValueTracking';
 import setTextContent from './setTextContent';
@@ -67,6 +68,7 @@ import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking
 
 import {
   enableScrollEndPolyfill,
+  enableSrcObject,
   enableTrustedTypesIntegration,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -402,7 +404,40 @@ function setProp(
         break;
       }
     // fallthrough
-    case 'src':
+    case 'src': {
+      if (enableSrcObject && typeof value === 'object' && value !== null) {
+        // Some tags support object sources like Blob, File, MediaSource and MediaStream.
+        if (tag === 'img' || tag === 'video' || tag === 'audio') {
+          try {
+            setSrcObject(domElement, tag, value);
+            break;
+          } catch (x) {
+            // If URL.createObjectURL() errors, it was probably some other object type
+            // that should be toString:ed instead, so we just fall-through to the normal
+            // path.
+          }
+        } else {
+          if (__DEV__) {
+            try {
+              // This should always error.
+              URL.revokeObjectURL(URL.createObjectURL((value: any)));
+              if (tag === 'source') {
+                console.error(
+                  'Passing Blob, MediaSource or MediaStream to <source src> is not supported. ' +
+                    'Pass it directly to <img src>, <video src> or <audio src> instead.',
+                );
+              } else {
+                console.error(
+                  'Passing Blob, MediaSource or MediaStream to <%s src> is not supported.',
+                  tag,
+                );
+              }
+            } catch (x) {}
+          }
+        }
+      }
+      // Fallthrough
+    }
     case 'href': {
       if (
         value === '' &&
