@@ -23,6 +23,7 @@
     "browserslist": "^4.18.1",
     "busboy": "^1.6.0",
     "camelcase": "^6.2.1",
+    "canvas": "^3.1.0",
     "case-sensitive-paths-webpack-plugin": "^2.4.0",
     "compression": "^1.7.4",
     "concurrently": "^7.3.0",
