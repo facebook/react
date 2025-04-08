@@ -169,4 +169,49 @@ describe('ReactDOMSrcObject', () => {
 
     expect(container.firstChild.src).toBe('data:image/jpeg;base64,ReactURL');
   });
+
+  // @gate enableSrcObject
+  it('errors in DEV when mismatching a Blob during hydration', async () => {
+    const blob = new Blob([new Uint8Array([69, 230, 156, 181, 68, 75])], {
+      type: 'image/jpeg',
+    });
+
+    const ref = React.createRef();
+
+    const stream = await ReactDOMFizzServer.renderToReadableStream(
+      <img src={blob} ref={ref} />,
+    );
+    container.innerHTML = await readContent(stream);
+
+    expect(container.firstChild.src).toBe('data:image/jpeg;base64,ReactURL');
+
+    const clientBlob = new Blob([new Uint8Array([69, 230, 156, 181, 68])], {
+      type: 'image/jpeg',
+    });
+
+    await act(() => {
+      ReactDOMClient.hydrateRoot(container, <img src={clientBlob} ref={ref} />);
+    });
+
+    assertConsoleErrorDev([
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
+        "This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n" +
+        "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+        "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+        "- Date formatting in a user's locale which doesn't match the server.\n" +
+        '- External changing data without sending a snapshot of it along with the HTML.\n' +
+        '- Invalid HTML tag nesting.\n\n' +
+        'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n' +
+        'https://react.dev/link/hydration-mismatch\n\n' +
+        '  <img\n' +
+        '+   src={Blob:image/jpeg}\n' +
+        '-   src="data:image/jpeg;base64,ReactURL"\n' +
+        '    ref={{current:null}}\n' +
+        '  >\n' +
+        '\n    in img (at **)',
+    ]);
+
+    // The original URL left in place.
+    expect(container.firstChild.src).toBe('data:image/jpeg;base64,ReactURL');
+  });
 });
