@@ -13,6 +13,7 @@ import type {
   ReactPortal,
   ReactScope,
   ViewTransitionProps,
+  ActivityProps,
 } from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
@@ -20,7 +21,6 @@ import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
 import type {SuspenseInstance} from './ReactFiberConfig';
-import type {ActivityProps} from './ReactFiberActivityComponent';
 import type {
   LegacyHiddenProps,
   OffscreenProps,

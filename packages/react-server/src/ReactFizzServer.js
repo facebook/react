@@ -22,6 +22,7 @@ import type {
   ReactComponentInfo,
   ReactDebugInfo,
   ViewTransitionProps,
+  ActivityProps,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -35,8 +36,6 @@ import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
 import type {ThenableState} from './ReactFizzThenable';
-
-import type {ActivityProps} from 'react-reconciler/src/ReactFiberActivityComponent';
 
 import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 

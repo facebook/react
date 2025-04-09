@@ -12,6 +12,7 @@ import type {
   ReactContext,
   ReactNodeList,
   ViewTransitionProps,
+  ActivityProps,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
@@ -23,7 +24,6 @@ import type {
   SuspenseListTailMode,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
-import type {ActivityProps} from './ReactFiberActivityComponent';
 import type {
   LegacyHiddenProps,
   OffscreenProps,

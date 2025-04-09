@@ -263,3 +263,8 @@ export type ViewTransitionProps = {
   onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
   onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
 };
+
+export type ActivityProps = {
+  mode?: 'hidden' | 'visible' | null | void,
+  children?: ReactNodeList,
+};
