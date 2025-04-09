@@ -105,6 +105,9 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
   panicThreshold: 'none',
   // Don't emit errors on Flow suppressions--Flow already gave a signal
   flowSuppressions: false,
+  environment: validateEnvironmentConfig({
+    validateRefAccessDuringRender: false,
+  }),
 };
 
 const rule: Rule.RuleModule = {
