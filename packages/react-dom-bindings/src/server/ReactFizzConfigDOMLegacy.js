@@ -20,6 +20,8 @@ import {
   createRenderState as createRenderStateImpl,
   pushTextInstance as pushTextInstanceImpl,
   pushSegmentFinale as pushSegmentFinaleImpl,
+  pushStartActivityBoundary as pushStartActivityBoundaryImpl,
+  pushEndActivityBoundary as pushEndActivityBoundaryImpl,
   writeStartCompletedSuspenseBoundary as writeStartCompletedSuspenseBoundaryImpl,
   writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
@@ -205,6 +207,29 @@ export function pushSegmentFinale(
       textEmbedded,
     );
   }
+}
+
+export function pushStartActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  if (renderState.generateStaticMarkup) {
+    // A completed boundary is done and doesn't need a representation in the HTML
+    // if we're not going to be hydrating it.
+    return;
+  }
+  pushStartActivityBoundaryImpl(target, renderState);
+}
+
+export function pushEndActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+  preambleState: null | PreambleState,
+): void {
+  if (renderState.generateStaticMarkup) {
+    return;
+  }
+  pushEndActivityBoundaryImpl(target, renderState, preambleState);
 }
 
 export function writeStartCompletedSuspenseBoundary(

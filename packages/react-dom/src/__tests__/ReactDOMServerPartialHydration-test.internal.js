@@ -3669,7 +3669,7 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // @gate enableActivity
-  it('a visible Activity component acts like a fragment', async () => {
+  it('a visible Activity component is surrounded by comment markers', async () => {
     const ref = React.createRef();
 
     function App() {
@@ -3690,9 +3690,11 @@ describe('ReactDOMServerPartialHydration', () => {
     // pure indirection.
     expect(container).toMatchInlineSnapshot(`
       <div>
+        <!--&-->
         <span>
           Child
         </span>
+        <!--/&-->
       </div>
     `);
 
@@ -3739,6 +3741,8 @@ describe('ReactDOMServerPartialHydration', () => {
         <span>
           Visible
         </span>
+        <!--&-->
+        <!--/&-->
       </div>
     `);
 
@@ -3760,6 +3764,8 @@ describe('ReactDOMServerPartialHydration', () => {
         <span>
           Visible
         </span>
+        <!--&-->
+        <!--/&-->
         <span
           style="display: none;"
         >
