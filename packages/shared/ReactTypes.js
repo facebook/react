@@ -268,3 +268,15 @@ export type ActivityProps = {
   mode?: 'hidden' | 'visible' | null | void,
   children?: ReactNodeList,
 };
+
+export type SuspenseProps = {
+  children?: ReactNodeList,
+  fallback?: ReactNodeList,
+
+  // TODO: Add "unstable_" prefix?
+  suspenseCallback?: (Set<Wakeable> | null) => mixed,
+
+  unstable_avoidThisFallback?: boolean,
+  unstable_expectedLoadTime?: number,
+  unstable_name?: string,
+};

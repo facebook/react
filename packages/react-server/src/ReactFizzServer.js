@@ -23,6 +23,7 @@ import type {
   ReactDebugInfo,
   ViewTransitionProps,
   ActivityProps,
+  SuspenseProps,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -1126,7 +1127,7 @@ function renderSuspenseBoundary(
   request: Request,
   someTask: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: SuspenseProps,
 ): void {
   if (someTask.replay !== null) {
     // If we're replaying through this pass, it means we're replaying through

@@ -13,6 +13,7 @@ import type {
   ReactNodeList,
   ViewTransitionProps,
   ActivityProps,
+  SuspenseProps,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
@@ -2082,7 +2083,7 @@ function updateSuspenseComponent(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  const nextProps = workInProgress.pendingProps;
+  const nextProps: SuspenseProps = workInProgress.pendingProps;
 
   // This is used by DevTools to force a boundary to suspend.
   if (__DEV__) {
@@ -2675,7 +2676,7 @@ function updateDehydratedSuspenseComponent(
   workInProgress: Fiber,
   didSuspend: boolean,
   didPrimaryChildrenDefer: boolean,
-  nextProps: any,
+  nextProps: SuspenseProps,
   suspenseInstance: SuspenseInstance,
   suspenseState: SuspenseState,
   renderLanes: Lanes,
