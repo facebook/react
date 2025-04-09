@@ -311,15 +311,16 @@ describe('rendering React components at document', () => {
                 '+       Hello world\n' +
                 '-       Goodbye world\n' +
                 '+       Hello world\n' +
-                '-       Goodbye world\n',
+                '-       Goodbye world\n' +
+                '\n    in body (at **)' +
+                '\n    in Component (at **)',
             ],
-        {withoutStack: true},
       );
 
       assertLog(
         favorSafetyOverHydrationPerf
           ? [
-              "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+              "onRecoverableError: Hydration failed because the server rendered text didn't match the client.",
             ]
           : [],
       );

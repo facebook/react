@@ -33,7 +33,8 @@ function component(a) {
       m(x);
     };
 
-    let x = { a };
+    let x;
+    x = { a };
     m(x);
     $[0] = a;
     $[1] = y;

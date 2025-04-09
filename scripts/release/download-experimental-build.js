@@ -27,6 +27,12 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
     demandOption: true,
     type: 'string',
   },
+  noVerify: {
+    describe: 'Skip verification',
+    requiresArg: false,
+    type: 'boolean',
+    default: false,
+  },
 }).argv;
 
 function printSummary(commit) {
@@ -48,8 +54,13 @@ function printSummary(commit) {
 }
 
 const main = async () => {
+  const {commit, releaseChannel, noVerify} = argv;
   try {
-    await downloadBuildArtifacts(argv.commit, argv.releaseChannel);
+    await downloadBuildArtifacts({
+      commit,
+      releaseChannel,
+      noVerify,
+    });
     printSummary(argv.commit);
   } catch (error) {
     handleError(error);

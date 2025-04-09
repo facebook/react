@@ -17,10 +17,7 @@ import {
 } from 'shared/ReactSymbols';
 import {createThenableState, trackUsedThenable} from './ReactFlightThenable';
 import {isClientReference} from './ReactFlightServerConfig';
-import {
-  enableUseEffectEventHook,
-  enableSwipeTransition,
-} from 'shared/ReactFeatureFlags';
+import {enableUseEffectEventHook} from 'shared/ReactFeatureFlags';
 
 let currentRequest = null;
 let thenableIndexCounter = 0;
@@ -101,9 +98,6 @@ export const HooksDispatcher: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = (unsupportedHook: any);
-}
-if (enableSwipeTransition) {
-  HooksDispatcher.useSwipeTransition = (unsupportedHook: any);
 }
 
 function unsupportedHook(): void {

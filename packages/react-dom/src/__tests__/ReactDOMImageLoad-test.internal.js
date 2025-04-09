@@ -598,4 +598,66 @@ describe('ReactDOMImageLoad', () => {
     expect(renderSrcProperty).toBe(commitSrcProperty);
     expect(renderSrcAttr).toBe(commitSrcAttr);
   });
+
+  it('captures the load event for Blob sources if it happens before commit phase', async function () {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    const blob = new Blob();
+
+    React.startTransition(() =>
+      root.render(
+        <PhaseMarkers>
+          <Img src={blob} onLoad={onLoadSpy} />
+          <Yield />
+          <Text text={'a'} />
+        </PhaseMarkers>,
+      ),
+    );
+
+    await waitFor(['render start', 'Img [object Blob]', 'Yield']);
+    const img = last(images);
+    loadImage(img);
+    assertLog([
+      'actualLoadSpy [[object Blob]]',
+      // no onLoadSpy since we have not completed render
+    ]);
+    await waitForAll(['a', 'load triggered', 'last layout', 'last passive']);
+    expect(img.__needsDispatch).toBe(true);
+    loadImage(img);
+    assertLog([
+      'actualLoadSpy [[object Blob]]', // the browser reloading of the image causes this to yield again
+      'onLoadSpy [[object Blob]]',
+    ]);
+    expect(onLoadSpy).toHaveBeenCalled();
+  });
+
+  it('captures the load event for Blob sources if it happens after commit phase and replays it', async function () {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    const blob = new Blob();
+
+    React.startTransition(() =>
+      root.render(
+        <PhaseMarkers>
+          <Img src={blob} onLoad={onLoadSpy} />
+        </PhaseMarkers>,
+      ),
+    );
+
+    await waitFor([
+      'render start',
+      'Img [object Blob]',
+      'load triggered',
+      'last layout',
+    ]);
+    Scheduler.unstable_requestPaint();
+    const img = last(images);
+    loadImage(img);
+    assertLog(['actualLoadSpy [[object Blob]]', 'onLoadSpy [[object Blob]]']);
+    await waitForAll(['last passive']);
+    expect(img.__needsDispatch).toBe(false);
+    expect(onLoadSpy).toHaveBeenCalledTimes(1);
+  });
 });

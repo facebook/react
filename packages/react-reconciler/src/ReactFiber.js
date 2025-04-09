@@ -40,8 +40,8 @@ import {
   enableRenderableContext,
   disableLegacyMode,
   enableObjectFiber,
-  enableOwnerStacks,
   enableViewTransition,
+  enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -72,6 +72,7 @@ import {
   TracingMarkerComponent,
   Throw,
   ViewTransitionComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberActivityComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
@@ -89,6 +90,7 @@ import {
   StrictLegacyMode,
   StrictEffectsMode,
   NoStrictPassiveEffectsMode,
+  SuspenseyImagesMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -103,17 +105,13 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_TRACING_MARKER_TYPE,
   REACT_ELEMENT_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
+  REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
-import {
-  detachOffscreenInstance,
-  attachOffscreenInstance,
-} from './ReactFiberCommitWork';
 import {getHostContext} from './ReactFiberHostContext';
 import type {ReactComponentInfo} from '../../shared/ReactTypes';
 import isArray from 'shared/isArray';
@@ -202,10 +200,8 @@ function FiberNode(
     // This isn't directly used but is handy for debugging internals:
     this._debugInfo = null;
     this._debugOwner = null;
-    if (enableOwnerStacks) {
-      this._debugStack = null;
-      this._debugTask = null;
-    }
+    this._debugStack = null;
+    this._debugTask = null;
     this._debugNeedsRemount = false;
     this._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
@@ -293,10 +289,8 @@ function createFiberImplObject(
     // This isn't directly used but is handy for debugging internals:
     fiber._debugInfo = null;
     fiber._debugOwner = null;
-    if (enableOwnerStacks) {
-      fiber._debugStack = null;
-      fiber._debugTask = null;
-    }
+    fiber._debugStack = null;
+    fiber._debugTask = null;
     fiber._debugNeedsRemount = false;
     fiber._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
@@ -352,10 +346,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       // DEV-only fields
 
       workInProgress._debugOwner = current._debugOwner;
-      if (enableOwnerStacks) {
-        workInProgress._debugStack = current._debugStack;
-        workInProgress._debugTask = current._debugTask;
-      }
+      workInProgress._debugStack = current._debugStack;
+      workInProgress._debugTask = current._debugTask;
       workInProgress._debugHookTypes = current._debugHookTypes;
     }
 
@@ -595,6 +587,8 @@ export function createFiberFromTypeAndProps(
     }
   } else {
     getTag: switch (type) {
+      case REACT_ACTIVITY_TYPE:
+        return createFiberFromActivity(pendingProps, mode, lanes, key);
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children, mode, lanes, key);
       case REACT_STRICT_MODE_TYPE:
@@ -617,8 +611,6 @@ export function createFiberFromTypeAndProps(
         return createFiberFromSuspense(pendingProps, mode, lanes, key);
       case REACT_SUSPENSE_LIST_TYPE:
         return createFiberFromSuspenseList(pendingProps, mode, lanes, key);
-      case REACT_OFFSCREEN_TYPE:
-        return createFiberFromOffscreen(pendingProps, mode, lanes, key);
       case REACT_LEGACY_HIDDEN_TYPE:
         if (enableLegacyHidden) {
           return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
@@ -766,10 +758,8 @@ export function createFiberFromElement(
   );
   if (__DEV__) {
     fiber._debugOwner = element._owner;
-    if (enableOwnerStacks) {
-      fiber._debugStack = element._debugStack;
-      fiber._debugTask = element._debugTask;
-    }
+    fiber._debugStack = element._debugStack;
+    fiber._debugTask = element._debugTask;
   }
   return fiber;
 }
@@ -859,19 +849,25 @@ export function createFiberFromOffscreen(
   key: null | string,
 ): Fiber {
   const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
-  fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
   const primaryChildInstance: OffscreenInstance = {
     _visibility: OffscreenVisible,
-    _pendingVisibility: OffscreenVisible,
     _pendingMarkers: null,
     _retryCache: null,
     _transitions: null,
-    _current: null,
-    detach: () => detachOffscreenInstance(primaryChildInstance),
-    attach: () => attachOffscreenInstance(primaryChildInstance),
   };
   fiber.stateNode = primaryChildInstance;
+  return fiber;
+}
+export function createFiberFromActivity(
+  pendingProps: OffscreenProps,
+  mode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+): Fiber {
+  const fiber = createFiber(ActivityComponent, pendingProps, key, mode);
+  fiber.elementType = REACT_ACTIVITY_TYPE;
+  fiber.lanes = lanes;
   return fiber;
 }
 
@@ -881,12 +877,18 @@ export function createFiberFromViewTransition(
   lanes: Lanes,
   key: null | string,
 ): Fiber {
+  if (!enableSuspenseyImages) {
+    // Render a ViewTransition component opts into SuspenseyImages mode even
+    // when the flag is off.
+    mode |= SuspenseyImagesMode;
+  }
   const fiber = createFiber(ViewTransitionComponent, pendingProps, key, mode);
   fiber.elementType = REACT_VIEW_TRANSITION_TYPE;
   fiber.lanes = lanes;
   const instance: ViewTransitionState = {
     autoName: null,
     paired: null,
+    clones: null,
     ref: null,
   };
   fiber.stateNode = instance;
@@ -906,13 +908,9 @@ export function createFiberFromLegacyHidden(
   // the offscreen implementation, which depends on a state node
   const instance: OffscreenInstance = {
     _visibility: OffscreenVisible,
-    _pendingVisibility: OffscreenVisible,
     _pendingMarkers: null,
     _transitions: null,
     _retryCache: null,
-    _current: null,
-    detach: () => detachOffscreenInstance(instance),
-    attach: () => attachOffscreenInstance(instance),
   };
   fiber.stateNode = instance;
   return fiber;

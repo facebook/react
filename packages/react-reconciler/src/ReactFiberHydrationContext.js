@@ -67,6 +67,7 @@ import {
 import {queueRecoverableErrors} from './ReactFiberWorkLoop';
 import {getRootHostContainer, getHostContext} from './ReactFiberHostContext';
 import {describeDiff} from './ReactFiberHydrationDiffs';
+import {runWithFiberInDEV} from './ReactCurrentFiber';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -307,7 +308,7 @@ export const HydrationMismatchException: mixed = new Error(
     "userspace. If you're seeing this, it's likely a bug in React.",
 );
 
-function throwOnHydrationMismatch(fiber: Fiber) {
+function throwOnHydrationMismatch(fiber: Fiber, fromText: boolean = false) {
   let diff = '';
   if (__DEV__) {
     // Consume the diff root for this mismatch.
@@ -319,7 +320,8 @@ function throwOnHydrationMismatch(fiber: Fiber) {
     }
   }
   const error = new Error(
-    "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n" +
+    `Hydration failed because the server rendered ${fromText ? 'text' : 'HTML'} didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+` +
       '\n' +
       "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
       "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
@@ -480,7 +482,7 @@ function prepareToHydrateHostInstance(
     fiber,
   );
   if (!didHydrate && favorSafetyOverHydrationPerf) {
-    throwOnHydrationMismatch(fiber);
+    throwOnHydrationMismatch(fiber, true);
   }
 }
 
@@ -546,7 +548,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
     parentProps,
   );
   if (!didHydrate && favorSafetyOverHydrationPerf) {
-    throwOnHydrationMismatch(fiber);
+    throwOnHydrationMismatch(fiber, true);
   }
 }
 
@@ -749,22 +751,32 @@ export function emitPendingHydrationWarnings() {
     if (diffRoot !== null) {
       hydrationDiffRootDEV = null;
       const diff = describeDiff(diffRoot);
-      console.error(
-        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. " +
-          'This can happen if a SSR-ed Client Component used:\n' +
-          '\n' +
-          "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
-          "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
-          "- Date formatting in a user's locale which doesn't match the server.\n" +
-          '- External changing data without sending a snapshot of it along with the HTML.\n' +
-          '- Invalid HTML tag nesting.\n' +
-          '\n' +
-          'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n' +
-          '\n' +
-          '%s%s',
-        'https://react.dev/link/hydration-mismatch',
-        diff,
-      );
+
+      // Just pick the DFS-first leaf as the owner.
+      // Should be good enough since most warnings only have a single error.
+      let diffOwner: HydrationDiffNode = diffRoot;
+      while (diffOwner.children.length > 0) {
+        diffOwner = diffOwner.children[0];
+      }
+
+      runWithFiberInDEV(diffOwner.fiber, () => {
+        console.error(
+          "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. " +
+            'This can happen if a SSR-ed Client Component used:\n' +
+            '\n' +
+            "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+            "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+            "- Date formatting in a user's locale which doesn't match the server.\n" +
+            '- External changing data without sending a snapshot of it along with the HTML.\n' +
+            '- Invalid HTML tag nesting.\n' +
+            '\n' +
+            'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n' +
+            '\n' +
+            '%s%s',
+          'https://react.dev/link/hydration-mismatch',
+          diff,
+        );
+      });
     }
   }
 }

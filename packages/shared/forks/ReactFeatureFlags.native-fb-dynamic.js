@@ -25,6 +25,6 @@ export const enableShallowPropDiffing = __VARIANT__;
 export const passChildrenWhenCloningPersistedNodes = __VARIANT__;
 export const enableFabricCompleteRootInCommitPhase = __VARIANT__;
 export const enableSiblingPrerendering = __VARIANT__;
-export const enableUseEffectCRUDOverload = __VARIANT__;
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = __VARIANT__;
+export const renameElementSymbol = __VARIANT__;

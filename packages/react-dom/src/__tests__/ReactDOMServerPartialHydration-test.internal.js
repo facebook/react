@@ -1923,11 +1923,6 @@ describe('ReactDOMServerPartialHydration', () => {
         "Can't perform a React state update on a component that hasn't mounted yet. " +
           'This indicates that you have a side-effect in your render function that ' +
           'asynchronously later calls tries to update the component. Move this work to useEffect instead.\n' +
-          (gate('enableOwnerStacks')
-            ? ''
-            : '    in Child (at **)\n' +
-              '    in Suspense (at **)\n' +
-              '    in div (at **)\n') +
           '    in App (at **)',
       ]);
 
@@ -3674,7 +3669,7 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // @gate enableActivity
-  it('a visible Activity component acts like a fragment', async () => {
+  it('a visible Activity component is surrounded by comment markers', async () => {
     const ref = React.createRef();
 
     function App() {
@@ -3695,9 +3690,11 @@ describe('ReactDOMServerPartialHydration', () => {
     // pure indirection.
     expect(container).toMatchInlineSnapshot(`
       <div>
+        <!--&-->
         <span>
           Child
         </span>
+        <!--/&-->
       </div>
     `);
 
@@ -3744,6 +3741,8 @@ describe('ReactDOMServerPartialHydration', () => {
         <span>
           Visible
         </span>
+        <!--&-->
+        <!--/&-->
       </div>
     `);
 
@@ -3765,6 +3764,8 @@ describe('ReactDOMServerPartialHydration', () => {
         <span>
           Visible
         </span>
+        <!--&-->
+        <!--/&-->
         <span
           style="display: none;"
         >
@@ -3902,7 +3903,7 @@ describe('ReactDOMServerPartialHydration', () => {
       });
     });
     assertLog([
-      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      "onRecoverableError: Hydration failed because the server rendered text didn't match the client.",
     ]);
   });
 
@@ -3941,7 +3942,7 @@ describe('ReactDOMServerPartialHydration', () => {
       );
     });
     assertLog([
-      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      "onRecoverableError: Hydration failed because the server rendered text didn't match the client.",
     ]);
   });
 });

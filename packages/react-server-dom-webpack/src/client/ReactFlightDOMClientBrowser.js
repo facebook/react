@@ -25,9 +25,11 @@ import {
   injectIntoDevTools,
 } from 'react-client/src/ReactFlightClient';
 
-import {
-  processReply,
+import {processReply} from 'react-client/src/ReactFlightReplyClient';
+
+export {
   createServerReference,
+  registerServerReference,
 } from 'react-client/src/ReactFlightReplyClient';
 
 import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
@@ -150,12 +152,7 @@ function encodeReply(
   });
 }
 
-export {
-  createFromFetch,
-  createFromReadableStream,
-  encodeReply,
-  createServerReference,
-};
+export {createFromFetch, createFromReadableStream, encodeReply};
 
 if (__DEV__) {
   injectIntoDevTools();

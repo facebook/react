@@ -65,16 +65,19 @@ export const renameElementSymbol = true;
 export const enableShallowPropDiffing = false;
 export const enableSiblingPrerendering = true;
 
-export const enableUseEffectCRUDOverload = false;
-
 export const enableYieldingBeforePassive = true;
 
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
-export const enableSwipeTransition = false;
+export const enableGestureTransition = false;
 export const enableFastAddPropertiesInDiffing = true;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
+export const enableSuspenseyImages = false;
+export const enableSrcObject = false;
+export const ownerStackLimit = 1e4;
+
+export const enableFragmentRefs = false;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the
@@ -91,7 +94,6 @@ export const enableReactTestRendererWarning = true;
 export const disableDefaultPropsExceptForClasses = true;
 
 export const enableObjectFiber = false;
-export const enableOwnerStacks = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

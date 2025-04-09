@@ -236,3 +236,11 @@ export function createFastHash(input: string): string | number {
   hash.update(input);
   return hash.digest('hex');
 }
+
+export function readAsDataURL(blob: Blob): Promise<string> {
+  return blob.arrayBuffer().then(arrayBuffer => {
+    const encoded = Buffer.from(arrayBuffer).toString('base64');
+    const mimeType = blob.type || 'application/octet-stream';
+    return 'data:' + mimeType + ';base64,' + encoded;
+  });
+}

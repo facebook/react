@@ -615,6 +615,8 @@ module.exports = {
     GetAnimationsOptions: 'readonly',
     Animatable: 'readonly',
     ScrollTimeline: 'readonly',
+    EventListenerOptionsOrUseCapture: 'readonly',
+    FocusOptions: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',

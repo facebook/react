@@ -41,7 +41,6 @@ export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
 export const enableNoCloningMemoCache = false;
 export const enableObjectFiber = false;
-export const enableOwnerStacks = true;
 export const enablePersistedModeClonedFlag = false;
 export const enablePostpone = false;
 export const enableReactTestRendererWarning = false;
@@ -64,7 +63,6 @@ export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const enableSiblingPrerendering = true;
-export const enableUseEffectCRUDOverload = false;
 
 export const enableHydrationLaneScheduling = true;
 
@@ -72,10 +70,15 @@ export const enableYieldingBeforePassive = false;
 
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
-export const enableSwipeTransition = false;
+export const enableGestureTransition = false;
 export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
+export const enableSuspenseyImages = false;
+export const enableSrcObject = false;
+export const ownerStackLimit = 1e4;
+
+export const enableFragmentRefs = false;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;

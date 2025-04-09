@@ -2,14 +2,32 @@
   "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
     "module": "ES2015",
-    "target": "ES5",
+    "target": "ES2015",
     "moduleResolution": "Bundler",
-    "lib": ["ES2020"],
-    "rootDir": ".",
+    "lib": ["ES2020", "dom"],
     "sourceMap": false,
     "types": ["estree-jsx", "node"],
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "paths": {
+      "babel-plugin-react-compiler": ["../../compiler/packages/babel-plugin-react-compiler/src"]
+    },
+    "jsx": "react-jsxdev",
+    "rootDir": "../..",
+    "baseUrl": ".",
+    "typeRoots": [
+      "../../node_modules/@types"
+    ],
+    "checkJs": false,
+    "allowJs": false,
+
+    // weaken strictness from preset
+    "importsNotUsedAsValues": "remove",
+    "noUncheckedIndexedAccess": false,
+    "noUnusedParameters": false,
+    "useUnknownInCatchVariables": true,
+    // ideally turn off only during dev, or on a per-file basis
+    "noUnusedLocals": false,
+    "removeComments": true,
   },
-  "exclude": ["node_modules"],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "__tests__/**/*.ts"]
 }

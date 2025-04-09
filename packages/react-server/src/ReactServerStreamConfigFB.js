@@ -75,3 +75,7 @@ export function closeWithError(destination: Destination, error: mixed): void {
 }
 
 export {createFastHashJS as createFastHash} from './createFastHashJS';
+
+export function readAsDataURL(blob: Blob): Promise<string> {
+  throw new Error('Not implemented.');
+}

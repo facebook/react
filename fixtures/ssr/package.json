@@ -20,7 +20,7 @@
     "prestart": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:client": "PORT=3001 react-scripts start",
+    "dev:client": "BROWSER=none PORT=3001 react-scripts start",
     "dev:server": "NODE_ENV=development node server",
     "start": "react-scripts build && NODE_ENV=production node server",
     "build": "react-scripts build",

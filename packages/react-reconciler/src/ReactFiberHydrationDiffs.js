@@ -23,6 +23,8 @@ import {
   HostText,
 } from './ReactWorkTags';
 
+import {enableSrcObject} from 'shared/ReactFeatureFlags';
+
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import assign from 'shared/assign';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -222,6 +224,8 @@ function describeValue(value: mixed, maxLength: number): string {
             (properties === '' ? '' : ',') + propName + ':' + propValue;
         }
         return '{' + properties + '}';
+      } else if (enableSrcObject && (name === 'Blob' || name === 'File')) {
+        return name + ':' + (value: any).type;
       }
       return name;
     }

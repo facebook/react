@@ -11,12 +11,14 @@ jest.mock('shared/ReactFeatureFlags', () => {
   // Flags that aren't currently used, but we still want to force variants to keep the
   // code live.
   actual.disableInputAttributeSyncing = __VARIANT__;
-  actual.enableOwnerStacks = __VARIANT__;
 
   // These are hardcoded to true for the next release,
   // but still run the tests against both variants until
   // we remove the flag.
   actual.disableClientCache = __VARIANT__;
+
+  // Some value that doesn't impact existing tests
+  actual.ownerStackLimit = __VARIANT__ ? 500 : 1e4;
 
   return actual;
 });
