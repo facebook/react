@@ -8,7 +8,11 @@
  */
 
 import type {AnyNativeEvent} from '../events/PluginModuleType';
-import type {Container, SuspenseInstance} from '../client/ReactFiberConfigDOM';
+import type {
+  Container,
+  ActivityInstance,
+  SuspenseInstance,
+} from '../client/ReactFiberConfigDOM';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -21,6 +25,7 @@ import {
 import {
   getNearestMountedFiber,
   getContainerFromFiber,
+  getActivityInstanceFromFiber,
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 import {
@@ -33,7 +38,11 @@ import {
   getClosestInstanceFromNode,
   getFiberCurrentPropsFromNode,
 } from '../client/ReactDOMComponentTree';
-import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
+import {
+  HostRoot,
+  ActivityComponent,
+  SuspenseComponent,
+} from 'react-reconciler/src/ReactWorkTags';
 import {isHigherEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 import {dispatchReplayedFormAction} from './plugins/FormActionEventPlugin';
@@ -56,7 +65,7 @@ type PointerEvent = Event & {
 };
 
 type QueuedReplayableEvent = {
-  blockedOn: null | Container | SuspenseInstance,
+  blockedOn: null | Container | ActivityInstance | SuspenseInstance,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
@@ -76,7 +85,7 @@ const queuedPointerCaptures: Map<number, QueuedReplayableEvent> = new Map();
 // We could consider replaying selectionchange and touchmoves too.
 
 type QueuedHydrationTarget = {
-  blockedOn: null | Container | SuspenseInstance,
+  blockedOn: null | Container | ActivityInstance | SuspenseInstance,
   target: Node,
   priority: EventPriority,
 };
@@ -120,7 +129,7 @@ export function isDiscreteEventThatRequiresHydration(
 }
 
 function createQueuedReplayableEvent(
-  blockedOn: null | Container | SuspenseInstance,
+  blockedOn: null | Container | ActivityInstance | SuspenseInstance,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
@@ -170,7 +179,7 @@ export function clearIfContinuousEvent(
 
 function accumulateOrCreateContinuousQueuedReplayableEvent(
   existingQueuedEvent: null | QueuedReplayableEvent,
-  blockedOn: null | Container | SuspenseInstance,
+  blockedOn: null | Container | ActivityInstance | SuspenseInstance,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
@@ -212,7 +221,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
 }
 
 export function queueIfContinuousEvent(
-  blockedOn: null | Container | SuspenseInstance,
+  blockedOn: null | Container | ActivityInstance | SuspenseInstance,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
@@ -308,6 +317,18 @@ function attemptExplicitHydrationTarget(
       const tag = nearestMounted.tag;
       if (tag === SuspenseComponent) {
         const instance = getSuspenseInstanceFromFiber(nearestMounted);
+        if (instance !== null) {
+          // We're blocked on hydrating this boundary.
+          // Increase its priority.
+          queuedTarget.blockedOn = instance;
+          attemptHydrationAtPriority(queuedTarget.priority, () => {
+            attemptHydrationAtCurrentPriority(nearestMounted);
+          });
+
+          return;
+        }
+      } else if (tag === ActivityComponent) {
+        const instance = getActivityInstanceFromFiber(nearestMounted);
         if (instance !== null) {
           // We're blocked on hydrating this boundary.
           // Increase its priority.
@@ -418,7 +439,7 @@ function replayUnblockedEvents() {
 
 function scheduleCallbackIfUnblocked(
   queuedEvent: QueuedReplayableEvent,
-  unblocked: Container | SuspenseInstance,
+  unblocked: Container | SuspenseInstance | ActivityInstance,
 ) {
   if (queuedEvent.blockedOn === unblocked) {
     queuedEvent.blockedOn = null;
@@ -494,7 +515,7 @@ function scheduleReplayQueueIfNeeded(formReplayingQueue: FormReplayingQueue) {
 }
 
 export function retryIfBlockedOn(
-  unblocked: Container | SuspenseInstance,
+  unblocked: Container | SuspenseInstance | ActivityInstance,
 ): void {
   if (queuedFocus !== null) {
     scheduleCallbackIfUnblocked(queuedFocus, unblocked);
