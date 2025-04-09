@@ -59,6 +59,8 @@ export const pushFormStateMarkerIsNotMatching =
   $$$config.pushFormStateMarkerIsNotMatching;
 export const writeCompletedRoot = $$$config.writeCompletedRoot;
 export const writePlaceholder = $$$config.writePlaceholder;
+export const pushStartActivityBoundary = $$$config.pushStartActivityBoundary;
+export const pushEndActivityBoundary = $$$config.pushEndActivityBoundary;
 export const writeStartCompletedSuspenseBoundary =
   $$$config.writeStartCompletedSuspenseBoundary;
 export const writeStartPendingSuspenseBoundary =

@@ -4087,6 +4087,28 @@ export function writePlaceholder(
   return writeChunkAndReturn(destination, placeholder2);
 }
 
+// Activity boundaries are encoded as comments.
+const startActivityBoundary = stringToPrecomputedChunk('<!--&-->');
+const endActivityBoundary = stringToPrecomputedChunk('<!--/&-->');
+
+export function pushStartActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  target.push(startActivityBoundary);
+}
+
+export function pushEndActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+  preambleState: null | PreambleState,
+): void {
+  if (preambleState) {
+    pushPreambleContribution(target, preambleState);
+  }
+  target.push(endActivityBoundary);
+}
+
 // Suspense boundaries are encoded as comments.
 const startCompletedSuspenseBoundary = stringToPrecomputedChunk('<!--$-->');
 const startPendingSuspenseBoundary1 = stringToPrecomputedChunk(
@@ -4224,6 +4246,23 @@ export function writeEndClientRenderedSuspenseBoundary(
 
 const boundaryPreambleContributionChunkStart = stringToPrecomputedChunk('<!--');
 const boundaryPreambleContributionChunkEnd = stringToPrecomputedChunk('-->');
+
+function pushPreambleContribution(
+  target: Array<Chunk | PrecomputedChunk>,
+  preambleState: PreambleState,
+) {
+  // Same as writePreambleContribution but for the render phase.
+  const contribution = preambleState.contribution;
+  if (contribution !== NoContribution) {
+    target.push(
+      boundaryPreambleContributionChunkStart,
+      // This is a number type so we can do the fast path without coercion checking
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      stringToChunk('' + contribution),
+      boundaryPreambleContributionChunkEnd,
+    );
+  }
+}
 
 function writePreambleContribution(
   destination: Destination,
