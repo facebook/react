@@ -7,16 +7,15 @@
  * @flow
  */
 
+import type {ViewTransitionProps} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {FragmentInstanceType} from './ReactFiberConfig';
-import {
-  getViewTransitionName,
-  type ViewTransitionState,
-  type ViewTransitionProps,
-} from './ReactFiberViewTransitionComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
+
+import {getViewTransitionName} from './ReactFiberViewTransitionComponent';
 
 import {
   enableProfilerTimer,

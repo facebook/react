@@ -11,6 +11,7 @@ import type {
   ReactConsumerType,
   ReactContext,
   ReactNodeList,
+  ViewTransitionProps,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
@@ -30,10 +31,7 @@ import type {
   OffscreenQueue,
   OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
-import type {
-  ViewTransitionProps,
-  ViewTransitionState,
-} from './ReactFiberViewTransitionComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 import {assignViewTransitionAutoName} from './ReactFiberViewTransitionComponent';
 import type {
   Cache,

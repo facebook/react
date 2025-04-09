@@ -7,16 +7,15 @@
  * @flow
  */
 
+import type {ViewTransitionProps} from 'shared/ReactTypes';
+
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 
 import type {Instance, TextInstance, Props} from './ReactFiberConfig';
 
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 
-import type {
-  ViewTransitionState,
-  ViewTransitionProps,
-} from './ReactFiberViewTransitionComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 
 import {
   cloneMutableInstance,

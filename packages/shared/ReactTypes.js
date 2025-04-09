@@ -235,3 +235,31 @@ export type ReactTimeInfo = {
 export type ReactDebugInfo = Array<
   ReactComponentInfo | ReactEnvironmentInfo | ReactAsyncInfo | ReactTimeInfo,
 >;
+
+// Intrinsic ViewTransitionInstance. This type varies by Environment whether a particular
+// renderer supports it.
+export type ViewTransitionInstance = any;
+
+export type ViewTransitionClassPerType = {
+  [transitionType: 'default' | string]: 'none' | 'auto' | string,
+};
+
+export type ViewTransitionClass =
+  | 'none'
+  | 'auto'
+  | string
+  | ViewTransitionClassPerType;
+
+export type ViewTransitionProps = {
+  name?: string,
+  children?: ReactNodeList,
+  default?: ViewTransitionClass,
+  enter?: ViewTransitionClass,
+  exit?: ViewTransitionClass,
+  share?: ViewTransitionClass,
+  update?: ViewTransitionClass,
+  onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+};

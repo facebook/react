@@ -21,6 +21,7 @@ import type {
   ReactFormState,
   ReactComponentInfo,
   ReactDebugInfo,
+  ViewTransitionProps,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -2255,7 +2256,7 @@ function renderViewTransition(
   request: Request,
   task: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: ViewTransitionProps,
 ) {
   const prevKeyPath = task.keyPath;
   task.keyPath = keyPath;
