@@ -155,8 +155,8 @@ const rule: Rule.RuleModule = {
 
     let shouldReportUnusedOptOutDirective = true;
     const options: PluginOptions = {
-      ...parsePluginOptions(userOpts),
       ...COMPILER_OPTIONS,
+      ...parsePluginOptions(userOpts),
     };
     const userLogger: Logger | null = options.logger;
     options.logger = {
