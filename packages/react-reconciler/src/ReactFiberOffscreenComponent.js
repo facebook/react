@@ -7,12 +7,14 @@
  * @flow
  */
 
-import type {ReactNodeList, OffscreenMode, Wakeable} from 'shared/ReactTypes';
+import type {ReactNodeList, Wakeable} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {SpawnedCachePool} from './ReactFiberCacheComponent';
 import type {Transition} from 'react/src/ReactStartTransition';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {RetryQueue} from './ReactFiberSuspenseComponent';
+
+type OffscreenMode = 'hidden' | 'unstable-defer-without-hiding' | 'visible';
 
 export type LegacyHiddenProps = {
   mode?: OffscreenMode | null | void,
