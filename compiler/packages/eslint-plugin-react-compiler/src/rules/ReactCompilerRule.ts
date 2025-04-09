@@ -105,6 +105,9 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
   panicThreshold: 'none',
   // Don't emit errors on Flow suppressions--Flow already gave a signal
   flowSuppressions: false,
+  environment: {
+    validateRefAccessDuringRender: false,
+  },
 };
 
 const rule: Rule.RuleModule = {
@@ -150,8 +153,8 @@ const rule: Rule.RuleModule = {
 
     let shouldReportUnusedOptOutDirective = true;
     const options: PluginOptions = {
-      ...parsePluginOptions(userOpts),
       ...COMPILER_OPTIONS,
+      ...parsePluginOptions(userOpts),
     };
     const userLogger: Logger | null = options.logger;
     options.logger = {
