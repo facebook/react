@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNodeList, Wakeable} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberConfig';
 import type {Lane} from './ReactFiberLane';

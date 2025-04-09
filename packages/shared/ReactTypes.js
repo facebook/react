@@ -285,3 +285,28 @@ export type TracingMarkerProps = {
   name: string,
   children?: ReactNodeList,
 };
+
+export type CacheProps = {
+  children?: ReactNodeList,
+};
+
+export type ProfilerPhase = 'mount' | 'update' | 'nested-update';
+
+export type ProfilerProps = {
+  id?: string,
+  onRender?: (
+    id: void | string,
+    phase: ProfilerPhase,
+    actualDuration: number,
+    baseDuration: number,
+    startTime: number,
+    commitTime: number,
+  ) => void,
+  onCommit?: (
+    id: void | string,
+    phase: ProfilerPhase,
+    effectDuration: number,
+    commitTime: number,
+  ) => void,
+  children?: ReactNodeList,
+};

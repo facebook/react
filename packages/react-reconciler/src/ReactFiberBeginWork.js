@@ -15,6 +15,8 @@ import type {
   ActivityProps,
   SuspenseProps,
   TracingMarkerProps,
+  CacheProps,
+  ProfilerProps,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
@@ -977,7 +979,9 @@ function updateCacheComponent(
     }
   }
 
-  const nextChildren = workInProgress.pendingProps.children;
+  const nextProps: CacheProps = workInProgress.pendingProps;
+
+  const nextChildren = nextProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
@@ -1078,7 +1082,7 @@ function updateProfiler(
       stateNode.passiveEffectDuration = -0;
     }
   }
-  const nextProps = workInProgress.pendingProps;
+  const nextProps: ProfilerProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
