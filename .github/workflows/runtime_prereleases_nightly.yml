@@ -21,7 +21,9 @@ jobs:
       commit_sha: ${{ github.sha }}
       release_channel: stable
       dist_tag: canary,next
+      enableFailureNotification: true
     secrets:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -40,6 +42,8 @@ jobs:
       commit_sha: ${{ github.sha }}
       release_channel: experimental
       dist_tag: experimental
+      enableFailureNotification: true
     secrets:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
