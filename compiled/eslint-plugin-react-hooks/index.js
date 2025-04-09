@@ -55473,6 +55473,9 @@ const COMPILER_OPTIONS = {
     noEmit: true,
     panicThreshold: 'none',
     flowSuppressions: false,
+    environment: validateEnvironmentConfig({
+        validateRefAccessDuringRender: false,
+    }),
 };
 const rule$1 = {
     meta: {
@@ -55504,7 +55507,7 @@ const rule$1 = {
                 userOpts.__unstable_donotuse_reportAllBailouts;
         }
         let shouldReportUnusedOptOutDirective = true;
-        const options = Object.assign(Object.assign({}, parsePluginOptions(userOpts)), COMPILER_OPTIONS);
+        const options = parsePluginOptions(Object.assign(Object.assign(Object.assign({}, COMPILER_OPTIONS), userOpts), { environment: Object.assign(Object.assign({}, COMPILER_OPTIONS.environment), userOpts.environment) }));
         const userLogger = options.logger;
         options.logger = {
             logEvent: (eventFilename, event) => {
