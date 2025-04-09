@@ -27,7 +27,7 @@ import type {
 import type {
   OffscreenState,
   OffscreenQueue,
-} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import {

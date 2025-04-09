@@ -27,7 +27,7 @@ import type {
   OffscreenState,
   OffscreenQueue,
   OffscreenInstance,
-} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
 import type {
   ViewTransitionProps,
   ViewTransitionState,

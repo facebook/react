@@ -18,7 +18,7 @@ import type {SuspenseInstance} from './ReactFiberConfig';
 import type {
   OffscreenProps,
   OffscreenInstance,
-} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
 import type {
   ViewTransitionProps,
   ViewTransitionState,
@@ -74,7 +74,7 @@ import {
   ViewTransitionComponent,
   ActivityComponent,
 } from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberActivityComponent';
+import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
