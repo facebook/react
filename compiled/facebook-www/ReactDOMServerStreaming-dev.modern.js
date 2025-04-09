@@ -5263,18 +5263,43 @@ __DEV__ &&
             task.keyPath = prevKeyPath$jscomp$1;
             return;
           case REACT_ACTIVITY_TYPE:
-            if ("hidden" !== props.mode) {
-              var prevKeyPath$jscomp$2 = task.keyPath;
-              task.keyPath = keyPath;
-              renderNodeDestructive(request, task, props.children, -1);
-              task.keyPath = prevKeyPath$jscomp$2;
+            var segment$jscomp$0 = task.blockedSegment;
+            if (null === segment$jscomp$0) {
+              if ("hidden" !== props.mode) {
+                var prevKeyPath$jscomp$2 = task.keyPath;
+                task.keyPath = keyPath;
+                renderNode(request, task, props.children, -1);
+                task.keyPath = prevKeyPath$jscomp$2;
+              }
+            } else {
+              segment$jscomp$0.chunks.push("\x3c!--&--\x3e");
+              segment$jscomp$0.lastPushedText = !1;
+              if ("hidden" !== props.mode) {
+                var _prevKeyPath3 = task.keyPath;
+                task.keyPath = keyPath;
+                renderNode(request, task, props.children, -1);
+                task.keyPath = _prevKeyPath3;
+              }
+              var target$jscomp$0 = segment$jscomp$0.chunks,
+                preambleState = task.blockedPreamble;
+              if (preambleState) {
+                var contribution = preambleState.contribution;
+                contribution !== NoContribution &&
+                  target$jscomp$0.push(
+                    boundaryPreambleContributionChunkStart,
+                    "" + contribution,
+                    boundaryPreambleContributionChunkEnd
+                  );
+              }
+              target$jscomp$0.push("\x3c!--/&--\x3e");
+              segment$jscomp$0.lastPushedText = !1;
             }
             return;
           case REACT_SUSPENSE_LIST_TYPE:
-            var _prevKeyPath3 = task.keyPath;
+            var _prevKeyPath4 = task.keyPath;
             task.keyPath = keyPath;
             renderNodeDestructive(request, task, props.children, -1);
-            task.keyPath = _prevKeyPath3;
+            task.keyPath = _prevKeyPath4;
             return;
           case REACT_VIEW_TRANSITION_TYPE:
             if (enableViewTransition) {
@@ -5292,10 +5317,10 @@ __DEV__ &&
               return;
             }
           case REACT_SCOPE_TYPE:
-            var _prevKeyPath4 = task.keyPath;
+            var _prevKeyPath5 = task.keyPath;
             task.keyPath = keyPath;
             renderNodeDestructive(request, task, props.children, -1);
-            task.keyPath = _prevKeyPath4;
+            task.keyPath = _prevKeyPath5;
             return;
           case REACT_SUSPENSE_TYPE:
             a: if (null !== task.replay) {
