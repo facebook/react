@@ -997,7 +997,6 @@ function completeWork(
       }
       // Fallthrough
     }
-    case ActivityComponent:
     case LazyComponent:
     case SimpleMemoComponent:
     case FunctionComponent:
@@ -1388,6 +1387,16 @@ function completeWork(
             currentHostContext,
             workInProgress,
           );
+        }
+      }
+      bubbleProperties(workInProgress);
+      return null;
+    }
+    case ActivityComponent: {
+      if (current === null) {
+        const wasHydrated = popHydrationState(workInProgress);
+        if (wasHydrated) {
+          // TODO: Implement prepareToHydrateActivityInstance
         }
       }
       bubbleProperties(workInProgress);
