@@ -280,3 +280,8 @@ export type SuspenseProps = {
   unstable_expectedLoadTime?: number,
   unstable_name?: string,
 };
+
+export type TracingMarkerProps = {
+  name: string,
+  children?: ReactNodeList,
+};
