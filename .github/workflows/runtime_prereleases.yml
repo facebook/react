@@ -13,7 +13,14 @@ on:
       dist_tag:
         required: true
         type: string
+      enableFailureNotification:
+        description: 'Whether to notify the team on Discord when the release fails. Useful if this workflow is called from an automation.'
+        required: false
+        type: boolean
     secrets:
+      DISCORD_WEBHOOK_URL:
+        description: 'Discord webhook URL to notify on failure. Only required if enableFailureNotification is true.'
+        required: false
       GH_TOKEN:
         required: true
       NPM_TOKEN:
@@ -58,3 +65,11 @@ jobs:
           GH_TOKEN=${{ secrets.GH_TOKEN }} scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}
           cp ./scripts/release/ci-npmrc ~/.npmrc
           scripts/release/publish.js --ci --tags ${{ inputs.dist_tag }}
+      - name: Notify Discord on failure
+        if: failure() && inputs.enableFailureNotification == true
+        uses: tsickert/discord-webhook@86dc739f3f165f16dadc5666051c367efa1692f4
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-author-name: "GitHub Actions"
+          embed-title: 'Publish of $${{ inputs.release_channel }} release failed'
+          embed-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
