@@ -42,6 +42,7 @@ import {
   disableLegacyMode,
   enableSiblingPrerendering,
   enableViewTransition,
+  enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
 
 import {now} from './Scheduler';
@@ -77,7 +78,12 @@ import {
   ViewTransitionComponent,
   ActivityComponent,
 } from './ReactWorkTags';
-import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
+import {
+  NoMode,
+  ConcurrentMode,
+  ProfileMode,
+  SuspenseyImagesMode,
+} from './ReactTypeOfMode';
 import {
   Placement,
   Update,
@@ -555,9 +561,11 @@ function preloadInstanceAndSuspendIfNeeded(
   renderLanes: Lanes,
 ) {
   const maySuspend =
-    oldProps === null
+    (enableSuspenseyImages ||
+      (workInProgress.mode & SuspenseyImagesMode) !== NoMode) &&
+    (oldProps === null
       ? maySuspendCommit(type, newProps)
-      : maySuspendCommitOnUpdate(type, oldProps, newProps);
+      : maySuspendCommitOnUpdate(type, oldProps, newProps));
 
   if (!maySuspend) {
     // If this flag was set previously, we can remove it. The flag

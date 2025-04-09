@@ -47,6 +47,7 @@ import {
   updateTextarea,
   restoreControlledTextareaState,
 } from './ReactDOMTextarea';
+import {setSrcObject} from './ReactDOMSrcObject';
 import {validateTextNesting} from './validateDOMNesting';
 import {track} from './inputValueTracking';
 import setTextContent from './setTextContent';
@@ -67,6 +68,7 @@ import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking
 
 import {
   enableScrollEndPolyfill,
+  enableSrcObject,
   enableTrustedTypesIntegration,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -402,7 +404,40 @@ function setProp(
         break;
       }
     // fallthrough
-    case 'src':
+    case 'src': {
+      if (enableSrcObject && typeof value === 'object' && value !== null) {
+        // Some tags support object sources like Blob, File, MediaSource and MediaStream.
+        if (tag === 'img' || tag === 'video' || tag === 'audio') {
+          try {
+            setSrcObject(domElement, tag, value);
+            break;
+          } catch (x) {
+            // If URL.createObjectURL() errors, it was probably some other object type
+            // that should be toString:ed instead, so we just fall-through to the normal
+            // path.
+          }
+        } else {
+          if (__DEV__) {
+            try {
+              // This should always error.
+              URL.revokeObjectURL(URL.createObjectURL((value: any)));
+              if (tag === 'source') {
+                console.error(
+                  'Passing Blob, MediaSource or MediaStream to <source src> is not supported. ' +
+                    'Pass it directly to <img src>, <video src> or <audio src> instead.',
+                );
+              } else {
+                console.error(
+                  'Passing Blob, MediaSource or MediaStream to <%s src> is not supported.',
+                  tag,
+                );
+              }
+            } catch (x) {}
+          }
+        }
+      }
+      // Fallthrough
+    }
     case 'href': {
       if (
         value === '' &&
@@ -2301,6 +2336,39 @@ function hydrateSanitizedAttribute(
   warnForPropDifference(propKey, serverValue, value, serverDifferences);
 }
 
+function hydrateSrcObjectAttribute(
+  domElement: Element,
+  value: Blob,
+  extraAttributes: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
+): void {
+  const attributeName = 'src';
+  extraAttributes.delete(attributeName);
+  const serverValue = domElement.getAttribute(attributeName);
+  if (serverValue != null && value != null) {
+    const size = value.size;
+    const type = value.type;
+    if (typeof size === 'number' && typeof type === 'string') {
+      if (serverValue.indexOf('data:' + type + ';base64,') === 0) {
+        // For Blobs we don't bother reading the actual data but just diff by checking if
+        // the byte length size of the Blob maches the length of the data url.
+        const prefixLength = 5 + type.length + 8;
+        let byteLength = ((serverValue.length - prefixLength) / 4) * 3;
+        if (serverValue[serverValue.length - 1] === '=') {
+          byteLength--;
+        }
+        if (serverValue[serverValue.length - 2] === '=') {
+          byteLength--;
+        }
+        if (byteLength === size) {
+          return;
+        }
+      }
+    }
+  }
+  warnForPropDifference('src', serverValue, value, serverDifferences);
+}
+
 function diffHydratedCustomComponent(
   domElement: Element,
   tag: string,
@@ -2547,7 +2615,45 @@ function diffHydratedGenericElement(
           continue;
         }
       // fallthrough
-      case 'src':
+      case 'src': {
+        if (enableSrcObject && typeof value === 'object' && value !== null) {
+          // Some tags support object sources like Blob, File, MediaSource and MediaStream.
+          if (tag === 'img' || tag === 'video' || tag === 'audio') {
+            try {
+              // Test if this is a compatible object
+              URL.revokeObjectURL(URL.createObjectURL((value: any)));
+              hydrateSrcObjectAttribute(
+                domElement,
+                value,
+                extraAttributes,
+                serverDifferences,
+              );
+              continue;
+            } catch (x) {
+              // If not, just fall through to the normal toString flow.
+            }
+          } else {
+            if (__DEV__) {
+              try {
+                // This should always error.
+                URL.revokeObjectURL(URL.createObjectURL((value: any)));
+                if (tag === 'source') {
+                  console.error(
+                    'Passing Blob, MediaSource or MediaStream to <source src> is not supported. ' +
+                      'Pass it directly to <img src>, <video src> or <audio src> instead.',
+                  );
+                } else {
+                  console.error(
+                    'Passing Blob, MediaSource or MediaStream to <%s src> is not supported.',
+                    tag,
+                  );
+                }
+              } catch (x) {}
+            }
+          }
+        }
+        // Fallthrough
+      }
       case 'href':
         if (
           value === '' &&

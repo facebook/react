@@ -30,6 +30,10 @@ type TextInstance = {
   hidden: boolean,
 };
 
+type ActivityInstance = {
+  children: Array<Instance | TextInstance | SuspenseInstance>,
+};
+
 type SuspenseInstance = {
   state: 'pending' | 'complete' | 'client-render',
   children: Array<Instance | TextInstance | SuspenseInstance>,
@@ -164,44 +168,74 @@ const ReactNoopServer = ReactFizzServer({
     });
   },
 
+  pushStartActivityBoundary(
+    target: Array<Uint8Array>,
+    renderState: RenderState,
+  ): void {
+    const activityInstance: ActivityInstance = {
+      children: [],
+    };
+    target.push(Buffer.from(JSON.stringify(activityInstance), 'utf8'));
+  },
+
+  pushEndActivityBoundary(
+    target: Array<Uint8Array>,
+    renderState: RenderState,
+    preambleState: null | PreambleState,
+  ): void {
+    target.push(POP);
+  },
+
   writeStartCompletedSuspenseBoundary(
     destination: Destination,
     renderState: RenderState,
-    suspenseInstance: SuspenseInstance,
   ): boolean {
-    suspenseInstance.state = 'complete';
+    const suspenseInstance: SuspenseInstance = {
+      state: 'complete',
+      children: [],
+    };
     const parent = destination.stack[destination.stack.length - 1];
     parent.children.push(suspenseInstance);
     destination.stack.push(suspenseInstance);
+    return true;
   },
   writeStartPendingSuspenseBoundary(
     destination: Destination,
     renderState: RenderState,
-    suspenseInstance: SuspenseInstance,
   ): boolean {
-    suspenseInstance.state = 'pending';
+    const suspenseInstance: SuspenseInstance = {
+      state: 'pending',
+      children: [],
+    };
     const parent = destination.stack[destination.stack.length - 1];
     parent.children.push(suspenseInstance);
     destination.stack.push(suspenseInstance);
+    return true;
   },
   writeStartClientRenderedSuspenseBoundary(
     destination: Destination,
     renderState: RenderState,
-    suspenseInstance: SuspenseInstance,
   ): boolean {
-    suspenseInstance.state = 'client-render';
+    const suspenseInstance: SuspenseInstance = {
+      state: 'client-render',
+      children: [],
+    };
     const parent = destination.stack[destination.stack.length - 1];
     parent.children.push(suspenseInstance);
     destination.stack.push(suspenseInstance);
+    return true;
   },
   writeEndCompletedSuspenseBoundary(destination: Destination): boolean {
     destination.stack.pop();
+    return true;
   },
   writeEndPendingSuspenseBoundary(destination: Destination): boolean {
     destination.stack.pop();
+    return true;
   },
   writeEndClientRenderedSuspenseBoundary(destination: Destination): boolean {
     destination.stack.pop();
+    return true;
   },
 
   writeStartSegment(
@@ -218,9 +252,11 @@ const ReactNoopServer = ReactFizzServer({
       throw new Error('Segments are only expected at the root of the stack.');
     }
     destination.stack.push(segment);
+    return true;
   },
   writeEndSegment(destination: Destination, formatContext: null): boolean {
     destination.stack.pop();
+    return true;
   },
 
   writeCompletedSegmentInstruction(
@@ -241,6 +277,7 @@ const ReactNoopServer = ReactFizzServer({
       0,
       ...segment.children,
     );
+    return true;
   },
 
   writeCompletedBoundaryInstruction(
@@ -255,6 +292,7 @@ const ReactNoopServer = ReactFizzServer({
     }
     boundary.children = segment.children;
     boundary.state = 'complete';
+    return true;
   },
 
   writeClientRenderBoundaryInstruction(
@@ -263,6 +301,7 @@ const ReactNoopServer = ReactFizzServer({
     boundary: SuspenseInstance,
   ): boolean {
     boundary.status = 'client-render';
+    return true;
   },
 
   writePreambleStart() {},
