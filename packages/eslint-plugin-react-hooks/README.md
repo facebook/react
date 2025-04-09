@@ -20,6 +20,19 @@ yarn add eslint-plugin-react-hooks --dev
 
 ### Flat Config (eslint.config.js|ts)
 
+#### >= 6.0.0
+
+For users of 6.0 and beyond, simply add the `recommended` config.
+
+```js
+import * as reactHooks from 'eslint-plugin-react-hooks';
+
+export default [
+  // ...
+  reactHooks.configs.recommended,
+];
+```
+
 #### 5.2.0
 
 For users of 5.2.0 (the first version with flat config support), add the `recommended-latest` config.
