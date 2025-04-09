@@ -3085,10 +3085,10 @@ export function canHydrateTextInstance(
   return ((instance: any): TextInstance);
 }
 
-function canHydrateHydrationBoundary<T: SuspenseInstance | ActivityInstance>(
+function canHydrateHydrationBoundary(
   instance: HydratableInstance,
   inRootOrSingleton: boolean,
-): null | T {
+): null | SuspenseInstance | ActivityInstance {
   while (instance.nodeType !== COMMENT_NODE) {
     if (!inRootOrSingleton) {
       return null;
@@ -3099,24 +3099,42 @@ function canHydrateHydrationBoundary<T: SuspenseInstance | ActivityInstance>(
     }
     instance = nextInstance;
   }
-  // This has now been refined to a suspense node.
-  return ((instance: any): T);
+  // This has now been refined to a hydration boundary node.
+  return (instance: any);
 }
 
 export function canHydrateActivityInstance(
   instance: HydratableInstance,
   inRootOrSingleton: boolean,
 ): null | ActivityInstance {
-  // $FlowFixMe: This should be inferred. I can't pass explicit since it breaks build tooling.
-  return canHydrateHydrationBoundary(instance, inRootOrSingleton);
+  const hydratableInstance = canHydrateHydrationBoundary(
+    instance,
+    inRootOrSingleton,
+  );
+  if (
+    hydratableInstance !== null &&
+    hydratableInstance.data === ACTIVITY_START_DATA
+  ) {
+    return (hydratableInstance: any);
+  }
+  return null;
 }
 
 export function canHydrateSuspenseInstance(
   instance: HydratableInstance,
   inRootOrSingleton: boolean,
 ): null | SuspenseInstance {
-  // $FlowFixMe: This should be inferred. I can't pass explicit since it breaks build tooling.
-  return canHydrateHydrationBoundary(instance, inRootOrSingleton);
+  const hydratableInstance = canHydrateHydrationBoundary(
+    instance,
+    inRootOrSingleton,
+  );
+  if (
+    hydratableInstance !== null &&
+    hydratableInstance.data !== ACTIVITY_START_DATA
+  ) {
+    return (hydratableInstance: any);
+  }
+  return null;
 }
 
 export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
@@ -3342,6 +3360,12 @@ export function describeHydratableInstanceForDevWarnings(
       props: getPropsFromElement((instance: any)),
     };
   } else if (instance.nodeType === COMMENT_NODE) {
+    if (instance.data === ACTIVITY_START_DATA) {
+      return {
+        type: 'Activity',
+        props: {},
+      };
+    }
     return {
       type: 'Suspense',
       props: {},
