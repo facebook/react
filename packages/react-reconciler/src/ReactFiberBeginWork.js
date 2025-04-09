@@ -22,7 +22,9 @@ import type {
   SuspenseListTailMode,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
+import type {ActivityProps} from './ReactFiberActivityComponent';
 import type {
+  LegacyHiddenProps,
   OffscreenProps,
   OffscreenState,
   OffscreenQueue,
@@ -645,8 +647,8 @@ function updateOffscreenComponent(
   current: Fiber | null,
   workInProgress: Fiber,
   renderLanes: Lanes,
+  nextProps: OffscreenProps,
 ) {
-  const nextProps: OffscreenProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
 
   const prevState: OffscreenState | null =
@@ -858,17 +860,30 @@ function deferHiddenOffscreenComponent(
   return null;
 }
 
-// Note: These happen to have identical begin phases, for now. We shouldn't hold
-// ourselves to this constraint, though. If the behavior diverges, we should
-// fork the function.
-const updateLegacyHiddenComponent = updateOffscreenComponent;
+function updateLegacyHiddenComponent(
+  current: null | Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  const nextProps: LegacyHiddenProps = workInProgress.pendingProps;
+  // Note: These happen to have identical begin phases, for now. We shouldn't hold
+  // ourselves to this constraint, though. If the behavior diverges, we should
+  // fork the function.
+  // This just works today because it has the same Props.
+  return updateOffscreenComponent(
+    current,
+    workInProgress,
+    renderLanes,
+    nextProps,
+  );
+}
 
 function updateActivityComponent(
   current: null | Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  const nextProps = workInProgress.pendingProps;
+  const nextProps: ActivityProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
   const nextMode = nextProps.mode;
   const mode = workInProgress.mode;
@@ -3797,8 +3812,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         return null;
       }
     }
-    case OffscreenComponent:
-    case LegacyHiddenComponent: {
+    case OffscreenComponent: {
       // Need to check if the tree still needs to be deferred. This is
       // almost identical to the logic used in the normal update path,
       // so we'll just enter that. The only difference is we'll bail out
@@ -3808,7 +3822,12 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       // path from the normal path. I'm tempted to do a labeled break here
       // but I won't :)
       workInProgress.lanes = NoLanes;
-      return updateOffscreenComponent(current, workInProgress, renderLanes);
+      return updateOffscreenComponent(
+        current,
+        workInProgress,
+        renderLanes,
+        workInProgress.pendingProps,
+      );
     }
     case CacheComponent: {
       const cache: Cache = current.memoizedState.cache;
@@ -3821,7 +3840,20 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         if (instance !== null) {
           pushMarkerInstance(workInProgress, instance);
         }
+        break;
       }
+      // Fallthrough
+    }
+    case LegacyHiddenComponent: {
+      if (enableLegacyHidden) {
+        workInProgress.lanes = NoLanes;
+        return updateLegacyHiddenComponent(
+          current,
+          workInProgress,
+          renderLanes,
+        );
+      }
+      // Fallthrough
     }
   }
   return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
@@ -4087,7 +4119,12 @@ function beginWork(
       return updateActivityComponent(current, workInProgress, renderLanes);
     }
     case OffscreenComponent: {
-      return updateOffscreenComponent(current, workInProgress, renderLanes);
+      return updateOffscreenComponent(
+        current,
+        workInProgress,
+        renderLanes,
+        workInProgress.pendingProps,
+      );
     }
     case LegacyHiddenComponent: {
       if (enableLegacyHidden) {

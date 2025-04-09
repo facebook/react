@@ -14,6 +14,11 @@ import type {Transition} from 'react/src/ReactStartTransition';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {RetryQueue} from './ReactFiberSuspenseComponent';
 
+export type LegacyHiddenProps = {
+  mode?: OffscreenMode | null | void,
+  children?: ReactNodeList,
+};
+
 export type OffscreenProps = {
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum
   // for now, since we might have multiple variants. For example, hiding the
