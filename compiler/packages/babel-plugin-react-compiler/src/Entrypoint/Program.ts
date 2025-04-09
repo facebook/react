@@ -12,7 +12,11 @@ import {
   CompilerErrorDetail,
   ErrorSeverity,
 } from '../CompilerError';
-import {EnvironmentConfig, ReactFunctionType} from '../HIR/Environment';
+import {
+  EnvironmentConfig,
+  ReactFunctionType,
+  validateEnvironmentConfig,
+} from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
 import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
 import {isHookDeclaration} from '../Utils/HookDeclaration';
@@ -291,7 +295,7 @@ export function compileProgram(
     return null;
   }
 
-  const environment = pass.opts.environment;
+  const environment = validateEnvironmentConfig(pass.opts.environment);
   const restrictedImportsErr = validateRestrictedImports(program, environment);
   if (restrictedImportsErr) {
     handleError(restrictedImportsErr, pass, null);

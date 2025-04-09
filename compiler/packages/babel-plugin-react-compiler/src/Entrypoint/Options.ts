@@ -12,6 +12,7 @@ import {
   EnvironmentConfig,
   ExternalFunction,
   parseEnvironmentConfig,
+  PartialEnvironmentConfig,
   tryParseExternalFunction,
 } from '../HIR/Environment';
 import {hasOwnProperty} from '../Utils/utils';
@@ -39,7 +40,7 @@ const PanicThresholdOptionsSchema = z.enum([
 export type PanicThresholdOptions = z.infer<typeof PanicThresholdOptionsSchema>;
 
 export type PluginOptions = {
-  environment: EnvironmentConfig;
+  environment: PartialEnvironmentConfig;
 
   logger: Logger | null;
 
