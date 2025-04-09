@@ -47,8 +47,8 @@ export type CreateRootOptions = {
 
 export type HydrateRootOptions = {
   // Hydration options
-  onHydrated?: (suspenseNode: Comment) => void,
-  onDeleted?: (suspenseNode: Comment) => void,
+  onHydrated?: (hydrationBoundary: Comment) => void,
+  onDeleted?: (hydrationBoundary: Comment) => void,
   // Options for all roots
   unstable_strictMode?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,

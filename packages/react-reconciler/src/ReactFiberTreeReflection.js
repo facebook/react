@@ -8,7 +8,12 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Container, SuspenseInstance, Instance} from './ReactFiberConfig';
+import type {
+  Container,
+  ActivityInstance,
+  SuspenseInstance,
+  Instance,
+} from './ReactFiberConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
@@ -71,6 +76,13 @@ export function getSuspenseInstanceFromFiber(
       return suspenseState.dehydrated;
     }
   }
+  return null;
+}
+
+export function getActivityInstanceFromFiber(
+  fiber: Fiber,
+): null | ActivityInstance {
+  // TODO: Implement this on ActivityComponent.
   return null;
 }
 
