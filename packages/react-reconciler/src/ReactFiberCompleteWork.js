@@ -154,6 +154,7 @@ import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
+  prepareToHydrateHostActivityInstance,
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
   resetHydrationState,
@@ -1396,7 +1397,7 @@ function completeWork(
       if (current === null) {
         const wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
-          // TODO: Implement prepareToHydrateActivityInstance
+          prepareToHydrateHostActivityInstance(workInProgress);
         }
       }
       bubbleProperties(workInProgress);
