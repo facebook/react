@@ -18,6 +18,8 @@ import {
   NoEventPriority,
   DefaultEventPriority,
   DiscreteEventPriority,
+  ContinuousEventPriority,
+  IdleEventPriority,
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
@@ -46,6 +48,8 @@ const {
   registerEventHandler,
   unstable_DefaultEventPriority: FabricDefaultPriority,
   unstable_DiscreteEventPriority: FabricDiscretePriority,
+  unstable_ContinuousEventPriority: FabricContinuousPriority,
+  unstable_IdleEventPriority: FabricIdlePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
@@ -397,6 +401,10 @@ export function resolveUpdatePriority(): EventPriority {
     switch (currentEventPriority) {
       case FabricDiscretePriority:
         return DiscreteEventPriority;
+      case FabricContinuousPriority:
+        return ContinuousEventPriority;
+      case FabricIdlePriority:
+        return IdleEventPriority;
       case FabricDefaultPriority:
       default:
         return DefaultEventPriority;

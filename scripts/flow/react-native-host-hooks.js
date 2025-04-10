@@ -277,6 +277,8 @@ declare const nativeFabricUIManager: {
   ) => void,
   unstable_DefaultEventPriority: number,
   unstable_DiscreteEventPriority: number,
+  unstable_ContinuousEventPriority: number,
+  unstable_IdleEventPriority: number,
   unstable_getCurrentEventPriority: () => number,
   ...
 };
