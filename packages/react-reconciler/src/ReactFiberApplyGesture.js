@@ -631,6 +631,12 @@ function recursivelyInsertClonesFromExistingTree(
         const viewTransitionState: ViewTransitionState = child.stateNode;
         // TODO: If this was already cloned by a previous pass we can reuse those clones.
         viewTransitionState.clones = null;
+        // "Existing" view transitions are in subtrees that didn't update so
+        // this is a "current". We normally clear this upon rerendering
+        // but we use this flag to track changes from layout in the commit.
+        // So we need it to be cleared before we do that.
+        // TODO: Use some other temporary state to track this.
+        child.flags &= ~Update;
         let nextPhase;
         if (visitPhase === CLONE_EXIT) {
           // This was an Enter of a ViewTransition. We now move onto unhiding the inner
