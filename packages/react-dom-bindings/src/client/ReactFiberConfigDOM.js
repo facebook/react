@@ -230,9 +230,9 @@ const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
 const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
-const PREAMBLE_CONTRIBUTION_HTML = 0b001;
-const PREAMBLE_CONTRIBUTION_BODY = 0b010;
-const PREAMBLE_CONTRIBUTION_HEAD = 0b100;
+const PREAMBLE_CONTRIBUTION_HTML = 'html';
+const PREAMBLE_CONTRIBUTION_BODY = 'body';
+const PREAMBLE_CONTRIBUTION_HEAD = 'head';
 const FORM_STATE_IS_MATCHING = 'F!';
 const FORM_STATE_IS_NOT_MATCHING = 'F';
 
@@ -1054,7 +1054,6 @@ export function clearSuspenseBoundary(
   suspenseInstance: SuspenseInstance,
 ): void {
   let node: Node = suspenseInstance;
-  let possiblePreambleContribution: number = 0;
   // Delete all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
   // deep we are and only break out when we're back on top.
@@ -1065,36 +1064,6 @@ export function clearSuspenseBoundary(
     if (nextNode && nextNode.nodeType === COMMENT_NODE) {
       const data = ((nextNode: any).data: string);
       if (data === SUSPENSE_END_DATA) {
-        if (
-          // represents 3 bits where at least one bit is set (1-7)
-          possiblePreambleContribution > 0 &&
-          possiblePreambleContribution < 8
-        ) {
-          const code = possiblePreambleContribution;
-          // It's not normally possible to insert a comment immediately preceding Suspense boundary
-          // closing comment marker so we can infer that if the comment preceding starts with "1" through "7"
-          // then it is in fact a preamble contribution marker comment. We do this value test to avoid the case
-          // where the Suspense boundary is empty and the preceding comment marker is the Suspense boundary
-          // opening marker or the closing marker of an inner boundary. In those cases the first character won't
-          // have the requisite value to be interpreted as a Preamble contribution
-          const ownerDocument = parentInstance.ownerDocument;
-          if (code & PREAMBLE_CONTRIBUTION_HTML) {
-            const documentElement: Element =
-              (ownerDocument.documentElement: any);
-            releaseSingletonInstance(documentElement);
-          }
-          if (code & PREAMBLE_CONTRIBUTION_BODY) {
-            const body: Element = (ownerDocument.body: any);
-            releaseSingletonInstance(body);
-          }
-          if (code & PREAMBLE_CONTRIBUTION_HEAD) {
-            const head: Element = (ownerDocument.head: any);
-            releaseSingletonInstance(head);
-            // We need to clear the head because this is the only singleton that can have children that
-            // were part of this boundary but are not inside this boundary.
-            clearHead(head);
-          }
-        }
         if (depth === 0) {
           parentInstance.removeChild(nextNode);
           // Retry if any event replaying was blocked on this.
@@ -1109,11 +1078,24 @@ export function clearSuspenseBoundary(
         data === SUSPENSE_FALLBACK_START_DATA
       ) {
         depth++;
-      } else {
-        possiblePreambleContribution = data.charCodeAt(0) - 48;
+      } else if (data === PREAMBLE_CONTRIBUTION_HTML) {
+        // If a preamble contribution marker is found within the bounds of this boundary,
+        // then it contributed to the html tag and we need to reset it.
+        const ownerDocument = parentInstance.ownerDocument;
+        const documentElement: Element = (ownerDocument.documentElement: any);
+        releaseSingletonInstance(documentElement);
+      } else if (data === PREAMBLE_CONTRIBUTION_HEAD) {
+        const ownerDocument = parentInstance.ownerDocument;
+        const head: Element = (ownerDocument.head: any);
+        releaseSingletonInstance(head);
+        // We need to clear the head because this is the only singleton that can have children that
+        // were part of this boundary but are not inside this boundary.
+        clearHead(head);
+      } else if (data === PREAMBLE_CONTRIBUTION_BODY) {
+        const ownerDocument = parentInstance.ownerDocument;
+        const body: Element = (ownerDocument.body: any);
+        releaseSingletonInstance(body);
       }
-    } else {
-      possiblePreambleContribution = 0;
     }
     // $FlowFixMe[incompatible-type] we bail out when we get a null
     node = nextNode;

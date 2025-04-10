@@ -692,23 +692,16 @@ export function completeResumableState(resumableState: ResumableState): void {
   resumableState.bootstrapModules = undefined;
 }
 
-const NoContribution /*     */ = 0b000;
-const HTMLContribution /*   */ = 0b001;
-const BodyContribution /*   */ = 0b010;
-const HeadContribution /*   */ = 0b100;
-
 export type PreambleState = {
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
   bodyChunks: null | Array<Chunk | PrecomputedChunk>,
-  contribution: number,
 };
 export function createPreambleState(): PreambleState {
   return {
     htmlChunks: null,
     headChunks: null,
     bodyChunks: null,
-    contribution: NoContribution,
   };
 }
 
@@ -3279,6 +3272,12 @@ function pushTitleImpl(
   return null;
 }
 
+// These are used by the client if we clear a boundary and we find these, then we
+// also clear the singleton as well.
+const headPreambleContributionChunk = stringToPrecomputedChunk('<!--head-->');
+const bodyPreambleContributionChunk = stringToPrecomputedChunk('<!--body-->');
+const htmlPreambleContributionChunk = stringToPrecomputedChunk('<!--html-->');
+
 function pushStartHead(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -3293,6 +3292,12 @@ function pushStartHead(
     if (preamble.headChunks) {
       throw new Error(`The ${'`<head>`'} tag may only be rendered once.`);
     }
+
+    // Insert a marker in the body where the contribution to the head was in case we need to clear it.
+    if (preambleState !== null) {
+      target.push(headPreambleContributionChunk);
+    }
+
     preamble.headChunks = [];
     return pushStartSingletonElement(preamble.headChunks, props, 'head');
   } else {
@@ -3317,6 +3322,11 @@ function pushStartBody(
       throw new Error(`The ${'`<body>`'} tag may only be rendered once.`);
     }
 
+    // Insert a marker in the body where the contribution to the body tag was in case we need to clear it.
+    if (preambleState !== null) {
+      target.push(bodyPreambleContributionChunk);
+    }
+
     preamble.bodyChunks = [];
     return pushStartSingletonElement(preamble.bodyChunks, props, 'body');
   } else {
@@ -3339,6 +3349,11 @@ function pushStartHtml(
 
     if (preamble.htmlChunks) {
       throw new Error(`The ${'`<html>`'} tag may only be rendered once.`);
+    }
+
+    // Insert a marker in the body where the contribution to the head was in case we need to clear it.
+    if (preambleState !== null) {
+      target.push(htmlPreambleContributionChunk);
     }
 
     preamble.htmlChunks = [DOCTYPE];
@@ -4013,15 +4028,12 @@ export function hoistPreambleState(
   const rootPreamble = renderState.preamble;
   if (rootPreamble.htmlChunks === null && preambleState.htmlChunks) {
     rootPreamble.htmlChunks = preambleState.htmlChunks;
-    preambleState.contribution |= HTMLContribution;
   }
   if (rootPreamble.headChunks === null && preambleState.headChunks) {
     rootPreamble.headChunks = preambleState.headChunks;
-    preambleState.contribution |= HeadContribution;
   }
   if (rootPreamble.bodyChunks === null && preambleState.bodyChunks) {
     rootPreamble.bodyChunks = preambleState.bodyChunks;
-    preambleState.contribution |= BodyContribution;
   }
 }
 
@@ -4101,11 +4113,7 @@ export function pushStartActivityBoundary(
 export function pushEndActivityBoundary(
   target: Array<Chunk | PrecomputedChunk>,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): void {
-  if (preambleState) {
-    pushPreambleContribution(target, preambleState);
-  }
   target.push(endActivityBoundary);
 }
 
@@ -4220,11 +4228,7 @@ export function writeStartClientRenderedSuspenseBoundary(
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
-  if (preambleState) {
-    writePreambleContribution(destination, preambleState);
-  }
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 export function writeEndPendingSuspenseBoundary(
@@ -4236,46 +4240,8 @@ export function writeEndPendingSuspenseBoundary(
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
-  if (preambleState) {
-    writePreambleContribution(destination, preambleState);
-  }
   return writeChunkAndReturn(destination, endSuspenseBoundary);
-}
-
-const boundaryPreambleContributionChunkStart = stringToPrecomputedChunk('<!--');
-const boundaryPreambleContributionChunkEnd = stringToPrecomputedChunk('-->');
-
-function pushPreambleContribution(
-  target: Array<Chunk | PrecomputedChunk>,
-  preambleState: PreambleState,
-) {
-  // Same as writePreambleContribution but for the render phase.
-  const contribution = preambleState.contribution;
-  if (contribution !== NoContribution) {
-    target.push(
-      boundaryPreambleContributionChunkStart,
-      // This is a number type so we can do the fast path without coercion checking
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      stringToChunk('' + contribution),
-      boundaryPreambleContributionChunkEnd,
-    );
-  }
-}
-
-function writePreambleContribution(
-  destination: Destination,
-  preambleState: PreambleState,
-) {
-  const contribution = preambleState.contribution;
-  if (contribution !== NoContribution) {
-    writeChunk(destination, boundaryPreambleContributionChunkStart);
-    // This is a number type so we can do the fast path without coercion checking
-    // eslint-disable-next-line react-internal/safe-string-coercion
-    writeChunk(destination, stringToChunk('' + contribution));
-    writeChunk(destination, boundaryPreambleContributionChunkEnd);
-  }
 }
 
 const startSegmentHTML = stringToPrecomputedChunk('<div hidden id="');

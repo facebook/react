@@ -181,7 +181,6 @@ const ReactNoopServer = ReactFizzServer({
   pushEndActivityBoundary(
     target: Array<Uint8Array>,
     renderState: RenderState,
-    preambleState: null | PreambleState,
   ): void {
     target.push(POP);
   },
