@@ -11,6 +11,12 @@ import type {
   ReactConsumerType,
   ReactContext,
   ReactNodeList,
+  ViewTransitionProps,
+  ActivityProps,
+  SuspenseProps,
+  TracingMarkerProps,
+  CacheProps,
+  ProfilerProps,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
@@ -22,7 +28,6 @@ import type {
   SuspenseListTailMode,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
-import type {ActivityProps} from './ReactFiberActivityComponent';
 import type {
   LegacyHiddenProps,
   OffscreenProps,
@@ -30,10 +35,7 @@ import type {
   OffscreenQueue,
   OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
-import type {
-  ViewTransitionProps,
-  ViewTransitionState,
-} from './ReactFiberViewTransitionComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 import {assignViewTransitionAutoName} from './ReactFiberViewTransitionComponent';
 import type {
   Cache,
@@ -977,7 +979,9 @@ function updateCacheComponent(
     }
   }
 
-  const nextChildren = workInProgress.pendingProps.children;
+  const nextProps: CacheProps = workInProgress.pendingProps;
+
+  const nextChildren = nextProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
@@ -992,6 +996,8 @@ function updateTracingMarkerComponent(
     return null;
   }
 
+  const nextProps: TracingMarkerProps = workInProgress.pendingProps;
+
   // TODO: (luna) Only update the tracing marker if it's newly rendered or it's name changed.
   // A tracing marker is only associated with the transitions that rendered
   // or updated it, so we can create a new set of transitions each time
@@ -1002,7 +1008,7 @@ function updateTracingMarkerComponent(
         tag: TransitionTracingMarker,
         transitions: new Set(currentTransitions),
         pendingBoundaries: null,
-        name: workInProgress.pendingProps.name,
+        name: nextProps.name,
         aborts: null,
       };
       workInProgress.stateNode = markerInstance;
@@ -1015,7 +1021,7 @@ function updateTracingMarkerComponent(
     }
   } else {
     if (__DEV__) {
-      if (current.memoizedProps.name !== workInProgress.pendingProps.name) {
+      if (current.memoizedProps.name !== nextProps.name) {
         console.error(
           'Changing the name of a tracing marker after mount is not supported. ' +
             'To remount the tracing marker, pass it a new key.',
@@ -1028,7 +1034,7 @@ function updateTracingMarkerComponent(
   if (instance !== null) {
     pushMarkerInstance(workInProgress, instance);
   }
-  const nextChildren = workInProgress.pendingProps.children;
+  const nextChildren = nextProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
@@ -1076,7 +1082,7 @@ function updateProfiler(
       stateNode.passiveEffectDuration = -0;
     }
   }
-  const nextProps = workInProgress.pendingProps;
+  const nextProps: ProfilerProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
@@ -2084,7 +2090,7 @@ function updateSuspenseComponent(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  const nextProps = workInProgress.pendingProps;
+  const nextProps: SuspenseProps = workInProgress.pendingProps;
 
   // This is used by DevTools to force a boundary to suspend.
   if (__DEV__) {
@@ -2677,7 +2683,7 @@ function updateDehydratedSuspenseComponent(
   workInProgress: Fiber,
   didSuspend: boolean,
   didPrimaryChildrenDefer: boolean,
-  nextProps: any,
+  nextProps: SuspenseProps,
   suspenseInstance: SuspenseInstance,
   suspenseState: SuspenseState,
   renderLanes: Lanes,

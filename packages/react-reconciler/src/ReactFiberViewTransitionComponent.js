@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ViewTransitionClass, ViewTransitionProps} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {ViewTransitionInstance, Instance} from './ReactFiberConfig';
 
@@ -19,30 +19,6 @@ import {
 import {getIsHydrating} from './ReactFiberHydrationContext';
 
 import {getTreeId} from './ReactFiberTreeContext';
-
-export type ViewTransitionClassPerType = {
-  [transitionType: 'default' | string]: 'none' | 'auto' | string,
-};
-
-export type ViewTransitionClass =
-  | 'none'
-  | 'auto'
-  | string
-  | ViewTransitionClassPerType;
-
-export type ViewTransitionProps = {
-  name?: string,
-  children?: ReactNodeList,
-  default?: ViewTransitionClass,
-  enter?: ViewTransitionClass,
-  exit?: ViewTransitionClass,
-  share?: ViewTransitionClass,
-  update?: ViewTransitionClass,
-  onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-};
 
 export type ViewTransitionState = {
   autoName: null | string, // the view-transition-name to use when an explicit one is not specified

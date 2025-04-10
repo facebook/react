@@ -8,23 +8,25 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
+import type {
+  ReactFragment,
+  ReactPortal,
+  ReactScope,
+  ViewTransitionProps,
+  ActivityProps,
+} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
 import type {SuspenseInstance} from './ReactFiberConfig';
-import type {ActivityProps} from './ReactFiberActivityComponent';
 import type {
   LegacyHiddenProps,
   OffscreenProps,
   OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
-import type {
-  ViewTransitionProps,
-  ViewTransitionState,
-} from './ReactFiberViewTransitionComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import {
