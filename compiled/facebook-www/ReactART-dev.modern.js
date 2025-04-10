@@ -6717,9 +6717,13 @@ __DEV__ &&
         renderLanes
       );
     }
-    function updateOffscreenComponent(current, workInProgress, renderLanes) {
-      var nextProps = workInProgress.pendingProps,
-        nextChildren = nextProps.children,
+    function updateOffscreenComponent(
+      current,
+      workInProgress,
+      renderLanes,
+      nextProps
+    ) {
+      var nextChildren = nextProps.children,
         prevState = null !== current ? current.memoizedState : null;
       if (
         "hidden" === nextProps.mode ||
@@ -8290,10 +8294,14 @@ __DEV__ &&
           if (stateNode) break;
           else return null;
         case 22:
-        case 23:
           return (
             (workInProgress.lanes = 0),
-            updateOffscreenComponent(current, workInProgress, renderLanes)
+            updateOffscreenComponent(
+              current,
+              workInProgress,
+              renderLanes,
+              workInProgress.pendingProps
+            )
           );
         case 24:
           pushProvider(
@@ -8303,10 +8311,21 @@ __DEV__ &&
           );
           break;
         case 25:
-          enableTransitionTracing &&
-            ((stateNode = workInProgress.stateNode),
-            null !== stateNode &&
-              pushMarkerInstance(workInProgress, stateNode));
+          if (enableTransitionTracing) {
+            stateNode = workInProgress.stateNode;
+            null !== stateNode && pushMarkerInstance(workInProgress, stateNode);
+            break;
+          }
+        case 23:
+          return (
+            (workInProgress.lanes = 0),
+            updateOffscreenComponent(
+              current,
+              workInProgress,
+              renderLanes,
+              workInProgress.pendingProps
+            )
+          );
       }
       return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
     }
@@ -8794,12 +8813,18 @@ __DEV__ &&
             workInProgress
           );
         case 22:
-          return updateOffscreenComponent(current, workInProgress, renderLanes);
-        case 23:
-          return updateLegacyHiddenComponent(
+          return updateOffscreenComponent(
             current,
             workInProgress,
-            renderLanes
+            renderLanes,
+            workInProgress.pendingProps
+          );
+        case 23:
+          return updateOffscreenComponent(
+            current,
+            workInProgress,
+            renderLanes,
+            workInProgress.pendingProps
           );
         case 24:
           return (
@@ -17946,8 +17971,7 @@ __DEV__ &&
     var didWarnAboutTailOptions = {};
     var didWarnAboutDefaultPropsOnFunctionComponent = {};
     var didWarnAboutClassNameOnViewTransition = {};
-    var updateLegacyHiddenComponent = updateOffscreenComponent,
-      SUSPENDED_MARKER = {
+    var SUSPENDED_MARKER = {
         dehydrated: null,
         treeContext: null,
         retryLane: 0,
@@ -18299,10 +18323,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-ff697fc5-20250409",
+        version: "19.2.0-www-modern-31ecc980-20250409",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-ff697fc5-20250409"
+        reconcilerVersion: "19.2.0-www-modern-31ecc980-20250409"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18336,7 +18360,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-ff697fc5-20250409";
+    exports.version = "19.2.0-www-modern-31ecc980-20250409";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

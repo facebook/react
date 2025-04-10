@@ -4688,9 +4688,13 @@ function updateSimpleMemoComponent(
     renderLanes
   );
 }
-function updateOffscreenComponent(current, workInProgress, renderLanes) {
-  var nextProps = workInProgress.pendingProps,
-    nextChildren = nextProps.children,
+function updateOffscreenComponent(
+  current,
+  workInProgress,
+  renderLanes,
+  nextProps
+) {
+  var nextChildren = nextProps.children,
     prevState = null !== current ? current.memoizedState : null;
   if (
     "hidden" === nextProps.mode ||
@@ -5733,18 +5737,34 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       if (state) break;
       else return null;
     case 22:
-    case 23:
       return (
         (workInProgress.lanes = 0),
-        updateOffscreenComponent(current, workInProgress, renderLanes)
+        updateOffscreenComponent(
+          current,
+          workInProgress,
+          renderLanes,
+          workInProgress.pendingProps
+        )
       );
     case 24:
       pushProvider(workInProgress, CacheContext, current.memoizedState.cache);
       break;
     case 25:
-      enableTransitionTracing &&
-        ((state = workInProgress.stateNode),
-        null !== state && pushMarkerInstance(workInProgress, state));
+      if (enableTransitionTracing) {
+        state = workInProgress.stateNode;
+        null !== state && pushMarkerInstance(workInProgress, state);
+        break;
+      }
+    case 23:
+      return (
+        (workInProgress.lanes = 0),
+        updateOffscreenComponent(
+          current,
+          workInProgress,
+          renderLanes,
+          workInProgress.pendingProps
+        )
+      );
   }
   return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
 }
@@ -6058,9 +6078,19 @@ function beginWork(current, workInProgress, renderLanes) {
         workInProgress
       );
     case 22:
-      return updateOffscreenComponent(current, workInProgress, renderLanes);
+      return updateOffscreenComponent(
+        current,
+        workInProgress,
+        renderLanes,
+        workInProgress.pendingProps
+      );
     case 23:
-      return updateOffscreenComponent(current, workInProgress, renderLanes);
+      return updateOffscreenComponent(
+        current,
+        workInProgress,
+        renderLanes,
+        workInProgress.pendingProps
+      );
     case 24:
       return (
         prepareToReadContext(workInProgress),
@@ -10929,24 +10959,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1566 = {
+var internals$jscomp$inline_1578 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-ff697fc5-20250409",
+  version: "19.2.0-www-modern-31ecc980-20250409",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-ff697fc5-20250409"
+  reconcilerVersion: "19.2.0-www-modern-31ecc980-20250409"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1567 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1579 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1567.isDisabled &&
-    hook$jscomp$inline_1567.supportsFiber
+    !hook$jscomp$inline_1579.isDisabled &&
+    hook$jscomp$inline_1579.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1567.inject(
-        internals$jscomp$inline_1566
+      (rendererID = hook$jscomp$inline_1579.inject(
+        internals$jscomp$inline_1578
       )),
-        (injectedHook = hook$jscomp$inline_1567);
+        (injectedHook = hook$jscomp$inline_1579);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10960,4 +10990,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-ff697fc5-20250409";
+exports.version = "19.2.0-www-modern-31ecc980-20250409";

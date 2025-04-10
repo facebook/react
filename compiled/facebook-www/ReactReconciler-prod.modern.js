@@ -4449,9 +4449,13 @@ module.exports = function ($$$config) {
       renderLanes
     );
   }
-  function updateOffscreenComponent(current, workInProgress, renderLanes) {
-    var nextProps = workInProgress.pendingProps,
-      nextChildren = nextProps.children,
+  function updateOffscreenComponent(
+    current,
+    workInProgress,
+    renderLanes,
+    nextProps
+  ) {
+    var nextChildren = nextProps.children,
       prevState = null !== current ? current.memoizedState : null;
     if (
       "hidden" === nextProps.mode ||
@@ -5564,18 +5568,34 @@ module.exports = function ($$$config) {
         if (state) break;
         else return null;
       case 22:
-      case 23:
         return (
           (workInProgress.lanes = 0),
-          updateOffscreenComponent(current, workInProgress, renderLanes)
+          updateOffscreenComponent(
+            current,
+            workInProgress,
+            renderLanes,
+            workInProgress.pendingProps
+          )
         );
       case 24:
         pushProvider(workInProgress, CacheContext, current.memoizedState.cache);
         break;
       case 25:
-        enableTransitionTracing &&
-          ((state = workInProgress.stateNode),
-          null !== state && pushMarkerInstance(workInProgress, state));
+        if (enableTransitionTracing) {
+          state = workInProgress.stateNode;
+          null !== state && pushMarkerInstance(workInProgress, state);
+          break;
+        }
+      case 23:
+        return (
+          (workInProgress.lanes = 0),
+          updateOffscreenComponent(
+            current,
+            workInProgress,
+            renderLanes,
+            workInProgress.pendingProps
+          )
+        );
     }
     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
   }
@@ -6075,12 +6095,18 @@ module.exports = function ($$$config) {
           workInProgress
         );
       case 22:
-        return updateOffscreenComponent(current, workInProgress, renderLanes);
-      case 23:
-        return updateLegacyHiddenComponent(
+        return updateOffscreenComponent(
           current,
           workInProgress,
-          renderLanes
+          renderLanes,
+          workInProgress.pendingProps
+        );
+      case 23:
+        return updateOffscreenComponent(
+          current,
+          workInProgress,
+          renderLanes,
+          workInProgress.pendingProps
         );
       case 24:
         return (
@@ -13076,7 +13102,6 @@ module.exports = function ($$$config) {
     markerInstanceStack = createCursor(null),
     SelectiveHydrationException = Error(formatProdErrorMessage(461)),
     didReceiveUpdate = !1,
-    updateLegacyHiddenComponent = updateOffscreenComponent,
     SUSPENDED_MARKER = {
       dehydrated: null,
       treeContext: null,
@@ -13518,7 +13543,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-ff697fc5-20250409"
+      reconcilerVersion: "19.2.0-www-modern-31ecc980-20250409"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

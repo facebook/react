@@ -6472,9 +6472,13 @@ function updateSimpleMemoComponent(
     renderLanes
   );
 }
-function updateOffscreenComponent(current, workInProgress, renderLanes) {
-  var nextProps = workInProgress.pendingProps,
-    nextChildren = nextProps.children,
+function updateOffscreenComponent(
+  current,
+  workInProgress,
+  renderLanes,
+  nextProps
+) {
+  var nextChildren = nextProps.children,
     prevState = null !== current ? current.memoizedState : null;
   if (
     "hidden" === nextProps.mode ||
@@ -7672,18 +7676,34 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       if (stateNode) break;
       else return null;
     case 22:
-    case 23:
       return (
         (workInProgress.lanes = 0),
-        updateOffscreenComponent(current, workInProgress, renderLanes)
+        updateOffscreenComponent(
+          current,
+          workInProgress,
+          renderLanes,
+          workInProgress.pendingProps
+        )
       );
     case 24:
       pushProvider(workInProgress, CacheContext, current.memoizedState.cache);
       break;
     case 25:
-      enableTransitionTracing &&
-        ((stateNode = workInProgress.stateNode),
-        null !== stateNode && pushMarkerInstance(workInProgress, stateNode));
+      if (enableTransitionTracing) {
+        stateNode = workInProgress.stateNode;
+        null !== stateNode && pushMarkerInstance(workInProgress, stateNode);
+        break;
+      }
+    case 23:
+      return (
+        (workInProgress.lanes = 0),
+        updateOffscreenComponent(
+          current,
+          workInProgress,
+          renderLanes,
+          workInProgress.pendingProps
+        )
+      );
   }
   return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
 }
@@ -8162,9 +8182,19 @@ function beginWork(current, workInProgress, renderLanes) {
         workInProgress
       );
     case 22:
-      return updateOffscreenComponent(current, workInProgress, renderLanes);
+      return updateOffscreenComponent(
+        current,
+        workInProgress,
+        renderLanes,
+        workInProgress.pendingProps
+      );
     case 23:
-      return updateOffscreenComponent(current, workInProgress, renderLanes);
+      return updateOffscreenComponent(
+        current,
+        workInProgress,
+        renderLanes,
+        workInProgress.pendingProps
+      );
     case 24:
       return (
         prepareToReadContext(workInProgress),
@@ -16733,20 +16763,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1929 = 0;
-  i$jscomp$inline_1929 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1929++
+  var i$jscomp$inline_1941 = 0;
+  i$jscomp$inline_1941 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1941++
 ) {
-  var eventName$jscomp$inline_1930 =
-      simpleEventPluginEvents[i$jscomp$inline_1929],
-    domEventName$jscomp$inline_1931 =
-      eventName$jscomp$inline_1930.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1932 =
-      eventName$jscomp$inline_1930[0].toUpperCase() +
-      eventName$jscomp$inline_1930.slice(1);
+  var eventName$jscomp$inline_1942 =
+      simpleEventPluginEvents[i$jscomp$inline_1941],
+    domEventName$jscomp$inline_1943 =
+      eventName$jscomp$inline_1942.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1944 =
+      eventName$jscomp$inline_1942[0].toUpperCase() +
+      eventName$jscomp$inline_1942.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1931,
-    "on" + capitalizedEvent$jscomp$inline_1932
+    domEventName$jscomp$inline_1943,
+    "on" + capitalizedEvent$jscomp$inline_1944
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -20984,16 +21014,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2174 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2186 = React.version;
 if (
-  "19.2.0-www-classic-ff697fc5-20250409" !==
-  isomorphicReactPackageVersion$jscomp$inline_2174
+  "19.2.0-www-classic-31ecc980-20250409" !==
+  isomorphicReactPackageVersion$jscomp$inline_2186
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2174,
-      "19.2.0-www-classic-ff697fc5-20250409"
+      isomorphicReactPackageVersion$jscomp$inline_2186,
+      "19.2.0-www-classic-31ecc980-20250409"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -21009,27 +21039,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2176 = {
+var internals$jscomp$inline_2188 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-ff697fc5-20250409",
+  version: "19.2.0-www-classic-31ecc980-20250409",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-ff697fc5-20250409"
+  reconcilerVersion: "19.2.0-www-classic-31ecc980-20250409"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2176.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2176.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2188.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2188.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2754 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2766 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2754.isDisabled &&
-    hook$jscomp$inline_2754.supportsFiber
+    !hook$jscomp$inline_2766.isDisabled &&
+    hook$jscomp$inline_2766.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2754.inject(
-        internals$jscomp$inline_2176
+      (rendererID = hook$jscomp$inline_2766.inject(
+        internals$jscomp$inline_2188
       )),
-        (injectedHook = hook$jscomp$inline_2754);
+        (injectedHook = hook$jscomp$inline_2766);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -21381,7 +21411,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-ff697fc5-20250409";
+exports.version = "19.2.0-www-classic-31ecc980-20250409";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
