@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<202b8baacef32b6ef053fc11b97227b7>>
+ * @generated SignedSource<<d00dbb8514208913bf753f04a182c8e1>>
  */
 
 "use strict";
@@ -8431,12 +8431,7 @@ function commitProfilerUpdate(
         commitStartTime
       );
     "function" === typeof onCommit &&
-      onCommit(
-        finishedWork.memoizedProps.id,
-        current,
-        effectDuration,
-        commitStartTime
-      );
+      onCommit(id, current, effectDuration, commitStartTime);
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -11627,16 +11622,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1317 = {
+  internals$jscomp$inline_1318 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-31ecc980-20250409",
+    version: "19.2.0-native-fb-c44e4a25-20250409",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-31ecc980-20250409"
+    reconcilerVersion: "19.2.0-native-fb-c44e4a25-20250409"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1317.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1317.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1318.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1318.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$155 = 0;
     31 > index$155;
@@ -11648,20 +11643,20 @@ internals$jscomp$inline_1317.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1317.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1318.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1596 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1597 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1596.isDisabled &&
-    hook$jscomp$inline_1596.supportsFiber
+    !hook$jscomp$inline_1597.isDisabled &&
+    hook$jscomp$inline_1597.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1596.inject(
-        internals$jscomp$inline_1317
+      (rendererID = hook$jscomp$inline_1597.inject(
+        internals$jscomp$inline_1318
       )),
-        (injectedHook = hook$jscomp$inline_1596);
+        (injectedHook = hook$jscomp$inline_1597);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

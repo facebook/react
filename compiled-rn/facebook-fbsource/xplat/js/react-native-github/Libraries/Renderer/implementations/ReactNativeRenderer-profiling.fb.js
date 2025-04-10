@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3fdc8e8a92f9daed1875fe39a5e51768>>
+ * @generated SignedSource<<10580a2c1e19ce74a32dfd0013c1a915>>
  */
 
 "use strict";
@@ -8407,12 +8407,7 @@ function commitProfilerUpdate(
         commitStartTime
       );
     "function" === typeof onCommit &&
-      onCommit(
-        finishedWork.memoizedProps.id,
-        current,
-        effectDuration,
-        commitStartTime
-      );
+      onCommit(id, current, effectDuration, commitStartTime);
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -11724,11 +11719,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-31ecc980-20250409" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-c44e4a25-20250409" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-31ecc980-20250409\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-c44e4a25-20250409\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11775,16 +11770,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1380 = {
+  internals$jscomp$inline_1381 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-31ecc980-20250409",
+    version: "19.2.0-native-fb-c44e4a25-20250409",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-31ecc980-20250409"
+    reconcilerVersion: "19.2.0-native-fb-c44e4a25-20250409"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1380.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1380.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1381.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1381.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$158 = 0;
     31 > index$158;
@@ -11796,20 +11791,20 @@ internals$jscomp$inline_1380.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1380.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1381.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1681 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1682 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1681.isDisabled &&
-    hook$jscomp$inline_1681.supportsFiber
+    !hook$jscomp$inline_1682.isDisabled &&
+    hook$jscomp$inline_1682.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1681.inject(
-        internals$jscomp$inline_1380
+      (rendererID = hook$jscomp$inline_1682.inject(
+        internals$jscomp$inline_1381
       )),
-        (injectedHook = hook$jscomp$inline_1681);
+        (injectedHook = hook$jscomp$inline_1682);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

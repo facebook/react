@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fb1c893de357bb38dd21cb2f8b0be3ac>>
+ * @generated SignedSource<<9b57e89a2560536b44726a014843e5ff>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1137() {
+    function JSCompiler_object_inline_createNodeMock_1138() {
       return null;
     }
     function findHook(fiber, id) {
@@ -9269,12 +9269,7 @@ __DEV__ &&
           commitStartTime
         );
       "function" === typeof onCommit &&
-        onCommit(
-          finishedWork.memoizedProps.id,
-          current,
-          effectDuration,
-          commitStartTime
-        );
+        onCommit(id, current, effectDuration, commitStartTime);
     }
     function commitProfilerPostCommitImpl(
       finishedWork,
@@ -15415,10 +15410,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-31ecc980-20250409",
+        version: "19.2.0-native-fb-c44e4a25-20250409",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-31ecc980-20250409"
+        reconcilerVersion: "19.2.0-native-fb-c44e4a25-20250409"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15440,7 +15435,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1137,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1138,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15563,5 +15558,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-31ecc980-20250409";
+    exports.version = "19.2.0-native-fb-c44e4a25-20250409";
   })();

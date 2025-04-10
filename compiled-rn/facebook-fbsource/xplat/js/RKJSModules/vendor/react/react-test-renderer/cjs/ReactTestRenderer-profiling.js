@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<da60413c3ee204e8f0578dce9bf7a46a>>
+ * @generated SignedSource<<38a73c3ac6ceb967a013bb202c377cd6>>
  */
 
 "use strict";
@@ -6951,12 +6951,7 @@ function commitProfilerUpdate(
         commitStartTime
       );
     "function" === typeof onCommit &&
-      onCommit(
-        finishedWork.memoizedProps.id,
-        current,
-        effectDuration,
-        commitStartTime
-      );
+      onCommit(id, current, effectDuration, commitStartTime);
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -10328,12 +10323,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1228 = {
+var internals$jscomp$inline_1229 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-31ecc980-20250409",
+  version: "19.2.0-native-fb-c44e4a25-20250409",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-31ecc980-20250409",
+  reconcilerVersion: "19.2.0-native-fb-c44e4a25-20250409",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$148 = 0;
@@ -10351,16 +10346,16 @@ var internals$jscomp$inline_1228 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1475 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1476 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1475.isDisabled &&
-    hook$jscomp$inline_1475.supportsFiber
+    !hook$jscomp$inline_1476.isDisabled &&
+    hook$jscomp$inline_1476.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1475.inject(
-        internals$jscomp$inline_1228
+      (rendererID = hook$jscomp$inline_1476.inject(
+        internals$jscomp$inline_1229
       )),
-        (injectedHook = hook$jscomp$inline_1475);
+        (injectedHook = hook$jscomp$inline_1476);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10484,4 +10479,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-31ecc980-20250409";
+exports.version = "19.2.0-native-fb-c44e4a25-20250409";

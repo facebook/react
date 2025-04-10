@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<932b2e78a28be856237eefaa6d75bea4>>
+ * @generated SignedSource<<56c81c91495ec7068ba33ee26755e7e7>>
  */
 
 "use strict";
@@ -10330,12 +10330,7 @@ __DEV__ &&
           commitStartTime
         );
       "function" === typeof onCommit &&
-        onCommit(
-          finishedWork.memoizedProps.id,
-          current,
-          effectDuration,
-          commitStartTime
-        );
+        onCommit(id, current, effectDuration, commitStartTime);
     }
     function commitProfilerPostCommitImpl(
       finishedWork,
@@ -17147,10 +17142,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-31ecc980-20250409",
+        version: "19.2.0-native-fb-c44e4a25-20250409",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-31ecc980-20250409"
+        reconcilerVersion: "19.2.0-native-fb-c44e4a25-20250409"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
