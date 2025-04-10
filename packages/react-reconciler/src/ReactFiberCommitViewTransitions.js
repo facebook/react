@@ -7,12 +7,10 @@
  * @flow
  */
 
+import type {ViewTransitionProps} from 'shared/ReactTypes';
 import type {Instance, InstanceMeasurement, Props} from './ReactFiberConfig';
 import type {Fiber} from './ReactInternalTypes';
-import type {
-  ViewTransitionProps,
-  ViewTransitionState,
-} from './ReactFiberViewTransitionComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 
 import {
   HostComponent,
