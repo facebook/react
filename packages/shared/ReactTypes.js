@@ -137,11 +137,6 @@ export type Thenable<T> =
   | FulfilledThenable<T>
   | RejectedThenable<T>;
 
-export type OffscreenMode =
-  | 'hidden'
-  | 'unstable-defer-without-hiding'
-  | 'visible';
-
 export type StartTransitionOptions = {
   name?: string,
 };

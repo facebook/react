@@ -11,7 +11,7 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 
 import type {Instance, TextInstance, Props} from './ReactFiberConfig';
 
-import type {OffscreenState} from './ReactFiberActivityComponent';
+import type {OffscreenState} from './ReactFiberOffscreenComponent';
 
 import type {
   ViewTransitionState,

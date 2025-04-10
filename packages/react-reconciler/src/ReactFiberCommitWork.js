@@ -30,7 +30,7 @@ import type {
   OffscreenState,
   OffscreenInstance,
   OffscreenQueue,
-} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {RootState} from './ReactFiberRoot';
 import type {Transition} from 'react/src/ReactStartTransition';
@@ -201,7 +201,7 @@ import {clearTransitionsForLanes} from './ReactFiberLane';
 import {
   OffscreenVisible,
   OffscreenPassiveEffectsConnected,
-} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
 import {
   TransitionRoot,
   TransitionTracingMarker,
