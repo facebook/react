@@ -2243,11 +2243,7 @@ function renderActivity(
       renderNode(request, task, props.children, -1);
       task.keyPath = prevKeyPath;
     }
-    pushEndActivityBoundary(
-      segment.chunks,
-      request.renderState,
-      task.blockedPreamble,
-    );
+    pushEndActivityBoundary(segment.chunks, request.renderState);
     segment.lastPushedText = false;
   }
 }
@@ -4908,7 +4904,6 @@ function flushSegment(
     return writeEndClientRenderedSuspenseBoundary(
       destination,
       request.renderState,
-      boundary.fallbackPreamble,
     );
   } else if (boundary.status !== COMPLETED) {
     if (boundary.status === PENDING) {
@@ -4979,11 +4974,7 @@ function flushSegment(
     const contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment, hoistableState);
 
-    return writeEndCompletedSuspenseBoundary(
-      destination,
-      request.renderState,
-      boundary.contentPreamble,
-    );
+    return writeEndCompletedSuspenseBoundary(destination, request.renderState);
   }
 }
 
