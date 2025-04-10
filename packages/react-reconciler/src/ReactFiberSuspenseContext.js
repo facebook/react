@@ -106,12 +106,27 @@ export function pushFallbackTreeSuspenseHandler(fiber: Fiber): void {
   reuseSuspenseHandlerOnStack(fiber);
 }
 
+export function pushDehydratedActivitySuspenseHandler(fiber: Fiber): void {
+  // This is called when hydrating an Activity boundary. We can just leave it
+  // dehydrated if it suspends.
+  // A SuspenseList context is only pushed here to avoid a push/pop mismatch.
+  // Reuse the current value on the stack.
+  // TODO: We can avoid needing to push here by by forking popSuspenseHandler
+  // into separate functions for Activity, Suspense and Offscreen.
+  pushSuspenseListContext(fiber, suspenseStackCursor.current);
+  push(suspenseHandlerStackCursor, fiber, fiber);
+  if (shellBoundary === null) {
+    // We can contain any suspense inside the Activity boundary.
+    shellBoundary = fiber;
+  }
+}
+
 export function pushOffscreenSuspenseHandler(fiber: Fiber): void {
   if (fiber.tag === OffscreenComponent) {
     // A SuspenseList context is only pushed here to avoid a push/pop mismatch.
     // Reuse the current value on the stack.
     // TODO: We can avoid needing to push here by by forking popSuspenseHandler
-    // into separate functions for Suspense and Offscreen.
+    // into separate functions for Activity, Suspense and Offscreen.
     pushSuspenseListContext(fiber, suspenseStackCursor.current);
     push(suspenseHandlerStackCursor, fiber, fiber);
     if (shellBoundary === null) {
