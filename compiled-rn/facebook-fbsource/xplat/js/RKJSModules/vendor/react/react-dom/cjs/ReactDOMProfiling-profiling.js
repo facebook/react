@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bc15d857d07741192b39572e91ee52da>>
+ * @generated SignedSource<<d041b0d2e6f80217dce701470333f5c0>>
  */
 
 /*
@@ -13140,20 +13140,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1643 = 0;
-  i$jscomp$inline_1643 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1643++
+  var i$jscomp$inline_1645 = 0;
+  i$jscomp$inline_1645 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1645++
 ) {
-  var eventName$jscomp$inline_1644 =
-      simpleEventPluginEvents[i$jscomp$inline_1643],
-    domEventName$jscomp$inline_1645 =
-      eventName$jscomp$inline_1644.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1646 =
-      eventName$jscomp$inline_1644[0].toUpperCase() +
-      eventName$jscomp$inline_1644.slice(1);
+  var eventName$jscomp$inline_1646 =
+      simpleEventPluginEvents[i$jscomp$inline_1645],
+    domEventName$jscomp$inline_1647 =
+      eventName$jscomp$inline_1646.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1648 =
+      eventName$jscomp$inline_1646[0].toUpperCase() +
+      eventName$jscomp$inline_1646.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1645,
-    "on" + capitalizedEvent$jscomp$inline_1646
+    domEventName$jscomp$inline_1647,
+    "on" + capitalizedEvent$jscomp$inline_1648
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14993,51 +14993,38 @@ function isSingletonScope(type) {
 }
 function clearSuspenseBoundary(parentInstance, suspenseInstance) {
   var node = suspenseInstance,
-    possiblePreambleContribution = 0,
     depth = 0;
   do {
     var nextNode = node.nextSibling;
     parentInstance.removeChild(node);
     if (nextNode && 8 === nextNode.nodeType)
       if (((node = nextNode.data), "/$" === node)) {
-        if (
-          0 < possiblePreambleContribution &&
-          8 > possiblePreambleContribution
-        ) {
-          node = possiblePreambleContribution;
-          var ownerDocument = parentInstance.ownerDocument;
-          node & 1 && releaseSingletonInstance(ownerDocument.documentElement);
-          node & 2 && releaseSingletonInstance(ownerDocument.body);
-          if (node & 4)
-            for (
-              node = ownerDocument.head,
-                releaseSingletonInstance(node),
-                ownerDocument = node.firstChild;
-              ownerDocument;
-
-            ) {
-              var nextNode$jscomp$0 = ownerDocument.nextSibling,
-                nodeName = ownerDocument.nodeName;
-              ownerDocument[internalHoistableMarker] ||
-                "SCRIPT" === nodeName ||
-                "STYLE" === nodeName ||
-                ("LINK" === nodeName &&
-                  "stylesheet" === ownerDocument.rel.toLowerCase()) ||
-                node.removeChild(ownerDocument);
-              ownerDocument = nextNode$jscomp$0;
-            }
-        }
         if (0 === depth) {
           parentInstance.removeChild(nextNode);
           retryIfBlockedOn(suspenseInstance);
           return;
         }
         depth--;
+      } else if ("$" === node || "$?" === node || "$!" === node) depth++;
+      else if ("html" === node)
+        releaseSingletonInstance(parentInstance.ownerDocument.documentElement);
+      else if ("head" === node) {
+        node = parentInstance.ownerDocument.head;
+        releaseSingletonInstance(node);
+        for (var node$jscomp$0 = node.firstChild; node$jscomp$0; ) {
+          var nextNode$jscomp$0 = node$jscomp$0.nextSibling,
+            nodeName = node$jscomp$0.nodeName;
+          node$jscomp$0[internalHoistableMarker] ||
+            "SCRIPT" === nodeName ||
+            "STYLE" === nodeName ||
+            ("LINK" === nodeName &&
+              "stylesheet" === node$jscomp$0.rel.toLowerCase()) ||
+            node.removeChild(node$jscomp$0);
+          node$jscomp$0 = nextNode$jscomp$0;
+        }
       } else
-        "$" === node || "$?" === node || "$!" === node
-          ? depth++
-          : (possiblePreambleContribution = node.charCodeAt(0) - 48);
-    else possiblePreambleContribution = 0;
+        "body" === node &&
+          releaseSingletonInstance(parentInstance.ownerDocument.body);
     node = nextNode;
   } while (node);
   retryIfBlockedOn(suspenseInstance);
@@ -15517,26 +15504,26 @@ function getResource(type, currentProps, pendingProps, currentResource) {
         "string" === typeof pendingProps.precedence
       ) {
         type = getStyleKey(pendingProps.href);
-        var styles$272 = getResourcesFromRoot(
+        var styles$274 = getResourcesFromRoot(
             JSCompiler_inline_result
           ).hoistableStyles,
-          resource$273 = styles$272.get(type);
-        resource$273 ||
+          resource$275 = styles$274.get(type);
+        resource$275 ||
           ((JSCompiler_inline_result =
             JSCompiler_inline_result.ownerDocument || JSCompiler_inline_result),
-          (resource$273 = {
+          (resource$275 = {
             type: "stylesheet",
             instance: null,
             count: 0,
             state: { loading: 0, preload: null }
           }),
-          styles$272.set(type, resource$273),
-          (styles$272 = JSCompiler_inline_result.querySelector(
+          styles$274.set(type, resource$275),
+          (styles$274 = JSCompiler_inline_result.querySelector(
             getStylesheetSelectorFromKey(type)
           )) &&
-            !styles$272._p &&
-            ((resource$273.instance = styles$272),
-            (resource$273.state.loading = 5)),
+            !styles$274._p &&
+            ((resource$275.instance = styles$274),
+            (resource$275.state.loading = 5)),
           preloadPropsMap.has(type) ||
             ((pendingProps = {
               rel: "preload",
@@ -15549,16 +15536,16 @@ function getResource(type, currentProps, pendingProps, currentResource) {
               referrerPolicy: pendingProps.referrerPolicy
             }),
             preloadPropsMap.set(type, pendingProps),
-            styles$272 ||
+            styles$274 ||
               preloadStylesheet(
                 JSCompiler_inline_result,
                 type,
                 pendingProps,
-                resource$273.state
+                resource$275.state
               )));
         if (currentProps && null === currentResource)
           throw Error(formatProdErrorMessage(528, ""));
-        return resource$273;
+        return resource$275;
       }
       if (currentProps && null !== currentResource)
         throw Error(formatProdErrorMessage(529, ""));
@@ -15655,37 +15642,37 @@ function acquireResource(hoistableRoot, resource, props) {
         return (resource.instance = instance);
       case "stylesheet":
         styleProps = getStyleKey(props.href);
-        var instance$278 = hoistableRoot.querySelector(
+        var instance$280 = hoistableRoot.querySelector(
           getStylesheetSelectorFromKey(styleProps)
         );
-        if (instance$278)
+        if (instance$280)
           return (
             (resource.state.loading |= 4),
-            (resource.instance = instance$278),
-            markNodeAsHoistable(instance$278),
-            instance$278
+            (resource.instance = instance$280),
+            markNodeAsHoistable(instance$280),
+            instance$280
           );
         instance = stylesheetPropsFromRawProps(props);
         (styleProps = preloadPropsMap.get(styleProps)) &&
           adoptPreloadPropsForStylesheet(instance, styleProps);
-        instance$278 = (
+        instance$280 = (
           hoistableRoot.ownerDocument || hoistableRoot
         ).createElement("link");
-        markNodeAsHoistable(instance$278);
-        var linkInstance = instance$278;
+        markNodeAsHoistable(instance$280);
+        var linkInstance = instance$280;
         linkInstance._p = new Promise(function (resolve, reject) {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
         });
-        setInitialProperties(instance$278, "link", instance);
+        setInitialProperties(instance$280, "link", instance);
         resource.state.loading |= 4;
-        insertStylesheet(instance$278, props.precedence, hoistableRoot);
-        return (resource.instance = instance$278);
+        insertStylesheet(instance$280, props.precedence, hoistableRoot);
+        return (resource.instance = instance$280);
       case "script":
-        instance$278 = getScriptKey(props.src);
+        instance$280 = getScriptKey(props.src);
         if (
           (styleProps = hoistableRoot.querySelector(
-            getScriptSelectorFromKey(instance$278)
+            getScriptSelectorFromKey(instance$280)
           ))
         )
           return (
@@ -15694,7 +15681,7 @@ function acquireResource(hoistableRoot, resource, props) {
             styleProps
           );
         instance = props;
-        if ((styleProps = preloadPropsMap.get(instance$278)))
+        if ((styleProps = preloadPropsMap.get(instance$280)))
           (instance = assign({}, props)),
             adoptPreloadPropsForScript(instance, styleProps);
         hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
@@ -16762,16 +16749,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1899 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1901 = React.version;
 if (
-  "19.2.0-native-fb-5e9b4877-20250410" !==
-  isomorphicReactPackageVersion$jscomp$inline_1899
+  "19.2.0-native-fb-8a3c5e1a-20250410" !==
+  isomorphicReactPackageVersion$jscomp$inline_1901
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1899,
-      "19.2.0-native-fb-5e9b4877-20250410"
+      isomorphicReactPackageVersion$jscomp$inline_1901,
+      "19.2.0-native-fb-8a3c5e1a-20250410"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16791,17 +16778,17 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1906 = {
+var internals$jscomp$inline_1908 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-5e9b4877-20250410",
+  version: "19.2.0-native-fb-8a3c5e1a-20250410",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-5e9b4877-20250410",
+  reconcilerVersion: "19.2.0-native-fb-8a3c5e1a-20250410",
   getLaneLabelMap: function () {
     for (
-      var map = new Map(), lane = 1, index$295 = 0;
-      31 > index$295;
-      index$295++
+      var map = new Map(), lane = 1, index$297 = 0;
+      31 > index$297;
+      index$297++
     ) {
       var label = getLabelForLane(lane);
       map.set(lane, label);
@@ -16814,16 +16801,16 @@ var internals$jscomp$inline_1906 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2322 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2324 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2322.isDisabled &&
-    hook$jscomp$inline_2322.supportsFiber
+    !hook$jscomp$inline_2324.isDisabled &&
+    hook$jscomp$inline_2324.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2322.inject(
-        internals$jscomp$inline_1906
+      (rendererID = hook$jscomp$inline_2324.inject(
+        internals$jscomp$inline_1908
       )),
-        (injectedHook = hook$jscomp$inline_2322);
+        (injectedHook = hook$jscomp$inline_2324);
     } catch (err) {}
 }
 function noop() {}
@@ -17069,7 +17056,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-5e9b4877-20250410";
+exports.version = "19.2.0-native-fb-8a3c5e1a-20250410";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
