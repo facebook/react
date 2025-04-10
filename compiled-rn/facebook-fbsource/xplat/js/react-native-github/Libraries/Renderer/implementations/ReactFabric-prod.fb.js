@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<50ce8b2d63f0a8ac1125738bc6f69a8e>>
+ * @generated SignedSource<<35e6a1d3fd7910d01912f0f3a79aa2a4>>
  */
 
 "use strict";
@@ -10764,6 +10764,9 @@ var _nativeFabricUIManage = nativeFabricUIManager,
   completeRoot = _nativeFabricUIManage.completeRoot,
   registerEventHandler = _nativeFabricUIManage.registerEventHandler,
   FabricDiscretePriority = _nativeFabricUIManage.unstable_DiscreteEventPriority,
+  FabricContinuousPriority =
+    _nativeFabricUIManage.unstable_ContinuousEventPriority,
+  FabricIdlePriority = _nativeFabricUIManage.unstable_IdleEventPriority,
   fabricGetCurrentEventPriority =
     _nativeFabricUIManage.unstable_getCurrentEventPriority,
   extraDevToolsConfig = {
@@ -10831,6 +10834,10 @@ function resolveUpdatePriority() {
     switch (currentEventPriority) {
       case FabricDiscretePriority:
         return 2;
+      case FabricContinuousPriority:
+        return 8;
+      case FabricIdlePriority:
+        return 268435456;
     }
   return 32;
 }
@@ -10932,10 +10939,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1223 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-c44e4a25-20250409",
+    version: "19.2.0-native-fb-5e9b4877-20250410",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-c44e4a25-20250409"
+    reconcilerVersion: "19.2.0-native-fb-5e9b4877-20250410"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1223.rendererConfig = extraDevToolsConfig);

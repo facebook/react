@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<56c81c91495ec7068ba33ee26755e7e7>>
+ * @generated SignedSource<<94452e0de2850cca1886b8f0f46b7421>>
  */
 
 "use strict";
@@ -14289,6 +14289,10 @@ __DEV__ &&
         switch (currentEventPriority) {
           case FabricDiscretePriority:
             return DiscreteEventPriority;
+          case FabricContinuousPriority:
+            return ContinuousEventPriority;
+          case FabricIdlePriority:
+            return IdleEventPriority;
         }
       return DefaultEventPriority;
     }
@@ -16948,6 +16952,9 @@ __DEV__ &&
       registerEventHandler = _nativeFabricUIManage.registerEventHandler,
       FabricDiscretePriority =
         _nativeFabricUIManage.unstable_DiscreteEventPriority,
+      FabricContinuousPriority =
+        _nativeFabricUIManage.unstable_ContinuousEventPriority,
+      FabricIdlePriority = _nativeFabricUIManage.unstable_IdleEventPriority,
       fabricGetCurrentEventPriority =
         _nativeFabricUIManage.unstable_getCurrentEventPriority,
       extraDevToolsConfig = {
@@ -17142,10 +17149,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-c44e4a25-20250409",
+        version: "19.2.0-native-fb-5e9b4877-20250410",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-c44e4a25-20250409"
+        reconcilerVersion: "19.2.0-native-fb-5e9b4877-20250410"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
