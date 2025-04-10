@@ -6159,26 +6159,27 @@ module.exports = function ($$$config) {
         if (enableTransitionTracing)
           return (
             enableTransitionTracing
-              ? (null === current &&
-                  ((props = enableTransitionTracing
+              ? ((props = workInProgress.pendingProps),
+                null === current &&
+                  ((init = enableTransitionTracing
                     ? transitionStack.current
                     : null),
-                  null !== props &&
-                    ((props = {
+                  null !== init &&
+                    ((init = {
                       tag: 1,
-                      transitions: new Set(props),
+                      transitions: new Set(init),
                       pendingBoundaries: null,
-                      name: workInProgress.pendingProps.name,
+                      name: props.name,
                       aborts: null
                     }),
-                    (workInProgress.stateNode = props),
+                    (workInProgress.stateNode = init),
                     (workInProgress.flags |= 2048))),
-                (props = workInProgress.stateNode),
-                null !== props && pushMarkerInstance(workInProgress, props),
+                (init = workInProgress.stateNode),
+                null !== init && pushMarkerInstance(workInProgress, init),
                 reconcileChildren(
                   current,
                   workInProgress,
-                  workInProgress.pendingProps.children,
+                  props.children,
                   renderLanes
                 ),
                 (workInProgress = workInProgress.child))
@@ -13543,7 +13544,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-31ecc980-20250409"
+      reconcilerVersion: "19.2.0-www-modern-c44e4a25-20250409"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

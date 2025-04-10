@@ -6142,26 +6142,27 @@ function beginWork(current, workInProgress, renderLanes) {
       if (enableTransitionTracing)
         return (
           enableTransitionTracing
-            ? (null === current &&
-                ((props = enableTransitionTracing
+            ? ((props = workInProgress.pendingProps),
+              null === current &&
+                ((init = enableTransitionTracing
                   ? transitionStack.current
                   : null),
-                null !== props &&
-                  ((props = {
+                null !== init &&
+                  ((init = {
                     tag: 1,
-                    transitions: new Set(props),
+                    transitions: new Set(init),
                     pendingBoundaries: null,
-                    name: workInProgress.pendingProps.name,
+                    name: props.name,
                     aborts: null
                   }),
-                  (workInProgress.stateNode = props),
+                  (workInProgress.stateNode = init),
                   (workInProgress.flags |= 2048))),
-              (props = workInProgress.stateNode),
-              null !== props && pushMarkerInstance(workInProgress, props),
+              (init = workInProgress.stateNode),
+              null !== init && pushMarkerInstance(workInProgress, init),
               reconcileChildren(
                 current,
                 workInProgress,
-                workInProgress.pendingProps.children,
+                props.children,
                 renderLanes
               ),
               (workInProgress = workInProgress.child))
@@ -10959,24 +10960,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1578 = {
+var internals$jscomp$inline_1580 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-31ecc980-20250409",
+  version: "19.2.0-www-modern-c44e4a25-20250409",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-31ecc980-20250409"
+  reconcilerVersion: "19.2.0-www-modern-c44e4a25-20250409"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1579 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1581 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1579.isDisabled &&
-    hook$jscomp$inline_1579.supportsFiber
+    !hook$jscomp$inline_1581.isDisabled &&
+    hook$jscomp$inline_1581.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1579.inject(
-        internals$jscomp$inline_1578
+      (rendererID = hook$jscomp$inline_1581.inject(
+        internals$jscomp$inline_1580
       )),
-        (injectedHook = hook$jscomp$inline_1579);
+        (injectedHook = hook$jscomp$inline_1581);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10990,4 +10991,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-31ecc980-20250409";
+exports.version = "19.2.0-www-modern-c44e4a25-20250409";

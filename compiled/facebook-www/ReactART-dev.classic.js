@@ -9052,32 +9052,32 @@ __DEV__ &&
           if (enableTransitionTracing)
             return (
               enableTransitionTracing
-                ? (null === current
-                    ? ((returnFiber = enableTransitionTracing
+                ? ((returnFiber = workInProgress.pendingProps),
+                  null === current
+                    ? ((prevSibling = enableTransitionTracing
                         ? transitionStack.current
                         : null),
-                      null !== returnFiber &&
-                        ((returnFiber = {
+                      null !== prevSibling &&
+                        ((prevSibling = {
                           tag: TransitionTracingMarker,
-                          transitions: new Set(returnFiber),
+                          transitions: new Set(prevSibling),
                           pendingBoundaries: null,
-                          name: workInProgress.pendingProps.name,
+                          name: returnFiber.name,
                           aborts: null
                         }),
-                        (workInProgress.stateNode = returnFiber),
+                        (workInProgress.stateNode = prevSibling),
                         (workInProgress.flags |= 2048)))
-                    : current.memoizedProps.name !==
-                        workInProgress.pendingProps.name &&
+                    : current.memoizedProps.name !== returnFiber.name &&
                       console.error(
                         "Changing the name of a tracing marker after mount is not supported. To remount the tracing marker, pass it a new key."
                       ),
-                  (returnFiber = workInProgress.stateNode),
-                  null !== returnFiber &&
-                    pushMarkerInstance(workInProgress, returnFiber),
+                  (prevSibling = workInProgress.stateNode),
+                  null !== prevSibling &&
+                    pushMarkerInstance(workInProgress, prevSibling),
                   reconcileChildren(
                     current,
                     workInProgress,
-                    workInProgress.pendingProps.children,
+                    returnFiber.children,
                     renderLanes
                   ),
                   (workInProgress = workInProgress.child))
@@ -10348,12 +10348,7 @@ __DEV__ &&
           commitStartTime
         );
       "function" === typeof onCommit &&
-        onCommit(
-          finishedWork.memoizedProps.id,
-          current,
-          effectDuration,
-          commitStartTime
-        );
+        onCommit(id, current, effectDuration, commitStartTime);
     }
     function commitProfilerPostCommitImpl(
       finishedWork,
@@ -18551,10 +18546,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-31ecc980-20250409",
+        version: "19.2.0-www-classic-c44e4a25-20250409",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-31ecc980-20250409"
+        reconcilerVersion: "19.2.0-www-classic-c44e4a25-20250409"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18588,7 +18583,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-31ecc980-20250409";
+    exports.version = "19.2.0-www-classic-c44e4a25-20250409";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

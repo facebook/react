@@ -9721,6 +9721,7 @@ __DEV__ &&
         case 25:
           if (enableTransitionTracing) {
             if (enableTransitionTracing) {
+              var nextProps$jscomp$2 = workInProgress.pendingProps;
               if (null === current) {
                 var currentTransitions = enableTransitionTracing
                   ? transitionStack.current
@@ -9730,15 +9731,14 @@ __DEV__ &&
                     tag: TransitionTracingMarker,
                     transitions: new Set(currentTransitions),
                     pendingBoundaries: null,
-                    name: workInProgress.pendingProps.name,
+                    name: nextProps$jscomp$2.name,
                     aborts: null
                   };
                   workInProgress.stateNode = markerInstance;
                   workInProgress.flags |= 2048;
                 }
               } else
-                current.memoizedProps.name !==
-                  workInProgress.pendingProps.name &&
+                current.memoizedProps.name !== nextProps$jscomp$2.name &&
                   console.error(
                     "Changing the name of a tracing marker after mount is not supported. To remount the tracing marker, pass it a new key."
                   );
@@ -9748,7 +9748,7 @@ __DEV__ &&
               reconcileChildren(
                 current,
                 workInProgress,
-                workInProgress.pendingProps.children,
+                nextProps$jscomp$2.children,
                 renderLanes
               );
               var JSCompiler_inline_result$jscomp$4 = workInProgress.child;
@@ -11410,12 +11410,7 @@ __DEV__ &&
           commitStartTime
         );
       "function" === typeof onCommit &&
-        onCommit(
-          finishedWork.memoizedProps.id,
-          current,
-          effectDuration,
-          commitStartTime
-        );
+        onCommit(id, current, effectDuration, commitStartTime);
     }
     function commitProfilerPostCommitImpl(
       finishedWork,
@@ -21235,7 +21230,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-31ecc980-20250409"
+        reconcilerVersion: "19.2.0-www-classic-c44e4a25-20250409"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

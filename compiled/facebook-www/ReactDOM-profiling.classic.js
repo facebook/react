@@ -8246,26 +8246,27 @@ function beginWork(current, workInProgress, renderLanes) {
       if (enableTransitionTracing)
         return (
           enableTransitionTracing
-            ? (null === current &&
-                ((props = enableTransitionTracing
+            ? ((props = workInProgress.pendingProps),
+              null === current &&
+                ((init = enableTransitionTracing
                   ? transitionStack.current
                   : null),
-                null !== props &&
-                  ((props = {
+                null !== init &&
+                  ((init = {
                     tag: 1,
-                    transitions: new Set(props),
+                    transitions: new Set(init),
                     pendingBoundaries: null,
-                    name: workInProgress.pendingProps.name,
+                    name: props.name,
                     aborts: null
                   }),
-                  (workInProgress.stateNode = props),
+                  (workInProgress.stateNode = init),
                   (workInProgress.flags |= 2048))),
-              (props = workInProgress.stateNode),
-              null !== props && pushMarkerInstance(workInProgress, props),
+              (init = workInProgress.stateNode),
+              null !== init && pushMarkerInstance(workInProgress, init),
               reconcileChildren(
                 current,
                 workInProgress,
-                workInProgress.pendingProps.children,
+                props.children,
                 renderLanes
               ),
               (workInProgress = workInProgress.child))
@@ -9564,12 +9565,7 @@ function commitProfilerUpdate(
         commitStartTime
       );
     "function" === typeof onCommit &&
-      onCommit(
-        finishedWork.memoizedProps.id,
-        current,
-        effectDuration,
-        commitStartTime
-      );
+      onCommit(id, current, effectDuration, commitStartTime);
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -16763,20 +16759,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1941 = 0;
-  i$jscomp$inline_1941 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1941++
+  var i$jscomp$inline_1943 = 0;
+  i$jscomp$inline_1943 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1943++
 ) {
-  var eventName$jscomp$inline_1942 =
-      simpleEventPluginEvents[i$jscomp$inline_1941],
-    domEventName$jscomp$inline_1943 =
-      eventName$jscomp$inline_1942.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1944 =
-      eventName$jscomp$inline_1942[0].toUpperCase() +
-      eventName$jscomp$inline_1942.slice(1);
+  var eventName$jscomp$inline_1944 =
+      simpleEventPluginEvents[i$jscomp$inline_1943],
+    domEventName$jscomp$inline_1945 =
+      eventName$jscomp$inline_1944.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1946 =
+      eventName$jscomp$inline_1944[0].toUpperCase() +
+      eventName$jscomp$inline_1944.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1943,
-    "on" + capitalizedEvent$jscomp$inline_1944
+    domEventName$jscomp$inline_1945,
+    "on" + capitalizedEvent$jscomp$inline_1946
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -21014,16 +21010,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2186 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2188 = React.version;
 if (
-  "19.2.0-www-classic-31ecc980-20250409" !==
-  isomorphicReactPackageVersion$jscomp$inline_2186
+  "19.2.0-www-classic-c44e4a25-20250409" !==
+  isomorphicReactPackageVersion$jscomp$inline_2188
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2186,
-      "19.2.0-www-classic-31ecc980-20250409"
+      isomorphicReactPackageVersion$jscomp$inline_2188,
+      "19.2.0-www-classic-c44e4a25-20250409"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -21039,27 +21035,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2188 = {
+var internals$jscomp$inline_2190 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-31ecc980-20250409",
+  version: "19.2.0-www-classic-c44e4a25-20250409",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-31ecc980-20250409"
+  reconcilerVersion: "19.2.0-www-classic-c44e4a25-20250409"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2188.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2188.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2190.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2190.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2766 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2768 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2766.isDisabled &&
-    hook$jscomp$inline_2766.supportsFiber
+    !hook$jscomp$inline_2768.isDisabled &&
+    hook$jscomp$inline_2768.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2766.inject(
-        internals$jscomp$inline_2188
+      (rendererID = hook$jscomp$inline_2768.inject(
+        internals$jscomp$inline_2190
       )),
-        (injectedHook = hook$jscomp$inline_2766);
+        (injectedHook = hook$jscomp$inline_2768);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -21411,7 +21407,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-31ecc980-20250409";
+exports.version = "19.2.0-www-classic-c44e4a25-20250409";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
