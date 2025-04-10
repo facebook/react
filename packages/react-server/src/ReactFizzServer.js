@@ -16,7 +16,6 @@ import type {
   ReactNodeList,
   ReactContext,
   ReactConsumerType,
-  OffscreenMode,
   Wakeable,
   Thenable,
   ReactFormState,
@@ -35,6 +34,9 @@ import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
 import type {ThenableState} from './ReactFizzThenable';
+
+import type {ActivityProps} from 'react-reconciler/src/ReactFiberActivityComponent';
+
 import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 
 import {
@@ -2206,12 +2208,12 @@ function renderActivity(
   request: Request,
   task: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: ActivityProps,
 ): void {
   const segment = task.blockedSegment;
   if (segment === null) {
     // Replay
-    const mode: ?OffscreenMode = (props.mode: any);
+    const mode = props.mode;
     if (mode === 'hidden') {
       // A hidden Activity boundary is not server rendered. Prerendering happens
       // on the client.
@@ -2227,7 +2229,7 @@ function renderActivity(
     // An Activity boundary is delimited so that we can hydrate it separately.
     pushStartActivityBoundary(segment.chunks, request.renderState);
     segment.lastPushedText = false;
-    const mode: ?OffscreenMode = (props.mode: any);
+    const mode = props.mode;
     if (mode === 'hidden') {
       // A hidden Activity boundary is not server rendered. Prerendering happens
       // on the client.
