@@ -10,6 +10,7 @@
 import type {
   Instance,
   TextInstance,
+  ActivityInstance,
   SuspenseInstance,
   Container,
   HoistableRoot,
@@ -1508,7 +1509,9 @@ function commitDeletionEffectsOnFiber(
           try {
             const onDeleted = hydrationCallbacks.onDeleted;
             if (onDeleted) {
-              onDeleted((deletedFiber.stateNode: SuspenseInstance));
+              onDeleted(
+                (deletedFiber.stateNode: SuspenseInstance | ActivityInstance),
+              );
             }
           } catch (error) {
             captureCommitPhaseError(
