@@ -203,7 +203,6 @@ import {
   pushFallbackTreeSuspenseHandler,
   pushOffscreenSuspenseHandler,
   reuseSuspenseHandlerOnStack,
-  popSuspenseHandler,
 } from './ReactFiberSuspenseContext';
 import {
   pushHiddenContext,
@@ -245,7 +244,7 @@ import {
   claimHydratableSingleton,
   tryToClaimNextHydratableInstance,
   tryToClaimNextHydratableTextInstance,
-  tryToClaimNextHydratableSuspenseInstance,
+  claimNextHydratableSuspenseInstance,
   warnIfHydrating,
   queueHydrationError,
 } from './ReactFiberHydrationContext';
@@ -2151,24 +2150,14 @@ function updateSuspenseComponent(
       } else {
         pushFallbackTreeSuspenseHandler(workInProgress);
       }
-      tryToClaimNextHydratableSuspenseInstance(workInProgress);
-      // This could've been a dehydrated suspense component.
-      const suspenseState: null | SuspenseState = workInProgress.memoizedState;
-      if (suspenseState !== null) {
-        const dehydrated = suspenseState.dehydrated;
-        if (dehydrated !== null) {
-          return mountDehydratedSuspenseComponent(
-            workInProgress,
-            dehydrated,
-            renderLanes,
-          );
-        }
-      }
-      // If hydration didn't succeed, fall through to the normal Suspense path.
-      // To avoid a stack mismatch we need to pop the Suspense handler that we
-      // pushed above. This will become less awkward when move the hydration
-      // logic to its own fiber.
-      popSuspenseHandler(workInProgress);
+      // This throws if we fail to hydrate.
+      const dehydrated: SuspenseInstance =
+        claimNextHydratableSuspenseInstance(workInProgress);
+      return mountDehydratedSuspenseComponent(
+        workInProgress,
+        dehydrated,
+        renderLanes,
+      );
     }
 
     const nextPrimaryChildren = nextProps.children;
