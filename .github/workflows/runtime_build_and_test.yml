@@ -26,9 +26,6 @@ jobs:
     name: Cache Runtime node_modules
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Check cache hit
         uses: actions/cache/restore@v4
         id: node_modules
@@ -37,6 +34,10 @@ jobs:
             **/node_modules
           key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           lookup-only: true
+      - uses: actions/checkout@v4
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         if: steps.node_modules.outputs.cache-hit != 'true'
         with:
@@ -67,9 +68,6 @@ jobs:
     name: Cache Runtime, Compiler node_modules
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Check cache hit
         uses: actions/cache/restore@v4
         id: node_modules
@@ -78,6 +76,10 @@ jobs:
             **/node_modules
           key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
           lookup-only: true
+      - uses: actions/checkout@v4
+        if: steps.node_modules.outputs.cache-hit != 'true'
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         if: steps.node_modules.outputs.cache-hit != 'true'
         with:
