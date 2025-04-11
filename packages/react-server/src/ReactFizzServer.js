@@ -16,12 +16,14 @@ import type {
   ReactNodeList,
   ReactContext,
   ReactConsumerType,
-  OffscreenMode,
   Wakeable,
   Thenable,
   ReactFormState,
   ReactComponentInfo,
   ReactDebugInfo,
+  ViewTransitionProps,
+  ActivityProps,
+  SuspenseProps,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -35,6 +37,7 @@ import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
 import type {ThenableState} from './ReactFizzThenable';
+
 import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 
 import {
@@ -1124,7 +1127,7 @@ function renderSuspenseBoundary(
   request: Request,
   someTask: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: SuspenseProps,
 ): void {
   if (someTask.replay !== null) {
     // If we're replaying through this pass, it means we're replaying through
@@ -2206,12 +2209,12 @@ function renderActivity(
   request: Request,
   task: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: ActivityProps,
 ): void {
   const segment = task.blockedSegment;
   if (segment === null) {
     // Replay
-    const mode: ?OffscreenMode = (props.mode: any);
+    const mode = props.mode;
     if (mode === 'hidden') {
       // A hidden Activity boundary is not server rendered. Prerendering happens
       // on the client.
@@ -2227,7 +2230,7 @@ function renderActivity(
     // An Activity boundary is delimited so that we can hydrate it separately.
     pushStartActivityBoundary(segment.chunks, request.renderState);
     segment.lastPushedText = false;
-    const mode: ?OffscreenMode = (props.mode: any);
+    const mode = props.mode;
     if (mode === 'hidden') {
       // A hidden Activity boundary is not server rendered. Prerendering happens
       // on the client.
@@ -2240,11 +2243,7 @@ function renderActivity(
       renderNode(request, task, props.children, -1);
       task.keyPath = prevKeyPath;
     }
-    pushEndActivityBoundary(
-      segment.chunks,
-      request.renderState,
-      task.blockedPreamble,
-    );
+    pushEndActivityBoundary(segment.chunks, request.renderState);
     segment.lastPushedText = false;
   }
 }
@@ -2253,7 +2252,7 @@ function renderViewTransition(
   request: Request,
   task: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: ViewTransitionProps,
 ) {
   const prevKeyPath = task.keyPath;
   task.keyPath = keyPath;
@@ -4905,7 +4904,6 @@ function flushSegment(
     return writeEndClientRenderedSuspenseBoundary(
       destination,
       request.renderState,
-      boundary.fallbackPreamble,
     );
   } else if (boundary.status !== COMPLETED) {
     if (boundary.status === PENDING) {
@@ -4976,11 +4974,7 @@ function flushSegment(
     const contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment, hoistableState);
 
-    return writeEndCompletedSuspenseBoundary(
-      destination,
-      request.renderState,
-      boundary.contentPreamble,
-    );
+    return writeEndCompletedSuspenseBoundary(destination, request.renderState);
   }
 }
 

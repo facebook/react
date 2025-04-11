@@ -20,7 +20,7 @@ import type {
   PendingBoundaries,
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
-import type {OffscreenInstance} from './ReactFiberActivityComponent';
+import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 import type {
   Resource,
   ViewTransitionInstance,

@@ -8,7 +8,13 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
+import type {
+  ReactFragment,
+  ReactPortal,
+  ReactScope,
+  ViewTransitionProps,
+  ActivityProps,
+} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
@@ -16,13 +22,11 @@ import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
 import type {SuspenseInstance} from './ReactFiberConfig';
 import type {
+  LegacyHiddenProps,
   OffscreenProps,
   OffscreenInstance,
-} from './ReactFiberActivityComponent';
-import type {
-  ViewTransitionProps,
-  ViewTransitionState,
-} from './ReactFiberViewTransitionComponent';
+} from './ReactFiberOffscreenComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import {
@@ -74,7 +78,7 @@ import {
   ViewTransitionComponent,
   ActivityComponent,
 } from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberActivityComponent';
+import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
@@ -860,7 +864,7 @@ export function createFiberFromOffscreen(
   return fiber;
 }
 export function createFiberFromActivity(
-  pendingProps: OffscreenProps,
+  pendingProps: ActivityProps,
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
@@ -896,7 +900,7 @@ export function createFiberFromViewTransition(
 }
 
 export function createFiberFromLegacyHidden(
-  pendingProps: OffscreenProps,
+  pendingProps: LegacyHiddenProps,
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,

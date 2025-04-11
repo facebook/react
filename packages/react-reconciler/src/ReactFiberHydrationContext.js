@@ -272,7 +272,10 @@ function tryHydrateText(fiber: Fiber, nextInstance: any) {
   return false;
 }
 
-function tryHydrateSuspense(fiber: Fiber, nextInstance: any) {
+function tryHydrateSuspense(
+  fiber: Fiber,
+  nextInstance: any,
+): null | SuspenseInstance {
   // fiber is a SuspenseComponent Fiber
   const suspenseInstance = canHydrateSuspenseInstance(
     nextInstance,
@@ -298,9 +301,8 @@ function tryHydrateSuspense(fiber: Fiber, nextInstance: any) {
     // While a Suspense Instance does have children, we won't step into
     // it during the first pass. Instead, we'll reenter it later.
     nextHydratableInstance = null;
-    return true;
   }
-  return false;
+  return suspenseInstance;
 }
 
 export const HydrationMismatchException: mixed = new Error(
@@ -423,15 +425,16 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
   }
 }
 
-function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
-  if (!isHydrating) {
-    return;
-  }
+function claimNextHydratableSuspenseInstance(fiber: Fiber): SuspenseInstance {
   const nextInstance = nextHydratableInstance;
-  if (!nextInstance || !tryHydrateSuspense(fiber, nextInstance)) {
+  const suspenseInstance = nextInstance
+    ? tryHydrateSuspense(fiber, nextInstance)
+    : null;
+  if (suspenseInstance === null) {
     warnNonHydratedInstance(fiber, nextInstance);
-    throwOnHydrationMismatch(fiber);
+    throw throwOnHydrationMismatch(fiber);
   }
+  return suspenseInstance;
 }
 
 export function tryToClaimNextHydratableFormMarkerInstance(
@@ -790,7 +793,7 @@ export {
   claimHydratableSingleton,
   tryToClaimNextHydratableInstance,
   tryToClaimNextHydratableTextInstance,
-  tryToClaimNextHydratableSuspenseInstance,
+  claimNextHydratableSuspenseInstance,
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,

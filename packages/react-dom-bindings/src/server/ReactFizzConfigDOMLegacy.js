@@ -224,12 +224,11 @@ export function pushStartActivityBoundary(
 export function pushEndActivityBoundary(
   target: Array<Chunk | PrecomputedChunk>,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): void {
   if (renderState.generateStaticMarkup) {
     return;
   }
-  pushEndActivityBoundaryImpl(target, renderState, preambleState);
+  pushEndActivityBoundaryImpl(target, renderState);
 }
 
 export function writeStartCompletedSuspenseBoundary(
@@ -269,30 +268,20 @@ export function writeStartClientRenderedSuspenseBoundary(
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
   if (renderState.generateStaticMarkup) {
     return true;
   }
-  return writeEndCompletedSuspenseBoundaryImpl(
-    destination,
-    renderState,
-    preambleState,
-  );
+  return writeEndCompletedSuspenseBoundaryImpl(destination, renderState);
 }
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
   if (renderState.generateStaticMarkup) {
     return true;
   }
-  return writeEndClientRenderedSuspenseBoundaryImpl(
-    destination,
-    renderState,
-    preambleState,
-  );
+  return writeEndClientRenderedSuspenseBoundaryImpl(destination, renderState);
 }
 
 export type TransitionStatus = FormStatus;

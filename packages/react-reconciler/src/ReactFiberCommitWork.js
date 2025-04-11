@@ -25,12 +25,12 @@ import {
 import type {SuspenseState, RetryQueue} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable, ViewTransitionProps} from 'shared/ReactTypes';
 import type {
   OffscreenState,
   OffscreenInstance,
   OffscreenQueue,
-} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {RootState} from './ReactFiberRoot';
 import type {Transition} from 'react/src/ReactStartTransition';
@@ -38,10 +38,7 @@ import type {
   TracingMarkerInstance,
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
-import type {
-  ViewTransitionProps,
-  ViewTransitionState,
-} from './ReactFiberViewTransitionComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 
 import {
   alwaysThrottleRetries,
@@ -201,7 +198,7 @@ import {clearTransitionsForLanes} from './ReactFiberLane';
 import {
   OffscreenVisible,
   OffscreenPassiveEffectsConnected,
-} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
 import {
   TransitionRoot,
   TransitionTracingMarker,
