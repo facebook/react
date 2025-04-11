@@ -436,7 +436,7 @@ function updateForwardRef(
   }
 
   // The rest is a fork of updateFunctionComponent
-  prepareToReadContext(workInProgress, renderLanes);
+  prepareToReadContext(workInProgress);
   if (enableSchedulingProfiler) {
     markComponentRenderStarted(workInProgress);
   }
@@ -912,7 +912,7 @@ function updateCacheComponent(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  prepareToReadContext(workInProgress, renderLanes);
+  prepareToReadContext(workInProgress);
   const parentCache = readContext(CacheContext);
 
   if (current === null) {
@@ -1183,7 +1183,7 @@ function updateFunctionComponent(
 
   let nextChildren;
   let hasId;
-  prepareToReadContext(workInProgress, renderLanes);
+  prepareToReadContext(workInProgress);
   if (enableSchedulingProfiler) {
     markComponentRenderStarted(workInProgress);
   }
@@ -1239,7 +1239,7 @@ export function replayFunctionComponent(
   // after its data resolves. It's a simplified version of
   // updateFunctionComponent that reuses the hooks from the previous attempt.
 
-  prepareToReadContext(workInProgress, renderLanes);
+  prepareToReadContext(workInProgress);
   if (enableSchedulingProfiler) {
     markComponentRenderStarted(workInProgress);
   }
@@ -1330,7 +1330,7 @@ function updateClassComponent(
   } else {
     hasContext = false;
   }
-  prepareToReadContext(workInProgress, renderLanes);
+  prepareToReadContext(workInProgress);
 
   const instance = workInProgress.stateNode;
   let shouldUpdate;
@@ -1908,7 +1908,7 @@ function mountIncompleteClassComponent(
   } else {
     hasContext = false;
   }
-  prepareToReadContext(workInProgress, renderLanes);
+  prepareToReadContext(workInProgress);
 
   constructClassInstance(workInProgress, Component, nextProps);
   mountClassInstance(workInProgress, Component, nextProps, renderLanes);
@@ -3415,7 +3415,7 @@ function updateContextConsumer(
     }
   }
 
-  prepareToReadContext(workInProgress, renderLanes);
+  prepareToReadContext(workInProgress);
   const newValue = readContext(context);
   if (enableSchedulingProfiler) {
     markComponentRenderStarted(workInProgress);
