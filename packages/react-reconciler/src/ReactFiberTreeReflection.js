@@ -345,59 +345,65 @@ export function doesFiberContain(
   return false;
 }
 
-export function traverseFragmentInstance<I, A, B, C>(
+export function traverseFragmentInstance<A, B, C>(
   fragmentFiber: Fiber,
-  fn: (I, A, B, C) => boolean,
-  skipPortals: boolean,
+  fn: (Fiber, A, B, C) => boolean,
   a: A,
   b: B,
   c: C,
 ): void {
-  traverseFragmentInstanceChildren(
-    fragmentFiber.child,
-    skipPortals,
-    fn,
-    a,
-    b,
-    c,
-  );
+  traverseVisibleHostChildren(fragmentFiber.child, false, fn, a, b, c);
 }
 
-function traverseFragmentInstanceChildren<I, A, B, C>(
+function traverseVisibleHostChildren<A, B, C>(
   child: Fiber | null,
-  fn: (I, A, B, C) => boolean,
-  skipPortals: boolean,
+  searchWithinHosts: boolean,
+  fn: (Fiber, A, B, C) => boolean,
   a: A,
   b: B,
   c: C,
-): void {
+): boolean {
   while (child !== null) {
     if (child.tag === HostComponent) {
-      if (fn(child.stateNode, a, b, c)) {
-        return;
+      if (fn(child, a, b, c)) {
+        return true;
+      }
+      if (searchWithinHosts) {
+        if (
+          traverseVisibleHostChildren(
+            child.child,
+            searchWithinHosts,
+            fn,
+            a,
+            b,
+            c,
+          )
+        ) {
+          return true;
+        }
       }
     } else if (
       child.tag === OffscreenComponent &&
       child.memoizedState !== null
     ) {
       // Skip hidden subtrees
-    } else if (skipPortals && child.tag === HostPortal) {
-      // Skip portals
     } else {
-      traverseFragmentInstanceChildren(child.child, skipPortals, fn, a, b, c);
+      if (
+        traverseVisibleHostChildren(child.child, searchWithinHosts, fn, a, b, c)
+      ) {
+        return true;
+      }
     }
     child = child.sibling;
   }
+  return false;
 }
 
-export function getFragmentParentHostInstance(fiber: Fiber): null | Instance {
+export function getFragmentParentHostFiber(fiber: Fiber): null | Fiber {
   let parent = fiber.return;
   while (parent !== null) {
-    if (parent.tag === HostRoot) {
-      return parent.stateNode.containerInfo;
-    }
-    if (parent.tag === HostComponent) {
-      return parent.stateNode;
+    if (parent.tag === HostRoot || parent.tag === HostComponent) {
+      return parent;
     }
     parent = parent.return;
   }
@@ -405,11 +411,186 @@ export function getFragmentParentHostInstance(fiber: Fiber): null | Instance {
   return null;
 }
 
-export function getNextSiblingHostInstance(fiber: Fiber): null | Instance {
-  let nextSibling = null;
-  traverseFragmentInstanceChildren(fiber.sibling, true, instance => {
-    nextSibling = instance;
+export function getInstanceFromHostFiber(fiber: Fiber): Instance {
+  switch (fiber.tag) {
+    case HostComponent:
+      return fiber.stateNode;
+    case HostRoot:
+      return fiber.stateNode.containerInfo;
+    default:
+      throw new Error('Expected to find a host node. This is a bug in React.');
+  }
+}
+
+export function getNextSiblingHostFiber(fiber: Fiber): null | Fiber {
+  const searchState = {next: null};
+  traverseVisibleHostChildren(
+    fiber.sibling,
+    false,
+    findNextSibling,
+    searchState,
+  );
+  return searchState.next;
+}
+
+function findNextSibling(child: Fiber, state: {next: null | Fiber}): boolean {
+  state.next = child;
+  return true;
+}
+
+export function isFiberContainedBy(
+  maybeChild: Fiber,
+  maybeParent: Fiber,
+): boolean {
+  let parent = maybeParent.return;
+  if (parent === maybeChild || parent === maybeChild.alternate) {
     return true;
-  });
-  return nextSibling;
+  }
+  while (parent !== null && parent !== maybeChild) {
+    if (
+      (parent.tag === HostComponent || parent.tag === HostRoot) &&
+      (parent.return === maybeChild || parent.return === maybeChild.alternate)
+    ) {
+      return true;
+    }
+    parent = parent.return;
+  }
+  return false;
+}
+
+export function isFiberPreceding(fiber: Fiber, otherFiber: Fiber): boolean {
+  const commonAncestor = getLowestCommonAncestor(
+    fiber,
+    otherFiber,
+    getParentForFragmentAncestors,
+  );
+  if (commonAncestor === null) {
+    return false;
+  }
+  const searchState = {found: false};
+  traverseVisibleHostChildren(
+    commonAncestor,
+    true,
+    isFiberPrecedingCheck,
+    otherFiber,
+    fiber,
+    searchState,
+  );
+  return searchState.found;
+}
+
+function isFiberPrecedingCheck(
+  child: Fiber,
+  target: Fiber,
+  boundary: Fiber,
+  state: {found: boolean},
+): boolean {
+  if (child === boundary) {
+    return true;
+  }
+  if (child === target) {
+    state.found = true;
+    return true;
+  }
+  return false;
+}
+
+export function isFiberFollowing(fiber: Fiber, otherFiber: Fiber): boolean {
+  const commonAncestor = getLowestCommonAncestor(
+    fiber,
+    otherFiber,
+    getParentForFragmentAncestors,
+  );
+  if (commonAncestor === null) {
+    return false;
+  }
+  const searchState = {foundFiber: false, foundOther: false};
+  traverseVisibleHostChildren(
+    commonAncestor,
+    true,
+    isFiberFollowingCheck,
+    otherFiber,
+    fiber,
+    searchState,
+  );
+  return searchState.foundOther;
+}
+
+function isFiberFollowingCheck(
+  child: Fiber,
+  target: Fiber,
+  boundary: Fiber,
+  state: {foundFiber: boolean, foundOther: boolean},
+): boolean {
+  if (child === boundary) {
+    state.foundFiber = true;
+    return false;
+  }
+  if (child === target) {
+    state.foundOther = state.foundFiber;
+    return true;
+  }
+  return false;
+}
+
+function getParentForFragmentAncestors(inst: Fiber | null): Fiber | null {
+  if (inst === null) {
+    return null;
+  }
+  do {
+    inst = inst === null ? null : inst.return;
+  } while (
+    inst &&
+    inst.tag !== HostComponent &&
+    inst.tag !== HostSingleton &&
+    inst.tag !== HostRoot
+  );
+  if (inst) {
+    return inst;
+  }
+  return null;
+}
+
+/**
+ * Return the lowest common ancestor of A and B, or null if they are in
+ * different trees.
+ */
+export function getLowestCommonAncestor(
+  instA: Fiber,
+  instB: Fiber,
+  getParent: (inst: Fiber | null) => Fiber | null,
+): Fiber | null {
+  let nodeA: null | Fiber = instA;
+  let nodeB: null | Fiber = instB;
+  let depthA = 0;
+  for (let tempA: null | Fiber = nodeA; tempA; tempA = getParent(tempA)) {
+    depthA++;
+  }
+  let depthB = 0;
+  for (let tempB: null | Fiber = nodeB; tempB; tempB = getParent(tempB)) {
+    depthB++;
+  }
+
+  // If A is deeper, crawl up.
+  while (depthA - depthB > 0) {
+    nodeA = getParent(nodeA);
+    depthA--;
+  }
+
+  // If B is deeper, crawl up.
+  while (depthB - depthA > 0) {
+    nodeB = getParent(nodeB);
+    depthB--;
+  }
+
+  // Walk in lockstep until we find a match.
+  let depth = depthA;
+  while (depth--) {
+    if (nodeA === nodeB || (nodeB !== null && nodeA === nodeB.alternate)) {
+      return nodeA;
+    }
+    nodeA = getParent(nodeA);
+    nodeB = getParent(nodeB);
+  }
+  return null;
 }
