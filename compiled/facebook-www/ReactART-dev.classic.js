@@ -10648,6 +10648,7 @@ __DEV__ &&
           var props = changedParent.memoizedProps,
             name = getViewTransitionName(props, changedParent.stateNode);
           props = getViewTransitionClassName(props.default, props.update);
+          changedParent.flags &= -5;
           if ("none" !== props) {
             var collectMeasurements = (changedParent.memoizedState = []);
             applyViewTransitionToHostInstancesRecursive(
@@ -18546,10 +18547,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-961b625a-20250411",
+        version: "19.2.0-www-classic-1d6c8168-20250411",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-961b625a-20250411"
+        reconcilerVersion: "19.2.0-www-classic-1d6c8168-20250411"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18583,7 +18584,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-961b625a-20250411";
+    exports.version = "19.2.0-www-classic-1d6c8168-20250411";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

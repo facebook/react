@@ -11784,6 +11784,7 @@ __DEV__ &&
           var props = changedParent.memoizedProps,
             name = getViewTransitionName(props, changedParent.stateNode);
           props = getViewTransitionClassName(props.default, props.update);
+          changedParent.flags &= -5;
           "none" !== props &&
             applyViewTransitionToHostInstances(
               changedParent.child,
@@ -21007,7 +21008,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-961b625a-20250411"
+        reconcilerVersion: "19.2.0-www-modern-1d6c8168-20250411"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
