@@ -510,6 +510,12 @@ export function commitNestedViewTransitions(changedParent: Fiber): void {
         props.default,
         props.update,
       );
+      // "Nested" view transitions are in subtrees that didn't update so
+      // this is a "current". We normally clear this upon rerendering
+      // but we use this flag to track changes from layout in the commit.
+      // So we need it to be cleared before we do that.
+      // TODO: Use some other temporary state to track this.
+      child.flags &= ~Update;
       if (className !== 'none') {
         applyViewTransitionToHostInstances(
           child.child,
