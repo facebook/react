@@ -3944,6 +3944,10 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       if (state !== null) {
         // We're dehydrated so we're not going to render the children. This is just
         // to maintain push/pop symmetry.
+        // We know that this component will suspend again because if it has
+        // been unsuspended it has committed as a hydrated Activity component.
+        // If it needs to be retried, it should have work scheduled on it.
+        workInProgress.flags |= DidCapture;
         pushDehydratedActivitySuspenseHandler(workInProgress);
         return null;
       }
