@@ -3723,6 +3723,11 @@ describe('ReactDOMServerPartialHydration', () => {
           <Activity mode="hidden">
             <HiddenChild />
           </Activity>
+          <Suspense fallback={null}>
+            <Activity mode="hidden">
+              <HiddenChild />
+            </Activity>
+          </Suspense>
         </>
       );
     }
@@ -3743,6 +3748,10 @@ describe('ReactDOMServerPartialHydration', () => {
         </span>
         <!--&-->
         <!--/&-->
+        <!--$-->
+        <!--&-->
+        <!--/&-->
+        <!--/$-->
       </div>
     `);
 
@@ -3758,6 +3767,7 @@ describe('ReactDOMServerPartialHydration', () => {
       await waitForPaint([]);
     }
     // Subsequently, the hidden child is prerendered on the client
+    // along with hydrating the Suspense boundary outside the Activity.
     await waitForPaint(['HiddenChild']);
     expect(container).toMatchInlineSnapshot(`
       <div>
@@ -3766,6 +3776,37 @@ describe('ReactDOMServerPartialHydration', () => {
         </span>
         <!--&-->
         <!--/&-->
+        <!--$-->
+        <!--&-->
+        <!--/&-->
+        <!--/$-->
+        <span
+          style="display: none;"
+        >
+          Hidden
+        </span>
+      </div>
+    `);
+
+    // Next the child inside the Activity is hydrated.
+    await waitForPaint(['HiddenChild']);
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <span>
+          Visible
+        </span>
+        <!--&-->
+        <!--/&-->
+        <!--$-->
+        <!--&-->
+        <!--/&-->
+        <!--/$-->
+        <span
+          style="display: none;"
+        >
+          Hidden
+        </span>
         <span
           style="display: none;"
         >

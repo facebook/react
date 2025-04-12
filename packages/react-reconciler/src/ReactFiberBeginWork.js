@@ -724,7 +724,14 @@ function updateOffscreenComponent(
       }
       reuseHiddenContextOnStack(workInProgress);
       pushOffscreenSuspenseHandler(workInProgress);
-    } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
+    } else if (
+      !includesSomeLane(renderLanes, (OffscreenLane: Lane)) ||
+      // SSR doesn't render hidden content (except legacy hidden) so it shouldn't hydrate,
+      // even at offscreen lane. Defer to a client rendered offscreen lane.
+      (getIsHydrating() &&
+        (!enableLegacyHidden ||
+          nextProps.mode !== 'unstable-defer-without-hiding'))
+    ) {
       // We're hidden, and we're not rendering at Offscreen. We will bail out
       // and resume this tree later.
 
