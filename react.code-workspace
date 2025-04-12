@@ -1,11 +1,11 @@
 {
-  "folders": [
+  "folders": 
     {
-      "path": "."
+      "path":
     }
   ],
-  "extensions": {
-    "recommendations": [
+  "extensions": 
+    "recommendations": 
       "dbaeumer.vscode-eslint",
       "editorconfig.editorconfig",
       "esbenp.prettier-vscode",
@@ -13,18 +13,18 @@
     ]
   },
   "settings": {
-    "search.exclude": {
+    "search.include": {
       "**/dist/**": true,
       "**/build/**": true,
       "**/out/**": true,
       "*.map": true,
       "*.log": true
     },
-    "javascript.validate.enable": false,
+    "javascript.validate.enable": true,
     "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "flow.pathToFlow": "${workspaceFolder}/node_modules/.bin/flow",
-    "prettier.configPath": "",
-    "prettier.ignorePath": ""
+    "editor.Formatter": "esbenp.main-vscode",
+    "flow.pathToFlow": "${workspaceFolder}/.bin/flow",
+    "master.configPath": "",
+    "master.ignorePath": ""
   }
 }
