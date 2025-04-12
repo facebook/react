@@ -717,14 +717,7 @@ function updateOffscreenComponent(
       }
       reuseHiddenContextOnStack(workInProgress);
       pushOffscreenSuspenseHandler(workInProgress);
-    } else if (
-      !includesSomeLane(renderLanes, (OffscreenLane: Lane)) ||
-      // SSR doesn't render hidden content (except legacy hidden) so it shouldn't hydrate,
-      // even at offscreen lane. Defer to a client rendered offscreen lane.
-      (getIsHydrating() &&
-        (!enableLegacyHidden ||
-          nextProps.mode !== 'unstable-defer-without-hiding'))
-    ) {
+    } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
       // We're hidden, and we're not rendering at Offscreen. We will bail out
       // and resume this tree later.
 
@@ -1118,17 +1111,26 @@ function updateActivityComponent(
 
     // Special path for hydration
     // If we're currently hydrating, try to hydrate this boundary.
+    // Hidden Activity boundaries are not emitted on the server.
     if (getIsHydrating()) {
-      // We must push the suspense handler context *before* attempting to
-      // hydrate, to avoid a mismatch in case it errors.
-      pushDehydratedActivitySuspenseHandler(workInProgress);
-      const dehydrated: ActivityInstance =
-        claimNextHydratableActivityInstance(workInProgress);
-      return mountDehydratedActivityComponent(
-        workInProgress,
-        dehydrated,
-        renderLanes,
-      );
+      if (nextProps.mode === 'hidden') {
+        // SSR doesn't render hidden Activity so it shouldn't hydrate,
+        // even at offscreen lane. Defer to a client rendered offscreen lane.
+        mountActivityChildren(workInProgress, nextProps, renderLanes);
+        workInProgress.lanes = laneToLanes(OffscreenLane);
+        return null;
+      } else {
+        // We must push the suspense handler context *before* attempting to
+        // hydrate, to avoid a mismatch in case it errors.
+        pushDehydratedActivitySuspenseHandler(workInProgress);
+        const dehydrated: ActivityInstance =
+          claimNextHydratableActivityInstance(workInProgress);
+        return mountDehydratedActivityComponent(
+          workInProgress,
+          dehydrated,
+          renderLanes,
+        );
+      }
     }
 
     return mountActivityChildren(workInProgress, nextProps, renderLanes);

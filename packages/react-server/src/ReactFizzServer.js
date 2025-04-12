@@ -2227,14 +2227,14 @@ function renderActivity(
     }
   } else {
     // Render
-    // An Activity boundary is delimited so that we can hydrate it separately.
-    pushStartActivityBoundary(segment.chunks, request.renderState);
-    segment.lastPushedText = false;
     const mode = props.mode;
     if (mode === 'hidden') {
       // A hidden Activity boundary is not server rendered. Prerendering happens
       // on the client.
     } else {
+      // An Activity boundary is delimited so that we can hydrate it separately.
+      pushStartActivityBoundary(segment.chunks, request.renderState);
+      segment.lastPushedText = false;
       // A visible Activity boundary has its children rendered inside the boundary.
       const prevKeyPath = task.keyPath;
       task.keyPath = keyPath;
@@ -2242,9 +2242,9 @@ function renderActivity(
       // need to pop back up and finish the end comment.
       renderNode(request, task, props.children, -1);
       task.keyPath = prevKeyPath;
+      pushEndActivityBoundary(segment.chunks, request.renderState);
+      segment.lastPushedText = false;
     }
-    pushEndActivityBoundary(segment.chunks, request.renderState);
-    segment.lastPushedText = false;
   }
 }
 

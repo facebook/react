@@ -3746,11 +3746,7 @@ describe('ReactDOMServerPartialHydration', () => {
         <span>
           Visible
         </span>
-        <!--&-->
-        <!--/&-->
         <!--$-->
-        <!--&-->
-        <!--/&-->
         <!--/$-->
       </div>
     `);
@@ -3767,10 +3763,6 @@ describe('ReactDOMServerPartialHydration', () => {
       await waitForPaint([]);
     }
 
-    // Commit just the Activity boundary
-    // TODO: Optimize this
-    await waitForPaint([]);
-
     // Subsequently, the hidden child is prerendered on the client
     // along with hydrating the Suspense boundary outside the Activity.
     await waitForPaint(['HiddenChild']);
@@ -3779,11 +3771,7 @@ describe('ReactDOMServerPartialHydration', () => {
         <span>
           Visible
         </span>
-        <!--&-->
-        <!--/&-->
         <!--$-->
-        <!--&-->
-        <!--/&-->
         <!--/$-->
         <span
           style="display: none;"
@@ -3801,11 +3789,7 @@ describe('ReactDOMServerPartialHydration', () => {
         <span>
           Visible
         </span>
-        <!--&-->
-        <!--/&-->
         <!--$-->
-        <!--&-->
-        <!--/&-->
         <!--/$-->
         <span
           style="display: none;"
