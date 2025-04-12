@@ -16,6 +16,7 @@
     "@babel/plugin-syntax-typescript": "^7.25.9",
     "@babel/types": "^7.26.0",
     "@modelcontextprotocol/sdk": "^1.9.0",
+    "algoliasearch": "^5.23.3",
     "prettier": "^3.3.3",
     "zod": "^3.23.8"
   },
