@@ -11,7 +11,13 @@
     "watch": "yarn build --watch"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.9.0"
+    "@babel/core": "^7.26.0",
+    "@babel/parser": "^7.26",
+    "@babel/plugin-syntax-typescript": "^7.25.9",
+    "@babel/types": "^7.26.0",
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "prettier": "^3.3.3",
+    "zod": "^3.23.8"
   },
   "devDependencies": {},
   "license": "MIT",
