@@ -5,7 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
+import {
+  McpServer,
+  ResourceTemplate,
+} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {z} from 'zod';
 import {compile} from './compiler';
@@ -14,7 +17,11 @@ import {
   printReactiveFunctionWithOutlined,
   printFunctionWithOutlined,
 } from 'babel-plugin-react-compiler/src';
-import {type CallToolResult} from '@modelcontextprotocol/sdk/types.js';
+import {liteClient, type SearchResponse} from 'algoliasearch/lite';
+import {DocSearchHit} from './types/algolia';
+import {printHierarchy} from './utils/algolia';
+
+const client = liteClient('1FCF9AYYAT', '1b7ad4e1c89e645e351e59d40544eda1');
 
 export type PrintedCompilerPipelineValue =
   | {
@@ -27,7 +34,7 @@ export type PrintedCompilerPipelineValue =
   | {kind: 'debug'; name: string; fnName: string | null; value: string};
 
 const server = new McpServer({
-  name: 'React Compiler',
+  name: 'React',
   version: '0.0.0',
   capabilities: {
     resources: {},
@@ -35,9 +42,66 @@ const server = new McpServer({
   },
 });
 
+server.resource(
+  'docs',
+  new ResourceTemplate('docs://search', {list: undefined}),
+  async (uri, {message}) => {
+    const {results} = await client.search<DocSearchHit>({
+      requests: [
+        {
+          query: Array.isArray(message) ? message.join('\n') : message,
+          indexName: 'beta-react',
+          attributesToRetrieve: [
+            'hierarchy.lvl0',
+            'hierarchy.lvl1',
+            'hierarchy.lvl2',
+            'hierarchy.lvl3',
+            'hierarchy.lvl4',
+            'hierarchy.lvl5',
+            'hierarchy.lvl6',
+            'content',
+            'url',
+          ],
+          attributesToSnippet: [
+            `hierarchy.lvl1:10`,
+            `hierarchy.lvl2:10`,
+            `hierarchy.lvl3:10`,
+            `hierarchy.lvl4:10`,
+            `hierarchy.lvl5:10`,
+            `hierarchy.lvl6:10`,
+            `content:10`,
+          ],
+          snippetEllipsisText: '…',
+          hitsPerPage: 30,
+          attributesToHighlight: [
+            'hierarchy.lvl0',
+            'hierarchy.lvl1',
+            'hierarchy.lvl2',
+            'hierarchy.lvl3',
+            'hierarchy.lvl4',
+            'hierarchy.lvl5',
+            'hierarchy.lvl6',
+            'content',
+          ],
+        },
+      ],
+    });
+    const firstResult = results[0] as SearchResponse<DocSearchHit>;
+    const {hits} = firstResult;
+    return {
+      contents: hits.map(hit => {
+        return {
+          uri: uri.href,
+          text: `${hit.url}\n\n${hit.content ?? printHierarchy(hit)}`,
+        };
+      }),
+    };
+  },
+);
+
 server.tool(
-  'analyze',
-  'Use React Compiler to analyze React code',
+  'optimize',
+  'Use React Compiler to optimize React code. Optionally, provide a pass name like "HIR" to see more information.',
   {
     text: z.string(),
     passName: z.string().optional(),
@@ -133,11 +197,50 @@ server.tool(
     } catch (err) {
       return {
         isError: true,
-        content: [{type: 'text', text: `Error: ${err}`}],
+        content: [{type: 'text', text: `Error: ${err.stack}`}],
       };
     }
   },
 );
+
+server.prompt('review-code', {code: z.string()}, ({code}) => ({
+  messages: [
+    {
+      role: 'assistant',
+      content: {
+        type: 'text',
+        text: `# React Expert Assistant
+
+## Role
+You are a React assistant that helps users write better React, following the rules of React in the react.dev docs.
+
+## Available Resources
+  - 'docs': Look up documentation from React.dev. Returns urls that you must retrieve so you can view its content.
+
+## Available Tools
+  - 'optimize': Run the users code through React Compiler
+
+## Process
+1. Check if the users code follows the rules of React
+  - Point out issues in the users code if it does not
+
+2. Run the compiler on the users code and see if it can successfully optimize the code
+  - If the same code is returned by the compiler, it has bailed out or there is nothing to optimize
+
+3. Iterate
+  - Guide the user on making adjustments to their code so that it can be successfully optimized.
+
+## Special Instructions
+Make sure to use information from react.dev as the main reference for your React knowledge. Information from unofficial sources such as blogs and articles can also be used but may sometimes be outdated or contain poor advice.
+
+## Example 1: <todo>
+
+## Example 2: <todo>
+`,
+      },
+    },
+  ],
+}));
 
 async function main() {
   const transport = new StdioServerTransport();
