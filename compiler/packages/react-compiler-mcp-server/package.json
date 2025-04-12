@@ -1,0 +1,30 @@
+{
+  "name": "react-compiler-mcp-server",
+  "version": "0.0.0",
+  "description": "React Compiler MCP Server (experimental)",
+  "bin": {
+    "react-compiler-mcp-server": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsup",
+    "test": "echo 'no tests'",
+    "watch": "yarn build --watch"
+  },
+  "dependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/parser": "^7.26",
+    "@babel/plugin-syntax-typescript": "^7.25.9",
+    "@babel/types": "^7.26.0",
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "algoliasearch": "^5.23.3",
+    "prettier": "^3.3.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {},
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "compiler/packages/react-compiler-mcp-server"
+  }
+}
