@@ -222,6 +222,8 @@ export const getNextHydratableInstanceAfterActivityInstance =
 export const getNextHydratableInstanceAfterSuspenseInstance =
   $$$config.getNextHydratableInstanceAfterSuspenseInstance;
 export const commitHydratedContainer = $$$config.commitHydratedContainer;
+export const commitHydratedActivityInstance =
+  $$$config.commitHydratedActivityInstance;
 export const commitHydratedSuspenseInstance =
   $$$config.commitHydratedSuspenseInstance;
 export const clearActivityBoundary = $$$config.clearActivityBoundary;
