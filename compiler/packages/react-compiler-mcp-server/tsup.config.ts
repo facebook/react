@@ -12,7 +12,9 @@ export default defineConfig({
   platform: 'node',
   target: 'es2022',
   banner: {
-    js: `/**
+    js: `#!/usr/bin/env node
+
+/**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
