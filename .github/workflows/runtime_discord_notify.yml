@@ -10,7 +10,19 @@ on:
 permissions: {}
 
 jobs:
+  check_access:
+    runs-on: ubuntu-latest
+    outputs:
+      is_member_or_collaborator: ${{ steps.check_access.outputs.result }}
+    steps:
+      - name: Check access
+        id: check_access
+        if: ${{ github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR' }}
+        run: echo "is_member_or_collaborator=true" >> "$GITHUB_OUTPUT"
+
   check_maintainer:
+    if: ${{ needs.check_access.outputs.is_member_or_collaborator == 'true' }}
+    needs: [check_access]
     uses: facebook/react/.github/workflows/shared_check_maintainer.yml@main
     permissions:
       # Used by check_maintainer
