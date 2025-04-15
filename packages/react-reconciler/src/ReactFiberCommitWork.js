@@ -227,6 +227,7 @@ import {
   commitHostUpdate,
   commitHostTextUpdate,
   commitHostResetTextContent,
+  commitShowHideSuspenseBoundary,
   commitShowHideHostInstance,
   commitShowHideHostTextInstance,
   commitHostPlacement,
@@ -1157,6 +1158,10 @@ function hideOrUnhideAllChildren(finishedWork: Fiber, isHidden: boolean) {
       } else if (node.tag === HostText) {
         if (hostSubtreeRoot === null) {
           commitShowHideHostTextInstance(node, isHidden);
+        }
+      } else if (node.tag === DehydratedFragment) {
+        if (hostSubtreeRoot === null) {
+          commitShowHideSuspenseBoundary(node, isHidden);
         }
       } else if (
         (node.tag === OffscreenComponent ||
