@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<93ab681eecb0c3d22e0af38a0619be48>>
+ * @generated SignedSource<<36b8800ad277bcf7877dc1204fe0275a>>
  */
 
 /*
@@ -9367,31 +9367,31 @@ __DEV__ &&
         if ((workInProgress.mode & ConcurrentMode) === NoMode)
           (workInProgress.memoizedState = { baseLanes: 0, cachePool: null }),
             null !== current && pushTransition(workInProgress, null),
-            reuseHiddenContextOnStack(workInProgress),
-            pushOffscreenSuspenseHandler(workInProgress);
-        else if (0 !== (renderLanes & 536870912))
-          (workInProgress.memoizedState = { baseLanes: 0, cachePool: null }),
-            null !== current &&
-              pushTransition(
+            reuseHiddenContextOnStack(workInProgress);
+        else {
+          if (0 === (renderLanes & 536870912) || isHydrating)
+            return (
+              (workInProgress.lanes = workInProgress.childLanes = 536870912),
+              deferHiddenOffscreenComponent(
+                current,
                 workInProgress,
-                null !== prevState ? prevState.cachePool : null
-              ),
-            null !== prevState
-              ? pushHiddenContext(workInProgress, prevState)
-              : reuseHiddenContextOnStack(workInProgress),
-            pushOffscreenSuspenseHandler(workInProgress);
-        else
-          return (
-            (workInProgress.lanes = workInProgress.childLanes = 536870912),
-            deferHiddenOffscreenComponent(
-              current,
+                null !== prevState
+                  ? prevState.baseLanes | renderLanes
+                  : renderLanes,
+                renderLanes
+              )
+            );
+          workInProgress.memoizedState = { baseLanes: 0, cachePool: null };
+          null !== current &&
+            pushTransition(
               workInProgress,
-              null !== prevState
-                ? prevState.baseLanes | renderLanes
-                : renderLanes,
-              renderLanes
-            )
-          );
+              null !== prevState ? prevState.cachePool : null
+            );
+          null !== prevState
+            ? pushHiddenContext(workInProgress, prevState)
+            : reuseHiddenContextOnStack(workInProgress);
+        }
+        pushOffscreenSuspenseHandler(workInProgress);
       } else
         null !== prevState
           ? (pushTransition(workInProgress, prevState.cachePool),
@@ -25829,11 +25829,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-native-fb-539bbdbd-20250415" !== isomorphicReactPackageVersion)
+      if ("19.2.0-native-fb-b04254fd-20250415" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-native-fb-539bbdbd-20250415\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-native-fb-b04254fd-20250415\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -25870,10 +25870,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-native-fb-539bbdbd-20250415",
+          version: "19.2.0-native-fb-b04254fd-20250415",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-native-fb-539bbdbd-20250415"
+          reconcilerVersion: "19.2.0-native-fb-b04254fd-20250415"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26017,5 +26017,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.2.0-native-fb-539bbdbd-20250415";
+    exports.version = "19.2.0-native-fb-b04254fd-20250415";
   })();

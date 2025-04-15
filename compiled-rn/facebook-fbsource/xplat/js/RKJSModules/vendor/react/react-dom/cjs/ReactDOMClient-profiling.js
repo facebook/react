@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8cfac5997bdeedaaaf2d6fd569cc144a>>
+ * @generated SignedSource<<b444ccc017848b4a09aa98b7f899f1ad>>
  */
 
 /*
@@ -6693,29 +6693,31 @@ function updateOffscreenComponent(
     if (0 === (workInProgress.mode & 1))
       (workInProgress.memoizedState = { baseLanes: 0, cachePool: null }),
         null !== current && pushTransition(workInProgress, null),
-        reuseHiddenContextOnStack(),
-        pushOffscreenSuspenseHandler(workInProgress);
-    else if (0 !== (renderLanes & 536870912))
-      (workInProgress.memoizedState = { baseLanes: 0, cachePool: null }),
-        null !== current &&
-          pushTransition(
+        reuseHiddenContextOnStack();
+    else {
+      if (0 === (renderLanes & 536870912) || isHydrating)
+        return (
+          (workInProgress.lanes = workInProgress.childLanes = 536870912),
+          deferHiddenOffscreenComponent(
+            current,
             workInProgress,
-            null !== prevState ? prevState.cachePool : null
-          ),
-        null !== prevState
-          ? pushHiddenContext(workInProgress, prevState)
-          : reuseHiddenContextOnStack(),
-        pushOffscreenSuspenseHandler(workInProgress);
-    else
-      return (
-        (workInProgress.lanes = workInProgress.childLanes = 536870912),
-        deferHiddenOffscreenComponent(
-          current,
+            null !== prevState
+              ? prevState.baseLanes | renderLanes
+              : renderLanes,
+            renderLanes
+          )
+        );
+      workInProgress.memoizedState = { baseLanes: 0, cachePool: null };
+      null !== current &&
+        pushTransition(
           workInProgress,
-          null !== prevState ? prevState.baseLanes | renderLanes : renderLanes,
-          renderLanes
-        )
-      );
+          null !== prevState ? prevState.cachePool : null
+        );
+      null !== prevState
+        ? pushHiddenContext(workInProgress, prevState)
+        : reuseHiddenContextOnStack();
+    }
+    pushOffscreenSuspenseHandler(workInProgress);
   } else
     null !== prevState
       ? (pushTransition(workInProgress, prevState.cachePool),
@@ -16715,14 +16717,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1902 = React.version;
 if (
-  "19.2.0-native-fb-539bbdbd-20250415" !==
+  "19.2.0-native-fb-b04254fd-20250415" !==
   isomorphicReactPackageVersion$jscomp$inline_1902
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1902,
-      "19.2.0-native-fb-539bbdbd-20250415"
+      "19.2.0-native-fb-b04254fd-20250415"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16744,10 +16746,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1909 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-539bbdbd-20250415",
+  version: "19.2.0-native-fb-b04254fd-20250415",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-539bbdbd-20250415",
+  reconcilerVersion: "19.2.0-native-fb-b04254fd-20250415",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$297 = 0;
@@ -16866,4 +16868,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-539bbdbd-20250415";
+exports.version = "19.2.0-native-fb-b04254fd-20250415";
