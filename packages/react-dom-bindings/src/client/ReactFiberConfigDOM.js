@@ -1165,8 +1165,8 @@ export function clearSuspenseBoundaryFromContainer(
   clearHydrationBoundaryFromContainer(container, suspenseInstance);
 }
 
-function hideOrUnhideSuspenseBoundary(
-  suspenseInstance: SuspenseInstance,
+function hideOrUnhideDehydratedBoundary(
+  suspenseInstance: SuspenseInstance | ActivityInstance,
   isHidden: boolean,
 ) {
   let node: Node = suspenseInstance;
@@ -1216,8 +1216,10 @@ function hideOrUnhideSuspenseBoundary(
   } while (node);
 }
 
-export function hideSuspenseBoundary(suspenseInstance: SuspenseInstance): void {
-  hideOrUnhideSuspenseBoundary(suspenseInstance, true);
+export function hideDehydratedBoundary(
+  suspenseInstance: SuspenseInstance,
+): void {
+  hideOrUnhideDehydratedBoundary(suspenseInstance, true);
 }
 
 export function hideInstance(instance: Instance): void {
@@ -1237,10 +1239,10 @@ export function hideTextInstance(textInstance: TextInstance): void {
   textInstance.nodeValue = '';
 }
 
-export function unhideSuspenseBoundary(
-  suspenseInstance: SuspenseInstance,
+export function unhideDehydratedBoundary(
+  dehydratedInstance: SuspenseInstance | ActivityInstance,
 ): void {
-  hideOrUnhideSuspenseBoundary(suspenseInstance, false);
+  hideOrUnhideDehydratedBoundary(dehydratedInstance, false);
 }
 
 export function unhideInstance(instance: Instance, props: Props): void {

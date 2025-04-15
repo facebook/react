@@ -232,8 +232,8 @@ export const clearActivityBoundaryFromContainer =
   $$$config.clearActivityBoundaryFromContainer;
 export const clearSuspenseBoundaryFromContainer =
   $$$config.clearSuspenseBoundaryFromContainer;
-export const hideSuspenseBoundary = $$$config.hideSuspenseBoundary;
-export const unhideSuspenseBoundary = $$$config.unhideSuspenseBoundary;
+export const hideDehydratedBoundary = $$$config.hideDehydratedBoundary;
+export const unhideDehydratedBoundary = $$$config.unhideDehydratedBoundary;
 export const shouldDeleteUnhydratedTailInstances =
   $$$config.shouldDeleteUnhydratedTailInstances;
 export const diffHydratedPropsForDevWarnings =
