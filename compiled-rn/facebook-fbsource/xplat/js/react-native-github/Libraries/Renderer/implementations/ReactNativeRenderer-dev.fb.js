@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ccc77506c7bf8e1cff370720d00a9998>>
+ * @generated SignedSource<<486234ff79db056d23862af0c4bddad1>>
  */
 
 "use strict";
@@ -9161,22 +9161,33 @@ __DEV__ &&
           );
         case 31:
           return (
-            (returnFiber = workInProgress.pendingProps),
-            (renderLanes = workInProgress.mode),
-            (returnFiber = {
-              mode: returnFiber.mode,
-              children: returnFiber.children
+            (renderLanes = workInProgress.pendingProps),
+            (returnFiber = renderLanes.hidden),
+            void 0 !== returnFiber &&
+              console.error(
+                '<Activity> doesn\'t accept a hidden prop. Use mode="hidden" instead.\n- <Activity %s>\n+ <Activity %s>',
+                !0 === returnFiber
+                  ? "hidden"
+                  : !1 === returnFiber
+                    ? "hidden={false}"
+                    : "hidden={...}",
+                returnFiber ? 'mode="hidden"' : 'mode="visible"'
+              ),
+            (returnFiber = workInProgress.mode),
+            (renderLanes = {
+              mode: renderLanes.mode,
+              children: renderLanes.children
             }),
             null === current
               ? ((current = mountWorkInProgressOffscreenFiber(
-                  returnFiber,
-                  renderLanes
+                  renderLanes,
+                  returnFiber
                 )),
                 (current.ref = workInProgress.ref),
                 (workInProgress.child = current),
                 (current.return = workInProgress),
                 (workInProgress = current))
-              : ((current = createWorkInProgress(current.child, returnFiber)),
+              : ((current = createWorkInProgress(current.child, renderLanes)),
                 (current.ref = workInProgress.ref),
                 (workInProgress.child = current),
                 (current.return = workInProgress),
@@ -17320,11 +17331,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-961b625a-20250411" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-539bbdbd-20250415" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-961b625a-20250411\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-539bbdbd-20250415\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17350,10 +17361,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-961b625a-20250411",
+        version: "19.2.0-native-fb-539bbdbd-20250415",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-961b625a-20250411"
+        reconcilerVersion: "19.2.0-native-fb-539bbdbd-20250415"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

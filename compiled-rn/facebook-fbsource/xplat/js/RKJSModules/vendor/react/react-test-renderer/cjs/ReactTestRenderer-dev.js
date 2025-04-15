@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aae7489f2cc83ed12d4f0452d4f523b9>>
+ * @generated SignedSource<<f417b3a1c5860111265eabae937adae8>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1138() {
+    function JSCompiler_object_inline_createNodeMock_1139() {
       return null;
     }
     function findHook(fiber, id) {
@@ -8189,22 +8189,33 @@ __DEV__ &&
           );
         case 31:
           return (
-            (returnFiber = workInProgress.pendingProps),
-            (renderLanes = workInProgress.mode),
-            (returnFiber = {
-              mode: returnFiber.mode,
-              children: returnFiber.children
+            (renderLanes = workInProgress.pendingProps),
+            (returnFiber = renderLanes.hidden),
+            void 0 !== returnFiber &&
+              console.error(
+                '<Activity> doesn\'t accept a hidden prop. Use mode="hidden" instead.\n- <Activity %s>\n+ <Activity %s>',
+                !0 === returnFiber
+                  ? "hidden"
+                  : !1 === returnFiber
+                    ? "hidden={false}"
+                    : "hidden={...}",
+                returnFiber ? 'mode="hidden"' : 'mode="visible"'
+              ),
+            (returnFiber = workInProgress.mode),
+            (renderLanes = {
+              mode: renderLanes.mode,
+              children: renderLanes.children
             }),
             null === current
               ? ((current = mountWorkInProgressOffscreenFiber(
-                  returnFiber,
-                  renderLanes
+                  renderLanes,
+                  returnFiber
                 )),
                 (current.ref = workInProgress.ref),
                 (workInProgress.child = current),
                 (current.return = workInProgress),
                 (workInProgress = current))
-              : ((current = createWorkInProgress(current.child, returnFiber)),
+              : ((current = createWorkInProgress(current.child, renderLanes)),
                 (current.ref = workInProgress.ref),
                 (workInProgress.child = current),
                 (current.return = workInProgress),
@@ -15410,10 +15421,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-961b625a-20250411",
+        version: "19.2.0-native-fb-539bbdbd-20250415",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-961b625a-20250411"
+        reconcilerVersion: "19.2.0-native-fb-539bbdbd-20250415"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15435,7 +15446,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1138,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1139,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15558,5 +15569,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-961b625a-20250411";
+    exports.version = "19.2.0-native-fb-539bbdbd-20250415";
   })();

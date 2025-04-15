@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1a82e8ba85543d3a51ad323cc13eb9b4>>
+ * @generated SignedSource<<cb4bdd2a579db229289bf5525a3444b4>>
  */
 
 "use strict";
@@ -9037,22 +9037,33 @@ __DEV__ &&
           );
         case 31:
           return (
-            (returnFiber = workInProgress.pendingProps),
-            (renderLanes = workInProgress.mode),
-            (returnFiber = {
-              mode: returnFiber.mode,
-              children: returnFiber.children
+            (renderLanes = workInProgress.pendingProps),
+            (returnFiber = renderLanes.hidden),
+            void 0 !== returnFiber &&
+              console.error(
+                '<Activity> doesn\'t accept a hidden prop. Use mode="hidden" instead.\n- <Activity %s>\n+ <Activity %s>',
+                !0 === returnFiber
+                  ? "hidden"
+                  : !1 === returnFiber
+                    ? "hidden={false}"
+                    : "hidden={...}",
+                returnFiber ? 'mode="hidden"' : 'mode="visible"'
+              ),
+            (returnFiber = workInProgress.mode),
+            (renderLanes = {
+              mode: renderLanes.mode,
+              children: renderLanes.children
             }),
             null === current
               ? ((current = mountWorkInProgressOffscreenFiber(
-                  returnFiber,
-                  renderLanes
+                  renderLanes,
+                  returnFiber
                 )),
                 (current.ref = workInProgress.ref),
                 (workInProgress.child = current),
                 (current.return = workInProgress),
                 (workInProgress = current))
-              : ((current = createWorkInProgress(current.child, returnFiber)),
+              : ((current = createWorkInProgress(current.child, renderLanes)),
                 (current.ref = workInProgress.ref),
                 (workInProgress.child = current),
                 (current.return = workInProgress),
@@ -17149,10 +17160,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-961b625a-20250411",
+        version: "19.2.0-native-fb-539bbdbd-20250415",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-961b625a-20250411"
+        reconcilerVersion: "19.2.0-native-fb-539bbdbd-20250415"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
