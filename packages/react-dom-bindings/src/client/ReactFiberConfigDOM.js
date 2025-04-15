@@ -2699,17 +2699,36 @@ FragmentInstance.prototype.dispatchEvent = function (
   this: FragmentInstanceType,
   event: Event,
 ): boolean {
-  const parentHostInstance = getFragmentParentHostInstance(this._fragmentFiber);
-  if (parentHostInstance === null) {
-    if (__DEV__) {
-      console.error(
-        'You are attempting to dispatch an event on a disconnected ' +
-          'FragmentInstance. No event was dispatched.',
-      );
-    }
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
     return true;
   }
-  return parentHostInstance.dispatchEvent(event);
+  const parentHostInstance = getInstanceFromHostFiber(parentHostFiber);
+  const eventListeners = this._eventListeners;
+  if (
+    (eventListeners !== null && eventListeners.length > 0) ||
+    !event.bubbles
+  ) {
+    const temp = document.createTextNode('');
+    if (eventListeners) {
+      for (let i = 0; i < eventListeners.length; i++) {
+        const {type, listener, optionsOrUseCapture} = eventListeners[i];
+        temp.addEventListener(type, listener, optionsOrUseCapture);
+      }
+    }
+    parentHostInstance.appendChild(temp);
+    const cancelable = temp.dispatchEvent(event);
+    if (eventListeners) {
+      for (let i = 0; i < eventListeners.length; i++) {
+        const {type, listener, optionsOrUseCapture} = eventListeners[i];
+        temp.removeEventListener(type, listener, optionsOrUseCapture);
+      }
+    }
+    parentHostInstance.removeChild(temp);
+    return cancelable;
+  } else {
+    return parentHostInstance.dispatchEvent(event);
+  }
 };
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.focus = function (

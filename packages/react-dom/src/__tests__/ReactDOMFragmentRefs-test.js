@@ -789,7 +789,7 @@ describe('FragmentRefs', () => {
 
     describe('dispatchEvent()', () => {
       // @gate enableFragmentRefs
-      it('fires events on the host parent', async () => {
+      it('fires events on the host parent if bubbles=true', async () => {
         const fragmentRef = React.createRef();
         const root = ReactDOMClient.createRoot(container);
         let logs = [];
@@ -835,15 +835,55 @@ describe('FragmentRefs', () => {
         isCancelable = !fragmentInstanceHandle.dispatchEvent(
           new MouseEvent('click', {bubbles: true}),
         );
-        assertConsoleErrorDev(
-          [
-            'You are attempting to dispatch an event on a disconnected ' +
-              'FragmentInstance. No event was dispatched.',
-          ],
-          {withoutStack: true},
+        expect(logs).toEqual([]);
+        expect(isCancelable).toBe(false);
+
+        logs = [];
+        isCancelable = !fragmentInstanceHandle.dispatchEvent(
+          new MouseEvent('click', {bubbles: false}),
         );
         expect(logs).toEqual([]);
         expect(isCancelable).toBe(false);
+      });
+
+      // @gate enableFragmentRefs
+      it('fires events on self, and only self if bubbles=false', async () => {
+        const fragmentRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+        let logs = [];
+
+        function handleClick(e) {
+          logs.push([e.type, e.target.id, e.currentTarget.id]);
+        }
+
+        function Test() {
+          return (
+            <div id="parent" onClick={handleClick}>
+              <Fragment ref={fragmentRef} />
+            </div>
+          );
+        }
+
+        await act(() => {
+          root.render(<Test />);
+        });
+
+        fragmentRef.current.addEventListener('click', handleClick);
+
+        fragmentRef.current.dispatchEvent(
+          new MouseEvent('click', {bubbles: true}),
+        );
+        expect(logs).toEqual([
+          ['click', undefined, undefined],
+          ['click', 'parent', 'parent'],
+        ]);
+
+        logs = [];
+
+        fragmentRef.current.dispatchEvent(
+          new MouseEvent('click', {bubbles: false}),
+        );
+        expect(logs).toEqual([['click', undefined, undefined]]);
       });
     });
   });
