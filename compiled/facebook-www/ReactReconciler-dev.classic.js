@@ -9620,7 +9620,18 @@ __DEV__ &&
           return workInProgress.child;
         case 31:
           var nextProps$jscomp$1 = workInProgress.pendingProps,
-            mode = workInProgress.mode,
+            hiddenProp = nextProps$jscomp$1.hidden;
+          void 0 !== hiddenProp &&
+            console.error(
+              '<Activity> doesn\'t accept a hidden prop. Use mode="hidden" instead.\n- <Activity %s>\n+ <Activity %s>',
+              !0 === hiddenProp
+                ? "hidden"
+                : !1 === hiddenProp
+                  ? "hidden={false}"
+                  : "hidden={...}",
+              hiddenProp ? 'mode="hidden"' : 'mode="visible"'
+            );
+          var mode = workInProgress.mode,
             offscreenChildProps = {
               mode: nextProps$jscomp$1.mode,
               children: nextProps$jscomp$1.children
@@ -21227,7 +21238,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-1d6c8168-20250411"
+        reconcilerVersion: "19.2.0-www-classic-539bbdbd-20250415"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

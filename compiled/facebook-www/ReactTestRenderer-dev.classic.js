@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1140() {
+    function JSCompiler_object_inline_createNodeMock_1141() {
       return null;
     }
     function findHook(fiber, id) {
@@ -7969,22 +7969,33 @@ __DEV__ &&
           );
         case 31:
           return (
-            (returnFiber = workInProgress.pendingProps),
-            (renderLanes = workInProgress.mode),
-            (returnFiber = {
-              mode: returnFiber.mode,
-              children: returnFiber.children
+            (renderLanes = workInProgress.pendingProps),
+            (returnFiber = renderLanes.hidden),
+            void 0 !== returnFiber &&
+              console.error(
+                '<Activity> doesn\'t accept a hidden prop. Use mode="hidden" instead.\n- <Activity %s>\n+ <Activity %s>',
+                !0 === returnFiber
+                  ? "hidden"
+                  : !1 === returnFiber
+                    ? "hidden={false}"
+                    : "hidden={...}",
+                returnFiber ? 'mode="hidden"' : 'mode="visible"'
+              ),
+            (returnFiber = workInProgress.mode),
+            (renderLanes = {
+              mode: renderLanes.mode,
+              children: renderLanes.children
             }),
             null === current
               ? ((current = mountWorkInProgressOffscreenFiber(
-                  returnFiber,
-                  renderLanes
+                  renderLanes,
+                  returnFiber
                 )),
                 (current.ref = workInProgress.ref),
                 (workInProgress.child = current),
                 (current.return = workInProgress),
                 (workInProgress = current))
-              : ((current = createWorkInProgress(current.child, returnFiber)),
+              : ((current = createWorkInProgress(current.child, renderLanes)),
                 (current.ref = workInProgress.ref),
                 (workInProgress.child = current),
                 (current.return = workInProgress),
@@ -15114,10 +15125,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-1d6c8168-20250411",
+        version: "19.2.0-www-classic-539bbdbd-20250415",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-1d6c8168-20250411"
+        reconcilerVersion: "19.2.0-www-classic-539bbdbd-20250415"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15137,7 +15148,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1140,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1141,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15252,5 +15263,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-classic-1d6c8168-20250411";
+    exports.version = "19.2.0-www-classic-539bbdbd-20250415";
   })();

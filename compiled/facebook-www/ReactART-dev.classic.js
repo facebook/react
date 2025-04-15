@@ -8958,22 +8958,33 @@ __DEV__ &&
           );
         case 31:
           return (
-            (returnFiber = workInProgress.pendingProps),
-            (renderLanes = workInProgress.mode),
-            (returnFiber = {
-              mode: returnFiber.mode,
-              children: returnFiber.children
+            (renderLanes = workInProgress.pendingProps),
+            (returnFiber = renderLanes.hidden),
+            void 0 !== returnFiber &&
+              console.error(
+                '<Activity> doesn\'t accept a hidden prop. Use mode="hidden" instead.\n- <Activity %s>\n+ <Activity %s>',
+                !0 === returnFiber
+                  ? "hidden"
+                  : !1 === returnFiber
+                    ? "hidden={false}"
+                    : "hidden={...}",
+                returnFiber ? 'mode="hidden"' : 'mode="visible"'
+              ),
+            (returnFiber = workInProgress.mode),
+            (renderLanes = {
+              mode: renderLanes.mode,
+              children: renderLanes.children
             }),
             null === current
               ? ((current = mountWorkInProgressOffscreenFiber(
-                  returnFiber,
-                  renderLanes
+                  renderLanes,
+                  returnFiber
                 )),
                 (current.ref = workInProgress.ref),
                 (workInProgress.child = current),
                 (current.return = workInProgress),
                 (workInProgress = current))
-              : ((current = createWorkInProgress(current.child, returnFiber)),
+              : ((current = createWorkInProgress(current.child, renderLanes)),
                 (current.ref = workInProgress.ref),
                 (workInProgress.child = current),
                 (current.return = workInProgress),
@@ -18547,10 +18558,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-1d6c8168-20250411",
+        version: "19.2.0-www-classic-539bbdbd-20250415",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-1d6c8168-20250411"
+        reconcilerVersion: "19.2.0-www-classic-539bbdbd-20250415"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18584,7 +18595,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-1d6c8168-20250411";
+    exports.version = "19.2.0-www-classic-539bbdbd-20250415";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

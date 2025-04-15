@@ -66,6 +66,7 @@ export default [
   "%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). This component defines getSnapshotBeforeUpdate() only.",
   "<%s /> is using incorrect casing. Use PascalCase for React components, or lowercase for HTML elements.",
   "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace.",
+  "<Activity> doesn't accept a hidden prop. Use mode=\"hidden\" instead.\n- <Activity %s>\n+ <Activity %s>",
   "<SuspenseList tail=\"%s\" /> is only valid if revealOrder is \"forwards\" or \"backwards\". Did you mean to specify revealOrder=\"forwards\"?",
   "<ViewTransition> doesn't accept a \"className\" prop. It has been renamed to \"default\".\n-   <ViewTransition className=%s>\n+   <ViewTransition default=%s>",
   "A button can only specify a formAction along with type=\"submit\" or no type.",
