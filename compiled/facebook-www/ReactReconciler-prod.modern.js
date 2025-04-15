@@ -4478,19 +4478,10 @@ module.exports = function ($$$config) {
           renderLanes
         );
       }
-      if (0 !== (renderLanes & 536870912))
-        (workInProgress.memoizedState = { baseLanes: 0, cachePool: null }),
-          null !== current &&
-            pushTransition(
-              workInProgress,
-              null !== prevState ? prevState.cachePool : null,
-              null
-            ),
-          null !== prevState
-            ? pushHiddenContext(workInProgress, prevState)
-            : reuseHiddenContextOnStack(),
-          pushOffscreenSuspenseHandler(workInProgress);
-      else
+      if (
+        0 === (renderLanes & 536870912) ||
+        (isHydrating && "unstable-defer-without-hiding" !== nextProps.mode)
+      )
         return (
           (workInProgress.lanes = workInProgress.childLanes = 536870912),
           deferHiddenOffscreenComponent(
@@ -4502,6 +4493,17 @@ module.exports = function ($$$config) {
             renderLanes
           )
         );
+      workInProgress.memoizedState = { baseLanes: 0, cachePool: null };
+      null !== current &&
+        pushTransition(
+          workInProgress,
+          null !== prevState ? prevState.cachePool : null,
+          null
+        );
+      null !== prevState
+        ? pushHiddenContext(workInProgress, prevState)
+        : reuseHiddenContextOnStack();
+      pushOffscreenSuspenseHandler(workInProgress);
     } else if (null !== prevState) {
       nextProps = prevState.cachePool;
       var transitions = null;
@@ -13537,7 +13539,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-539bbdbd-20250415"
+      reconcilerVersion: "19.2.0-www-modern-b04254fd-20250415"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
