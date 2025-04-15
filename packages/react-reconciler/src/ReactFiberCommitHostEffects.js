@@ -41,10 +41,10 @@ import {
   insertBefore,
   insertInContainerBefore,
   replaceContainerChildren,
-  hideSuspenseBoundary,
+  hideDehydratedBoundary,
   hideInstance,
   hideTextInstance,
-  unhideSuspenseBoundary,
+  unhideDehydratedBoundary,
   unhideInstance,
   unhideTextInstance,
   commitHydratedContainer,
@@ -159,15 +159,15 @@ export function commitShowHideSuspenseBoundary(node: Fiber, isHidden: boolean) {
     const instance = node.stateNode;
     if (isHidden) {
       if (__DEV__) {
-        runWithFiberInDEV(node, hideSuspenseBoundary, instance);
+        runWithFiberInDEV(node, hideDehydratedBoundary, instance);
       } else {
-        hideSuspenseBoundary(instance);
+        hideDehydratedBoundary(instance);
       }
     } else {
       if (__DEV__) {
-        runWithFiberInDEV(node, unhideSuspenseBoundary, node.stateNode);
+        runWithFiberInDEV(node, unhideDehydratedBoundary, node.stateNode);
       } else {
-        unhideSuspenseBoundary(node.stateNode);
+        unhideDehydratedBoundary(node.stateNode);
       }
     }
   } catch (error) {
