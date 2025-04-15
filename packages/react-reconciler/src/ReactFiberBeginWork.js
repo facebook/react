@@ -873,6 +873,22 @@ function updateActivityComponent(
   renderLanes: Lanes,
 ) {
   const nextProps: ActivityProps = workInProgress.pendingProps;
+  if (__DEV__) {
+    const hiddenProp = (nextProps: any).hidden;
+    if (hiddenProp !== undefined) {
+      console.error(
+        '<Activity> doesn\'t accept a hidden prop. Use mode="hidden" instead.\n' +
+          '- <Activity %s>\n' +
+          '+ <Activity %s>',
+        hiddenProp === true
+          ? 'hidden'
+          : hiddenProp === false
+            ? 'hidden={false}'
+            : 'hidden={...}',
+        hiddenProp ? 'mode="hidden"' : 'mode="visible"',
+      );
+    }
+  }
   const nextChildren = nextProps.children;
   const nextMode = nextProps.mode;
   const mode = workInProgress.mode;
