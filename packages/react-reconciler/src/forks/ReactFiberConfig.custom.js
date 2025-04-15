@@ -220,6 +220,8 @@ export const commitHydratedSuspenseInstance =
 export const clearSuspenseBoundary = $$$config.clearSuspenseBoundary;
 export const clearSuspenseBoundaryFromContainer =
   $$$config.clearSuspenseBoundaryFromContainer;
+export const hideSuspenseBoundary = $$$config.hideSuspenseBoundary;
+export const unhideSuspenseBoundary = $$$config.unhideSuspenseBoundary;
 export const shouldDeleteUnhydratedTailInstances =
   $$$config.shouldDeleteUnhydratedTailInstances;
 export const diffHydratedPropsForDevWarnings =
