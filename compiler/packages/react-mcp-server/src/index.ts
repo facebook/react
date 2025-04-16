@@ -279,17 +279,16 @@ server.tool(
         }
       }
       if (errors.length > 0) {
-        const errMessages = errors.map(err => {
-          if (typeof err.loc !== 'symbol') {
+        return {
+          content: errors.map(err => {
             return {
               type: 'text' as const,
-              text: `React Compiler bailed out:\n\n${err.message}@${err.loc.start.line}:${err.loc.end.line}`,
+              text:
+                typeof err.loc !== 'symbol'
+                  ? `React Compiler bailed out:\n\n${err.message}@${err.loc.start.line}:${err.loc.end.line}`
+                  : `React Compiler bailed out:\n\n${err.message}`,
             };
-          }
-          return null;
-        });
-        return {
-          content: errMessages.filter(msg => msg !== null),
+          }),
         };
       }
       return {
