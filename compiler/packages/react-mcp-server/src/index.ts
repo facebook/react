@@ -40,14 +40,30 @@ const server = new McpServer({
   version: '0.0.0',
 });
 
+function slugify(heading: string): string {
+  return heading
+    .split(' ')
+    .map(w => w.toLowerCase())
+    .join('-');
+}
+
 // TODO: how to verify this works?
 server.resource(
   'docs',
   new ResourceTemplate('docs://{message}', {list: undefined}),
-  async (uri, {message}) => {
+  async (_uri, {message}) => {
     const hits = await queryAlgolia(message);
+    const deduped = new Map();
+    for (const hit of hits) {
+      // drop hashes to dedupe properly
+      const u = new URL(hit.url);
+      if (deduped.has(u.pathname)) {
+        continue;
+      }
+      deduped.set(u.pathname, hit);
+    }
     const pages: Array<string | null> = await Promise.all(
-      hits.map(hit => {
+      Array.from(deduped.values()).map(hit => {
         return fetch(hit.url, {
           headers: {
             'User-Agent':
@@ -70,16 +86,17 @@ server.resource(
       .filter(html => html !== null)
       .map(html => {
         const $ = cheerio.load(html);
+        const title = encodeURIComponent(slugify($('h1').text()));
         // react.dev should always have at least one <article> with the main content
         const article = $('article').html();
         if (article != null) {
           return {
-            uri: uri.href,
+            uri: `docs://${title}`,
             text: turndownService.turndown(article),
           };
         } else {
           return {
-            uri: uri.href,
+            uri: `docs://${title}`,
             // Fallback to converting the whole page to markdown
             text: turndownService.turndown($.html()),
           };
