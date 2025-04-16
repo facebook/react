@@ -285,8 +285,12 @@ server.tool(
               type: 'text' as const,
               text: `React Compiler bailed out:\n\n${err.message}@${err.loc.start.line}:${err.loc.end.line}`,
             };
+          } else {
+            return {
+              type: 'text' as const,
+              text: `React Compiler bailed out:\n\n${err.message}`,
+            };
           }
-          return null;
         });
         return {
           content: errMessages.filter(msg => msg !== null),
