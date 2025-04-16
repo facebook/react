@@ -283,7 +283,7 @@ server.tool(
           if (typeof err.loc !== 'symbol') {
             return {
               type: 'text' as const,
-              text: `React Compiler bailed out: ${err.message}@${err.loc.start}:${err.loc.end}`,
+              text: `React Compiler bailed out:\n\n${err.message}@${err.loc.start.line}:${err.loc.end.line}`,
             };
           }
           return null;
