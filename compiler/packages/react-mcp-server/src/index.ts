@@ -11,7 +11,7 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {z} from 'zod';
-import {compile} from './compiler';
+import {compile, type PrintedCompilerPipelineValue} from './compiler';
 import {
   CompilerPipelineValue,
   printReactiveFunctionWithOutlined,
@@ -22,19 +22,9 @@ import {
 import * as cheerio from 'cheerio';
 import TurndownService from 'turndown';
 import {queryAlgolia} from './utils/algolia';
+import assertExhaustive from './utils/assertExhaustive';
 
 const turndownService = new TurndownService();
-
-export type PrintedCompilerPipelineValue =
-  | {
-      kind: 'hir';
-      name: string;
-      fnName: string | null;
-      value: string;
-    }
-  | {kind: 'reactive'; name: string; fnName: string | null; value: string}
-  | {kind: 'debug'; name: string; fnName: string | null; value: string};
-
 const server = new McpServer({
   name: 'React',
   version: '0.0.0',
@@ -114,7 +104,7 @@ server.tool(
   'Compile code with React Compiler. Optionally, for debugging provide a pass name like "HIR" to see more information.',
   {
     text: z.string(),
-    passName: z.string().optional(),
+    passName: z.enum(['HIR', 'ReactiveFunction', 'All', '@DEBUG']).optional(),
   },
   async ({text, passName}) => {
     const pipelinePasses = new Map<
@@ -164,8 +154,7 @@ server.tool(
           break;
         }
         default: {
-          const _: never = result;
-          throw new Error(`Unhandled result ${result}`);
+          assertExhaustive(result, `Unhandled result ${result}`);
         }
       }
     };
@@ -205,6 +194,78 @@ server.tool(
       }
       const requestedPasses: Array<{type: 'text'; text: string}> = [];
       if (passName != null) {
+        switch (passName) {
+          case 'All': {
+            const hir = pipelinePasses.get('PropagateScopeDependenciesHIR');
+            if (hir !== undefined) {
+              for (const pipelineValue of hir) {
+                requestedPasses.push({
+                  type: 'text' as const,
+                  text: pipelineValue.value,
+                });
+              }
+            }
+            const reactiveFunc = pipelinePasses.get('PruneHoistedContexts');
+            if (reactiveFunc !== undefined) {
+              for (const pipelineValue of reactiveFunc) {
+                requestedPasses.push({
+                  type: 'text' as const,
+                  text: pipelineValue.value,
+                });
+              }
+            }
+            break;
+          }
+          case 'HIR': {
+            // Last pass before HIR -> ReactiveFunction
+            const requestedPass = pipelinePasses.get(
+              'PropagateScopeDependenciesHIR',
+            );
+            if (requestedPass !== undefined) {
+              for (const pipelineValue of requestedPass) {
+                requestedPasses.push({
+                  type: 'text' as const,
+                  text: pipelineValue.value,
+                });
+              }
+            } else {
+              console.error(`Could not find requested pass ${passName}`);
+            }
+            break;
+          }
+          case 'ReactiveFunction': {
+            // Last pass
+            const requestedPass = pipelinePasses.get('PruneHoistedContexts');
+            if (requestedPass !== undefined) {
+              for (const pipelineValue of requestedPass) {
+                requestedPasses.push({
+                  type: 'text' as const,
+                  text: pipelineValue.value,
+                });
+              }
+            } else {
+              console.error(`Could not find requested pass ${passName}`);
+            }
+            break;
+          }
+          case '@DEBUG': {
+            for (const [, pipelinePass] of pipelinePasses) {
+              for (const pass of pipelinePass) {
+                requestedPasses.push({
+                  type: 'text' as const,
+                  text: `${pass.name}\n\n${pass.value}`,
+                });
+              }
+            }
+            break;
+          }
+          default: {
+            assertExhaustive(
+              passName,
+              `Unhandled passName option: ${passName}`,
+            );
+          }
+        }
         const requestedPass = pipelinePasses.get(passName);
         if (requestedPass !== undefined) {
           for (const pipelineValue of requestedPass) {
