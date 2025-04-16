@@ -14,6 +14,16 @@ import * as prettier from 'prettier';
 
 export let lastResult: BabelCore.BabelFileResult | null = null;
 
+export type PrintedCompilerPipelineValue =
+  | {
+      kind: 'hir';
+      name: string;
+      fnName: string | null;
+      value: string;
+    }
+  | {kind: 'reactive'; name: string; fnName: string | null; value: string}
+  | {kind: 'debug'; name: string; fnName: string | null; value: string};
+
 type CompileOptions = {
   text: string;
   file: string;

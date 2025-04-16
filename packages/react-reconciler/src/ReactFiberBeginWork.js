@@ -712,7 +712,14 @@ function updateOffscreenComponent(
       }
       reuseHiddenContextOnStack(workInProgress);
       pushOffscreenSuspenseHandler(workInProgress);
-    } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
+    } else if (
+      !includesSomeLane(renderLanes, (OffscreenLane: Lane)) ||
+      // SSR doesn't render hidden content (except legacy hidden) so it shouldn't hydrate,
+      // even at offscreen lane. Defer to a client rendered offscreen lane.
+      (getIsHydrating() &&
+        (!enableLegacyHidden ||
+          nextProps.mode !== 'unstable-defer-without-hiding'))
+    ) {
       // We're hidden, and we're not rendering at Offscreen. We will bail out
       // and resume this tree later.
 
@@ -873,6 +880,22 @@ function updateActivityComponent(
   renderLanes: Lanes,
 ) {
   const nextProps: ActivityProps = workInProgress.pendingProps;
+  if (__DEV__) {
+    const hiddenProp = (nextProps: any).hidden;
+    if (hiddenProp !== undefined) {
+      console.error(
+        '<Activity> doesn\'t accept a hidden prop. Use mode="hidden" instead.\n' +
+          '- <Activity %s>\n' +
+          '+ <Activity %s>',
+        hiddenProp === true
+          ? 'hidden'
+          : hiddenProp === false
+            ? 'hidden={false}'
+            : 'hidden={...}',
+        hiddenProp ? 'mode="hidden"' : 'mode="visible"',
+      );
+    }
+  }
   const nextChildren = nextProps.children;
   const nextMode = nextProps.mode;
   const mode = workInProgress.mode;
