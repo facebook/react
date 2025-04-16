@@ -13,7 +13,7 @@ jobs:
   check_access:
     runs-on: ubuntu-latest
     outputs:
-      is_member_or_collaborator: ${{ steps.check_access.outputs.result }}
+      is_member_or_collaborator: ${{ steps.check_access.outputs.is_member_or_collaborator }}
     steps:
       - name: Check access
         id: check_access
