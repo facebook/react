@@ -158,7 +158,7 @@ server.tool(
         }
       }
     };
-    const errors: Array<{message: string; loc: SourceLocation}> = [];
+    const errors: Array<{message: string; loc: SourceLocation | null}> = [];
     const compilerOptions: Partial<PluginOptions> = {
       panicThreshold: 'none',
       logger: {
@@ -170,12 +170,10 @@ server.tool(
               detail.loc == null || typeof detail.loc == 'symbol'
                 ? event.fnLoc
                 : detail.loc;
-            if (loc != null) {
-              errors.push({
-                message: detail.reason,
-                loc,
-              });
-            }
+            errors.push({
+              message: detail.reason,
+              loc,
+            });
           }
         },
       },
@@ -279,17 +277,16 @@ server.tool(
         }
       }
       if (errors.length > 0) {
-        const errMessages = errors.map(err => {
-          if (typeof err.loc !== 'symbol') {
+        return {
+          content: errors.map(err => {
             return {
               type: 'text' as const,
-              text: `React Compiler bailed out:\n\n${err.message}@${err.loc.start.line}:${err.loc.end.line}`,
+              text:
+                err.loc === null || typeof err.loc === 'symbol'
+                  ? `React Compiler bailed out:\n\n${err.message}`
+                  : `React Compiler bailed out:\n\n${err.message}@${err.loc.start.line}:${err.loc.end.line}`,
             };
-          }
-          return null;
-        });
-        return {
-          content: errMessages.filter(msg => msg !== null),
+          }),
         };
       }
       return {
