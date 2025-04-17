@@ -2762,6 +2762,7 @@ function pushStyle(
   }
   const precedence = props.precedence;
   const href = props.href;
+  const nonce = props.nonce;
 
   if (
     insertionMode === SVG_MODE ||
@@ -2809,9 +2810,23 @@ function pushStyle(
         rules: ([]: Array<Chunk | PrecomputedChunk>),
         hrefs: [stringToChunk(escapeTextForBrowser(href))],
         sheets: (new Map(): Map<string, StylesheetResource>),
+        nonce: nonce && stringToChunk(escapeTextForBrowser(nonce)),
       };
       renderState.styles.set(precedence, styleQueue);
     } else {
+      if (!('nonce' in styleQueue)) {
+        // `styleQueue` could have been created by `preinit` where `nonce` is not required
+        styleQueue.nonce = nonce && stringToChunk(escapeTextForBrowser(nonce));
+      }
+      if (__DEV__) {
+        if (nonce !== styleQueue.nonce) {
+          console.error(
+            'React encountered a hoistable style tag with "%s" nonce. It doesn\'t match the previously encountered nonce "%s". They have to be the same',
+            nonce && stringToChunk(escapeTextForBrowser(nonce)),
+            styleQueue.nonce,
+          );
+        }
+      }
       // We have seen this precedence before and need to track this href
       styleQueue.hrefs.push(stringToChunk(escapeTextForBrowser(href)));
     }
@@ -4746,8 +4761,9 @@ function escapeJSObjectForInstructionScripts(input: Object): string {
 const lateStyleTagResourceOpen1 = stringToPrecomputedChunk(
   '<style media="not all" data-precedence="',
 );
-const lateStyleTagResourceOpen2 = stringToPrecomputedChunk('" data-href="');
-const lateStyleTagResourceOpen3 = stringToPrecomputedChunk('">');
+const lateStyleTagResourceOpen2 = stringToPrecomputedChunk('" nonce="');
+const lateStyleTagResourceOpen3 = stringToPrecomputedChunk('" data-href="');
+const lateStyleTagResourceOpen4 = stringToPrecomputedChunk('">');
 const lateStyleTagTemplateClose = stringToPrecomputedChunk('</style>');
 
 // Tracks whether the boundary currently flushing is flushign style tags or has any
@@ -4763,6 +4779,7 @@ function flushStyleTagsLateForBoundary(
 ) {
   const rules = styleQueue.rules;
   const hrefs = styleQueue.hrefs;
+  const nonce = styleQueue.nonce;
   if (__DEV__) {
     if (rules.length > 0 && hrefs.length === 0) {
       console.error(
@@ -4774,13 +4791,17 @@ function flushStyleTagsLateForBoundary(
   if (hrefs.length) {
     writeChunk(this, lateStyleTagResourceOpen1);
     writeChunk(this, styleQueue.precedence);
-    writeChunk(this, lateStyleTagResourceOpen2);
+    if (nonce) {
+      writeChunk(this, lateStyleTagResourceOpen2);
+      writeChunk(this, nonce);
+    }
+    writeChunk(this, lateStyleTagResourceOpen3);
     for (; i < hrefs.length - 1; i++) {
       writeChunk(this, hrefs[i]);
       writeChunk(this, spaceSeparator);
     }
     writeChunk(this, hrefs[i]);
-    writeChunk(this, lateStyleTagResourceOpen3);
+    writeChunk(this, lateStyleTagResourceOpen4);
     for (i = 0; i < rules.length; i++) {
       writeChunk(this, rules[i]);
     }
@@ -4867,9 +4888,10 @@ function flushStyleInPreamble(
 const styleTagResourceOpen1 = stringToPrecomputedChunk(
   '<style data-precedence="',
 );
-const styleTagResourceOpen2 = stringToPrecomputedChunk('" data-href="');
+const styleTagResourceOpen2 = stringToPrecomputedChunk('" nonce="');
+const styleTagResourceOpen3 = stringToPrecomputedChunk('" data-href="');
 const spaceSeparator = stringToPrecomputedChunk(' ');
-const styleTagResourceOpen3 = stringToPrecomputedChunk('">');
+const styleTagResourceOpen4 = stringToPrecomputedChunk('">');
 
 const styleTagResourceClose = stringToPrecomputedChunk('</style>');
 
@@ -4884,22 +4906,27 @@ function flushStylesInPreamble(
 
   const rules = styleQueue.rules;
   const hrefs = styleQueue.hrefs;
+  const nonce = styleQueue.nonce;
   // If we don't emit any stylesheets at this precedence we still need to maintain the precedence
   // order so even if there are no rules for style tags at this precedence we emit an empty style
   // tag with the data-precedence attribute
   if (!hasStylesheets || hrefs.length) {
     writeChunk(this, styleTagResourceOpen1);
     writeChunk(this, styleQueue.precedence);
+    if (nonce) {
+      writeChunk(this, styleTagResourceOpen2);
+      writeChunk(this, nonce);
+    }
     let i = 0;
     if (hrefs.length) {
-      writeChunk(this, styleTagResourceOpen2);
+      writeChunk(this, styleTagResourceOpen3);
       for (; i < hrefs.length - 1; i++) {
         writeChunk(this, hrefs[i]);
         writeChunk(this, spaceSeparator);
       }
       writeChunk(this, hrefs[i]);
     }
-    writeChunk(this, styleTagResourceOpen3);
+    writeChunk(this, styleTagResourceOpen4);
     for (i = 0; i < rules.length; i++) {
       writeChunk(this, rules[i]);
     }
@@ -5596,6 +5623,7 @@ export type StyleQueue = {
   rules: Array<Chunk | PrecomputedChunk>,
   hrefs: Array<Chunk | PrecomputedChunk>,
   sheets: Map<string, StylesheetResource>,
+  nonce?: ?Chunk,
 };
 
 export function createHoistableState(): HoistableState {
