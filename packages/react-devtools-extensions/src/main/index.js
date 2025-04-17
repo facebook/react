@@ -128,7 +128,13 @@ function createBridgeAndStore() {
       : source;
 
     // We use 1-based line and column, Chrome expects them 0-based.
-    chrome.devtools.panels.openResource(sourceURL, line - 1, column - 1);
+    chrome.devtools.panels.openResource(
+      // openResource needs normalized URLs.
+      // Using `URL` triggers path normalization.
+      new URL(sourceURL).toString(),
+      line - 1,
+      column - 1,
+    );
   };
 
   // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
