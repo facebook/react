@@ -3986,4 +3986,94 @@ describe('ReactDOMServerPartialHydration', () => {
       "onRecoverableError: Hydration failed because the server rendered text didn't match the client.",
     ]);
   });
+
+  it('hides a dehydrated suspense boundary if the parent resuspends', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    const ref = React.createRef();
+
+    function Child({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return text;
+      }
+    }
+
+    function Sibling({resuspend}) {
+      if (suspend && resuspend) {
+        throw promise;
+      } else {
+        return null;
+      }
+    }
+
+    function Component({text}) {
+      return (
+        <Suspense>
+          <Child text={text} />
+          <span ref={ref}>World</span>
+        </Suspense>
+      );
+    }
+
+    function App({text, resuspend}) {
+      const memoized = React.useMemo(() => <Component text={text} />, [text]);
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            {memoized}
+            <Sibling resuspend={resuspend} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    const finalHTML = ReactDOMServer.renderToString(<App text="Hello" />);
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    const root = ReactDOMClient.hydrateRoot(container, <App text="Hello" />, {
+      onRecoverableError(error) {
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
+      },
+    });
+    await waitForAll([]);
+
+    expect(ref.current).toBe(null); // Still dehydrated
+    const span = container.getElementsByTagName('span')[0];
+    const textNode = span.previousSibling;
+    expect(textNode.nodeValue).toBe('Hello');
+    expect(span.textContent).toBe('World');
+
+    // Render an update, that resuspends the parent boundary.
+    // Flushing now now hide the text content.
+    await act(() => {
+      root.render(<App text="Hello" resuspend={true} />);
+    });
+
+    expect(ref.current).toBe(null);
+    expect(span.style.display).toBe('none');
+    expect(textNode.nodeValue).toBe('');
+
+    // Unsuspending shows the content.
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
+
+    expect(textNode.nodeValue).toBe('Hello');
+    expect(span.textContent).toBe('World');
+    expect(span.style.display).toBe('');
+    expect(ref.current).toBe(span);
+  });
 });

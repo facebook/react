@@ -14,6 +14,7 @@ import {
   HostHoistable,
   HostSingleton,
   LazyComponent,
+  ActivityComponent,
   SuspenseComponent,
   SuspenseListComponent,
   FunctionComponent,
@@ -83,6 +84,8 @@ function describeFiberType(fiber: Fiber): null | string {
       return fiber.type;
     case LazyComponent:
       return 'Lazy';
+    case ActivityComponent:
+      return 'Activity';
     case SuspenseComponent:
       return 'Suspense';
     case SuspenseListComponent:
