@@ -1354,4 +1354,92 @@ describe('ReactFlightDOMEdge', () => {
     expect(error).not.toBe(null);
     expect(error.message).toBe('Connection closed.');
   });
+
+  it('should be able to handle a rejected promise in renderToReadableStream', async () => {
+    const expectedError = new Error('Boom!');
+    const errors = [];
+
+    const {stream} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        stream: ReactServerDOMServer.renderToReadableStream(
+          Promise.reject(expectedError),
+          webpackMap,
+          {
+            onError(err) {
+              errors.push(err);
+            },
+          },
+        ),
+      };
+    });
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let error = null;
+    try {
+      await response;
+    } catch (x) {
+      error = x;
+    }
+
+    expect(errors).toEqual([expectedError]);
+
+    const expectedMessage = __DEV__
+      ? expectedError.message
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    expect(error).not.toBe(null);
+    expect(error.message).toBe(expectedMessage);
+  });
+
+  // @gate experimental
+  it('should be able to handle a rejected promise in unstable_prerender', async () => {
+    const expectedError = new Error('Bam!');
+    const errors = [];
+
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+          Promise.reject(expectedError),
+          webpackMap,
+          {
+            onError(err) {
+              errors.push(err);
+            },
+          },
+        ),
+      };
+    });
+
+    const {prelude} = await pendingResult;
+    expect(errors).toEqual([expectedError]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let error = null;
+    try {
+      await response;
+    } catch (x) {
+      error = x;
+    }
+
+    const expectedMessage = __DEV__
+      ? expectedError.message
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    expect(error).not.toBe(null);
+    expect(error.message).toBe(expectedMessage);
+  });
 });
