@@ -11,6 +11,8 @@
 
 let React;
 let ReactDOMClient;
+let ReactDOM;
+let createPortal;
 let act;
 let container;
 let Fragment;
@@ -31,6 +33,8 @@ describe('FragmentRefs', () => {
     Fragment = React.Fragment;
     Activity = React.unstable_Activity;
     ReactDOMClient = require('react-dom/client');
+    ReactDOM = require('react-dom');
+    createPortal = ReactDOM.createPortal;
     act = require('internal-test-utils').act;
     const IntersectionMocks = require('./utils/IntersectionMocks');
     mockIntersectionObserver = IntersectionMocks.mockIntersectionObserver;
@@ -40,6 +44,7 @@ describe('FragmentRefs', () => {
       require('internal-test-utils').assertConsoleErrorDev;
 
     container = document.createElement('div');
+    document.body.innerHTML = '';
     document.body.appendChild(container);
   });
 
@@ -611,6 +616,39 @@ describe('FragmentRefs', () => {
       expect(logs).toEqual([]);
     });
 
+    // @gate enableFragmentRefs
+    it('applies event listeners to portaled children', async () => {
+      const fragmentRef = React.createRef();
+      const childARef = React.createRef();
+      const childBRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test() {
+        return (
+          <Fragment ref={fragmentRef}>
+            <div id="child-a" ref={childARef} />
+            {createPortal(<div id="child-b" ref={childBRef} />, document.body)}
+          </Fragment>
+        );
+      }
+
+      await act(() => {
+        root.render(<Test />);
+      });
+
+      const logs = [];
+      fragmentRef.current.addEventListener('click', e => {
+        logs.push(e.target.id);
+      });
+
+      childARef.current.click();
+      expect(logs).toEqual(['child-a']);
+
+      logs.length = 0;
+      childBRef.current.click();
+      expect(logs).toEqual(['child-b']);
+    });
+
     describe('with activity', () => {
       // @gate enableFragmentRefs && enableActivity
       it('does not apply event listeners to hidden trees', async () => {
@@ -964,6 +1002,570 @@ describe('FragmentRefs', () => {
       const fragmentHandle = fragmentRef.current;
       await act(() => root.render(<Test mounted={false} />));
       expect(fragmentHandle.getRootNode()).toBe(fragmentHandle);
+    });
+  });
+
+  describe('compareDocumentPosition', () => {
+    function expectPosition(position, spec) {
+      const positionResult = {
+        following: (position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
+        preceding: (position & Node.DOCUMENT_POSITION_PRECEDING) !== 0,
+        contains: (position & Node.DOCUMENT_POSITION_CONTAINS) !== 0,
+        containedBy: (position & Node.DOCUMENT_POSITION_CONTAINED_BY) !== 0,
+        disconnected: (position & Node.DOCUMENT_POSITION_DISCONNECTED) !== 0,
+        implementationSpecific:
+          (position & Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC) !== 0,
+      };
+      expect(positionResult).toEqual(spec);
+    }
+    // @gate enableFragmentRefs
+    it('returns the relationship between the fragment instance and a given node', async () => {
+      const fragmentRef = React.createRef();
+      const beforeRef = React.createRef();
+      const afterRef = React.createRef();
+      const middleChildRef = React.createRef();
+      const firstChildRef = React.createRef();
+      const lastChildRef = React.createRef();
+      const containerRef = React.createRef();
+      const disconnectedElement = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test() {
+        return (
+          <div ref={containerRef}>
+            <div ref={beforeRef} />
+            <React.Fragment ref={fragmentRef}>
+              <div ref={firstChildRef} />
+              <div ref={middleChildRef} />
+              <div ref={lastChildRef} />
+            </React.Fragment>
+            <div ref={afterRef} />
+          </div>
+        );
+      }
+
+      await act(() => root.render(<Test />));
+
+      // document.body is preceding and contains the fragment
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(document.body),
+        {
+          preceding: true,
+          following: false,
+          contains: true,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      // beforeRef is preceding the fragment
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(beforeRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      // afterRef is following the fragment
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(afterRef.current),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      // firstChildRef is contained by the fragment
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(firstChildRef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: false,
+          containedBy: true,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      // middleChildRef is contained by the fragment
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(middleChildRef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: false,
+          containedBy: true,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      // lastChildRef is contained by the fragment
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(lastChildRef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: false,
+          containedBy: true,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      // containerRef preceds and contains the fragment
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(containerRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: true,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(disconnectedElement),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: true,
+          implementationSpecific: true,
+        },
+      );
+    });
+
+    // @gate enableFragmentRefs
+    it('handles fragment instances with one child', async () => {
+      const fragmentRef = React.createRef();
+      const beforeRef = React.createRef();
+      const afterRef = React.createRef();
+      const containerRef = React.createRef();
+      const onlyChildRef = React.createRef();
+      const disconnectedElement = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test() {
+        return (
+          <div id="container" ref={containerRef}>
+            <div>
+              <div ref={beforeRef} id="before" />
+              <React.Fragment ref={fragmentRef}>
+                <div ref={onlyChildRef} id="within" />
+              </React.Fragment>
+              <div id="after" ref={afterRef} />
+            </div>
+          </div>
+        );
+      }
+
+      await act(() => root.render(<Test />));
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(beforeRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(afterRef.current),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(onlyChildRef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: false,
+          containedBy: true,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(containerRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: true,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(disconnectedElement),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: true,
+          implementationSpecific: true,
+        },
+      );
+    });
+
+    // @gate enableFragmentRefs
+    it('handles empty fragment instances', async () => {
+      const fragmentRef = React.createRef();
+      const beforeParentRef = React.createRef();
+      const beforeRef = React.createRef();
+      const afterRef = React.createRef();
+      const afterParentRef = React.createRef();
+      const containerRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test() {
+        return (
+          <>
+            <div id="before-container" ref={beforeParentRef} />
+            <div id="container" ref={containerRef}>
+              <div id="before" ref={beforeRef} />
+              <React.Fragment ref={fragmentRef} />
+              <div id="after" ref={afterRef} />
+            </div>
+            <div id="after-container" ref={afterParentRef} />
+          </>
+        );
+      }
+
+      await act(() => root.render(<Test />));
+
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(document.body),
+        {
+          preceding: true,
+          following: false,
+          contains: true,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
+        },
+      );
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(beforeRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
+        },
+      );
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(beforeParentRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
+        },
+      );
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(afterRef.current),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
+        },
+      );
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(afterParentRef.current),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
+        },
+      );
+      expectPosition(
+        fragmentRef.current.compareDocumentPosition(containerRef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: true,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
+        },
+      );
+    });
+
+    // @gate enableFragmentRefs
+    it('returns disconnected for comparison with an unmounted fragment instance', async () => {
+      const fragmentRef = React.createRef();
+      const containerRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test({mount}) {
+        return (
+          <div ref={containerRef}>
+            {mount && (
+              <Fragment ref={fragmentRef}>
+                <div />
+              </Fragment>
+            )}
+          </div>
+        );
+      }
+
+      await act(() => root.render(<Test mount={true} />));
+
+      const fragmentHandle = fragmentRef.current;
+
+      expectPosition(
+        fragmentHandle.compareDocumentPosition(containerRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: true,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      await act(() => {
+        root.render(<Test mount={false} />);
+      });
+
+      expectPosition(
+        fragmentHandle.compareDocumentPosition(containerRef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: true,
+          implementationSpecific: false,
+        },
+      );
+    });
+
+    describe('with portals', () => {
+      // @gate enableFragmentRefs
+      it('handles portaled elements', async () => {
+        const fragmentRef = React.createRef();
+        const portaledSiblingRef = React.createRef();
+        const portaledChildRef = React.createRef();
+
+        function Test() {
+          return (
+            <div>
+              {createPortal(<div ref={portaledSiblingRef} />, document.body)}
+              <Fragment ref={fragmentRef}>
+                {createPortal(<div ref={portaledChildRef} />, document.body)}
+                <div />
+              </Fragment>
+            </div>
+          );
+        }
+
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => root.render(<Test />));
+
+        // The sibling is preceding in both the DOM and the React tree
+        expectPosition(
+          fragmentRef.current.compareDocumentPosition(
+            portaledSiblingRef.current,
+          ),
+          {
+            preceding: true,
+            following: false,
+            contains: false,
+            containedBy: false,
+            disconnected: false,
+            implementationSpecific: false,
+          },
+        );
+
+        // The child is contained by in the React tree but not in the DOM
+        expectPosition(
+          fragmentRef.current.compareDocumentPosition(portaledChildRef.current),
+          {
+            preceding: false,
+            following: false,
+            contains: false,
+            containedBy: false,
+            disconnected: false,
+            implementationSpecific: true,
+          },
+        );
+      });
+
+      // @gate enableFragmentRefs
+      it('handles multiple portals to the same element', async () => {
+        const root = ReactDOMClient.createRoot(container);
+        const fragmentRef = React.createRef();
+        const childARef = React.createRef();
+        const childBRef = React.createRef();
+        const childCRef = React.createRef();
+
+        function Test() {
+          const [c, setC] = React.useState(false);
+          React.useEffect(() => {
+            setC(true);
+          });
+
+          return (
+            <>
+              {createPortal(
+                <Fragment ref={fragmentRef}>
+                  <div id="A" ref={childARef} />
+                  {c ? <div id="C" ref={childCRef} /> : null}
+                </Fragment>,
+                document.body,
+              )}
+              {createPortal(<p id="B" ref={childBRef} />, document.body)}
+            </>
+          );
+        }
+
+        await act(() => root.render(<Test />));
+
+        // Due to effect, order is A->B->C
+        expect(document.body.innerHTML).toBe(
+          '<div></div>' +
+            '<div id="A"></div>' +
+            '<p id="B"></p>' +
+            '<div id="C"></div>',
+        );
+
+        expectPosition(
+          fragmentRef.current.compareDocumentPosition(document.body),
+          {
+            preceding: true,
+            following: false,
+            contains: true,
+            containedBy: false,
+            disconnected: false,
+            implementationSpecific: false,
+          },
+        );
+
+        expectPosition(
+          fragmentRef.current.compareDocumentPosition(childARef.current),
+          {
+            preceding: false,
+            following: false,
+            contains: false,
+            containedBy: true,
+            disconnected: false,
+            implementationSpecific: false,
+          },
+        );
+        expectPosition(
+          fragmentRef.current.compareDocumentPosition(childBRef.current),
+          {
+            preceding: false,
+            following: false,
+            contains: false,
+            containedBy: false,
+            disconnected: false,
+            implementationSpecific: true,
+          },
+        );
+        expectPosition(
+          fragmentRef.current.compareDocumentPosition(childCRef.current),
+          {
+            preceding: false,
+            following: false,
+            contains: false,
+            containedBy: true,
+            disconnected: false,
+            implementationSpecific: false,
+          },
+        );
+      });
+
+      // @gate enableFragmentRefs
+      it('handles empty fragments', async () => {
+        const fragmentRef = React.createRef();
+        const childARef = React.createRef();
+        const childBRef = React.createRef();
+
+        function Test() {
+          return (
+            <>
+              <div id="A" ref={childARef} />
+              {createPortal(<Fragment ref={fragmentRef} />, document.body)}
+              <div id="B" ref={childBRef} />
+            </>
+          );
+        }
+
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => root.render(<Test />));
+
+        expectPosition(
+          fragmentRef.current.compareDocumentPosition(document.body),
+          {
+            preceding: true,
+            following: false,
+            contains: true,
+            containedBy: false,
+            disconnected: false,
+            implementationSpecific: true,
+          },
+        );
+        expectPosition(
+          fragmentRef.current.compareDocumentPosition(childARef.current),
+          {
+            preceding: true,
+            following: false,
+            contains: false,
+            containedBy: false,
+            disconnected: false,
+            implementationSpecific: true,
+          },
+        );
+        expectPosition(
+          fragmentRef.current.compareDocumentPosition(childBRef.current),
+          {
+            preceding: true,
+            following: false,
+            contains: false,
+            containedBy: false,
+            disconnected: false,
+            implementationSpecific: true,
+          },
+        );
+      });
     });
   });
 });
