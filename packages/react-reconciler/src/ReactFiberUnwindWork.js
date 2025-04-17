@@ -10,6 +10,7 @@
 import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
+import type {ActivityState} from './ReactFiberActivityComponent';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
@@ -22,6 +23,7 @@ import {
   HostSingleton,
   HostPortal,
   ContextProvider,
+  ActivityComponent,
   SuspenseComponent,
   SuspenseListComponent,
   OffscreenComponent,
@@ -118,6 +120,35 @@ function unwindWork(
     case HostComponent: {
       // TODO: popHydrationState
       popHostContext(workInProgress);
+      return null;
+    }
+    case ActivityComponent: {
+      const activityState: null | ActivityState = workInProgress.memoizedState;
+      if (activityState !== null) {
+        popSuspenseHandler(workInProgress);
+
+        if (workInProgress.alternate === null) {
+          throw new Error(
+            'Threw in newly mounted dehydrated component. This is likely a bug in ' +
+              'React. Please file an issue.',
+          );
+        }
+
+        resetHydrationState();
+      }
+
+      const flags = workInProgress.flags;
+      if (flags & ShouldCapture) {
+        workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
+        // Captured a suspense effect. Re-render the boundary.
+        if (
+          enableProfilerTimer &&
+          (workInProgress.mode & ProfileMode) !== NoMode
+        ) {
+          transferActualDuration(workInProgress);
+        }
+        return workInProgress;
+      }
       return null;
     }
     case SuspenseComponent: {
@@ -242,6 +273,12 @@ function unwindInterruptedWork(
     case HostPortal:
       popHostContainer(interruptedWork);
       break;
+    case ActivityComponent: {
+      if (interruptedWork.memoizedState !== null) {
+        popSuspenseHandler(interruptedWork);
+      }
+      break;
+    }
     case SuspenseComponent:
       popSuspenseHandler(interruptedWork);
       break;

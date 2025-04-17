@@ -21,6 +21,7 @@ import type {
 } from './ReactFiberConfig';
 import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
+import type {ActivityState} from './ReactFiberActivityComponent';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {LegacyRoot} from './ReactRootTags';
@@ -35,6 +36,7 @@ import {
   ClassComponent,
   HostRoot,
   SuspenseComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import isArray from 'shared/isArray';
@@ -484,6 +486,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       }
       break;
     }
+    case ActivityComponent:
     case SuspenseComponent: {
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
@@ -501,7 +504,8 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
 }
 
 function markRetryLaneImpl(fiber: Fiber, retryLane: Lane) {
-  const suspenseState: null | SuspenseState = fiber.memoizedState;
+  const suspenseState: null | SuspenseState | ActivityState =
+    fiber.memoizedState;
   if (suspenseState !== null && suspenseState.dehydrated !== null) {
     suspenseState.retryLane = higherPriorityLane(
       suspenseState.retryLane,
@@ -520,7 +524,7 @@ function markRetryLaneIfNotHydrated(fiber: Fiber, retryLane: Lane) {
 }
 
 export function attemptContinuousHydration(fiber: Fiber): void {
-  if (fiber.tag !== SuspenseComponent) {
+  if (fiber.tag !== SuspenseComponent && fiber.tag !== ActivityComponent) {
     // We ignore HostRoots here because we can't increase
     // their priority and they should not suspend on I/O,
     // since you have to wrap anything that might suspend in
@@ -536,7 +540,7 @@ export function attemptContinuousHydration(fiber: Fiber): void {
 }
 
 export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
-  if (fiber.tag !== SuspenseComponent) {
+  if (fiber.tag !== SuspenseComponent && fiber.tag !== ActivityComponent) {
     // We ignore HostRoots here because we can't increase
     // their priority other than synchronously flush it.
     return;

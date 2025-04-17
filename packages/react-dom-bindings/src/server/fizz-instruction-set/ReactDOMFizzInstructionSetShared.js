@@ -3,11 +3,13 @@
 // Shared implementation and constants between the inline script and external
 // runtime instruction sets.
 
-export const COMMENT_NODE = 8;
-export const SUSPENSE_START_DATA = '$';
-export const SUSPENSE_END_DATA = '/$';
-export const SUSPENSE_PENDING_START_DATA = '$?';
-export const SUSPENSE_FALLBACK_START_DATA = '$!';
+const COMMENT_NODE = 8;
+const ACTIVITY_START_DATA = '&';
+const ACTIVITY_END_DATA = '/&';
+const SUSPENSE_START_DATA = '$';
+const SUSPENSE_END_DATA = '/$';
+const SUSPENSE_PENDING_START_DATA = '$?';
+const SUSPENSE_FALLBACK_START_DATA = '$!';
 
 // TODO: Symbols that are referenced outside this module use dynamic accessor
 // notation instead of dot notation to prevent Closure's advanced compilation
@@ -74,7 +76,7 @@ export function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {
     do {
       if (node && node.nodeType === COMMENT_NODE) {
         const data = node.data;
-        if (data === SUSPENSE_END_DATA) {
+        if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
           if (depth === 0) {
             break;
           } else {
@@ -83,7 +85,8 @@ export function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {
         } else if (
           data === SUSPENSE_START_DATA ||
           data === SUSPENSE_PENDING_START_DATA ||
-          data === SUSPENSE_FALLBACK_START_DATA
+          data === SUSPENSE_FALLBACK_START_DATA ||
+          data === ACTIVITY_START_DATA
         ) {
           depth++;
         }
