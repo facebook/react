@@ -510,6 +510,639 @@ describe('ReactFlightDOMReply', () => {
     });
   });
 
+  it('can pass a ReadableStream through a round trip', async () => {
+    let controller;
+    const s = new ReadableStream({
+      start(c) {
+        controller = c;
+      },
+    });
+    const payload = s;
+
+    const temporaryReferencesClient =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+
+    const promise = ReactServerDOMClient.encodeReply(payload, {
+      temporaryReferences: temporaryReferencesClient,
+    });
+
+    controller.enqueue({hello: 'world'});
+    controller.enqueue('text1');
+    controller.close();
+
+    const body = await promise;
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+
+    const reply = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    // Partially consume the value on the server.
+    const serverReader = reply.getReader();
+
+    expect(await serverReader.read()).toEqual({
+      value: {hello: 'world'},
+      done: false,
+    });
+
+    serverReader.releaseLock();
+
+    // Send the rest of the value back to the client.
+    const resultStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(reply, null, {
+        temporaryReferences: temporaryReferencesServer,
+      }),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      resultStream,
+      {temporaryReferences: temporaryReferencesClient},
+    );
+
+    const reader = result.getReader();
+
+    expect(await reader.read()).toEqual({
+      value: 'text1',
+      done: false,
+    });
+    expect(await reader.read()).toEqual({
+      value: undefined,
+      done: true,
+    });
+  });
+
+  it('can pass an async iterator through a round trip', async () => {
+    let resolve;
+    const wait = new Promise(r => (resolve = r));
+
+    const iter = (async function* () {
+      const next = yield {hello: 'A'};
+      expect(next).toBe(undefined);
+      await wait;
+      yield {hi: 'B'};
+      return 'C';
+    })();
+
+    await resolve();
+
+    const payload = iter;
+
+    const temporaryReferencesClient =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+
+    const promise = ReactServerDOMClient.encodeReply(payload, {
+      temporaryReferences: temporaryReferencesClient,
+    });
+
+    const body = await promise;
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+
+    const reply = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    // Partially consume the value on the server.
+    expect(await reply.next()).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+
+    // Send the rest of the value back to the client.
+    const resultStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(reply, null, {
+        temporaryReferences: temporaryReferencesServer,
+      }),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      resultStream,
+      {temporaryReferences: temporaryReferencesClient},
+    );
+    const iterator = result;
+
+    expect(await iterator.next()).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(await iterator.next()).toEqual({
+      value: 'C', // Return value
+      done: true,
+    });
+    expect(await iterator.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+  });
+
+  it('can pass an iterator through a round trip', async () => {
+    const iter = [{hello: 'A'}, {hi: 'B'}, 'C'].values();
+
+    const payload = iter;
+    const temporaryReferencesClient =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+
+    const promise = ReactServerDOMClient.encodeReply(payload, {
+      temporaryReferences: temporaryReferencesClient,
+    });
+
+    const body = await promise;
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+
+    const reply = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    // Partially consume the value on the server.
+    expect(reply.next()).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+
+    // Send the rest of the value back to the client.
+    const resultStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(reply, null, {
+        temporaryReferences: temporaryReferencesServer,
+      }),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      resultStream,
+      {temporaryReferences: temporaryReferencesClient},
+    );
+    const iterator = result;
+
+    expect(iterator.next()).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(iterator.next()).toEqual({
+      value: 'C',
+      done: false,
+    });
+    expect(iterator.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+    expect(iterator.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+  });
+
+  it('can pass a generator function iterator through a round trip', async () => {
+    const iter = (function* () {
+      const next = yield {hello: 'A'};
+      expect(next).toBe(undefined);
+      yield {hi: 'B'};
+      return 'C';
+    })();
+
+    const payload = iter;
+
+    const temporaryReferencesClient =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+
+    const promise = ReactServerDOMClient.encodeReply(payload, {
+      temporaryReferences: temporaryReferencesClient,
+    });
+
+    const body = await promise;
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+
+    const reply = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    // Partially consume the value on the server.
+    expect(reply.next()).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+
+    // Send the rest of the value back to the client.
+    const resultStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(reply, null, {
+        temporaryReferences: temporaryReferencesServer,
+      }),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      resultStream,
+      {temporaryReferences: temporaryReferencesClient},
+    );
+    const iterator = result;
+
+    expect(iterator.next()).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(iterator.next()).toEqual({
+      // FIXME: return values are currently not supported for generator function iterators
+      // value: 'C', // return value
+      value: undefined,
+      done: true,
+    });
+    expect(iterator.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+  });
+
+  it('can pass a wrapped ReadableStream through a round trip', async () => {
+    let controller1;
+    let controller2;
+    const s1 = new ReadableStream({
+      start(c) {
+        controller1 = c;
+      },
+    });
+    const s2 = new ReadableStream({
+      start(c) {
+        controller2 = c;
+      },
+    });
+
+    function Component() {
+      return <div />;
+    }
+
+    const children = {elem: <Component />};
+    const payload = {s1, s2, children};
+
+    const temporaryReferencesClient =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+
+    const promise = ReactServerDOMClient.encodeReply(payload, {
+      temporaryReferences: temporaryReferencesClient,
+    });
+
+    controller1.enqueue({hello: 'world'});
+    controller2.enqueue({hi: 'there'});
+
+    controller1.enqueue('text1');
+    controller2.enqueue('text2');
+
+    controller1.close();
+    controller2.close();
+
+    const body = await promise;
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+
+    const reply = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    // Partially consume the value on the server.
+    const serverReader1 = reply.s1.getReader();
+    const serverReader2 = reply.s2.getReader();
+
+    expect(await serverReader1.read()).toEqual({
+      value: {hello: 'world'},
+      done: false,
+    });
+    expect(await serverReader2.read()).toEqual({
+      value: {hi: 'there'},
+      done: false,
+    });
+
+    serverReader1.releaseLock();
+    serverReader2.releaseLock();
+
+    // Send the rest of the value back to the client.
+    const resultStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(reply, null, {
+        temporaryReferences: temporaryReferencesServer,
+      }),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      resultStream,
+      {temporaryReferences: temporaryReferencesClient},
+    );
+
+    const reader1 = result.s1.getReader();
+    const reader2 = result.s2.getReader();
+
+    expect(await reader1.read()).toEqual({
+      value: 'text1',
+      done: false,
+    });
+    expect(await reader1.read()).toEqual({
+      value: undefined,
+      done: true,
+    });
+    expect(await reader2.read()).toEqual({
+      value: 'text2',
+      done: false,
+    });
+    expect(await reader2.read()).toEqual({
+      value: undefined,
+      done: true,
+    });
+
+    // Temporary references should still work
+    expect(result.children).toBe(children);
+  });
+
+  it('can pass a wrappedn async iterator through a round trip', async () => {
+    let resolve;
+    const wait = new Promise(r => (resolve = r));
+
+    const i1 = (async function* () {
+      const next = yield {hello: 'A'};
+      expect(next).toBe(undefined);
+      await wait;
+      yield {hi: 'B'};
+      return 'C';
+    })();
+
+    const i2 = (async function* () {
+      const next = yield {hello: 'D'};
+      expect(next).toBe(undefined);
+      await wait;
+      yield {hi: 'E'};
+      return 'F';
+    })();
+
+    await resolve();
+
+    function Component() {
+      return <div />;
+    }
+
+    const children = {elem: <Component />};
+    const payload = {i1, i2, children};
+
+    const temporaryReferencesClient =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+
+    const promise = ReactServerDOMClient.encodeReply(payload, {
+      temporaryReferences: temporaryReferencesClient,
+    });
+
+    const body = await promise;
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+
+    const reply = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    // Partially consume the value on the server.
+    expect(await reply.i1.next()).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+    expect(await reply.i2.next()).toEqual({
+      value: {hello: 'D'},
+      done: false,
+    });
+
+    // Send the rest of the value back to the client.
+    const resultStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(reply, null, {
+        temporaryReferences: temporaryReferencesServer,
+      }),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      resultStream,
+      {temporaryReferences: temporaryReferencesClient},
+    );
+    const iterator1 = result.i1;
+    const iterator2 = result.i2;
+
+    expect(await iterator1.next()).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(await iterator2.next()).toEqual({
+      value: {hi: 'E'},
+      done: false,
+    });
+    expect(await iterator1.next()).toEqual({
+      value: 'C', // Return value
+      done: true,
+    });
+    expect(await iterator1.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+
+    expect(await iterator2.next()).toEqual({
+      value: 'F', // Return value
+      done: true,
+    });
+
+    // Temporary references should still work
+    expect(result.children).toBe(children);
+  });
+
+  it('can pass a wrappedn iterator through a round trip', async () => {
+    const i1 = [{hello: 'A'}, {hi: 'B'}, 'C'].values();
+    const i2 = [{hello: 'D'}, {hi: 'E'}, 'F'].values();
+
+    function Component() {
+      return <div />;
+    }
+
+    const children = {elem: <Component />};
+    const payload = {i1, i2, children};
+
+    const temporaryReferencesClient =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+
+    const promise = ReactServerDOMClient.encodeReply(payload, {
+      temporaryReferences: temporaryReferencesClient,
+    });
+
+    const body = await promise;
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+
+    const reply = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    // Partially consume the value on the server.
+    expect(reply.i1.next()).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+    expect(reply.i2.next()).toEqual({
+      value: {hello: 'D'},
+      done: false,
+    });
+
+    // Send the rest of the value back to the client.
+    const resultStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(reply, null, {
+        temporaryReferences: temporaryReferencesServer,
+      }),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      resultStream,
+      {temporaryReferences: temporaryReferencesClient},
+    );
+    const iterator1 = result.i1;
+    const iterator2 = result.i2;
+
+    expect(iterator1.next()).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(iterator2.next()).toEqual({
+      value: {hi: 'E'},
+      done: false,
+    });
+
+    expect(iterator1.next()).toEqual({
+      value: 'C',
+      done: false,
+    });
+    expect(iterator2.next()).toEqual({
+      value: 'F',
+      done: false,
+    });
+
+    expect(iterator1.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+    expect(iterator1.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+    expect(iterator2.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+
+    // Temporary references should still work
+    expect(result.children).toBe(children);
+  });
+
+  it('can pass a wrapped generator function iterator through a round trip', async () => {
+    const i1 = (function* () {
+      const next = yield {hello: 'A'};
+      expect(next).toBe(undefined);
+      yield {hi: 'B'};
+      return 'C';
+    })();
+
+    const i2 = (function* () {
+      const next = yield {hello: 'D'};
+      expect(next).toBe(undefined);
+      yield {hi: 'E'};
+      return 'F';
+    })();
+
+    function Component() {
+      return <div />;
+    }
+
+    const children = {elem: <Component />};
+    const payload = {i1, i2, children};
+
+    const temporaryReferencesClient =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+
+    const promise = ReactServerDOMClient.encodeReply(payload, {
+      temporaryReferences: temporaryReferencesClient,
+    });
+
+    const body = await promise;
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+
+    const reply = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    // Partially consume the value on the server.
+    expect(reply.i1.next()).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+    expect(reply.i2.next()).toEqual({
+      value: {hello: 'D'},
+      done: false,
+    });
+
+    // Send the rest of the value back to the client.
+    const resultStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(reply, null, {
+        temporaryReferences: temporaryReferencesServer,
+      }),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      resultStream,
+      {temporaryReferences: temporaryReferencesClient},
+    );
+    const iterator1 = result.i1;
+    const iterator2 = result.i2;
+
+    expect(iterator1.next()).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(iterator2.next()).toEqual({
+      value: {hi: 'E'},
+      done: false,
+    });
+    expect(iterator1.next()).toEqual({
+      // FIXME: return values are currently not supported for generator function iterators
+      // value: 'C', // return value
+      value: undefined,
+      done: true,
+    });
+    expect(iterator1.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+
+    expect(iterator2.next()).toEqual({
+      // FIXME: return values are currently not supported for generator function iterators
+      // value: 'F', // Return value
+      value: undefined,
+      done: true,
+    });
+
+    // Temporary references should still work
+    expect(result.children).toBe(children);
+  });
+
   it('should supports streaming AsyncIterables with objects', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));
