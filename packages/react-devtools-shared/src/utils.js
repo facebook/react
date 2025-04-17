@@ -996,6 +996,19 @@ export function backendToFrontendSerializedElementMapper(
   };
 }
 
+/**
+ * Should be used when treating url as a Chrome Resource URL.
+ */
+export function normalizeUrlIfValid(url: string): string {
+  try {
+    // TODO: Chrome will use the basepath to create a Resource URL.
+    return new URL(url).toString();
+  } catch {
+    // Giving up if it's not a valid URL without basepath
+    return url;
+  }
+}
+
 export function getIsReloadAndProfileSupported(): boolean {
   // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
   // If not, features like reload-and-profile will not work correctly and must be disabled.

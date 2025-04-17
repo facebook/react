@@ -16,6 +16,7 @@ import {
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
 import {logEvent} from 'react-devtools-shared/src/Logger';
+import {normalizeUrlIfValid} from 'react-devtools-shared/src/utils';
 
 import {
   setBrowserSelectionFromReact,
@@ -129,9 +130,7 @@ function createBridgeAndStore() {
 
     // We use 1-based line and column, Chrome expects them 0-based.
     chrome.devtools.panels.openResource(
-      // openResource needs normalized URLs.
-      // Using `URL` triggers path normalization.
-      new URL(sourceURL).toString(),
+      normalizeUrlIfValid(sourceURL),
       line - 1,
       column - 1,
     );
