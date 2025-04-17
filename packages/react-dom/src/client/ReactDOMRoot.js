@@ -98,6 +98,7 @@ function ReactDOMRoot(internalRoot: FiberRoot) {
 }
 
 // $FlowFixMe[prop-missing] found when upgrading Flow
+// NOTE 사딕-root.render: root.render(<App />) 할 때 실행되는 함수.
 ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
   // $FlowFixMe[missing-this-annot]
   function (children: ReactNodeList): void {
