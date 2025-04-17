@@ -29,10 +29,8 @@ function hoisting() {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     foo = () => bar + baz;
 
-    let bar;
-    bar = 3;
-    let baz;
-    baz = 2;
+    let bar = 3;
+    let baz = 2;
     $[0] = foo;
   } else {
     foo = $[0];
