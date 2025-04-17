@@ -705,6 +705,11 @@ function serializeThenable(
         // to do so again here.
         erroredTask(request, newTask, reason);
         enqueueFlush(request);
+
+        if (request.abortableTasks.size === 0) {
+          const onAllReady = request.onAllReady;
+          onAllReady();
+        }
       }
     },
   );
