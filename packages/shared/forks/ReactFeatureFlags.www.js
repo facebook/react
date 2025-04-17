@@ -23,7 +23,6 @@ export const {
   enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
   enableNoCloningMemoCache,
-  enableObjectFiber,
   enableRenderableContext,
   enableRetryLaneExpiration,
   enableSiblingPrerendering,
