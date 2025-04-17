@@ -625,6 +625,7 @@ function setProp(
     }
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
+    case 'suppressReset':
     case 'defaultValue': // Reserved
     case 'defaultChecked':
     case 'innerHTML':
@@ -1016,6 +1017,7 @@ function setPropOnCustomElement(
     }
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
+    case 'suppressReset':
     case 'innerHTML':
     case 'ref': {
       // Noop
@@ -2411,6 +2413,7 @@ function diffHydratedCustomComponent(
       // Checked above already
       case 'suppressContentEditableWarning':
       case 'suppressHydrationWarning':
+      case 'suppressReset':
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
@@ -2544,6 +2547,7 @@ function diffHydratedGenericElement(
       // Checked above already
       case 'suppressContentEditableWarning':
       case 'suppressHydrationWarning':
+      case 'suppressReset':
       case 'value': // Controlled attributes are not validated
       case 'checked': // TODO: Only ignore them on controlled tags.
       case 'selected':
