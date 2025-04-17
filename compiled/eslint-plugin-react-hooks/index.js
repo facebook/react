@@ -17086,6 +17086,9 @@ function isSetActionStateType(id) {
 function isDispatcherType(id) {
     return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
 }
+function isFireFunctionType(id) {
+    return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction');
+}
 function isStableType(id) {
     return (isSetStateType(id) ||
         isSetActionStateType(id) ||
@@ -28703,6 +28706,7 @@ const BuiltInUseContextHookId = 'BuiltInUseContextHook';
 const BuiltInUseTransitionId = 'BuiltInUseTransition';
 const BuiltInStartTransitionId = 'BuiltInStartTransition';
 const BuiltInFireId = 'BuiltInFire';
+const BuiltInFireFunctionId = 'BuiltInFireFunction';
 const BUILTIN_SHAPES = new Map();
 addObject(BUILTIN_SHAPES, BuiltInPropsId, [
     ['ref', { kind: 'Object', shapeId: BuiltInUseRefId }],
@@ -37053,7 +37057,12 @@ const REACT_APIS = [
         addFunction(DEFAULT_SHAPES, [], {
             positionalParams: [],
             restParam: null,
-            returnType: { kind: 'Primitive' },
+            returnType: {
+                kind: 'Function',
+                return: { kind: 'Poly' },
+                shapeId: BuiltInFireFunctionId,
+                isConstructor: false,
+            },
             calleeEffect: Effect.Read,
             returnValueKind: ValueKind.Frozen,
         }, BuiltInFireId),
@@ -48290,9 +48299,10 @@ function inferEffectDependencies(fn) {
                             });
                         }
                         for (const dep of scopeInfo.deps) {
-                            if ((isUseRefType(dep.identifier) ||
+                            if (((isUseRefType(dep.identifier) ||
                                 isSetStateType(dep.identifier)) &&
-                                !reactiveIds.has(dep.identifier.id)) {
+                                !reactiveIds.has(dep.identifier.id)) ||
+                                isFireFunctionType(dep.identifier)) {
                                 continue;
                             }
                             const { place, instructions } = writeDependencyToInstructions(dep, reactiveIds.has(dep.identifier.id), fn.env, fnExpr.loc);
@@ -53607,6 +53617,12 @@ class Context {
     }
     getOrGenerateFireFunctionBinding(callee, fireLoc) {
         const fireFunctionBinding = getOrInsertWith(__classPrivateFieldGet(this, _Context_fireCalleesToFireFunctions, "f"), callee.identifier.id, () => createTemporaryPlace(__classPrivateFieldGet(this, _Context_env, "f"), GeneratedSource));
+        fireFunctionBinding.identifier.type = {
+            kind: 'Function',
+            shapeId: BuiltInFireFunctionId,
+            return: { kind: 'Poly' },
+            isConstructor: false,
+        };
         __classPrivateFieldGet(this, _Context_capturedCalleeIdentifierIds, "f").set(callee.identifier.id, {
             fireFunctionBinding,
             capturedCalleeIdentifier: callee.identifier,
