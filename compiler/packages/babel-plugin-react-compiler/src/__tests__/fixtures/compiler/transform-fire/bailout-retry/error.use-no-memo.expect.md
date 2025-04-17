@@ -33,7 +33,11 @@ function Component({props, bar}) {
   13 |   };
   14 |   useEffect(() => {
 > 15 |     fire(foo(props));
-     |     ^^^^ InvalidReact: [Fire] Untransformed reference to compiler-required feature. Either remove this `fire` call or ensure it is successfully transformed by the compiler (15:15)
+     |     ^^^^ InvalidReact: [Fire] Untransformed reference to compiler-required feature. Either remove this `fire` call or ensure it is successfully transformed by the compiler. (Bailout reason: InvalidReact: Cannot compile `fire`. `fire(myFunction)` will not do anything on its own, you need to call the result like `fire(myFunction)(myArgument)` (15:15)
+
+InvalidReact: Cannot compile `fire`. `fire(myFunction)` will not do anything on its own, you need to call the result like `fire(myFunction)(myArgument)` (16:16)
+
+InvalidReact: Cannot compile `fire`. `fire(myFunction)` will not do anything on its own, you need to call the result like `fire(myFunction)(myArgument)` (17:17)) (15:15)
   16 |     fire(foo());
   17 |     fire(bar());
   18 |   });

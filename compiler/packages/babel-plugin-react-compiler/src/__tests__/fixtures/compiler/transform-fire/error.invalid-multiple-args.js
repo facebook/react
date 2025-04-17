@@ -6,7 +6,7 @@ function Component({bar, baz}) {
     console.log(bar, baz);
   };
   useEffect(() => {
-    fire(foo(bar), baz);
+    fire(foo(bar), baz)();
   });
 
   return null;

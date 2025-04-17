@@ -10,8 +10,8 @@ function Component(props) {
     console.log(props);
   };
   useEffect(() => {
-    fire(foo(props));
-    fire(foo(props));
+    fire(foo)(props);
+    fire(foo)(props);
   });
 
   return null;

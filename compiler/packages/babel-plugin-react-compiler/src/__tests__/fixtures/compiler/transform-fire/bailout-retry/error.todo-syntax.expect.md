@@ -19,7 +19,7 @@ function Component({prop1}) {
     }
   };
   useEffect(() => {
-    fire(foo());
+    fire(foo)();
   });
 }
 
@@ -31,7 +31,7 @@ function Component({prop1}) {
 ```
   16 |   };
   17 |   useEffect(() => {
-> 18 |     fire(foo());
+> 18 |     fire(foo)();
      |     ^^^^ InvalidReact: [Fire] Untransformed reference to compiler-required feature. Either remove this `fire` call or ensure it is successfully transformed by the compiler. (Bailout reason: Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:15)) (18:18)
   19 |   });
   20 | }

@@ -35,7 +35,7 @@ import {
 import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
 import {getOrInsertWith} from '../Utils/utils';
 import {BuiltInFireId, DefaultNonmutatingHook} from '../HIR/ObjectShape';
-import {eachInstructionOperand} from '../HIR/visitors';
+import {eachCallArgument, eachInstructionOperand} from '../HIR/visitors';
 import {printSourceLocationLine} from '../HIR/PrintHIR';
 import {USE_FIRE_FUNCTION_NAME} from '../HIR/Environment';
 
@@ -50,6 +50,8 @@ const CANNOT_COMPILE_FIRE = 'Cannot compile `fire`';
 
 export function transformFire(fn: HIRFunction): void {
   const context = new Context(fn.env);
+  ensureLinearConsumption(fn, context);
+  context.throwIfErrorsFound();
   replaceFireFunctions(fn, context);
   if (!context.hasErrors()) {
     ensureNoMoreFireUses(fn, context);
@@ -197,58 +199,47 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
         context.inUseEffectLambda()
       ) {
         /*
-         * We found a fire(callExpr()) call. We remove the `fire()` call and replace the callExpr()
-         * with a freshly generated fire function binding. We'll insert the useFire call before the
-         * useEffect call, which happens in the CallExpression (useEffect) case above.
+         * We found a fire(identifier)() call. We remove the `fire()` call and replace the
+         * identifier with a freshly generated fire function binding, leaving fireIdentifier().
+         * We'll insert the useFire call before the useEffect call, which happens in the
+         * CallExpression (useEffect) case above.
          */
 
         /*
-         * We only allow fire to be called with a CallExpression: `fire(f())`
-         * TODO: add support for method calls: `fire(this.method())`
+         * We only allow fire to be called with an identifier: `fire(f)()`
+         * TODO: add support for method calls: `fire(this.method)()`
          */
         if (value.args.length === 1 && value.args[0].kind === 'Identifier') {
-          const callExpr = context.getCallExpression(
-            value.args[0].identifier.id,
-          );
-
-          if (callExpr != null) {
-            const calleeId = callExpr.callee.identifier.id;
-            const loadLocal = context.getLoadLocalInstr(calleeId);
-            if (loadLocal == null) {
-              context.pushError({
-                loc: value.loc,
-                description: null,
-                severity: ErrorSeverity.Invariant,
-                reason:
-                  '[InsertFire] No loadLocal found for fire call argument',
-                suggestions: null,
-              });
-              continue;
-            }
-
-            const fireFunctionBinding =
-              context.getOrGenerateFireFunctionBinding(
-                loadLocal.place,
-                value.loc,
-              );
-
-            loadLocal.place = {...fireFunctionBinding};
-
-            // Delete the fire call expression
-            deleteInstrs.add(instr.id);
-          } else {
+          const callee = value.args[0];
+          // TODO: This value must be captured by the useEffect lambda
+          const loadLocal = context.getLoadLocalInstr(callee.identifier.id);
+          if (loadLocal == null) {
             context.pushError({
               loc: value.loc,
-              description:
-                '`fire()` can only receive a function call such as `fire(fn(a,b)). Method calls and other expressions are not allowed',
+              description: `fire() can only be called with an identifier as an argument, like fire(myFunction)(myArgument)`,
               severity: ErrorSeverity.InvalidReact,
               reason: CANNOT_COMPILE_FIRE,
               suggestions: null,
             });
+            continue;
           }
+
+          const fireFunctionBinding = context.getOrGenerateFireFunctionBinding(
+            loadLocal.place,
+            value.loc,
+          );
+
+          context.addFireCallResultToReplacedBinding(
+            instr.lvalue.identifier.id,
+            fireFunctionBinding,
+          );
+
+          loadLocal.place = {...fireFunctionBinding};
+
+          deleteInstrs.add(instr.id);
         } else {
           let description: string =
-            'fire() can only take in a single call expression as an argument';
+            'fire() can only take in a single identifier as an argument';
           if (value.args.length === 0) {
             description += ' but received none';
           } else if (value.args.length > 1) {
@@ -265,7 +256,12 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
           });
         }
       } else if (value.kind === 'CallExpression') {
-        context.addCallExpression(lvalue.identifier.id, value);
+        const callToFire = context.getFireCallResultToReplacedBinding(
+          value.callee.identifier.id,
+        );
+        if (callToFire != null) {
+          value.callee = callToFire;
+        }
       } else if (
         value.kind === 'FunctionExpression' &&
         context.inUseEffectLambda()
@@ -415,6 +411,80 @@ function ensureNoMoreFireUses(fn: HIRFunction, context: Context): void {
   }
 }
 
+/*
+ * Fire calls must be linearly consumed as the callee of another call expression. All
+ * of these usages are syntax errors:
+ * 1. fire(props);
+ * 2. f(fire(props));
+ * 3 const fireFunction = fire(props);
+ * 4. fire(fire(props));
+ *
+ * We run this check *before* we do the transform because it is much simpler to implement
+ * by ensuring that a fire call lvalue is only ever used as a callee.
+ */
+function ensureLinearConsumption(fn: HIRFunction, context: Context): void {
+  const fireCallLvalues = new Map<IdentifierId, SourceLocation>();
+  const consumedFireCallLvalues = new Set<IdentifierId>();
+  const addInvalidUseError = (id: IdentifierId, loc: SourceLocation): void => {
+    consumedFireCallLvalues.add(id);
+    context.pushError({
+      loc,
+      description:
+        '`fire()` expressions can only be called, like fire(myFunction)(myArguments)',
+      severity: ErrorSeverity.InvalidReact,
+      reason: CANNOT_COMPILE_FIRE,
+      suggestions: null,
+    });
+  };
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      const {value, lvalue} = instr;
+      if (value.kind === 'CallExpression') {
+        if (
+          value.callee.identifier.type.kind === 'Function' &&
+          value.callee.identifier.type.shapeId === BuiltInFireId
+        ) {
+          fireCallLvalues.set(lvalue.identifier.id, lvalue.loc);
+        } else {
+          if (fireCallLvalues.has(value.callee.identifier.id)) {
+            consumedFireCallLvalues.add(value.callee.identifier.id);
+          }
+        }
+        for (const argPlace of eachCallArgument(value.args)) {
+          if (fireCallLvalues.has(argPlace.identifier.id)) {
+            addInvalidUseError(argPlace.identifier.id, argPlace.loc);
+          }
+        }
+      } else if (
+        value.kind === 'FunctionExpression' ||
+        value.kind === 'ObjectMethod'
+      ) {
+        ensureLinearConsumption(value.loweredFunc.func, context);
+      } else {
+        for (const place of eachInstructionOperand(instr)) {
+          if (fireCallLvalues.has(place.identifier.id)) {
+            addInvalidUseError(place.identifier.id, place.loc);
+          }
+        }
+      }
+    }
+  }
+
+  // Ensure every fire call was consumed
+  for (const [fireCallId, loc] of fireCallLvalues.entries()) {
+    if (!consumedFireCallLvalues.has(fireCallId)) {
+      context.pushError({
+        loc: loc,
+        description:
+          '`fire(myFunction)` will not do anything on its own, you need to call the result like `fire(myFunction)(myArgument)`',
+        severity: ErrorSeverity.InvalidReact,
+        reason: CANNOT_COMPILE_FIRE,
+        suggestions: null,
+      });
+    }
+  }
+}
+
 function makeLoadUseFireInstruction(
   env: Environment,
   importedLoadUseFire: NonLocalImportSpecifier,
@@ -525,12 +595,6 @@ class Context {
   #errors: CompilerError = new CompilerError();
 
   /*
-   * Used to look up the call expression passed to a `fire(callExpr())`. Gives back
-   * the `callExpr()`.
-   */
-  #callExpressions = new Map<IdentifierId, CallExpression>();
-
-  /*
    * We keep track of function expressions so that we can traverse them when
    * we encounter a lambda passed to a useEffect call
    */
@@ -574,8 +638,18 @@ class Context {
    */
   #loadGlobalInstructionIds = new Map<IdentifierId, InstructionId>();
 
+  #fireCallResultsToReplacedBindings = new Map<IdentifierId, Place>();
+
   constructor(env: Environment) {
     this.#env = env;
+  }
+
+  addFireCallResultToReplacedBinding(id: IdentifierId, binding: Place): void {
+    this.#fireCallResultsToReplacedBindings.set(id, binding);
+  }
+
+  getFireCallResultToReplacedBinding(id: IdentifierId): Place | undefined {
+    return this.#fireCallResultsToReplacedBindings.get(id);
   }
 
   /*
@@ -606,14 +680,6 @@ class Context {
     this.#inUseEffectLambda = inUseEffectLambda;
 
     return resultCapturedCalleeIdentifierIds;
-  }
-
-  addCallExpression(id: IdentifierId, callExpr: CallExpression): void {
-    this.#callExpressions.set(id, callExpr);
-  }
-
-  getCallExpression(id: IdentifierId): CallExpression | undefined {
-    return this.#callExpressions.get(id);
   }
 
   addLoadLocalInstr(id: IdentifierId, loadLocal: LoadLocal): void {

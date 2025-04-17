@@ -17,7 +17,7 @@ function Component(props) {
 
   if (props.cond) {
     useEffect(() => {
-      fire(foo(props));
+      fire(foo)(props);
     });
   }
 

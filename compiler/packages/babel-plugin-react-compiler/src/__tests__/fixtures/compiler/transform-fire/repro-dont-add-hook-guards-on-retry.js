@@ -8,7 +8,7 @@ function Component(props, useDynamicHook) {
     console.log(props);
   };
   useEffect(() => {
-    fire(foo(props));
+    fire(foo)(props);
   });
 
   return <div>hello world</div>;
