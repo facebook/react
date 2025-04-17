@@ -146,7 +146,7 @@ export function commitHookEffectListMount(
     const updateQueue: FunctionComponentUpdateQueue | null =
       (finishedWork.updateQueue: any);
     const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
-    if (lastEffect !== null) {
+    if (lastEffect !== null && lastEffect.next !== undefined) {
       const firstEffect = lastEffect.next;
       let effect = firstEffect;
       do {
@@ -237,6 +237,11 @@ export function commitHookEffectListMount(
             }
           }
         }
+
+        if (!effect.next) {
+          break
+        }
+
         effect = effect.next;
       } while (effect !== firstEffect);
     }
@@ -254,7 +259,7 @@ export function commitHookEffectListUnmount(
     const updateQueue: FunctionComponentUpdateQueue | null =
       (finishedWork.updateQueue: any);
     const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
-    if (lastEffect !== null) {
+    if (lastEffect !== null && lastEffect.next !== undefined) {
       const firstEffect = lastEffect.next;
       let effect = firstEffect;
       do {
@@ -293,6 +298,11 @@ export function commitHookEffectListUnmount(
             }
           }
         }
+
+        if (!effect.next) {
+          break
+        }
+
         effect = effect.next;
       } while (effect !== firstEffect);
     }
