@@ -211,8 +211,9 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
          */
         if (value.args.length === 1 && value.args[0].kind === 'Identifier') {
           const callee = value.args[0];
-          // TODO: This value must be captured by the useEffect lambda
-          const loadLocal = context.getLoadLocalInstr(callee.identifier.id);
+          const calleeId = callee.identifier.id;
+
+          const loadLocal = context.getLoadLocalInstr(calleeId);
           if (loadLocal == null) {
             context.pushError({
               loc: value.loc,
@@ -223,6 +224,11 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
             });
             continue;
           }
+
+          context.errorIfNotCapturedFromComponentScope(
+            loadLocal.place.identifier.id,
+            callee.loc,
+          );
 
           const fireFunctionBinding = context.getOrGenerateFireFunctionBinding(
             loadLocal.place,
@@ -318,13 +324,10 @@ function visitFunctionExpressionAndPropagateFireDependencies(
   context: Context,
   enteringUseEffect: boolean,
 ): FireCalleesToFireFunctionBinding {
-  let withScope = enteringUseEffect
-    ? context.withUseEffectLambdaScope.bind(context)
-    : context.withFunctionScope.bind(context);
-
-  const calleesCapturedByFnExpression = withScope(() =>
-    replaceFireFunctions(fnExpr.loweredFunc.func, context),
-  );
+  const visitFn = (): void => replaceFireFunctions(fnExpr.loweredFunc.func, context);
+  const calleesCapturedByFnExpression = enteringUseEffect
+    ? context.withUseEffectLambdaScope(fnExpr, visitFn)
+    : context.withFunctionScope(visitFn);
 
   // For each replaced callee, update the context of the function expression to track it
   for (
@@ -631,6 +634,8 @@ class Context {
    */
   #inUseEffectLambda = false;
 
+  #identifierIdsCapturedByEffectLambda = new Set<IdentifierId>();
+
   /*
    * Mapping from useEffect callee identifier ids to the instruction id of the
    * load global instruction for the useEffect call. We use this to insert the
@@ -667,17 +672,23 @@ class Context {
     return this.#capturedCalleeIdentifierIds;
   }
 
-  withUseEffectLambdaScope(fn: () => void): FireCalleesToFireFunctionBinding {
+  withUseEffectLambdaScope(
+    lambda: FunctionExpression,
+    fn: () => void,
+  ): FireCalleesToFireFunctionBinding {
     const capturedCalleeIdentifierIds = this.#capturedCalleeIdentifierIds;
     const inUseEffectLambda = this.#inUseEffectLambda;
 
     this.#capturedCalleeIdentifierIds = new Map();
     this.#inUseEffectLambda = true;
-
+    this.#identifierIdsCapturedByEffectLambda = new Set(
+      lambda.loweredFunc.func.context.map(dep => dep.identifier.id),
+    );
     const resultCapturedCalleeIdentifierIds = this.withFunctionScope(fn);
 
     this.#capturedCalleeIdentifierIds = capturedCalleeIdentifierIds;
     this.#inUseEffectLambda = inUseEffectLambda;
+    this.#identifierIdsCapturedByEffectLambda = new Set();
 
     return resultCapturedCalleeIdentifierIds;
   }
@@ -750,6 +761,22 @@ class Context {
 
   getArrayExpression(id: IdentifierId): ArrayExpression | undefined {
     return this.#arrayExpressions.get(id);
+  }
+
+  errorIfNotCapturedFromComponentScope(
+    id: IdentifierId,
+    loc: SourceLocation,
+  ): void {
+    if (!this.#identifierIdsCapturedByEffectLambda.has(id)) {
+      this.pushError({
+        loc,
+        description:
+          '`fire()` only accepts identifiers defined in the component/hook scope. This value was defined in the useEffect callback.',
+        severity: ErrorSeverity.InvalidReact,
+        reason: CANNOT_COMPILE_FIRE,
+        suggestions: null,
+      });
+    }
   }
 
   hasErrors(): boolean {
