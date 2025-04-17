@@ -163,6 +163,7 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
     }
   };
 
+// NOTE 사딕-createRoot: ReactDOMRoot 객체 생성 함수 (internalRoot의 wrapper, render 메서드 제공)
 export function createRoot(
   container: Element | Document | DocumentFragment,
   options?: CreateRootOptions,
