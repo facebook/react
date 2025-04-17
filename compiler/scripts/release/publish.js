@@ -62,7 +62,7 @@ async function main() {
     .option('tag', {
       description: 'Tag to publish to npm',
       type: 'choices',
-      choices: ['experimental', 'beta'],
+      choices: ['experimental', 'beta', 'rc'],
       default: 'experimental',
     })
     .option('version-name', {
