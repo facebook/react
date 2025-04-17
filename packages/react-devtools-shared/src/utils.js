@@ -996,11 +996,6 @@ export function backendToFrontendSerializedElementMapper(
   };
 }
 
-// Chrome normalizes urls like webpack-internals:// but new URL don't, so cannot use new URL here.
-export function normalizeUrl(url: string): string {
-  return url.replace('/./', '/');
-}
-
 export function getIsReloadAndProfileSupported(): boolean {
   // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
   // If not, features like reload-and-profile will not work correctly and must be disabled.

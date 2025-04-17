@@ -1,6 +1,5 @@
 /* global chrome */
 
-import {normalizeUrl} from 'react-devtools-shared/src/utils';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 
 let debugIDCounter = 0;
@@ -117,7 +116,7 @@ async function fetchFileWithCaching(url: string): Promise<string> {
       chrome.devtools.inspectedWindow.getResources(r => resolve(r)),
     );
 
-    const normalizedReferenceURL = normalizeUrl(url);
+    const normalizedReferenceURL = new URL(url).toString();
     const resource = resources.find(r => r.url === normalizedReferenceURL);
 
     if (resource != null) {
