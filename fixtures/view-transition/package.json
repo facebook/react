@@ -30,6 +30,9 @@
     "dev:server": "NODE_ENV=development node server",
     "start": "react-scripts build && NODE_ENV=production node server",
     "build": "react-scripts build",
+    "postinstall": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "vc-build": "yarn build && DISABLE_ESLINT_PLUGIN=true vercel build --prod && cp -r src .vercel/output/functions/server/index.js.func/",
+    "vc-deploy": "vercel deploy --prebuilt --prod",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },

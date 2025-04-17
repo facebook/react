@@ -24,6 +24,11 @@ if (process.env.NODE_ENV === 'development') {
     render(req.url, res);
   });
 } else {
+  // `vercel build`
+  require('babel-preset-react-app');
+  require('react');
+  require('react-dom/server');
+
   const render = require('./render').default;
   app.get('/', function (req, res) {
     render(req.url, res);
