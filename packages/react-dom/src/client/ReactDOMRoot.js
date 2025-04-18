@@ -224,6 +224,7 @@ export function createRoot(
     }
   }
 
+  // NOTE 사딕-createContainer: 내부에서 createFiberRoot를 호출하여 FiberRoot를 return하는 함수
   const root = createContainer(
     container,
     ConcurrentRoot,
