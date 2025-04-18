@@ -1283,6 +1283,42 @@ describe('ReactDOMComponent', () => {
       expect(container.textContent).toEqual('bonjour');
     });
 
+    it('should set innerHTML when html changed', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div />);
+      });
+      const node = container.firstChild;
+      const spyOnSetInnerHtml = jest.spyOn(node, 'innerHTML', 'set');
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: 'bonjour'}} />);
+      });
+      expect(spyOnSetInnerHtml).toHaveBeenCalledTimes(1);
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: 'adieu'}} />);
+      });
+      expect(spyOnSetInnerHtml).toHaveBeenCalledTimes(2);
+    });
+
+    it('should skip setting innerHTML when html did not change', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div />);
+      });
+      const node = container.firstChild;
+      const spyOnSetInnerHTML = jest.spyOn(node, 'innerHTML', 'set');
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: 'bonjour'}} />);
+      });
+      expect(spyOnSetInnerHTML).toHaveBeenCalledTimes(1);
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: 'bonjour'}} />);
+      });
+      expect(spyOnSetInnerHTML).toHaveBeenCalledTimes(1);
+    });
+
     it('should not incur unnecessary DOM mutations for attributes', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
