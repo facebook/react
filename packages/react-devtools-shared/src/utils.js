@@ -996,9 +996,17 @@ export function backendToFrontendSerializedElementMapper(
   };
 }
 
-// Chrome normalizes urls like webpack-internals:// but new URL don't, so cannot use new URL here.
-export function normalizeUrl(url: string): string {
-  return url.replace('/./', '/');
+/**
+ * Should be used when treating url as a Chrome Resource URL.
+ */
+export function normalizeUrlIfValid(url: string): string {
+  try {
+    // TODO: Chrome will use the basepath to create a Resource URL.
+    return new URL(url).toString();
+  } catch {
+    // Giving up if it's not a valid URL without basepath
+    return url;
+  }
 }
 
 export function getIsReloadAndProfileSupported(): boolean {

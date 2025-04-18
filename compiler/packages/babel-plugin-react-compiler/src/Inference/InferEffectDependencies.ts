@@ -17,6 +17,7 @@ import {
   ReactiveScopeDependencies,
   isUseRefType,
   isSetStateType,
+  isFireFunctionType,
 } from '../HIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {
@@ -189,9 +190,10 @@ export function inferEffectDependencies(fn: HIRFunction): void {
              */
             for (const dep of scopeInfo.deps) {
               if (
-                (isUseRefType(dep.identifier) ||
+                ((isUseRefType(dep.identifier) ||
                   isSetStateType(dep.identifier)) &&
-                !reactiveIds.has(dep.identifier.id)
+                  !reactiveIds.has(dep.identifier.id)) ||
+                isFireFunctionType(dep.identifier)
               ) {
                 // exclude non-reactive hook results, which will never be in a memo block
                 continue;

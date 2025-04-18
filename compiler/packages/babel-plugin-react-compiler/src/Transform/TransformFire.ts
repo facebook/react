@@ -34,7 +34,11 @@ import {
 } from '../HIR';
 import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
 import {getOrInsertWith} from '../Utils/utils';
-import {BuiltInFireId, DefaultNonmutatingHook} from '../HIR/ObjectShape';
+import {
+  BuiltInFireFunctionId,
+  BuiltInFireId,
+  DefaultNonmutatingHook,
+} from '../HIR/ObjectShape';
 import {eachInstructionOperand} from '../HIR/visitors';
 import {printSourceLocationLine} from '../HIR/PrintHIR';
 import {USE_FIRE_FUNCTION_NAME} from '../HIR/Environment';
@@ -632,6 +636,13 @@ class Context {
       callee.identifier.id,
       () => createTemporaryPlace(this.#env, GeneratedSource),
     );
+
+    fireFunctionBinding.identifier.type = {
+      kind: 'Function',
+      shapeId: BuiltInFireFunctionId,
+      return: {kind: 'Poly'},
+      isConstructor: false,
+    };
 
     this.#capturedCalleeIdentifierIds.set(callee.identifier.id, {
       fireFunctionBinding,
