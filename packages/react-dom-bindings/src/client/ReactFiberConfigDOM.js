@@ -4451,12 +4451,6 @@ function getStyleKey(href: string) {
   return `href="${limitedEscapedHref}"`;
 }
 
-function getStyleTagSelector(href: string) {
-  const limitedEscapedHref =
-    escapeSelectorAttributeValueInsideDoubleQuotes(href);
-  return `style[data-href~="${limitedEscapedHref}"]`;
-}
-
 function getStylesheetSelectorFromKey(key: string) {
   return `link[rel="stylesheet"][${key}]`;
 }
@@ -4522,6 +4516,64 @@ function getScriptSelectorFromKey(key: string): string {
   return 'script[async]' + key;
 }
 
+// for the sake of performance we want to use insertRule
+// if that fails, fall back to appending textContent (which is slow)
+function appendStyleRule(style: HTMLStyleElement, cssText: string) {
+  try {
+    if (style.sheet)
+      style.sheet.insertRule(cssText, style.sheet.cssRules.length);
+    else style.textContent += cssText;
+  } catch (e) {
+    style.textContent += cssText;
+  }
+}
+
+const styleNodesByPrecedence = new WeakMap<
+  HoistableRoot,
+  Map<string, HTMLStyleElement>,
+>();
+const styleNodesByHref = new WeakMap<HoistableRoot, Map<string, Instance>>();
+
+// when creating our caches, hydrate with data from the DOM
+// this should only happen once per root
+function getHydratedCaches(hoistableRoot: HoistableRoot) {
+  let rootHrefCache = styleNodesByHref.get(hoistableRoot);
+  let rootPrecedenceCache = styleNodesByPrecedence.get(hoistableRoot);
+
+  if (!rootHrefCache) {
+    rootHrefCache = new Map<string, Instance>();
+    styleNodesByHref.set(hoistableRoot, rootHrefCache);
+
+    const nodesWithHref = hoistableRoot.querySelectorAll('style[data-href]');
+    for (let i = 0; i < nodesWithHref.length; i++) {
+      // populate our cache for all hrefs listed in this node's data-href
+      const node = nodesWithHref[i];
+      const href = node.dataset.href;
+      for (let j = 0; j < href.length; j++) {
+        const h = href[j];
+        if (node instanceof HTMLStyleElement) rootHrefCache.set(h, node);
+      }
+    }
+  }
+
+  if (!rootPrecedenceCache) {
+    rootPrecedenceCache = new Map<string, HTMLStyleElement>();
+    styleNodesByPrecedence.set(hoistableRoot, rootPrecedenceCache);
+
+    const nodesWithPrecedence = hoistableRoot.querySelectorAll(
+      'style[data-precedence]',
+    );
+    for (let i = 0; i < nodesWithPrecedence.length; i++) {
+      const node = nodesWithPrecedence[i];
+      const precedence = node.dataset.precedence;
+      if (node instanceof HTMLStyleElement)
+        rootPrecedenceCache.set(precedence, node);
+    }
+  }
+
+  return {rootHrefCache, rootPrecedenceCache};
+}
+
 export function acquireResource(
   hoistableRoot: HoistableRoot,
   resource: Resource,
@@ -4533,13 +4585,28 @@ export function acquireResource(
       case 'style': {
         const qualifiedProps: StyleTagQualifyingProps = props;
 
-        // Attempt to hydrate instance from DOM
-        let instance: null | Instance = hoistableRoot.querySelector(
-          getStyleTagSelector(qualifiedProps.href),
-        );
+        const {rootHrefCache, rootPrecedenceCache} =
+          getHydratedCaches(hoistableRoot);
+
+        // attempt to hydrate first from our cache, then from the DOM
+        // this minimizes the number of times we query the DOM
+        let instance: void | Instance = rootHrefCache.get(qualifiedProps.href);
+
         if (instance) {
           resource.instance = instance;
           markNodeAsHoistable(instance);
+          return instance;
+        }
+
+        // attempt to reuse an existing style node before creating a new one
+        // this minimizes the number of style nodes we create, which keeps query selectors faster
+        instance = rootPrecedenceCache.get(qualifiedProps.precedence);
+        if (instance && instance.isConnected) {
+          if (typeof qualifiedProps.children === 'string')
+            appendStyleRule(instance, qualifiedProps.children);
+          if (!instance.dataset.href.includes(qualifiedProps.href))
+            instance.dataset.href += ` ${qualifiedProps.href}`;
+          resource.instance = instance;
           return instance;
         }
 
@@ -4556,6 +4623,7 @@ export function acquireResource(
         // resource.state.loading |= Inserted;
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
         resource.instance = instance;
+        rootPrecedenceCache.set(qualifiedProps.precedence, instance);
 
         return instance;
       }
