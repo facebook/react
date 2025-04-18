@@ -4451,6 +4451,12 @@ function getStyleKey(href: string) {
   return `href="${limitedEscapedHref}"`;
 }
 
+function getStyleTagSelector(href: string) {
+  const limitedEscapedHref =
+    escapeSelectorAttributeValueInsideDoubleQuotes(href);
+  return `style[data-href~="${limitedEscapedHref}"]`;
+}
+
 function getStylesheetSelectorFromKey(key: string) {
   return `link[rel="stylesheet"][${key}]`;
 }
@@ -4532,7 +4538,25 @@ const styleNodesByPrecedence = new WeakMap<
   HoistableRoot,
   Map<string, HTMLStyleElement>,
 >();
-const styleNodesByHref = new WeakMap<HoistableRoot, Map<string, Instance>>();
+const styleNodesByHref = new WeakMap<
+  HoistableRoot,
+  Map<string, HTMLStyleElement>,
+>();
+
+function updateHrefCache(
+  hrefCache: Map<string, HTMLStyleElement>,
+  node: HTMLElement,
+) {
+  const hrefs = node.dataset.href.split(' ');
+  for (let j = 0; j < hrefs.length; j++) {
+    const href = hrefs[j];
+    if (
+      typeof HTMLStyleElement !== 'undefined' &&
+      node instanceof HTMLStyleElement
+    )
+      hrefCache.set(href, node);
+  }
+}
 
 // when creating our caches, hydrate with data from the DOM
 // this should only happen once per root
@@ -4541,18 +4565,12 @@ function getHydratedCaches(hoistableRoot: HoistableRoot) {
   let rootPrecedenceCache = styleNodesByPrecedence.get(hoistableRoot);
 
   if (!rootHrefCache) {
-    rootHrefCache = new Map<string, Instance>();
+    rootHrefCache = new Map<string, HTMLStyleElement>();
     styleNodesByHref.set(hoistableRoot, rootHrefCache);
 
     const nodesWithHref = hoistableRoot.querySelectorAll('style[data-href]');
     for (let i = 0; i < nodesWithHref.length; i++) {
-      // populate our cache for all hrefs listed in this node's data-href
-      const node = nodesWithHref[i];
-      const href = node.dataset.href;
-      for (let j = 0; j < href.length; j++) {
-        const h = href[j];
-        if (node instanceof HTMLStyleElement) rootHrefCache.set(h, node);
-      }
+      updateHrefCache(rootHrefCache, nodesWithHref[i]);
     }
   }
 
@@ -4566,7 +4584,10 @@ function getHydratedCaches(hoistableRoot: HoistableRoot) {
     for (let i = 0; i < nodesWithPrecedence.length; i++) {
       const node = nodesWithPrecedence[i];
       const precedence = node.dataset.precedence;
-      if (node instanceof HTMLStyleElement)
+      if (
+        typeof HTMLStyleElement !== 'undefined' &&
+        node instanceof HTMLStyleElement
+      )
         rootPrecedenceCache.set(precedence, node);
     }
   }
@@ -4588,9 +4609,10 @@ export function acquireResource(
         const {rootHrefCache, rootPrecedenceCache} =
           getHydratedCaches(hoistableRoot);
 
-        // attempt to hydrate first from our cache, then from the DOM
+        // attempt to hydrate first from our href cache, then from the DOM
         // this minimizes the number of times we query the DOM
-        let instance: void | Instance = rootHrefCache.get(qualifiedProps.href);
+        let instance: null | Instance =
+          rootHrefCache.get(qualifiedProps.href) || null;
 
         if (instance) {
           resource.instance = instance;
@@ -4600,13 +4622,24 @@ export function acquireResource(
 
         // attempt to reuse an existing style node before creating a new one
         // this minimizes the number of style nodes we create, which keeps query selectors faster
-        instance = rootPrecedenceCache.get(qualifiedProps.precedence);
+        instance = rootPrecedenceCache.get(qualifiedProps.precedence) || null;
         if (instance && instance.isConnected) {
           if (typeof qualifiedProps.children === 'string')
             appendStyleRule(instance, qualifiedProps.children);
           if (!instance.dataset.href.includes(qualifiedProps.href))
             instance.dataset.href += ` ${qualifiedProps.href}`;
           resource.instance = instance;
+          return instance;
+        }
+
+        // if a style tag with the same href was server-rendered but then suspended, it may not be in our cache
+        instance = hoistableRoot.querySelector(
+          getStyleTagSelector(qualifiedProps.href),
+        );
+        if (instance) {
+          updateHrefCache(rootHrefCache, instance);
+          resource.instance = instance;
+          markNodeAsHoistable(instance);
           return instance;
         }
 
@@ -4623,7 +4656,9 @@ export function acquireResource(
         // resource.state.loading |= Inserted;
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
         resource.instance = instance;
+
         rootPrecedenceCache.set(qualifiedProps.precedence, instance);
+        rootHrefCache.set(qualifiedProps.href, instance);
 
         return instance;
       }
