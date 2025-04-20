@@ -45,6 +45,13 @@ function inferOperandEffect(state: State, place: Place): null | FunctionEffect {
     case Effect.Mutate: {
       if (isRefOrRefValue(place.identifier)) {
         break;
+      } else if (
+        place.identifier.name && 
+        place.identifier.name.kind === 'named' &&
+        place.identifier.name.value === 'current' &&
+        value.reason.has(ValueReason.Context)
+      ) {
+        break;
       } else if (value.kind === ValueKind.Context) {
         CompilerError.invariant(value.context.size > 0, {
           reason:
