@@ -14,18 +14,30 @@ import {
   ScopeId,
   ReactiveScopeDependency,
   Place,
+  ReactiveScope,
   ReactiveScopeDependencies,
+  Terminal,
   isUseRefType,
   isSetStateType,
   isFireFunctionType,
+  makeScopeId,
 } from '../HIR';
+import {collectHoistablePropertyLoadsInInnerFn} from '../HIR/CollectHoistablePropertyLoads';
+import {collectOptionalChainSidemap} from '../HIR/CollectOptionalChainDependencies';
+import {ReactiveScopeDependencyTreeHIR} from '../HIR/DeriveMinimalDependenciesHIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {
   createTemporaryPlace,
   fixScopeAndIdentifierRanges,
   markInstructionIds,
 } from '../HIR/HIRBuilder';
+import {
+  collectTemporariesSidemap,
+  DependencyCollectionContext,
+  handleInstruction,
+} from '../HIR/PropagateScopeDependenciesHIR';
 import {eachInstructionOperand, eachTerminalOperand} from '../HIR/visitors';
+import {empty} from '../Utils/Stack';
 import {getOrInsertWith} from '../Utils/utils';
 
 /**
@@ -54,10 +66,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
   const autodepFnLoads = new Map<IdentifierId, number>();
   const autodepModuleLoads = new Map<IdentifierId, Map<string, number>>();
 
-  const scopeInfos = new Map<
-    ScopeId,
-    {pruned: boolean; deps: ReactiveScopeDependencies; hasSingleInstr: boolean}
-  >();
+  const scopeInfos = new Map<ScopeId, ReactiveScopeDependencies>();
 
   const loadGlobals = new Set<IdentifierId>();
 
@@ -71,19 +80,18 @@ export function inferEffectDependencies(fn: HIRFunction): void {
   const reactiveIds = inferReactiveIdentifiers(fn);
 
   for (const [, block] of fn.body.blocks) {
-    if (
-      block.terminal.kind === 'scope' ||
-      block.terminal.kind === 'pruned-scope'
-    ) {
+    if (block.terminal.kind === 'scope') {
       const scopeBlock = fn.body.blocks.get(block.terminal.block)!;
-      scopeInfos.set(block.terminal.scope.id, {
-        pruned: block.terminal.kind === 'pruned-scope',
-        deps: block.terminal.scope.dependencies,
-        hasSingleInstr:
-          scopeBlock.instructions.length === 1 &&
-          scopeBlock.terminal.kind === 'goto' &&
-          scopeBlock.terminal.block === block.terminal.fallthrough,
-      });
+      if (
+        scopeBlock.instructions.length === 1 &&
+        scopeBlock.terminal.kind === 'goto' &&
+        scopeBlock.terminal.block === block.terminal.fallthrough
+      ) {
+        scopeInfos.set(
+          block.terminal.scope.id,
+          block.terminal.scope.dependencies,
+        );
+      }
     }
     const rewriteInstrs = new Map<InstructionId, Array<Instruction>>();
     for (const instr of block.instructions) {
@@ -165,22 +173,12 @@ export function inferEffectDependencies(fn: HIRFunction): void {
               fnExpr.lvalue.identifier.scope != null
                 ? scopeInfos.get(fnExpr.lvalue.identifier.scope.id)
                 : null;
-            CompilerError.invariant(scopeInfo != null, {
-              reason: 'Expected function expression scope to exist',
-              loc: value.loc,
-            });
-            if (scopeInfo.pruned || !scopeInfo.hasSingleInstr) {
-              /**
-               * TODO: retry pipeline that ensures effect function expressions
-               * are placed into their own scope
-               */
-              CompilerError.throwTodo({
-                reason:
-                  '[InferEffectDependencies] Expected effect function to have non-pruned scope and its scope to have exactly one instruction',
-                loc: fnExpr.loc,
-              });
+            let minimalDeps: Set<ReactiveScopeDependency>;
+            if (scopeInfo != null) {
+              minimalDeps = new Set(scopeInfo);
+            } else {
+              minimalDeps = inferMinimalDependencies(fnExpr);
             }
-
             /**
              * Step 1: push dependencies to the effect deps array
              *
@@ -188,7 +186,8 @@ export function inferEffectDependencies(fn: HIRFunction): void {
              * the `infer-effect-deps/pruned-nonreactive-obj` fixture for an
              * explanation.
              */
-            for (const dep of scopeInfo.deps) {
+
+            for (const dep of minimalDeps) {
               if (
                 ((isUseRefType(dep.identifier) ||
                   isSetStateType(dep.identifier)) &&
@@ -339,4 +338,133 @@ function inferReactiveIdentifiers(fn: HIRFunction): Set<IdentifierId> {
     }
   }
   return reactiveIds;
+}
+
+function inferMinimalDependencies(
+  fnInstr: TInstruction<FunctionExpression>,
+): Set<ReactiveScopeDependency> {
+  const fn = fnInstr.value.loweredFunc.func;
+
+  const temporaries = collectTemporariesSidemap(fn, new Set());
+  const {
+    hoistableObjects,
+    processedInstrsInOptional,
+    temporariesReadInOptional,
+  } = collectOptionalChainSidemap(fn);
+
+  const hoistablePropertyLoads = collectHoistablePropertyLoadsInInnerFn(
+    fnInstr,
+    temporaries,
+    hoistableObjects,
+  );
+  const hoistableToFnEntry = hoistablePropertyLoads.get(fn.body.entry);
+  CompilerError.invariant(hoistableToFnEntry != null, {
+    reason:
+      '[InferEffectDependencies] Internal invariant broken: missing entry block',
+    loc: fnInstr.loc,
+  });
+
+  const dependencies = inferDependencies(
+    fnInstr,
+    new Map([...temporaries, ...temporariesReadInOptional]),
+    processedInstrsInOptional,
+  );
+
+  const tree = new ReactiveScopeDependencyTreeHIR(
+    [...hoistableToFnEntry.assumedNonNullObjects].map(o => o.fullPath),
+  );
+  for (const dep of dependencies) {
+    tree.addDependency({...dep});
+  }
+
+  return tree.deriveMinimalDependencies();
+}
+
+function inferDependencies(
+  fnInstr: TInstruction<FunctionExpression>,
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+  processedInstrsInOptional: ReadonlySet<Instruction | Terminal>,
+): Set<ReactiveScopeDependency> {
+  const fn = fnInstr.value.loweredFunc.func;
+  const context = new DependencyCollectionContext(
+    new Set(),
+    temporaries,
+    processedInstrsInOptional,
+  );
+  for (const dep of fn.context) {
+    context.declare(dep.identifier, {
+      id: makeInstructionId(0),
+      scope: empty(),
+    });
+  }
+  const placeholderScope: ReactiveScope = {
+    id: makeScopeId(0),
+    range: {
+      start: fnInstr.id,
+      end: makeInstructionId(fnInstr.id + 1),
+    },
+    dependencies: new Set(),
+    reassignments: new Set(),
+    declarations: new Map(),
+    earlyReturnValue: null,
+    merged: new Set(),
+    loc: GeneratedSource,
+  };
+  context.enterScope(placeholderScope);
+  inferDependenciesInFn(fn, context, temporaries);
+  context.exitScope(placeholderScope, false);
+  const resultUnfiltered = context.deps.get(placeholderScope);
+  CompilerError.invariant(resultUnfiltered != null, {
+    reason:
+      '[InferEffectDependencies] Internal invariant broken: missing scope dependencies',
+    loc: fn.loc,
+  });
+
+  const fnContext = new Set(fn.context.map(dep => dep.identifier.id));
+  const result = new Set<ReactiveScopeDependency>();
+  for (const dep of resultUnfiltered) {
+    if (fnContext.has(dep.identifier.id)) {
+      result.add(dep);
+    }
+  }
+
+  return result;
+}
+
+function inferDependenciesInFn(
+  fn: HIRFunction,
+  context: DependencyCollectionContext,
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+): void {
+  for (const [, block] of fn.body.blocks) {
+    // Record referenced optional chains in phis
+    for (const phi of block.phis) {
+      for (const operand of phi.operands) {
+        const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
+        if (maybeOptionalChain) {
+          context.visitDependency(maybeOptionalChain);
+        }
+      }
+    }
+    for (const instr of block.instructions) {
+      if (
+        instr.value.kind === 'FunctionExpression' ||
+        instr.value.kind === 'ObjectMethod'
+      ) {
+        context.declare(instr.lvalue.identifier, {
+          id: instr.id,
+          scope: context.currentScope,
+        });
+        /**
+         * Recursively visit the inner function to extract dependencies
+         */
+        const innerFn = instr.value.loweredFunc.func;
+        context.enterInnerFn(instr as TInstruction<FunctionExpression>, () => {
+          inferDependenciesInFn(innerFn, context, temporaries);
+        });
+      } else {
+        handleInstruction(instr, context);
+      }
+    }
+  }
 }
