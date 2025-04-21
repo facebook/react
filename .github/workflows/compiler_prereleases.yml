@@ -16,6 +16,9 @@ on:
       version_name:
         required: true
         type: string
+      tag_version:
+        required: false
+        type: number
     secrets:
       NPM_TOKEN:
         required: true
@@ -55,4 +58,4 @@ jobs:
       - name: Publish packages to npm
         run: |
           cp ./scripts/release/ci-npmrc ~/.npmrc
-          scripts/release/publish.js --frfr --ci --versionName=${{ inputs.version_name }} --tag ${{ inputs.dist_tag }}
+          scripts/release/publish.js --frfr --ci --versionName=${{ inputs.version_name }} --tag=${{ inputs.dist_tag }} ${{ inputs.tag_version && format('--tagVersion={0}', inputs.tag_version) || '' }}

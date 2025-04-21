@@ -14,6 +14,9 @@ on:
       version_name:
         required: true
         type: string
+      tag_version:
+        required: false
+        type: number
 
 permissions: {}
 
@@ -29,5 +32,6 @@ jobs:
       release_channel: ${{ inputs.release_channel }}
       dist_tag: ${{ inputs.dist_tag }}
       version_name: ${{ inputs.version_name }}
+      tag_version: ${{ inputs.tag_version }}
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
