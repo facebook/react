@@ -139,10 +139,13 @@ async function main() {
       files: {exclude: ['.DS_Store']},
     });
     const truncatedHash = hash.slice(0, 7);
-    const newVersion =
+    let newVersion =
       argv.tagVersion == null || argv.tagVersion === ''
-        ? `${argv.versionName}-${argv.tag}-${truncatedHash}-${dateString}`
-        : `${argv.versionName}-${argv.tag}.${argv.tagVersion}-${truncatedHash}-${dateString}`;
+        ? `${argv.versionName}-${argv.tag}`
+        : `${argv.versionName}-${argv.tag}.${argv.tagVersion}`;
+    if (argv.tag === 'experimental' || argv.tag === 'beta') {
+      newVersion = `${newVersion}-${truncatedHash}-${dateString}`;
+    }
 
     for (const pkgName of pkgNames) {
       const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
