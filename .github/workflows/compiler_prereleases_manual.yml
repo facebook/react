@@ -16,7 +16,7 @@ on:
         type: string
       tag_version:
         required: false
-        type: number
+        type: string
 
 permissions: {}
 

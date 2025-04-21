@@ -18,7 +18,7 @@ on:
         type: string
       tag_version:
         required: false
-        type: number
+        type: string
     secrets:
       NPM_TOKEN:
         required: true
