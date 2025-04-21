@@ -3669,7 +3669,7 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // @gate enableActivity
-  it('a visible Activity component acts like a fragment', async () => {
+  it('a visible Activity component is surrounded by comment markers', async () => {
     const ref = React.createRef();
 
     function App() {
@@ -3690,9 +3690,11 @@ describe('ReactDOMServerPartialHydration', () => {
     // pure indirection.
     expect(container).toMatchInlineSnapshot(`
       <div>
+        <!--&-->
         <span>
           Child
         </span>
+        <!--/&-->
       </div>
     `);
 
@@ -3721,6 +3723,11 @@ describe('ReactDOMServerPartialHydration', () => {
           <Activity mode="hidden">
             <HiddenChild />
           </Activity>
+          <Suspense fallback={null}>
+            <Activity mode="hidden">
+              <HiddenChild />
+            </Activity>
+          </Suspense>
         </>
       );
     }
@@ -3739,6 +3746,12 @@ describe('ReactDOMServerPartialHydration', () => {
         <span>
           Visible
         </span>
+        <!--&-->
+        <!--/&-->
+        <!--$-->
+        <!--&-->
+        <!--/&-->
+        <!--/$-->
       </div>
     `);
 
@@ -3754,11 +3767,45 @@ describe('ReactDOMServerPartialHydration', () => {
       await waitForPaint([]);
     }
     // Subsequently, the hidden child is prerendered on the client
+    // along with hydrating the Suspense boundary outside the Activity.
     await waitForPaint(['HiddenChild']);
     expect(container).toMatchInlineSnapshot(`
       <div>
         <span>
           Visible
+        </span>
+        <!--&-->
+        <!--/&-->
+        <!--$-->
+        <!--&-->
+        <!--/&-->
+        <!--/$-->
+        <span
+          style="display: none;"
+        >
+          Hidden
+        </span>
+      </div>
+    `);
+
+    // Next the child inside the Activity is hydrated.
+    await waitForPaint(['HiddenChild']);
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <span>
+          Visible
+        </span>
+        <!--&-->
+        <!--/&-->
+        <!--$-->
+        <!--&-->
+        <!--/&-->
+        <!--/$-->
+        <span
+          style="display: none;"
+        >
+          Hidden
         </span>
         <span
           style="display: none;"

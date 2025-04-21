@@ -22,7 +22,7 @@ import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue'
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
-import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -320,7 +320,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     suspenseyCommitSubscription = null;
   }
 
-  function suspendInstance(type: string, props: Props): void {
+  function suspendInstance(
+    instance: Instance,
+    type: string,
+    props: Props,
+  ): void {
     const src = props.src;
     if (type === 'suspensey-thing' && typeof src === 'string') {
       // Attach a listener to the suspensey thing and create a subscription
@@ -624,13 +628,33 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return type === 'suspensey-thing' && typeof props.src === 'string';
     },
 
+    maySuspendCommitOnUpdate(
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+    ): boolean {
+      // Asks whether it's possible for this combination of type and props
+      // to ever need to suspend. This is different from asking whether it's
+      // currently ready because even if it's ready now, it might get purged
+      // from the cache later.
+      return (
+        type === 'suspensey-thing' &&
+        typeof newProps.src === 'string' &&
+        newProps.src !== oldProps.src
+      );
+    },
+
+    maySuspendCommitInSyncRender(type: string, props: Props): boolean {
+      return true;
+    },
+
     mayResourceSuspendCommit(resource: mixed): boolean {
       throw new Error(
         'Resources are not implemented for React Noop yet. This method should not be called',
       );
     },
 
-    preloadInstance(type: string, props: Props): boolean {
+    preloadInstance(instance: Instance, type: string, props: Props): boolean {
       if (type !== 'suspensey-thing' || typeof props.src !== 'string') {
         throw new Error('Attempted to preload unexpected instance: ' + type);
       }
@@ -863,14 +887,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         getCurrentGestureOffset(provider: GestureTimeline): number {
           return 0;
-        },
-
-        subscribeToGestureDirection(
-          provider: GestureTimeline,
-          currentOffset: number,
-          directionCallback: (direction: boolean) => void,
-        ): () => void {
-          return () => {};
         },
 
         resetTextContent(instance: Instance): void {

@@ -151,6 +151,22 @@ export function pushSegmentFinale(
   return;
 }
 
+export function pushStartActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  // Markup doesn't have any instructions.
+  return;
+}
+
+export function pushEndActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  // Markup doesn't have any instructions.
+  return;
+}
+
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
@@ -158,6 +174,7 @@ export function writeStartCompletedSuspenseBoundary(
   // Markup doesn't have any instructions.
   return true;
 }
+
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
@@ -174,7 +191,6 @@ export function writeStartClientRenderedSuspenseBoundary(
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
   // Markup doesn't have any instructions.
   return true;
@@ -182,7 +198,6 @@ export function writeEndCompletedSuspenseBoundary(
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
   // Markup doesn't have any instructions.
   return true;

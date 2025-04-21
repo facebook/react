@@ -20,6 +20,8 @@ import {
   createRenderState as createRenderStateImpl,
   pushTextInstance as pushTextInstanceImpl,
   pushSegmentFinale as pushSegmentFinaleImpl,
+  pushStartActivityBoundary as pushStartActivityBoundaryImpl,
+  pushEndActivityBoundary as pushEndActivityBoundaryImpl,
   writeStartCompletedSuspenseBoundary as writeStartCompletedSuspenseBoundaryImpl,
   writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
@@ -207,6 +209,28 @@ export function pushSegmentFinale(
   }
 }
 
+export function pushStartActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  if (renderState.generateStaticMarkup) {
+    // A completed boundary is done and doesn't need a representation in the HTML
+    // if we're not going to be hydrating it.
+    return;
+  }
+  pushStartActivityBoundaryImpl(target, renderState);
+}
+
+export function pushEndActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  if (renderState.generateStaticMarkup) {
+    return;
+  }
+  pushEndActivityBoundaryImpl(target, renderState);
+}
+
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
@@ -244,30 +268,20 @@ export function writeStartClientRenderedSuspenseBoundary(
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
   if (renderState.generateStaticMarkup) {
     return true;
   }
-  return writeEndCompletedSuspenseBoundaryImpl(
-    destination,
-    renderState,
-    preambleState,
-  );
+  return writeEndCompletedSuspenseBoundaryImpl(destination, renderState);
 }
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
   if (renderState.generateStaticMarkup) {
     return true;
   }
-  return writeEndClientRenderedSuspenseBoundaryImpl(
-    destination,
-    renderState,
-    preambleState,
-  );
+  return writeEndClientRenderedSuspenseBoundaryImpl(destination, renderState);
 }
 
 export type TransitionStatus = FormStatus;

@@ -943,13 +943,21 @@ export type InstructionValue =
       value: Place;
       loc: SourceLocation;
     }
-  | {
+  | ({
       kind: 'TypeCastExpression';
       value: Place;
-      typeAnnotation: t.FlowType | t.TSType;
       type: Type;
       loc: SourceLocation;
-    }
+    } & (
+      | {
+          typeAnnotation: t.FlowType;
+          typeAnnotationKind: 'cast';
+        }
+      | {
+          typeAnnotation: t.TSType;
+          typeAnnotationKind: 'as' | 'satisfies';
+        }
+    ))
   | JsxExpression
   | {
       kind: 'ObjectExpression';
@@ -1745,6 +1753,12 @@ export function isUseReducerType(id: Identifier): boolean {
 
 export function isDispatcherType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
+}
+
+export function isFireFunctionType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction'
+  );
 }
 
 export function isStableType(id: Identifier): boolean {
