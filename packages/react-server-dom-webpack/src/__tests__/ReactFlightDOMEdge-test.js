@@ -1402,7 +1402,9 @@ describe('ReactFlightDOMEdge', () => {
     const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
       {
         async *[Symbol.asyncIterator]() {
-          throw expectedError;
+          await serverAct(() => {
+            throw expectedError;
+          });
         },
       },
       webpackMap,
