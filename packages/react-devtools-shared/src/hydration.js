@@ -43,7 +43,7 @@ export type Dehydrated = {
   type: string,
 };
 
-// Typed arrays and other complex iteratable objects (e.g. Map, Set, ImmutableJS) need special handling.
+// Typed arrays, other complex iteratable objects (e.g. Map, Set, ImmutableJS) or Promises need special handling.
 // These objects can't be serialized without losing type information,
 // so a "Unserializable" type wrapper is used (with meta-data keys) to send nested values-
 // while preserving the original type and name.
@@ -302,6 +302,76 @@ export function dehydrate(
         name: data.toString(),
         type,
       };
+
+    case 'thenable':
+      isPathAllowedCheck = isPathAllowed(path);
+
+      if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
+        return {
+          inspectable:
+            data.status === 'fulfilled' || data.status === 'rejected',
+          preview_short: formatDataForPreview(data, false),
+          preview_long: formatDataForPreview(data, true),
+          name: data.toString(),
+          type,
+        };
+      }
+
+      switch (data.status) {
+        case 'fulfilled': {
+          const unserializableValue: Unserializable = {
+            unserializable: true,
+            type: type,
+            preview_short: formatDataForPreview(data, false),
+            preview_long: formatDataForPreview(data, true),
+            name: 'fulfilled Promise',
+          };
+
+          unserializableValue.value = dehydrate(
+            data.value,
+            cleaned,
+            unserializable,
+            path.concat(['value']),
+            isPathAllowed,
+            isPathAllowedCheck ? 1 : level + 1,
+          );
+
+          unserializable.push(path);
+
+          return unserializableValue;
+        }
+        case 'rejected': {
+          const unserializableValue: Unserializable = {
+            unserializable: true,
+            type: type,
+            preview_short: formatDataForPreview(data, false),
+            preview_long: formatDataForPreview(data, true),
+            name: 'fulfilled Promise',
+          };
+
+          unserializableValue.reason = dehydrate(
+            data.reason,
+            cleaned,
+            unserializable,
+            path.concat(['reason']),
+            isPathAllowed,
+            isPathAllowedCheck ? 1 : level + 1,
+          );
+
+          unserializable.push(path);
+
+          return unserializableValue;
+        }
+        default:
+          cleaned.push(path);
+          return {
+            inspectable: false,
+            preview_short: formatDataForPreview(data, false),
+            preview_long: formatDataForPreview(data, true),
+            name: data.toString(),
+            type,
+          };
+      }
 
     case 'object':
       isPathAllowedCheck = isPathAllowed(path);

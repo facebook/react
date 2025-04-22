@@ -176,6 +176,14 @@ const appServer = new WebpackDevServer(
       logging: 'warn',
       overlay: {
         warnings: false,
+        runtimeErrors: error => {
+          const shouldIgnoreError =
+            error !== null &&
+            typeof error === 'object' &&
+            error.message === 'test-error-do-not-surface';
+
+          return !shouldIgnoreError;
+        },
       },
     },
     static: {
