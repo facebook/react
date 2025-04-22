@@ -11433,6 +11433,18 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                 captureCommitPhaseError(lanes, lanes.return, error);
               }
             }
+          } else if (18 === root.tag) {
+            if (null === current) {
+              lanes = root;
+              try {
+                var instance$jscomp$0 = lanes.stateNode;
+                suspenseCallback
+                  ? hideOrUnhideSuspenseBoundary(instance$jscomp$0, !0)
+                  : hideOrUnhideSuspenseBoundary(lanes.stateNode, !1);
+              } catch (error) {
+                captureCommitPhaseError(lanes, lanes.return, error);
+              }
+            }
           } else if (
             ((22 !== root.tag && 23 !== root.tag) ||
               null === root.memoizedState ||
@@ -18596,6 +18608,30 @@ function clearSuspenseBoundary(parentInstance, suspenseInstance) {
   } while (node);
   retryIfBlockedOn(suspenseInstance);
 }
+function hideOrUnhideSuspenseBoundary(suspenseInstance, isHidden) {
+  var node = suspenseInstance;
+  suspenseInstance = 0;
+  do {
+    var nextNode = node.nextSibling;
+    1 === node.nodeType
+      ? isHidden
+        ? ((node._stashedDisplay = node.style.display),
+          (node.style.display = "none"))
+        : ((node.style.display = node._stashedDisplay || ""),
+          "" === node.getAttribute("style") && node.removeAttribute("style"))
+      : 3 === node.nodeType &&
+        (isHidden
+          ? ((node._stashedText = node.nodeValue), (node.nodeValue = ""))
+          : (node.nodeValue = node._stashedText || ""));
+    if (nextNode && 8 === nextNode.nodeType)
+      if (((node = nextNode.data), "/$" === node))
+        if (0 === suspenseInstance) break;
+        else suspenseInstance--;
+      else
+        ("$" !== node && "$?" !== node && "$!" !== node) || suspenseInstance++;
+    node = nextNode;
+  } while (node);
+}
 function applyViewTransitionName(instance, name, className) {
   instance.style.viewTransitionName = name;
   null != className && (instance.style.viewTransitionClass = className);
@@ -20785,14 +20821,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2182 = React.version;
 if (
-  "19.2.0-www-modern-b303610c-20250421" !==
+  "19.2.0-www-modern-ebf7318e-20250422" !==
   isomorphicReactPackageVersion$jscomp$inline_2182
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2182,
-      "19.2.0-www-modern-b303610c-20250421"
+      "19.2.0-www-modern-ebf7318e-20250422"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20810,25 +20846,25 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2184 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-b303610c-20250421",
+  version: "19.2.0-www-modern-ebf7318e-20250422",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-b303610c-20250421"
+  reconcilerVersion: "19.2.0-www-modern-ebf7318e-20250422"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2184.getLaneLabelMap = getLaneLabelMap),
   (internals$jscomp$inline_2184.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2754 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2760 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2754.isDisabled &&
-    hook$jscomp$inline_2754.supportsFiber
+    !hook$jscomp$inline_2760.isDisabled &&
+    hook$jscomp$inline_2760.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2754.inject(
+      (rendererID = hook$jscomp$inline_2760.inject(
         internals$jscomp$inline_2184
       )),
-        (injectedHook = hook$jscomp$inline_2754);
+        (injectedHook = hook$jscomp$inline_2760);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -21180,7 +21216,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-b303610c-20250421";
+exports.version = "19.2.0-www-modern-ebf7318e-20250422";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

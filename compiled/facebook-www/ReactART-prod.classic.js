@@ -8376,6 +8376,16 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                 captureCommitPhaseError(lanes, lanes.return, error);
               }
             }
+          } else if (18 === root.tag) {
+            if (null === current) {
+              lanes = root;
+              try {
+                var instance$jscomp$0 = lanes.stateNode;
+                instance ? shim$2(instance$jscomp$0) : shim$2(lanes.stateNode);
+              } catch (error) {
+                captureCommitPhaseError(lanes, lanes.return, error);
+              }
+            }
           } else if (
             ((22 !== root.tag && 23 !== root.tag) ||
               null === root.memoizedState ||
@@ -11248,24 +11258,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1607 = {
+var internals$jscomp$inline_1613 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-b303610c-20250421",
+  version: "19.2.0-www-classic-ebf7318e-20250422",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-b303610c-20250421"
+  reconcilerVersion: "19.2.0-www-classic-ebf7318e-20250422"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1608 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1614 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1608.isDisabled &&
-    hook$jscomp$inline_1608.supportsFiber
+    !hook$jscomp$inline_1614.isDisabled &&
+    hook$jscomp$inline_1614.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1608.inject(
-        internals$jscomp$inline_1607
+      (rendererID = hook$jscomp$inline_1614.inject(
+        internals$jscomp$inline_1613
       )),
-        (injectedHook = hook$jscomp$inline_1608);
+        (injectedHook = hook$jscomp$inline_1614);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11279,4 +11289,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-classic-b303610c-20250421";
+exports.version = "19.2.0-www-classic-ebf7318e-20250422";

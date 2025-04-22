@@ -11923,6 +11923,26 @@ __DEV__ &&
                     captureCommitPhaseError(lanes, lanes.return, error);
                   }
                 }
+              } else if (18 === root.tag) {
+                if (null === current) {
+                  lanes = root;
+                  try {
+                    var instance$jscomp$0 = lanes.stateNode;
+                    suspenseCallback
+                      ? runWithFiberInDEV(
+                          lanes,
+                          hideSuspenseBoundary,
+                          instance$jscomp$0
+                        )
+                      : runWithFiberInDEV(
+                          lanes,
+                          unhideSuspenseBoundary,
+                          lanes.stateNode
+                        );
+                  } catch (error) {
+                    captureCommitPhaseError(lanes, lanes.return, error);
+                  }
+                }
               } else if (
                 ((22 !== root.tag && 23 !== root.tag) ||
                   null === root.memoizedState ||
@@ -16416,6 +16436,8 @@ __DEV__ &&
       registerSuspenseInstanceRetry = shim$2,
       clearSuspenseBoundary = shim$2,
       clearSuspenseBoundaryFromContainer = shim$2,
+      hideSuspenseBoundary = shim$2,
+      unhideSuspenseBoundary = shim$2,
       prepareScopeUpdate = shim$1,
       getInstanceFromScope = shim$1,
       preloadResource = shim,
@@ -18558,10 +18580,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-b303610c-20250421",
+        version: "19.2.0-www-classic-ebf7318e-20250422",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-b303610c-20250421"
+        reconcilerVersion: "19.2.0-www-classic-ebf7318e-20250422"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18595,7 +18617,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-b303610c-20250421";
+    exports.version = "19.2.0-www-classic-ebf7318e-20250422";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

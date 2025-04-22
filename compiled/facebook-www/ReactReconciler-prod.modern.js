@@ -9107,6 +9107,18 @@ module.exports = function ($$$config) {
                     captureCommitPhaseError(lanes, lanes.return, error);
                   }
                 }
+              } else if (18 === root.tag) {
+                if (null === current) {
+                  lanes = root;
+                  try {
+                    var instance$jscomp$0 = lanes.stateNode;
+                    suspenseCallback
+                      ? hideSuspenseBoundary(instance$jscomp$0)
+                      : unhideSuspenseBoundary(lanes.stateNode);
+                  } catch (error) {
+                    captureCommitPhaseError(lanes, lanes.return, error);
+                  }
+                }
               } else if (
                 ((22 !== root.tag && 23 !== root.tag) ||
                   null === root.memoizedState ||
@@ -12517,6 +12529,8 @@ module.exports = function ($$$config) {
     clearSuspenseBoundary = $$$config.clearSuspenseBoundary,
     clearSuspenseBoundaryFromContainer =
       $$$config.clearSuspenseBoundaryFromContainer,
+    hideSuspenseBoundary = $$$config.hideSuspenseBoundary,
+    unhideSuspenseBoundary = $$$config.unhideSuspenseBoundary,
     shouldDeleteUnhydratedTailInstances =
       $$$config.shouldDeleteUnhydratedTailInstances;
   $$$config.diffHydratedPropsForDevWarnings;
@@ -13539,7 +13553,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-b303610c-20250421"
+      reconcilerVersion: "19.2.0-www-modern-ebf7318e-20250422"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

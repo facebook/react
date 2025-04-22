@@ -10006,6 +10006,30 @@ __DEV__ &&
                     );
                   }
                 }
+              } else if (18 === root.tag) {
+                if (null === current) {
+                  retryQueue = root;
+                  try {
+                    var instance = retryQueue.stateNode;
+                    suspenseCallback
+                      ? runWithFiberInDEV(
+                          retryQueue,
+                          hideSuspenseBoundary,
+                          instance
+                        )
+                      : runWithFiberInDEV(
+                          retryQueue,
+                          unhideSuspenseBoundary,
+                          retryQueue.stateNode
+                        );
+                  } catch (error) {
+                    captureCommitPhaseError(
+                      retryQueue,
+                      retryQueue.return,
+                      error
+                    );
+                  }
+                }
               } else if (
                 ((22 !== root.tag && 23 !== root.tag) ||
                   null === root.memoizedState ||
@@ -13182,6 +13206,8 @@ __DEV__ &&
       registerSuspenseInstanceRetry = shim$1,
       clearSuspenseBoundary = shim$1,
       clearSuspenseBoundaryFromContainer = shim$1,
+      hideSuspenseBoundary = shim$1,
+      unhideSuspenseBoundary = shim$1,
       preloadResource = shim,
       suspendResource = shim,
       NO_CONTEXT = {},
@@ -15125,10 +15151,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-b303610c-20250421",
+        version: "19.2.0-www-modern-ebf7318e-20250422",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-b303610c-20250421"
+        reconcilerVersion: "19.2.0-www-modern-ebf7318e-20250422"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15263,5 +15289,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-modern-b303610c-20250421";
+    exports.version = "19.2.0-www-modern-ebf7318e-20250422";
   })();

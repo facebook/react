@@ -8128,6 +8128,16 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                 captureCommitPhaseError(lanes, lanes.return, error);
               }
             }
+          } else if (18 === root.tag) {
+            if (null === current) {
+              lanes = root;
+              try {
+                var instance$jscomp$0 = lanes.stateNode;
+                instance ? shim$2(instance$jscomp$0) : shim$2(lanes.stateNode);
+              } catch (error) {
+                captureCommitPhaseError(lanes, lanes.return, error);
+              }
+            }
           } else if (
             ((22 !== root.tag && 23 !== root.tag) ||
               null === root.memoizedState ||
@@ -10961,24 +10971,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1580 = {
+var internals$jscomp$inline_1586 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-b303610c-20250421",
+  version: "19.2.0-www-modern-ebf7318e-20250422",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-b303610c-20250421"
+  reconcilerVersion: "19.2.0-www-modern-ebf7318e-20250422"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1581 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1587 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1581.isDisabled &&
-    hook$jscomp$inline_1581.supportsFiber
+    !hook$jscomp$inline_1587.isDisabled &&
+    hook$jscomp$inline_1587.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1581.inject(
-        internals$jscomp$inline_1580
+      (rendererID = hook$jscomp$inline_1587.inject(
+        internals$jscomp$inline_1586
       )),
-        (injectedHook = hook$jscomp$inline_1581);
+        (injectedHook = hook$jscomp$inline_1587);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10992,4 +11002,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-b303610c-20250421";
+exports.version = "19.2.0-www-modern-ebf7318e-20250422";
