@@ -768,10 +768,10 @@ function serializeReadableStream(
     }
 
     if (entry.done) {
-      request.abortListeners.delete(abortStream);
       const endStreamRow = streamTask.id.toString(16) + ':C\n';
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       enqueueFlush(request);
+      request.abortListeners.delete(abortStream);
       callOnAllReadyIfReady(request);
       aborted = true;
     } else {
@@ -870,7 +870,6 @@ function serializeAsyncIterable(
     }
 
     if (entry.done) {
-      request.abortListeners.delete(abortIterable);
       let endStreamRow;
       if (entry.value === undefined) {
         endStreamRow = streamTask.id.toString(16) + ':C\n';
@@ -891,6 +890,7 @@ function serializeAsyncIterable(
       }
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       enqueueFlush(request);
+      request.abortListeners.delete(abortIterable);
       callOnAllReadyIfReady(request);
       aborted = true;
     } else {
@@ -3903,7 +3903,6 @@ function erroredTask(request: Request, task: Task, error: mixed): void {
       emitTimingChunk(request, task.id, performance.now());
     }
   }
-  request.abortableTasks.delete(task);
   task.status = ERRORED;
   if (
     enablePostpone &&
@@ -3918,6 +3917,7 @@ function erroredTask(request: Request, task: Task, error: mixed): void {
     const digest = logRecoverableError(request, error, task);
     emitErrorChunk(request, task.id, digest, error);
   }
+  request.abortableTasks.delete(task);
   callOnAllReadyIfReady(request);
 }
 
@@ -3998,8 +3998,8 @@ function retryTask(request: Request, task: Task): void {
       emitModelChunk(request, task.id, json);
     }
 
-    request.abortableTasks.delete(task);
     task.status = COMPLETED;
+    request.abortableTasks.delete(task);
     callOnAllReadyIfReady(request);
   } catch (thrownValue) {
     if (request.status === ABORTING) {
@@ -4287,6 +4287,7 @@ export function abort(request: Request, reason: mixed): void {
         // and leave the reference unfulfilled.
         abortableTasks.forEach(task => haltTask(task, request));
         abortableTasks.clear();
+        callOnAllReadyIfReady(request);
       } else if (
         enablePostpone &&
         typeof reason === 'object' &&
@@ -4303,6 +4304,7 @@ export function abort(request: Request, reason: mixed): void {
         emitPostponeChunk(request, errorId, postponeInstance);
         abortableTasks.forEach(task => abortTask(task, request, errorId));
         abortableTasks.clear();
+        callOnAllReadyIfReady(request);
       } else {
         const error =
           reason === undefined
@@ -4325,6 +4327,7 @@ export function abort(request: Request, reason: mixed): void {
         emitErrorChunk(request, errorId, digest, error);
         abortableTasks.forEach(task => abortTask(task, request, errorId));
         abortableTasks.clear();
+        callOnAllReadyIfReady(request);
       }
     }
     const abortListeners = request.abortListeners;
@@ -4356,11 +4359,11 @@ export function abort(request: Request, reason: mixed): void {
       }
       abortListeners.forEach(callback => callback(error));
       abortListeners.clear();
+      callOnAllReadyIfReady(request);
     }
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
     }
-    callOnAllReadyIfReady(request);
   } catch (error) {
     logRecoverableError(request, error, null);
     fatalError(request, error);
