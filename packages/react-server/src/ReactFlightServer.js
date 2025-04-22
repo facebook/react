@@ -383,6 +383,7 @@ export type Request = {
   onError: (error: mixed) => ?string,
   onPostpone: (reason: string) => void,
   onAllReady: () => void,
+  onAllReadyScheduled: boolean,
   onFatalError: mixed => void,
   // Profiling-only
   timeOrigin: number,
@@ -496,6 +497,7 @@ function RequestInstance(
   this.onPostpone =
     onPostpone === undefined ? defaultPostponeHandler : onPostpone;
   this.onAllReady = onAllReady;
+  this.onAllReadyScheduled = false;
   this.onFatalError = onFatalError;
 
   if (__DEV__) {
@@ -705,11 +707,6 @@ function serializeThenable(
         // to do so again here.
         erroredTask(request, newTask, reason);
         enqueueFlush(request);
-
-        if (request.abortableTasks.size === 0) {
-          const onAllReady = request.onAllReady;
-          onAllReady();
-        }
       }
     },
   );
@@ -3921,6 +3918,7 @@ function erroredTask(request: Request, task: Task, error: mixed): void {
     const digest = logRecoverableError(request, error, task);
     emitErrorChunk(request, task.id, digest, error);
   }
+  enqueueOnAllReady(request);
 }
 
 const emptyRoot = {};
@@ -4041,6 +4039,8 @@ function retryTask(request: Request, task: Task): void {
     }
     erroredTask(request, task, x);
   } finally {
+    enqueueOnAllReady(request);
+
     if (__DEV__) {
       debugID = prevDebugID;
     }
@@ -4072,7 +4072,6 @@ function performWork(request: Request): void {
   currentRequest = request;
   prepareToUseHooksForRequest(request);
 
-  const hadAbortableTasks = request.abortableTasks.size > 0;
   try {
     const pingedTasks = request.pingedTasks;
     request.pingedTasks = [];
@@ -4082,13 +4081,6 @@ function performWork(request: Request): void {
     }
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
-    }
-    if (hadAbortableTasks && request.abortableTasks.size === 0) {
-      // We can ping after completing but if this happens there already
-      // wouldn't be any abortable tasks. So we only call allReady after
-      // the work which actually completed the last pending task
-      const onAllReady = request.onAllReady;
-      onAllReady();
     }
   } catch (error) {
     logRecoverableError(request, error, null);
@@ -4251,6 +4243,27 @@ function enqueueFlush(request: Request): void {
   }
 }
 
+function enqueueOnAllReady(request: Request): void {
+  if (request.onAllReadyScheduled === false) {
+    request.onAllReadyScheduled = true;
+
+    const callback = () => {
+      if (request.abortableTasks.size === 0) {
+        const onAllReady = request.onAllReady;
+        onAllReady();
+      } else {
+        request.onAllReadyScheduled = false;
+      }
+    };
+
+    if (request.type === PRERENDER || request.status === OPENING) {
+      scheduleMicrotask(callback);
+    } else {
+      scheduleWork(callback);
+    }
+  }
+}
+
 export function startFlowing(request: Request, destination: Destination): void {
   if (request.status === CLOSING) {
     request.status = CLOSED;
@@ -4329,8 +4342,7 @@ export function abort(request: Request, reason: mixed): void {
         abortableTasks.forEach(task => abortTask(task, request, errorId));
         abortableTasks.clear();
       }
-      const onAllReady = request.onAllReady;
-      onAllReady();
+      enqueueOnAllReady(request);
     }
     const abortListeners = request.abortListeners;
     if (abortListeners.size > 0) {
