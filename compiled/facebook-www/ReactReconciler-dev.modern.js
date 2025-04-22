@@ -1356,6 +1356,8 @@ __DEV__ &&
           return fiber.type;
         case 16:
           return "Lazy";
+        case 31:
+          return "Activity";
         case 13:
           return "Suspense";
         case 19:
@@ -1967,6 +1969,8 @@ __DEV__ &&
           case 3:
             rootOrSingletonContext = !0;
             return;
+          case 31:
+            return;
           default:
             hydrationParentFiber = hydrationParentFiber.return;
         }
@@ -2006,14 +2010,16 @@ __DEV__ &&
           getNextHydratableInstanceAfterSuspenseInstance(fiber);
       } else
         nextHydratableInstance =
-          supportsSingletons && 27 === tag
-            ? getNextHydratableSiblingAfterSingleton(
-                fiber.type,
-                nextHydratableInstance
-              )
-            : hydrationParentFiber
-              ? getNextHydratableSibling(fiber.stateNode)
-              : null;
+          31 === tag
+            ? getNextHydratableInstanceAfterActivityInstance(fiber.stateNode)
+            : supportsSingletons && 27 === tag
+              ? getNextHydratableSiblingAfterSingleton(
+                  fiber.type,
+                  nextHydratableInstance
+                )
+              : hydrationParentFiber
+                ? getNextHydratableSibling(fiber.stateNode)
+                : null;
       return !0;
     }
     function warnIfUnhydratedTailNodes(fiber) {
@@ -9464,6 +9470,31 @@ __DEV__ &&
               children: nextProps$jscomp$1.children
             };
           if (null === current) {
+            if (isHydrating) {
+              var nextInstance$jscomp$1 = nextHydratableInstance;
+              if (nextInstance$jscomp$1) {
+                var activityInstance = canHydrateActivityInstance(
+                  nextInstance$jscomp$1,
+                  rootOrSingletonContext
+                );
+                null !== activityInstance &&
+                  ((workInProgress.stateNode = activityInstance),
+                  (hydrationParentFiber = workInProgress),
+                  (nextHydratableInstance =
+                    getFirstHydratableChildWithinActivityInstance(
+                      activityInstance
+                    )));
+                var JSCompiler_temp$jscomp$2 = activityInstance;
+              } else JSCompiler_temp$jscomp$2 = null;
+              if (null === JSCompiler_temp$jscomp$2)
+                throw (
+                  (warnNonHydratedInstance(
+                    workInProgress,
+                    nextInstance$jscomp$1
+                  ),
+                  throwOnHydrationMismatch(workInProgress))
+                );
+            }
             var primaryChildFragment = mountWorkInProgressOffscreenFiber(
               offscreenChildProps,
               mode
@@ -10093,7 +10124,6 @@ __DEV__ &&
       var newProps = workInProgress.pendingProps;
       popTreeContext(workInProgress);
       switch (workInProgress.tag) {
-        case 31:
         case 16:
         case 15:
         case 0:
@@ -10360,6 +10390,12 @@ __DEV__ &&
           }
           bubbleProperties(workInProgress);
           return null;
+        case 31:
+          return (
+            null === current && popHydrationState(workInProgress),
+            bubbleProperties(workInProgress),
+            null
+          );
         case 13:
           newProps = workInProgress.memoizedState;
           if (
@@ -13424,12 +13460,12 @@ __DEV__ &&
                       suspenseCallback
                         ? runWithFiberInDEV(
                             lanes,
-                            hideSuspenseBoundary,
+                            hideDehydratedBoundary,
                             instance
                           )
                         : runWithFiberInDEV(
                             lanes,
-                            unhideSuspenseBoundary,
+                            unhideDehydratedBoundary,
                             lanes.stateNode
                           );
                     } catch (error) {
@@ -18442,25 +18478,35 @@ __DEV__ &&
       getFirstHydratableChild = $$$config.getFirstHydratableChild,
       getFirstHydratableChildWithinContainer =
         $$$config.getFirstHydratableChildWithinContainer,
+      getFirstHydratableChildWithinActivityInstance =
+        $$$config.getFirstHydratableChildWithinActivityInstance,
       getFirstHydratableChildWithinSuspenseInstance =
         $$$config.getFirstHydratableChildWithinSuspenseInstance,
       getFirstHydratableChildWithinSingleton =
         $$$config.getFirstHydratableChildWithinSingleton,
       canHydrateInstance = $$$config.canHydrateInstance,
       canHydrateTextInstance = $$$config.canHydrateTextInstance,
+      canHydrateActivityInstance = $$$config.canHydrateActivityInstance,
       canHydrateSuspenseInstance = $$$config.canHydrateSuspenseInstance,
       hydrateInstance = $$$config.hydrateInstance,
-      hydrateTextInstance = $$$config.hydrateTextInstance,
-      hydrateSuspenseInstance = $$$config.hydrateSuspenseInstance,
+      hydrateTextInstance = $$$config.hydrateTextInstance;
+    $$$config.hydrateActivityInstance;
+    var hydrateSuspenseInstance = $$$config.hydrateSuspenseInstance,
+      getNextHydratableInstanceAfterActivityInstance =
+        $$$config.getNextHydratableInstanceAfterActivityInstance,
       getNextHydratableInstanceAfterSuspenseInstance =
         $$$config.getNextHydratableInstanceAfterSuspenseInstance,
-      commitHydratedContainer = $$$config.commitHydratedContainer,
-      commitHydratedSuspenseInstance = $$$config.commitHydratedSuspenseInstance,
-      clearSuspenseBoundary = $$$config.clearSuspenseBoundary,
-      clearSuspenseBoundaryFromContainer =
+      commitHydratedContainer = $$$config.commitHydratedContainer;
+    $$$config.commitHydratedActivityInstance;
+    var commitHydratedSuspenseInstance =
+      $$$config.commitHydratedSuspenseInstance;
+    $$$config.clearActivityBoundary;
+    var clearSuspenseBoundary = $$$config.clearSuspenseBoundary;
+    $$$config.clearActivityBoundaryFromContainer;
+    var clearSuspenseBoundaryFromContainer =
         $$$config.clearSuspenseBoundaryFromContainer,
-      hideSuspenseBoundary = $$$config.hideSuspenseBoundary,
-      unhideSuspenseBoundary = $$$config.unhideSuspenseBoundary,
+      hideDehydratedBoundary = $$$config.hideDehydratedBoundary,
+      unhideDehydratedBoundary = $$$config.unhideDehydratedBoundary,
       shouldDeleteUnhydratedTailInstances =
         $$$config.shouldDeleteUnhydratedTailInstances,
       diffHydratedPropsForDevWarnings =
@@ -21036,7 +21082,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-3fbd6b7b-20250422"
+        reconcilerVersion: "19.2.0-www-modern-17f88c80-20250422"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

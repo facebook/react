@@ -1318,6 +1318,8 @@ __DEV__ &&
           return fiber.type;
         case 16:
           return "Lazy";
+        case 31:
+          return "Activity";
         case 13:
           return "Suspense";
         case 19:
@@ -9182,7 +9184,6 @@ __DEV__ &&
     function completeWork(current, workInProgress, renderLanes) {
       var newProps = workInProgress.pendingProps;
       switch (workInProgress.tag) {
-        case 31:
         case 16:
         case 15:
         case 0:
@@ -9324,6 +9325,8 @@ __DEV__ &&
           }
           bubbleProperties(workInProgress);
           return null;
+        case 31:
+          return bubbleProperties(workInProgress), null;
         case 13:
           newProps = workInProgress.memoizedState;
           if (
@@ -11742,12 +11745,12 @@ __DEV__ &&
                     suspenseCallback
                       ? runWithFiberInDEV(
                           lanes,
-                          hideSuspenseBoundary,
+                          hideDehydratedBoundary,
                           instance$jscomp$0
                         )
                       : runWithFiberInDEV(
                           lanes,
-                          unhideSuspenseBoundary,
+                          unhideDehydratedBoundary,
                           lanes.stateNode
                         );
                   } catch (error) {
@@ -16206,8 +16209,8 @@ __DEV__ &&
       registerSuspenseInstanceRetry = shim$2,
       clearSuspenseBoundary = shim$2,
       clearSuspenseBoundaryFromContainer = shim$2,
-      hideSuspenseBoundary = shim$2,
-      unhideSuspenseBoundary = shim$2,
+      hideDehydratedBoundary = shim$2,
+      unhideDehydratedBoundary = shim$2,
       prepareScopeUpdate = shim$1,
       getInstanceFromScope = shim$1,
       preloadResource = shim,
@@ -18345,10 +18348,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-3fbd6b7b-20250422",
+        version: "19.2.0-www-modern-17f88c80-20250422",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-3fbd6b7b-20250422"
+        reconcilerVersion: "19.2.0-www-modern-17f88c80-20250422"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18382,7 +18385,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-3fbd6b7b-20250422";
+    exports.version = "19.2.0-www-modern-17f88c80-20250422";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

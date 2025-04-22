@@ -6358,7 +6358,6 @@ function bubbleProperties(completedWork) {
 function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   switch (workInProgress.tag) {
-    case 31:
     case 16:
     case 15:
     case 0:
@@ -6482,6 +6481,8 @@ function completeWork(current, workInProgress, renderLanes) {
       }
       bubbleProperties(workInProgress);
       return null;
+    case 31:
+      return bubbleProperties(workInProgress), null;
     case 13:
       newProps = workInProgress.memoizedState;
       if (
@@ -10966,10 +10967,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1586 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-3fbd6b7b-20250422",
+  version: "19.2.0-www-modern-17f88c80-20250422",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-3fbd6b7b-20250422"
+  reconcilerVersion: "19.2.0-www-modern-17f88c80-20250422"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1587 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10995,4 +10996,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-3fbd6b7b-20250422";
+exports.version = "19.2.0-www-modern-17f88c80-20250422";

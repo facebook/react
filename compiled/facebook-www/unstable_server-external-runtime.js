@@ -15,10 +15,15 @@
         do {
           if (suspenseIdNode && 8 === suspenseIdNode.nodeType) {
             var data = suspenseIdNode.data;
-            if ("/$" === data)
+            if ("/$" === data || "/&" === data)
               if (0 === depth) break;
               else depth--;
-            else ("$" !== data && "$?" !== data && "$!" !== data) || depth++;
+            else
+              ("$" !== data &&
+                "$?" !== data &&
+                "$!" !== data &&
+                "&" !== data) ||
+                depth++;
           }
           data = suspenseIdNode.nextSibling;
           errorDigest.removeChild(suspenseIdNode);
