@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f5c49241c458e2340c08fa91cf512964>>
+ * @generated SignedSource<<c262b49ca303d859bd3e412983cc967b>>
  */
 
 "use strict";
@@ -1279,6 +1279,8 @@ __DEV__ &&
           return fiber.type;
         case 16:
           return "Lazy";
+        case 31:
+          return "Activity";
         case 13:
           return "Suspense";
         case 19:
@@ -8381,7 +8383,6 @@ __DEV__ &&
       var newProps = workInProgress.pendingProps;
       switch (workInProgress.tag) {
         case 28:
-        case 31:
         case 16:
         case 15:
         case 0:
@@ -8502,6 +8503,8 @@ __DEV__ &&
           }
           bubbleProperties(workInProgress);
           return null;
+        case 31:
+          return bubbleProperties(workInProgress), null;
         case 13:
           newProps = workInProgress.memoizedState;
           if (
@@ -10134,12 +10137,12 @@ __DEV__ &&
                     existingHiddenCallbacks
                       ? runWithFiberInDEV(
                           wasHidden,
-                          hideSuspenseBoundary,
+                          hideDehydratedBoundary,
                           instance$jscomp$0
                         )
                       : runWithFiberInDEV(
                           wasHidden,
-                          unhideSuspenseBoundary,
+                          unhideDehydratedBoundary,
                           wasHidden.stateNode
                         );
                   } catch (error) {
@@ -13486,8 +13489,8 @@ __DEV__ &&
       registerSuspenseInstanceRetry = shim$1,
       clearSuspenseBoundary = shim$1,
       clearSuspenseBoundaryFromContainer = shim$1,
-      hideSuspenseBoundary = shim$1,
-      unhideSuspenseBoundary = shim$1,
+      hideDehydratedBoundary = shim$1,
+      unhideDehydratedBoundary = shim$1,
       preloadResource = shim,
       suspendResource = shim,
       NO_CONTEXT = {},
@@ -15436,10 +15439,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-3fbd6b7b-20250422",
+        version: "19.2.0-native-fb-17f88c80-20250422",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-3fbd6b7b-20250422"
+        reconcilerVersion: "19.2.0-native-fb-17f88c80-20250422"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15584,5 +15587,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-3fbd6b7b-20250422";
+    exports.version = "19.2.0-native-fb-17f88c80-20250422";
   })();

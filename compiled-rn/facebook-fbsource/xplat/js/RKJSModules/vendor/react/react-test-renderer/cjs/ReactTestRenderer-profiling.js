@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f8f77ba9d2878f4b14e5cf8d3be4a840>>
+ * @generated SignedSource<<8b8618533c9d803de0ea5139ba1e5479>>
  */
 
 "use strict";
@@ -6210,7 +6210,6 @@ function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   switch (workInProgress.tag) {
     case 28:
-    case 31:
     case 16:
     case 15:
     case 0:
@@ -6319,6 +6318,8 @@ function completeWork(current, workInProgress, renderLanes) {
       }
       bubbleProperties(workInProgress);
       return null;
+    case 31:
+      return bubbleProperties(workInProgress), null;
     case 13:
       newProps = workInProgress.memoizedState;
       if (
@@ -10330,10 +10331,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1229 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-3fbd6b7b-20250422",
+  version: "19.2.0-native-fb-17f88c80-20250422",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-3fbd6b7b-20250422",
+  reconcilerVersion: "19.2.0-native-fb-17f88c80-20250422",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$148 = 0;
@@ -10484,4 +10485,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-3fbd6b7b-20250422";
+exports.version = "19.2.0-native-fb-17f88c80-20250422";

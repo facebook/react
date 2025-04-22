@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<85cb160a8b7bb3d70bb8ca6134e6affa>>
+ * @generated SignedSource<<bb4541cf4a4c035629b9c69793203130>>
  */
 
 "use strict";
@@ -2244,6 +2244,8 @@ __DEV__ &&
           return fiber.type;
         case 16:
           return "Lazy";
+        case 31:
+          return "Activity";
         case 13:
           return "Suspense";
         case 19:
@@ -9349,7 +9351,6 @@ __DEV__ &&
       var newProps = workInProgress.pendingProps;
       switch (workInProgress.tag) {
         case 28:
-        case 31:
         case 16:
         case 15:
         case 0:
@@ -9561,6 +9562,8 @@ __DEV__ &&
           }
           bubbleProperties(workInProgress);
           return null;
+        case 31:
+          return bubbleProperties(workInProgress), null;
         case 13:
           newProps = workInProgress.memoizedState;
           if (
@@ -17153,10 +17156,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-3fbd6b7b-20250422",
+        version: "19.2.0-native-fb-17f88c80-20250422",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-3fbd6b7b-20250422"
+        reconcilerVersion: "19.2.0-native-fb-17f88c80-20250422"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

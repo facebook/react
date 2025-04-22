@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<08b1a87e71ffe68c63a387ad85355fe0>>
+ * @generated SignedSource<<e57086168337bbd4c954e33abdfeca98>>
  */
 
 "use strict";
@@ -2380,6 +2380,8 @@ __DEV__ &&
           return fiber.type;
         case 16:
           return "Lazy";
+        case 31:
+          return "Activity";
         case 13:
           return "Suspense";
         case 19:
@@ -9354,7 +9356,6 @@ __DEV__ &&
       var newProps = workInProgress.pendingProps;
       switch (workInProgress.tag) {
         case 28:
-        case 31:
         case 16:
         case 15:
         case 0:
@@ -9492,6 +9493,8 @@ __DEV__ &&
           }
           bubbleProperties(workInProgress);
           return null;
+        case 31:
+          return bubbleProperties(workInProgress), null;
         case 13:
           newProps = workInProgress.memoizedState;
           if (
@@ -11234,12 +11237,12 @@ __DEV__ &&
                     suspenseCallback
                       ? runWithFiberInDEV(
                           retryQueue,
-                          hideSuspenseBoundary,
+                          hideDehydratedBoundary,
                           instance
                         )
                       : runWithFiberInDEV(
                           retryQueue,
-                          unhideSuspenseBoundary,
+                          unhideDehydratedBoundary,
                           retryQueue.stateNode
                         );
                   } catch (error) {
@@ -15463,8 +15466,8 @@ __DEV__ &&
       registerSuspenseInstanceRetry = shim$1,
       clearSuspenseBoundary = shim$1,
       clearSuspenseBoundaryFromContainer = shim$1,
-      hideSuspenseBoundary = shim$1,
-      unhideSuspenseBoundary = shim$1,
+      hideDehydratedBoundary = shim$1,
+      unhideDehydratedBoundary = shim$1,
       preloadResource = shim,
       suspendResource = shim,
       extraDevToolsConfig = {
@@ -17370,11 +17373,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-3fbd6b7b-20250422" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-17f88c80-20250422" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-3fbd6b7b-20250422\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-17f88c80-20250422\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17400,10 +17403,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-3fbd6b7b-20250422",
+        version: "19.2.0-native-fb-17f88c80-20250422",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-3fbd6b7b-20250422"
+        reconcilerVersion: "19.2.0-native-fb-17f88c80-20250422"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
