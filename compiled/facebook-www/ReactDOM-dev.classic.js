@@ -6433,18 +6433,11 @@ __DEV__ &&
             );
     }
     function pushOffscreenSuspenseHandler(fiber) {
-      if (22 === fiber.tag) {
-        if (
-          (push(suspenseStackCursor, suspenseStackCursor.current, fiber),
+      22 === fiber.tag
+        ? (push(suspenseStackCursor, suspenseStackCursor.current, fiber),
           push(suspenseHandlerStackCursor, fiber, fiber),
-          null === shellBoundary)
-        ) {
-          var current = fiber.alternate;
-          null !== current &&
-            null !== current.memoizedState &&
-            (shellBoundary = fiber);
-        }
-      } else reuseSuspenseHandlerOnStack(fiber);
+          null === shellBoundary && (shellBoundary = fiber))
+        : reuseSuspenseHandlerOnStack(fiber);
     }
     function reuseSuspenseHandlerOnStack(fiber) {
       push(suspenseStackCursor, suspenseStackCursor.current, fiber);
@@ -30540,11 +30533,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-classic-ebf7318e-20250422" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-classic-3fbd6b7b-20250422" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-classic-ebf7318e-20250422\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-classic-3fbd6b7b-20250422\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30587,10 +30580,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-classic-ebf7318e-20250422",
+          version: "19.2.0-www-classic-3fbd6b7b-20250422",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-classic-ebf7318e-20250422"
+          reconcilerVersion: "19.2.0-www-classic-3fbd6b7b-20250422"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -31188,7 +31181,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-classic-ebf7318e-20250422";
+    exports.version = "19.2.0-www-classic-3fbd6b7b-20250422";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

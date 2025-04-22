@@ -2836,18 +2836,11 @@ module.exports = function ($$$config) {
         : push(suspenseHandlerStackCursor, suspenseHandlerStackCursor.current);
   }
   function pushOffscreenSuspenseHandler(fiber) {
-    if (22 === fiber.tag) {
-      if (
-        (push(suspenseStackCursor, suspenseStackCursor.current),
+    22 === fiber.tag
+      ? (push(suspenseStackCursor, suspenseStackCursor.current),
         push(suspenseHandlerStackCursor, fiber),
-        null === shellBoundary)
-      ) {
-        var current = fiber.alternate;
-        null !== current &&
-          null !== current.memoizedState &&
-          (shellBoundary = fiber);
-      }
-    } else reuseSuspenseHandlerOnStack(fiber);
+        null === shellBoundary && (shellBoundary = fiber))
+      : reuseSuspenseHandlerOnStack(fiber);
   }
   function reuseSuspenseHandlerOnStack() {
     push(suspenseStackCursor, suspenseStackCursor.current);
@@ -13836,7 +13829,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-ebf7318e-20250422"
+      reconcilerVersion: "19.2.0-www-classic-3fbd6b7b-20250422"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

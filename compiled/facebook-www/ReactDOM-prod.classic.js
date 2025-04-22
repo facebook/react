@@ -3736,18 +3736,11 @@ function pushPrimaryTreeSuspenseHandler(handler) {
       : push(suspenseHandlerStackCursor, suspenseHandlerStackCursor.current);
 }
 function pushOffscreenSuspenseHandler(fiber) {
-  if (22 === fiber.tag) {
-    if (
-      (push(suspenseStackCursor, suspenseStackCursor.current),
+  22 === fiber.tag
+    ? (push(suspenseStackCursor, suspenseStackCursor.current),
       push(suspenseHandlerStackCursor, fiber),
-      null === shellBoundary)
-    ) {
-      var current = fiber.alternate;
-      null !== current &&
-        null !== current.memoizedState &&
-        (shellBoundary = fiber);
-    }
-  } else reuseSuspenseHandlerOnStack(fiber);
+      null === shellBoundary && (shellBoundary = fiber))
+    : reuseSuspenseHandlerOnStack(fiber);
 }
 function reuseSuspenseHandlerOnStack() {
   push(suspenseStackCursor, suspenseStackCursor.current);
@@ -19068,14 +19061,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1996 = React.version;
 if (
-  "19.2.0-www-classic-ebf7318e-20250422" !==
+  "19.2.0-www-classic-3fbd6b7b-20250422" !==
   isomorphicReactPackageVersion$jscomp$inline_1996
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1996,
-      "19.2.0-www-classic-ebf7318e-20250422"
+      "19.2.0-www-classic-3fbd6b7b-20250422"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19093,10 +19086,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2586 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-ebf7318e-20250422",
+  version: "19.2.0-www-classic-3fbd6b7b-20250422",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-ebf7318e-20250422"
+  reconcilerVersion: "19.2.0-www-classic-3fbd6b7b-20250422"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2587 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -19460,4 +19453,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-ebf7318e-20250422";
+exports.version = "19.2.0-www-classic-3fbd6b7b-20250422";

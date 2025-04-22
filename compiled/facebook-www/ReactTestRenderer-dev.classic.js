@@ -3960,18 +3960,11 @@ __DEV__ &&
             );
     }
     function pushOffscreenSuspenseHandler(fiber) {
-      if (22 === fiber.tag) {
-        if (
-          (push(suspenseStackCursor, suspenseStackCursor.current, fiber),
+      22 === fiber.tag
+        ? (push(suspenseStackCursor, suspenseStackCursor.current, fiber),
           push(suspenseHandlerStackCursor, fiber, fiber),
-          null === shellBoundary)
-        ) {
-          var current = fiber.alternate;
-          null !== current &&
-            null !== current.memoizedState &&
-            (shellBoundary = fiber);
-        }
-      } else reuseSuspenseHandlerOnStack(fiber);
+          null === shellBoundary && (shellBoundary = fiber))
+        : reuseSuspenseHandlerOnStack(fiber);
     }
     function reuseSuspenseHandlerOnStack(fiber) {
       push(suspenseStackCursor, suspenseStackCursor.current, fiber);
@@ -15151,10 +15144,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-ebf7318e-20250422",
+        version: "19.2.0-www-classic-3fbd6b7b-20250422",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-ebf7318e-20250422"
+        reconcilerVersion: "19.2.0-www-classic-3fbd6b7b-20250422"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15289,5 +15282,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-classic-ebf7318e-20250422";
+    exports.version = "19.2.0-www-classic-3fbd6b7b-20250422";
   })();
