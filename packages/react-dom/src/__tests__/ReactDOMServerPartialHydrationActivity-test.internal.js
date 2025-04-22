@@ -662,13 +662,24 @@ describe('ReactDOMServerPartialHydrationActivity', () => {
     suspend = false;
     resolve();
     await promise;
-    await waitForAll(['Component', 'Component', 'Hello']);
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      await waitForAll(['Component', 'Component', 'Hello']);
+    } else {
+      await waitForAll([
+        'Component',
+        'Component',
+        'Hello',
+        "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      ]);
+    }
     jest.runAllTimers();
 
-    // Now that we've unsuspended, we can commit the failed hydration.
-    assertLog([
-      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
-    ]);
+    // Now that we've hit the throttle timeout, we can commit the failed hydration.
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      assertLog([
+        "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      ]);
+    }
 
     // Client rendered - activity comment nodes removed
     expect(container.innerHTML).toBe(
@@ -751,13 +762,24 @@ describe('ReactDOMServerPartialHydrationActivity', () => {
     suspend = false;
     resolve();
     await promise;
-    await waitForAll(['Component', 'Component', 'Hello']);
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      await waitForAll(['Component', 'Component', 'Hello']);
+    } else {
+      await waitForAll([
+        'Component',
+        'Component',
+        'Hello',
+        "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      ]);
+    }
     jest.runAllTimers();
 
-    // Now that we've unsuspended, we can commit the failed hydration.
-    assertLog([
-      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
-    ]);
+    // Now that we've hit the throttle timeout, we can commit the failed hydration.
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      assertLog([
+        "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      ]);
+    }
 
     // Client rendered - activity comment nodes removed
     expect(container.innerHTML).toBe(
@@ -839,13 +861,24 @@ describe('ReactDOMServerPartialHydrationActivity', () => {
     suspend = false;
     resolve();
     await promise;
-    await waitForAll(['Component', 'Component', 'Hello']);
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      await waitForAll(['Component', 'Component', 'Hello']);
+    } else {
+      await waitForAll([
+        'Component',
+        'Component',
+        'Hello',
+        "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      ]);
+    }
     jest.runAllTimers();
 
-    // Now that we've unsuspended, we can commit the failed hydration.
-    assertLog([
-      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
-    ]);
+    // Now that we've hit the throttle timeout, we can commit the failed hydration.
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      assertLog([
+        "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      ]);
+    }
 
     // Client rendered - activity comment nodes removed
     expect(container.innerHTML).toBe(
@@ -929,13 +962,24 @@ describe('ReactDOMServerPartialHydrationActivity', () => {
     suspend = false;
     resolve();
     await promise;
-    await waitForAll(['Component', 'Component', 'Hello']);
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      await waitForAll(['Component', 'Component', 'Hello']);
+    } else {
+      await waitForAll([
+        'Component',
+        'Component',
+        'Hello',
+        "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      ]);
+    }
     jest.runAllTimers();
 
-    // Now that we've unsuspended, we can commit the failed hydration.
-    assertLog([
-      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
-    ]);
+    // Now that we've hit the throttle timeout, we can commit the failed hydration.
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      assertLog([
+        "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
+      ]);
+    }
 
     // Client rendered - activity comment nodes removed
     expect(container.innerHTML).toBe(
