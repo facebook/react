@@ -4328,7 +4328,6 @@ export function abort(request: Request, reason: mixed): void {
         abortableTasks.forEach(task => abortTask(task, request, errorId));
         abortableTasks.clear();
       }
-      callOnAllReadyIfReady(request);
     }
     const abortListeners = request.abortListeners;
     if (abortListeners.size > 0) {
@@ -4366,5 +4365,7 @@ export function abort(request: Request, reason: mixed): void {
   } catch (error) {
     logRecoverableError(request, error, null);
     fatalError(request, error);
+  } finally {
+    callOnAllReadyIfReady(request);
   }
 }
