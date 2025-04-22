@@ -244,6 +244,7 @@ import {
   claimHydratableSingleton,
   tryToClaimNextHydratableInstance,
   tryToClaimNextHydratableTextInstance,
+  claimNextHydratableActivityInstance,
   claimNextHydratableSuspenseInstance,
   warnIfHydrating,
   queueHydrationError,
@@ -905,6 +906,10 @@ function updateActivityComponent(
   };
 
   if (current === null) {
+    if (getIsHydrating()) {
+      claimNextHydratableActivityInstance(workInProgress);
+    }
+
     const primaryChildFragment = mountWorkInProgressOffscreenFiber(
       offscreenChildProps,
       mode,

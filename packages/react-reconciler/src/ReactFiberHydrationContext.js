@@ -12,6 +12,7 @@ import type {
   Instance,
   TextInstance,
   HydratableInstance,
+  ActivityInstance,
   SuspenseInstance,
   Container,
   HostContext,
@@ -26,6 +27,7 @@ import {
   HostSingleton,
   HostRoot,
   SuspenseComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
 import {favorSafetyOverHydrationPerf} from 'shared/ReactFeatureFlags';
 
@@ -40,6 +42,7 @@ import {
   getNextHydratableSiblingAfterSingleton,
   getFirstHydratableChild,
   getFirstHydratableChildWithinContainer,
+  getFirstHydratableChildWithinActivityInstance,
   getFirstHydratableChildWithinSuspenseInstance,
   getFirstHydratableChildWithinSingleton,
   hydrateInstance,
@@ -48,11 +51,13 @@ import {
   hydrateTextInstance,
   diffHydratedTextForDevWarnings,
   hydrateSuspenseInstance,
+  getNextHydratableInstanceAfterActivityInstance,
   getNextHydratableInstanceAfterSuspenseInstance,
   shouldDeleteUnhydratedTailInstances,
   resolveSingletonInstance,
   canHydrateInstance,
   canHydrateTextInstance,
+  canHydrateActivityInstance,
   canHydrateSuspenseInstance,
   canHydrateFormStateMarker,
   isFormStateMarkerMatching,
@@ -272,6 +277,26 @@ function tryHydrateText(fiber: Fiber, nextInstance: any) {
   return false;
 }
 
+function tryHydrateActivity(
+  fiber: Fiber,
+  nextInstance: any,
+): null | ActivityInstance {
+  // fiber is a SuspenseComponent Fiber
+  const activityInstance = canHydrateActivityInstance(
+    nextInstance,
+    rootOrSingletonContext,
+  );
+  if (activityInstance !== null) {
+    // TODO: Implement dehydrated Activity state.
+    // TODO: Delete this from stateNode. It's only used to skip past it.
+    fiber.stateNode = activityInstance;
+    hydrationParentFiber = fiber;
+    nextHydratableInstance =
+      getFirstHydratableChildWithinActivityInstance(activityInstance);
+  }
+  return activityInstance;
+}
+
 function tryHydrateSuspense(
   fiber: Fiber,
   nextInstance: any,
@@ -425,6 +450,18 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
   }
 }
 
+function claimNextHydratableActivityInstance(fiber: Fiber): ActivityInstance {
+  const nextInstance = nextHydratableInstance;
+  const activityInstance = nextInstance
+    ? tryHydrateActivity(fiber, nextInstance)
+    : null;
+  if (activityInstance === null) {
+    warnNonHydratedInstance(fiber, nextInstance);
+    throw throwOnHydrationMismatch(fiber);
+  }
+  return activityInstance;
+}
+
 function claimNextHydratableSuspenseInstance(fiber: Fiber): SuspenseInstance {
   const nextInstance = nextHydratableInstance;
   const suspenseInstance = nextInstance
@@ -576,6 +613,11 @@ function prepareToHydrateHostSuspenseInstance(fiber: Fiber): void {
 
   hydrateSuspenseInstance(suspenseInstance, fiber);
 }
+function skipPastDehydratedActivityInstance(
+  fiber: Fiber,
+): null | HydratableInstance {
+  return getNextHydratableInstanceAfterActivityInstance(fiber.stateNode);
+}
 
 function skipPastDehydratedSuspenseInstance(
   fiber: Fiber,
@@ -611,6 +653,8 @@ function popToNextHostParent(fiber: Fiber): void {
       case HostSingleton:
       case HostRoot:
         rootOrSingletonContext = true;
+        return;
+      case ActivityComponent:
         return;
       default:
         hydrationParentFiber = hydrationParentFiber.return;
@@ -677,6 +721,8 @@ function popHydrationState(fiber: Fiber): boolean {
   popToNextHostParent(fiber);
   if (tag === SuspenseComponent) {
     nextHydratableInstance = skipPastDehydratedSuspenseInstance(fiber);
+  } else if (tag === ActivityComponent) {
+    nextHydratableInstance = skipPastDehydratedActivityInstance(fiber);
   } else if (supportsSingletons && tag === HostSingleton) {
     nextHydratableInstance = getNextHydratableSiblingAfterSingleton(
       fiber.type,
@@ -793,6 +839,7 @@ export {
   claimHydratableSingleton,
   tryToClaimNextHydratableInstance,
   tryToClaimNextHydratableTextInstance,
+  claimNextHydratableActivityInstance,
   claimNextHydratableSuspenseInstance,
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,

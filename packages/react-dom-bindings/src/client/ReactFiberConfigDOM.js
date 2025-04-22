@@ -187,13 +187,20 @@ export type Container =
   | interface extends DocumentFragment {_reactRootContainer?: FiberRoot};
 export type Instance = Element;
 export type TextInstance = Text;
-export interface SuspenseInstance extends Comment {
-  _reactRetry?: () => void;
+
+declare class ActivityInterface extends Comment {}
+declare class SuspenseInterface extends Comment {
+  _reactRetry: void | (() => void);
 }
+
+export type ActivityInstance = ActivityInterface;
+export type SuspenseInstance = SuspenseInterface;
+
 type FormStateMarkerInstance = Comment;
 export type HydratableInstance =
   | Instance
   | TextInstance
+  | ActivityInstance
   | SuspenseInstance
   | FormStateMarkerInstance;
 export type PublicInstance = Element | Text;
@@ -226,6 +233,8 @@ type SelectionInformation = {
 
 const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 
+const ACTIVITY_START_DATA = '&';
+const ACTIVITY_END_DATA = '/&';
 const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
 const SUSPENSE_PENDING_START_DATA = '$?';
@@ -947,7 +956,7 @@ export function appendChildToContainer(
 export function insertBefore(
   parentInstance: Instance,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance | SuspenseInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance | ActivityInstance,
 ): void {
   if (supportsMoveBefore && child.parentNode !== null) {
     // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
@@ -960,7 +969,7 @@ export function insertBefore(
 export function insertInContainerBefore(
   container: Container,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance | SuspenseInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance | ActivityInstance,
 ): void {
   if (__DEV__) {
     warnForReactChildrenConflict(container);
@@ -1024,14 +1033,14 @@ function dispatchAfterDetachedBlur(target: HTMLElement): void {
 
 export function removeChild(
   parentInstance: Instance,
-  child: Instance | TextInstance | SuspenseInstance,
+  child: Instance | TextInstance | SuspenseInstance | ActivityInstance,
 ): void {
   parentInstance.removeChild(child);
 }
 
 export function removeChildFromContainer(
   container: Container,
-  child: Instance | TextInstance | SuspenseInstance,
+  child: Instance | TextInstance | SuspenseInstance | ActivityInstance,
 ): void {
   let parentNode: DocumentFragment | Element;
   if (container.nodeType === DOCUMENT_NODE) {
@@ -1049,11 +1058,11 @@ export function removeChildFromContainer(
   parentNode.removeChild(child);
 }
 
-export function clearSuspenseBoundary(
+function clearHydrationBoundary(
   parentInstance: Instance,
-  suspenseInstance: SuspenseInstance,
+  hydrationInstance: SuspenseInstance | ActivityInstance,
 ): void {
-  let node: Node = suspenseInstance;
+  let node: Node = hydrationInstance;
   // Delete all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
   // deep we are and only break out when we're back on top.
@@ -1063,11 +1072,11 @@ export function clearSuspenseBoundary(
     parentInstance.removeChild(node);
     if (nextNode && nextNode.nodeType === COMMENT_NODE) {
       const data = ((nextNode: any).data: string);
-      if (data === SUSPENSE_END_DATA) {
+      if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
         if (depth === 0) {
           parentInstance.removeChild(nextNode);
           // Retry if any event replaying was blocked on this.
-          retryIfBlockedOn(suspenseInstance);
+          retryIfBlockedOn(hydrationInstance);
           return;
         } else {
           depth--;
@@ -1075,7 +1084,8 @@ export function clearSuspenseBoundary(
       } else if (
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_PENDING_START_DATA ||
-        data === SUSPENSE_FALLBACK_START_DATA
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === ACTIVITY_START_DATA
       ) {
         depth++;
       } else if (data === PREAMBLE_CONTRIBUTION_HTML) {
@@ -1102,12 +1112,26 @@ export function clearSuspenseBoundary(
   } while (node);
   // TODO: Warn, we didn't find the end comment boundary.
   // Retry if any event replaying was blocked on this.
-  retryIfBlockedOn(suspenseInstance);
+  retryIfBlockedOn(hydrationInstance);
 }
 
-export function clearSuspenseBoundaryFromContainer(
-  container: Container,
+export function clearActivityBoundary(
+  parentInstance: Instance,
+  activityInstance: ActivityInstance,
+): void {
+  clearHydrationBoundary(parentInstance, activityInstance);
+}
+
+export function clearSuspenseBoundary(
+  parentInstance: Instance,
   suspenseInstance: SuspenseInstance,
+): void {
+  clearHydrationBoundary(parentInstance, suspenseInstance);
+}
+
+function clearHydrationBoundaryFromContainer(
+  container: Container,
+  hydrationInstance: SuspenseInstance | ActivityInstance,
 ): void {
   let parentNode: DocumentFragment | Element;
   if (container.nodeType === DOCUMENT_NODE) {
@@ -1122,13 +1146,27 @@ export function clearSuspenseBoundaryFromContainer(
   } else {
     parentNode = (container: any);
   }
-  clearSuspenseBoundary(parentNode, suspenseInstance);
+  clearHydrationBoundary(parentNode, hydrationInstance);
   // Retry if any event replaying was blocked on this.
   retryIfBlockedOn(container);
 }
 
-function hideOrUnhideSuspenseBoundary(
+export function clearActivityBoundaryFromContainer(
+  container: Container,
+  activityInstance: ActivityInstance,
+): void {
+  clearHydrationBoundaryFromContainer(container, activityInstance);
+}
+
+export function clearSuspenseBoundaryFromContainer(
+  container: Container,
   suspenseInstance: SuspenseInstance,
+): void {
+  clearHydrationBoundaryFromContainer(container, suspenseInstance);
+}
+
+function hideOrUnhideDehydratedBoundary(
+  suspenseInstance: SuspenseInstance | ActivityInstance,
   isHidden: boolean,
 ) {
   let node: Node = suspenseInstance;
@@ -1178,8 +1216,10 @@ function hideOrUnhideSuspenseBoundary(
   } while (node);
 }
 
-export function hideSuspenseBoundary(suspenseInstance: SuspenseInstance): void {
-  hideOrUnhideSuspenseBoundary(suspenseInstance, true);
+export function hideDehydratedBoundary(
+  suspenseInstance: SuspenseInstance,
+): void {
+  hideOrUnhideDehydratedBoundary(suspenseInstance, true);
 }
 
 export function hideInstance(instance: Instance): void {
@@ -1199,10 +1239,10 @@ export function hideTextInstance(textInstance: TextInstance): void {
   textInstance.nodeValue = '';
 }
 
-export function unhideSuspenseBoundary(
-  suspenseInstance: SuspenseInstance,
+export function unhideDehydratedBoundary(
+  dehydratedInstance: SuspenseInstance | ActivityInstance,
 ): void {
-  hideOrUnhideSuspenseBoundary(suspenseInstance, false);
+  hideOrUnhideDehydratedBoundary(dehydratedInstance, false);
 }
 
 export function unhideInstance(instance: Instance, props: Props): void {
@@ -3047,10 +3087,10 @@ export function canHydrateTextInstance(
   return ((instance: any): TextInstance);
 }
 
-export function canHydrateSuspenseInstance(
+function canHydrateHydrationBoundary(
   instance: HydratableInstance,
   inRootOrSingleton: boolean,
-): null | SuspenseInstance {
+): null | SuspenseInstance | ActivityInstance {
   while (instance.nodeType !== COMMENT_NODE) {
     if (!inRootOrSingleton) {
       return null;
@@ -3061,8 +3101,42 @@ export function canHydrateSuspenseInstance(
     }
     instance = nextInstance;
   }
-  // This has now been refined to a suspense node.
-  return ((instance: any): SuspenseInstance);
+  // This has now been refined to a hydration boundary node.
+  return (instance: any);
+}
+
+export function canHydrateActivityInstance(
+  instance: HydratableInstance,
+  inRootOrSingleton: boolean,
+): null | ActivityInstance {
+  const hydratableInstance = canHydrateHydrationBoundary(
+    instance,
+    inRootOrSingleton,
+  );
+  if (
+    hydratableInstance !== null &&
+    hydratableInstance.data === ACTIVITY_START_DATA
+  ) {
+    return (hydratableInstance: any);
+  }
+  return null;
+}
+
+export function canHydrateSuspenseInstance(
+  instance: HydratableInstance,
+  inRootOrSingleton: boolean,
+): null | SuspenseInstance {
+  const hydratableInstance = canHydrateHydrationBoundary(
+    instance,
+    inRootOrSingleton,
+  );
+  if (
+    hydratableInstance !== null &&
+    hydratableInstance.data !== ACTIVITY_START_DATA
+  ) {
+    return (hydratableInstance: any);
+  }
+  return null;
 }
 
 export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
@@ -3186,12 +3260,13 @@ function getNextHydratable(node: ?Node) {
         nodeData === SUSPENSE_START_DATA ||
         nodeData === SUSPENSE_FALLBACK_START_DATA ||
         nodeData === SUSPENSE_PENDING_START_DATA ||
+        nodeData === ACTIVITY_START_DATA ||
         nodeData === FORM_STATE_IS_MATCHING ||
         nodeData === FORM_STATE_IS_NOT_MATCHING
       ) {
         break;
       }
-      if (nodeData === SUSPENSE_END_DATA) {
+      if (nodeData === SUSPENSE_END_DATA || nodeData === ACTIVITY_END_DATA) {
         return null;
       }
     }
@@ -3228,6 +3303,12 @@ export function getFirstHydratableChildWithinContainer(
     }
   }
   return getNextHydratable(parentElement.firstChild);
+}
+
+export function getFirstHydratableChildWithinActivityInstance(
+  parentInstance: ActivityInstance,
+): null | HydratableInstance {
+  return getNextHydratable(parentInstance.nextSibling);
 }
 
 export function getFirstHydratableChildWithinSuspenseInstance(
@@ -3281,6 +3362,12 @@ export function describeHydratableInstanceForDevWarnings(
       props: getPropsFromElement((instance: any)),
     };
   } else if (instance.nodeType === COMMENT_NODE) {
+    if (instance.data === ACTIVITY_START_DATA) {
+      return {
+        type: 'Activity',
+        props: {},
+      };
+    }
     return {
       type: 'Suspense',
       props: {},
@@ -3372,6 +3459,13 @@ export function diffHydratedTextForDevWarnings(
   return null;
 }
 
+export function hydrateActivityInstance(
+  activityInstance: ActivityInstance,
+  internalInstanceHandle: Object,
+) {
+  precacheFiberNode(internalInstanceHandle, activityInstance);
+}
+
 export function hydrateSuspenseInstance(
   suspenseInstance: SuspenseInstance,
   internalInstanceHandle: Object,
@@ -3379,10 +3473,10 @@ export function hydrateSuspenseInstance(
   precacheFiberNode(internalInstanceHandle, suspenseInstance);
 }
 
-export function getNextHydratableInstanceAfterSuspenseInstance(
-  suspenseInstance: SuspenseInstance,
+function getNextHydratableInstanceAfterHydrationBoundary(
+  hydrationInstance: SuspenseInstance | ActivityInstance,
 ): null | HydratableInstance {
-  let node = suspenseInstance.nextSibling;
+  let node = hydrationInstance.nextSibling;
   // Skip past all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
   // deep we are and only break out when we're back on top.
@@ -3390,7 +3484,7 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
   while (node) {
     if (node.nodeType === COMMENT_NODE) {
       const data = ((node: any).data: string);
-      if (data === SUSPENSE_END_DATA) {
+      if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
         if (depth === 0) {
           return getNextHydratableSibling((node: any));
         } else {
@@ -3399,7 +3493,8 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
       } else if (
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_FALLBACK_START_DATA ||
-        data === SUSPENSE_PENDING_START_DATA
+        data === SUSPENSE_PENDING_START_DATA ||
+        data === ACTIVITY_START_DATA
       ) {
         depth++;
       }
@@ -3410,12 +3505,24 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
   return null;
 }
 
+export function getNextHydratableInstanceAfterActivityInstance(
+  activityInstance: ActivityInstance,
+): null | HydratableInstance {
+  return getNextHydratableInstanceAfterHydrationBoundary(activityInstance);
+}
+
+export function getNextHydratableInstanceAfterSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+): null | HydratableInstance {
+  return getNextHydratableInstanceAfterHydrationBoundary(suspenseInstance);
+}
+
 // Returns the SuspenseInstance if this node is a direct child of a
 // SuspenseInstance. I.e. if its previous sibling is a Comment with
 // SUSPENSE_x_START_DATA. Otherwise, null.
-export function getParentSuspenseInstance(
+export function getParentHydrationBoundary(
   targetInstance: Node,
-): null | SuspenseInstance {
+): null | SuspenseInstance | ActivityInstance {
   let node = targetInstance.previousSibling;
   // Skip past all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
@@ -3427,14 +3534,15 @@ export function getParentSuspenseInstance(
       if (
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_FALLBACK_START_DATA ||
-        data === SUSPENSE_PENDING_START_DATA
+        data === SUSPENSE_PENDING_START_DATA ||
+        data === ACTIVITY_START_DATA
       ) {
         if (depth === 0) {
-          return ((node: any): SuspenseInstance);
+          return ((node: any): SuspenseInstance | ActivityInstance);
         } else {
           depth--;
         }
-      } else if (data === SUSPENSE_END_DATA) {
+      } else if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
         depth++;
       }
     }
@@ -3446,6 +3554,13 @@ export function getParentSuspenseInstance(
 export function commitHydratedContainer(container: Container): void {
   // Retry if any event replaying was blocked on this.
   retryIfBlockedOn(container);
+}
+
+export function commitHydratedActivityInstance(
+  activityInstance: ActivityInstance,
+): void {
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(activityInstance);
 }
 
 export function commitHydratedSuspenseInstance(
