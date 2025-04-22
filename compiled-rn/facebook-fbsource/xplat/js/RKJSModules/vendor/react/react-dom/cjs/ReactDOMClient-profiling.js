@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d7020526701f9de6b4a8d0b07a73b7bf>>
+ * @generated SignedSource<<b83f2b36c457b6410ee1fa6b73c2de1b>>
  */
 
 /*
@@ -4555,18 +4555,11 @@ function pushPrimaryTreeSuspenseHandler(handler) {
       : null !== current.memoizedState && (shellBoundary = handler));
 }
 function pushOffscreenSuspenseHandler(fiber) {
-  if (22 === fiber.tag) {
-    if (
-      (push(suspenseStackCursor, suspenseStackCursor.current),
+  22 === fiber.tag
+    ? (push(suspenseStackCursor, suspenseStackCursor.current),
       push(suspenseHandlerStackCursor, fiber),
-      null === shellBoundary)
-    ) {
-      var current = fiber.alternate;
-      null !== current &&
-        null !== current.memoizedState &&
-        (shellBoundary = fiber);
-    }
-  } else reuseSuspenseHandlerOnStack(fiber);
+      null === shellBoundary && (shellBoundary = fiber))
+    : reuseSuspenseHandlerOnStack(fiber);
 }
 function reuseSuspenseHandlerOnStack() {
   push(suspenseStackCursor, suspenseStackCursor.current);
@@ -16758,14 +16751,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1902 = React.version;
 if (
-  "19.2.0-native-fb-ebf7318e-20250422" !==
+  "19.2.0-native-fb-3fbd6b7b-20250422" !==
   isomorphicReactPackageVersion$jscomp$inline_1902
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1902,
-      "19.2.0-native-fb-ebf7318e-20250422"
+      "19.2.0-native-fb-3fbd6b7b-20250422"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16787,10 +16780,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1909 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-ebf7318e-20250422",
+  version: "19.2.0-native-fb-3fbd6b7b-20250422",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-ebf7318e-20250422",
+  reconcilerVersion: "19.2.0-native-fb-3fbd6b7b-20250422",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$297 = 0;
@@ -16909,4 +16902,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-ebf7318e-20250422";
+exports.version = "19.2.0-native-fb-3fbd6b7b-20250422";
