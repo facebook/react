@@ -1127,6 +1127,61 @@ export function clearSuspenseBoundaryFromContainer(
   retryIfBlockedOn(container);
 }
 
+function hideOrUnhideSuspenseBoundary(
+  suspenseInstance: SuspenseInstance,
+  isHidden: boolean,
+) {
+  let node: Node = suspenseInstance;
+  // Unhide all nodes within this suspense boundary.
+  let depth = 0;
+  do {
+    const nextNode = node.nextSibling;
+    if (node.nodeType === ELEMENT_NODE) {
+      const instance = ((node: any): HTMLElement & {_stashedDisplay?: string});
+      if (isHidden) {
+        instance._stashedDisplay = instance.style.display;
+        instance.style.display = 'none';
+      } else {
+        instance.style.display = instance._stashedDisplay || '';
+        if (instance.getAttribute('style') === '') {
+          instance.removeAttribute('style');
+        }
+      }
+    } else if (node.nodeType === TEXT_NODE) {
+      const textNode = ((node: any): Text & {_stashedText?: string});
+      if (isHidden) {
+        textNode._stashedText = textNode.nodeValue;
+        textNode.nodeValue = '';
+      } else {
+        textNode.nodeValue = textNode._stashedText || '';
+      }
+    }
+    if (nextNode && nextNode.nodeType === COMMENT_NODE) {
+      const data = ((nextNode: any).data: string);
+      if (data === SUSPENSE_END_DATA) {
+        if (depth === 0) {
+          return;
+        } else {
+          depth--;
+        }
+      } else if (
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA
+      ) {
+        depth++;
+      }
+      // TODO: Should we hide preamble contribution in this case?
+    }
+    // $FlowFixMe[incompatible-type] we bail out when we get a null
+    node = nextNode;
+  } while (node);
+}
+
+export function hideSuspenseBoundary(suspenseInstance: SuspenseInstance): void {
+  hideOrUnhideSuspenseBoundary(suspenseInstance, true);
+}
+
 export function hideInstance(instance: Instance): void {
   // TODO: Does this work for all element types? What about MathML? Should we
   // pass host context to this method?
@@ -1142,6 +1197,12 @@ export function hideInstance(instance: Instance): void {
 
 export function hideTextInstance(textInstance: TextInstance): void {
   textInstance.nodeValue = '';
+}
+
+export function unhideSuspenseBoundary(
+  suspenseInstance: SuspenseInstance,
+): void {
+  hideOrUnhideSuspenseBoundary(suspenseInstance, false);
 }
 
 export function unhideInstance(instance: Instance, props: Props): void {
