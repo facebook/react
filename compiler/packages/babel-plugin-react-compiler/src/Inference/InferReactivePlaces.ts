@@ -9,14 +9,19 @@ import {CompilerError} from '..';
 import {
   BlockId,
   Effect,
+  Environment,
   HIRFunction,
   Identifier,
   IdentifierId,
+  Instruction,
   Place,
   computePostDominatorTree,
+  evaluatesToStableTypeOrContainer,
   getHookKind,
   isStableType,
+  isStableTypeContainer,
   isUseOperator,
+  isUseRefType,
 } from '../HIR';
 import {PostDominator} from '../HIR/Dominator';
 import {
@@ -31,6 +36,87 @@ import {
 import DisjointSet from '../Utils/DisjointSet';
 import {assertExhaustive} from '../Utils/utils';
 
+class StableSidemap {
+  map: Map<IdentifierId, {isStable: boolean}> = new Map();
+  env: Environment;
+
+  constructor(env: Environment) {
+    this.env = env;
+  }
+
+  handleInstruction(instr: Instruction): void {
+    const {value, lvalue} = instr;
+
+    switch (value.kind) {
+      case 'CallExpression':
+      case 'MethodCall': {
+        if (evaluatesToStableTypeOrContainer(this.env, instr)) {
+          if (isStableType(lvalue.identifier)) {
+            this.map.set(lvalue.identifier.id, {
+              isStable: true,
+            });
+          } else {
+            this.map.set(lvalue.identifier.id, {
+              isStable: false,
+            });
+          }
+        } else if (
+          this.env.config.enableTreatRefLikeIdentifiersAsRefs &&
+          isUseRefType(lvalue.identifier)
+        ) {
+          this.map.set(lvalue.identifier.id, {
+            isStable: true,
+          });
+        }
+        break;
+      }
+      case 'Destructure':
+      case 'PropertyLoad': {
+        const source =
+          value.kind === 'Destructure'
+            ? value.value.identifier.id
+            : value.object.identifier.id;
+        const entry = this.map.get(source);
+        if (entry) {
+          for (const lvalue of eachInstructionLValue(instr)) {
+            if (isStableTypeContainer(lvalue.identifier)) {
+              this.map.set(lvalue.identifier.id, {
+                isStable: false,
+              });
+            } else if (isStableType(lvalue.identifier)) {
+              this.map.set(lvalue.identifier.id, {
+                isStable: true,
+              });
+            }
+          }
+        }
+        break;
+      }
+
+      case 'StoreLocal': {
+        const entry = this.map.get(value.value.identifier.id);
+        if (entry) {
+          this.map.set(lvalue.identifier.id, entry);
+          this.map.set(value.lvalue.place.identifier.id, entry);
+        }
+        break;
+      }
+
+      case 'LoadLocal': {
+        const entry = this.map.get(value.place.identifier.id);
+        if (entry) {
+          this.map.set(lvalue.identifier.id, entry);
+        }
+        break;
+      }
+    }
+  }
+
+  isStable(id: IdentifierId): boolean {
+    const entry = this.map.get(id);
+    return entry != null ? entry.isStable : false;
+  }
+}
 /*
  * Infers which `Place`s are reactive, ie may *semantically* change
  * over the course of the component/hook's lifetime. Places are reactive
@@ -111,6 +197,7 @@ import {assertExhaustive} from '../Utils/utils';
  */
 export function inferReactivePlaces(fn: HIRFunction): void {
   const reactiveIdentifiers = new ReactivityMap(findDisjointMutableValues(fn));
+  const stableIdentifierSources = new StableSidemap(fn.env);
   for (const param of fn.params) {
     const place = param.kind === 'Identifier' ? param : param.place;
     reactiveIdentifiers.markReactive(place);
@@ -184,6 +271,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
         }
       }
       for (const instruction of block.instructions) {
+        stableIdentifierSources.handleInstruction(instruction);
         const {value} = instruction;
         let hasReactiveInput = false;
         /*
@@ -218,7 +306,13 @@ export function inferReactivePlaces(fn: HIRFunction): void {
 
         if (hasReactiveInput) {
           for (const lvalue of eachInstructionLValue(instruction)) {
-            if (isStableType(lvalue.identifier)) {
+            /**
+             * Note that it's not correct to mark all stable-typed identifiers
+             * as non-reactive, since ternaries and other value blocks can
+             * produce reactive identifiers typed as these.
+             * (e.g. `props.cond ? setState1 : setState2`)
+             */
+            if (stableIdentifierSources.isStable(lvalue.identifier.id)) {
               continue;
             }
             reactiveIdentifiers.markReactive(lvalue);
