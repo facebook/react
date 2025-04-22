@@ -86,18 +86,7 @@ function dispatchMouseEvent(to, from) {
   }
 }
 
-class TestAppClass extends React.Component {
-  render() {
-    return (
-      <div>
-        <>{''}</>
-        <>{'Hello'}</>
-      </div>
-    );
-  }
-}
-
-describe('ReactDOMServerPartialHydration', () => {
+describe('ReactDOMServerPartialHydrationActivity', () => {
   beforeEach(() => {
     jest.resetModules();
 
@@ -124,6 +113,7 @@ describe('ReactDOMServerPartialHydration', () => {
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
   });
 
+  // @gate enableActivity
   it('hydrates a parent even if a child Activity boundary is blocked', async () => {
     let suspend = false;
     let resolve;
@@ -179,6 +169,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
+  // @gate enableActivity
   it('can hydrate siblings of a suspended component without errors', async () => {
     let suspend = false;
     let resolve;
@@ -237,6 +228,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('HelloHello');
   });
 
+  // @gate enableActivity
   it('falls back to client rendering boundary on mismatch', async () => {
     let client = false;
     let suspend = false;
@@ -329,6 +321,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
   });
 
+  // @gate enableActivity
   it('handles if mismatch is after suspending', async () => {
     let client = false;
     let suspend = false;
@@ -408,6 +401,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.innerHTML).toBe('Hello<article>Mismatch</article>');
   });
 
+  // @gate enableActivity
   it('handles if mismatch is child of suspended component', async () => {
     let client = false;
     let suspend = false;
@@ -488,6 +482,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.innerHTML).toBe('<div><article>Mismatch</article></div>');
   });
 
+  // @gate enableActivity
   it('handles if mismatch is parent and first child suspends', async () => {
     let client = false;
     let suspend = false;
@@ -580,6 +575,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
   });
 
+  // @gate enableActivity
   it('does show a parent fallback if mismatch is parent and second child suspends', async () => {
     let client = false;
     let suspend = false;
@@ -680,6 +676,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
   });
 
+  // @gate enableActivity
   it('does show a parent fallback if mismatch is in parent element only', async () => {
     let client = false;
     let suspend = false;
@@ -768,6 +765,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
   });
 
+  // @gate enableActivity
   it('does show a parent fallback if mismatch is before suspending', async () => {
     let client = false;
     let suspend = false;
@@ -855,6 +853,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
   });
 
+  // @gate enableActivity
   it('does show a parent fallback if mismatch is before suspending in a child', async () => {
     let client = false;
     let suspend = false;
@@ -944,6 +943,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
   });
 
+  // @gate enableActivity
   it('calls the hydration callbacks after hydration or deletion', async () => {
     let suspend = false;
     let resolve;
@@ -1035,6 +1035,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
+  // @gate enableActivity
   it('hydrates an empty activity boundary', async () => {
     function App() {
       return (
@@ -1056,6 +1057,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.innerHTML).toContain('<div>Sibling</div>');
   });
 
+  // @gate enableActivity
   it('recovers with client render when server rendered additional nodes at suspense root', async () => {
     function CheckIfHydrating({children}) {
       // This is a trick to check whether we're hydrating or not, since React
@@ -1125,6 +1127,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).not.toBe(span);
   });
 
+  // @gate enableActivity
   it('recovers with client render when server rendered additional nodes at suspense root after unsuspending', async () => {
     const ref = React.createRef();
     let shouldSuspend = false;
@@ -1189,6 +1192,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).not.toBe(span);
   });
 
+  // @gate enableActivity
   it('recovers with client render when server rendered additional nodes deep inside suspense root', async () => {
     const ref = React.createRef();
     function App({hasB}) {
@@ -1235,6 +1239,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).not.toBe(span);
   });
 
+  // @gate enableActivity
   it('calls the onDeleted hydration callback if the parent gets deleted', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -1288,6 +1293,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
+  // @gate enableActivity
   it('can insert siblings before the dehydrated boundary', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -1345,6 +1351,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.firstChild.firstChild.textContent).toBe('First');
   });
 
+  // @gate enableActivity
   it('can delete the dehydrated boundary before it is hydrated', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -1400,6 +1407,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.firstChild.children[1].textContent).toBe('After');
   });
 
+  // @gate enableActivity
   it('blocks updates to hydrate the content first if props have changed', async () => {
     let suspend = false;
     let resolve;
@@ -1471,7 +1479,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
-  // @gate www
+  // @gate enableActivity && www
   it('blocks updates to hydrate the content first if props changed at idle priority', async () => {
     let suspend = false;
     let resolve;
@@ -1545,6 +1553,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
+  // @gate enableActivity
   it('shows the fallback of the parent if props have changed before hydration completes and is still suspended', async () => {
     let suspend = false;
     let resolve;
@@ -1631,6 +1640,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
+  // @gate enableActivity
   it('clears nested activity boundaries if they did not hydrate yet', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -1698,6 +1708,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi Hi');
   });
 
+  // @gate enableActivity
   it('hydrates first if props changed but we are able to resolve within a timeout', async () => {
     let suspend = false;
     let resolve;
@@ -1771,6 +1782,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
+  // @gate enableActivity
   it('warns but works if setState is called before commit in a dehydrated component', async () => {
     let suspend = false;
     let resolve;
@@ -1845,6 +1857,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hello');
   });
 
+  // @gate enableActivity
   it('blocks the update to hydrate first if context has changed', async () => {
     let suspend = false;
     let resolve;
@@ -1927,6 +1940,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
+  // @gate enableActivity
   it('shows the parent fallback if context has changed before hydration completes and is still suspended', async () => {
     let suspend = false;
     let resolve;
@@ -2017,6 +2031,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
+  // @gate enableActivity
   it('can hydrate TWO activity boundaries', async () => {
     const ref1 = React.createRef();
     const ref2 = React.createRef();
@@ -2054,6 +2069,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref2.current).toBe(span2);
   });
 
+  // @gate enableActivity
   it('regenerates if it cannot hydrate before changes to props/context expire', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -2141,6 +2157,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(newSpan.className).toBe('hi');
   });
 
+  // @gate enableActivity
   it('does not invoke an event on a hydrated node until it commits', async () => {
     let suspend = false;
     let resolve;
@@ -2220,7 +2237,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate www
+  // @gate enableActivity && www
   it('does not invoke an event on a hydrated event handle until it commits', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
@@ -2302,6 +2319,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('invokes discrete events on nested activity boundaries in a root (legacy system)', async () => {
     let suspend = false;
     let resolve;
@@ -2382,7 +2400,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate www
+  // @gate enableActivity && www
   it('invokes discrete events on nested activity boundaries in a root (createEventHandle)', async () => {
     let suspend = false;
     let isServerRendering = true;
@@ -2467,6 +2485,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('does not invoke the parent of dehydrated boundary event', async () => {
     let suspend = false;
     let resolve;
@@ -2539,6 +2558,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('does not invoke an event on a parent tree when a subtree is dehydrated', async () => {
     let suspend = false;
     let resolve;
@@ -2611,6 +2631,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(parentContainer);
   });
 
+  // @gate enableActivity
   it('blocks only on the last continuous event (legacy system)', async () => {
     let suspend1 = false;
     let resolve1;
@@ -2711,6 +2732,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('finishes normal pri work before continuing to hydrate a retry', async () => {
     let suspend = false;
     let resolve;
@@ -2794,6 +2816,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).not.toBe(null);
   });
 
+  // @gate enableActivity
   it('regression test: does not overfire non-bubbling browser events', async () => {
     let suspend = false;
     let resolve;
@@ -2878,50 +2901,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  function itHydratesWithoutMismatch(msg, App) {
-    it('hydrates without mismatch ' + msg, async () => {
-      const container = document.createElement('div');
-      document.body.appendChild(container);
-      const finalHTML = ReactDOMServer.renderToString(<App />);
-      container.innerHTML = finalHTML;
-
-      await act(() => ReactDOMClient.hydrateRoot(container, <App />));
-    });
-  }
-
-  itHydratesWithoutMismatch('an empty string with neighbors', function App() {
-    return (
-      <div>
-        <div id="test">Test</div>
-        {'' && <div>Test</div>}
-        {'Test'}
-      </div>
-    );
-  });
-
-  itHydratesWithoutMismatch('an empty string', function App() {
-    return '';
-  });
-  itHydratesWithoutMismatch(
-    'an empty string simple in fragment',
-    function App() {
-      return (
-        <>
-          {''}
-          {'sup'}
-        </>
-      );
-    },
-  );
-  itHydratesWithoutMismatch(
-    'an empty string simple in suspense',
-    function App() {
-      return <Activity>{'' && false}</Activity>;
-    },
-  );
-
-  itHydratesWithoutMismatch('an empty string in class component', TestAppClass);
-
+  // @gate enableActivity
   it('fallback to client render on hydration mismatch at root', async () => {
     let suspend = true;
     let resolve;

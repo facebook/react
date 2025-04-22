@@ -127,7 +127,7 @@ function TODO_scheduleContinuousSchedulerTask(fn) {
   });
 }
 
-describe('ReactDOMServerSelectiveHydration', () => {
+describe('ReactDOMServerSelectiveHydrationActivity', () => {
   beforeEach(() => {
     jest.resetModules();
 
@@ -152,6 +152,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       require('react-reconciler/constants').ContinuousEventPriority;
   });
 
+  // @gate enableActivity
   it('hydrates the target boundary synchronously during a click', async () => {
     function Child({text}) {
       Scheduler.log(text);
@@ -213,6 +214,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('hydrates at higher pri if sync did not work first time', async () => {
     let suspend = false;
     let resolve;
@@ -298,6 +300,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('hydrates at higher pri for secondary discrete events', async () => {
     let suspend = false;
     let resolve;
@@ -385,7 +388,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate www
+  // @gate enableActivity && www
   it('hydrates the target boundary synchronously during a click (createEventHandle)', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let isServerRendering = true;
@@ -452,7 +455,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate www
+  // @gate enableActivity && www
   it('hydrates at higher pri if sync did not work first time (createEventHandle)', async () => {
     let suspend = false;
     let isServerRendering = true;
@@ -541,7 +544,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate www
+  // @gate enableActivity && www
   it('hydrates at higher pri for secondary discrete events (createEventHandle)', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
@@ -633,6 +636,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('hydrates the hovered targets as higher priority for continuous events', async () => {
     let suspend = false;
     let resolve;
@@ -725,6 +729,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('replays capture phase for continuous events and respects stopPropagation', async () => {
     let suspend = false;
     let resolve;
@@ -878,255 +883,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  describe('can handle replaying events as part of multiple instances of React', () => {
-    let resolveInner;
-    let resolveOuter;
-    let innerPromise;
-    let outerPromise;
-    let OuterScheduler;
-    let InnerScheduler;
-    let innerDiv;
-
-    let OuterTestUtils;
-    let InnerTestUtils;
-
-    beforeEach(async () => {
-      document.body.innerHTML = '';
-      jest.resetModules();
-      let OuterReactDOMClient;
-      let InnerReactDOMClient;
-
-      jest.isolateModules(() => {
-        OuterReactDOMClient = require('react-dom/client');
-        OuterScheduler = require('scheduler');
-        OuterTestUtils = require('internal-test-utils');
-      });
-      jest.isolateModules(() => {
-        InnerReactDOMClient = require('react-dom/client');
-        InnerScheduler = require('scheduler');
-        InnerTestUtils = require('internal-test-utils');
-      });
-
-      expect(OuterReactDOMClient).not.toBe(InnerReactDOMClient);
-      expect(OuterScheduler).not.toBe(InnerScheduler);
-
-      const outerContainer = document.createElement('div');
-      const innerContainer = document.createElement('div');
-
-      let suspendOuter = false;
-      outerPromise = new Promise(res => {
-        resolveOuter = () => {
-          suspendOuter = false;
-          res();
-        };
-      });
-
-      function Outer() {
-        if (suspendOuter) {
-          OuterScheduler.log('Suspend Outer');
-          throw outerPromise;
-        }
-        OuterScheduler.log('Outer');
-        const innerRoot = outerContainer.querySelector('#inner-root');
-        return (
-          <div
-            id="inner-root"
-            onMouseEnter={() => {
-              Scheduler.log('Outer Mouse Enter');
-            }}
-            dangerouslySetInnerHTML={{
-              __html: innerRoot ? innerRoot.innerHTML : '',
-            }}
-          />
-        );
-      }
-      const OuterApp = () => {
-        return (
-          <Activity>
-            <Outer />
-          </Activity>
-        );
-      };
-
-      let suspendInner = false;
-      innerPromise = new Promise(res => {
-        resolveInner = () => {
-          suspendInner = false;
-          res();
-        };
-      });
-      function Inner() {
-        if (suspendInner) {
-          InnerScheduler.log('Suspend Inner');
-          throw innerPromise;
-        }
-        InnerScheduler.log('Inner');
-        return (
-          <div
-            id="inner"
-            onMouseEnter={() => {
-              Scheduler.log('Inner Mouse Enter');
-            }}
-          />
-        );
-      }
-      const InnerApp = () => {
-        return (
-          <Activity>
-            <Inner />
-          </Activity>
-        );
-      };
-
-      document.body.appendChild(outerContainer);
-      const outerHTML = ReactDOMServer.renderToString(<OuterApp />);
-      outerContainer.innerHTML = outerHTML;
-
-      const innerWrapper = document.querySelector('#inner-root');
-      innerWrapper.appendChild(innerContainer);
-      const innerHTML = ReactDOMServer.renderToString(<InnerApp />);
-      innerContainer.innerHTML = innerHTML;
-
-      OuterTestUtils.assertLog(['Outer']);
-      InnerTestUtils.assertLog(['Inner']);
-
-      suspendOuter = true;
-      suspendInner = true;
-
-      await OuterTestUtils.act(() =>
-        OuterReactDOMClient.hydrateRoot(outerContainer, <OuterApp />),
-      );
-      await InnerTestUtils.act(() =>
-        InnerReactDOMClient.hydrateRoot(innerContainer, <InnerApp />),
-      );
-
-      OuterTestUtils.assertLog(['Suspend Outer']);
-      InnerTestUtils.assertLog(['Suspend Inner']);
-
-      innerDiv = document.querySelector('#inner');
-
-      dispatchClickEvent(innerDiv);
-
-      await act(() => {
-        jest.runAllTimers();
-        Scheduler.unstable_flushAllWithoutAsserting();
-        OuterScheduler.unstable_flushAllWithoutAsserting();
-        InnerScheduler.unstable_flushAllWithoutAsserting();
-      });
-
-      OuterTestUtils.assertLog(['Suspend Outer']);
-
-      // InnerApp doesn't see the event because OuterApp calls stopPropagation in
-      // capture phase since the event is blocked on suspended component
-      InnerTestUtils.assertLog([]);
-
-      assertLog([]);
-    });
-    afterEach(async () => {
-      document.body.innerHTML = '';
-    });
-
-    it('Inner hydrates first then Outer', async () => {
-      dispatchMouseHoverEvent(innerDiv);
-
-      await InnerTestUtils.act(async () => {
-        await OuterTestUtils.act(() => {
-          resolveInner();
-        });
-      });
-
-      OuterTestUtils.assertLog(['Suspend Outer']);
-      // Inner App renders because it is unblocked
-      InnerTestUtils.assertLog(['Inner']);
-      // No event is replayed yet
-      assertLog([]);
-
-      dispatchMouseHoverEvent(innerDiv);
-      OuterTestUtils.assertLog([]);
-      InnerTestUtils.assertLog([]);
-      // No event is replayed yet
-      assertLog([]);
-
-      await InnerTestUtils.act(async () => {
-        await OuterTestUtils.act(() => {
-          resolveOuter();
-
-          // Nothing happens to inner app yet.
-          // Its blocked on the outer app replaying the event
-          InnerTestUtils.assertLog([]);
-          // Outer hydrates and schedules Replay
-          OuterTestUtils.waitFor(['Outer']);
-          // No event is replayed yet
-          assertLog([]);
-        });
-      });
-
-      // fire scheduled Replay
-
-      // First Inner Mouse Enter fires then Outer Mouse Enter
-      assertLog(['Inner Mouse Enter', 'Outer Mouse Enter']);
-    });
-
-    it('Outer hydrates first then Inner', async () => {
-      dispatchMouseHoverEvent(innerDiv);
-
-      await act(async () => {
-        resolveOuter();
-        await outerPromise;
-        Scheduler.unstable_flushAllWithoutAsserting();
-        OuterScheduler.unstable_flushAllWithoutAsserting();
-        InnerScheduler.unstable_flushAllWithoutAsserting();
-      });
-
-      // Outer resolves and scheduled replay
-      OuterTestUtils.assertLog(['Outer']);
-      // Inner App is still blocked
-      InnerTestUtils.assertLog([]);
-
-      // Replay outer event
-      await act(() => {
-        Scheduler.unstable_flushAllWithoutAsserting();
-        OuterScheduler.unstable_flushAllWithoutAsserting();
-        InnerScheduler.unstable_flushAllWithoutAsserting();
-      });
-
-      // Inner is still blocked so when Outer replays the event in capture phase
-      // inner ends up caling stopPropagation
-      assertLog([]);
-      OuterTestUtils.assertLog([]);
-      InnerTestUtils.assertLog(['Suspend Inner']);
-
-      dispatchMouseHoverEvent(innerDiv);
-      OuterTestUtils.assertLog([]);
-      InnerTestUtils.assertLog([]);
-      assertLog([]);
-
-      await act(async () => {
-        resolveInner();
-        await innerPromise;
-        Scheduler.unstable_flushAllWithoutAsserting();
-        OuterScheduler.unstable_flushAllWithoutAsserting();
-        InnerScheduler.unstable_flushAllWithoutAsserting();
-      });
-
-      // Inner hydrates
-      InnerTestUtils.assertLog(['Inner']);
-      // Outer was hydrated earlier
-      OuterTestUtils.assertLog([]);
-
-      // First Inner Mouse Enter fires then Outer Mouse Enter
-      assertLog(['Inner Mouse Enter', 'Outer Mouse Enter']);
-
-      await act(() => {
-        Scheduler.unstable_flushAllWithoutAsserting();
-        OuterScheduler.unstable_flushAllWithoutAsserting();
-        InnerScheduler.unstable_flushAllWithoutAsserting();
-      });
-
-      assertLog([]);
-    });
-  });
-
+  // @gate enableActivity
   it('replays event with null target when tree is dismounted', async () => {
     let suspend = false;
     let resolve;
@@ -1200,6 +957,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('hydrates the last target path first for continuous events', async () => {
     let suspend = false;
     let resolve;
@@ -1286,6 +1044,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('hydrates the last explicitly hydrated target at higher priority', async () => {
     function Child({text}) {
       Scheduler.log(text);
@@ -1333,7 +1092,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     await waitForAll(['App', 'C', 'B', 'A']);
   });
 
-  // @gate www
+  // @gate enableActivity && www
   it('hydrates before an update even if hydration moves away from it', async () => {
     function Child({text}) {
       Scheduler.log(text);
@@ -1441,6 +1200,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('fires capture event handlers and native events if content is hydratable during discrete event', async () => {
     spyOnDev(console, 'error');
     function Child({text}) {
@@ -1512,6 +1272,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableActivity
   it('does not propagate discrete event if it cannot be synchronously hydrated', async () => {
     let triggeredParent = false;
     let triggeredChild = false;
@@ -1574,6 +1335,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(triggeredChild).toBe(false);
   });
 
+  // @gate enableActivity
   it('can force hydration in response to sync update', async () => {
     function Child({text}) {
       Scheduler.log(`Child ${text}`);
@@ -1609,7 +1371,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(initialSpan).toBe(spanRef);
   });
 
-  // @gate www
+  // @gate enableActivity && www
   it('can force hydration in response to continuous update', async () => {
     function Child({text}) {
       Scheduler.log(`Child ${text}`);
@@ -1646,6 +1408,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(initialSpan).toBe(spanRef);
   });
 
+  // @gate enableActivity
   it('can force hydration in response to default update', async () => {
     function Child({text}) {
       Scheduler.log(`Child ${text}`);
@@ -1678,7 +1441,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(initialSpan).toBe(spanRef);
   });
 
-  // @gate www
+  // @gate enableActivity && www
   it('regression test: can unwind context on selective hydration interruption', async () => {
     const Context = React.createContext('DefaultContext');
 
@@ -1737,6 +1500,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     });
   });
 
+  // @gate enableActivity
   it('regression test: can unwind context on selective hydration interruption for sync updates', async () => {
     const Context = React.createContext('DefaultContext');
 
@@ -1788,6 +1552,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     });
   });
 
+  // @gate enableActivity
   it('regression: selective hydration does not contribute to "maximum update limit" count', async () => {
     const outsideRef = React.createRef(null);
     const insideRef = React.createRef(null);
