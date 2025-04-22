@@ -4360,10 +4360,9 @@ export function abort(request: Request, reason: mixed): void {
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
     }
+    callOnAllReadyIfReady(request);
   } catch (error) {
     logRecoverableError(request, error, null);
     fatalError(request, error);
-  } finally {
-    callOnAllReadyIfReady(request);
   }
 }
