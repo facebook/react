@@ -1360,22 +1360,16 @@ describe('ReactFlightDOMEdge', () => {
     const expectedError = new Error('Bam!');
     const errors = [];
 
-    const {pendingResult} = await serverAct(async () => {
-      // destructure trick to avoid the act scope from awaiting the returned value
-      return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
-          Promise.reject(expectedError),
-          webpackMap,
-          {
-            onError(err) {
-              errors.push(err);
-            },
-          },
-        ),
-      };
-    });
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      Promise.reject(expectedError),
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
 
-    const {prelude} = await pendingResult;
     expect(errors).toEqual([expectedError]);
 
     const response = ReactServerDOMClient.createFromReadableStream(prelude, {
@@ -1405,26 +1399,20 @@ describe('ReactFlightDOMEdge', () => {
     const expectedError = new Error('Bam!');
     const errors = [];
 
-    const {pendingResult} = await serverAct(async () => {
-      // destructure trick to avoid the act scope from awaiting the returned value
-      return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
-          {
-            async *[Symbol.asyncIterator]() {
-              throw expectedError;
-            },
-          },
-          webpackMap,
-          {
-            onError(err) {
-              errors.push(err);
-            },
-          },
-        ),
-      };
-    });
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      {
+        async *[Symbol.asyncIterator]() {
+          throw expectedError;
+        },
+      },
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
 
-    const {prelude} = await pendingResult;
     expect(errors).toEqual([expectedError]);
 
     const response = ReactServerDOMClient.createFromReadableStream(prelude, {
@@ -1456,26 +1444,24 @@ describe('ReactFlightDOMEdge', () => {
     const expectedError = new Error('Bam!');
     const errors = [];
 
-    const {pendingResult} = await serverAct(async () => {
-      // destructure trick to avoid the act scope from awaiting the returned value
-      return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
-          new ReadableStream({
-            start(controller) {
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      new ReadableStream({
+        async start(controller) {
+          await serverAct(() => {
+            setTimeout(() => {
               controller.error(expectedError);
-            },
-          }),
-          webpackMap,
-          {
-            onError(err) {
-              errors.push(err);
-            },
-          },
-        ),
-      };
-    });
+            });
+          });
+        },
+      }),
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
 
-    const {prelude} = await pendingResult;
     expect(errors).toEqual([expectedError]);
 
     const response = ReactServerDOMClient.createFromReadableStream(prelude, {
@@ -1505,28 +1491,22 @@ describe('ReactFlightDOMEdge', () => {
   it('can prerender an async iterable', async () => {
     const errors = [];
 
-    const {pendingResult} = await serverAct(async () => {
-      // destructure trick to avoid the act scope from awaiting the returned value
-      return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
-          {
-            async *[Symbol.asyncIterator]() {
-              yield 'hello';
-              yield ' ';
-              yield 'world';
-            },
-          },
-          webpackMap,
-          {
-            onError(err) {
-              errors.push(err);
-            },
-          },
-        ),
-      };
-    });
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      {
+        async *[Symbol.asyncIterator]() {
+          yield 'hello';
+          yield ' ';
+          yield 'world';
+        },
+      },
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
 
-    const {prelude} = await pendingResult;
     expect(errors).toEqual([]);
 
     const response = ReactServerDOMClient.createFromReadableStream(prelude, {
@@ -1552,7 +1532,41 @@ describe('ReactFlightDOMEdge', () => {
   });
 
   // @gate experimental
-  it('does not return early when an error is emitted and there are still pending tasks', async () => {
+  it('can prerender a readable stream', async () => {
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue('hello world');
+          controller.close();
+        },
+      }),
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    const stream = await response;
+    const result = await readResult(stream);
+
+    expect(result).toBe('hello world');
+  });
+
+  // @gate experimental
+  it('does not return a prerender prelude early when an error is emitted and there are still pending tasks', async () => {
     let rejectPromise;
     const rejectingPromise = new Promise(
       (resolve, reject) => (rejectPromise = reject),
@@ -1560,32 +1574,28 @@ describe('ReactFlightDOMEdge', () => {
     const expectedError = new Error('Boom!');
     const errors = [];
 
-    const {pendingResult} = await serverAct(async () => {
-      // destructure trick to avoid the act scope from awaiting the returned value
-      return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
-          [
-            rejectingPromise,
-            {
-              async *[Symbol.asyncIterator]() {
-                yield 'hello';
-                yield ' ';
-                rejectPromise(expectedError);
-                yield 'world';
-              },
-            },
-          ],
-          webpackMap,
-          {
-            onError(err) {
-              errors.push(err);
-            },
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      [
+        rejectingPromise,
+        {
+          async *[Symbol.asyncIterator]() {
+            yield 'hello';
+            yield ' ';
+            await serverAct(() => {
+              rejectPromise(expectedError);
+            });
+            yield 'world';
           },
-        ),
-      };
-    });
+        },
+      ],
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
 
-    const {prelude} = await pendingResult;
     expect(errors).toEqual([expectedError]);
 
     const response = ReactServerDOMClient.createFromReadableStream(prelude, {

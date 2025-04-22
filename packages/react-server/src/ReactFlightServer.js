@@ -774,6 +774,7 @@ function serializeReadableStream(
       const endStreamRow = streamTask.id.toString(16) + ':C\n';
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       enqueueFlush(request);
+      callOnAllReadyIfReady(request);
       aborted = true;
     } else {
       try {
@@ -892,6 +893,7 @@ function serializeAsyncIterable(
       }
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       enqueueFlush(request);
+      callOnAllReadyIfReady(request);
       aborted = true;
     } else {
       try {
@@ -3918,7 +3920,7 @@ function erroredTask(request: Request, task: Task, error: mixed): void {
     const digest = logRecoverableError(request, error, task);
     emitErrorChunk(request, task.id, digest, error);
   }
-  enqueueOnAllReady(request);
+  callOnAllReadyIfReady(request);
 }
 
 const emptyRoot = {};
@@ -4000,6 +4002,7 @@ function retryTask(request: Request, task: Task): void {
 
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
+    callOnAllReadyIfReady(request);
   } catch (thrownValue) {
     if (request.status === ABORTING) {
       request.abortableTasks.delete(task);
@@ -4039,8 +4042,6 @@ function retryTask(request: Request, task: Task): void {
     }
     erroredTask(request, task, x);
   } finally {
-    enqueueOnAllReady(request);
-
     if (__DEV__) {
       debugID = prevDebugID;
     }
@@ -4243,24 +4244,9 @@ function enqueueFlush(request: Request): void {
   }
 }
 
-function enqueueOnAllReady(request: Request): void {
-  if (request.onAllReadyScheduled === false) {
-    request.onAllReadyScheduled = true;
-
-    const callback = () => {
-      if (request.abortableTasks.size === 0) {
-        const onAllReady = request.onAllReady;
-        onAllReady();
-      } else {
-        request.onAllReadyScheduled = false;
-      }
-    };
-
-    if (request.type === PRERENDER || request.status === OPENING) {
-      scheduleMicrotask(callback);
-    } else {
-      scheduleWork(callback);
-    }
+function callOnAllReadyIfReady(request: Request): void {
+  if (request.abortableTasks.size === 0 && request.abortListeners.size === 0) {
+    request.onAllReady();
   }
 }
 
@@ -4342,7 +4328,7 @@ export function abort(request: Request, reason: mixed): void {
         abortableTasks.forEach(task => abortTask(task, request, errorId));
         abortableTasks.clear();
       }
-      enqueueOnAllReady(request);
+      callOnAllReadyIfReady(request);
     }
     const abortListeners = request.abortListeners;
     if (abortListeners.size > 0) {
