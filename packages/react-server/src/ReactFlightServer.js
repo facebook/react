@@ -383,7 +383,6 @@ export type Request = {
   onError: (error: mixed) => ?string,
   onPostpone: (reason: string) => void,
   onAllReady: () => void,
-  onAllReadyScheduled: boolean,
   onFatalError: mixed => void,
   // Profiling-only
   timeOrigin: number,
@@ -497,7 +496,6 @@ function RequestInstance(
   this.onPostpone =
     onPostpone === undefined ? defaultPostponeHandler : onPostpone;
   this.onAllReady = onAllReady;
-  this.onAllReadyScheduled = false;
   this.onFatalError = onFatalError;
 
   if (__DEV__) {
