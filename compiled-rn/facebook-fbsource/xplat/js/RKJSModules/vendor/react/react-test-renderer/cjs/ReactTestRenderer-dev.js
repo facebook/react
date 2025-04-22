@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<afaf39b3888b49a7bdefd30c3649bdea>>
+ * @generated SignedSource<<e70c276d08c28c80a31aaa8e1f1972b5>>
  */
 
 "use strict";
@@ -10133,6 +10133,26 @@ __DEV__ &&
                     captureCommitPhaseError(wasHidden, wasHidden.return, error);
                   }
                 }
+              } else if (18 === root.tag) {
+                if (null === current) {
+                  wasHidden = root;
+                  try {
+                    var instance$jscomp$0 = wasHidden.stateNode;
+                    existingHiddenCallbacks
+                      ? runWithFiberInDEV(
+                          wasHidden,
+                          hideSuspenseBoundary,
+                          instance$jscomp$0
+                        )
+                      : runWithFiberInDEV(
+                          wasHidden,
+                          unhideSuspenseBoundary,
+                          wasHidden.stateNode
+                        );
+                  } catch (error) {
+                    captureCommitPhaseError(wasHidden, wasHidden.return, error);
+                  }
+                }
               } else if (
                 ((22 !== root.tag && 23 !== root.tag) ||
                   null === root.memoizedState ||
@@ -13473,6 +13493,8 @@ __DEV__ &&
       registerSuspenseInstanceRetry = shim$1,
       clearSuspenseBoundary = shim$1,
       clearSuspenseBoundaryFromContainer = shim$1,
+      hideSuspenseBoundary = shim$1,
+      unhideSuspenseBoundary = shim$1,
       preloadResource = shim,
       suspendResource = shim,
       NO_CONTEXT = {},
@@ -15421,10 +15443,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-b04254fd-20250415",
+        version: "19.2.0-native-fb-ebf7318e-20250422",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-b04254fd-20250415"
+        reconcilerVersion: "19.2.0-native-fb-ebf7318e-20250422"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15569,5 +15591,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-b04254fd-20250415";
+    exports.version = "19.2.0-native-fb-ebf7318e-20250422";
   })();

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d36342229196f791f2a65da16515ff91>>
+ * @generated SignedSource<<b4c7e868aa7726c6f7a881db3e803555>>
  */
 
 "use strict";
@@ -7628,6 +7628,18 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
                 captureCommitPhaseError(wasHidden, wasHidden.return, error);
               }
             }
+          } else if (18 === current.tag) {
+            if (null === root) {
+              wasHidden = current;
+              try {
+                var instance$jscomp$0 = wasHidden.stateNode;
+                instance
+                  ? shim$1(instance$jscomp$0)
+                  : shim$1(wasHidden.stateNode);
+              } catch (error) {
+                captureCommitPhaseError(wasHidden, wasHidden.return, error);
+              }
+            }
           } else if (
             ((22 !== current.tag && 23 !== current.tag) ||
               null === current.memoizedState ||
@@ -10325,10 +10337,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1229 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-b04254fd-20250415",
+  version: "19.2.0-native-fb-ebf7318e-20250422",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-b04254fd-20250415",
+  reconcilerVersion: "19.2.0-native-fb-ebf7318e-20250422",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$148 = 0;
@@ -10346,16 +10358,16 @@ var internals$jscomp$inline_1229 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1476 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1482 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1476.isDisabled &&
-    hook$jscomp$inline_1476.supportsFiber
+    !hook$jscomp$inline_1482.isDisabled &&
+    hook$jscomp$inline_1482.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1476.inject(
+      (rendererID = hook$jscomp$inline_1482.inject(
         internals$jscomp$inline_1229
       )),
-        (injectedHook = hook$jscomp$inline_1476);
+        (injectedHook = hook$jscomp$inline_1482);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10479,4 +10491,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-b04254fd-20250415";
+exports.version = "19.2.0-native-fb-ebf7318e-20250422";

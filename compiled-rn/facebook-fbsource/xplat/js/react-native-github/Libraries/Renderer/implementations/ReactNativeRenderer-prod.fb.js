@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dea36fce334b99a1221f083fb8c9664f>>
+ * @generated SignedSource<<c69b8abc7efe7211a7ea1fb8f71f8265>>
  */
 
 "use strict";
@@ -8760,6 +8760,18 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
                 captureCommitPhaseError(viewConfig, viewConfig.return, error);
               }
             }
+          } else if (18 === root.tag) {
+            if (null === current) {
+              viewConfig = root;
+              try {
+                var instance$jscomp$1 = viewConfig.stateNode;
+                instance
+                  ? shim$1(instance$jscomp$1)
+                  : shim$1(viewConfig.stateNode);
+              } catch (error) {
+                captureCommitPhaseError(viewConfig, viewConfig.return, error);
+              }
+            }
           } else if (
             ((22 !== root.tag && 23 !== root.tag) ||
               null === root.memoizedState ||
@@ -11029,11 +11041,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-b04254fd-20250415" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-ebf7318e-20250422" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-b04254fd-20250415\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-ebf7318e-20250422\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11082,24 +11094,24 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1286 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-b04254fd-20250415",
+    version: "19.2.0-native-fb-ebf7318e-20250422",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-b04254fd-20250415"
+    reconcilerVersion: "19.2.0-native-fb-ebf7318e-20250422"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1286.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1621 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1627 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1621.isDisabled &&
-    hook$jscomp$inline_1621.supportsFiber
+    !hook$jscomp$inline_1627.isDisabled &&
+    hook$jscomp$inline_1627.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1621.inject(
+      (rendererID = hook$jscomp$inline_1627.inject(
         internals$jscomp$inline_1286
       )),
-        (injectedHook = hook$jscomp$inline_1621);
+        (injectedHook = hook$jscomp$inline_1627);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

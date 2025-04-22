@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2384872a2240a79f09a5d3d000b519f6>>
+ * @generated SignedSource<<dc7bd96f495789abc601302fd6b9c066>>
  */
 
 "use strict";
@@ -11014,15 +11014,19 @@ __DEV__ &&
             (offscreenSubtreeWasHidden ||
               null === current ||
               safelyDetachRef(current, current.return));
-          flags & 64 &&
+          if (
+            flags & 64 &&
             offscreenSubtreeIsHidden &&
             ((finishedWork = finishedWork.updateQueue),
             null !== finishedWork &&
-              ((flags = finishedWork.callbacks),
-              null !== flags &&
-                ((current = finishedWork.shared.hiddenCallbacks),
-                (finishedWork.shared.hiddenCallbacks =
-                  null === current ? flags : current.concat(flags)))));
+              ((flags = finishedWork.callbacks), null !== flags))
+          ) {
+            var existingHiddenCallbacks = finishedWork.shared.hiddenCallbacks;
+            finishedWork.shared.hiddenCallbacks =
+              null === existingHiddenCallbacks
+                ? flags
+                : existingHiddenCallbacks.concat(flags);
+          }
           break;
         case 26:
         case 27:
@@ -11034,24 +11038,31 @@ __DEV__ &&
               null === current ||
               safelyDetachRef(current, current.return));
           if (finishedWork.flags & 32) {
-            var instance = finishedWork.stateNode;
+            existingHiddenCallbacks = finishedWork.stateNode;
             try {
-              runWithFiberInDEV(finishedWork, resetTextContent, instance);
+              runWithFiberInDEV(
+                finishedWork,
+                resetTextContent,
+                existingHiddenCallbacks
+              );
             } catch (error) {
               captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
           if (flags & 4 && null != finishedWork.stateNode) {
-            instance = finishedWork.memoizedProps;
-            current = null !== current ? current.memoizedProps : instance;
+            existingHiddenCallbacks = finishedWork.memoizedProps;
+            var _oldProps =
+              null !== current
+                ? current.memoizedProps
+                : existingHiddenCallbacks;
             try {
               runWithFiberInDEV(
                 finishedWork,
                 commitUpdate,
                 finishedWork.stateNode,
                 finishedWork.type,
-                current,
-                instance,
+                _oldProps,
+                existingHiddenCallbacks,
                 finishedWork
               );
             } catch (error) {
@@ -11073,14 +11084,15 @@ __DEV__ &&
                 "This should have a text node initialized. This error is likely caused by a bug in React. Please file an issue."
               );
             flags = finishedWork.memoizedProps;
-            current = null !== current ? current.memoizedProps : flags;
-            instance = finishedWork.stateNode;
+            existingHiddenCallbacks =
+              null !== current ? current.memoizedProps : flags;
+            _oldProps = finishedWork.stateNode;
             try {
               runWithFiberInDEV(
                 finishedWork,
                 commitTextUpdate,
-                instance,
-                current,
+                _oldProps,
+                existingHiddenCallbacks,
                 flags
               );
             } catch (error) {
@@ -11109,12 +11121,13 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
           finishedWork.child.flags & 8192 &&
-            ((instance = null !== finishedWork.memoizedState),
-            (current = null !== current && null !== current.memoizedState),
+            ((existingHiddenCallbacks = null !== finishedWork.memoizedState),
+            (_oldProps = null !== current && null !== current.memoizedState),
             alwaysThrottleRetries
-              ? instance !== current && (globalMostRecentFallbackTime = now$1())
-              : instance &&
-                !current &&
+              ? existingHiddenCallbacks !== _oldProps &&
+                (globalMostRecentFallbackTime = now$1())
+              : existingHiddenCallbacks &&
+                !_oldProps &&
                 (globalMostRecentFallbackTime = now$1()));
           if (flags & 4) {
             try {
@@ -11174,9 +11187,13 @@ __DEV__ &&
                 if (null === current) {
                   retryQueue = current = root;
                   try {
-                    (instance = retryQueue.stateNode),
+                    (existingHiddenCallbacks = retryQueue.stateNode),
                       suspenseCallback
-                        ? runWithFiberInDEV(retryQueue, hideInstance, instance)
+                        ? runWithFiberInDEV(
+                            retryQueue,
+                            hideInstance,
+                            existingHiddenCallbacks
+                          )
                         : runWithFiberInDEV(
                             retryQueue,
                             unhideInstance,
@@ -11195,18 +11212,42 @@ __DEV__ &&
                 if (null === current) {
                   retryQueue = root;
                   try {
-                    var instance$jscomp$0 = retryQueue.stateNode;
+                    (_oldProps = retryQueue.stateNode),
+                      suspenseCallback
+                        ? runWithFiberInDEV(
+                            retryQueue,
+                            hideTextInstance,
+                            _oldProps
+                          )
+                        : runWithFiberInDEV(
+                            retryQueue,
+                            unhideTextInstance,
+                            _oldProps,
+                            retryQueue.memoizedProps
+                          );
+                  } catch (error) {
+                    captureCommitPhaseError(
+                      retryQueue,
+                      retryQueue.return,
+                      error
+                    );
+                  }
+                }
+              } else if (18 === root.tag) {
+                if (null === current) {
+                  retryQueue = root;
+                  try {
+                    var instance = retryQueue.stateNode;
                     suspenseCallback
                       ? runWithFiberInDEV(
                           retryQueue,
-                          hideTextInstance,
-                          instance$jscomp$0
+                          hideSuspenseBoundary,
+                          instance
                         )
                       : runWithFiberInDEV(
                           retryQueue,
-                          unhideTextInstance,
-                          instance$jscomp$0,
-                          retryQueue.memoizedProps
+                          unhideSuspenseBoundary,
+                          retryQueue.stateNode
                         );
                   } catch (error) {
                     captureCommitPhaseError(
@@ -11240,10 +11281,13 @@ __DEV__ &&
           flags & 4 &&
             ((flags = finishedWork.updateQueue),
             null !== flags &&
-              ((current = flags.retryQueue),
-              null !== current &&
+              ((existingHiddenCallbacks = flags.retryQueue),
+              null !== existingHiddenCallbacks &&
                 ((flags.retryQueue = null),
-                attachSuspenseRetryListeners(finishedWork, current))));
+                attachSuspenseRetryListeners(
+                  finishedWork,
+                  existingHiddenCallbacks
+                ))));
           break;
         case 19:
           recursivelyTraverseMutationEffects(root, finishedWork);
@@ -15426,6 +15470,8 @@ __DEV__ &&
       registerSuspenseInstanceRetry = shim$1,
       clearSuspenseBoundary = shim$1,
       clearSuspenseBoundaryFromContainer = shim$1,
+      hideSuspenseBoundary = shim$1,
+      unhideSuspenseBoundary = shim$1,
       preloadResource = shim,
       suspendResource = shim,
       extraDevToolsConfig = {
@@ -17331,11 +17377,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-b04254fd-20250415" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-ebf7318e-20250422" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-b04254fd-20250415\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-ebf7318e-20250422\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17361,10 +17407,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-b04254fd-20250415",
+        version: "19.2.0-native-fb-ebf7318e-20250422",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-b04254fd-20250415"
+        reconcilerVersion: "19.2.0-native-fb-ebf7318e-20250422"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

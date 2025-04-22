@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<68c81e4fb928a3f466375784e887ebfa>>
+ * @generated SignedSource<<acdde4a372fd1e9a0a62374e97dc9590>>
  */
 
 /*
@@ -10039,6 +10039,18 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
                 captureCommitPhaseError(retryQueue, retryQueue.return, error);
               }
             }
+          } else if (18 === root.tag) {
+            if (null === current) {
+              retryQueue = root;
+              try {
+                var instance = retryQueue.stateNode;
+                suspenseCallback
+                  ? hideOrUnhideSuspenseBoundary(instance, !0)
+                  : hideOrUnhideSuspenseBoundary(retryQueue.stateNode, !1);
+              } catch (error) {
+                captureCommitPhaseError(retryQueue, retryQueue.return, error);
+              }
+            }
           } else if (
             ((22 !== root.tag && 23 !== root.tag) ||
               null === root.memoizedState ||
@@ -14329,6 +14341,30 @@ function clearSuspenseBoundary(parentInstance, suspenseInstance) {
   } while (node);
   retryIfBlockedOn(suspenseInstance);
 }
+function hideOrUnhideSuspenseBoundary(suspenseInstance, isHidden) {
+  var node = suspenseInstance;
+  suspenseInstance = 0;
+  do {
+    var nextNode = node.nextSibling;
+    1 === node.nodeType
+      ? isHidden
+        ? ((node._stashedDisplay = node.style.display),
+          (node.style.display = "none"))
+        : ((node.style.display = node._stashedDisplay || ""),
+          "" === node.getAttribute("style") && node.removeAttribute("style"))
+      : 3 === node.nodeType &&
+        (isHidden
+          ? ((node._stashedText = node.nodeValue), (node.nodeValue = ""))
+          : (node.nodeValue = node._stashedText || ""));
+    if (nextNode && 8 === nextNode.nodeType)
+      if (((node = nextNode.data), "/$" === node))
+        if (0 === suspenseInstance) break;
+        else suspenseInstance--;
+      else
+        ("$" !== node && "$?" !== node && "$!" !== node) || suspenseInstance++;
+    node = nextNode;
+  } while (node);
+}
 function clearContainerSparingly(container) {
   var nextNode = container.firstChild;
   nextNode && 10 === nextNode.nodeType && (nextNode = nextNode.nextSibling);
@@ -16043,14 +16079,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1806 = React.version;
 if (
-  "19.2.0-native-fb-b04254fd-20250415" !==
+  "19.2.0-native-fb-ebf7318e-20250422" !==
   isomorphicReactPackageVersion$jscomp$inline_1806
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1806,
-      "19.2.0-native-fb-b04254fd-20250415"
+      "19.2.0-native-fb-ebf7318e-20250422"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16070,24 +16106,24 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2264 = {
+var internals$jscomp$inline_2270 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-b04254fd-20250415",
+  version: "19.2.0-native-fb-ebf7318e-20250422",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-b04254fd-20250415"
+  reconcilerVersion: "19.2.0-native-fb-ebf7318e-20250422"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2265 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2271 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2265.isDisabled &&
-    hook$jscomp$inline_2265.supportsFiber
+    !hook$jscomp$inline_2271.isDisabled &&
+    hook$jscomp$inline_2271.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2265.inject(
-        internals$jscomp$inline_2264
+      (rendererID = hook$jscomp$inline_2271.inject(
+        internals$jscomp$inline_2270
       )),
-        (injectedHook = hook$jscomp$inline_2265);
+        (injectedHook = hook$jscomp$inline_2271);
     } catch (err) {}
 }
 function noop() {}
@@ -16333,4 +16369,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-b04254fd-20250415";
+exports.version = "19.2.0-native-fb-ebf7318e-20250422";
