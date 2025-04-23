@@ -4,13 +4,15 @@
   "private": true,
   "devDependencies": {
     "concurrently": "3.1.0",
-    "http-proxy-middleware": "3.0.3",
-    "react-scripts": "5.0.1",
-    "@babel/plugin-proposal-private-property-in-object": "7.21.11"
+    "react-scripts": "5.0.1"
   },
   "dependencies": {
+    "@babel/core": "7.26.0",
+    "@babel/plugin-proposal-private-property-in-object": "7.21.11",
     "@babel/register": "^7.25.9",
+    "babel-preset-react-app": "10.0.1",
     "express": "^4.14.0",
+    "http-proxy-middleware": "3.0.3",
     "ignore-styles": "^5.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
