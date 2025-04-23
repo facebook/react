@@ -188,6 +188,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
              * the `infer-effect-deps/pruned-nonreactive-obj` fixture for an
              * explanation.
              */
+            const usedDeps = [];
             for (const dep of scopeInfo.deps) {
               if (
                 ((isUseRefType(dep.identifier) ||
@@ -207,7 +208,18 @@ export function inferEffectDependencies(fn: HIRFunction): void {
               );
               newInstructions.push(...instructions);
               effectDeps.push(place);
+              usedDeps.push(dep);
             }
+
+            // For LSP autodeps feature.
+            fn.env.logger?.logEvent(fn.env.filename, {
+              kind: 'AutoDepsDecorations',
+              useEffectCallExpr:
+                typeof value.loc !== 'symbol' ? value.loc : null,
+              decorations: collectDepUsages(usedDeps, fnExpr.value).map(loc =>
+                typeof loc !== 'symbol' ? loc : null,
+              ),
+            });
 
             newInstructions.push({
               id: makeInstructionId(0),
@@ -339,4 +351,32 @@ function inferReactiveIdentifiers(fn: HIRFunction): Set<IdentifierId> {
     }
   }
   return reactiveIds;
+}
+
+function collectDepUsages(
+  deps: Array<ReactiveScopeDependency>,
+  fnExpr: FunctionExpression,
+): Array<SourceLocation> {
+  const identifiers: Map<IdentifierId, ReactiveScopeDependency> = new Map();
+  const loadedDeps: Set<IdentifierId> = new Set();
+  const sourceLocations = [];
+  for (const dep of deps) {
+    identifiers.set(dep.identifier.id, dep);
+  }
+
+  for (const [, block] of fnExpr.loweredFunc.func.body.blocks) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === 'LoadLocal') {
+        loadedDeps.add(instr.lvalue.identifier.id);
+      }
+      for (const place of eachInstructionOperand(instr)) {
+        if (loadedDeps.has(place.identifier.id)) {
+          // TODO(@jbrown215): handle member exprs!!
+          sourceLocations.push(place.identifier.loc);
+        }
+      }
+    }
+  }
+
+  return sourceLocations;
 }
