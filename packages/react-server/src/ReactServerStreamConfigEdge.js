@@ -182,3 +182,14 @@ export function closeWithError(destination: Destination, error: mixed): void {
 }
 
 export {createFastHashJS as createFastHash} from 'react-server/src/createFastHashJS';
+
+export function readAsDataURL(blob: Blob): Promise<string> {
+  return blob.arrayBuffer().then(arrayBuffer => {
+    const encoded =
+      typeof Buffer === 'function' && typeof Buffer.from === 'function'
+        ? Buffer.from(arrayBuffer).toString('base64')
+        : btoa(String.fromCharCode.apply(String, new Uint8Array(arrayBuffer)));
+    const mimeType = blob.type || 'application/octet-stream';
+    return 'data:' + mimeType + ';base64,' + encoded;
+  });
+}

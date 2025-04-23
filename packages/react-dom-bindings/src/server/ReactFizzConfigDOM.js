@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactNodeList, ReactCustomFormAction} from 'shared/ReactTypes';
+import type {
+  ReactNodeList,
+  ReactCustomFormAction,
+  Thenable,
+} from 'shared/ReactTypes';
 import type {
   CrossOriginEnum,
   PreloadImplOptions,
@@ -27,7 +31,10 @@ import {
 
 import {Children} from 'react';
 
-import {enableFizzExternalRuntime} from 'shared/ReactFeatureFlags';
+import {
+  enableFizzExternalRuntime,
+  enableSrcObject,
+} from 'shared/ReactFeatureFlags';
 
 import type {
   Destination,
@@ -42,6 +49,7 @@ import {
   writeChunkAndReturn,
   stringToChunk,
   stringToPrecomputedChunk,
+  readAsDataURL,
 } from 'react-server/src/ReactServerStreamConfig';
 import {
   resolveRequest,
@@ -684,23 +692,16 @@ export function completeResumableState(resumableState: ResumableState): void {
   resumableState.bootstrapModules = undefined;
 }
 
-const NoContribution /*     */ = 0b000;
-const HTMLContribution /*   */ = 0b001;
-const BodyContribution /*   */ = 0b010;
-const HeadContribution /*   */ = 0b100;
-
 export type PreambleState = {
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
   bodyChunks: null | Array<Chunk | PrecomputedChunk>,
-  contribution: number,
 };
 export function createPreambleState(): PreambleState {
   return {
     htmlChunks: null,
     headChunks: null,
     bodyChunks: null,
-    contribution: NoContribution,
   };
 }
 
@@ -1214,6 +1215,47 @@ function pushFormActionAttribute(
   return formData;
 }
 
+let blobCache: null | WeakMap<Blob, Thenable<string>> = null;
+
+function pushSrcObjectAttribute(
+  target: Array<Chunk | PrecomputedChunk>,
+  blob: Blob,
+): void {
+  // Throwing a Promise style suspense read of the Blob content.
+  if (blobCache === null) {
+    blobCache = new WeakMap();
+  }
+  const suspenseCache: WeakMap<Blob, Thenable<string>> = blobCache;
+  let thenable = suspenseCache.get(blob);
+  if (thenable === undefined) {
+    thenable = ((readAsDataURL(blob): any): Thenable<string>);
+    thenable.then(
+      result => {
+        (thenable: any).status = 'fulfilled';
+        (thenable: any).value = result;
+      },
+      error => {
+        (thenable: any).status = 'rejected';
+        (thenable: any).reason = error;
+      },
+    );
+    suspenseCache.set(blob, thenable);
+  }
+  if (thenable.status === 'rejected') {
+    throw thenable.reason;
+  } else if (thenable.status !== 'fulfilled') {
+    throw thenable;
+  }
+  const url = thenable.value;
+  target.push(
+    attributeSeparator,
+    stringToChunk('src'),
+    attributeAssign,
+    stringToChunk(escapeTextForBrowser(url)),
+    attributeEnd,
+  );
+}
+
 function pushAttribute(
   target: Array<Chunk | PrecomputedChunk>,
   name: string,
@@ -1243,7 +1285,15 @@ function pushAttribute(
       pushStyleAttribute(target, value);
       return;
     }
-    case 'src':
+    case 'src': {
+      if (enableSrcObject && typeof value === 'object' && value !== null) {
+        if (typeof Blob === 'function' && value instanceof Blob) {
+          pushSrcObjectAttribute(target, value);
+          return;
+        }
+      }
+      // Fallthrough to general urls
+    }
     case 'href': {
       if (value === '') {
         if (__DEV__) {
@@ -3222,6 +3272,12 @@ function pushTitleImpl(
   return null;
 }
 
+// These are used by the client if we clear a boundary and we find these, then we
+// also clear the singleton as well.
+const headPreambleContributionChunk = stringToPrecomputedChunk('<!--head-->');
+const bodyPreambleContributionChunk = stringToPrecomputedChunk('<!--body-->');
+const htmlPreambleContributionChunk = stringToPrecomputedChunk('<!--html-->');
+
 function pushStartHead(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -3236,6 +3292,12 @@ function pushStartHead(
     if (preamble.headChunks) {
       throw new Error(`The ${'`<head>`'} tag may only be rendered once.`);
     }
+
+    // Insert a marker in the body where the contribution to the head was in case we need to clear it.
+    if (preambleState !== null) {
+      target.push(headPreambleContributionChunk);
+    }
+
     preamble.headChunks = [];
     return pushStartSingletonElement(preamble.headChunks, props, 'head');
   } else {
@@ -3260,6 +3322,11 @@ function pushStartBody(
       throw new Error(`The ${'`<body>`'} tag may only be rendered once.`);
     }
 
+    // Insert a marker in the body where the contribution to the body tag was in case we need to clear it.
+    if (preambleState !== null) {
+      target.push(bodyPreambleContributionChunk);
+    }
+
     preamble.bodyChunks = [];
     return pushStartSingletonElement(preamble.bodyChunks, props, 'body');
   } else {
@@ -3282,6 +3349,11 @@ function pushStartHtml(
 
     if (preamble.htmlChunks) {
       throw new Error(`The ${'`<html>`'} tag may only be rendered once.`);
+    }
+
+    // Insert a marker in the body where the contribution to the head was in case we need to clear it.
+    if (preambleState !== null) {
+      target.push(htmlPreambleContributionChunk);
     }
 
     preamble.htmlChunks = [DOCTYPE];
@@ -3956,15 +4028,12 @@ export function hoistPreambleState(
   const rootPreamble = renderState.preamble;
   if (rootPreamble.htmlChunks === null && preambleState.htmlChunks) {
     rootPreamble.htmlChunks = preambleState.htmlChunks;
-    preambleState.contribution |= HTMLContribution;
   }
   if (rootPreamble.headChunks === null && preambleState.headChunks) {
     rootPreamble.headChunks = preambleState.headChunks;
-    preambleState.contribution |= HeadContribution;
   }
   if (rootPreamble.bodyChunks === null && preambleState.bodyChunks) {
     rootPreamble.bodyChunks = preambleState.bodyChunks;
-    preambleState.contribution |= BodyContribution;
   }
 }
 
@@ -4028,6 +4097,24 @@ export function writePlaceholder(
   const formattedID = stringToChunk(id.toString(16));
   writeChunk(destination, formattedID);
   return writeChunkAndReturn(destination, placeholder2);
+}
+
+// Activity boundaries are encoded as comments.
+const startActivityBoundary = stringToPrecomputedChunk('<!--&-->');
+const endActivityBoundary = stringToPrecomputedChunk('<!--/&-->');
+
+export function pushStartActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  target.push(startActivityBoundary);
+}
+
+export function pushEndActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  target.push(endActivityBoundary);
 }
 
 // Suspense boundaries are encoded as comments.
@@ -4141,11 +4228,7 @@ export function writeStartClientRenderedSuspenseBoundary(
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
-  if (preambleState) {
-    writePreambleContribution(destination, preambleState);
-  }
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 export function writeEndPendingSuspenseBoundary(
@@ -4157,29 +4240,8 @@ export function writeEndPendingSuspenseBoundary(
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
-  if (preambleState) {
-    writePreambleContribution(destination, preambleState);
-  }
   return writeChunkAndReturn(destination, endSuspenseBoundary);
-}
-
-const boundaryPreambleContributionChunkStart = stringToPrecomputedChunk('<!--');
-const boundaryPreambleContributionChunkEnd = stringToPrecomputedChunk('-->');
-
-function writePreambleContribution(
-  destination: Destination,
-  preambleState: PreambleState,
-) {
-  const contribution = preambleState.contribution;
-  if (contribution !== NoContribution) {
-    writeChunk(destination, boundaryPreambleContributionChunkStart);
-    // This is a number type so we can do the fast path without coercion checking
-    // eslint-disable-next-line react-internal/safe-string-coercion
-    writeChunk(destination, stringToChunk('' + contribution));
-    writeChunk(destination, boundaryPreambleContributionChunkEnd);
-  }
 }
 
 const startSegmentHTML = stringToPrecomputedChunk('<div hidden id="');

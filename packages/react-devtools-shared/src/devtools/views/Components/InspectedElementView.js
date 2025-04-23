@@ -54,8 +54,14 @@ export default function InspectedElementView({
   toggleParseHookNames,
   symbolicatedSourcePromise,
 }: Props): React.Node {
-  const {owners, rendererPackageName, rendererVersion, rootType, source} =
-    inspectedElement;
+  const {
+    owners,
+    rendererPackageName,
+    rendererVersion,
+    rootType,
+    source,
+    nativeTag,
+  } = inspectedElement;
 
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -75,6 +81,7 @@ export default function InspectedElementView({
           <InspectedElementBadges
             hocDisplayNames={element.hocDisplayNames}
             compiledWithForget={element.compiledWithForget}
+            nativeTag={nativeTag}
           />
         </div>
 

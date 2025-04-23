@@ -16,6 +16,7 @@ function Button({label}) {
 
 let currentTheme = 'light';
 function useTheme() {
+  'use memo';
   return currentTheme;
 }
 

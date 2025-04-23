@@ -1,0 +1,35 @@
+{
+  "name": "react-mcp-server",
+  "version": "0.0.0",
+  "description": "React MCP Server (experimental)",
+  "bin": {
+    "react-mcp-server": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsup",
+    "test": "echo 'no tests'",
+    "dev": "concurrently --kill-others -n build,inspect \"yarn run watch\" \"wait-on dist/index.js && yarn run inspect\"",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "watch": "yarn build --watch"
+  },
+  "dependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/parser": "^7.26",
+    "@babel/plugin-syntax-typescript": "^7.25.9",
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "algoliasearch": "^5.23.3",
+    "cheerio": "^1.0.0",
+    "prettier": "^3.3.3",
+    "turndown": "^7.2.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/turndown": "^5.0.5"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "compiler/packages/react-mcp-server"
+  }
+}

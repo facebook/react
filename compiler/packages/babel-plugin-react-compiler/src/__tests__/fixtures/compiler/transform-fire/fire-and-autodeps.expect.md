@@ -21,8 +21,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableFire @inferEffectDependencies
+import { c as _c, useFire } from "react/compiler-runtime"; // @enableFire @inferEffectDependencies
 import { fire, useEffect } from "react";
 
 function Component(props) {
@@ -50,7 +49,7 @@ function Component(props) {
   } else {
     t2 = $[4];
   }
-  useEffect(t2, [t1, props]);
+  useEffect(t2, [props]);
   return null;
 }
 

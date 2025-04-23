@@ -3360,27 +3360,29 @@ body {
     });
     await waitForAll([]);
 
-    // Although the commit suspended, a preload was inserted.
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="preload" href="foo" as="style" />
-        </head>
-        <body>loading...</body>
-      </html>,
-    );
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      // Although the commit suspended, a preload was inserted.
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preload" href="foo" as="style" />
+          </head>
+          <body>loading...</body>
+        </html>,
+      );
 
-    loadPreloads(['foo']);
-    assertLog(['load preload: foo']);
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
-        </head>
-        <body>loading...</body>
-      </html>,
-    );
+      loadPreloads(['foo']);
+      assertLog(['load preload: foo']);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+          </head>
+          <body>loading...</body>
+        </html>,
+      );
+    }
 
     loadStylesheets(['foo']);
     assertLog(['load stylesheet: foo']);
@@ -3410,35 +3412,36 @@ body {
       );
     });
     await waitForAll([]);
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="bar" as="style" />
-        </head>
-        <body>
-          <div style="display: none;">hello</div>loading...
-        </body>
-      </html>,
-    );
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preload" href="bar" as="style" />
+          </head>
+          <body>
+            <div style="display: none;">hello</div>loading...
+          </body>
+        </html>,
+      );
 
-    loadPreloads(['bar']);
-    assertLog(['load preload: bar']);
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="stylesheet" href="bar" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="bar" as="style" />
-        </head>
-        <body>
-          <div style="display: none;">hello</div>loading...
-        </body>
-      </html>,
-    );
-
+      loadPreloads(['bar']);
+      assertLog(['load preload: bar']);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preload" href="bar" as="style" />
+          </head>
+          <body>
+            <div style="display: none;">hello</div>loading...
+          </body>
+        </html>,
+      );
+    }
     loadStylesheets(['bar']);
     assertLog(['load stylesheet: bar']);
     expect(getMeaningfulChildren(document)).toEqual(

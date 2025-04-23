@@ -41,8 +41,10 @@ import {
   insertBefore,
   insertInContainerBefore,
   replaceContainerChildren,
+  hideDehydratedBoundary,
   hideInstance,
   hideTextInstance,
+  unhideDehydratedBoundary,
   unhideInstance,
   unhideTextInstance,
   commitHydratedContainer,
@@ -152,6 +154,27 @@ export function commitHostResetTextContent(finishedWork: Fiber) {
   }
 }
 
+export function commitShowHideSuspenseBoundary(node: Fiber, isHidden: boolean) {
+  try {
+    const instance = node.stateNode;
+    if (isHidden) {
+      if (__DEV__) {
+        runWithFiberInDEV(node, hideDehydratedBoundary, instance);
+      } else {
+        hideDehydratedBoundary(instance);
+      }
+    } else {
+      if (__DEV__) {
+        runWithFiberInDEV(node, unhideDehydratedBoundary, node.stateNode);
+      } else {
+        unhideDehydratedBoundary(node.stateNode);
+      }
+    }
+  } catch (error) {
+    captureCommitPhaseError(node, node.return, error);
+  }
+}
+
 export function commitShowHideHostInstance(node: Fiber, isHidden: boolean) {
   try {
     const instance = node.stateNode;
@@ -199,6 +222,7 @@ export function commitShowHideHostTextInstance(node: Fiber, isHidden: boolean) {
         unhideTextInstance(instance, node.memoizedProps);
       }
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(node, node.return, error);
   }

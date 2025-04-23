@@ -18,6 +18,7 @@ import {
   Instruction,
   LoadGlobal,
   LoadLocal,
+  NonLocalImportSpecifier,
   Place,
   PropertyLoad,
   isUseContextHookType,
@@ -35,7 +36,7 @@ import {inferTypes} from '../TypeInference';
 
 export function lowerContextAccess(
   fn: HIRFunction,
-  loweredContextCallee: ExternalFunction,
+  loweredContextCalleeConfig: ExternalFunction,
 ): void {
   const contextAccess: Map<IdentifierId, CallExpression> = new Map();
   const contextKeys: Map<IdentifierId, Array<string>> = new Map();
@@ -79,6 +80,8 @@ export function lowerContextAccess(
     }
   }
 
+  let importLoweredContextCallee: NonLocalImportSpecifier | null = null;
+
   if (contextAccess.size > 0 && contextKeys.size > 0) {
     for (const [, block] of fn.body.blocks) {
       let nextInstructions: Array<Instruction> | null = null;
@@ -91,9 +94,13 @@ export function lowerContextAccess(
           isUseContextHookType(value.callee.identifier) &&
           contextKeys.has(lvalue.identifier.id)
         ) {
+          importLoweredContextCallee ??=
+            fn.env.programContext.addImportSpecifier(
+              loweredContextCalleeConfig,
+            );
           const loweredContextCalleeInstr = emitLoadLoweredContextCallee(
             fn.env,
-            loweredContextCallee,
+            importLoweredContextCallee,
           );
 
           if (nextInstructions === null) {
@@ -122,21 +129,16 @@ export function lowerContextAccess(
     }
     markInstructionIds(fn.body);
     inferTypes(fn);
-    fn.env.hasLoweredContextAccess = true;
   }
 }
 
 function emitLoadLoweredContextCallee(
   env: Environment,
-  loweredContextCallee: ExternalFunction,
+  importedLowerContextCallee: NonLocalImportSpecifier,
 ): Instruction {
   const loadGlobal: LoadGlobal = {
     kind: 'LoadGlobal',
-    binding: {
-      kind: 'ImportNamespace',
-      module: loweredContextCallee.source,
-      name: loweredContextCallee.importSpecifierName,
-    },
+    binding: {...importedLowerContextCallee},
     loc: GeneratedSource,
   };
 

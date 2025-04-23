@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ViewTransitionClass, ViewTransitionProps} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {ViewTransitionInstance, Instance} from './ReactFiberConfig';
 
@@ -19,28 +19,6 @@ import {
 import {getIsHydrating} from './ReactFiberHydrationContext';
 
 import {getTreeId} from './ReactFiberTreeContext';
-
-export type ViewTransitionClassPerType = {
-  [transitionType: 'default' | string]: 'none' | string,
-};
-
-export type ViewTransitionClass = 'none' | string | ViewTransitionClassPerType;
-
-export type ViewTransitionProps = {
-  name?: string,
-  children?: ReactNodeList,
-  className?: ViewTransitionClass,
-  enter?: ViewTransitionClass,
-  exit?: ViewTransitionClass,
-  layout?: ViewTransitionClass,
-  share?: ViewTransitionClass,
-  update?: ViewTransitionClass,
-  onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onLayout?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-};
 
 export type ViewTransitionState = {
   autoName: null | string, // the view-transition-name to use when an explicit one is not specified
@@ -129,13 +107,10 @@ export function getViewTransitionClassName(
   const className: ?string = getClassNameByType(defaultClass);
   const eventClassName: ?string = getClassNameByType(eventClass);
   if (eventClassName == null) {
-    return className;
+    return className === 'auto' ? null : className;
   }
-  if (eventClassName === 'none') {
-    return eventClassName;
-  }
-  if (className != null && className !== 'none') {
-    return className + ' ' + eventClassName;
+  if (eventClassName === 'auto') {
+    return null;
   }
   return eventClassName;
 }

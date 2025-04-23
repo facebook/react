@@ -12,6 +12,7 @@ import type {
   Instance,
   TextInstance,
   HydratableInstance,
+  ActivityInstance,
   SuspenseInstance,
   Container,
   HostContext,
@@ -26,6 +27,7 @@ import {
   HostSingleton,
   HostRoot,
   SuspenseComponent,
+  ActivityComponent,
 } from './ReactWorkTags';
 import {favorSafetyOverHydrationPerf} from 'shared/ReactFeatureFlags';
 
@@ -40,6 +42,7 @@ import {
   getNextHydratableSiblingAfterSingleton,
   getFirstHydratableChild,
   getFirstHydratableChildWithinContainer,
+  getFirstHydratableChildWithinActivityInstance,
   getFirstHydratableChildWithinSuspenseInstance,
   getFirstHydratableChildWithinSingleton,
   hydrateInstance,
@@ -48,11 +51,13 @@ import {
   hydrateTextInstance,
   diffHydratedTextForDevWarnings,
   hydrateSuspenseInstance,
+  getNextHydratableInstanceAfterActivityInstance,
   getNextHydratableInstanceAfterSuspenseInstance,
   shouldDeleteUnhydratedTailInstances,
   resolveSingletonInstance,
   canHydrateInstance,
   canHydrateTextInstance,
+  canHydrateActivityInstance,
   canHydrateSuspenseInstance,
   canHydrateFormStateMarker,
   isFormStateMarkerMatching,
@@ -272,7 +277,30 @@ function tryHydrateText(fiber: Fiber, nextInstance: any) {
   return false;
 }
 
-function tryHydrateSuspense(fiber: Fiber, nextInstance: any) {
+function tryHydrateActivity(
+  fiber: Fiber,
+  nextInstance: any,
+): null | ActivityInstance {
+  // fiber is a SuspenseComponent Fiber
+  const activityInstance = canHydrateActivityInstance(
+    nextInstance,
+    rootOrSingletonContext,
+  );
+  if (activityInstance !== null) {
+    // TODO: Implement dehydrated Activity state.
+    // TODO: Delete this from stateNode. It's only used to skip past it.
+    fiber.stateNode = activityInstance;
+    hydrationParentFiber = fiber;
+    nextHydratableInstance =
+      getFirstHydratableChildWithinActivityInstance(activityInstance);
+  }
+  return activityInstance;
+}
+
+function tryHydrateSuspense(
+  fiber: Fiber,
+  nextInstance: any,
+): null | SuspenseInstance {
   // fiber is a SuspenseComponent Fiber
   const suspenseInstance = canHydrateSuspenseInstance(
     nextInstance,
@@ -298,9 +326,8 @@ function tryHydrateSuspense(fiber: Fiber, nextInstance: any) {
     // While a Suspense Instance does have children, we won't step into
     // it during the first pass. Instead, we'll reenter it later.
     nextHydratableInstance = null;
-    return true;
   }
-  return false;
+  return suspenseInstance;
 }
 
 export const HydrationMismatchException: mixed = new Error(
@@ -308,7 +335,7 @@ export const HydrationMismatchException: mixed = new Error(
     "userspace. If you're seeing this, it's likely a bug in React.",
 );
 
-function throwOnHydrationMismatch(fiber: Fiber) {
+function throwOnHydrationMismatch(fiber: Fiber, fromText: boolean = false) {
   let diff = '';
   if (__DEV__) {
     // Consume the diff root for this mismatch.
@@ -320,7 +347,8 @@ function throwOnHydrationMismatch(fiber: Fiber) {
     }
   }
   const error = new Error(
-    "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n" +
+    `Hydration failed because the server rendered ${fromText ? 'text' : 'HTML'} didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+` +
       '\n' +
       "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
       "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
@@ -422,15 +450,28 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
   }
 }
 
-function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
-  if (!isHydrating) {
-    return;
-  }
+function claimNextHydratableActivityInstance(fiber: Fiber): ActivityInstance {
   const nextInstance = nextHydratableInstance;
-  if (!nextInstance || !tryHydrateSuspense(fiber, nextInstance)) {
+  const activityInstance = nextInstance
+    ? tryHydrateActivity(fiber, nextInstance)
+    : null;
+  if (activityInstance === null) {
     warnNonHydratedInstance(fiber, nextInstance);
-    throwOnHydrationMismatch(fiber);
+    throw throwOnHydrationMismatch(fiber);
   }
+  return activityInstance;
+}
+
+function claimNextHydratableSuspenseInstance(fiber: Fiber): SuspenseInstance {
+  const nextInstance = nextHydratableInstance;
+  const suspenseInstance = nextInstance
+    ? tryHydrateSuspense(fiber, nextInstance)
+    : null;
+  if (suspenseInstance === null) {
+    warnNonHydratedInstance(fiber, nextInstance);
+    throw throwOnHydrationMismatch(fiber);
+  }
+  return suspenseInstance;
 }
 
 export function tryToClaimNextHydratableFormMarkerInstance(
@@ -481,7 +522,7 @@ function prepareToHydrateHostInstance(
     fiber,
   );
   if (!didHydrate && favorSafetyOverHydrationPerf) {
-    throwOnHydrationMismatch(fiber);
+    throwOnHydrationMismatch(fiber, true);
   }
 }
 
@@ -547,7 +588,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
     parentProps,
   );
   if (!didHydrate && favorSafetyOverHydrationPerf) {
-    throwOnHydrationMismatch(fiber);
+    throwOnHydrationMismatch(fiber, true);
   }
 }
 
@@ -571,6 +612,11 @@ function prepareToHydrateHostSuspenseInstance(fiber: Fiber): void {
   }
 
   hydrateSuspenseInstance(suspenseInstance, fiber);
+}
+function skipPastDehydratedActivityInstance(
+  fiber: Fiber,
+): null | HydratableInstance {
+  return getNextHydratableInstanceAfterActivityInstance(fiber.stateNode);
 }
 
 function skipPastDehydratedSuspenseInstance(
@@ -607,6 +653,8 @@ function popToNextHostParent(fiber: Fiber): void {
       case HostSingleton:
       case HostRoot:
         rootOrSingletonContext = true;
+        return;
+      case ActivityComponent:
         return;
       default:
         hydrationParentFiber = hydrationParentFiber.return;
@@ -673,6 +721,8 @@ function popHydrationState(fiber: Fiber): boolean {
   popToNextHostParent(fiber);
   if (tag === SuspenseComponent) {
     nextHydratableInstance = skipPastDehydratedSuspenseInstance(fiber);
+  } else if (tag === ActivityComponent) {
+    nextHydratableInstance = skipPastDehydratedActivityInstance(fiber);
   } else if (supportsSingletons && tag === HostSingleton) {
     nextHydratableInstance = getNextHydratableSiblingAfterSingleton(
       fiber.type,
@@ -789,7 +839,8 @@ export {
   claimHydratableSingleton,
   tryToClaimNextHydratableInstance,
   tryToClaimNextHydratableTextInstance,
-  tryToClaimNextHydratableSuspenseInstance,
+  claimNextHydratableActivityInstance,
+  claimNextHydratableSuspenseInstance,
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,

@@ -19,6 +19,7 @@ export {
   parsePluginOptions,
   OPT_OUT_DIRECTIVES,
   OPT_IN_DIRECTIVES,
+  ProgramContext,
   findDirectiveEnablingMemoization,
   findDirectiveDisablingMemoization,
   type CompilerPipelineValue,
@@ -31,13 +32,17 @@ export {
   ValueKind,
   parseConfigPragmaForTests,
   printHIR,
+  printFunctionWithOutlined,
   validateEnvironmentConfig,
   type EnvironmentConfig,
   type ExternalFunction,
   type Hook,
   type SourceLocation,
 } from './HIR';
-export {printReactiveFunction} from './ReactiveScopes';
+export {
+  printReactiveFunction,
+  printReactiveFunctionWithOutlined,
+} from './ReactiveScopes';
 declare global {
   let __DEV__: boolean | null | undefined;
 }

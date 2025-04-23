@@ -62,16 +62,18 @@ export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const enableFabricCompleteRootInCommitPhase = false;
 export const enableSiblingPrerendering = true;
-export const enableUseEffectCRUDOverload = true;
 export const enableHydrationLaneScheduling = true;
 export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
-export const enableSwipeTransition = false;
+export const enableGestureTransition = false;
 export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
+export const enableSuspenseyImages = false;
+export const enableSrcObject = false;
 export const enableFragmentRefs = false;
+export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

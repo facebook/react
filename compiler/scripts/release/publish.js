@@ -62,8 +62,14 @@ async function main() {
     .option('tag', {
       description: 'Tag to publish to npm',
       type: 'choices',
-      choices: ['experimental', 'beta'],
+      choices: ['experimental', 'beta', 'rc'],
       default: 'experimental',
+    })
+    .option('tag-version', {
+      description:
+        'Optional tag version to append to tag name, eg `1` becomes 0.0.0-rc.1',
+      type: 'number',
+      default: null,
     })
     .option('version-name', {
       description: 'Version name',
@@ -133,7 +139,13 @@ async function main() {
       files: {exclude: ['.DS_Store']},
     });
     const truncatedHash = hash.slice(0, 7);
-    const newVersion = `${argv.versionName}-${argv.tag}-${truncatedHash}-${dateString}`;
+    let newVersion =
+      argv.tagVersion == null || argv.tagVersion === ''
+        ? `${argv.versionName}-${argv.tag}`
+        : `${argv.versionName}-${argv.tag}.${argv.tagVersion}`;
+    if (argv.tag === 'experimental' || argv.tag === 'beta') {
+      newVersion = `${newVersion}-${truncatedHash}-${dateString}`;
+    }
 
     for (const pkgName of pkgNames) {
       const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);

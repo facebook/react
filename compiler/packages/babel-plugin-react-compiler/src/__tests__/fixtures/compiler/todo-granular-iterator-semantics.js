@@ -1,7 +1,7 @@
 import {useIdentity, ValidateMemoization} from 'shared-runtime';
 
 /**
- * TODO fixture for granular iterator semantics:
+ * Fixture for granular iterator semantics:
  * 1. ConditionallyMutate the iterator itself, depending on whether the iterator
  *    is a mutable iterator.
  * 2. Capture effect on elements within the iterator.
@@ -22,7 +22,7 @@ function Validate({x, input}) {
 function useFoo(input) {
   'use memo';
   /**
-   * TODO: We should be able to memoize {} separately from `x`.
+   * We should be able to memoize {} separately from `x`.
    */
   const x = Array.from([{}]);
   useIdentity();

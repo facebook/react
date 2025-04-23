@@ -17,8 +17,8 @@ import type {
   Awaited,
   ReactComponentInfo,
   ReactDebugInfo,
-  StartGesture,
 } from 'shared/ReactTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
@@ -29,14 +29,13 @@ import type {
   Instance,
   TimeoutHandle,
   NoTimeout,
+  ActivityInstance,
   SuspenseInstance,
   TransitionStatus,
 } from './ReactFiberConfig';
 import type {Cache} from './ReactFiberCacheComponent';
-import type {
-  TracingMarkerInstance,
-  Transition,
-} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
 import type {ComponentStackNode} from 'react-server/src/ReactFizzComponentStack';
 import type {ThenableState} from './ReactFiberThenable';
@@ -63,8 +62,7 @@ export type HookType =
   | 'useCacheRefresh'
   | 'useOptimistic'
   | 'useFormState'
-  | 'useActionState'
-  | 'useSwipeTransition';
+  | 'useActionState';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -284,7 +282,9 @@ type BaseFiberRootProperties = {
 
   formState: ReactFormState<any, any> | null,
 
-  // enableSwipeTransition only
+  // enableViewTransition only
+  transitionTypes: null | TransitionTypes, // TODO: Make this a LaneMap.
+  // enableGestureTransition only
   pendingGestures: null | ScheduledGesture,
   stoppingGestures: null | ScheduledGesture,
   gestureClone: null | Instance,
@@ -298,8 +298,10 @@ type UpdaterTrackingOnlyFiberRootProperties = {
 };
 
 export type SuspenseHydrationCallbacks = {
-  onHydrated?: (suspenseInstance: SuspenseInstance) => void,
-  onDeleted?: (suspenseInstance: SuspenseInstance) => void,
+  +onHydrated?: (
+    hydrationBoundary: SuspenseInstance | ActivityInstance,
+  ) => void,
+  +onDeleted?: (hydrationBoundary: SuspenseInstance | ActivityInstance) => void,
   ...
 };
 
@@ -358,7 +360,7 @@ export type TransitionTracingCallbacks = {
 // The following fields are only used in transition tracing in Profile builds
 type TransitionTracingOnlyFiberRootProperties = {
   transitionCallbacks: null | TransitionTracingCallbacks,
-  transitionLanes: Array<Set<Transition> | null>,
+  transitionLanes: LaneMap<Set<Transition> | null>,
   // Transitions on the root can be represented as a bunch of tracing markers.
   // Each entangled group of transitions can be treated as a tracing marker.
   // It will have a set of pending suspense boundaries. These transitions
@@ -399,11 +401,8 @@ export type Dispatcher = {
   useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {current: T},
   useEffect(
-    create: (() => (() => void) | void) | (() => {...} | void | null),
-    createDeps: Array<mixed> | void | null,
-    update?: ((resource: {...} | void | null) => void) | void,
-    updateDeps?: Array<mixed> | void | null,
-    destroy?: ((resource: {...} | void | null) => void) | void,
+    create: () => (() => void) | void,
+    deps: Array<mixed> | void | null,
   ): void,
   // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
   useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
@@ -451,12 +450,6 @@ export type Dispatcher = {
     initialState: Awaited<S>,
     permalink?: string,
   ) => [Awaited<S>, (P) => void, boolean],
-  // TODO: Non-nullable once `enableSwipeTransition` is on everywhere.
-  useSwipeTransition?: <T>(
-    previous: T,
-    current: T,
-    next: T,
-  ) => [T, StartGesture],
 };
 
 export type AsyncDispatcher = {

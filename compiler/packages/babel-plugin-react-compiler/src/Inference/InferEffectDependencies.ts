@@ -17,6 +17,7 @@ import {
   ReactiveScopeDependencies,
   isUseRefType,
   isSetStateType,
+  isFireFunctionType,
 } from '../HIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {
@@ -189,9 +190,10 @@ export function inferEffectDependencies(fn: HIRFunction): void {
              */
             for (const dep of scopeInfo.deps) {
               if (
-                (isUseRefType(dep.identifier) ||
+                ((isUseRefType(dep.identifier) ||
                   isSetStateType(dep.identifier)) &&
-                !reactiveIds.has(dep.identifier.id)
+                  !reactiveIds.has(dep.identifier.id)) ||
+                isFireFunctionType(dep.identifier)
               ) {
                 // exclude non-reactive hook results, which will never be in a memo block
                 continue;
@@ -217,6 +219,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
             // Step 2: push the inferred deps array as an argument of the useEffect
             value.args.push({...depsPlace, effect: Effect.Freeze});
             rewriteInstrs.set(instr.id, newInstructions);
+            fn.env.inferredEffectLocations.add(callee.loc);
           } else if (loadGlobals.has(value.args[0].identifier.id)) {
             // Global functions have no reactive dependencies, so we can insert an empty array
             newInstructions.push({
@@ -227,6 +230,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
             });
             value.args.push({...depsPlace, effect: Effect.Freeze});
             rewriteInstrs.set(instr.id, newInstructions);
+            fn.env.inferredEffectLocations.add(callee.loc);
           }
         }
       }
@@ -249,6 +253,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
     // Renumber instructions and fix scope ranges
     markInstructionIds(fn.body);
     fixScopeAndIdentifierRanges(fn.body);
+    fn.env.hasInferredEffect = true;
   }
 }
 

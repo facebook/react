@@ -8,7 +8,12 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Container, SuspenseInstance, Instance} from './ReactFiberConfig';
+import type {
+  Container,
+  ActivityInstance,
+  SuspenseInstance,
+  Instance,
+} from './ReactFiberConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
@@ -71,6 +76,13 @@ export function getSuspenseInstanceFromFiber(
       return suspenseState.dehydrated;
     }
   }
+  return null;
+}
+
+export function getActivityInstanceFromFiber(
+  fiber: Fiber,
+): null | ActivityInstance {
+  // TODO: Implement this on ActivityComponent.
   return null;
 }
 
@@ -326,7 +338,7 @@ export function traverseFragmentInstance<A, B, C>(
   b: B,
   c: C,
 ): void {
-  return traverseFragmentInstanceChildren(fragmentFiber.child, fn, a, b, c);
+  traverseFragmentInstanceChildren(fragmentFiber.child, fn, a, b, c);
 }
 
 function traverseFragmentInstanceChildren<A, B, C>(
@@ -351,4 +363,19 @@ function traverseFragmentInstanceChildren<A, B, C>(
     }
     child = child.sibling;
   }
+}
+
+export function getFragmentParentHostInstance(fiber: Fiber): null | Instance {
+  let parent = fiber.return;
+  while (parent !== null) {
+    if (parent.tag === HostRoot) {
+      return parent.stateNode.containerInfo;
+    }
+    if (parent.tag === HostComponent) {
+      return parent.stateNode;
+    }
+    parent = parent.return;
+  }
+
+  return null;
 }

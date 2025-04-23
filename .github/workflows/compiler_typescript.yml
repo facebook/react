@@ -8,6 +8,8 @@ on:
       - compiler/**
       - .github/workflows/compiler_typescript.yml
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
@@ -45,11 +47,13 @@ jobs:
           cache-dependency-path: compiler/yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
+        id: node_modules
         with:
           path: |
             **/node_modules
-          key: compiler-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
+          key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn workspace babel-plugin-react-compiler lint
 
   # Hardcoded to improve parallelism
@@ -69,8 +73,9 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: compiler-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
+          key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn workspace babel-plugin-react-compiler jest
 
   test:
@@ -94,8 +99,9 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: compiler-node_modules-v5-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
+          key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: xvfb-run -a yarn workspace ${{ matrix.workspace_name }} test
         if: runner.os == 'Linux' && matrix.workspace_name == 'react-forgive'
       - run: yarn workspace ${{ matrix.workspace_name }} test

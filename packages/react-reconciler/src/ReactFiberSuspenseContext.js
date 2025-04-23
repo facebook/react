@@ -7,10 +7,10 @@
  * @flow
  */
 
+import type {SuspenseProps} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack';
-import type {SuspenseProps, SuspenseState} from './ReactFiberSuspenseComponent';
-import type {OffscreenState} from './ReactFiberActivityComponent';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
 import {createCursor, push, pop} from './ReactFiberStack';
@@ -114,19 +114,10 @@ export function pushOffscreenSuspenseHandler(fiber: Fiber): void {
     // into separate functions for Suspense and Offscreen.
     pushSuspenseListContext(fiber, suspenseStackCursor.current);
     push(suspenseHandlerStackCursor, fiber, fiber);
-    if (shellBoundary !== null) {
-      // A parent boundary is showing a fallback, so we've already rendered
-      // deeper than the shell.
-    } else {
-      const current = fiber.alternate;
-      if (current !== null) {
-        const prevState: OffscreenState = current.memoizedState;
-        if (prevState !== null) {
-          // This is the first boundary in the stack that's already showing
-          // a fallback. So everything outside is considered the shell.
-          shellBoundary = fiber;
-        }
-      }
+    if (shellBoundary === null) {
+      // We're rendering hidden content. If it suspends, we can handle it by
+      // just not committing the offscreen boundary.
+      shellBoundary = fiber;
     }
   } else {
     // This is a LegacyHidden component.

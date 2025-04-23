@@ -1455,6 +1455,11 @@ function lowerObjectPropertyKey(
       kind: 'identifier',
       name: key.node.name,
     };
+  } else if (key.isNumericLiteral()) {
+    return {
+      kind: 'identifier',
+      name: String(key.node.value),
+    };
   }
 
   builder.errors.push({
@@ -2401,6 +2406,19 @@ function lowerExpression(
         kind: 'TypeCastExpression',
         value: lowerExpressionToTemporary(builder, expr.get('expression')),
         typeAnnotation: typeAnnotation.node,
+        typeAnnotationKind: 'cast',
+        type: lowerType(typeAnnotation.node),
+        loc: exprLoc,
+      };
+    }
+    case 'TSSatisfiesExpression': {
+      let expr = exprPath as NodePath<t.TSSatisfiesExpression>;
+      const typeAnnotation = expr.get('typeAnnotation');
+      return {
+        kind: 'TypeCastExpression',
+        value: lowerExpressionToTemporary(builder, expr.get('expression')),
+        typeAnnotation: typeAnnotation.node,
+        typeAnnotationKind: 'satisfies',
         type: lowerType(typeAnnotation.node),
         loc: exprLoc,
       };
@@ -2412,6 +2430,7 @@ function lowerExpression(
         kind: 'TypeCastExpression',
         value: lowerExpressionToTemporary(builder, expr.get('expression')),
         typeAnnotation: typeAnnotation.node,
+        typeAnnotationKind: 'as',
         type: lowerType(typeAnnotation.node),
         loc: exprLoc,
       };
