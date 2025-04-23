@@ -31,21 +31,8 @@ This will pre-build all static resources and then start a server-side rendering 
 
 ## Deploy
 
-TODO: How to create own project
+Deployed to https://react-fixture-view-transition-six.vercel.app
+Dashboard: https://vercel.com/react-fixtures/react-fixture-view-transition.
 
-Existing Vercel project (ask Sebbie for invite):
-- project: https://vercel.com/solverfox/react-fixture-view-transition/settings/build-and-deployment
-- production deploy: https://react-fixture-view-transition-six.vercel.app/ there's a `-six` in the URL :(
-
-```console
-$ yarn
-$ yarn build-for-vt-deploy
-$ cd fixtures/view-transition
-$ yarn
-# Make sure you have global Vercel CLI installed e.g. `yarn global add vercel`
-$ vc link
-# Team: solverfox
-# project: react-fixture-view-transition
-$ yarn vc-build
-$ yarn vc-deploy
-```
+Ask a member of React Core team for access if you need it.
+Deployments should be public and happen automatically on PRs except those only targetting `compiler/`.
