@@ -10,6 +10,7 @@
 import type {
   Instance,
   TextInstance,
+  ActivityInstance,
   SuspenseInstance,
   Container,
   ChildSet,
@@ -48,6 +49,7 @@ import {
   unhideInstance,
   unhideTextInstance,
   commitHydratedContainer,
+  commitHydratedActivityInstance,
   commitHydratedSuspenseInstance,
   removeChildFromContainer,
   removeChild,
@@ -676,6 +678,25 @@ export function commitHostHydratedContainer(
       );
     } else {
       commitHydratedContainer(root.containerInfo);
+    }
+  } catch (error) {
+    captureCommitPhaseError(finishedWork, finishedWork.return, error);
+  }
+}
+
+export function commitHostHydratedActivity(
+  activityInstance: ActivityInstance,
+  finishedWork: Fiber,
+) {
+  try {
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        commitHydratedActivityInstance,
+        activityInstance,
+      );
+    } else {
+      commitHydratedActivityInstance(activityInstance);
     }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);

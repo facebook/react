@@ -12,6 +12,7 @@ import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 import type {Wakeable, Thenable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
+import type {ActivityState} from './ReactFiberActivityComponent';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {Transition} from 'react/src/ReactStartTransition';
@@ -124,6 +125,7 @@ import {
 import {
   HostRoot,
   ClassComponent,
+  ActivityComponent,
   SuspenseComponent,
   SuspenseListComponent,
   OffscreenComponent,
@@ -4489,9 +4491,11 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
   let retryLane: Lane = NoLane; // Default
   let retryCache: WeakSet<Wakeable> | Set<Wakeable> | null;
   switch (boundaryFiber.tag) {
+    case ActivityComponent:
     case SuspenseComponent:
       retryCache = boundaryFiber.stateNode;
-      const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
+      const suspenseState: null | SuspenseState | ActivityState =
+        boundaryFiber.memoizedState;
       if (suspenseState !== null) {
         retryLane = suspenseState.retryLane;
       }

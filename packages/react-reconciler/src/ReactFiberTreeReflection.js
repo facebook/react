@@ -14,6 +14,7 @@ import type {
   SuspenseInstance,
   Instance,
 } from './ReactFiberConfig';
+import type {ActivityState} from './ReactFiberActivityComponent';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
@@ -23,6 +24,7 @@ import {
   HostRoot,
   HostPortal,
   HostText,
+  ActivityComponent,
   SuspenseComponent,
   OffscreenComponent,
 } from './ReactWorkTags';
@@ -82,6 +84,18 @@ export function getSuspenseInstanceFromFiber(
 export function getActivityInstanceFromFiber(
   fiber: Fiber,
 ): null | ActivityInstance {
+  if (fiber.tag === ActivityComponent) {
+    let activityState: ActivityState | null = fiber.memoizedState;
+    if (activityState === null) {
+      const current = fiber.alternate;
+      if (current !== null) {
+        activityState = current.memoizedState;
+      }
+    }
+    if (activityState !== null) {
+      return activityState.dehydrated;
+    }
+  }
   // TODO: Implement this on ActivityComponent.
   return null;
 }

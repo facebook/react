@@ -22,6 +22,7 @@ import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes, Lane} from './ReactFiberLane';
+import type {ActivityState} from './ReactFiberActivityComponent';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -185,7 +186,7 @@ import {
   createHoistableInstance,
   HostTransitionContext,
 } from './ReactFiberConfig';
-import type {SuspenseInstance} from './ReactFiberConfig';
+import type {ActivityInstance, SuspenseInstance} from './ReactFiberConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
 import {
   pushHostContext,
@@ -201,8 +202,10 @@ import {
   setShallowSuspenseListContext,
   pushPrimaryTreeSuspenseHandler,
   pushFallbackTreeSuspenseHandler,
+  pushDehydratedActivitySuspenseHandler,
   pushOffscreenSuspenseHandler,
   reuseSuspenseHandlerOnStack,
+  popSuspenseHandler,
 } from './ReactFiberSuspenseContext';
 import {
   pushHiddenContext,
@@ -239,6 +242,7 @@ import {
 import {
   getIsHydrating,
   enterHydrationState,
+  reenterHydrationStateFromDehydratedActivityInstance,
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
   claimHydratableSingleton,
@@ -713,14 +717,7 @@ function updateOffscreenComponent(
       }
       reuseHiddenContextOnStack(workInProgress);
       pushOffscreenSuspenseHandler(workInProgress);
-    } else if (
-      !includesSomeLane(renderLanes, (OffscreenLane: Lane)) ||
-      // SSR doesn't render hidden content (except legacy hidden) so it shouldn't hydrate,
-      // even at offscreen lane. Defer to a client rendered offscreen lane.
-      (getIsHydrating() &&
-        (!enableLegacyHidden ||
-          nextProps.mode !== 'unstable-defer-without-hiding'))
-    ) {
+    } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
       // We're hidden, and we're not rendering at Offscreen. We will bail out
       // and resume this tree later.
 
@@ -875,12 +872,11 @@ function updateLegacyHiddenComponent(
   );
 }
 
-function updateActivityComponent(
-  current: null | Fiber,
+function mountActivityChildren(
   workInProgress: Fiber,
+  nextProps: ActivityProps,
   renderLanes: Lanes,
 ) {
-  const nextProps: ActivityProps = workInProgress.pendingProps;
   if (__DEV__) {
     const hiddenProp = (nextProps: any).hidden;
     if (hiddenProp !== undefined) {
@@ -904,24 +900,267 @@ function updateActivityComponent(
     mode: nextMode,
     children: nextChildren,
   };
+  const primaryChildFragment = mountWorkInProgressOffscreenFiber(
+    offscreenChildProps,
+    mode,
+    renderLanes,
+  );
+  primaryChildFragment.ref = workInProgress.ref;
+  workInProgress.child = primaryChildFragment;
+  primaryChildFragment.return = workInProgress;
+  return primaryChildFragment;
+}
 
-  if (current === null) {
-    if (getIsHydrating()) {
-      claimNextHydratableActivityInstance(workInProgress);
+function retryActivityComponentWithoutHydrating(
+  current: Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  // Falling back to client rendering. Because this has performance
+  // implications, it's considered a recoverable error, even though the user
+  // likely won't observe anything wrong with the UI.
+
+  // This will add the old fiber to the deletion list
+  reconcileChildFibers(workInProgress, current.child, null, renderLanes);
+
+  // We're now not suspended nor dehydrated.
+  const nextProps: ActivityProps = workInProgress.pendingProps;
+  const primaryChildFragment = mountActivityChildren(
+    workInProgress,
+    nextProps,
+    renderLanes,
+  );
+  // Needs a placement effect because the parent (the Activity boundary) already
+  // mounted but this is a new fiber.
+  primaryChildFragment.flags |= Placement;
+
+  // If we're not going to hydrate we can't leave it dehydrated if something
+  // suspends. In that case we want that to bubble to the nearest parent boundary
+  // so we need to pop our own handler that we just pushed.
+  popSuspenseHandler(workInProgress);
+
+  workInProgress.memoizedState = null;
+
+  return primaryChildFragment;
+}
+
+function mountDehydratedActivityComponent(
+  workInProgress: Fiber,
+  activityInstance: ActivityInstance,
+  renderLanes: Lanes,
+): null | Fiber {
+  // During the first pass, we'll bail out and not drill into the children.
+  // Instead, we'll leave the content in place and try to hydrate it later.
+  // We'll continue hydrating the rest at offscreen priority since we'll already
+  // be showing the right content coming from the server, it is no rush.
+  workInProgress.lanes = laneToLanes(OffscreenLane);
+  return null;
+}
+
+function updateDehydratedActivityComponent(
+  current: Fiber,
+  workInProgress: Fiber,
+  didSuspend: boolean,
+  nextProps: ActivityProps,
+  activityInstance: ActivityInstance,
+  activityState: ActivityState,
+  renderLanes: Lanes,
+): null | Fiber {
+  // We'll handle suspending since if something suspends we can just leave
+  // it dehydrated. We push early and then pop if we enter non-dehydrated attempts.
+  pushDehydratedActivitySuspenseHandler(workInProgress);
+  if (!didSuspend) {
+    // This is the first render pass. Attempt to hydrate.
+
+    // We should never be hydrating at this point because it is the first pass,
+    // but after we've already committed once.
+    warnIfHydrating();
+
+    if (
+      // TODO: Factoring is a little weird, since we check this right below, too.
+      !didReceiveUpdate
+    ) {
+      // We need to check if any children have context before we decide to bail
+      // out, so propagate the changes now.
+      lazilyPropagateParentContextChanges(current, workInProgress, renderLanes);
     }
 
-    const primaryChildFragment = mountWorkInProgressOffscreenFiber(
-      offscreenChildProps,
-      mode,
-      renderLanes,
-    );
-    primaryChildFragment.ref = workInProgress.ref;
-    workInProgress.child = primaryChildFragment;
-    primaryChildFragment.return = workInProgress;
+    // We use lanes to indicate that a child might depend on context, so if
+    // any context has changed, we need to treat is as if the input might have changed.
+    const hasContextChanged = includesSomeLane(renderLanes, current.childLanes);
+    if (didReceiveUpdate || hasContextChanged) {
+      // This boundary has changed since the first render. This means that we are now unable to
+      // hydrate it. We might still be able to hydrate it using a higher priority lane.
+      const root = getWorkInProgressRoot();
+      if (root !== null) {
+        const attemptHydrationAtLane = getBumpedLaneForHydration(
+          root,
+          renderLanes,
+        );
+        if (
+          attemptHydrationAtLane !== NoLane &&
+          attemptHydrationAtLane !== activityState.retryLane
+        ) {
+          // Intentionally mutating since this render will get interrupted. This
+          // is one of the very rare times where we mutate the current tree
+          // during the render phase.
+          activityState.retryLane = attemptHydrationAtLane;
+          enqueueConcurrentRenderForLane(current, attemptHydrationAtLane);
+          scheduleUpdateOnFiber(root, current, attemptHydrationAtLane);
 
-    return primaryChildFragment;
+          // Throw a special object that signals to the work loop that it should
+          // interrupt the current render.
+          //
+          // Because we're inside a React-only execution stack, we don't
+          // strictly need to throw here — we could instead modify some internal
+          // work loop state. But using an exception means we don't need to
+          // check for this case on every iteration of the work loop. So doing
+          // it this way moves the check out of the fast path.
+          throw SelectiveHydrationException;
+        } else {
+          // We have already tried to ping at a higher priority than we're rendering with
+          // so if we got here, we must have failed to hydrate at those levels. We must
+          // now give up. Instead, we're going to delete the whole subtree and instead inject
+          // a new real Activity boundary to take its place. This might suspend for a while
+          // and if it does we might still have an opportunity to hydrate before this pass
+          // commits.
+        }
+      }
+
+      // If we did not selectively hydrate, we'll continue rendering without
+      // hydrating. Mark this tree as suspended to prevent it from committing
+      // outside a transition.
+      //
+      // This path should only happen if the hydration lane already suspended.
+      renderDidSuspendDelayIfPossible();
+      return retryActivityComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+      );
+    } else {
+      // This is the first attempt.
+
+      reenterHydrationStateFromDehydratedActivityInstance(
+        workInProgress,
+        activityInstance,
+        activityState.treeContext,
+      );
+
+      const primaryChildFragment = mountActivityChildren(
+        workInProgress,
+        nextProps,
+        renderLanes,
+      );
+      // Mark the children as hydrating. This is a fast path to know whether this
+      // tree is part of a hydrating tree. This is used to determine if a child
+      // node has fully mounted yet, and for scheduling event replaying.
+      // Conceptually this is similar to Placement in that a new subtree is
+      // inserted into the React tree here. It just happens to not need DOM
+      // mutations because it already exists.
+      primaryChildFragment.flags |= Hydrating;
+      return primaryChildFragment;
+    }
   } else {
+    // This is the second render pass. We already attempted to hydrated, but
+    // something either suspended or errored.
+
+    if (workInProgress.flags & ForceClientRender) {
+      // Something errored during hydration. Try again without hydrating.
+      // The error should've already been logged in throwException.
+      workInProgress.flags &= ~ForceClientRender;
+      return retryActivityComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+      );
+    } else if ((workInProgress.memoizedState: null | ActivityState) !== null) {
+      // Something suspended and we should still be in dehydrated mode.
+      // Leave the existing child in place.
+
+      workInProgress.child = current.child;
+      // The dehydrated completion pass expects this flag to be there
+      // but the normal offscreen pass doesn't.
+      workInProgress.flags |= DidCapture;
+      return null;
+    } else {
+      // We called retryActivityComponentWithoutHydrating and tried client rendering
+      // but now we suspended again. We should never arrive here because we should
+      // not have pushed a suspense handler during that second pass and it should
+      // instead have suspended above.
+      throw new Error(
+        'Client rendering an Activity suspended it again. This is a bug in React.',
+      );
+    }
+  }
+}
+
+function updateActivityComponent(
+  current: null | Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  const nextProps: ActivityProps = workInProgress.pendingProps;
+
+  // Check if the first pass suspended.
+  const didSuspend = (workInProgress.flags & DidCapture) !== NoFlags;
+  workInProgress.flags &= ~DidCapture;
+
+  if (current === null) {
+    // Initial mount
+
+    // Special path for hydration
+    // If we're currently hydrating, try to hydrate this boundary.
+    // Hidden Activity boundaries are not emitted on the server.
+    if (getIsHydrating()) {
+      if (nextProps.mode === 'hidden') {
+        // SSR doesn't render hidden Activity so it shouldn't hydrate,
+        // even at offscreen lane. Defer to a client rendered offscreen lane.
+        mountActivityChildren(workInProgress, nextProps, renderLanes);
+        workInProgress.lanes = laneToLanes(OffscreenLane);
+        return null;
+      } else {
+        // We must push the suspense handler context *before* attempting to
+        // hydrate, to avoid a mismatch in case it errors.
+        pushDehydratedActivitySuspenseHandler(workInProgress);
+        const dehydrated: ActivityInstance =
+          claimNextHydratableActivityInstance(workInProgress);
+        return mountDehydratedActivityComponent(
+          workInProgress,
+          dehydrated,
+          renderLanes,
+        );
+      }
+    }
+
+    return mountActivityChildren(workInProgress, nextProps, renderLanes);
+  } else {
+    // This is an update.
+
+    // Special path for hydration
+    const prevState: null | ActivityState = current.memoizedState;
+
+    if (prevState !== null) {
+      const dehydrated = prevState.dehydrated;
+      return updateDehydratedActivityComponent(
+        current,
+        workInProgress,
+        didSuspend,
+        nextProps,
+        dehydrated,
+        prevState,
+        renderLanes,
+      );
+    }
+
     const currentChild: Fiber = (current.child: any);
+
+    const nextChildren = nextProps.children;
+    const nextMode = nextProps.mode;
+    const offscreenChildProps: OffscreenProps = {
+      mode: nextMode,
+      children: nextChildren,
+    };
 
     const primaryChildFragment = updateWorkInProgressOffscreenFiber(
       currentChild,
@@ -2801,11 +3040,6 @@ function updateDehydratedSuspenseComponent(
       // outside a transition.
       //
       // This path should only happen if the hydration lane already suspended.
-      // Currently, it also happens during sync updates because there is no
-      // hydration lane for sync updates.
-      // TODO: We should ideally have a sync hydration lane that we can apply to do
-      // a pass where we hydrate this subtree in place using the previous Context and then
-      // reapply the update afterwards.
       if (isSuspenseInstancePending(suspenseInstance)) {
         // This is a dehydrated suspense instance. We don't need to suspend
         // because we're already showing a fallback.
@@ -3705,6 +3939,20 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         }
       }
       break;
+    case ActivityComponent: {
+      const state: ActivityState | null = workInProgress.memoizedState;
+      if (state !== null) {
+        // We're dehydrated so we're not going to render the children. This is just
+        // to maintain push/pop symmetry.
+        // We know that this component will suspend again because if it has
+        // been unsuspended it has committed as a hydrated Activity component.
+        // If it needs to be retried, it should have work scheduled on it.
+        workInProgress.flags |= DidCapture;
+        pushDehydratedActivitySuspenseHandler(workInProgress);
+        return null;
+      }
+      break;
+    }
     case SuspenseComponent: {
       const state: SuspenseState | null = workInProgress.memoizedState;
       if (state !== null) {

@@ -20,7 +20,7 @@ import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
-import type {SuspenseInstance} from './ReactFiberConfig';
+import type {ActivityInstance, SuspenseInstance} from './ReactFiberConfig';
 import type {
   LegacyHiddenProps,
   OffscreenProps,
@@ -951,7 +951,7 @@ export function createFiberFromText(
 }
 
 export function createFiberFromDehydratedFragment(
-  dehydratedNode: SuspenseInstance,
+  dehydratedNode: SuspenseInstance | ActivityInstance,
 ): Fiber {
   const fiber = createFiber(DehydratedFragment, null, null, NoMode);
   fiber.stateNode = dehydratedNode;
