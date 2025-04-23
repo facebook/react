@@ -1354,4 +1354,285 @@ describe('ReactFlightDOMEdge', () => {
     expect(error).not.toBe(null);
     expect(error.message).toBe('Connection closed.');
   });
+
+  // @gate experimental
+  it('should be able to handle a rejected promise in unstable_prerender', async () => {
+    const expectedError = new Error('Bam!');
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      Promise.reject(expectedError),
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([expectedError]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let error = null;
+    try {
+      await response;
+    } catch (x) {
+      error = x;
+    }
+
+    const expectedMessage = __DEV__
+      ? expectedError.message
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    expect(error).not.toBe(null);
+    expect(error.message).toBe(expectedMessage);
+  });
+
+  // @gate experimental
+  it('should be able to handle an erroring async iterable in unstable_prerender', async () => {
+    const expectedError = new Error('Bam!');
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      {
+        async *[Symbol.asyncIterator]() {
+          await serverAct(() => {
+            throw expectedError;
+          });
+        },
+      },
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([expectedError]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let error = null;
+    try {
+      const result = await response;
+      const iterator = result[Symbol.asyncIterator]();
+      await iterator.next();
+    } catch (x) {
+      error = x;
+    }
+
+    const expectedMessage = __DEV__
+      ? expectedError.message
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    expect(error).not.toBe(null);
+    expect(error.message).toBe(expectedMessage);
+  });
+
+  // @gate experimental
+  it('should be able to handle an erroring readable stream in unstable_prerender', async () => {
+    const expectedError = new Error('Bam!');
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      new ReadableStream({
+        async start(controller) {
+          await serverAct(() => {
+            setTimeout(() => {
+              controller.error(expectedError);
+            });
+          });
+        },
+      }),
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([expectedError]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let error = null;
+    try {
+      const stream = await response;
+      await stream.getReader().read();
+    } catch (x) {
+      error = x;
+    }
+
+    const expectedMessage = __DEV__
+      ? expectedError.message
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    expect(error).not.toBe(null);
+    expect(error.message).toBe(expectedMessage);
+  });
+
+  // @gate experimental
+  it('can prerender an async iterable', async () => {
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      {
+        async *[Symbol.asyncIterator]() {
+          yield 'hello';
+          yield ' ';
+          yield 'world';
+        },
+      },
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let text = '';
+    const result = await response;
+    const iterator = result[Symbol.asyncIterator]();
+
+    while (true) {
+      const {done, value} = await iterator.next();
+      if (done) {
+        break;
+      }
+      text += value;
+    }
+
+    expect(text).toBe('hello world');
+  });
+
+  // @gate experimental
+  it('can prerender a readable stream', async () => {
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue('hello world');
+          controller.close();
+        },
+      }),
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    const stream = await response;
+    const result = await readResult(stream);
+
+    expect(result).toBe('hello world');
+  });
+
+  // @gate experimental
+  it('does not return a prerender prelude early when an error is emitted and there are still pending tasks', async () => {
+    let rejectPromise;
+    const rejectingPromise = new Promise(
+      (resolve, reject) => (rejectPromise = reject),
+    );
+    const expectedError = new Error('Boom!');
+    const errors = [];
+
+    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+      [
+        rejectingPromise,
+        {
+          async *[Symbol.asyncIterator]() {
+            yield 'hello';
+            yield ' ';
+            await serverAct(() => {
+              rejectPromise(expectedError);
+            });
+            yield 'world';
+          },
+        },
+      ],
+      webpackMap,
+      {
+        onError(err) {
+          errors.push(err);
+        },
+      },
+    );
+
+    expect(errors).toEqual([expectedError]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    let text = '';
+    const [promise, iterable] = await response;
+    const iterator = iterable[Symbol.asyncIterator]();
+
+    while (true) {
+      const {done, value} = await iterator.next();
+      if (done) {
+        break;
+      }
+      text += value;
+    }
+
+    expect(text).toBe('hello world');
+
+    let error = null;
+    try {
+      await promise;
+    } catch (x) {
+      error = x;
+    }
+
+    const expectedMessage = __DEV__
+      ? expectedError.message
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    expect(error).not.toBe(null);
+    expect(error.message).toBe(expectedMessage);
+  });
 });
