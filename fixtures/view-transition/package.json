@@ -31,7 +31,7 @@
     "start": "react-scripts build && NODE_ENV=production node api",
     "build": "react-scripts build",
     "postinstall": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "vc-build": "yarn build && DISABLE_ESLINT_PLUGIN=true vercel build --prod",
+    "vc-build": "node scripts/vercel-build.js",
     "vc-deploy": "vercel deploy --prebuilt --prod",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
