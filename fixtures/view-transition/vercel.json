@@ -3,6 +3,7 @@
   "version": 2,
   "outputDirectory": "build/static",
   "buildCommand": "",
+  "ignoreCommand": "exit 1",
   "env": {
     "BABEL_DISABLE_CACHE": "1",
     "DISABLE_ESLINT_PLUGIN": "true"
