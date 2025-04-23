@@ -3,7 +3,7 @@
   "version": 2,
   "outputDirectory": "build/static",
   "buildCommand": "",
-  "ignoreCommand": "exit 1",
+  "ignoreCommand": "pwd; exit 1",
   "installCommand": "cd ../../ && yarn install && yarn build-for-vt-deploy && cd fixtures/view-transition && yarn install && yarn build",
   "env": {
     "BABEL_DISABLE_CACHE": "1",
