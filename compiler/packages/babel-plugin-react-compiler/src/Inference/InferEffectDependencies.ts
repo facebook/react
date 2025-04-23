@@ -216,7 +216,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
             if (typeof value.loc !== 'symbol') {
               fn.env.logger?.logEvent(fn.env.filename, {
                 kind: 'AutoDepsDecorations',
-                useEffectCallExpr: value.loc,
+                fnLoc: value.loc,
                 decorations: collectDepUsages(usedDeps, fnExpr.value)
                   .map(loc => (typeof loc !== 'symbol' ? loc : null))
                   .filter(loc => loc !== null),
@@ -245,6 +245,30 @@ export function inferEffectDependencies(fn: HIRFunction): void {
             value.args.push({...depsPlace, effect: Effect.Freeze});
             rewriteInstrs.set(instr.id, newInstructions);
             fn.env.inferredEffectLocations.add(callee.loc);
+          }
+        } else if (
+          value.args.length >= 2 &&
+          value.args.length - 1 === autodepFnLoads.get(callee.identifier.id) &&
+          value.args[0].kind === 'Identifier'
+        ) {
+          const penultimateArg = value.args[value.args.length - 2];
+          const depArrayArg = value.args[value.args.length - 1];
+          if (
+            depArrayArg.kind !== 'Spread' &&
+            penultimateArg.kind !== 'Spread' &&
+            typeof depArrayArg.loc !== 'symbol' &&
+            typeof penultimateArg.loc !== 'symbol' &&
+            typeof value.loc !== 'symbol'
+          ) {
+            fn.env.logger?.logEvent(fn.env.filename, {
+              kind: 'AutoDepsEligible',
+              fnLoc: value.loc,
+              depArrayLoc: {
+                ...depArrayArg.loc,
+                start: penultimateArg.loc.end,
+                end: depArrayArg.loc.end,
+              },
+            });
           }
         }
       }
