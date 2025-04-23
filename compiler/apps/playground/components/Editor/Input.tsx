@@ -30,6 +30,12 @@ export default function Input({errors, language}: Props): JSX.Element {
   const store = useStore();
   const dispatchStore = useStoreDispatch();
 
+  useEffect(() => {
+    console.log(monaco);
+    console.log(errors);
+    console.log(errors);
+  });
+
   // Set tab width to 2 spaces for the selected input file.
   useEffect(() => {
     if (!monaco) return;

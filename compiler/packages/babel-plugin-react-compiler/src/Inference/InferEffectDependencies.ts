@@ -213,14 +213,15 @@ export function inferEffectDependencies(fn: HIRFunction): void {
             }
 
             // For LSP autodeps feature.
-            fn.env.logger?.logEvent(fn.env.filename, {
-              kind: 'AutoDepsDecorations',
-              useEffectCallExpr:
-                typeof value.loc !== 'symbol' ? value.loc : null,
-              decorations: collectDepUsages(usedDeps, fnExpr.value).map(loc =>
-                typeof loc !== 'symbol' ? loc : null,
-              ),
-            });
+            if (typeof value.loc !== 'symbol') {
+              fn.env.logger?.logEvent(fn.env.filename, {
+                kind: 'AutoDepsDecorations',
+                useEffectCallExpr: value.loc,
+                decorations: collectDepUsages(usedDeps, fnExpr.value)
+                  .map(loc => (typeof loc !== 'symbol' ? loc : null))
+                  .filter(loc => loc !== null),
+              });
+            }
 
             newInstructions.push({
               id: makeInstructionId(0),

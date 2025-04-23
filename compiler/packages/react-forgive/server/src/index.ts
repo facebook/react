@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {TextDocument} from 'vscode-languageserver-textdocument';
+import {Position, TextDocument} from 'vscode-languageserver-textdocument';
 import {
   CodeLens,
   createConnection,
@@ -24,6 +24,10 @@ import {
   LoggerEvent,
 } from 'babel-plugin-react-compiler/src/Entrypoint/Options';
 import {babelLocationToRange, getRangeFirstCharacter} from './compiler/compat';
+import {
+  AutoDepsDecorationsLSPEvent,
+  mapCompilerEventToLSPEvent,
+} from './custom-requests/autodepsdecorations';
 
 const SUPPORTED_LANGUAGE_IDS = new Set([
   'javascript',
@@ -37,16 +41,47 @@ const documents = new TextDocuments(TextDocument);
 
 let compilerOptions: PluginOptions | null = null;
 let compiledFns: Set<CompileSuccessEvent> = new Set();
+let autoDepsDecorations: Array<AutoDepsDecorationsLSPEvent> = [];
 
 connection.onInitialize((_params: InitializeParams) => {
   // TODO(@poteto) get config fr
   compilerOptions = resolveReactConfig('.') ?? defaultOptions;
   compilerOptions = {
     ...compilerOptions,
+    environment: {
+      ...compilerOptions.environment,
+      inferEffectDependencies: [
+        {
+          function: {
+            importSpecifierName: 'useEffect',
+            source: 'react',
+          },
+          numRequiredArgs: 1,
+        },
+        {
+          function: {
+            importSpecifierName: 'useSpecialEffect',
+            source: 'shared-runtime',
+          },
+          numRequiredArgs: 2,
+        },
+        {
+          function: {
+            importSpecifierName: 'default',
+            source: 'useEffectWrapper',
+          },
+          numRequiredArgs: 1,
+        },
+      ],
+    },
     logger: {
       logEvent(_filename: string | null, event: LoggerEvent) {
+        connection.console.info(`Received event: ${event.kind}`);
         if (event.kind === 'CompileSuccess') {
           compiledFns.add(event);
+        }
+        if (event.kind === 'AutoDepsDecorations') {
+          autoDepsDecorations.push(mapCompilerEventToLSPEvent(event));
         }
       },
     },
@@ -67,6 +102,7 @@ connection.onInitialized(() => {
 documents.onDidChangeContent(async event => {
   connection.console.info(`Changed: ${event.document.uri}`);
   compiledFns.clear();
+  autoDepsDecorations = [];
   if (SUPPORTED_LANGUAGE_IDS.has(event.document.languageId)) {
     const text = event.document.getText();
     await compile({
@@ -79,6 +115,7 @@ documents.onDidChangeContent(async event => {
 
 connection.onDidChangeWatchedFiles(change => {
   compiledFns.clear();
+  autoDepsDecorations = [];
   connection.console.log(
     change.changes.map(c => `File changed: ${c.uri}`).join('\n'),
   );
@@ -116,6 +153,25 @@ connection.onCodeLensResolve(lens => {
     connection.console.log(lastResult.code);
   }
   return lens;
+});
+
+connection.onRequest('react/autodepsdecorations', (position: Position) => {
+  connection.console.log('Client hovering on: ' + JSON.stringify(position));
+  connection.console.log(JSON.stringify(autoDepsDecorations, null, 2));
+
+  for (const dec of autoDepsDecorations) {
+    // TODO: extract to helper
+    if (
+      position.line >= dec.useEffectCallExpr[0].line &&
+      position.line <= dec.useEffectCallExpr[1].line
+    ) {
+      connection.console.log(
+        'found decoration: ' + JSON.stringify(dec.decorations),
+      );
+      return dec.decorations;
+    }
+  }
+  return null;
 });
 
 documents.listen(connection);
