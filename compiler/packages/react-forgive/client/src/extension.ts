@@ -4,12 +4,30 @@ import * as vscode from 'vscode';
 import {
   LanguageClient,
   LanguageClientOptions,
-  Position,
+  type Position,
+  RequestType,
   ServerOptions,
   TransportKind,
 } from 'vscode-languageclient/node';
+import {WHITE} from './colors';
 
 let client: LanguageClient;
+const inferredEffectDepDecoration =
+  vscode.window.createTextEditorDecorationType({
+    backgroundColor: WHITE.toAlphaString(0.3),
+  });
+
+type Range = [Position, Position];
+interface AutoDepsDecorationsParams {
+  position: Position;
+}
+namespace AutoDepsDecorationsRequest {
+  export const type = new RequestType<
+    AutoDepsDecorationsParams,
+    Array<Range> | null,
+    void
+  >('react/autodeps_decorations');
+}
 
 export function activate(context: vscode.ExtensionContext) {
   const serverModule = context.asAbsolutePath(path.join('dist', 'server.js'));
@@ -54,23 +72,24 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.languages.registerHoverProvider(documentSelector, {
     provideHover(_document, position, _token) {
       client
-        .sendRequest('react/autodepsdecorations', position)
-        .then((decorations: Array<[Position, Position]>) => {
-          for (const [start, end] of decorations) {
-            const range = new vscode.Range(
-              new vscode.Position(start.line, start.character),
-              new vscode.Position(end.line, end.character),
+        .sendRequest(AutoDepsDecorationsRequest.type, {position})
+        .then(decorations => {
+          if (Array.isArray(decorations)) {
+            const decorationOptions = decorations.map(([start, end]) => {
+              return {
+                range: new vscode.Range(
+                  new vscode.Position(start.line, start.character),
+                  new vscode.Position(end.line, end.character),
+                ),
+                hoverMessage: 'Inferred as an effect dependency',
+              };
+            });
+            vscode.window.activeTextEditor?.setDecorations(
+              inferredEffectDepDecoration,
+              decorationOptions,
             );
-            const vscodeDecoration =
-              vscode.window.createTextEditorDecorationType({
-                backgroundColor: 'red',
-              });
-            vscode.window.activeTextEditor?.setDecorations(vscodeDecoration, [
-              {
-                range,
-                hoverMessage: 'hehe',
-              },
-            ]);
+          } else {
+            clearDecorations(inferredEffectDepDecoration);
           }
         });
       return null;
@@ -85,4 +104,11 @@ export function deactivate(): Thenable<void> | undefined {
   if (client !== undefined) {
     return client.stop();
   }
+  return;
+}
+
+export function clearDecorations(
+  decorationType: vscode.TextEditorDecorationType,
+) {
+  vscode.window.activeTextEditor?.setDecorations(decorationType, []);
 }

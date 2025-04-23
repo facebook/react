@@ -183,7 +183,7 @@ export type LoggerEvent =
   | CompileSkipEvent
   | PipelineErrorEvent
   | TimingEvent
-  | AutoDepsDecorations;
+  | AutoDepsDecorationsEvent;
 
 export type CompileErrorEvent = {
   kind: 'CompileError';
@@ -220,7 +220,7 @@ export type TimingEvent = {
   kind: 'Timing';
   measurement: PerformanceMeasure;
 };
-export type AutoDepsDecorations = {
+export type AutoDepsDecorationsEvent = {
   kind: 'AutoDepsDecorations';
   useEffectCallExpr: t.SourceLocation;
   decorations: Array<t.SourceLocation>;
