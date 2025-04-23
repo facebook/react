@@ -558,6 +558,50 @@ function markRootEntangled(root, entangledLanes) {
     rootEntangledLanes &= ~lane;
   }
 }
+function getBumpedLaneForHydration(root, renderLanes) {
+  var renderLane = renderLanes & -renderLanes;
+  if (0 !== (renderLane & 42)) renderLane = 1;
+  else
+    switch (renderLane) {
+      case 2:
+        renderLane = 1;
+        break;
+      case 8:
+        renderLane = 4;
+        break;
+      case 32:
+        renderLane = 16;
+        break;
+      case 256:
+      case 512:
+      case 1024:
+      case 2048:
+      case 4096:
+      case 8192:
+      case 16384:
+      case 32768:
+      case 65536:
+      case 131072:
+      case 262144:
+      case 524288:
+      case 1048576:
+      case 2097152:
+      case 4194304:
+      case 8388608:
+      case 16777216:
+      case 33554432:
+        renderLane = 128;
+        break;
+      case 268435456:
+        renderLane = 134217728;
+        break;
+      default:
+        renderLane = 0;
+    }
+  return 0 !== (renderLane & (root.suspendedLanes | renderLanes))
+    ? 0
+    : renderLane;
+}
 function getTransitionsForLanes(root, lanes) {
   if (!enableTransitionTracing) return null;
   for (var transitionsForLanes = []; 0 < lanes; ) {
@@ -2853,6 +2897,11 @@ function pushPrimaryTreeSuspenseHandler(handler) {
       ? push(suspenseHandlerStackCursor, handler)
       : push(suspenseHandlerStackCursor, suspenseHandlerStackCursor.current);
 }
+function pushDehydratedActivitySuspenseHandler(fiber) {
+  push(suspenseStackCursor, suspenseStackCursor.current);
+  push(suspenseHandlerStackCursor, fiber);
+  null === shellBoundary && (shellBoundary = fiber);
+}
 function pushOffscreenSuspenseHandler(fiber) {
   22 === fiber.tag
     ? (push(suspenseStackCursor, suspenseStackCursor.current),
@@ -4461,6 +4510,7 @@ function throwException(
     returnFiber = suspenseHandlerStackCursor.current;
     if (null !== returnFiber) {
       switch (returnFiber.tag) {
+        case 31:
         case 13:
           return (
             null === shellBoundary
@@ -4919,6 +4969,28 @@ function deferHiddenOffscreenComponent(
     propagateParentContextChanges(current, workInProgress, renderLanes, !0);
   return null;
 }
+function mountActivityChildren(workInProgress, nextProps) {
+  nextProps = mountWorkInProgressOffscreenFiber(
+    { mode: nextProps.mode, children: nextProps.children },
+    workInProgress.mode
+  );
+  nextProps.ref = workInProgress.ref;
+  workInProgress.child = nextProps;
+  nextProps.return = workInProgress;
+  return nextProps;
+}
+function retryActivityComponentWithoutHydrating(
+  current,
+  workInProgress,
+  renderLanes
+) {
+  reconcileChildFibers(workInProgress, current.child, null, renderLanes);
+  current = mountActivityChildren(workInProgress, workInProgress.pendingProps);
+  current.flags |= 2;
+  popSuspenseHandler(workInProgress);
+  workInProgress.memoizedState = null;
+  return current;
+}
 function markRef(current, workInProgress) {
   var ref = workInProgress.ref;
   if (null === ref)
@@ -5372,10 +5444,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           didSuspend,
           renderLanes
         )),
-        (nextPrimaryChildren = workInProgress.child),
-        (nextPrimaryChildren.memoizedState =
-          mountSuspenseOffscreenState(renderLanes)),
-        (nextPrimaryChildren.childLanes = getRemainingWorkInPrimaryTree(
+        (showFallback = workInProgress.child),
+        (showFallback.memoizedState = mountSuspenseOffscreenState(renderLanes)),
+        (showFallback.childLanes = getRemainingWorkInPrimaryTree(
           current,
           JSCompiler_temp,
           renderLanes
@@ -5389,9 +5460,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             ((current = enableTransitionTracing
               ? markerInstanceStack.current
               : null),
-            (renderLanes = nextPrimaryChildren.updateQueue),
+            (renderLanes = showFallback.updateQueue),
             null === renderLanes
-              ? (nextPrimaryChildren.updateQueue = {
+              ? (showFallback.updateQueue = {
                   transitions: workInProgress,
                   markerInstances: current,
                   retryQueue: null
@@ -5409,10 +5480,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           didSuspend,
           renderLanes
         )),
-        (nextPrimaryChildren = workInProgress.child),
-        (nextPrimaryChildren.memoizedState =
-          mountSuspenseOffscreenState(renderLanes)),
-        (nextPrimaryChildren.childLanes = getRemainingWorkInPrimaryTree(
+        (showFallback = workInProgress.child),
+        (showFallback.memoizedState = mountSuspenseOffscreenState(renderLanes)),
+        (showFallback.childLanes = getRemainingWorkInPrimaryTree(
           current,
           JSCompiler_temp,
           renderLanes
@@ -5441,22 +5511,22 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             (workInProgress.flags |= 128),
             (workInProgress = null))
           : (reuseSuspenseHandlerOnStack(workInProgress),
-            (nextPrimaryChildren = nextProps.fallback),
-            (showFallback = workInProgress.mode),
+            (showFallback = nextProps.fallback),
+            (nextPrimaryChildren = workInProgress.mode),
             (nextProps = mountWorkInProgressOffscreenFiber(
               { mode: "visible", children: nextProps.children },
-              showFallback
+              nextPrimaryChildren
             )),
-            (nextPrimaryChildren = createFiberFromFragment(
-              nextPrimaryChildren,
+            (showFallback = createFiberFromFragment(
               showFallback,
+              nextPrimaryChildren,
               renderLanes,
               null
             )),
-            (nextPrimaryChildren.flags |= 2),
+            (showFallback.flags |= 2),
             (nextProps.return = workInProgress),
-            (nextPrimaryChildren.return = workInProgress),
-            (nextProps.sibling = nextPrimaryChildren),
+            (showFallback.return = workInProgress),
+            (nextProps.sibling = showFallback),
             (workInProgress.child = nextProps),
             reconcileChildFibers(
               workInProgress,
@@ -5473,7 +5543,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
               renderLanes
             )),
             (workInProgress.memoizedState = SUSPENDED_MARKER),
-            (workInProgress = nextPrimaryChildren));
+            (workInProgress = showFallback));
     else if ((pushPrimaryTreeSuspenseHandler(workInProgress), shim$2()))
       (JSCompiler_temp = shim$2().digest),
         (nextProps = Error(formatProdErrorMessage(419))),
@@ -5495,58 +5565,17 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       didReceiveUpdate || JSCompiler_temp)
     ) {
       JSCompiler_temp = workInProgressRoot;
-      if (null !== JSCompiler_temp) {
-        nextProps = renderLanes & -renderLanes;
-        if (0 !== (nextProps & 42)) nextProps = 1;
-        else
-          switch (nextProps) {
-            case 2:
-              nextProps = 1;
-              break;
-            case 8:
-              nextProps = 4;
-              break;
-            case 32:
-              nextProps = 16;
-              break;
-            case 256:
-            case 512:
-            case 1024:
-            case 2048:
-            case 4096:
-            case 8192:
-            case 16384:
-            case 32768:
-            case 65536:
-            case 131072:
-            case 262144:
-            case 524288:
-            case 1048576:
-            case 2097152:
-            case 4194304:
-            case 8388608:
-            case 16777216:
-            case 33554432:
-              nextProps = 128;
-              break;
-            case 268435456:
-              nextProps = 134217728;
-              break;
-            default:
-              nextProps = 0;
-          }
-        nextProps =
-          0 !== (nextProps & (JSCompiler_temp.suspendedLanes | renderLanes))
-            ? 0
-            : nextProps;
-        if (0 !== nextProps && nextProps !== nextPrimaryChildren.retryLane)
-          throw (
-            ((nextPrimaryChildren.retryLane = nextProps),
-            enqueueConcurrentRenderForLane(current, nextProps),
-            scheduleUpdateOnFiber(JSCompiler_temp, current, nextProps),
-            SelectiveHydrationException)
-          );
-      }
+      if (
+        null !== JSCompiler_temp &&
+        ((nextProps = getBumpedLaneForHydration(JSCompiler_temp, renderLanes)),
+        0 !== nextProps && nextProps !== nextPrimaryChildren.retryLane)
+      )
+        throw (
+          ((nextPrimaryChildren.retryLane = nextProps),
+          enqueueConcurrentRenderForLane(current, nextProps),
+          scheduleUpdateOnFiber(JSCompiler_temp, current, nextProps),
+          SelectiveHydrationException)
+        );
       shim$2() || renderDidSuspendDelayIfPossible();
       workInProgress = retrySuspenseComponentWithoutHydrating(
         current,
@@ -5567,37 +5596,37 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
   }
   if (showFallback) {
     reuseSuspenseHandlerOnStack(workInProgress);
-    nextPrimaryChildren = nextProps.fallback;
-    showFallback = workInProgress.mode;
+    showFallback = nextProps.fallback;
+    nextPrimaryChildren = workInProgress.mode;
     didSuspend = current.child;
     var currentFallbackChildFragment = didSuspend.sibling;
-    nextProps = createWorkInProgress(didSuspend, {
+    nextProps = updateWorkInProgressOffscreenFiber(didSuspend, {
       mode: "hidden",
       children: nextProps.children
     });
     nextProps.subtreeFlags = didSuspend.subtreeFlags & 65011712;
     null !== currentFallbackChildFragment
-      ? (nextPrimaryChildren = createWorkInProgress(
+      ? (showFallback = createWorkInProgress(
           currentFallbackChildFragment,
-          nextPrimaryChildren
+          showFallback
         ))
-      : ((nextPrimaryChildren = createFiberFromFragment(
-          nextPrimaryChildren,
+      : ((showFallback = createFiberFromFragment(
           showFallback,
+          nextPrimaryChildren,
           renderLanes,
           null
         )),
-        (nextPrimaryChildren.flags |= 2));
-    nextPrimaryChildren.return = workInProgress;
+        (showFallback.flags |= 2));
+    showFallback.return = workInProgress;
     nextProps.return = workInProgress;
-    nextProps.sibling = nextPrimaryChildren;
+    nextProps.sibling = showFallback;
     workInProgress.child = nextProps;
-    nextProps = nextPrimaryChildren;
-    nextPrimaryChildren = workInProgress.child;
-    showFallback = current.child.memoizedState;
-    null === showFallback
-      ? (showFallback = mountSuspenseOffscreenState(renderLanes))
-      : ((didSuspend = showFallback.cachePool),
+    nextProps = showFallback;
+    showFallback = workInProgress.child;
+    nextPrimaryChildren = current.child.memoizedState;
+    null === nextPrimaryChildren
+      ? (nextPrimaryChildren = mountSuspenseOffscreenState(renderLanes))
+      : ((didSuspend = nextPrimaryChildren.cachePool),
         null !== didSuspend
           ? ((currentFallbackChildFragment = CacheContext._currentValue2),
             (didSuspend =
@@ -5608,40 +5637,40 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
                   }
                 : didSuspend))
           : (didSuspend = getSuspendedCache()),
-        (showFallback = {
-          baseLanes: showFallback.baseLanes | renderLanes,
+        (nextPrimaryChildren = {
+          baseLanes: nextPrimaryChildren.baseLanes | renderLanes,
           cachePool: didSuspend
         }));
-    nextPrimaryChildren.memoizedState = showFallback;
+    showFallback.memoizedState = nextPrimaryChildren;
     if (
       enableTransitionTracing &&
-      ((showFallback = enableTransitionTracing
+      ((nextPrimaryChildren = enableTransitionTracing
         ? transitionStack.current
         : null),
-      null !== showFallback)
+      null !== nextPrimaryChildren)
     ) {
       didSuspend = enableTransitionTracing ? markerInstanceStack.current : null;
-      currentFallbackChildFragment = nextPrimaryChildren.updateQueue;
+      currentFallbackChildFragment = showFallback.updateQueue;
       var currentOffscreenQueue = current.updateQueue;
       null === currentFallbackChildFragment
-        ? (nextPrimaryChildren.updateQueue = {
-            transitions: showFallback,
+        ? (showFallback.updateQueue = {
+            transitions: nextPrimaryChildren,
             markerInstances: didSuspend,
             retryQueue: null
           })
         : currentFallbackChildFragment === currentOffscreenQueue
-          ? (nextPrimaryChildren.updateQueue = {
-              transitions: showFallback,
+          ? (showFallback.updateQueue = {
+              transitions: nextPrimaryChildren,
               markerInstances: didSuspend,
               retryQueue:
                 null !== currentOffscreenQueue
                   ? currentOffscreenQueue.retryQueue
                   : null
             })
-          : ((currentFallbackChildFragment.transitions = showFallback),
+          : ((currentFallbackChildFragment.transitions = nextPrimaryChildren),
             (currentFallbackChildFragment.markerInstances = didSuspend));
     }
-    nextPrimaryChildren.childLanes = getRemainingWorkInPrimaryTree(
+    showFallback.childLanes = getRemainingWorkInPrimaryTree(
       current,
       JSCompiler_temp,
       renderLanes
@@ -5652,7 +5681,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
   pushPrimaryTreeSuspenseHandler(workInProgress);
   renderLanes = current.child;
   current = renderLanes.sibling;
-  renderLanes = createWorkInProgress(renderLanes, {
+  renderLanes = updateWorkInProgressOffscreenFiber(renderLanes, {
     mode: "visible",
     children: nextProps.children
   });
@@ -5708,6 +5737,9 @@ function mountWorkInProgressOffscreenFiber(offscreenProps, mode) {
     _transitions: null
   };
   return offscreenProps;
+}
+function updateWorkInProgressOffscreenFiber(current, offscreenProps) {
+  return createWorkInProgress(current, offscreenProps);
 }
 function retrySuspenseComponentWithoutHydrating(
   current,
@@ -5906,10 +5938,18 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         workInProgress.memoizedProps.value
       );
       break;
+    case 31:
+      if (null !== workInProgress.memoizedState)
+        return (
+          (workInProgress.flags |= 128),
+          pushDehydratedActivitySuspenseHandler(workInProgress),
+          null
+        );
+      break;
     case 13:
-      var state = workInProgress.memoizedState;
-      if (null !== state) {
-        if (null !== state.dehydrated)
+      var state$80 = workInProgress.memoizedState;
+      if (null !== state$80) {
+        if (null !== state$80.dehydrated)
           return (
             pushPrimaryTreeSuspenseHandler(workInProgress),
             (workInProgress.flags |= 128),
@@ -5929,17 +5969,17 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       break;
     case 19:
       var didSuspendBefore = 0 !== (current.flags & 128);
-      state = 0 !== (renderLanes & workInProgress.childLanes);
-      state ||
+      state$80 = 0 !== (renderLanes & workInProgress.childLanes);
+      state$80 ||
         (propagateParentContextChanges(
           current,
           workInProgress,
           renderLanes,
           !1
         ),
-        (state = 0 !== (renderLanes & workInProgress.childLanes)));
+        (state$80 = 0 !== (renderLanes & workInProgress.childLanes)));
       if (didSuspendBefore) {
-        if (state)
+        if (state$80)
           return updateSuspenseListComponent(
             current,
             workInProgress,
@@ -5953,7 +5993,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         (didSuspendBefore.tail = null),
         (didSuspendBefore.lastEffect = null));
       push(suspenseStackCursor, suspenseStackCursor.current);
-      if (state) break;
+      if (state$80) break;
       else return null;
     case 22:
       return (
@@ -5970,8 +6010,8 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       break;
     case 25:
       if (enableTransitionTracing) {
-        state = workInProgress.stateNode;
-        null !== state && pushMarkerInstance(workInProgress, state);
+        state$80 = workInProgress.stateNode;
+        null !== state$80 && pushMarkerInstance(workInProgress, state$80);
         break;
       }
     case 23:
@@ -6279,26 +6319,73 @@ function beginWork(current, workInProgress, renderLanes) {
         workInProgress.child
       );
     case 31:
-      return (
-        (props = workInProgress.pendingProps),
-        (renderLanes = workInProgress.mode),
-        (props = { mode: props.mode, children: props.children }),
-        null === current
-          ? ((renderLanes = mountWorkInProgressOffscreenFiber(
-              props,
+      init = workInProgress.pendingProps;
+      nextProps = 0 !== (workInProgress.flags & 128);
+      workInProgress.flags &= -129;
+      if (null === current)
+        workInProgress = mountActivityChildren(workInProgress, init);
+      else if (((props = current.memoizedState), null !== props))
+        b: {
+          pushDehydratedActivitySuspenseHandler(workInProgress);
+          if (nextProps) {
+            if (workInProgress.flags & 256) {
+              workInProgress.flags &= -257;
+              workInProgress = retryActivityComponentWithoutHydrating(
+                current,
+                workInProgress,
+                renderLanes
+              );
+              break b;
+            }
+            if (null !== workInProgress.memoizedState) {
+              workInProgress.child = current.child;
+              workInProgress.flags |= 128;
+              workInProgress = null;
+              break b;
+            }
+            throw Error(formatProdErrorMessage(558));
+          }
+          didReceiveUpdate ||
+            propagateParentContextChanges(
+              current,
+              workInProgress,
+              renderLanes,
+              !1
+            );
+          nextProps = 0 !== (renderLanes & current.childLanes);
+          if (didReceiveUpdate || nextProps) {
+            init = workInProgressRoot;
+            if (
+              null !== init &&
+              ((nextProps = getBumpedLaneForHydration(init, renderLanes)),
+              0 !== nextProps && nextProps !== props.retryLane)
+            )
+              throw (
+                ((props.retryLane = nextProps),
+                enqueueConcurrentRenderForLane(current, nextProps),
+                scheduleUpdateOnFiber(init, current, nextProps),
+                SelectiveHydrationException)
+              );
+            renderDidSuspendDelayIfPossible();
+            workInProgress = retryActivityComponentWithoutHydrating(
+              current,
+              workInProgress,
               renderLanes
-            )),
-            (renderLanes.ref = workInProgress.ref),
-            (workInProgress.child = renderLanes),
-            (renderLanes.return = workInProgress),
-            (workInProgress = renderLanes))
-          : ((renderLanes = createWorkInProgress(current.child, props)),
-            (renderLanes.ref = workInProgress.ref),
-            (workInProgress.child = renderLanes),
-            (renderLanes.return = workInProgress),
-            (workInProgress = renderLanes)),
-        workInProgress
-      );
+            );
+          } else
+            (workInProgress = mountActivityChildren(workInProgress, init)),
+              (workInProgress.flags |= 4096);
+        }
+      else
+        (renderLanes = updateWorkInProgressOffscreenFiber(current.child, {
+          mode: init.mode,
+          children: init.children
+        })),
+          (renderLanes.ref = workInProgress.ref),
+          (workInProgress.child = renderLanes),
+          (renderLanes.return = workInProgress),
+          (workInProgress = renderLanes);
+      return workInProgress;
     case 22:
       return updateOffscreenComponent(
         current,
@@ -6550,14 +6637,14 @@ function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       break;
     case "collapsed":
       lastTailNode = renderState.tail;
-      for (var lastTailNode$90 = null; null !== lastTailNode; )
-        null !== lastTailNode.alternate && (lastTailNode$90 = lastTailNode),
+      for (var lastTailNode$91 = null; null !== lastTailNode; )
+        null !== lastTailNode.alternate && (lastTailNode$91 = lastTailNode),
           (lastTailNode = lastTailNode.sibling);
-      null === lastTailNode$90
+      null === lastTailNode$91
         ? hasRenderedATailFallback || null === renderState.tail
           ? (renderState.tail = null)
           : (renderState.tail.sibling = null)
-        : (lastTailNode$90.sibling = null);
+        : (lastTailNode$91.sibling = null);
   }
 }
 function bubbleProperties(completedWork) {
@@ -6567,19 +6654,19 @@ function bubbleProperties(completedWork) {
     newChildLanes = 0,
     subtreeFlags = 0;
   if (didBailout)
-    for (var child$91 = completedWork.child; null !== child$91; )
-      (newChildLanes |= child$91.lanes | child$91.childLanes),
-        (subtreeFlags |= child$91.subtreeFlags & 65011712),
-        (subtreeFlags |= child$91.flags & 65011712),
-        (child$91.return = completedWork),
-        (child$91 = child$91.sibling);
+    for (var child$92 = completedWork.child; null !== child$92; )
+      (newChildLanes |= child$92.lanes | child$92.childLanes),
+        (subtreeFlags |= child$92.subtreeFlags & 65011712),
+        (subtreeFlags |= child$92.flags & 65011712),
+        (child$92.return = completedWork),
+        (child$92 = child$92.sibling);
   else
-    for (child$91 = completedWork.child; null !== child$91; )
-      (newChildLanes |= child$91.lanes | child$91.childLanes),
-        (subtreeFlags |= child$91.subtreeFlags),
-        (subtreeFlags |= child$91.flags),
-        (child$91.return = completedWork),
-        (child$91 = child$91.sibling);
+    for (child$92 = completedWork.child; null !== child$92; )
+      (newChildLanes |= child$92.lanes | child$92.childLanes),
+        (subtreeFlags |= child$92.subtreeFlags),
+        (subtreeFlags |= child$92.flags),
+        (child$92.return = completedWork),
+        (child$92 = child$92.sibling);
   completedWork.subtreeFlags |= subtreeFlags;
   completedWork.childLanes = newChildLanes;
   return didBailout;
@@ -6718,7 +6805,35 @@ function completeWork(current, workInProgress, renderLanes) {
       bubbleProperties(workInProgress);
       return null;
     case 31:
-      return bubbleProperties(workInProgress), null;
+      renderLanes = workInProgress.memoizedState;
+      if (null === current || null !== current.memoizedState) {
+        if (null !== renderLanes) {
+          if (null === current) {
+            throw Error(formatProdErrorMessage(318));
+            throw Error(formatProdErrorMessage(556));
+          }
+          0 === (workInProgress.flags & 128) &&
+            (workInProgress.memoizedState = null);
+          workInProgress.flags |= 4;
+          bubbleProperties(workInProgress);
+          current = !1;
+        } else
+          (renderLanes = upgradeHydrationErrorsToRecoverable()),
+            null !== current &&
+              null !== current.memoizedState &&
+              (current.memoizedState.hydrationErrors = renderLanes),
+            (current = !0);
+        if (!current) {
+          if (workInProgress.flags & 256)
+            return popSuspenseHandler(workInProgress), workInProgress;
+          popSuspenseHandler(workInProgress);
+          return null;
+        }
+        if (0 !== (workInProgress.flags & 128))
+          throw Error(formatProdErrorMessage(558));
+      }
+      bubbleProperties(workInProgress);
+      return null;
     case 13:
       newProps = workInProgress.memoizedState;
       if (
@@ -6761,11 +6876,11 @@ function completeWork(current, workInProgress, renderLanes) {
           null !== newProps.alternate.memoizedState &&
           null !== newProps.alternate.memoizedState.cachePool &&
           (instance = newProps.alternate.memoizedState.cachePool.pool);
-        var cache$96 = null;
+        var cache$99 = null;
         null !== newProps.memoizedState &&
           null !== newProps.memoizedState.cachePool &&
-          (cache$96 = newProps.memoizedState.cachePool.pool);
-        cache$96 !== instance && (newProps.flags |= 2048);
+          (cache$99 = newProps.memoizedState.cachePool.pool);
+        cache$99 !== instance && (newProps.flags |= 2048);
       }
       renderLanes !== current &&
         (enableTransitionTracing && (workInProgress.child.flags |= 2048),
@@ -6793,8 +6908,8 @@ function completeWork(current, workInProgress, renderLanes) {
       instance = workInProgress.memoizedState;
       if (null === instance) return bubbleProperties(workInProgress), null;
       newProps = 0 !== (workInProgress.flags & 128);
-      cache$96 = instance.rendering;
-      if (null === cache$96)
+      cache$99 = instance.rendering;
+      if (null === cache$99)
         if (newProps) cutOffTailIfNeeded(instance, !1);
         else {
           if (
@@ -6802,11 +6917,11 @@ function completeWork(current, workInProgress, renderLanes) {
             (null !== current && 0 !== (current.flags & 128))
           )
             for (current = workInProgress.child; null !== current; ) {
-              cache$96 = findFirstSuspended(current);
-              if (null !== cache$96) {
+              cache$99 = findFirstSuspended(current);
+              if (null !== cache$99) {
                 workInProgress.flags |= 128;
                 cutOffTailIfNeeded(instance, !1);
-                current = cache$96.updateQueue;
+                current = cache$99.updateQueue;
                 workInProgress.updateQueue = current;
                 scheduleRetryEffect(workInProgress, current);
                 workInProgress.subtreeFlags = 0;
@@ -6831,7 +6946,7 @@ function completeWork(current, workInProgress, renderLanes) {
         }
       else {
         if (!newProps)
-          if (((current = findFirstSuspended(cache$96)), null !== current)) {
+          if (((current = findFirstSuspended(cache$99)), null !== current)) {
             if (
               ((workInProgress.flags |= 128),
               (newProps = !0),
@@ -6841,7 +6956,7 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(instance, !0),
               null === instance.tail &&
                 "hidden" === instance.tailMode &&
-                !cache$96.alternate)
+                !cache$99.alternate)
             )
               return bubbleProperties(workInProgress), null;
           } else
@@ -6853,13 +6968,13 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(instance, !1),
               (workInProgress.lanes = 4194304));
         instance.isBackwards
-          ? ((cache$96.sibling = workInProgress.child),
-            (workInProgress.child = cache$96))
+          ? ((cache$99.sibling = workInProgress.child),
+            (workInProgress.child = cache$99))
           : ((current = instance.last),
             null !== current
-              ? (current.sibling = cache$96)
-              : (workInProgress.child = cache$96),
-            (instance.last = cache$96));
+              ? (current.sibling = cache$99)
+              : (workInProgress.child = cache$99),
+            (instance.last = cache$99));
       }
       if (null !== instance.tail)
         return (
@@ -6982,6 +7097,16 @@ function unwindWork(current, workInProgress) {
     case 27:
     case 5:
       return popHostContext(workInProgress), null;
+    case 31:
+      if (
+        null !== workInProgress.memoizedState &&
+        (popSuspenseHandler(workInProgress), null === workInProgress.alternate)
+      )
+        throw Error(formatProdErrorMessage(340));
+      current = workInProgress.flags;
+      return current & 65536
+        ? ((workInProgress.flags = (current & -65537) | 128), workInProgress)
+        : null;
     case 13:
       popSuspenseHandler(workInProgress);
       current = workInProgress.memoizedState;
@@ -7058,6 +7183,10 @@ function unwindInterruptedWork(current, interruptedWork) {
       break;
     case 4:
       popHostContainer();
+      break;
+    case 31:
+      null !== interruptedWork.memoizedState &&
+        popSuspenseHandler(interruptedWork);
       break;
     case 13:
       popSuspenseHandler(interruptedWork);
@@ -7231,8 +7360,8 @@ function safelyDetachRef(current, nearestMountedAncestor) {
     else if ("function" === typeof ref)
       try {
         ref(null);
-      } catch (error$115) {
-        captureCommitPhaseError(current, nearestMountedAncestor, error$115);
+      } catch (error$119) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error$119);
       }
     else ref.current = null;
 }
@@ -7678,11 +7807,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
               current,
               finishedRoot.__reactInternalSnapshotBeforeUpdate
             );
-          } catch (error$113) {
+          } catch (error$117) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$113
+              error$117
             );
           }
         }
@@ -7719,6 +7848,9 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
       break;
     case 12:
+      recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+      break;
+    case 31:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
       break;
     case 13:
@@ -8133,6 +8265,7 @@ function commitDeletionEffectsOnFiber(
 }
 function getRetryCache(finishedWork) {
   switch (finishedWork.tag) {
+    case 31:
     case 13:
     case 19:
       var retryCache = finishedWork.stateNode;
@@ -8284,6 +8417,15 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
     case 12:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
+      break;
+    case 31:
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      commitReconciliationEffects(finishedWork);
+      flags & 4 &&
+        ((flags = finishedWork.updateQueue),
+        null !== flags &&
+          ((finishedWork.updateQueue = null),
+          attachSuspenseRetryListeners(finishedWork, flags)));
       break;
     case 13:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -8491,12 +8633,12 @@ function commitReconciliationEffects(finishedWork) {
           break;
         case 3:
         case 4:
-          var parent$116 = hostParentFiber.stateNode.containerInfo,
-            before$117 = getHostSibling(finishedWork);
+          var parent$120 = hostParentFiber.stateNode.containerInfo,
+            before$121 = getHostSibling(finishedWork);
           insertOrAppendPlacementNodeIntoContainer(
             finishedWork,
-            before$117,
-            parent$116
+            before$121,
+            parent$120
           );
           break;
         default:
@@ -8630,6 +8772,13 @@ function recursivelyTraverseReappearLayoutEffects(
         safelyAttachRef(finishedWork, finishedWork.return);
         break;
       case 12:
+        recursivelyTraverseReappearLayoutEffects(
+          finishedRoot,
+          finishedWork,
+          includeWorkInProgressEffects
+        );
+        break;
+      case 31:
         recursivelyTraverseReappearLayoutEffects(
           finishedRoot,
           finishedWork,
@@ -8886,6 +9035,14 @@ function commitPassiveMountOnFiber(
             committedTransitions
           );
       break;
+    case 31:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 13:
       recursivelyTraversePassiveMountEffects(
         finishedRoot,
@@ -8909,14 +9066,14 @@ function commitPassiveMountOnFiber(
         );
       break;
     case 22:
-      var instance$124 = finishedWork.stateNode,
-        current$125 = finishedWork.alternate;
+      var instance$129 = finishedWork.stateNode,
+        current$130 = finishedWork.alternate;
       null !== finishedWork.memoizedState
         ? (isViewTransitionEligible &&
-            null !== current$125 &&
-            null === current$125.memoizedState &&
-            restoreEnterOrExitViewTransitions(current$125),
-          instance$124._visibility & 2
+            null !== current$130 &&
+            null === current$130.memoizedState &&
+            restoreEnterOrExitViewTransitions(current$130),
+          instance$129._visibility & 2
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
                 finishedWork,
@@ -8928,17 +9085,17 @@ function commitPassiveMountOnFiber(
                 finishedWork
               ))
         : (isViewTransitionEligible &&
-            null !== current$125 &&
-            null !== current$125.memoizedState &&
+            null !== current$130 &&
+            null !== current$130.memoizedState &&
             restoreEnterOrExitViewTransitions(finishedWork),
-          instance$124._visibility & 2
+          instance$129._visibility & 2
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
                 finishedWork,
                 committedLanes,
                 committedTransitions
               )
-            : ((instance$124._visibility |= 2),
+            : ((instance$129._visibility |= 2),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -8948,9 +9105,9 @@ function commitPassiveMountOnFiber(
               )));
       flags & 2048 &&
         commitOffscreenPassiveMountEffects(
-          current$125,
+          current$130,
           finishedWork,
-          instance$124
+          instance$129
         );
       break;
     case 24:
@@ -9038,9 +9195,9 @@ function recursivelyTraverseReconnectPassiveEffects(
           );
         break;
       case 22:
-        var instance$127 = finishedWork.stateNode;
+        var instance$132 = finishedWork.stateNode;
         null !== finishedWork.memoizedState
-          ? instance$127._visibility & 2
+          ? instance$132._visibility & 2
             ? recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -9052,7 +9209,7 @@ function recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork
               )
-          : ((instance$127._visibility |= 2),
+          : ((instance$132._visibility |= 2),
             recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
               finishedWork,
@@ -9065,7 +9222,7 @@ function recursivelyTraverseReconnectPassiveEffects(
           commitOffscreenPassiveMountEffects(
             finishedWork.alternate,
             finishedWork,
-            instance$127
+            instance$132
           );
         break;
       case 24:
@@ -10014,8 +10171,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$139) {
-      handleThrow(root, thrownValue$139);
+    } catch (thrownValue$144) {
+      handleThrow(root, thrownValue$144);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -10130,8 +10287,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrentByScheduler();
       break;
-    } catch (thrownValue$141) {
-      handleThrow(root, thrownValue$141);
+    } catch (thrownValue$146) {
+      handleThrow(root, thrownValue$146);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -10697,6 +10854,7 @@ function retryDehydratedSuspenseBoundary(boundaryFiber) {
 function resolveRetryWakeable(boundaryFiber, wakeable) {
   var retryLane = 0;
   switch (boundaryFiber.tag) {
+    case 31:
     case 13:
       var retryCache = boundaryFiber.stateNode;
       var suspenseState = boundaryFiber.memoizedState;
@@ -11252,24 +11410,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1613 = {
+var internals$jscomp$inline_1619 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-17f88c80-20250422",
+  version: "19.2.0-www-classic-3ef31d19-20250422",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-17f88c80-20250422"
+  reconcilerVersion: "19.2.0-www-classic-3ef31d19-20250422"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1614 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1620 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1614.isDisabled &&
-    hook$jscomp$inline_1614.supportsFiber
+    !hook$jscomp$inline_1620.isDisabled &&
+    hook$jscomp$inline_1620.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1614.inject(
-        internals$jscomp$inline_1613
+      (rendererID = hook$jscomp$inline_1620.inject(
+        internals$jscomp$inline_1619
       )),
-        (injectedHook = hook$jscomp$inline_1614);
+        (injectedHook = hook$jscomp$inline_1620);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11283,4 +11441,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-classic-17f88c80-20250422";
+exports.version = "19.2.0-www-classic-3ef31d19-20250422";

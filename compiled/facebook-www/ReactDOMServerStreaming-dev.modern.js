@@ -5259,15 +5259,13 @@ __DEV__ &&
                 renderNode(request, task, props.children, -1);
                 task.keyPath = prevKeyPath$jscomp$2;
               }
-            } else {
+            } else if ("hidden" !== props.mode) {
               segment$jscomp$0.chunks.push("\x3c!--&--\x3e");
               segment$jscomp$0.lastPushedText = !1;
-              if ("hidden" !== props.mode) {
-                var _prevKeyPath3 = task.keyPath;
-                task.keyPath = keyPath;
-                renderNode(request, task, props.children, -1);
-                task.keyPath = _prevKeyPath3;
-              }
+              var _prevKeyPath3 = task.keyPath;
+              task.keyPath = keyPath;
+              renderNode(request, task, props.children, -1);
+              task.keyPath = _prevKeyPath3;
               segment$jscomp$0.chunks.push("\x3c!--/&--\x3e");
               segment$jscomp$0.lastPushedText = !1;
             }

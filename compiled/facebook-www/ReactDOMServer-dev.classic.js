@@ -5591,16 +5591,14 @@ __DEV__ &&
                 renderNode(request, task, props.children, -1);
                 task.keyPath = prevKeyPath$jscomp$2;
               }
-            } else {
+            } else if ("hidden" !== props.mode) {
               request.renderState.generateStaticMarkup ||
                 segment$jscomp$0.chunks.push("\x3c!--&--\x3e");
               segment$jscomp$0.lastPushedText = !1;
-              if ("hidden" !== props.mode) {
-                var _prevKeyPath3 = task.keyPath;
-                task.keyPath = keyPath;
-                renderNode(request, task, props.children, -1);
-                task.keyPath = _prevKeyPath3;
-              }
+              var _prevKeyPath3 = task.keyPath;
+              task.keyPath = keyPath;
+              renderNode(request, task, props.children, -1);
+              task.keyPath = _prevKeyPath3;
               request.renderState.generateStaticMarkup ||
                 segment$jscomp$0.chunks.push("\x3c!--/&--\x3e");
               segment$jscomp$0.lastPushedText = !1;
@@ -9440,5 +9438,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-17f88c80-20250422";
+    exports.version = "19.2.0-www-classic-3ef31d19-20250422";
   })();

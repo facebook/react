@@ -4100,13 +4100,13 @@ function renderElement(request, task, keyPath, type, props, ref) {
             (task.keyPath = keyPath),
             renderNode(request, task, props.children, -1),
             (task.keyPath = type))
-          : (type.chunks.push("\x3c!--&--\x3e"),
+          : "hidden" !== props.mode &&
+            (type.chunks.push("\x3c!--&--\x3e"),
             (type.lastPushedText = !1),
-            "hidden" !== props.mode &&
-              ((newProps = task.keyPath),
-              (task.keyPath = keyPath),
-              renderNode(request, task, props.children, -1),
-              (task.keyPath = newProps)),
+            (newProps = task.keyPath),
+            (task.keyPath = keyPath),
+            renderNode(request, task, props.children, -1),
+            (task.keyPath = newProps),
             type.chunks.push("\x3c!--/&--\x3e"),
             (type.lastPushedText = !1));
         return;
