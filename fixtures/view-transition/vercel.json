@@ -4,6 +4,7 @@
   "outputDirectory": "build/static",
   "buildCommand": "",
   "ignoreCommand": "exit 1",
+  "installCommand": "yarn install && yarn build",
   "env": {
     "BABEL_DISABLE_CACHE": "1",
     "DISABLE_ESLINT_PLUGIN": "true"
