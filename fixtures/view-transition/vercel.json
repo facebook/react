@@ -1,14 +1,21 @@
 {
-  "builds": [
-    {
-      "src": "./server/index.js",
-      "use": "@vercel/node"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "outputDirectory": "build/static",
+  "buildCommand": "",
+  "env": {
+    "BABEL_DISABLE_CACHE": "1",
+    "DISABLE_ESLINT_PLUGIN": "true"
+  },
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "src/**/*"
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/server"
+      "source": "/(.*)",
+      "destination": "/api/index.js"
     }
   ]
 }

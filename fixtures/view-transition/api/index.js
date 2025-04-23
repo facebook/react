@@ -24,7 +24,7 @@ if (process.env.NODE_ENV === 'development') {
     render(req.url, res);
   });
 } else {
-  // `vercel build`
+  // `vercel build` does not include this in n_m otherwise
   require('babel-preset-react-app');
   require('react');
   require('react-dom/server');

@@ -39,7 +39,7 @@ Existing Vercel project (ask Sebbie for invite):
 
 ```console
 $ yarn
-$ yarn build-for-vt-build
+$ yarn build-for-vt-deploy
 $ cd fixtures/view-transition
 $ yarn
 # Make sure you have global Vercel CLI installed e.g. `yarn global add vercel`
@@ -49,4 +49,3 @@ $ vc link
 $ yarn vc-build
 $ yarn vc-deploy
 ```
-
