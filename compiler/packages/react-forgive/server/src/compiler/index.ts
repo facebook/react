@@ -33,6 +33,8 @@ export async function compile({
       plugins: ['typescript', 'jsx'],
     },
     sourceType: 'module',
+    configFile: false,
+    babelrc: false,
   });
   if (ast == null) {
     return null;
@@ -48,6 +50,8 @@ export async function compile({
     plugins,
     sourceType: 'module',
     sourceFileName: file,
+    configFile: false,
+    babelrc: false,
   });
   if (result?.code == null) {
     throw new Error(
