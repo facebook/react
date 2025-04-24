@@ -48312,11 +48312,20 @@ function inferEffectDependencies(fn) {
                             effectDeps.push(place);
                             usedDeps.push(dep);
                         }
-                        (_a = fn.env.logger) === null || _a === void 0 ? void 0 : _a.logEvent(fn.env.filename, {
-                            kind: 'AutoDepsDecorations',
-                            useEffectCallExpr: typeof value.loc !== 'symbol' ? value.loc : null,
-                            decorations: collectDepUsages(usedDeps, fnExpr.value).map(loc => typeof loc !== 'symbol' ? loc : null),
-                        });
+                        const decorations = [];
+                        for (const loc of collectDepUsages(usedDeps, fnExpr.value)) {
+                            if (typeof loc === 'symbol') {
+                                continue;
+                            }
+                            decorations.push(loc);
+                        }
+                        if (typeof value.loc !== 'symbol') {
+                            (_a = fn.env.logger) === null || _a === void 0 ? void 0 : _a.logEvent(fn.env.filename, {
+                                kind: 'AutoDepsDecorations',
+                                useEffectCallExpr: value.loc,
+                                decorations,
+                            });
+                        }
                         newInstructions.push({
                             id: makeInstructionId(0),
                             loc: GeneratedSource,
@@ -48434,7 +48443,8 @@ function collectDepUsages(deps, fnExpr) {
     }
     for (const [, block] of fnExpr.loweredFunc.func.body.blocks) {
         for (const instr of block.instructions) {
-            if (instr.value.kind === 'LoadLocal') {
+            if (instr.value.kind === 'LoadLocal' &&
+                identifiers.has(instr.value.place.identifier.id)) {
                 loadedDeps.add(instr.lvalue.identifier.id);
             }
             for (const place of eachInstructionOperand(instr)) {
