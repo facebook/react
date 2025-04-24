@@ -278,7 +278,7 @@ export type SuspenseProps = {
 
   unstable_avoidThisFallback?: boolean,
   unstable_expectedLoadTime?: number,
-  unstable_name?: string,
+  name?: string,
 };
 
 export type TracingMarkerProps = {

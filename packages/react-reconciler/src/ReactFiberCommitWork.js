@@ -1042,9 +1042,9 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
     if (
       parent !== null &&
       parent.tag === SuspenseComponent &&
-      parent.memoizedProps.unstable_name
+      parent.memoizedProps.name
     ) {
-      name = parent.memoizedProps.unstable_name;
+      name = parent.memoizedProps.name;
     }
 
     if (!wasHidden && isHidden) {
@@ -4816,7 +4816,7 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
         if (transitions !== null) {
           const abortReason = {
             reason: 'suspense',
-            name: current.memoizedProps.unstable_name || null,
+            name: current.memoizedProps.name || null,
           };
           if (
             current.memoizedState === null ||
