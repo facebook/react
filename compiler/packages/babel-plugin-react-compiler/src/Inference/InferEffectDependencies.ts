@@ -248,6 +248,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
         } else if (
           value.args.length >= 2 &&
           value.args.length - 1 === autodepFnLoads.get(callee.identifier.id) &&
+          value.args[0] != null &&
           value.args[0].kind === 'Identifier'
         ) {
           const penultimateArg = value.args[value.args.length - 2];
