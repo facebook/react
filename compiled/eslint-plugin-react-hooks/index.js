@@ -48206,6 +48206,7 @@ function declareTemporary(env, block, result) {
 }
 
 function inferEffectDependencies(fn) {
+    var _a;
     let hasRewrite = false;
     const fnExpressions = new Map();
     const autodepFnConfigs = new Map();
@@ -48298,6 +48299,7 @@ function inferEffectDependencies(fn) {
                                 loc: fnExpr.loc,
                             });
                         }
+                        const usedDeps = [];
                         for (const dep of scopeInfo.deps) {
                             if (((isUseRefType(dep.identifier) ||
                                 isSetStateType(dep.identifier)) &&
@@ -48308,7 +48310,13 @@ function inferEffectDependencies(fn) {
                             const { place, instructions } = writeDependencyToInstructions(dep, reactiveIds.has(dep.identifier.id), fn.env, fnExpr.loc);
                             newInstructions.push(...instructions);
                             effectDeps.push(place);
+                            usedDeps.push(dep);
                         }
+                        (_a = fn.env.logger) === null || _a === void 0 ? void 0 : _a.logEvent(fn.env.filename, {
+                            kind: 'AutoDepsDecorations',
+                            useEffectCallExpr: typeof value.loc !== 'symbol' ? value.loc : null,
+                            decorations: collectDepUsages(usedDeps, fnExpr.value).map(loc => typeof loc !== 'symbol' ? loc : null),
+                        });
                         newInstructions.push({
                             id: makeInstructionId(0),
                             loc: GeneratedSource,
@@ -48416,6 +48424,27 @@ function inferReactiveIdentifiers(fn) {
         }
     }
     return reactiveIds;
+}
+function collectDepUsages(deps, fnExpr) {
+    const identifiers = new Map();
+    const loadedDeps = new Set();
+    const sourceLocations = [];
+    for (const dep of deps) {
+        identifiers.set(dep.identifier.id, dep);
+    }
+    for (const [, block] of fnExpr.loweredFunc.func.body.blocks) {
+        for (const instr of block.instructions) {
+            if (instr.value.kind === 'LoadLocal') {
+                loadedDeps.add(instr.lvalue.identifier.id);
+            }
+            for (const place of eachInstructionOperand(instr)) {
+                if (loadedDeps.has(place.identifier.id)) {
+                    sourceLocations.push(place.identifier.loc);
+                }
+            }
+        }
+    }
+    return sourceLocations;
 }
 
 function instructionReordering(fn) {
