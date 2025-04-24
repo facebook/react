@@ -54534,10 +54534,21 @@ function compileProgram(program, pass) {
                 return null;
             }
         }
-        (_c = pass.opts.logger) === null || _c === void 0 ? void 0 : _c.logEvent(pass.filename, {
+        if (pass.opts.ignoreUseNoForget === false && optOutDirectives.length > 0) {
+            for (const directive of optOutDirectives) {
+                (_c = pass.opts.logger) === null || _c === void 0 ? void 0 : _c.logEvent(pass.filename, {
+                    kind: 'CompileSkip',
+                    fnLoc: (_d = fn.node.body.loc) !== null && _d !== void 0 ? _d : null,
+                    reason: `Skipped due to '${directive.value.value}' directive.`,
+                    loc: (_e = directive.loc) !== null && _e !== void 0 ? _e : null,
+                });
+            }
+            return null;
+        }
+        (_f = pass.opts.logger) === null || _f === void 0 ? void 0 : _f.logEvent(pass.filename, {
             kind: 'CompileSuccess',
-            fnLoc: (_d = fn.node.loc) !== null && _d !== void 0 ? _d : null,
-            fnName: (_f = (_e = compileResult.compiledFn.id) === null || _e === void 0 ? void 0 : _e.name) !== null && _f !== void 0 ? _f : null,
+            fnLoc: (_g = fn.node.loc) !== null && _g !== void 0 ? _g : null,
+            fnName: (_j = (_h = compileResult.compiledFn.id) === null || _h === void 0 ? void 0 : _h.name) !== null && _j !== void 0 ? _j : null,
             memoSlots: compileResult.compiledFn.memoSlotsUsed,
             memoBlocks: compileResult.compiledFn.memoBlocks,
             memoValues: compileResult.compiledFn.memoValues,
@@ -54548,17 +54559,6 @@ function compileProgram(program, pass) {
             return compileResult.compiledFn;
         }
         else if (pass.opts.compilationMode === 'annotation') {
-            return null;
-        }
-        if (pass.opts.ignoreUseNoForget === false && optOutDirectives.length > 0) {
-            for (const directive of optOutDirectives) {
-                (_g = pass.opts.logger) === null || _g === void 0 ? void 0 : _g.logEvent(pass.filename, {
-                    kind: 'CompileSkip',
-                    fnLoc: (_h = fn.node.body.loc) !== null && _h !== void 0 ? _h : null,
-                    reason: `Skipped due to '${directive.value.value}' directive.`,
-                    loc: (_j = directive.loc) !== null && _j !== void 0 ? _j : null,
-                });
-            }
             return null;
         }
         if (!pass.opts.noEmit) {
