@@ -1,17 +1,22 @@
 import * as path from 'path';
-import {ExtensionContext, window as Window} from 'vscode';
+import * as vscode from 'vscode';
 
 import {
   LanguageClient,
   LanguageClientOptions,
+  Position,
   ServerOptions,
   TransportKind,
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
 
-export function activate(context: ExtensionContext) {
+export function activate(context: vscode.ExtensionContext) {
   const serverModule = context.asAbsolutePath(path.join('dist', 'server.js'));
+  const documentSelector = [
+    {scheme: 'file', language: 'javascriptreact'},
+    {scheme: 'file', language: 'typescriptreact'},
+  ];
 
   // If the extension is launched in debug mode then the debug server options are used
   // Otherwise the run options are used
@@ -27,10 +32,7 @@ export function activate(context: ExtensionContext) {
   };
 
   const clientOptions: LanguageClientOptions = {
-    documentSelector: [
-      {scheme: 'file', language: 'javascriptreact'},
-      {scheme: 'file', language: 'typescriptreact'},
-    ],
+    documentSelector,
     progressOnInitialization: true,
   };
 
@@ -43,11 +45,37 @@ export function activate(context: ExtensionContext) {
       clientOptions,
     );
   } catch {
-    Window.showErrorMessage(
+    vscode.window.showErrorMessage(
       `React Analyzer couldn't be started. See the output channel for details.`,
     );
     return;
   }
+
+  vscode.languages.registerHoverProvider(documentSelector, {
+    provideHover(_document, position, _token) {
+      client
+        .sendRequest('react/autodepsdecorations', position)
+        .then((decorations: Array<[Position, Position]>) => {
+          for (const [start, end] of decorations) {
+            const range = new vscode.Range(
+              new vscode.Position(start.line, start.character),
+              new vscode.Position(end.line, end.character),
+            );
+            const vscodeDecoration =
+              vscode.window.createTextEditorDecorationType({
+                backgroundColor: 'red',
+              });
+            vscode.window.activeTextEditor?.setDecorations(vscodeDecoration, [
+              {
+                range,
+                hoverMessage: 'hehe',
+              },
+            ]);
+          }
+        });
+      return null;
+    },
+  });
 
   client.registerProposedFeatures();
   client.start();
