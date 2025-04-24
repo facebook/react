@@ -5,29 +5,16 @@ import {
   LanguageClient,
   LanguageClientOptions,
   type Position,
-  RequestType,
   ServerOptions,
   TransportKind,
 } from 'vscode-languageclient/node';
-import {WHITE} from './colors';
+import {positionLiteralToVSCodePosition} from './mapping';
+import {
+  getCurrentlyDecoratedAutoDepFnLoc,
+  requestAutoDepsDecorations,
+} from './autodeps';
 
 let client: LanguageClient;
-const inferredEffectDepDecoration =
-  vscode.window.createTextEditorDecorationType({
-    backgroundColor: WHITE.toAlphaString(0.3),
-  });
-
-type Range = [Position, Position];
-interface AutoDepsDecorationsParams {
-  position: Position;
-}
-namespace AutoDepsDecorationsRequest {
-  export const type = new RequestType<
-    AutoDepsDecorationsParams,
-    Array<Range> | null,
-    void
-  >('react/autodeps_decorations');
-}
 
 export function activate(context: vscode.ExtensionContext) {
   const serverModule = context.asAbsolutePath(path.join('dist', 'server.js'));
@@ -71,30 +58,30 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.languages.registerHoverProvider(documentSelector, {
     provideHover(_document, position, _token) {
-      client
-        .sendRequest(AutoDepsDecorationsRequest.type, {position})
-        .then(decorations => {
-          if (Array.isArray(decorations)) {
-            const decorationOptions = decorations.map(([start, end]) => {
-              return {
-                range: new vscode.Range(
-                  new vscode.Position(start.line, start.character),
-                  new vscode.Position(end.line, end.character),
-                ),
-                hoverMessage: 'Inferred as an effect dependency',
-              };
-            });
-            vscode.window.activeTextEditor?.setDecorations(
-              inferredEffectDepDecoration,
-              decorationOptions,
-            );
-          } else {
-            clearDecorations(inferredEffectDepDecoration);
-          }
-        });
+      requestAutoDepsDecorations(client, position, {shouldUpdateCurrent: true});
       return null;
     },
   });
+
+  vscode.workspace.onDidChangeTextDocument(async _e => {
+    const currentlyDecoratedAutoDepFnLoc = getCurrentlyDecoratedAutoDepFnLoc();
+    if (currentlyDecoratedAutoDepFnLoc !== null) {
+      requestAutoDepsDecorations(client, currentlyDecoratedAutoDepFnLoc.start, {
+        shouldUpdateCurrent: false,
+      });
+    }
+  });
+
+  vscode.commands.registerCommand(
+    'react.requestAutoDepsDecorations',
+    (position: Position) => {
+      requestAutoDepsDecorations(
+        client,
+        positionLiteralToVSCodePosition(position),
+        {shouldUpdateCurrent: true},
+      );
+    },
+  );
 
   client.registerProposedFeatures();
   client.start();
@@ -105,10 +92,4 @@ export function deactivate(): Thenable<void> | undefined {
     return client.stop();
   }
   return;
-}
-
-export function clearDecorations(
-  decorationType: vscode.TextEditorDecorationType,
-) {
-  vscode.window.activeTextEditor?.setDecorations(decorationType, []);
 }

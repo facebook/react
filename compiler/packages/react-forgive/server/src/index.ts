@@ -10,6 +10,7 @@ import {
   CodeAction,
   CodeActionKind,
   CodeLens,
+  Command,
   createConnection,
   type InitializeParams,
   type InitializeResult,
@@ -96,6 +97,7 @@ connection.onInitialize((_params: InitializeParams) => {
     logger: {
       logEvent(_filename: string | null, event: LoggerEvent) {
         connection.console.info(`Received event: ${event.kind}`);
+        connection.console.debug(JSON.stringify(event, null, 2));
         if (event.kind === 'CompileSuccess') {
           compiledFns.add(event);
         }
@@ -191,7 +193,6 @@ connection.onCodeLensResolve(lens => {
 
 connection.onCodeAction(params => {
   connection.console.log('onCodeAction');
-  connection.console.log(JSON.stringify(params, null, 2));
   const codeActions: Array<CodeAction> = [];
   for (const codeActionEvent of codeActionEvents) {
     if (
@@ -200,39 +201,41 @@ connection.onCodeAction(params => {
         codeActionEvent.anchorRange,
       )
     ) {
-      codeActions.push(
-        CodeAction.create(
-          codeActionEvent.title,
-          {
-            changes: {
-              [params.textDocument.uri]: [
-                {
-                  newText: codeActionEvent.newText,
-                  range: codeActionEvent.editRange,
-                },
-              ],
-            },
+      const codeAction = CodeAction.create(
+        codeActionEvent.title,
+        {
+          changes: {
+            [params.textDocument.uri]: [
+              {
+                newText: codeActionEvent.newText,
+                range: codeActionEvent.editRange,
+              },
+            ],
           },
-          codeActionEvent.kind,
-        ),
+        },
+        codeActionEvent.kind,
       );
+      // After executing a codeaction, we want to draw autodep decorations again
+      codeAction.command = Command.create(
+        'Request autodeps decorations',
+        'react.requestAutoDepsDecorations',
+        codeActionEvent.anchorRange[0],
+      );
+      codeActions.push(codeAction);
     }
   }
   return codeActions;
 });
 
-connection.onCodeActionResolve(codeAction => {
-  connection.console.log('onCodeActionResolve');
-  connection.console.log(JSON.stringify(codeAction, null, 2));
-  return codeAction;
-});
-
+/**
+ * The client can request the server to compute autodeps decorations based on a currently selected
+ * position if the selected position is within an autodep eligible function call.
+ */
 connection.onRequest(AutoDepsDecorationsRequest.type, async params => {
   const position = params.position;
-  connection.console.debug('Client hovering on: ' + JSON.stringify(position));
   for (const dec of autoDepsDecorations) {
     if (isPositionWithinRange(position, dec.useEffectCallExpr)) {
-      return dec.decorations;
+      return dec;
     }
   }
   return null;
