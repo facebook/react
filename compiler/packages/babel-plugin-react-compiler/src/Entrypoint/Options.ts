@@ -183,7 +183,8 @@ export type LoggerEvent =
   | CompileSkipEvent
   | PipelineErrorEvent
   | TimingEvent
-  | AutoDepsDecorationsEvent;
+  | AutoDepsDecorationsEvent
+  | AutoDepsEligibleEvent;
 
 export type CompileErrorEvent = {
   kind: 'CompileError';
@@ -222,8 +223,13 @@ export type TimingEvent = {
 };
 export type AutoDepsDecorationsEvent = {
   kind: 'AutoDepsDecorations';
-  useEffectCallExpr: t.SourceLocation;
+  fnLoc: t.SourceLocation;
   decorations: Array<t.SourceLocation>;
+};
+export type AutoDepsEligibleEvent = {
+  kind: 'AutoDepsEligible';
+  fnLoc: t.SourceLocation;
+  depArrayLoc: t.SourceLocation;
 };
 
 export type Logger = {
