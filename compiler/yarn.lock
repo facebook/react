@@ -4341,15 +4341,10 @@ camelcase@^6.0.0, camelcase@^6.2.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-6.3.0.tgz#5685b95eb209ac9c0c177467778c9c84df58ba9a"
   integrity sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==
 
-caniuse-lite@^1.0.30001489:
-  version "1.0.30001581"
-  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001581.tgz"
-  integrity sha512-whlTkwhqV2tUmP3oYhtNfaWGYHDdS3JYFQBKXxcUR9qqPWsRhFHhoISO2Xnl/g0xyKzht9mI1LZpiNWfMzHixQ==
-
-caniuse-lite@^1.0.30001688:
-  version "1.0.30001690"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001690.tgz#f2d15e3aaf8e18f76b2b8c1481abde063b8104c8"
-  integrity sha512-5ExiE3qQN6oF8Clf8ifIDcMRCRE/dMGcETG/XGMD8/XiXm6HXQgQTh1yZYLXXpSOsEUlJm1Xr7kGULZTuGtP/w==
+caniuse-lite@^1.0.30001489, caniuse-lite@^1.0.30001688:
+  version "1.0.30001715"
+  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001715.tgz"
+  integrity sha512-7ptkFGMm2OAOgvZpwgA4yjQ5SQbrNVGdRjzH0pBdy1Fasvcr+KAeECmbCAECzTuDuoX0FCY8KzUxjf9+9kfZEw==
 
 chalk@2.4.2, chalk@^2.0.0, chalk@^2.4.2:
   version "2.4.2"
@@ -8705,17 +8700,17 @@ raw-body@^3.0.0:
     iconv-lite "0.6.3"
     unpipe "1.0.0"
 
-react-dom@0.0.0-experimental-4beb1fd8-20241118:
-  version "0.0.0-experimental-4beb1fd8-20241118"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-0.0.0-experimental-4beb1fd8-20241118.tgz#bf51483d52faea0618abef7d7eab681eea328ac7"
-  integrity sha512-/Gs2N/6hiuwqf2uuJ3UN/PWxpIncbuY7XY/IynlB2oNpopeV+x1MMXfNdse8TiPkpgg9aw+VUfQUlLPC52bKiQ==
+react-dom@0.0.0-experimental-197d6a04-20250424:
+  version "0.0.0-experimental-197d6a04-20250424"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-0.0.0-experimental-197d6a04-20250424.tgz#ea244a8b4329b204cd308fd748b67637f6f03eea"
+  integrity sha512-k8W9K9/sQlkydX+gVPgmFVNVqhU5YwtWAtCshWZYpLbmMWp6Za3T0FaFYeGRBjsgpqh+4fRPtQG1MNU+gvrN8w==
   dependencies:
-    scheduler "0.0.0-experimental-4beb1fd8-20241118"
+    scheduler "0.0.0-experimental-197d6a04-20250424"
 
-react-is@0.0.0-experimental-4beb1fd8-20241118:
-  version "0.0.0-experimental-4beb1fd8-20241118"
-  resolved "https://registry.yarnpkg.com/react-is/-/react-is-0.0.0-experimental-4beb1fd8-20241118.tgz#b6831c4ea841c994cc4a2f8c516ec8bbfe6b93ec"
-  integrity sha512-7JE3PtW4zpMYdp1bTXKNmz2t0jzaqc3frMWbvbuZmhif5ndtYx5oCGhfnbm6S5ZeTNKe4GXsN5D73QtZClfepQ==
+react-is@0.0.0-experimental-197d6a04-20250424:
+  version "0.0.0-experimental-197d6a04-20250424"
+  resolved "https://registry.yarnpkg.com/react-is/-/react-is-0.0.0-experimental-197d6a04-20250424.tgz#f448916fd4078b51cf83caec22b435a99de8a940"
+  integrity sha512-PWnddSUekOz0cNcfjXzunHoUsDFv6OHNGSxjR/Fp3EKLQrK8RlyGP2INnO9IEfa4jym385twgSGZ9Pj4D+Dotg==
 
 react-is@^16.8.4:
   version "16.13.1"
@@ -8732,10 +8727,10 @@ react-is@^18.0.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-18.3.1.tgz#e83557dc12eae63a99e003a46388b1dcbb44db7e"
   integrity sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==
 
-react@0.0.0-experimental-4beb1fd8-20241118:
-  version "0.0.0-experimental-4beb1fd8-20241118"
-  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-4beb1fd8-20241118.tgz#1585771bb5246a2a9828700997d90db9adb0eeba"
-  integrity sha512-SojDx9IQZXRbze+BNoLRiBDblVTMRebpOZyU2QyRk4ptJob78QiROi58uuE7yxrFMDQN4kBl6tqYkSwQaIM2nQ==
+react@0.0.0-experimental-197d6a04-20250424:
+  version "0.0.0-experimental-197d6a04-20250424"
+  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-197d6a04-20250424.tgz#83398ac57a5322b2ca7aedea6645c94c4585261a"
+  integrity sha512-2BWhl33tYx2nVLahXumIvAmyMKQOuXKRj/DjV1gnBTRT31PV7ttMeOUDtR1Pwt648rI4ooCKyMV4wqxZotyOAA==
 
 readable-stream@^3.4.0, readable-stream@^3.6.2:
   version "3.6.2"
@@ -9013,10 +9008,10 @@ saxes@^6.0.0:
   dependencies:
     xmlchars "^2.2.0"
 
-scheduler@0.0.0-experimental-4beb1fd8-20241118:
-  version "0.0.0-experimental-4beb1fd8-20241118"
-  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-experimental-4beb1fd8-20241118.tgz#3143baa23dfb4daed6a9d0bfd44a8050a0cdab93"
-  integrity sha512-b7GQktevD5BPcS+R5qY5se5oX4b8AHQyebWswGZBdLCmElIwR3Q+RO5EgsLOA4t5D3/TDjLm58CQG16uEB5rMA==
+scheduler@0.0.0-experimental-197d6a04-20250424:
+  version "0.0.0-experimental-197d6a04-20250424"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-experimental-197d6a04-20250424.tgz#ca47e90feec36d058d8db9878a8b138a0f1604c8"
+  integrity sha512-kfVmZoI1SPFz8g24coy9aJTc/tdPjLHhs34QT5HW0+jJl2Kg5pjL1tlzM9aztfxLORQ3vS4Okg5FejbB3EVBYg==
 
 semver@7.x, semver@^7.3.5:
   version "7.3.7"
