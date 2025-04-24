@@ -48206,7 +48206,7 @@ function declareTemporary(env, block, result) {
 }
 
 function inferEffectDependencies(fn) {
-    var _a;
+    var _a, _b;
     let hasRewrite = false;
     const fnExpressions = new Map();
     const autodepFnConfigs = new Map();
@@ -48322,7 +48322,7 @@ function inferEffectDependencies(fn) {
                         if (typeof value.loc !== 'symbol') {
                             (_a = fn.env.logger) === null || _a === void 0 ? void 0 : _a.logEvent(fn.env.filename, {
                                 kind: 'AutoDepsDecorations',
-                                useEffectCallExpr: value.loc,
+                                fnLoc: value.loc,
                                 decorations,
                             });
                         }
@@ -48346,6 +48346,23 @@ function inferEffectDependencies(fn) {
                         value.args.push(Object.assign(Object.assign({}, depsPlace), { effect: Effect.Freeze }));
                         rewriteInstrs.set(instr.id, newInstructions);
                         fn.env.inferredEffectLocations.add(callee.loc);
+                    }
+                }
+                else if (value.args.length >= 2 &&
+                    value.args.length - 1 === autodepFnLoads.get(callee.identifier.id) &&
+                    value.args[0].kind === 'Identifier') {
+                    const penultimateArg = value.args[value.args.length - 2];
+                    const depArrayArg = value.args[value.args.length - 1];
+                    if (depArrayArg.kind !== 'Spread' &&
+                        penultimateArg.kind !== 'Spread' &&
+                        typeof depArrayArg.loc !== 'symbol' &&
+                        typeof penultimateArg.loc !== 'symbol' &&
+                        typeof value.loc !== 'symbol') {
+                        (_b = fn.env.logger) === null || _b === void 0 ? void 0 : _b.logEvent(fn.env.filename, {
+                            kind: 'AutoDepsEligible',
+                            fnLoc: value.loc,
+                            depArrayLoc: Object.assign(Object.assign({}, depArrayArg.loc), { start: penultimateArg.loc.end, end: depArrayArg.loc.end }),
+                        });
                     }
                 }
             }
