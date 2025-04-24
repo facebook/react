@@ -133,3 +133,15 @@ export function preinitScriptForSSR(
       nonce,
     });
 }
+
+export function preloadModuleForSSR(
+  href: string,
+  nonce: ?string,
+  crossOrigin: ?string,
+) {
+  ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
+    .m(/* preloadModuleScript */ href, {
+      crossOrigin: getCrossOriginString(crossOrigin),
+      nonce,
+    });
+}
