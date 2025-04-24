@@ -938,25 +938,40 @@ export function formatDataForPreview(
         return 'unserializable';
       }
     case 'thenable':
+      let displayName: string;
+      if (isPlainObject(data)) {
+        displayName = 'Thenable';
+      } else {
+        let resolvedConstructorName = data.constructor.name;
+        if (typeof resolvedConstructorName !== 'string') {
+          resolvedConstructorName =
+            Object.getPrototypeOf(data).constructor.name;
+        }
+        if (typeof resolvedConstructorName === 'string') {
+          displayName = resolvedConstructorName;
+        } else {
+          displayName = 'Thenable';
+        }
+      }
       switch (data.status) {
         case 'pending':
-          return 'pending Thenable';
+          return `pending ${displayName}`;
         case 'fulfilled':
           if (showFormattedValue) {
             const formatted = formatDataForPreview(data.value, false);
-            return `fulfilled Thenable {${truncateForDisplay(formatted)}}`;
+            return `fulfilled ${displayName} {${truncateForDisplay(formatted)}}`;
           } else {
-            return 'fulfilled Thenable {…}';
+            return `fulfilled ${displayName} {…}`;
           }
         case 'rejected':
           if (showFormattedValue) {
             const formatted = formatDataForPreview(data.reason, false);
-            return `rejected Thenable {${truncateForDisplay(formatted)}}`;
+            return `rejected ${displayName} {${truncateForDisplay(formatted)}}`;
           } else {
-            return 'rejected Thenable {…}';
+            return `rejected ${displayName} {…}`;
           }
         default:
-          return Object.getPrototypeOf(data).constructor.name;
+          return displayName;
       }
     case 'object':
       if (showFormattedValue) {

@@ -818,6 +818,10 @@ describe('InspectedElement', () => {
   it('should support Thenables in React 19', async () => {
     const Example = () => null;
 
+    class SubclassedPromise extends Promise {}
+
+    const plainThenable = {then() {}};
+    const subclassedPromise = new SubclassedPromise(() => {});
     const unusedPromise = Promise.resolve();
     const usedFulfilledPromise = Promise.resolve();
     const usedFulfilledRichPromise = Promise.resolve({
@@ -845,6 +849,8 @@ describe('InspectedElement', () => {
       render(
         <>
           <Example
+            plainThenable={plainThenable}
+            subclassedPromise={subclassedPromise}
             unusedPromise={unusedPromise}
             usedFulfilledPromise={usedFulfilledPromise}
             usedFulfilledRichPromise={usedFulfilledRichPromise}
@@ -872,32 +878,40 @@ describe('InspectedElement', () => {
     const inspectedElement = await inspectElementAtIndex(0);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-    {
-      "unusedPromise": Dehydrated {
-        "preview_short": Promise,
-        "preview_long": Promise,
-      },
-      "usedFulfilledPromise": {
-        "value": undefined,
-      },
-      "usedFulfilledRichPromise": {
-        "value": Dehydrated {
-          "preview_short": {…},
-          "preview_long": {some: {…}},
+      {
+        "plainThenable": Dehydrated {
+          "preview_short": Thenable,
+          "preview_long": Thenable,
         },
-      },
-      "usedPendingPromise": Dehydrated {
-        "preview_short": pending Thenable,
-        "preview_long": pending Thenable,
-      },
-      "usedRejectedPromise": {
-        "reason": Dehydrated {
-          "preview_short": Error,
-          "preview_long": Error,
+        "subclassedPromise": Dehydrated {
+          "preview_short": SubclassedPromise,
+          "preview_long": SubclassedPromise,
         },
-      },
-    }
-  `);
+        "unusedPromise": Dehydrated {
+          "preview_short": Promise,
+          "preview_long": Promise,
+        },
+        "usedFulfilledPromise": {
+          "value": undefined,
+        },
+        "usedFulfilledRichPromise": {
+          "value": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {some: {…}},
+          },
+        },
+        "usedPendingPromise": Dehydrated {
+          "preview_short": pending Promise,
+          "preview_long": pending Promise,
+        },
+        "usedRejectedPromise": {
+          "reason": Dehydrated {
+            "preview_short": Error,
+            "preview_long": Error,
+          },
+        },
+      }
+    `);
   });
 
   it('should support Promises in React 18', async () => {

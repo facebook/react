@@ -324,7 +324,7 @@ export function dehydrate(
             type: type,
             preview_short: formatDataForPreview(data, false),
             preview_long: formatDataForPreview(data, true),
-            name: 'fulfilled Promise',
+            name: 'fulfilled Thenable',
           };
 
           unserializableValue.value = dehydrate(
@@ -346,7 +346,7 @@ export function dehydrate(
             type: type,
             preview_short: formatDataForPreview(data, false),
             preview_long: formatDataForPreview(data, true),
-            name: 'fulfilled Promise',
+            name: 'rejected Thenable',
           };
 
           unserializableValue.reason = dehydrate(
