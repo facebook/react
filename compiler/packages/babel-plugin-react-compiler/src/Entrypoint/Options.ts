@@ -222,8 +222,8 @@ export type TimingEvent = {
 };
 export type AutoDepsDecorations = {
   kind: 'AutoDepsDecorations';
-  useEffectCallExpr: t.SourceLocation | null;
-  decorations: Array<t.SourceLocation | null>;
+  useEffectCallExpr: t.SourceLocation;
+  decorations: Array<t.SourceLocation>;
 };
 
 export type Logger = {

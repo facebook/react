@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+import * as t from '@babel/types';
 import {CompilerError, SourceLocation} from '..';
 import {
   ArrayExpression,
@@ -212,14 +220,20 @@ export function inferEffectDependencies(fn: HIRFunction): void {
             }
 
             // For LSP autodeps feature.
-            fn.env.logger?.logEvent(fn.env.filename, {
-              kind: 'AutoDepsDecorations',
-              useEffectCallExpr:
-                typeof value.loc !== 'symbol' ? value.loc : null,
-              decorations: collectDepUsages(usedDeps, fnExpr.value).map(loc =>
-                typeof loc !== 'symbol' ? loc : null,
-              ),
-            });
+            const decorations: Array<t.SourceLocation> = [];
+            for (const loc of collectDepUsages(usedDeps, fnExpr.value)) {
+              if (typeof loc === 'symbol') {
+                continue;
+              }
+              decorations.push(loc);
+            }
+            if (typeof value.loc !== 'symbol') {
+              fn.env.logger?.logEvent(fn.env.filename, {
+                kind: 'AutoDepsDecorations',
+                useEffectCallExpr: value.loc,
+                decorations,
+              });
+            }
 
             newInstructions.push({
               id: makeInstructionId(0),
