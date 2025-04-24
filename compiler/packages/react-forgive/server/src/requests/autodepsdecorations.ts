@@ -22,7 +22,7 @@ export function mapCompilerEventToLSPEvent(
   event: AutoDepsDecorationsEvent,
 ): AutoDepsDecorationsLSPEvent {
   return {
-    useEffectCallExpr: sourceLocationToRange(event.useEffectCallExpr),
+    useEffectCallExpr: sourceLocationToRange(event.fnLoc),
     decorations: event.decorations.map(sourceLocationToRange),
   };
 }
