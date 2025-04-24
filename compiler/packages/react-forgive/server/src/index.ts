@@ -132,7 +132,7 @@ connection.onInitialized(() => {
 });
 
 documents.onDidChangeContent(async event => {
-  connection.console.info(`Changed: ${event.document.uri}`);
+  connection.console.info(`Compiling: ${event.document.uri}`);
   resetState();
   if (SUPPORTED_LANGUAGE_IDS.has(event.document.languageId)) {
     const text = event.document.getText();
@@ -143,8 +143,11 @@ documents.onDidChangeContent(async event => {
         options: compilerOptions,
       });
     } catch (err) {
+      connection.console.error('Failed to compile');
       if (err instanceof Error) {
-        connection.console.error(err.stack ?? '');
+        connection.console.error(err.stack ?? err.message);
+      } else {
+        connection.console.error(JSON.stringify(err, null, 2));
       }
     }
   }
@@ -192,7 +195,6 @@ connection.onCodeLensResolve(lens => {
 });
 
 connection.onCodeAction(params => {
-  connection.console.log('onCodeAction');
   const codeActions: Array<CodeAction> = [];
   for (const codeActionEvent of codeActionEvents) {
     if (
@@ -242,6 +244,7 @@ connection.onRequest(AutoDepsDecorationsRequest.type, async params => {
 });
 
 function resetState() {
+  connection.console.debug('Clearing state');
   compiledFns.clear();
   autoDepsDecorations = [];
   codeActionEvents = [];
