@@ -469,6 +469,23 @@ export function compileProgram(
       }
     }
 
+    /**
+     * Otherwise if 'use no forget/memo' is present, we still run the code through the compiler
+     * for validation but we don't mutate the babel AST. This allows us to flag if there is an
+     * unused 'use no forget/memo' directive.
+     */
+    if (pass.opts.ignoreUseNoForget === false && optOutDirectives.length > 0) {
+      for (const directive of optOutDirectives) {
+        pass.opts.logger?.logEvent(pass.filename, {
+          kind: 'CompileSkip',
+          fnLoc: fn.node.body.loc ?? null,
+          reason: `Skipped due to '${directive.value.value}' directive.`,
+          loc: directive.loc ?? null,
+        });
+      }
+      return null;
+    }
+
     pass.opts.logger?.logEvent(pass.filename, {
       kind: 'CompileSuccess',
       fnLoc: fn.node.loc ?? null,
@@ -489,23 +506,6 @@ export function compileProgram(
       /**
        * No opt-in directive in annotation mode, so don't insert the compiled function.
        */
-      return null;
-    }
-
-    /**
-     * Otherwise if 'use no forget/memo' is present, we still run the code through the compiler
-     * for validation but we don't mutate the babel AST. This allows us to flag if there is an
-     * unused 'use no forget/memo' directive.
-     */
-    if (pass.opts.ignoreUseNoForget === false && optOutDirectives.length > 0) {
-      for (const directive of optOutDirectives) {
-        pass.opts.logger?.logEvent(pass.filename, {
-          kind: 'CompileSkip',
-          fnLoc: fn.node.body.loc ?? null,
-          reason: `Skipped due to '${directive.value.value}' directive.`,
-          loc: directive.loc ?? null,
-        });
-      }
       return null;
     }
 
