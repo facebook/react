@@ -367,7 +367,10 @@ function collectDepUsages(
 
   for (const [, block] of fnExpr.loweredFunc.func.body.blocks) {
     for (const instr of block.instructions) {
-      if (instr.value.kind === 'LoadLocal') {
+      if (
+        instr.value.kind === 'LoadLocal' &&
+        identifiers.has(instr.value.place.identifier.id)
+      ) {
         loadedDeps.add(instr.lvalue.identifier.id);
       }
       for (const place of eachInstructionOperand(instr)) {
