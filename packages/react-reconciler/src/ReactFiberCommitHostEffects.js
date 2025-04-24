@@ -10,6 +10,7 @@
 import type {
   Instance,
   TextInstance,
+  ActivityInstance,
   SuspenseInstance,
   Container,
   ChildSet,
@@ -41,11 +42,14 @@ import {
   insertBefore,
   insertInContainerBefore,
   replaceContainerChildren,
+  hideDehydratedBoundary,
   hideInstance,
   hideTextInstance,
+  unhideDehydratedBoundary,
   unhideInstance,
   unhideTextInstance,
   commitHydratedContainer,
+  commitHydratedActivityInstance,
   commitHydratedSuspenseInstance,
   removeChildFromContainer,
   removeChild,
@@ -149,6 +153,27 @@ export function commitHostResetTextContent(finishedWork: Fiber) {
     trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
+  }
+}
+
+export function commitShowHideSuspenseBoundary(node: Fiber, isHidden: boolean) {
+  try {
+    const instance = node.stateNode;
+    if (isHidden) {
+      if (__DEV__) {
+        runWithFiberInDEV(node, hideDehydratedBoundary, instance);
+      } else {
+        hideDehydratedBoundary(instance);
+      }
+    } else {
+      if (__DEV__) {
+        runWithFiberInDEV(node, unhideDehydratedBoundary, node.stateNode);
+      } else {
+        unhideDehydratedBoundary(node.stateNode);
+      }
+    }
+  } catch (error) {
+    captureCommitPhaseError(node, node.return, error);
   }
 }
 
@@ -653,6 +678,25 @@ export function commitHostHydratedContainer(
       );
     } else {
       commitHydratedContainer(root.containerInfo);
+    }
+  } catch (error) {
+    captureCommitPhaseError(finishedWork, finishedWork.return, error);
+  }
+}
+
+export function commitHostHydratedActivity(
+  activityInstance: ActivityInstance,
+  finishedWork: Fiber,
+) {
+  try {
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        commitHydratedActivityInstance,
+        activityInstance,
+      );
+    } else {
+      commitHydratedActivityInstance(activityInstance);
     }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);

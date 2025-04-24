@@ -29,6 +29,7 @@ import type {
   Instance,
   TimeoutHandle,
   NoTimeout,
+  ActivityInstance,
   SuspenseInstance,
   TransitionStatus,
 } from './ReactFiberConfig';
@@ -297,8 +298,10 @@ type UpdaterTrackingOnlyFiberRootProperties = {
 };
 
 export type SuspenseHydrationCallbacks = {
-  onHydrated?: (suspenseInstance: SuspenseInstance) => void,
-  onDeleted?: (suspenseInstance: SuspenseInstance) => void,
+  +onHydrated?: (
+    hydrationBoundary: SuspenseInstance | ActivityInstance,
+  ) => void,
+  +onDeleted?: (hydrationBoundary: SuspenseInstance | ActivityInstance) => void,
   ...
 };
 
