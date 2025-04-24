@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 // https://github.com/algolia/docsearch/blob/15ebcba606b281aa0dddc4ccb8feb19d396bf79e/packages/docsearch-react/src/types/DocSearchHit.ts
 type ContentType =
   | 'content'
