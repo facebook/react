@@ -5,10 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  McpServer,
-  ResourceTemplate,
-} from '@modelcontextprotocol/sdk/server/mcp.js';
+import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {z} from 'zod';
 import {compile, type PrintedCompilerPipelineValue} from './compiler';
@@ -20,82 +17,55 @@ import {
   SourceLocation,
 } from 'babel-plugin-react-compiler/src';
 import * as cheerio from 'cheerio';
-import TurndownService from 'turndown';
 import {queryAlgolia} from './utils/algolia';
 import assertExhaustive from './utils/assertExhaustive';
+import {convert} from 'html-to-text';
 
-const turndownService = new TurndownService();
 const server = new McpServer({
   name: 'React',
   version: '0.0.0',
 });
 
-function slugify(heading: string): string {
-  return heading
-    .split(' ')
-    .map(w => w.toLowerCase())
-    .join('-');
-}
-
-// TODO: how to verify this works?
-server.resource(
-  'docs',
-  new ResourceTemplate('docs://{message}', {list: undefined}),
-  async (_uri, {message}) => {
-    const hits = await queryAlgolia(message);
-    const deduped = new Map();
-    for (const hit of hits) {
-      // drop hashes to dedupe properly
-      const u = new URL(hit.url);
-      if (deduped.has(u.pathname)) {
-        continue;
+server.tool(
+  'query-react-dev-docs',
+  'Search/look up official docs from react.dev',
+  {
+    query: z.string(),
+  },
+  async ({query}) => {
+    try {
+      const pages = await queryAlgolia(query);
+      if (pages.length === 0) {
+        return {
+          content: [{type: 'text' as const, text: `No results`}],
+        };
       }
-      deduped.set(u.pathname, hit);
-    }
-    const pages: Array<string | null> = await Promise.all(
-      Array.from(deduped.values()).map(hit => {
-        return fetch(hit.url, {
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
-          },
-        }).then(res => {
-          if (res.ok === true) {
-            return res.text();
-          } else {
-            console.error(
-              `Could not fetch docs: ${res.status} ${res.statusText}`,
-            );
-            return null;
-          }
-        });
-      }),
-    );
-
-    const resultsMarkdown = pages
-      .filter(html => html !== null)
-      .map(html => {
+      const content = pages.map(html => {
         const $ = cheerio.load(html);
-        const title = encodeURIComponent(slugify($('h1').text()));
         // react.dev should always have at least one <article> with the main content
         const article = $('article').html();
         if (article != null) {
           return {
-            uri: `docs://${title}`,
-            text: turndownService.turndown(article),
+            type: 'text' as const,
+            text: convert(article),
           };
         } else {
           return {
-            uri: `docs://${title}`,
-            // Fallback to converting the whole page to markdown
-            text: turndownService.turndown($.html()),
+            type: 'text' as const,
+            // Fallback to converting the whole page to text.
+            text: convert($.html()),
           };
         }
       });
-
-    return {
-      contents: resultsMarkdown,
-    };
+      return {
+        content,
+      };
+    } catch (err) {
+      return {
+        isError: true,
+        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
+      };
+    }
   },
 );
 
@@ -341,10 +311,8 @@ Design for a good user experience - Provide clear, minimal, and non-blocking UI 
 
 Server Components - Shift data-heavy logic to the server whenever possible. Break up the more static parts of the app into server components. Break up data fetching into server components. Only client components (denoted by the 'use client' top level directive) need interactivity. By rendering parts of your UI on the server, you reduce the client-side JavaScript needed and avoid sending unnecessary data over the wire. Use Server Components to prefetch and pre-render data, allowing faster initial loads and smaller bundle sizes. This also helps manage or eliminate certain waterfalls by resolving data on the server before streaming the HTML (and partial React tree) to the client.
 
-## Available Resources
-- 'docs': Look up documentation from docs://{query}. Returns markdown as a string.
-
 ## Available Tools
+- 'docs': Look up documentation from react.dev. Returns text as a string.
 - 'compile': Run the user's code through React Compiler. Returns optimized JS/TS code with potential diagnostics.
 
 ## Process

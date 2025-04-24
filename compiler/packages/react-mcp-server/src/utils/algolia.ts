@@ -44,7 +44,7 @@ export function printHierarchy(
 
 export async function queryAlgolia(
   message: string | Array<string>,
-): Promise<Hit<DocSearchHit>[]> {
+): Promise<Array<string>> {
   const {results} = await ALGOLIA_CLIENT.search<DocSearchHit>({
     requests: [
       {
@@ -87,5 +87,33 @@ export async function queryAlgolia(
   });
   const firstResult = results[0] as SearchResponse<DocSearchHit>;
   const {hits} = firstResult;
-  return hits;
+  const deduped = new Map();
+  for (const hit of hits) {
+    // drop hashes to dedupe properly
+    const u = new URL(hit.url);
+    if (deduped.has(u.pathname)) {
+      continue;
+    }
+    deduped.set(u.pathname, hit);
+  }
+  const pages: Array<string | null> = await Promise.all(
+    Array.from(deduped.values()).map(hit => {
+      return fetch(hit.url, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+        },
+      }).then(res => {
+        if (res.ok === true) {
+          return res.text();
+        } else {
+          console.error(
+            `Could not fetch docs: ${res.status} ${res.statusText}`,
+          );
+          return null;
+        }
+      });
+    }),
+  );
+  return pages.filter(page => page !== null);
 }
