@@ -5,10 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  McpServer,
-  ResourceTemplate,
-} from '@modelcontextprotocol/sdk/server/mcp.js';
+import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {z} from 'zod';
 import {compile, type PrintedCompilerPipelineValue} from './compiler';
@@ -20,81 +17,43 @@ import {
   SourceLocation,
 } from 'babel-plugin-react-compiler/src';
 import * as cheerio from 'cheerio';
-import TurndownService from 'turndown';
 import {queryAlgolia} from './utils/algolia';
 import assertExhaustive from './utils/assertExhaustive';
+import {convert} from 'html-to-text';
 
-const turndownService = new TurndownService();
 const server = new McpServer({
   name: 'React',
   version: '0.0.0',
 });
 
-function slugify(heading: string): string {
-  return heading
-    .split(' ')
-    .map(w => w.toLowerCase())
-    .join('-');
-}
-
-// TODO: how to verify this works?
-server.resource(
+server.tool(
   'docs',
-  new ResourceTemplate('docs://{message}', {list: undefined}),
-  async (_uri, {message}) => {
-    const hits = await queryAlgolia(message);
-    const deduped = new Map();
-    for (const hit of hits) {
-      // drop hashes to dedupe properly
-      const u = new URL(hit.url);
-      if (deduped.has(u.pathname)) {
-        continue;
+  'Search docs from react.dev',
+  {
+    query: z.string(),
+  },
+  async ({query}) => {
+    const pages = await queryAlgolia(query);
+    const content = pages.map(html => {
+      const $ = cheerio.load(html);
+      // react.dev should always have at least one <article> with the main content
+      const article = $('article').html();
+      if (article != null) {
+        return {
+          type: 'text' as const,
+          text: convert(article),
+        };
+      } else {
+        return {
+          type: 'text' as const,
+          // Fallback to converting the whole page to text.
+          text: convert($.html()),
+        };
       }
-      deduped.set(u.pathname, hit);
-    }
-    const pages: Array<string | null> = await Promise.all(
-      Array.from(deduped.values()).map(hit => {
-        return fetch(hit.url, {
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
-          },
-        }).then(res => {
-          if (res.ok === true) {
-            return res.text();
-          } else {
-            console.error(
-              `Could not fetch docs: ${res.status} ${res.statusText}`,
-            );
-            return null;
-          }
-        });
-      }),
-    );
-
-    const resultsMarkdown = pages
-      .filter(html => html !== null)
-      .map(html => {
-        const $ = cheerio.load(html);
-        const title = encodeURIComponent(slugify($('h1').text()));
-        // react.dev should always have at least one <article> with the main content
-        const article = $('article').html();
-        if (article != null) {
-          return {
-            uri: `docs://${title}`,
-            text: turndownService.turndown(article),
-          };
-        } else {
-          return {
-            uri: `docs://${title}`,
-            // Fallback to converting the whole page to markdown
-            text: turndownService.turndown($.html()),
-          };
-        }
-      });
+    });
 
     return {
-      contents: resultsMarkdown,
+      content,
     };
   },
 );

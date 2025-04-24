@@ -19,12 +19,12 @@
     "@modelcontextprotocol/sdk": "^1.9.0",
     "algoliasearch": "^5.23.3",
     "cheerio": "^1.0.0",
+    "html-to-text": "^9.0.5",
     "prettier": "^3.3.3",
-    "turndown": "^7.2.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/turndown": "^5.0.5"
+    "@types/html-to-text": "^9.0.4"
   },
   "license": "MIT",
   "repository": {
