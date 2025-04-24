@@ -563,6 +563,7 @@ export type DataType =
   | 'nan'
   | 'null'
   | 'number'
+  | 'thenable'
   | 'object'
   | 'react_element'
   | 'regexp'
@@ -631,6 +632,8 @@ export function getDataType(data: Object): DataType {
         }
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
+      } else if (typeof data.then === 'function') {
+        return 'thenable';
       } else {
         // $FlowFixMe[method-unbinding]
         const toStringValue = Object.prototype.toString.call(data);
@@ -934,6 +937,42 @@ export function formatDataForPreview(
       } catch (error) {
         return 'unserializable';
       }
+    case 'thenable':
+      let displayName: string;
+      if (isPlainObject(data)) {
+        displayName = 'Thenable';
+      } else {
+        let resolvedConstructorName = data.constructor.name;
+        if (typeof resolvedConstructorName !== 'string') {
+          resolvedConstructorName =
+            Object.getPrototypeOf(data).constructor.name;
+        }
+        if (typeof resolvedConstructorName === 'string') {
+          displayName = resolvedConstructorName;
+        } else {
+          displayName = 'Thenable';
+        }
+      }
+      switch (data.status) {
+        case 'pending':
+          return `pending ${displayName}`;
+        case 'fulfilled':
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(data.value, false);
+            return `fulfilled ${displayName} {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `fulfilled ${displayName} {…}`;
+          }
+        case 'rejected':
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(data.reason, false);
+            return `rejected ${displayName} {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `rejected ${displayName} {…}`;
+          }
+        default:
+          return displayName;
+      }
     case 'object':
       if (showFormattedValue) {
         const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
@@ -963,7 +1002,7 @@ export function formatDataForPreview(
     case 'nan':
     case 'null':
     case 'undefined':
-      return data;
+      return String(data);
     default:
       try {
         return truncateForDisplay(String(data));
