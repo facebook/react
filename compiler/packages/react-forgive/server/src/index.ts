@@ -7,10 +7,13 @@
 
 import {TextDocument} from 'vscode-languageserver-textdocument';
 import {
+  CodeAction,
+  CodeActionKind,
   CodeLens,
   createConnection,
   type InitializeParams,
   type InitializeResult,
+  Position,
   ProposedFeatures,
   TextDocuments,
   TextDocumentSyncKind,
@@ -29,7 +32,12 @@ import {
   AutoDepsDecorationsRequest,
   mapCompilerEventToLSPEvent,
 } from './requests/autodepsdecorations';
-import {isPositionWithinRange} from './utils/range';
+import {
+  isPositionWithinRange,
+  isRangeWithinRange,
+  Range,
+  sourceLocationToRange,
+} from './utils/range';
 
 const SUPPORTED_LANGUAGE_IDS = new Set([
   'javascript',
@@ -44,6 +52,15 @@ const documents = new TextDocuments(TextDocument);
 let compilerOptions: PluginOptions | null = null;
 let compiledFns: Set<CompileSuccessEvent> = new Set();
 let autoDepsDecorations: Array<AutoDepsDecorationsLSPEvent> = [];
+let codeActionEvents: Array<CodeActionLSPEvent> = [];
+
+type CodeActionLSPEvent = {
+  title: string;
+  kind: CodeActionKind;
+  newText: string;
+  anchorRange: Range;
+  editRange: {start: Position; end: Position};
+};
 
 connection.onInitialize((_params: InitializeParams) => {
   // TODO(@poteto) get config fr
@@ -85,6 +102,16 @@ connection.onInitialize((_params: InitializeParams) => {
         if (event.kind === 'AutoDepsDecorations') {
           autoDepsDecorations.push(mapCompilerEventToLSPEvent(event));
         }
+        if (event.kind === 'AutoDepsEligible') {
+          const depArrayLoc = sourceLocationToRange(event.depArrayLoc);
+          codeActionEvents.push({
+            title: 'Use React Compiler inferred dependency array',
+            kind: CodeActionKind.QuickFix,
+            newText: '',
+            anchorRange: sourceLocationToRange(event.fnLoc),
+            editRange: {start: depArrayLoc[0], end: depArrayLoc[1]},
+          });
+        }
       },
     },
   };
@@ -92,6 +119,7 @@ connection.onInitialize((_params: InitializeParams) => {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Full,
       codeLensProvider: {resolveProvider: true},
+      codeActionProvider: {resolveProvider: true},
     },
   };
   return result;
@@ -103,8 +131,7 @@ connection.onInitialized(() => {
 
 documents.onDidChangeContent(async event => {
   connection.console.info(`Changed: ${event.document.uri}`);
-  compiledFns.clear();
-  autoDepsDecorations = [];
+  resetState();
   if (SUPPORTED_LANGUAGE_IDS.has(event.document.languageId)) {
     const text = event.document.getText();
     await compile({
@@ -116,8 +143,7 @@ documents.onDidChangeContent(async event => {
 });
 
 connection.onDidChangeWatchedFiles(change => {
-  compiledFns.clear();
-  autoDepsDecorations = [];
+  resetState();
   connection.console.log(
     change.changes.map(c => `File changed: ${c.uri}`).join('\n'),
   );
@@ -157,6 +183,44 @@ connection.onCodeLensResolve(lens => {
   return lens;
 });
 
+connection.onCodeAction(params => {
+  connection.console.log('onCodeAction');
+  connection.console.log(JSON.stringify(params, null, 2));
+  const codeActions: Array<CodeAction> = [];
+  for (const codeActionEvent of codeActionEvents) {
+    if (
+      isRangeWithinRange(
+        [params.range.start, params.range.end],
+        codeActionEvent.anchorRange,
+      )
+    ) {
+      codeActions.push(
+        CodeAction.create(
+          codeActionEvent.title,
+          {
+            changes: {
+              [params.textDocument.uri]: [
+                {
+                  newText: codeActionEvent.newText,
+                  range: codeActionEvent.editRange,
+                },
+              ],
+            },
+          },
+          codeActionEvent.kind,
+        ),
+      );
+    }
+  }
+  return codeActions;
+});
+
+connection.onCodeActionResolve(codeAction => {
+  connection.console.log('onCodeActionResolve');
+  connection.console.log(JSON.stringify(codeAction, null, 2));
+  return codeAction;
+});
+
 connection.onRequest(AutoDepsDecorationsRequest.type, async params => {
   const position = params.position;
   connection.console.debug('Client hovering on: ' + JSON.stringify(position));
@@ -167,6 +231,12 @@ connection.onRequest(AutoDepsDecorationsRequest.type, async params => {
   }
   return null;
 });
+
+function resetState() {
+  compiledFns.clear();
+  autoDepsDecorations = [];
+  codeActionEvents = [];
+}
 
 documents.listen(connection);
 connection.listen();
