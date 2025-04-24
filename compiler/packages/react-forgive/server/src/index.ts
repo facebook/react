@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {Position, TextDocument} from 'vscode-languageserver-textdocument';
+import {TextDocument} from 'vscode-languageserver-textdocument';
 import {
   CodeLens,
   createConnection,
@@ -19,15 +19,17 @@ import {compile, lastResult} from './compiler';
 import {type PluginOptions} from 'babel-plugin-react-compiler/src';
 import {resolveReactConfig} from './compiler/options';
 import {
-  CompileSuccessEvent,
+  type CompileSuccessEvent,
+  type LoggerEvent,
   defaultOptions,
-  LoggerEvent,
 } from 'babel-plugin-react-compiler/src/Entrypoint/Options';
 import {babelLocationToRange, getRangeFirstCharacter} from './compiler/compat';
 import {
-  AutoDepsDecorationsLSPEvent,
+  type AutoDepsDecorationsLSPEvent,
+  AutoDepsDecorationsRequest,
   mapCompilerEventToLSPEvent,
-} from './custom-requests/autodepsdecorations';
+} from './requests/autodepsdecorations';
+import {isPositionWithinRange} from './utils/range';
 
 const SUPPORTED_LANGUAGE_IDS = new Set([
   'javascript',
@@ -155,19 +157,11 @@ connection.onCodeLensResolve(lens => {
   return lens;
 });
 
-connection.onRequest('react/autodepsdecorations', (position: Position) => {
-  connection.console.log('Client hovering on: ' + JSON.stringify(position));
-  connection.console.log(JSON.stringify(autoDepsDecorations, null, 2));
-
+connection.onRequest(AutoDepsDecorationsRequest.type, async params => {
+  const position = params.position;
+  connection.console.debug('Client hovering on: ' + JSON.stringify(position));
   for (const dec of autoDepsDecorations) {
-    // TODO: extract to helper
-    if (
-      position.line >= dec.useEffectCallExpr[0].line &&
-      position.line <= dec.useEffectCallExpr[1].line
-    ) {
-      connection.console.log(
-        'found decoration: ' + JSON.stringify(dec.decorations),
-      );
+    if (isPositionWithinRange(position, dec.useEffectCallExpr)) {
       return dec.decorations;
     }
   }
