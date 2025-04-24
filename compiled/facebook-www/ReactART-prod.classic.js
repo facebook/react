@@ -8016,8 +8016,8 @@ function commitTransitionProgress(offscreenFiber) {
     offscreenFiber = offscreenFiber.return;
     null !== offscreenFiber &&
       13 === offscreenFiber.tag &&
-      offscreenFiber.memoizedProps.unstable_name &&
-      (name = offscreenFiber.memoizedProps.unstable_name);
+      offscreenFiber.memoizedProps.name &&
+      (name = offscreenFiber.memoizedProps.name);
     !prevState && previousFiber
       ? null !== pendingMarkers &&
         pendingMarkers.forEach(function (markerInstance) {
@@ -9469,7 +9469,7 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
           if (null !== transitions) {
             var abortReason = {
               reason: "suspense",
-              name: fiber.memoizedProps.unstable_name || null
+              name: fiber.memoizedProps.name || null
             };
             if (
               null === fiber.memoizedState ||
@@ -11412,10 +11412,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1619 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-24dfad3a-20250424",
+  version: "19.2.0-www-classic-693803a9-20250424",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-24dfad3a-20250424"
+  reconcilerVersion: "19.2.0-www-classic-693803a9-20250424"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1620 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11441,4 +11441,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-classic-24dfad3a-20250424";
+exports.version = "19.2.0-www-classic-693803a9-20250424";

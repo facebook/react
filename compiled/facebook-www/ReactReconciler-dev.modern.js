@@ -12800,8 +12800,8 @@ __DEV__ &&
         offscreenFiber = offscreenFiber.return;
         null !== offscreenFiber &&
           13 === offscreenFiber.tag &&
-          offscreenFiber.memoizedProps.unstable_name &&
-          (name = offscreenFiber.memoizedProps.unstable_name);
+          offscreenFiber.memoizedProps.name &&
+          (name = offscreenFiber.memoizedProps.name);
         !prevState && previousFiber
           ? null !== pendingMarkers &&
             pendingMarkers.forEach(function (markerInstance) {
@@ -15372,7 +15372,7 @@ __DEV__ &&
               if (null !== transitions) {
                 var abortReason = {
                   reason: "suspense",
-                  name: current.memoizedProps.unstable_name || null
+                  name: current.memoizedProps.name || null
                 };
                 if (
                   null === current.memoizedState ||
@@ -21416,7 +21416,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-24dfad3a-20250424"
+        reconcilerVersion: "19.2.0-www-modern-693803a9-20250424"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

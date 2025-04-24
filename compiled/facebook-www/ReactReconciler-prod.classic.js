@@ -8828,8 +8828,8 @@ module.exports = function ($$$config) {
       offscreenFiber = offscreenFiber.return;
       null !== offscreenFiber &&
         13 === offscreenFiber.tag &&
-        offscreenFiber.memoizedProps.unstable_name &&
-        (name = offscreenFiber.memoizedProps.unstable_name);
+        offscreenFiber.memoizedProps.name &&
+        (name = offscreenFiber.memoizedProps.name);
       !prevState && previousFiber
         ? null !== pendingMarkers &&
           pendingMarkers.forEach(function (markerInstance) {
@@ -10718,7 +10718,7 @@ module.exports = function ($$$config) {
             if (null !== transitions) {
               var abortReason = {
                 reason: "suspense",
-                name: fiber.memoizedProps.unstable_name || null
+                name: fiber.memoizedProps.name || null
               };
               if (
                 null === fiber.memoizedState ||
@@ -14088,7 +14088,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-24dfad3a-20250424"
+      reconcilerVersion: "19.2.0-www-classic-693803a9-20250424"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

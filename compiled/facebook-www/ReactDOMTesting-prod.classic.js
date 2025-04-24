@@ -10227,8 +10227,8 @@ function commitTransitionProgress(offscreenFiber) {
     offscreenFiber = offscreenFiber.return;
     null !== offscreenFiber &&
       13 === offscreenFiber.tag &&
-      offscreenFiber.memoizedProps.unstable_name &&
-      (name = offscreenFiber.memoizedProps.unstable_name);
+      offscreenFiber.memoizedProps.name &&
+      (name = offscreenFiber.memoizedProps.name);
     !prevState && previousFiber
       ? null !== pendingMarkers &&
         pendingMarkers.forEach(function (markerInstance) {
@@ -12179,7 +12179,7 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
           if (null !== transitions) {
             var abortReason = {
               reason: "suspense",
-              name: fiber.memoizedProps.unstable_name || null
+              name: fiber.memoizedProps.name || null
             };
             if (
               null === fiber.memoizedState ||
@@ -19756,14 +19756,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2058 = React.version;
 if (
-  "19.2.0-www-classic-24dfad3a-20250424" !==
+  "19.2.0-www-classic-693803a9-20250424" !==
   isomorphicReactPackageVersion$jscomp$inline_2058
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2058,
-      "19.2.0-www-classic-24dfad3a-20250424"
+      "19.2.0-www-classic-693803a9-20250424"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19781,10 +19781,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2669 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-24dfad3a-20250424",
+  version: "19.2.0-www-classic-693803a9-20250424",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-24dfad3a-20250424"
+  reconcilerVersion: "19.2.0-www-classic-693803a9-20250424"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2670 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20299,4 +20299,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-24dfad3a-20250424";
+exports.version = "19.2.0-www-classic-693803a9-20250424";

@@ -14629,8 +14629,8 @@ __DEV__ &&
         offscreenFiber = offscreenFiber.return;
         null !== offscreenFiber &&
           13 === offscreenFiber.tag &&
-          offscreenFiber.memoizedProps.unstable_name &&
-          (name = offscreenFiber.memoizedProps.unstable_name);
+          offscreenFiber.memoizedProps.name &&
+          (name = offscreenFiber.memoizedProps.name);
         !prevState && previousFiber
           ? null !== pendingMarkers &&
             pendingMarkers.forEach(function (markerInstance) {
@@ -17259,7 +17259,7 @@ __DEV__ &&
               if (null !== transitions) {
                 var abortReason = {
                   reason: "suspense",
-                  name: current.memoizedProps.unstable_name || null
+                  name: current.memoizedProps.name || null
                 };
                 if (
                   null === current.memoizedState ||
@@ -31021,11 +31021,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-24dfad3a-20250424" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-693803a9-20250424" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-24dfad3a-20250424\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-693803a9-20250424\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31068,10 +31068,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-24dfad3a-20250424",
+          version: "19.2.0-www-modern-693803a9-20250424",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-24dfad3a-20250424"
+          reconcilerVersion: "19.2.0-www-modern-693803a9-20250424"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -31835,5 +31835,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-24dfad3a-20250424";
+    exports.version = "19.2.0-www-modern-693803a9-20250424";
   })();

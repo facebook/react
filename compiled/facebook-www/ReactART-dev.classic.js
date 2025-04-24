@@ -11425,8 +11425,8 @@ __DEV__ &&
         offscreenFiber = offscreenFiber.return;
         null !== offscreenFiber &&
           13 === offscreenFiber.tag &&
-          offscreenFiber.memoizedProps.unstable_name &&
-          (name = offscreenFiber.memoizedProps.unstable_name);
+          offscreenFiber.memoizedProps.name &&
+          (name = offscreenFiber.memoizedProps.name);
         !prevState && previousFiber
           ? null !== pendingMarkers &&
             pendingMarkers.forEach(function (markerInstance) {
@@ -13565,7 +13565,7 @@ __DEV__ &&
               if (null !== transitions) {
                 var abortReason = {
                   reason: "suspense",
-                  name: current.memoizedProps.unstable_name || null
+                  name: current.memoizedProps.name || null
                 };
                 if (
                   null === current.memoizedState ||
@@ -18800,10 +18800,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-24dfad3a-20250424",
+        version: "19.2.0-www-classic-693803a9-20250424",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-24dfad3a-20250424"
+        reconcilerVersion: "19.2.0-www-classic-693803a9-20250424"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18837,7 +18837,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-24dfad3a-20250424";
+    exports.version = "19.2.0-www-classic-693803a9-20250424";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
