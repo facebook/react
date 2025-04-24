@@ -13,7 +13,7 @@ export interface AutoDepsDecorationsParams {
 export namespace AutoDepsDecorationsRequest {
   export const type = new RequestType<
     AutoDepsDecorationsParams,
-    Array<Range> | null,
+    AutoDepsDecorationsLSPEvent,
     void
   >('react/autodeps_decorations');
 }
