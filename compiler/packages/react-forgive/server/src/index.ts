@@ -134,11 +134,17 @@ documents.onDidChangeContent(async event => {
   resetState();
   if (SUPPORTED_LANGUAGE_IDS.has(event.document.languageId)) {
     const text = event.document.getText();
-    await compile({
-      text,
-      file: event.document.uri,
-      options: compilerOptions,
-    });
+    try {
+      await compile({
+        text,
+        file: event.document.uri,
+        options: compilerOptions,
+      });
+    } catch (err) {
+      if (err instanceof Error) {
+        connection.console.error(err.stack ?? '');
+      }
+    }
   }
 });
 
