@@ -5712,7 +5712,7 @@ export type StyleQueue = {
   rules: Array<Chunk | PrecomputedChunk>,
   hrefs: Array<Chunk | PrecomputedChunk>,
   sheets: Map<string, StylesheetResource>,
-  nonce: ?Chunk,
+  nonce: ?string,
 };
 
 export function createHoistableState(): HoistableState {
