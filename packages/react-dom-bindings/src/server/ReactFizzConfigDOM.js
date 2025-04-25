@@ -4116,8 +4116,8 @@ export function writeCompletedRoot(
     // If we rendered the whole document, then we emitted a rel="expect" that needs a
     // matching target. Normally we use one of the bootstrap scripts for this but if
     // there are none, then we need to emit a tag to complete the shell.
-    const bootstrapChunks = renderState.bootstrapChunks;
-    if (bootstrapChunks.length === 0) {
+    if ((resumableState.instructions & SentCompletedShellId) === NothingSent) {
+      const bootstrapChunks = renderState.bootstrapChunks;
       bootstrapChunks.push(startChunkForTag('template'));
       pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
       bootstrapChunks.push(endOfStartTag, endChunkForTag('template'));
