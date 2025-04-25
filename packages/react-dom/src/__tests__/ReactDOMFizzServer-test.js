@@ -10301,7 +10301,7 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      'React encountered a hoistable style tag with nonce. It doesn\'t match the previously encountered nonce. They have to be the same',
+      "React encountered a hoistable style tag with nonce. It doesn't match the previously encountered nonce. They have to be the same",
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
