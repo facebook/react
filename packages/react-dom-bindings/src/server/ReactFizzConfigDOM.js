@@ -2757,24 +2757,21 @@ function pushStyle(
       // to create a StyleQueue.
       styleQueue = {
         precedence: stringToChunk(escapeTextForBrowser(precedence)),
-        rules: ([]: Array<Chunk | PrecomputedChunk>),
+        rules: pushStyleContents(([]: Array<Chunk | PrecomputedChunk>), props),
         hrefs: [stringToChunk(escapeTextForBrowser(href))],
         sheets: (new Map(): Map<string, StylesheetResource>),
-        nonce: nonce && stringToChunk(escapeTextForBrowser(nonce)),
+        nonce: nonce,
       };
       renderState.styles.set(precedence, styleQueue);
     } else if (nonce === styleQueue.nonce) {
       // We have seen this precedence before and need to track this href
       styleQueue.hrefs.push(stringToChunk(escapeTextForBrowser(href)));
+      pushStyleContents(styleQueue.rules, props);
     } else if (__DEV__) {
       console.error(
-        'React encountered a hoistable style tag with "%s" nonce. It doesn\'t match the previously encountered nonce "%s". They have to be the same',
-        nonce && stringToChunk(escapeTextForBrowser(nonce)),
-        styleQueue.nonce,
+        "React encountered a hoistable style tag with nonce. It doesn't match the previously encountered nonce. They have to be the same",
       );
     }
-
-    pushStyleContents(styleQueue.rules, props);
   }
   if (styleQueue) {
     // We need to track whether this boundary should wait on this resource or not.
@@ -2898,7 +2895,7 @@ function pushStyleContents(
     target.push(stringToChunk(escapeStyleTextContent(child)));
   }
   pushInnerHTML(target, innerHTML, children);
-  return;
+  return target;
 }
 
 function pushImg(
@@ -4725,7 +4722,7 @@ function flushStyleTagsLateForBoundary(
     writeChunk(this, styleQueue.precedence);
     if (nonce) {
       writeChunk(this, lateStyleTagResourceOpen2);
-      writeChunk(this, nonce);
+      writeChunk(this, stringToChunk(escapeTextForBrowser(nonce)));
     }
     writeChunk(this, lateStyleTagResourceOpen3);
     for (; i < hrefs.length - 1; i++) {
@@ -4847,7 +4844,7 @@ function flushStylesInPreamble(
     writeChunk(this, styleQueue.precedence);
     if (nonce) {
       writeChunk(this, styleTagResourceOpen2);
-      writeChunk(this, nonce);
+      writeChunk(this, stringToChunk(escapeTextForBrowser(nonce)));
     }
     let i = 0;
     if (hrefs.length) {
