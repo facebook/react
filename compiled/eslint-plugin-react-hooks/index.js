@@ -17783,6 +17783,9 @@ function isStartTransitionType(id) {
 function isSetActionStateType(id) {
     return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetActionState');
 }
+function isUseReducerType(id) {
+    return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseReducer';
+}
 function isDispatcherType(id) {
     return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
 }
@@ -17795,6 +17798,31 @@ function isStableType(id) {
         isDispatcherType(id) ||
         isUseRefType(id) ||
         isStartTransitionType(id));
+}
+function isStableTypeContainer(id) {
+    const type_ = id.type;
+    if (type_.kind !== 'Object') {
+        return false;
+    }
+    return (isUseStateType(id) ||
+        type_.shapeId === 'BuiltInUseActionState' ||
+        isUseReducerType(id) ||
+        type_.shapeId === 'BuiltInUseTransition');
+}
+function evaluatesToStableTypeOrContainer(env, { value }) {
+    if (value.kind === 'CallExpression' || value.kind === 'MethodCall') {
+        const callee = value.kind === 'CallExpression' ? value.callee : value.property;
+        const calleeHookKind = getHookKind(env, callee.identifier);
+        switch (calleeHookKind) {
+            case 'useState':
+            case 'useReducer':
+            case 'useActionState':
+            case 'useRef':
+            case 'useTransition':
+                return true;
+        }
+    }
+    return false;
 }
 function isUseEffectHookType(id) {
     return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseEffectHook');
@@ -48885,8 +48913,83 @@ function findOptionalPlaces(fn) {
     return optionals;
 }
 
+class StableSidemap {
+    constructor(env) {
+        this.map = new Map();
+        this.env = env;
+    }
+    handleInstruction(instr) {
+        const { value, lvalue } = instr;
+        switch (value.kind) {
+            case 'CallExpression':
+            case 'MethodCall': {
+                if (evaluatesToStableTypeOrContainer(this.env, instr)) {
+                    if (isStableType(lvalue.identifier)) {
+                        this.map.set(lvalue.identifier.id, {
+                            isStable: true,
+                        });
+                    }
+                    else {
+                        this.map.set(lvalue.identifier.id, {
+                            isStable: false,
+                        });
+                    }
+                }
+                else if (this.env.config.enableTreatRefLikeIdentifiersAsRefs &&
+                    isUseRefType(lvalue.identifier)) {
+                    this.map.set(lvalue.identifier.id, {
+                        isStable: true,
+                    });
+                }
+                break;
+            }
+            case 'Destructure':
+            case 'PropertyLoad': {
+                const source = value.kind === 'Destructure'
+                    ? value.value.identifier.id
+                    : value.object.identifier.id;
+                const entry = this.map.get(source);
+                if (entry) {
+                    for (const lvalue of eachInstructionLValue(instr)) {
+                        if (isStableTypeContainer(lvalue.identifier)) {
+                            this.map.set(lvalue.identifier.id, {
+                                isStable: false,
+                            });
+                        }
+                        else if (isStableType(lvalue.identifier)) {
+                            this.map.set(lvalue.identifier.id, {
+                                isStable: true,
+                            });
+                        }
+                    }
+                }
+                break;
+            }
+            case 'StoreLocal': {
+                const entry = this.map.get(value.value.identifier.id);
+                if (entry) {
+                    this.map.set(lvalue.identifier.id, entry);
+                    this.map.set(value.lvalue.place.identifier.id, entry);
+                }
+                break;
+            }
+            case 'LoadLocal': {
+                const entry = this.map.get(value.place.identifier.id);
+                if (entry) {
+                    this.map.set(lvalue.identifier.id, entry);
+                }
+                break;
+            }
+        }
+    }
+    isStable(id) {
+        const entry = this.map.get(id);
+        return entry != null ? entry.isStable : false;
+    }
+}
 function inferReactivePlaces(fn) {
     const reactiveIdentifiers = new ReactivityMap(findDisjointMutableValues(fn));
+    const stableIdentifierSources = new StableSidemap(fn.env);
     for (const param of fn.params) {
         const place = param.kind === 'Identifier' ? param : param.place;
         reactiveIdentifiers.markReactive(place);
@@ -48954,6 +49057,7 @@ function inferReactivePlaces(fn) {
                 }
             }
             for (const instruction of block.instructions) {
+                stableIdentifierSources.handleInstruction(instruction);
                 const { value } = instruction;
                 let hasReactiveInput = false;
                 for (const operand of eachInstructionValueOperand(value)) {
@@ -48972,7 +49076,7 @@ function inferReactivePlaces(fn) {
                 }
                 if (hasReactiveInput) {
                     for (const lvalue of eachInstructionLValue(instruction)) {
-                        if (isStableType(lvalue.identifier)) {
+                        if (stableIdentifierSources.isStable(lvalue.identifier.id)) {
                             continue;
                         }
                         reactiveIdentifiers.markReactive(lvalue);
