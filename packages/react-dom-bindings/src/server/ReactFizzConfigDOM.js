@@ -289,15 +289,15 @@ export type ResumableState = {
 
 const dataElementQuotedEnd = stringToPrecomputedChunk('"></template>');
 
-const startInlineScript = stringToPrecomputedChunk('<script>');
+const startInlineScript = stringToPrecomputedChunk('<script');
 const endInlineScript = stringToPrecomputedChunk('</script>');
 
 const startScriptSrc = stringToPrecomputedChunk('<script src="');
 const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
-const scriptNonce = stringToPrecomputedChunk('" nonce="');
-const scriptIntegirty = stringToPrecomputedChunk('" integrity="');
-const scriptCrossOrigin = stringToPrecomputedChunk('" crossorigin="');
-const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
+const scriptNonce = stringToPrecomputedChunk(' nonce="');
+const scriptIntegirty = stringToPrecomputedChunk(' integrity="');
+const scriptCrossOrigin = stringToPrecomputedChunk(' crossorigin="');
+const endAsyncScript = stringToPrecomputedChunk(' async=""></script>');
 
 /**
  * This escaping function is designed to work with with inline scripts where the entire
@@ -367,17 +367,22 @@ export function createRenderState(
     nonce === undefined
       ? startInlineScript
       : stringToPrecomputedChunk(
-          '<script nonce="' + escapeTextForBrowser(nonce) + '">',
+          '<script nonce="' + escapeTextForBrowser(nonce) + '"',
         );
   const idPrefix = resumableState.idPrefix;
+
+  let needsShellId = true;
 
   const bootstrapChunks: Array<Chunk | PrecomputedChunk> = [];
   let externalRuntimeScript: null | ExternalRuntimeScript = null;
   const {bootstrapScriptContent, bootstrapScripts, bootstrapModules} =
     resumableState;
   if (bootstrapScriptContent !== undefined) {
+    bootstrapChunks.push(inlineScriptWithNonce);
+    pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
+    needsShellId = false;
     bootstrapChunks.push(
-      inlineScriptWithNonce,
+      endOfStartTag,
       stringToChunk(escapeEntireInlineScriptContent(bootstrapScriptContent)),
       endInlineScript,
     );
@@ -527,24 +532,32 @@ export function createRenderState(
       bootstrapChunks.push(
         startScriptSrc,
         stringToChunk(escapeTextForBrowser(src)),
+        attributeEnd,
       );
       if (nonce) {
         bootstrapChunks.push(
           scriptNonce,
           stringToChunk(escapeTextForBrowser(nonce)),
+          attributeEnd,
         );
       }
       if (typeof integrity === 'string') {
         bootstrapChunks.push(
           scriptIntegirty,
           stringToChunk(escapeTextForBrowser(integrity)),
+          attributeEnd,
         );
       }
       if (typeof crossOrigin === 'string') {
         bootstrapChunks.push(
           scriptCrossOrigin,
           stringToChunk(escapeTextForBrowser(crossOrigin)),
+          attributeEnd,
         );
+      }
+      if (needsShellId) {
+        pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
+        needsShellId = false;
       }
       bootstrapChunks.push(endAsyncScript);
     }
@@ -579,25 +592,32 @@ export function createRenderState(
       bootstrapChunks.push(
         startModuleSrc,
         stringToChunk(escapeTextForBrowser(src)),
+        attributeEnd,
       );
-
       if (nonce) {
         bootstrapChunks.push(
           scriptNonce,
           stringToChunk(escapeTextForBrowser(nonce)),
+          attributeEnd,
         );
       }
       if (typeof integrity === 'string') {
         bootstrapChunks.push(
           scriptIntegirty,
           stringToChunk(escapeTextForBrowser(integrity)),
+          attributeEnd,
         );
       }
       if (typeof crossOrigin === 'string') {
         bootstrapChunks.push(
           scriptCrossOrigin,
           stringToChunk(escapeTextForBrowser(crossOrigin)),
+          attributeEnd,
         );
+      }
+      if (needsShellId) {
+        pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
+        needsShellId = false;
       }
       bootstrapChunks.push(endAsyncScript);
     }
@@ -1960,11 +1980,32 @@ function injectFormReplayingRuntime(
     (!enableFizzExternalRuntime || !renderState.externalRuntimeScript)
   ) {
     resumableState.instructions |= SentFormReplayingRuntime;
-    renderState.bootstrapChunks.unshift(
-      renderState.startInlineScript,
-      formReplayingRuntimeScript,
-      endInlineScript,
-    );
+    const preamble = renderState.preamble;
+    const bootstrapChunks = renderState.bootstrapChunks;
+    if (
+      (preamble.htmlChunks || preamble.headChunks) &&
+      bootstrapChunks.length === 0
+    ) {
+      // If we rendered the whole document, then we emitted a rel="expect" that needs a
+      // matching target. If we haven't emitted that yet, we need to include it in this
+      // script tag.
+      bootstrapChunks.push(renderState.startInlineScript);
+      pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
+      bootstrapChunks.push(
+        endOfStartTag,
+        formReplayingRuntimeScript,
+        endInlineScript,
+      );
+    } else {
+      // Otherwise we added to the beginning of the scripts. This will mean that it
+      // appears before the shell ID unfortunately.
+      bootstrapChunks.unshift(
+        renderState.startInlineScript,
+        endOfStartTag,
+        formReplayingRuntimeScript,
+        endInlineScript,
+      );
+    }
   }
 }
 
@@ -4075,8 +4116,21 @@ function writeBootstrap(
 
 export function writeCompletedRoot(
   destination: Destination,
+  resumableState: ResumableState,
   renderState: RenderState,
 ): boolean {
+  const preamble = renderState.preamble;
+  if (preamble.htmlChunks || preamble.headChunks) {
+    // If we rendered the whole document, then we emitted a rel="expect" that needs a
+    // matching target. Normally we use one of the bootstrap scripts for this but if
+    // there are none, then we need to emit a tag to complete the shell.
+    const bootstrapChunks = renderState.bootstrapChunks;
+    if (bootstrapChunks.length === 0) {
+      bootstrapChunks.push(startChunkForTag('template'));
+      pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
+      bootstrapChunks.push(endOfStartTag, endChunkForTag('template'));
+    }
+  }
   return writeBootstrap(destination, renderState);
 }
 
@@ -4400,6 +4454,7 @@ export function writeCompletedSegmentInstruction(
     resumableState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
     writeChunk(destination, renderState.startInlineScript);
+    writeChunk(destination, endOfStartTag);
     if (
       (resumableState.instructions & SentCompleteSegmentFunction) ===
       NothingSent
@@ -4481,6 +4536,7 @@ export function writeCompletedBoundaryInstruction(
     resumableState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
     writeChunk(destination, renderState.startInlineScript);
+    writeChunk(destination, endOfStartTag);
     if (requiresStyleInsertion) {
       if (
         (resumableState.instructions & SentCompleteBoundaryFunction) ===
@@ -4591,6 +4647,7 @@ export function writeClientRenderBoundaryInstruction(
     resumableState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
     writeChunk(destination, renderState.startInlineScript);
+    writeChunk(destination, endOfStartTag);
     if (
       (resumableState.instructions & SentClientRenderFunction) ===
       NothingSent
@@ -4933,6 +4990,40 @@ function preloadLateStyles(this: Destination, styleQueue: StyleQueue) {
   styleQueue.sheets.clear();
 }
 
+const blockingRenderChunkStart = stringToPrecomputedChunk(
+  '<link rel="expect" href="#',
+);
+const blockingRenderChunkEnd = stringToPrecomputedChunk(
+  '" blocking="render"/>',
+);
+
+function writeBlockingRenderInstruction(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+): void {
+  const idPrefix = resumableState.idPrefix;
+  const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+  writeChunk(destination, blockingRenderChunkStart);
+  writeChunk(destination, stringToChunk(escapeTextForBrowser(shellId)));
+  writeChunk(destination, blockingRenderChunkEnd);
+}
+
+const completedShellIdAttributeStart = stringToPrecomputedChunk(' id="');
+
+function pushCompletedShellIdAttribute(
+  target: Array<Chunk | PrecomputedChunk>,
+  resumableState: ResumableState,
+): void {
+  const idPrefix = resumableState.idPrefix;
+  const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+  target.push(
+    completedShellIdAttributeStart,
+    stringToChunk(escapeTextForBrowser(shellId)),
+    attributeEnd,
+  );
+}
+
 // We don't bother reporting backpressure at the moment because we expect to
 // flush the entire preamble in a single pass. This probably should be modified
 // in the future to be backpressure sensitive but that requires a larger refactor
@@ -5026,6 +5117,16 @@ export function writePreambleStart(
 
   renderState.bulkPreloads.forEach(flushResource, destination);
   renderState.bulkPreloads.clear();
+
+  if (htmlChunks || headChunks) {
+    // If we have any html or head chunks we know that we're rendering a full document.
+    // A full document should block display until the full shell has downloaded.
+    // Therefore we insert a render blocking instruction referring to the last body
+    // element that's considered part of the shell. We do this after the important loads
+    // have already been emitted so we don't do anything to delay them but early so that
+    // the browser doesn't risk painting too early.
+    writeBlockingRenderInstruction(destination, resumableState, renderState);
+  }
 
   // Write embedding hoistableChunks
   const hoistableChunks = renderState.hoistableChunks;

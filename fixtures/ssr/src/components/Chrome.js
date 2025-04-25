@@ -37,6 +37,7 @@ export default class Chrome extends Component {
               </div>
             </Theme.Provider>
           </Suspense>
+          <p>This should appear in the first paint.</p>
           <script
             dangerouslySetInnerHTML={{
               __html: `assetManifest = ${JSON.stringify(assets)};`,
