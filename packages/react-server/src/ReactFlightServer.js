@@ -1600,6 +1600,11 @@ function renderClientElement(
 // The chunk ID we're currently rendering that we can assign debug data to.
 let debugID: null | number = null;
 
+// Approximate string length of the currently serializing row.
+// Used to power outlining heuristics.
+let serializedSize = 0;
+const MAX_ROW_SIZE = 3200;
+
 function outlineTask(request: Request, task: Task): ReactJSONValue {
   const newTask = createTask(
     request,
@@ -2393,6 +2398,8 @@ function renderModelDestructive(
   // Set the currently rendering model
   task.model = value;
 
+  serializedSize += parentPropertyName.length;
+
   // Special Symbol, that's very common.
   if (value === REACT_ELEMENT_TYPE) {
     return '$';
@@ -2811,6 +2818,7 @@ function renderModelDestructive(
         throwTaintViolation(tainted.message);
       }
     }
+    serializedSize += value.length;
     // TODO: Maybe too clever. If we support URL there's no similar trick.
     if (value[value.length - 1] === 'Z') {
       // Possibly a Date, whose toJSON automatically calls toISOString
@@ -3892,9 +3900,18 @@ function emitChunk(
     return;
   }
   // For anything else we need to try to serialize it using JSON.
-  // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
-  const json: string = stringify(value, task.toJSON);
-  emitModelChunk(request, task.id, json);
+  // We stash the outer parent size so we can restore it when we exit.
+  // We don't reset the serialized size counter from reentry because that indicates that we
+  // are outlining a model and we actually want to include that size into the parent since
+  // it will still block the parent row. It only restores to zero at the top of the stack.
+  const parentSerializedSize = 0;
+  try {
+    // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+    const json: string = stringify(value, task.toJSON);
+    emitModelChunk(request, task.id, json);
+  } finally {
+    serializedSize = parentSerializedSize;
+  }
 }
 
 function erroredTask(request: Request, task: Task, error: mixed): void {
