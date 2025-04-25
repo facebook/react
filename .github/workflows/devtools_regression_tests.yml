@@ -44,9 +44,15 @@ jobs:
       - run: yarn --cwd scripts/release install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Download react-devtools artifacts for base revision
+        env: 
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git fetch origin main
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || '$(git rev-parse origin/main)' }}
+          commit="${{ inputs.commit_sha }}"
+          if [ -z "$commit" ]; then
+            git fetch origin main
+            commit="$(git rev-parse origin/main)"
+          fi
+          scripts/release/download-experimental-build.js --commit=$commit
       - name: Display structure of build
         run: ls -R build
       - name: Archive build
