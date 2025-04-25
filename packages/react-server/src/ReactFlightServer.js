@@ -1605,6 +1605,24 @@ let debugID: null | number = null;
 let serializedSize = 0;
 const MAX_ROW_SIZE = 3200;
 
+function deferTask(request: Request, task: Task): ReactJSONValue {
+  // Like outlineTask but instead the item is scheduled to be serialized
+  // after its parent in the stream.
+  const newTask = createTask(
+    request,
+    task.model, // the currently rendering element
+    task.keyPath, // unlike outlineModel this one carries along context
+    task.implicitSlot,
+    request.abortableTasks,
+    __DEV__ ? task.debugOwner : null,
+    __DEV__ ? task.debugStack : null,
+    __DEV__ ? task.debugTask : null,
+  );
+
+  pingTask(request, newTask);
+  return serializeLazyID(newTask.id);
+}
+
 function outlineTask(request: Request, task: Task): ReactJSONValue {
   const newTask = createTask(
     request,
@@ -2449,6 +2467,10 @@ function renderModelDestructive(
 
         const element: ReactElement = (value: any);
 
+        if (serializedSize > MAX_ROW_SIZE) {
+          return deferTask(request, task);
+        }
+
         if (__DEV__) {
           const debugInfo: ?ReactDebugInfo = (value: any)._debugInfo;
           if (debugInfo) {
@@ -2507,6 +2529,10 @@ function renderModelDestructive(
         return newChild;
       }
       case REACT_LAZY_TYPE: {
+        if (serializedSize > MAX_ROW_SIZE) {
+          return deferTask(request, task);
+        }
+
         // Reset the task's thenable state before continuing. If there was one, it was
         // from suspending the lazy before.
         task.thenableState = null;
