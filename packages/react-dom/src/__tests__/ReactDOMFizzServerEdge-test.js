@@ -72,7 +72,7 @@ describe('ReactDOMFizzServerEdge', () => {
     });
 
     expect(result).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><head></head><body><main>hello</main></body></html>"`,
+      `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body><main>hello</main><template id="«R»"></template></body></html>"`,
     );
   });
 });
