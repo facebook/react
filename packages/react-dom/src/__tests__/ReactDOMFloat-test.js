@@ -250,7 +250,10 @@ describe('ReactDOMFloat', () => {
             node.tagName !== 'TEMPLATE' &&
             node.tagName !== 'template' &&
             !node.hasAttribute('hidden') &&
-            !node.hasAttribute('aria-hidden'))
+            !node.hasAttribute('aria-hidden') &&
+            // Ignore the render blocking expect
+            (node.getAttribute('rel') !== 'expect' ||
+              node.getAttribute('blocking') !== 'render'))
         ) {
           const props = {};
           const attributes = node.attributes;
@@ -690,7 +693,9 @@ describe('ReactDOMFloat', () => {
       pipe(writable);
     });
     expect(chunks).toEqual([
-      '<!DOCTYPE html><html><head><script async="" src="foo"></script><title>foo</title></head><body>bar',
+      '<!DOCTYPE html><html><head><script async="" src="foo"></script>' +
+        '<link rel="expect" href="#«R»" blocking="render"/><title>foo</title></head>' +
+        '<body>bar<template id="«R»"></template>',
       '</body></html>',
     ]);
   });
