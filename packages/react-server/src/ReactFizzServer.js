@@ -50,6 +50,7 @@ import {
   flushBuffered,
   close,
   closeWithError,
+  byteLengthOfChunk,
 } from './ReactServerStreamConfig';
 import {
   writeCompletedRoot,
@@ -1237,6 +1238,7 @@ function renderSuspenseBoundary(
         boundarySegment.textEmbedded,
       );
       boundarySegment.status = COMPLETED;
+      finishedSegment(request, parentBoundary, boundarySegment);
     } catch (thrownValue: mixed) {
       if (request.status === ABORTING) {
         boundarySegment.status = ABORTED;
@@ -1303,6 +1305,7 @@ function renderSuspenseBoundary(
         contentRootSegment.textEmbedded,
       );
       contentRootSegment.status = COMPLETED;
+      finishedSegment(request, newBoundary, contentRootSegment);
       queueCompletedSegment(newBoundary, contentRootSegment);
       if (newBoundary.pendingTasks === 0 && newBoundary.status === PENDING) {
         // This must have been the last segment we were waiting on. This boundary is now complete.
@@ -2453,6 +2456,7 @@ function resumeNode(
     renderTask.blockedSegment = resumedSegment;
     renderNode(request, task, node, childIndex);
     resumedSegment.status = COMPLETED;
+    finishedSegment(request, blockedBoundary, resumedSegment);
     if (blockedBoundary === null) {
       request.completedRootSegment = resumedSegment;
     } else {
@@ -4274,6 +4278,27 @@ function queueCompletedSegment(
   }
 }
 
+function finishedSegment(
+  request: Request,
+  boundary: Root | SuspenseBoundary,
+  segment: Segment,
+) {
+  if (byteLengthOfChunk !== null) {
+    // Count the bytes of all the chunks of this segment.
+    const chunks = segment.chunks;
+    let segmentByteSize = 0;
+    for (let i = 0; i < chunks.length; i++) {
+      segmentByteSize += byteLengthOfChunk(chunks[i]);
+    }
+    // Accumulate on the parent boundary to power heuristics.
+    if (boundary === null) {
+      request.byteSize += segmentByteSize;
+    } else {
+      boundary.byteSize += segmentByteSize;
+    }
+  }
+}
+
 function finishedTask(
   request: Request,
   boundary: Root | SuspenseBoundary,
@@ -4420,6 +4445,7 @@ function retryRenderTask(
 
     task.abortSet.delete(task);
     segment.status = COMPLETED;
+    finishedSegment(request, task.blockedBoundary, segment);
     finishedTask(request, task.blockedBoundary, segment);
   } catch (thrownValue: mixed) {
     resetHooksState();

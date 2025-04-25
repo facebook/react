@@ -98,6 +98,8 @@ const ReactNoopServer = ReactFizzServer({
   closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
 
+  byteLengthOfChunk: null,
+
   getChildFormatContext(): null {
     return null;
   },
