@@ -4223,6 +4223,7 @@ __DEV__ &&
       this.fatalError = null;
       this.pendingRootTasks = this.allPendingTasks = this.nextSegmentId = 0;
       this.completedPreambleSegments = this.completedRootSegment = null;
+      this.byteSize = 0;
       this.abortableTasks = abortSet;
       this.pingedTasks = [];
       this.clientRenderedBoundaries = [];
@@ -5448,9 +5449,11 @@ __DEV__ &&
                       contentRootSegment.chunks.push("\x3c!-- --\x3e"),
                     (contentRootSegment.status = 1),
                     queueCompletedSegment(newBoundary, contentRootSegment),
-                    0 === newBoundary.pendingTasks && 0 === newBoundary.status)
+                    0 === newBoundary.pendingTasks &&
+                      0 === newBoundary.status &&
+                      ((newBoundary.status = 1),
+                      !(newBoundary.byteSize > request.progressiveChunkSize)))
                   ) {
-                    newBoundary.status = 1;
                     0 === request.pendingRootTasks &&
                       task.blockedPreamble &&
                       preparePreamble(request);
@@ -6570,11 +6573,12 @@ __DEV__ &&
                 boundary.parentFlushed &&
                   request.completedBoundaries.push(boundary),
                 1 === boundary.status &&
-                  (boundary.fallbackAbortableTasks.forEach(
-                    abortTaskSoft,
-                    request
-                  ),
-                  boundary.fallbackAbortableTasks.clear(),
+                  (boundary.byteSize > request.progressiveChunkSize ||
+                    (boundary.fallbackAbortableTasks.forEach(
+                      abortTaskSoft,
+                      request
+                    ),
+                    boundary.fallbackAbortableTasks.clear()),
                   0 === request.pendingRootTasks &&
                     null === request.trackedPostpones &&
                     null !== boundary.contentPreamble &&

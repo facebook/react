@@ -4456,6 +4456,7 @@ __DEV__ &&
       this.fatalError = null;
       this.pendingRootTasks = this.allPendingTasks = this.nextSegmentId = 0;
       this.completedPreambleSegments = this.completedRootSegment = null;
+      this.byteSize = 0;
       this.abortableTasks = abortSet;
       this.pingedTasks = [];
       this.clientRenderedBoundaries = [];
@@ -5802,9 +5803,10 @@ __DEV__ &&
                     (contentRootSegment.status = COMPLETED),
                     queueCompletedSegment(newBoundary, contentRootSegment),
                     0 === newBoundary.pendingTasks &&
-                      newBoundary.status === PENDING)
+                      newBoundary.status === PENDING &&
+                      ((newBoundary.status = COMPLETED),
+                      !(newBoundary.byteSize > request.progressiveChunkSize)))
                   ) {
-                    newBoundary.status = COMPLETED;
                     0 === request.pendingRootTasks &&
                       task.blockedPreamble &&
                       preparePreamble(request);
@@ -6930,11 +6932,12 @@ __DEV__ &&
                 boundary.parentFlushed &&
                   request.completedBoundaries.push(boundary),
                 boundary.status === COMPLETED &&
-                  (boundary.fallbackAbortableTasks.forEach(
-                    abortTaskSoft,
-                    request
-                  ),
-                  boundary.fallbackAbortableTasks.clear(),
+                  (boundary.byteSize > request.progressiveChunkSize ||
+                    (boundary.fallbackAbortableTasks.forEach(
+                      abortTaskSoft,
+                      request
+                    ),
+                    boundary.fallbackAbortableTasks.clear()),
                   0 === request.pendingRootTasks &&
                     null === request.trackedPostpones &&
                     null !== boundary.contentPreamble &&
@@ -9500,5 +9503,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-89e8875e-20250425";
+    exports.version = "19.2.0-www-classic-8e9a5fc6-20250425";
   })();
