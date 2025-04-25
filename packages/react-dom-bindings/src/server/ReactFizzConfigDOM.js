@@ -2763,23 +2763,17 @@ function pushStyle(
         nonce: nonce && stringToChunk(escapeTextForBrowser(nonce)),
       };
       renderState.styles.set(precedence, styleQueue);
-    } else {
-      if (!('nonce' in styleQueue)) {
-        // `styleQueue` could have been created by `preinit` where `nonce` is not required
-        styleQueue.nonce = nonce && stringToChunk(escapeTextForBrowser(nonce));
-      }
-      if (__DEV__) {
-        if (nonce !== styleQueue.nonce) {
-          console.error(
-            'React encountered a hoistable style tag with "%s" nonce. It doesn\'t match the previously encountered nonce "%s". They have to be the same',
-            nonce && stringToChunk(escapeTextForBrowser(nonce)),
-            styleQueue.nonce,
-          );
-        }
-      }
+    } else if (nonce === styleQueue.nonce) {
       // We have seen this precedence before and need to track this href
       styleQueue.hrefs.push(stringToChunk(escapeTextForBrowser(href)));
+    } else if (__DEV__) {
+      console.error(
+        'React encountered a hoistable style tag with "%s" nonce. It doesn\'t match the previously encountered nonce "%s". They have to be the same',
+        nonce && stringToChunk(escapeTextForBrowser(nonce)),
+        styleQueue.nonce,
+      );
     }
+
     pushStyleContents(styleQueue.rules, props);
   }
   if (styleQueue) {
@@ -5561,7 +5555,7 @@ export type StyleQueue = {
   rules: Array<Chunk | PrecomputedChunk>,
   hrefs: Array<Chunk | PrecomputedChunk>,
   sheets: Map<string, StylesheetResource>,
-  nonce?: ?Chunk,
+  nonce: ?Chunk,
 };
 
 export function createHoistableState(): HoistableState {
