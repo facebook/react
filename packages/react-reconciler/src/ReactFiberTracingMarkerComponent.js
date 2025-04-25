@@ -13,7 +13,7 @@ import type {
   FiberRoot,
 } from './ReactInternalTypes';
 import type {Transition} from 'react/src/ReactStartTransition';
-import type {OffscreenInstance} from './ReactFiberActivityComponent';
+import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 import type {StackCursor} from './ReactFiberStack';
 
 import {enableTransitionTracing} from 'shared/ReactFeatureFlags';

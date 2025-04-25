@@ -16,12 +16,14 @@ import type {
   ReactNodeList,
   ReactContext,
   ReactConsumerType,
-  OffscreenMode,
   Wakeable,
   Thenable,
   ReactFormState,
   ReactComponentInfo,
   ReactDebugInfo,
+  ViewTransitionProps,
+  ActivityProps,
+  SuspenseProps,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -35,6 +37,7 @@ import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
 import type {ThenableState} from './ReactFizzThenable';
+
 import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 
 import {
@@ -51,6 +54,8 @@ import {
 import {
   writeCompletedRoot,
   writePlaceholder,
+  pushStartActivityBoundary,
+  pushEndActivityBoundary,
   writeStartCompletedSuspenseBoundary,
   writeStartPendingSuspenseBoundary,
   writeStartClientRenderedSuspenseBoundary,
@@ -1122,7 +1127,7 @@ function renderSuspenseBoundary(
   request: Request,
   someTask: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: SuspenseProps,
 ): void {
   if (someTask.replay !== null) {
     // If we're replaying through this pass, it means we're replaying through
@@ -2200,23 +2205,46 @@ function renderLazyComponent(
   renderElement(request, task, keyPath, Component, resolvedProps, ref);
 }
 
-function renderOffscreen(
+function renderActivity(
   request: Request,
   task: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: ActivityProps,
 ): void {
-  const mode: ?OffscreenMode = (props.mode: any);
-  if (mode === 'hidden') {
-    // A hidden Offscreen boundary is not server rendered. Prerendering happens
-    // on the client.
+  const segment = task.blockedSegment;
+  if (segment === null) {
+    // Replay
+    const mode = props.mode;
+    if (mode === 'hidden') {
+      // A hidden Activity boundary is not server rendered. Prerendering happens
+      // on the client.
+    } else {
+      // A visible Activity boundary has its children rendered inside the boundary.
+      const prevKeyPath = task.keyPath;
+      task.keyPath = keyPath;
+      renderNode(request, task, props.children, -1);
+      task.keyPath = prevKeyPath;
+    }
   } else {
-    // A visible Offscreen boundary is treated exactly like a fragment: a
-    // pure indirection.
-    const prevKeyPath = task.keyPath;
-    task.keyPath = keyPath;
-    renderNodeDestructive(request, task, props.children, -1);
-    task.keyPath = prevKeyPath;
+    // Render
+    const mode = props.mode;
+    if (mode === 'hidden') {
+      // A hidden Activity boundary is not server rendered. Prerendering happens
+      // on the client.
+    } else {
+      // An Activity boundary is delimited so that we can hydrate it separately.
+      pushStartActivityBoundary(segment.chunks, request.renderState);
+      segment.lastPushedText = false;
+      // A visible Activity boundary has its children rendered inside the boundary.
+      const prevKeyPath = task.keyPath;
+      task.keyPath = keyPath;
+      // We use the non-destructive form because if something suspends, we still
+      // need to pop back up and finish the end comment.
+      renderNode(request, task, props.children, -1);
+      task.keyPath = prevKeyPath;
+      pushEndActivityBoundary(segment.chunks, request.renderState);
+      segment.lastPushedText = false;
+    }
   }
 }
 
@@ -2224,7 +2252,7 @@ function renderViewTransition(
   request: Request,
   task: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: ViewTransitionProps,
 ) {
   const prevKeyPath = task.keyPath;
   task.keyPath = keyPath;
@@ -2291,7 +2319,7 @@ function renderElement(
       return;
     }
     case REACT_ACTIVITY_TYPE: {
-      renderOffscreen(request, task, keyPath, props);
+      renderActivity(request, task, keyPath, props);
       return;
     }
     case REACT_SUSPENSE_LIST_TYPE: {
@@ -4876,7 +4904,6 @@ function flushSegment(
     return writeEndClientRenderedSuspenseBoundary(
       destination,
       request.renderState,
-      boundary.fallbackPreamble,
     );
   } else if (boundary.status !== COMPLETED) {
     if (boundary.status === PENDING) {
@@ -4947,11 +4974,7 @@ function flushSegment(
     const contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment, hoistableState);
 
-    return writeEndCompletedSuspenseBoundary(
-      destination,
-      request.renderState,
-      boundary.contentPreamble,
-    );
+    return writeEndCompletedSuspenseBoundary(destination, request.renderState);
   }
 }
 
@@ -5134,7 +5157,11 @@ function flushCompletedQueues(
       );
       flushSegment(request, destination, completedRootSegment, null);
       request.completedRootSegment = null;
-      writeCompletedRoot(destination, request.renderState);
+      writeCompletedRoot(
+        destination,
+        request.resumableState,
+        request.renderState,
+      );
     }
 
     writeHoistables(destination, request.resumableState, request.renderState);

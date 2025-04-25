@@ -104,7 +104,10 @@ describe('ReactDOM HostSingleton', () => {
             el.tagName !== 'TEMPLATE' &&
             el.tagName !== 'template' &&
             !el.hasAttribute('hidden') &&
-            !el.hasAttribute('aria-hidden')) ||
+            !el.hasAttribute('aria-hidden') &&
+            // Ignore the render blocking expect
+            (node.getAttribute('rel') !== 'expect' ||
+              node.getAttribute('blocking') !== 'render')) ||
           el.hasAttribute('data-meaningful')
         ) {
           const props = {};

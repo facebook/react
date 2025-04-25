@@ -96,7 +96,9 @@ export const enableGestureTransition = __EXPERIMENTAL__;
 
 export const enableScrollEndPolyfill = __EXPERIMENTAL__;
 
-export const enableSuspenseyImages = __EXPERIMENTAL__;
+export const enableSuspenseyImages = false;
+
+export const enableSrcObject = __EXPERIMENTAL__;
 
 /**
  * Switches the Fabric API from doing layout in commit work instead of complete work.

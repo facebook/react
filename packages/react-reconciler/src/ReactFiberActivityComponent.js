@@ -7,48 +7,19 @@
  * @flow
  */
 
-import type {ReactNodeList, OffscreenMode, Wakeable} from 'shared/ReactTypes';
-import type {Lanes} from './ReactFiberLane';
-import type {SpawnedCachePool} from './ReactFiberCacheComponent';
-import type {Transition} from 'react/src/ReactStartTransition';
-import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
-import type {RetryQueue} from './ReactFiberSuspenseComponent';
+import type {ActivityInstance} from './ReactFiberConfig';
+import type {CapturedValue} from './ReactCapturedValue';
+import type {Lane} from './ReactFiberLane';
+import type {TreeContext} from './ReactFiberTreeContext';
 
-export type OffscreenProps = {
-  // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum
-  // for now, since we might have multiple variants. For example, hiding the
-  // content without changing the layout.
-  //
-  // Default mode is visible. Kind of a weird default for a component
-  // called "Offscreen." Possible alt: <Visibility />?
-  mode?: OffscreenMode | null | void,
-  children?: ReactNodeList,
-};
-
-// We use the existence of the state object as an indicator that the component
-// is hidden.
-export type OffscreenState = {
-  // TODO: This doesn't do anything, yet. It's always NoLanes. But eventually it
-  // will represent the pending work that must be included in the render in
-  // order to unhide the component.
-  baseLanes: Lanes,
-  cachePool: SpawnedCachePool | null,
-};
-
-export type OffscreenQueue = {
-  transitions: Array<Transition> | null,
-  markerInstances: Array<TracingMarkerInstance> | null,
-  retryQueue: RetryQueue | null,
-};
-
-type OffscreenVisibility = number;
-
-export const OffscreenVisible = /*                     */ 0b001;
-export const OffscreenPassiveEffectsConnected = /*     */ 0b010;
-
-export type OffscreenInstance = {
-  _visibility: OffscreenVisibility,
-  _pendingMarkers: Set<TracingMarkerInstance> | null,
-  _transitions: Set<Transition> | null,
-  _retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,
+// A non-null ActivityState represents a dehydrated Activity boundary.
+export type ActivityState = {
+  dehydrated: ActivityInstance,
+  treeContext: null | TreeContext,
+  // Represents the lane we should attempt to hydrate a dehydrated boundary at.
+  // OffscreenLane is the default for dehydrated boundaries.
+  // NoLane is the default for normal boundaries, which turns into "normal" pri.
+  retryLane: Lane,
+  // Stashed Errors that happened while attempting to hydrate this boundary.
+  hydrationErrors: Array<CapturedValue<mixed>> | null,
 };

@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactNodeList, ReactCustomFormAction} from 'shared/ReactTypes';
+import type {
+  ReactNodeList,
+  ReactCustomFormAction,
+  Thenable,
+} from 'shared/ReactTypes';
 import type {
   CrossOriginEnum,
   PreloadImplOptions,
@@ -27,7 +31,10 @@ import {
 
 import {Children} from 'react';
 
-import {enableFizzExternalRuntime} from 'shared/ReactFeatureFlags';
+import {
+  enableFizzExternalRuntime,
+  enableSrcObject,
+} from 'shared/ReactFeatureFlags';
 
 import type {
   Destination,
@@ -42,6 +49,7 @@ import {
   writeChunkAndReturn,
   stringToChunk,
   stringToPrecomputedChunk,
+  readAsDataURL,
 } from 'react-server/src/ReactServerStreamConfig';
 import {
   resolveRequest,
@@ -112,12 +120,13 @@ const ScriptStreamingFormat: StreamingFormat = 0;
 const DataStreamingFormat: StreamingFormat = 1;
 
 export type InstructionState = number;
-const NothingSent /*                      */ = 0b00000;
-const SentCompleteSegmentFunction /*      */ = 0b00001;
-const SentCompleteBoundaryFunction /*     */ = 0b00010;
-const SentClientRenderFunction /*         */ = 0b00100;
-const SentStyleInsertionFunction /*       */ = 0b01000;
-const SentFormReplayingRuntime /*         */ = 0b10000;
+const NothingSent /*                      */ = 0b000000;
+const SentCompleteSegmentFunction /*      */ = 0b000001;
+const SentCompleteBoundaryFunction /*     */ = 0b000010;
+const SentClientRenderFunction /*         */ = 0b000100;
+const SentStyleInsertionFunction /*       */ = 0b001000;
+const SentFormReplayingRuntime /*         */ = 0b010000;
+const SentCompletedShellId /*             */ = 0b100000;
 
 // Per request, global state that is not contextual to the rendering subtree.
 // This cannot be resumed and therefore should only contain things that are
@@ -281,15 +290,15 @@ export type ResumableState = {
 
 const dataElementQuotedEnd = stringToPrecomputedChunk('"></template>');
 
-const startInlineScript = stringToPrecomputedChunk('<script>');
+const startInlineScript = stringToPrecomputedChunk('<script');
 const endInlineScript = stringToPrecomputedChunk('</script>');
 
 const startScriptSrc = stringToPrecomputedChunk('<script src="');
 const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
-const scriptNonce = stringToPrecomputedChunk('" nonce="');
-const scriptIntegirty = stringToPrecomputedChunk('" integrity="');
-const scriptCrossOrigin = stringToPrecomputedChunk('" crossorigin="');
-const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
+const scriptNonce = stringToPrecomputedChunk(' nonce="');
+const scriptIntegirty = stringToPrecomputedChunk(' integrity="');
+const scriptCrossOrigin = stringToPrecomputedChunk(' crossorigin="');
+const endAsyncScript = stringToPrecomputedChunk(' async=""></script>');
 
 /**
  * This escaping function is designed to work with with inline scripts where the entire
@@ -359,7 +368,7 @@ export function createRenderState(
     nonce === undefined
       ? startInlineScript
       : stringToPrecomputedChunk(
-          '<script nonce="' + escapeTextForBrowser(nonce) + '">',
+          '<script nonce="' + escapeTextForBrowser(nonce) + '"',
         );
   const idPrefix = resumableState.idPrefix;
 
@@ -368,8 +377,10 @@ export function createRenderState(
   const {bootstrapScriptContent, bootstrapScripts, bootstrapModules} =
     resumableState;
   if (bootstrapScriptContent !== undefined) {
+    bootstrapChunks.push(inlineScriptWithNonce);
+    pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
     bootstrapChunks.push(
-      inlineScriptWithNonce,
+      endOfStartTag,
       stringToChunk(escapeEntireInlineScriptContent(bootstrapScriptContent)),
       endInlineScript,
     );
@@ -519,25 +530,30 @@ export function createRenderState(
       bootstrapChunks.push(
         startScriptSrc,
         stringToChunk(escapeTextForBrowser(src)),
+        attributeEnd,
       );
       if (nonce) {
         bootstrapChunks.push(
           scriptNonce,
           stringToChunk(escapeTextForBrowser(nonce)),
+          attributeEnd,
         );
       }
       if (typeof integrity === 'string') {
         bootstrapChunks.push(
           scriptIntegirty,
           stringToChunk(escapeTextForBrowser(integrity)),
+          attributeEnd,
         );
       }
       if (typeof crossOrigin === 'string') {
         bootstrapChunks.push(
           scriptCrossOrigin,
           stringToChunk(escapeTextForBrowser(crossOrigin)),
+          attributeEnd,
         );
       }
+      pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
       bootstrapChunks.push(endAsyncScript);
     }
   }
@@ -571,26 +587,30 @@ export function createRenderState(
       bootstrapChunks.push(
         startModuleSrc,
         stringToChunk(escapeTextForBrowser(src)),
+        attributeEnd,
       );
-
       if (nonce) {
         bootstrapChunks.push(
           scriptNonce,
           stringToChunk(escapeTextForBrowser(nonce)),
+          attributeEnd,
         );
       }
       if (typeof integrity === 'string') {
         bootstrapChunks.push(
           scriptIntegirty,
           stringToChunk(escapeTextForBrowser(integrity)),
+          attributeEnd,
         );
       }
       if (typeof crossOrigin === 'string') {
         bootstrapChunks.push(
           scriptCrossOrigin,
           stringToChunk(escapeTextForBrowser(crossOrigin)),
+          attributeEnd,
         );
       }
+      pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
       bootstrapChunks.push(endAsyncScript);
     }
   }
@@ -684,23 +704,16 @@ export function completeResumableState(resumableState: ResumableState): void {
   resumableState.bootstrapModules = undefined;
 }
 
-const NoContribution /*     */ = 0b000;
-const HTMLContribution /*   */ = 0b001;
-const BodyContribution /*   */ = 0b010;
-const HeadContribution /*   */ = 0b100;
-
 export type PreambleState = {
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
   bodyChunks: null | Array<Chunk | PrecomputedChunk>,
-  contribution: number,
 };
 export function createPreambleState(): PreambleState {
   return {
     htmlChunks: null,
     headChunks: null,
     bodyChunks: null,
-    contribution: NoContribution,
   };
 }
 
@@ -1214,6 +1227,47 @@ function pushFormActionAttribute(
   return formData;
 }
 
+let blobCache: null | WeakMap<Blob, Thenable<string>> = null;
+
+function pushSrcObjectAttribute(
+  target: Array<Chunk | PrecomputedChunk>,
+  blob: Blob,
+): void {
+  // Throwing a Promise style suspense read of the Blob content.
+  if (blobCache === null) {
+    blobCache = new WeakMap();
+  }
+  const suspenseCache: WeakMap<Blob, Thenable<string>> = blobCache;
+  let thenable = suspenseCache.get(blob);
+  if (thenable === undefined) {
+    thenable = ((readAsDataURL(blob): any): Thenable<string>);
+    thenable.then(
+      result => {
+        (thenable: any).status = 'fulfilled';
+        (thenable: any).value = result;
+      },
+      error => {
+        (thenable: any).status = 'rejected';
+        (thenable: any).reason = error;
+      },
+    );
+    suspenseCache.set(blob, thenable);
+  }
+  if (thenable.status === 'rejected') {
+    throw thenable.reason;
+  } else if (thenable.status !== 'fulfilled') {
+    throw thenable;
+  }
+  const url = thenable.value;
+  target.push(
+    attributeSeparator,
+    stringToChunk('src'),
+    attributeAssign,
+    stringToChunk(escapeTextForBrowser(url)),
+    attributeEnd,
+  );
+}
+
 function pushAttribute(
   target: Array<Chunk | PrecomputedChunk>,
   name: string,
@@ -1243,7 +1297,15 @@ function pushAttribute(
       pushStyleAttribute(target, value);
       return;
     }
-    case 'src':
+    case 'src': {
+      if (enableSrcObject && typeof value === 'object' && value !== null) {
+        if (typeof Blob === 'function' && value instanceof Blob) {
+          pushSrcObjectAttribute(target, value);
+          return;
+        }
+      }
+      // Fallthrough to general urls
+    }
     case 'href': {
       if (value === '') {
         if (__DEV__) {
@@ -1910,11 +1972,32 @@ function injectFormReplayingRuntime(
     (!enableFizzExternalRuntime || !renderState.externalRuntimeScript)
   ) {
     resumableState.instructions |= SentFormReplayingRuntime;
-    renderState.bootstrapChunks.unshift(
-      renderState.startInlineScript,
-      formReplayingRuntimeScript,
-      endInlineScript,
-    );
+    const preamble = renderState.preamble;
+    const bootstrapChunks = renderState.bootstrapChunks;
+    if (
+      (preamble.htmlChunks || preamble.headChunks) &&
+      bootstrapChunks.length === 0
+    ) {
+      // If we rendered the whole document, then we emitted a rel="expect" that needs a
+      // matching target. If we haven't emitted that yet, we need to include it in this
+      // script tag.
+      bootstrapChunks.push(renderState.startInlineScript);
+      pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
+      bootstrapChunks.push(
+        endOfStartTag,
+        formReplayingRuntimeScript,
+        endInlineScript,
+      );
+    } else {
+      // Otherwise we added to the beginning of the scripts. This will mean that it
+      // appears before the shell ID unfortunately.
+      bootstrapChunks.unshift(
+        renderState.startInlineScript,
+        endOfStartTag,
+        formReplayingRuntimeScript,
+        endInlineScript,
+      );
+    }
   }
 }
 
@@ -3228,6 +3311,12 @@ function pushTitleImpl(
   return null;
 }
 
+// These are used by the client if we clear a boundary and we find these, then we
+// also clear the singleton as well.
+const headPreambleContributionChunk = stringToPrecomputedChunk('<!--head-->');
+const bodyPreambleContributionChunk = stringToPrecomputedChunk('<!--body-->');
+const htmlPreambleContributionChunk = stringToPrecomputedChunk('<!--html-->');
+
 function pushStartHead(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -3242,6 +3331,12 @@ function pushStartHead(
     if (preamble.headChunks) {
       throw new Error(`The ${'`<head>`'} tag may only be rendered once.`);
     }
+
+    // Insert a marker in the body where the contribution to the head was in case we need to clear it.
+    if (preambleState !== null) {
+      target.push(headPreambleContributionChunk);
+    }
+
     preamble.headChunks = [];
     return pushStartSingletonElement(preamble.headChunks, props, 'head');
   } else {
@@ -3266,6 +3361,11 @@ function pushStartBody(
       throw new Error(`The ${'`<body>`'} tag may only be rendered once.`);
     }
 
+    // Insert a marker in the body where the contribution to the body tag was in case we need to clear it.
+    if (preambleState !== null) {
+      target.push(bodyPreambleContributionChunk);
+    }
+
     preamble.bodyChunks = [];
     return pushStartSingletonElement(preamble.bodyChunks, props, 'body');
   } else {
@@ -3288,6 +3388,11 @@ function pushStartHtml(
 
     if (preamble.htmlChunks) {
       throw new Error(`The ${'`<html>`'} tag may only be rendered once.`);
+    }
+
+    // Insert a marker in the body where the contribution to the head was in case we need to clear it.
+    if (preambleState !== null) {
+      target.push(htmlPreambleContributionChunk);
     }
 
     preamble.htmlChunks = [DOCTYPE];
@@ -3962,15 +4067,12 @@ export function hoistPreambleState(
   const rootPreamble = renderState.preamble;
   if (rootPreamble.htmlChunks === null && preambleState.htmlChunks) {
     rootPreamble.htmlChunks = preambleState.htmlChunks;
-    preambleState.contribution |= HTMLContribution;
   }
   if (rootPreamble.headChunks === null && preambleState.headChunks) {
     rootPreamble.headChunks = preambleState.headChunks;
-    preambleState.contribution |= HeadContribution;
   }
   if (rootPreamble.bodyChunks === null && preambleState.bodyChunks) {
     rootPreamble.bodyChunks = preambleState.bodyChunks;
-    preambleState.contribution |= BodyContribution;
   }
 }
 
@@ -4012,8 +4114,21 @@ function writeBootstrap(
 
 export function writeCompletedRoot(
   destination: Destination,
+  resumableState: ResumableState,
   renderState: RenderState,
 ): boolean {
+  const preamble = renderState.preamble;
+  if (preamble.htmlChunks || preamble.headChunks) {
+    // If we rendered the whole document, then we emitted a rel="expect" that needs a
+    // matching target. Normally we use one of the bootstrap scripts for this but if
+    // there are none, then we need to emit a tag to complete the shell.
+    if ((resumableState.instructions & SentCompletedShellId) === NothingSent) {
+      const bootstrapChunks = renderState.bootstrapChunks;
+      bootstrapChunks.push(startChunkForTag('template'));
+      pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
+      bootstrapChunks.push(endOfStartTag, endChunkForTag('template'));
+    }
+  }
   return writeBootstrap(destination, renderState);
 }
 
@@ -4034,6 +4149,24 @@ export function writePlaceholder(
   const formattedID = stringToChunk(id.toString(16));
   writeChunk(destination, formattedID);
   return writeChunkAndReturn(destination, placeholder2);
+}
+
+// Activity boundaries are encoded as comments.
+const startActivityBoundary = stringToPrecomputedChunk('<!--&-->');
+const endActivityBoundary = stringToPrecomputedChunk('<!--/&-->');
+
+export function pushStartActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  target.push(startActivityBoundary);
+}
+
+export function pushEndActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  target.push(endActivityBoundary);
 }
 
 // Suspense boundaries are encoded as comments.
@@ -4147,11 +4280,7 @@ export function writeStartClientRenderedSuspenseBoundary(
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
-  if (preambleState) {
-    writePreambleContribution(destination, preambleState);
-  }
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 export function writeEndPendingSuspenseBoundary(
@@ -4163,29 +4292,8 @@ export function writeEndPendingSuspenseBoundary(
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
-  if (preambleState) {
-    writePreambleContribution(destination, preambleState);
-  }
   return writeChunkAndReturn(destination, endSuspenseBoundary);
-}
-
-const boundaryPreambleContributionChunkStart = stringToPrecomputedChunk('<!--');
-const boundaryPreambleContributionChunkEnd = stringToPrecomputedChunk('-->');
-
-function writePreambleContribution(
-  destination: Destination,
-  preambleState: PreambleState,
-) {
-  const contribution = preambleState.contribution;
-  if (contribution !== NoContribution) {
-    writeChunk(destination, boundaryPreambleContributionChunkStart);
-    // This is a number type so we can do the fast path without coercion checking
-    // eslint-disable-next-line react-internal/safe-string-coercion
-    writeChunk(destination, stringToChunk('' + contribution));
-    writeChunk(destination, boundaryPreambleContributionChunkEnd);
-  }
 }
 
 const startSegmentHTML = stringToPrecomputedChunk('<div hidden id="');
@@ -4344,6 +4452,7 @@ export function writeCompletedSegmentInstruction(
     resumableState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
     writeChunk(destination, renderState.startInlineScript);
+    writeChunk(destination, endOfStartTag);
     if (
       (resumableState.instructions & SentCompleteSegmentFunction) ===
       NothingSent
@@ -4425,6 +4534,7 @@ export function writeCompletedBoundaryInstruction(
     resumableState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
     writeChunk(destination, renderState.startInlineScript);
+    writeChunk(destination, endOfStartTag);
     if (requiresStyleInsertion) {
       if (
         (resumableState.instructions & SentCompleteBoundaryFunction) ===
@@ -4535,6 +4645,7 @@ export function writeClientRenderBoundaryInstruction(
     resumableState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
     writeChunk(destination, renderState.startInlineScript);
+    writeChunk(destination, endOfStartTag);
     if (
       (resumableState.instructions & SentClientRenderFunction) ===
       NothingSent
@@ -4889,6 +5000,44 @@ function preloadLateStyles(this: Destination, styleQueue: StyleQueue) {
   styleQueue.sheets.clear();
 }
 
+const blockingRenderChunkStart = stringToPrecomputedChunk(
+  '<link rel="expect" href="#',
+);
+const blockingRenderChunkEnd = stringToPrecomputedChunk(
+  '" blocking="render"/>',
+);
+
+function writeBlockingRenderInstruction(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+): void {
+  const idPrefix = resumableState.idPrefix;
+  const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+  writeChunk(destination, blockingRenderChunkStart);
+  writeChunk(destination, stringToChunk(escapeTextForBrowser(shellId)));
+  writeChunk(destination, blockingRenderChunkEnd);
+}
+
+const completedShellIdAttributeStart = stringToPrecomputedChunk(' id="');
+
+function pushCompletedShellIdAttribute(
+  target: Array<Chunk | PrecomputedChunk>,
+  resumableState: ResumableState,
+): void {
+  if ((resumableState.instructions & SentCompletedShellId) !== NothingSent) {
+    return;
+  }
+  resumableState.instructions |= SentCompletedShellId;
+  const idPrefix = resumableState.idPrefix;
+  const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+  target.push(
+    completedShellIdAttributeStart,
+    stringToChunk(escapeTextForBrowser(shellId)),
+    attributeEnd,
+  );
+}
+
 // We don't bother reporting backpressure at the moment because we expect to
 // flush the entire preamble in a single pass. This probably should be modified
 // in the future to be backpressure sensitive but that requires a larger refactor
@@ -4898,6 +5047,7 @@ export function writePreambleStart(
   resumableState: ResumableState,
   renderState: RenderState,
   willFlushAllSegments: boolean,
+  skipExpect?: boolean, // Used as an override by ReactFizzConfigMarkup
 ): void {
   // This function must be called exactly once on every request
   if (
@@ -4982,6 +5132,16 @@ export function writePreambleStart(
 
   renderState.bulkPreloads.forEach(flushResource, destination);
   renderState.bulkPreloads.clear();
+
+  if ((htmlChunks || headChunks) && !skipExpect) {
+    // If we have any html or head chunks we know that we're rendering a full document.
+    // A full document should block display until the full shell has downloaded.
+    // Therefore we insert a render blocking instruction referring to the last body
+    // element that's considered part of the shell. We do this after the important loads
+    // have already been emitted so we don't do anything to delay them but early so that
+    // the browser doesn't risk painting too early.
+    writeBlockingRenderInstruction(destination, resumableState, renderState);
+  }
 
   // Write embedding hoistableChunks
   const hoistableChunks = renderState.hoistableChunks;

@@ -392,6 +392,11 @@ function runWithEnvironment(
 
   if (env.config.inferEffectDependencies) {
     inferEffectDependencies(hir);
+    log({
+      kind: 'hir',
+      name: 'InferEffectDependencies',
+      value: hir,
+    });
   }
 
   if (env.config.inlineJsxTransform) {

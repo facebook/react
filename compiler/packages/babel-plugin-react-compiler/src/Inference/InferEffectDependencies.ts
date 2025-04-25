@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+import * as t from '@babel/types';
 import {CompilerError, SourceLocation} from '..';
 import {
   ArrayExpression,
@@ -17,6 +25,7 @@ import {
   ReactiveScopeDependencies,
   isUseRefType,
   isSetStateType,
+  isFireFunctionType,
 } from '../HIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {
@@ -187,11 +196,13 @@ export function inferEffectDependencies(fn: HIRFunction): void {
              * the `infer-effect-deps/pruned-nonreactive-obj` fixture for an
              * explanation.
              */
+            const usedDeps = [];
             for (const dep of scopeInfo.deps) {
               if (
-                (isUseRefType(dep.identifier) ||
+                ((isUseRefType(dep.identifier) ||
                   isSetStateType(dep.identifier)) &&
-                !reactiveIds.has(dep.identifier.id)
+                  !reactiveIds.has(dep.identifier.id)) ||
+                isFireFunctionType(dep.identifier)
               ) {
                 // exclude non-reactive hook results, which will never be in a memo block
                 continue;
@@ -205,6 +216,23 @@ export function inferEffectDependencies(fn: HIRFunction): void {
               );
               newInstructions.push(...instructions);
               effectDeps.push(place);
+              usedDeps.push(dep);
+            }
+
+            // For LSP autodeps feature.
+            const decorations: Array<t.SourceLocation> = [];
+            for (const loc of collectDepUsages(usedDeps, fnExpr.value)) {
+              if (typeof loc === 'symbol') {
+                continue;
+              }
+              decorations.push(loc);
+            }
+            if (typeof value.loc !== 'symbol') {
+              fn.env.logger?.logEvent(fn.env.filename, {
+                kind: 'AutoDepsDecorations',
+                fnLoc: value.loc,
+                decorations,
+              });
             }
 
             newInstructions.push({
@@ -229,6 +257,31 @@ export function inferEffectDependencies(fn: HIRFunction): void {
             value.args.push({...depsPlace, effect: Effect.Freeze});
             rewriteInstrs.set(instr.id, newInstructions);
             fn.env.inferredEffectLocations.add(callee.loc);
+          }
+        } else if (
+          value.args.length >= 2 &&
+          value.args.length - 1 === autodepFnLoads.get(callee.identifier.id) &&
+          value.args[0] != null &&
+          value.args[0].kind === 'Identifier'
+        ) {
+          const penultimateArg = value.args[value.args.length - 2];
+          const depArrayArg = value.args[value.args.length - 1];
+          if (
+            depArrayArg.kind !== 'Spread' &&
+            penultimateArg.kind !== 'Spread' &&
+            typeof depArrayArg.loc !== 'symbol' &&
+            typeof penultimateArg.loc !== 'symbol' &&
+            typeof value.loc !== 'symbol'
+          ) {
+            fn.env.logger?.logEvent(fn.env.filename, {
+              kind: 'AutoDepsEligible',
+              fnLoc: value.loc,
+              depArrayLoc: {
+                ...depArrayArg.loc,
+                start: penultimateArg.loc.end,
+                end: depArrayArg.loc.end,
+              },
+            });
           }
         }
       }
@@ -337,4 +390,35 @@ function inferReactiveIdentifiers(fn: HIRFunction): Set<IdentifierId> {
     }
   }
   return reactiveIds;
+}
+
+function collectDepUsages(
+  deps: Array<ReactiveScopeDependency>,
+  fnExpr: FunctionExpression,
+): Array<SourceLocation> {
+  const identifiers: Map<IdentifierId, ReactiveScopeDependency> = new Map();
+  const loadedDeps: Set<IdentifierId> = new Set();
+  const sourceLocations = [];
+  for (const dep of deps) {
+    identifiers.set(dep.identifier.id, dep);
+  }
+
+  for (const [, block] of fnExpr.loweredFunc.func.body.blocks) {
+    for (const instr of block.instructions) {
+      if (
+        instr.value.kind === 'LoadLocal' &&
+        identifiers.has(instr.value.place.identifier.id)
+      ) {
+        loadedDeps.add(instr.lvalue.identifier.id);
+      }
+      for (const place of eachInstructionOperand(instr)) {
+        if (loadedDeps.has(place.identifier.id)) {
+          // TODO(@jbrown215): handle member exprs!!
+          sourceLocations.push(place.identifier.loc);
+        }
+      }
+    }
+  }
+
+  return sourceLocations;
 }

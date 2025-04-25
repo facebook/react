@@ -17,7 +17,10 @@ import type {
   FormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
-import {pushStartInstance as pushStartInstanceImpl} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import {
+  pushStartInstance as pushStartInstanceImpl,
+  writePreambleStart as writePreambleStartImpl,
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 import type {
   Destination,
@@ -62,13 +65,11 @@ export {
   writeEndPendingSuspenseBoundary,
   writeHoistablesForBoundary,
   writePlaceholder,
-  writeCompletedRoot,
   createRootFormatContext,
   createRenderState,
   createResumableState,
   createPreambleState,
   createHoistableState,
-  writePreambleStart,
   writePreambleEnd,
   writeHoistables,
   writePostamble,
@@ -151,6 +152,22 @@ export function pushSegmentFinale(
   return;
 }
 
+export function pushStartActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  // Markup doesn't have any instructions.
+  return;
+}
+
+export function pushEndActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  // Markup doesn't have any instructions.
+  return;
+}
+
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
@@ -158,6 +175,7 @@ export function writeStartCompletedSuspenseBoundary(
   // Markup doesn't have any instructions.
   return true;
 }
+
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
@@ -174,7 +192,6 @@ export function writeStartClientRenderedSuspenseBoundary(
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
   // Markup doesn't have any instructions.
   return true;
@@ -182,9 +199,33 @@ export function writeEndCompletedSuspenseBoundary(
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  preambleState: null | PreambleState,
 ): boolean {
   // Markup doesn't have any instructions.
+  return true;
+}
+
+export function writePreambleStart(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  willFlushAllSegments: boolean,
+  skipExpect?: boolean, // Used as an override by ReactFizzConfigMarkup
+): void {
+  return writePreambleStartImpl(
+    destination,
+    resumableState,
+    renderState,
+    willFlushAllSegments,
+    true, // skipExpect
+  );
+}
+
+export function writeCompletedRoot(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+): boolean {
+  // Markup doesn't have any bootstrap scripts nor shell completions.
   return true;
 }
 
