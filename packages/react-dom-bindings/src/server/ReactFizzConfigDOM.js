@@ -120,12 +120,13 @@ const ScriptStreamingFormat: StreamingFormat = 0;
 const DataStreamingFormat: StreamingFormat = 1;
 
 export type InstructionState = number;
-const NothingSent /*                      */ = 0b00000;
-const SentCompleteSegmentFunction /*      */ = 0b00001;
-const SentCompleteBoundaryFunction /*     */ = 0b00010;
-const SentClientRenderFunction /*         */ = 0b00100;
-const SentStyleInsertionFunction /*       */ = 0b01000;
-const SentFormReplayingRuntime /*         */ = 0b10000;
+const NothingSent /*                      */ = 0b000000;
+const SentCompleteSegmentFunction /*      */ = 0b000001;
+const SentCompleteBoundaryFunction /*     */ = 0b000010;
+const SentClientRenderFunction /*         */ = 0b000100;
+const SentStyleInsertionFunction /*       */ = 0b001000;
+const SentFormReplayingRuntime /*         */ = 0b010000;
+const SentCompletedShellId /*             */ = 0b100000;
 
 // Per request, global state that is not contextual to the rendering subtree.
 // This cannot be resumed and therefore should only contain things that are
@@ -371,8 +372,6 @@ export function createRenderState(
         );
   const idPrefix = resumableState.idPrefix;
 
-  let needsShellId = true;
-
   const bootstrapChunks: Array<Chunk | PrecomputedChunk> = [];
   let externalRuntimeScript: null | ExternalRuntimeScript = null;
   const {bootstrapScriptContent, bootstrapScripts, bootstrapModules} =
@@ -380,7 +379,6 @@ export function createRenderState(
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(inlineScriptWithNonce);
     pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
-    needsShellId = false;
     bootstrapChunks.push(
       endOfStartTag,
       stringToChunk(escapeEntireInlineScriptContent(bootstrapScriptContent)),
@@ -555,10 +553,7 @@ export function createRenderState(
           attributeEnd,
         );
       }
-      if (needsShellId) {
-        pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
-        needsShellId = false;
-      }
+      pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
       bootstrapChunks.push(endAsyncScript);
     }
   }
@@ -615,10 +610,7 @@ export function createRenderState(
           attributeEnd,
         );
       }
-      if (needsShellId) {
-        pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
-        needsShellId = false;
-      }
+      pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
       bootstrapChunks.push(endAsyncScript);
     }
   }
@@ -5015,6 +5007,10 @@ function pushCompletedShellIdAttribute(
   target: Array<Chunk | PrecomputedChunk>,
   resumableState: ResumableState,
 ): void {
+  if ((resumableState.instructions & SentCompletedShellId) !== NothingSent) {
+    return;
+  }
+  resumableState.instructions |= SentCompletedShellId;
   const idPrefix = resumableState.idPrefix;
   const shellId = '\u00AB' + idPrefix + 'R\u00BB';
   target.push(
