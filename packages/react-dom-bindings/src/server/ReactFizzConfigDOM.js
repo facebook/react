@@ -5033,6 +5033,7 @@ export function writePreambleStart(
   resumableState: ResumableState,
   renderState: RenderState,
   willFlushAllSegments: boolean,
+  skipExpect?: boolean, // Used as an override by ReactFizzConfigMarkup
 ): void {
   // This function must be called exactly once on every request
   if (
@@ -5118,7 +5119,7 @@ export function writePreambleStart(
   renderState.bulkPreloads.forEach(flushResource, destination);
   renderState.bulkPreloads.clear();
 
-  if (htmlChunks || headChunks) {
+  if ((htmlChunks || headChunks) && !skipExpect) {
     // If we have any html or head chunks we know that we're rendering a full document.
     // A full document should block display until the full shell has downloaded.
     // Therefore we insert a render blocking instruction referring to the last body
