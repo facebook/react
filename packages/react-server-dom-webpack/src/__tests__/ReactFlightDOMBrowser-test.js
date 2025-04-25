@@ -1899,8 +1899,8 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     expect(content).toEqual(
-      '<!DOCTYPE html><html><head>' +
-        '</head><body><p>hello world</p></body></html>',
+      '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body><p>hello world</p><template id="«R»"></template></body></html>',
     );
   });
 

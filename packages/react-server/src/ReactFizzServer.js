@@ -5157,7 +5157,11 @@ function flushCompletedQueues(
       );
       flushSegment(request, destination, completedRootSegment, null);
       request.completedRootSegment = null;
-      writeCompletedRoot(destination, request.renderState);
+      writeCompletedRoot(
+        destination,
+        request.resumableState,
+        request.renderState,
+      );
     }
 
     writeHoistables(destination, request.resumableState, request.renderState);
