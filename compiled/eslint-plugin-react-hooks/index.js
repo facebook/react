@@ -41754,7 +41754,7 @@ let Visitor$a = class Visitor extends ReactiveFunctionVisitor {
 
 var _Context_nextScheduleId, _Context_scheduled, _Context_catchHandlers, _Context_controlFlowStack;
 function buildReactiveFunction(fn) {
-    const cx = new Context$3(fn.body);
+    const cx = new Context$2(fn.body);
     const driver = new Driver(cx);
     const body = driver.traverseBlock(cx.block(fn.body.entry));
     return {
@@ -42769,7 +42769,7 @@ class Driver {
         };
     }
 }
-let Context$3 = class Context {
+let Context$2 = class Context {
     constructor(ir) {
         _Context_nextScheduleId.set(this, 0);
         this.emitted = new Set();
@@ -43078,12 +43078,12 @@ function expandFbtScopeRange(fbtRange, extendWith) {
     }
 }
 
-var _Context_nextCacheIndex, _Context_declarations$1;
+var _Context_nextCacheIndex, _Context_declarations;
 const MEMO_CACHE_SENTINEL = 'react.memo_cache_sentinel';
 const EARLY_RETURN_SENTINEL = 'react.early_return_sentinel';
 function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
     var _a, _b, _c;
-    const cx = new Context$2(fn.env, (_a = fn.id) !== null && _a !== void 0 ? _a : '[[ anonymous ]]', uniqueIdentifiers, fbtOperands, null);
+    const cx = new Context$1(fn.env, (_a = fn.id) !== null && _a !== void 0 ? _a : '[[ anonymous ]]', uniqueIdentifiers, fbtOperands, null);
     let fastRefreshState = null;
     if (fn.env.config.enableResetCacheOnSourceFileChanges &&
         fn.env.code !== null) {
@@ -43171,7 +43171,7 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
         pruneUnusedLValues(reactiveFunction);
         pruneHoistedContexts(reactiveFunction);
         const identifiers = renameVariables(reactiveFunction);
-        const codegen = codegenReactiveFunction(new Context$2(cx.env, (_c = reactiveFunction.id) !== null && _c !== void 0 ? _c : '[[ anonymous ]]', identifiers, cx.fbtOperands), reactiveFunction);
+        const codegen = codegenReactiveFunction(new Context$1(cx.env, (_c = reactiveFunction.id) !== null && _c !== void 0 ? _c : '[[ anonymous ]]', identifiers, cx.fbtOperands), reactiveFunction);
         if (codegen.isErr()) {
             return codegen;
         }
@@ -43251,10 +43251,10 @@ function convertParameter(param) {
         return libExports$1.restElement(convertIdentifier(param.place.identifier));
     }
 }
-let Context$2 = class Context {
+let Context$1 = class Context {
     constructor(env, fnName, uniqueIdentifiers, fbtOperands, temporaries = null) {
         _Context_nextCacheIndex.set(this, 0);
-        _Context_declarations$1.set(this, new Set());
+        _Context_declarations.set(this, new Set());
         this.errors = new CompilerError();
         this.objectMethods = new Map();
         this.synthesizedNames = new Map();
@@ -43269,10 +43269,10 @@ let Context$2 = class Context {
         return __classPrivateFieldSet(this, _Context_nextCacheIndex, (_b = __classPrivateFieldGet(this, _Context_nextCacheIndex, "f"), _a = _b++, _b), "f"), _a;
     }
     declare(identifier) {
-        __classPrivateFieldGet(this, _Context_declarations$1, "f").add(identifier.declarationId);
+        __classPrivateFieldGet(this, _Context_declarations, "f").add(identifier.declarationId);
     }
     hasDeclared(identifier) {
-        return __classPrivateFieldGet(this, _Context_declarations$1, "f").has(identifier.declarationId);
+        return __classPrivateFieldGet(this, _Context_declarations, "f").has(identifier.declarationId);
     }
     synthesizeName(name) {
         const previous = this.synthesizedNames.get(name);
@@ -43289,7 +43289,7 @@ let Context$2 = class Context {
         return validated;
     }
 };
-_Context_nextCacheIndex = new WeakMap(), _Context_declarations$1 = new WeakMap();
+_Context_nextCacheIndex = new WeakMap(), _Context_declarations = new WeakMap();
 function codegenBlock(cx, block) {
     const temp = new Map(cx.temp);
     const result = codegenBlockNoReset(cx, block);
@@ -44242,7 +44242,7 @@ function codegenInstructionValue(cx, instrValue) {
                             const reactiveFunction = buildReactiveFunction(loweredFunc.func);
                             pruneUnusedLabels(reactiveFunction);
                             pruneUnusedLValues(reactiveFunction);
-                            const fn = codegenReactiveFunction(new Context$2(cx.env, (_e = reactiveFunction.id) !== null && _e !== void 0 ? _e : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
+                            const fn = codegenReactiveFunction(new Context$1(cx.env, (_e = reactiveFunction.id) !== null && _e !== void 0 ? _e : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
                             const babelNode = libExports$1.objectMethod('method', key, fn.params, fn.body, false);
                             babelNode.async = fn.async;
                             babelNode.generator = fn.generator;
@@ -44374,7 +44374,7 @@ function codegenInstructionValue(cx, instrValue) {
             pruneUnusedLabels(reactiveFunction);
             pruneUnusedLValues(reactiveFunction);
             pruneHoistedContexts(reactiveFunction);
-            const fn = codegenReactiveFunction(new Context$2(cx.env, (_g = reactiveFunction.id) !== null && _g !== void 0 ? _g : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
+            const fn = codegenReactiveFunction(new Context$1(cx.env, (_g = reactiveFunction.id) !== null && _g !== void 0 ? _g : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
             if (instrValue.type === 'ArrowFunctionExpression') {
                 let body = fn.body;
                 if (body.body.length === 1 && loweredFunc.directives.length == 0) {
@@ -49308,6 +49308,1165 @@ function declareTemporary(env, block, result) {
     });
 }
 
+function collectHoistablePropertyLoads(fn, temporaries, hoistableFromOptionals) {
+    const registry = new PropertyPathRegistry();
+    const knownImmutableIdentifiers = new Set();
+    if (fn.fnType === 'Component' || fn.fnType === 'Hook') {
+        for (const p of fn.params) {
+            if (p.kind === 'Identifier') {
+                knownImmutableIdentifiers.add(p.identifier.id);
+            }
+        }
+    }
+    return collectHoistablePropertyLoadsImpl(fn, {
+        temporaries,
+        knownImmutableIdentifiers,
+        hoistableFromOptionals,
+        registry,
+        nestedFnImmutableContext: null,
+        assumedInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
+            ? new Set()
+            : getAssumedInvokedFunctions(fn),
+    });
+}
+function collectHoistablePropertyLoadsInInnerFn(fnInstr, temporaries, hoistableFromOptionals) {
+    const fn = fnInstr.value.loweredFunc.func;
+    const initialContext = {
+        temporaries,
+        knownImmutableIdentifiers: new Set(),
+        hoistableFromOptionals,
+        registry: new PropertyPathRegistry(),
+        nestedFnImmutableContext: null,
+        assumedInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
+            ? new Set()
+            : getAssumedInvokedFunctions(fn),
+    };
+    const nestedFnImmutableContext = new Set(fn.context
+        .filter(place => isImmutableAtInstr(place.identifier, fnInstr.id, initialContext))
+        .map(place => place.identifier.id));
+    initialContext.nestedFnImmutableContext = nestedFnImmutableContext;
+    return collectHoistablePropertyLoadsImpl(fn, initialContext);
+}
+function collectHoistablePropertyLoadsImpl(fn, context) {
+    const nodes = collectNonNullsInBlocks(fn, context);
+    propagateNonNull(fn, nodes, context.registry);
+    return nodes;
+}
+function keyByScopeId(fn, source) {
+    const keyedByScopeId = new Map();
+    for (const [_, block] of fn.body.blocks) {
+        if (block.terminal.kind === 'scope') {
+            keyedByScopeId.set(block.terminal.scope.id, source.get(block.terminal.block));
+        }
+    }
+    return keyedByScopeId;
+}
+class PropertyPathRegistry {
+    constructor() {
+        this.roots = new Map();
+    }
+    getOrCreateIdentifier(identifier) {
+        let rootNode = this.roots.get(identifier.id);
+        if (rootNode === undefined) {
+            rootNode = {
+                root: identifier.id,
+                properties: new Map(),
+                optionalProperties: new Map(),
+                fullPath: {
+                    identifier,
+                    path: [],
+                },
+                hasOptional: false,
+                parent: null,
+            };
+            this.roots.set(identifier.id, rootNode);
+        }
+        return rootNode;
+    }
+    static getOrCreatePropertyEntry(parent, entry) {
+        const map = entry.optional ? parent.optionalProperties : parent.properties;
+        let child = map.get(entry.property);
+        if (child == null) {
+            child = {
+                properties: new Map(),
+                optionalProperties: new Map(),
+                parent: parent,
+                fullPath: {
+                    identifier: parent.fullPath.identifier,
+                    path: parent.fullPath.path.concat(entry),
+                },
+                hasOptional: parent.hasOptional || entry.optional,
+            };
+            map.set(entry.property, child);
+        }
+        return child;
+    }
+    getOrCreateProperty(n) {
+        let currNode = this.getOrCreateIdentifier(n.identifier);
+        if (n.path.length === 0) {
+            return currNode;
+        }
+        for (let i = 0; i < n.path.length - 1; i++) {
+            currNode = PropertyPathRegistry.getOrCreatePropertyEntry(currNode, n.path[i]);
+        }
+        return PropertyPathRegistry.getOrCreatePropertyEntry(currNode, n.path.at(-1));
+    }
+}
+function getMaybeNonNullInInstruction(instr, context) {
+    var _a, _b, _c;
+    let path = null;
+    if (instr.kind === 'PropertyLoad') {
+        path = (_a = context.temporaries.get(instr.object.identifier.id)) !== null && _a !== void 0 ? _a : {
+            identifier: instr.object.identifier,
+            path: [],
+        };
+    }
+    else if (instr.kind === 'Destructure') {
+        path = (_b = context.temporaries.get(instr.value.identifier.id)) !== null && _b !== void 0 ? _b : null;
+    }
+    else if (instr.kind === 'ComputedLoad') {
+        path = (_c = context.temporaries.get(instr.object.identifier.id)) !== null && _c !== void 0 ? _c : null;
+    }
+    return path != null ? context.registry.getOrCreateProperty(path) : null;
+}
+function isImmutableAtInstr(identifier, instr, context) {
+    if (context.nestedFnImmutableContext != null) {
+        return context.nestedFnImmutableContext.has(identifier.id);
+    }
+    else {
+        const mutableAtInstr = identifier.mutableRange.end > identifier.mutableRange.start + 1 &&
+            identifier.scope != null &&
+            inRange({
+                id: instr,
+            }, identifier.scope.range);
+        return (!mutableAtInstr || context.knownImmutableIdentifiers.has(identifier.id));
+    }
+}
+function collectNonNullsInBlocks(fn, context) {
+    var _a;
+    const knownNonNullIdentifiers = new Set();
+    if (fn.fnType === 'Component' &&
+        fn.params.length > 0 &&
+        fn.params[0].kind === 'Identifier') {
+        const identifier = fn.params[0].identifier;
+        knownNonNullIdentifiers.add(context.registry.getOrCreateIdentifier(identifier));
+    }
+    const nodes = new Map();
+    for (const [_, block] of fn.body.blocks) {
+        const assumedNonNullObjects = new Set(knownNonNullIdentifiers);
+        const maybeOptionalChain = context.hoistableFromOptionals.get(block.id);
+        if (maybeOptionalChain != null) {
+            assumedNonNullObjects.add(context.registry.getOrCreateProperty(maybeOptionalChain));
+        }
+        for (const instr of block.instructions) {
+            const maybeNonNull = getMaybeNonNullInInstruction(instr.value, context);
+            if (maybeNonNull != null &&
+                isImmutableAtInstr(maybeNonNull.fullPath.identifier, instr.id, context)) {
+                assumedNonNullObjects.add(maybeNonNull);
+            }
+            if (instr.value.kind === 'FunctionExpression') {
+                const innerFn = instr.value.loweredFunc;
+                if (context.assumedInvokedFns.has(innerFn)) {
+                    const innerHoistableMap = collectHoistablePropertyLoadsImpl(innerFn.func, Object.assign(Object.assign({}, context), { nestedFnImmutableContext: (_a = context.nestedFnImmutableContext) !== null && _a !== void 0 ? _a : new Set(innerFn.func.context
+                            .filter(place => isImmutableAtInstr(place.identifier, instr.id, context))
+                            .map(place => place.identifier.id)) }));
+                    const innerHoistables = assertNonNull(innerHoistableMap.get(innerFn.func.body.entry));
+                    for (const entry of innerHoistables.assumedNonNullObjects) {
+                        assumedNonNullObjects.add(entry);
+                    }
+                }
+            }
+        }
+        nodes.set(block.id, {
+            block,
+            assumedNonNullObjects,
+        });
+    }
+    return nodes;
+}
+function propagateNonNull(fn, nodes, registry) {
+    const blockSuccessors = new Map();
+    const terminalPreds = new Set();
+    for (const [blockId, block] of fn.body.blocks) {
+        for (const pred of block.preds) {
+            getOrInsertDefault(blockSuccessors, pred, new Set()).add(blockId);
+        }
+        if (block.terminal.kind === 'throw' || block.terminal.kind === 'return') {
+            terminalPreds.add(blockId);
+        }
+    }
+    function recursivelyPropagateNonNull(nodeId, direction, traversalState) {
+        var _a;
+        if (traversalState.has(nodeId)) {
+            return false;
+        }
+        traversalState.set(nodeId, 'active');
+        const node = nodes.get(nodeId);
+        if (node == null) {
+            CompilerError.invariant(false, {
+                reason: `Bad node ${nodeId}, kind: ${direction}`,
+                loc: GeneratedSource,
+            });
+        }
+        const neighbors = Array.from(direction === 'backward'
+            ? ((_a = blockSuccessors.get(nodeId)) !== null && _a !== void 0 ? _a : [])
+            : node.block.preds);
+        let changed = false;
+        for (const pred of neighbors) {
+            if (!traversalState.has(pred)) {
+                const neighborChanged = recursivelyPropagateNonNull(pred, direction, traversalState);
+                changed || (changed = neighborChanged);
+            }
+        }
+        const neighborAccesses = Set_intersect(Array.from(neighbors)
+            .filter(n => traversalState.get(n) === 'done')
+            .map(n => assertNonNull(nodes.get(n)).assumedNonNullObjects));
+        const prevObjects = assertNonNull(nodes.get(nodeId)).assumedNonNullObjects;
+        const mergedObjects = Set_union(prevObjects, neighborAccesses);
+        reduceMaybeOptionalChains(mergedObjects, registry);
+        assertNonNull(nodes.get(nodeId)).assumedNonNullObjects = mergedObjects;
+        traversalState.set(nodeId, 'done');
+        changed || (changed = !Set_equal(prevObjects, mergedObjects));
+        return changed;
+    }
+    const traversalState = new Map();
+    const reversedBlocks = [...fn.body.blocks];
+    reversedBlocks.reverse();
+    let changed;
+    let i = 0;
+    do {
+        CompilerError.invariant(i++ < 100, {
+            reason: '[CollectHoistablePropertyLoads] fixed point iteration did not terminate after 100 loops',
+            loc: GeneratedSource,
+        });
+        changed = false;
+        for (const [blockId] of fn.body.blocks) {
+            const forwardChanged = recursivelyPropagateNonNull(blockId, 'forward', traversalState);
+            changed || (changed = forwardChanged);
+        }
+        traversalState.clear();
+        for (const [blockId] of reversedBlocks) {
+            const backwardChanged = recursivelyPropagateNonNull(blockId, 'backward', traversalState);
+            changed || (changed = backwardChanged);
+        }
+        traversalState.clear();
+    } while (changed);
+}
+function assertNonNull(value, source) {
+    CompilerError.invariant(value != null, {
+        reason: 'Unexpected null',
+        description: source != null ? `(from ${source})` : null,
+        loc: GeneratedSource,
+    });
+    return value;
+}
+function reduceMaybeOptionalChains(nodes, registry) {
+    let optionalChainNodes = Set_filter(nodes, n => n.hasOptional);
+    if (optionalChainNodes.size === 0) {
+        return;
+    }
+    let changed;
+    do {
+        changed = false;
+        for (const original of optionalChainNodes) {
+            let { identifier, path: origPath } = original.fullPath;
+            let currNode = registry.getOrCreateIdentifier(identifier);
+            for (let i = 0; i < origPath.length; i++) {
+                const entry = origPath[i];
+                const nextEntry = entry.optional && nodes.has(currNode)
+                    ? { property: entry.property, optional: false }
+                    : entry;
+                currNode = PropertyPathRegistry.getOrCreatePropertyEntry(currNode, nextEntry);
+            }
+            if (currNode !== original) {
+                changed = true;
+                optionalChainNodes.delete(original);
+                optionalChainNodes.add(currNode);
+                nodes.delete(original);
+                nodes.add(currNode);
+            }
+        }
+    } while (changed);
+}
+function getAssumedInvokedFunctions(fn, temporaries = new Map()) {
+    var _a;
+    const hoistableFunctions = new Set();
+    for (const block of fn.body.blocks.values()) {
+        for (const { lvalue, value } of block.instructions) {
+            if (value.kind === 'FunctionExpression') {
+                temporaries.set(lvalue.identifier.id, {
+                    fn: value.loweredFunc,
+                    mayInvoke: new Set(),
+                });
+            }
+            else if (value.kind === 'StoreLocal') {
+                const lvalue = value.lvalue.place.identifier;
+                const maybeLoweredFunc = temporaries.get(value.value.identifier.id);
+                if (maybeLoweredFunc != null) {
+                    temporaries.set(lvalue.id, maybeLoweredFunc);
+                }
+            }
+            else if (value.kind === 'LoadLocal') {
+                const maybeLoweredFunc = temporaries.get(value.place.identifier.id);
+                if (maybeLoweredFunc != null) {
+                    temporaries.set(lvalue.identifier.id, maybeLoweredFunc);
+                }
+            }
+        }
+    }
+    for (const block of fn.body.blocks.values()) {
+        for (const { lvalue, value } of block.instructions) {
+            if (value.kind === 'CallExpression') {
+                const callee = value.callee;
+                const maybeHook = getHookKind(fn.env, callee.identifier);
+                const maybeLoweredFunc = temporaries.get(callee.identifier.id);
+                if (maybeLoweredFunc != null) {
+                    hoistableFunctions.add(maybeLoweredFunc.fn);
+                }
+                else if (maybeHook != null) {
+                    for (const arg of value.args) {
+                        if (arg.kind === 'Identifier') {
+                            const maybeLoweredFunc = temporaries.get(arg.identifier.id);
+                            if (maybeLoweredFunc != null) {
+                                hoistableFunctions.add(maybeLoweredFunc.fn);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (value.kind === 'JsxExpression') {
+                for (const attr of value.props) {
+                    if (attr.kind === 'JsxSpreadAttribute') {
+                        continue;
+                    }
+                    const maybeLoweredFunc = temporaries.get(attr.place.identifier.id);
+                    if (maybeLoweredFunc != null) {
+                        hoistableFunctions.add(maybeLoweredFunc.fn);
+                    }
+                }
+                for (const child of (_a = value.children) !== null && _a !== void 0 ? _a : []) {
+                    const maybeLoweredFunc = temporaries.get(child.identifier.id);
+                    if (maybeLoweredFunc != null) {
+                        hoistableFunctions.add(maybeLoweredFunc.fn);
+                    }
+                }
+            }
+            else if (value.kind === 'FunctionExpression') {
+                const loweredFunc = value.loweredFunc.func;
+                const lambdasCalled = getAssumedInvokedFunctions(loweredFunc, temporaries);
+                const maybeLoweredFunc = temporaries.get(lvalue.identifier.id);
+                if (maybeLoweredFunc != null) {
+                    for (const called of lambdasCalled) {
+                        maybeLoweredFunc.mayInvoke.add(called);
+                    }
+                }
+            }
+        }
+        if (block.terminal.kind === 'return') {
+            const maybeLoweredFunc = temporaries.get(block.terminal.value.identifier.id);
+            if (maybeLoweredFunc != null) {
+                hoistableFunctions.add(maybeLoweredFunc.fn);
+            }
+        }
+    }
+    for (const [_, { fn, mayInvoke }] of temporaries) {
+        if (hoistableFunctions.has(fn)) {
+            for (const called of mayInvoke) {
+                hoistableFunctions.add(called);
+            }
+        }
+    }
+    return hoistableFunctions;
+}
+
+function collectOptionalChainSidemap(fn) {
+    const context = {
+        currFn: fn,
+        blocks: fn.body.blocks,
+        seenOptionals: new Set(),
+        processedInstrsInOptional: new Set(),
+        temporariesReadInOptional: new Map(),
+        hoistableObjects: new Map(),
+    };
+    traverseFunction(fn, context);
+    return {
+        temporariesReadInOptional: context.temporariesReadInOptional,
+        processedInstrsInOptional: context.processedInstrsInOptional,
+        hoistableObjects: context.hoistableObjects,
+    };
+}
+function traverseFunction(fn, context) {
+    for (const [_, block] of fn.body.blocks) {
+        for (const instr of block.instructions) {
+            if (instr.value.kind === 'FunctionExpression' ||
+                instr.value.kind === 'ObjectMethod') {
+                traverseFunction(instr.value.loweredFunc.func, Object.assign(Object.assign({}, context), { currFn: instr.value.loweredFunc.func, blocks: instr.value.loweredFunc.func.body.blocks }));
+            }
+        }
+        if (block.terminal.kind === 'optional' &&
+            !context.seenOptionals.has(block.id)) {
+            traverseOptionalBlock(block, context, null);
+        }
+    }
+}
+function matchOptionalTestBlock(terminal, blocks) {
+    const consequentBlock = assertNonNull(blocks.get(terminal.consequent));
+    if (consequentBlock.instructions.length === 2 &&
+        consequentBlock.instructions[0].value.kind === 'PropertyLoad' &&
+        consequentBlock.instructions[1].value.kind === 'StoreLocal') {
+        const propertyLoad = consequentBlock
+            .instructions[0];
+        const storeLocal = consequentBlock.instructions[1].value;
+        const storeLocalInstr = consequentBlock.instructions[1];
+        CompilerError.invariant(propertyLoad.value.object.identifier.id === terminal.test.identifier.id, {
+            reason: '[OptionalChainDeps] Inconsistent optional chaining property load',
+            description: `Test=${printIdentifier(terminal.test.identifier)} PropertyLoad base=${printIdentifier(propertyLoad.value.object.identifier)}`,
+            loc: propertyLoad.loc,
+        });
+        CompilerError.invariant(storeLocal.value.identifier.id === propertyLoad.lvalue.identifier.id, {
+            reason: '[OptionalChainDeps] Unexpected storeLocal',
+            loc: propertyLoad.loc,
+        });
+        if (consequentBlock.terminal.kind !== 'goto' ||
+            consequentBlock.terminal.variant !== GotoVariant.Break) {
+            return null;
+        }
+        const alternate = assertNonNull(blocks.get(terminal.alternate));
+        CompilerError.invariant(alternate.instructions.length === 2 &&
+            alternate.instructions[0].value.kind === 'Primitive' &&
+            alternate.instructions[1].value.kind === 'StoreLocal', {
+            reason: 'Unexpected alternate structure',
+            loc: terminal.loc,
+        });
+        return {
+            consequentId: storeLocal.lvalue.place.identifier.id,
+            property: propertyLoad.value.property,
+            propertyId: propertyLoad.lvalue.identifier.id,
+            storeLocalInstr,
+            consequentGoto: consequentBlock.terminal.block,
+        };
+    }
+    return null;
+}
+function traverseOptionalBlock(optional, context, outerAlternate) {
+    context.seenOptionals.add(optional.id);
+    const maybeTest = context.blocks.get(optional.terminal.test);
+    let test;
+    let baseObject;
+    if (maybeTest.terminal.kind === 'branch') {
+        CompilerError.invariant(optional.terminal.optional, {
+            reason: '[OptionalChainDeps] Expect base case to be always optional',
+            loc: optional.terminal.loc,
+        });
+        if (maybeTest.instructions.length === 0 ||
+            maybeTest.instructions[0].value.kind !== 'LoadLocal') {
+            return null;
+        }
+        const path = [];
+        for (let i = 1; i < maybeTest.instructions.length; i++) {
+            const instrVal = maybeTest.instructions[i].value;
+            const prevInstr = maybeTest.instructions[i - 1];
+            if (instrVal.kind === 'PropertyLoad' &&
+                instrVal.object.identifier.id === prevInstr.lvalue.identifier.id) {
+                path.push({ property: instrVal.property, optional: false });
+            }
+            else {
+                return null;
+            }
+        }
+        CompilerError.invariant(maybeTest.terminal.test.identifier.id ===
+            maybeTest.instructions.at(-1).lvalue.identifier.id, {
+            reason: '[OptionalChainDeps] Unexpected test expression',
+            loc: maybeTest.terminal.loc,
+        });
+        baseObject = {
+            identifier: maybeTest.instructions[0].value.place.identifier,
+            path,
+        };
+        test = maybeTest.terminal;
+    }
+    else if (maybeTest.terminal.kind === 'optional') {
+        const testBlock = context.blocks.get(maybeTest.terminal.fallthrough);
+        if (testBlock.terminal.kind !== 'branch') {
+            CompilerError.throwTodo({
+                reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional fallthrough block`,
+                loc: maybeTest.terminal.loc,
+            });
+        }
+        const innerOptional = traverseOptionalBlock(maybeTest, context, testBlock.terminal.alternate);
+        if (innerOptional == null) {
+            return null;
+        }
+        if (testBlock.terminal.test.identifier.id !== innerOptional) {
+            return null;
+        }
+        if (!optional.terminal.optional) {
+            context.hoistableObjects.set(optional.id, assertNonNull(context.temporariesReadInOptional.get(innerOptional)));
+        }
+        baseObject = assertNonNull(context.temporariesReadInOptional.get(innerOptional));
+        test = testBlock.terminal;
+    }
+    else {
+        return null;
+    }
+    if (test.alternate === outerAlternate) {
+        CompilerError.invariant(optional.instructions.length === 0, {
+            reason: '[OptionalChainDeps] Unexpected instructions an inner optional block. ' +
+                'This indicates that the compiler may be incorrectly concatenating two unrelated optional chains',
+            loc: optional.terminal.loc,
+        });
+    }
+    const matchConsequentResult = matchOptionalTestBlock(test, context.blocks);
+    if (!matchConsequentResult) {
+        return null;
+    }
+    CompilerError.invariant(matchConsequentResult.consequentGoto === optional.terminal.fallthrough, {
+        reason: '[OptionalChainDeps] Unexpected optional goto-fallthrough',
+        description: `${matchConsequentResult.consequentGoto} != ${optional.terminal.fallthrough}`,
+        loc: optional.terminal.loc,
+    });
+    const load = {
+        identifier: baseObject.identifier,
+        path: [
+            ...baseObject.path,
+            {
+                property: matchConsequentResult.property,
+                optional: optional.terminal.optional,
+            },
+        ],
+    };
+    context.processedInstrsInOptional.add(matchConsequentResult.storeLocalInstr);
+    context.processedInstrsInOptional.add(test);
+    context.temporariesReadInOptional.set(matchConsequentResult.consequentId, load);
+    context.temporariesReadInOptional.set(matchConsequentResult.propertyId, load);
+    return matchConsequentResult.consequentId;
+}
+
+var _a, _ReactiveScopeDependencyTreeHIR_hoistableObjects, _ReactiveScopeDependencyTreeHIR_deps, _ReactiveScopeDependencyTreeHIR_getOrCreateRoot, _ReactiveScopeDependencyTreeHIR_debugImpl;
+class ReactiveScopeDependencyTreeHIR {
+    constructor(hoistableObjects) {
+        var _b;
+        _ReactiveScopeDependencyTreeHIR_hoistableObjects.set(this, new Map());
+        _ReactiveScopeDependencyTreeHIR_deps.set(this, new Map());
+        for (const { path, identifier } of hoistableObjects) {
+            let currNode = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_hoistableObjects, "f"), path.length > 0 && path[0].optional ? 'Optional' : 'NonNull');
+            for (let i = 0; i < path.length; i++) {
+                const prevAccessType = (_b = currNode.properties.get(path[i].property)) === null || _b === void 0 ? void 0 : _b.accessType;
+                const accessType = i + 1 < path.length && path[i + 1].optional ? 'Optional' : 'NonNull';
+                CompilerError.invariant(prevAccessType == null || prevAccessType === accessType, {
+                    reason: 'Conflicting access types',
+                    loc: GeneratedSource,
+                });
+                let nextNode = currNode.properties.get(path[i].property);
+                if (nextNode == null) {
+                    nextNode = {
+                        properties: new Map(),
+                        accessType,
+                    };
+                    currNode.properties.set(path[i].property, nextNode);
+                }
+                currNode = nextNode;
+            }
+        }
+    }
+    addDependency(dep) {
+        const { identifier, path } = dep;
+        let depCursor = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f"), PropertyAccessType.UnconditionalAccess);
+        let hoistableCursor = __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_hoistableObjects, "f").get(identifier);
+        for (const entry of path) {
+            let nextHoistableCursor;
+            let nextDepCursor;
+            if (entry.optional) {
+                if (hoistableCursor != null) {
+                    nextHoistableCursor = hoistableCursor === null || hoistableCursor === void 0 ? void 0 : hoistableCursor.properties.get(entry.property);
+                }
+                let accessType;
+                if (hoistableCursor != null &&
+                    hoistableCursor.accessType === 'NonNull') {
+                    accessType = PropertyAccessType.UnconditionalAccess;
+                }
+                else {
+                    accessType = PropertyAccessType.OptionalAccess;
+                }
+                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, accessType);
+            }
+            else if (hoistableCursor != null &&
+                hoistableCursor.accessType === 'NonNull') {
+                nextHoistableCursor = hoistableCursor.properties.get(entry.property);
+                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, PropertyAccessType.UnconditionalAccess);
+            }
+            else {
+                break;
+            }
+            depCursor = nextDepCursor;
+            hoistableCursor = nextHoistableCursor;
+        }
+        depCursor.accessType = merge(depCursor.accessType, PropertyAccessType.OptionalDependency);
+    }
+    deriveMinimalDependencies() {
+        const results = new Set();
+        for (const [rootId, rootNode] of __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f").entries()) {
+            collectMinimalDependenciesInSubtree(rootNode, rootId, [], results);
+        }
+        return results;
+    }
+    printDeps(includeAccesses) {
+        let res = [];
+        for (const [rootId, rootNode] of __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f").entries()) {
+            const rootResults = printSubtree(rootNode, includeAccesses).map(result => `${printIdentifier(rootId)}.${result}`);
+            res.push(rootResults);
+        }
+        return res.flat().join('\n');
+    }
+    static debug(roots) {
+        const buf = [`tree() [`];
+        for (const [rootId, rootNode] of roots) {
+            buf.push(`${printIdentifier(rootId)} (${rootNode.accessType}):`);
+            __classPrivateFieldGet(this, _a, "m", _ReactiveScopeDependencyTreeHIR_debugImpl).call(this, buf, rootNode, 1);
+        }
+        buf.push(']');
+        return buf.length > 2 ? buf.join('\n') : buf.join('');
+    }
+}
+_a = ReactiveScopeDependencyTreeHIR, _ReactiveScopeDependencyTreeHIR_hoistableObjects = new WeakMap(), _ReactiveScopeDependencyTreeHIR_deps = new WeakMap(), _ReactiveScopeDependencyTreeHIR_getOrCreateRoot = function _ReactiveScopeDependencyTreeHIR_getOrCreateRoot(identifier, roots, defaultAccessType) {
+    let rootNode = roots.get(identifier);
+    if (rootNode === undefined) {
+        rootNode = {
+            properties: new Map(),
+            accessType: defaultAccessType,
+        };
+        roots.set(identifier, rootNode);
+    }
+    return rootNode;
+}, _ReactiveScopeDependencyTreeHIR_debugImpl = function _ReactiveScopeDependencyTreeHIR_debugImpl(buf, node, depth = 0) {
+    for (const [property, childNode] of node.properties) {
+        buf.push(`${'  '.repeat(depth)}.${property} (${childNode.accessType}):`);
+        __classPrivateFieldGet(this, _a, "m", _ReactiveScopeDependencyTreeHIR_debugImpl).call(this, buf, childNode, depth + 1);
+    }
+};
+var PropertyAccessType;
+(function (PropertyAccessType) {
+    PropertyAccessType["OptionalAccess"] = "OptionalAccess";
+    PropertyAccessType["UnconditionalAccess"] = "UnconditionalAccess";
+    PropertyAccessType["OptionalDependency"] = "OptionalDependency";
+    PropertyAccessType["UnconditionalDependency"] = "UnconditionalDependency";
+})(PropertyAccessType || (PropertyAccessType = {}));
+function isOptional(access) {
+    return (access === PropertyAccessType.OptionalAccess ||
+        access === PropertyAccessType.OptionalDependency);
+}
+function isDependency(access) {
+    return (access === PropertyAccessType.OptionalDependency ||
+        access === PropertyAccessType.UnconditionalDependency);
+}
+function merge(access1, access2) {
+    const resultIsUnconditional = !(isOptional(access1) && isOptional(access2));
+    const resultIsDependency = isDependency(access1) || isDependency(access2);
+    if (resultIsUnconditional) {
+        if (resultIsDependency) {
+            return PropertyAccessType.UnconditionalDependency;
+        }
+        else {
+            return PropertyAccessType.UnconditionalAccess;
+        }
+    }
+    else {
+        if (resultIsDependency) {
+            return PropertyAccessType.OptionalDependency;
+        }
+        else {
+            return PropertyAccessType.OptionalAccess;
+        }
+    }
+}
+function collectMinimalDependenciesInSubtree(node, rootIdentifier, path, results) {
+    if (isDependency(node.accessType)) {
+        results.add({ identifier: rootIdentifier, path });
+    }
+    else {
+        for (const [childName, childNode] of node.properties) {
+            collectMinimalDependenciesInSubtree(childNode, rootIdentifier, [
+                ...path,
+                {
+                    property: childName,
+                    optional: isOptional(childNode.accessType),
+                },
+            ], results);
+        }
+    }
+}
+function printSubtree(node, includeAccesses) {
+    const results = [];
+    for (const [propertyName, propertyNode] of node.properties) {
+        if (includeAccesses || isDependency(propertyNode.accessType)) {
+            results.push(`${propertyName} (${propertyNode.accessType})`);
+        }
+        const propertyResults = printSubtree(propertyNode, includeAccesses);
+        results.push(...propertyResults.map(result => `${propertyName}.${result}`));
+    }
+    return results;
+}
+function makeOrMergeProperty(node, property, accessType) {
+    let child = node.properties.get(property);
+    if (child == null) {
+        child = {
+            properties: new Map(),
+            accessType,
+        };
+        node.properties.set(property, child);
+    }
+    else {
+        child.accessType = merge(child.accessType, accessType);
+    }
+    return child;
+}
+
+var _Node_value, _Node_next;
+function empty() {
+    return EMPTY;
+}
+class Node {
+    constructor(value, next = EMPTY) {
+        _Node_value.set(this, void 0);
+        _Node_next.set(this, void 0);
+        __classPrivateFieldSet(this, _Node_value, value, "f");
+        __classPrivateFieldSet(this, _Node_next, next, "f");
+    }
+    push(value) {
+        return new Node(value, this);
+    }
+    pop() {
+        return __classPrivateFieldGet(this, _Node_next, "f");
+    }
+    find(fn) {
+        return fn(__classPrivateFieldGet(this, _Node_value, "f")) ? true : __classPrivateFieldGet(this, _Node_next, "f").find(fn);
+    }
+    contains(value) {
+        return (value === __classPrivateFieldGet(this, _Node_value, "f") ||
+            (__classPrivateFieldGet(this, _Node_next, "f") !== null && __classPrivateFieldGet(this, _Node_next, "f").contains(value)));
+    }
+    each(fn) {
+        fn(__classPrivateFieldGet(this, _Node_value, "f"));
+        __classPrivateFieldGet(this, _Node_next, "f").each(fn);
+    }
+    get value() {
+        return __classPrivateFieldGet(this, _Node_value, "f");
+    }
+    print(fn) {
+        return fn(__classPrivateFieldGet(this, _Node_value, "f")) + __classPrivateFieldGet(this, _Node_next, "f").print(fn);
+    }
+}
+_Node_value = new WeakMap(), _Node_next = new WeakMap();
+class Empty {
+    push(value) {
+        return new Node(value, this);
+    }
+    pop() {
+        return this;
+    }
+    find(_fn) {
+        return false;
+    }
+    contains(_value) {
+        return false;
+    }
+    each(_fn) {
+        return;
+    }
+    get value() {
+        return null;
+    }
+    print(_) {
+        return '';
+    }
+}
+const EMPTY = new Empty();
+
+var _DependencyCollectionContext_instances, _DependencyCollectionContext_declarations, _DependencyCollectionContext_reassignments, _DependencyCollectionContext_scopes, _DependencyCollectionContext_dependencies, _DependencyCollectionContext_temporaries, _DependencyCollectionContext_temporariesUsedOutsideScope, _DependencyCollectionContext_processedInstrsInOptional, _DependencyCollectionContext_innerFnContext, _DependencyCollectionContext_checkValidDependency, _DependencyCollectionContext_isScopeActive;
+function propagateScopeDependenciesHIR(fn) {
+    const usedOutsideDeclaringScope = findTemporariesUsedOutsideDeclaringScope(fn);
+    const temporaries = collectTemporariesSidemap(fn, usedOutsideDeclaringScope);
+    const { temporariesReadInOptional, processedInstrsInOptional, hoistableObjects, } = collectOptionalChainSidemap(fn);
+    const hoistablePropertyLoads = keyByScopeId(fn, collectHoistablePropertyLoads(fn, temporaries, hoistableObjects));
+    const scopeDeps = collectDependencies(fn, usedOutsideDeclaringScope, new Map([...temporaries, ...temporariesReadInOptional]), processedInstrsInOptional);
+    for (const [scope, deps] of scopeDeps) {
+        if (deps.length === 0) {
+            continue;
+        }
+        const hoistables = hoistablePropertyLoads.get(scope.id);
+        CompilerError.invariant(hoistables != null, {
+            reason: '[PropagateScopeDependencies] Scope not found in tracked blocks',
+            loc: GeneratedSource,
+        });
+        const tree = new ReactiveScopeDependencyTreeHIR([...hoistables.assumedNonNullObjects].map(o => o.fullPath));
+        for (const dep of deps) {
+            tree.addDependency(Object.assign({}, dep));
+        }
+        const candidates = tree.deriveMinimalDependencies();
+        for (const candidateDep of candidates) {
+            if (!Iterable_some(scope.dependencies, existingDep => existingDep.identifier.declarationId ===
+                candidateDep.identifier.declarationId &&
+                areEqualPaths(existingDep.path, candidateDep.path)))
+                scope.dependencies.add(candidateDep);
+        }
+    }
+}
+function findTemporariesUsedOutsideDeclaringScope(fn) {
+    const declarations = new Map();
+    const prunedScopes = new Set();
+    const scopeTraversal = new ScopeBlockTraversal();
+    const usedOutsideDeclaringScope = new Set();
+    function handlePlace(place) {
+        const declaringScope = declarations.get(place.identifier.declarationId);
+        if (declaringScope != null &&
+            !scopeTraversal.isScopeActive(declaringScope) &&
+            !prunedScopes.has(declaringScope)) {
+            usedOutsideDeclaringScope.add(place.identifier.declarationId);
+        }
+    }
+    function handleInstruction(instr) {
+        const scope = scopeTraversal.currentScope;
+        if (scope == null || prunedScopes.has(scope)) {
+            return;
+        }
+        switch (instr.value.kind) {
+            case 'LoadLocal':
+            case 'LoadContext':
+            case 'PropertyLoad': {
+                declarations.set(instr.lvalue.identifier.declarationId, scope);
+                break;
+            }
+        }
+    }
+    for (const [blockId, block] of fn.body.blocks) {
+        scopeTraversal.recordScopes(block);
+        const scopeStartInfo = scopeTraversal.blockInfos.get(blockId);
+        if ((scopeStartInfo === null || scopeStartInfo === void 0 ? void 0 : scopeStartInfo.kind) === 'begin' && scopeStartInfo.pruned) {
+            prunedScopes.add(scopeStartInfo.scope.id);
+        }
+        for (const instr of block.instructions) {
+            for (const place of eachInstructionOperand(instr)) {
+                handlePlace(place);
+            }
+            handleInstruction(instr);
+        }
+        for (const place of eachTerminalOperand(block.terminal)) {
+            handlePlace(place);
+        }
+    }
+    return usedOutsideDeclaringScope;
+}
+function collectTemporariesSidemap(fn, usedOutsideDeclaringScope) {
+    const temporaries = new Map();
+    collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporaries, null);
+    return temporaries;
+}
+function isLoadContextMutable(instrValue, id) {
+    if (instrValue.kind === 'LoadContext') {
+        CompilerError.invariant(instrValue.place.identifier.scope != null, {
+            reason: '[PropagateScopeDependencies] Expected all context variables to be assigned a scope',
+            loc: instrValue.loc,
+        });
+        return id >= instrValue.place.identifier.scope.range.end;
+    }
+    return false;
+}
+function collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporaries, innerFnContext) {
+    for (const [_, block] of fn.body.blocks) {
+        for (const { value, lvalue, id: origInstrId } of block.instructions) {
+            const instrId = innerFnContext != null ? innerFnContext.instrId : origInstrId;
+            const usedOutside = usedOutsideDeclaringScope.has(lvalue.identifier.declarationId);
+            if (value.kind === 'PropertyLoad' && !usedOutside) {
+                if (innerFnContext == null ||
+                    temporaries.has(value.object.identifier.id)) {
+                    const property = getProperty(value.object, value.property, false, temporaries);
+                    temporaries.set(lvalue.identifier.id, property);
+                }
+            }
+            else if ((value.kind === 'LoadLocal' || isLoadContextMutable(value, instrId)) &&
+                lvalue.identifier.name == null &&
+                value.place.identifier.name !== null &&
+                !usedOutside) {
+                if (innerFnContext == null ||
+                    fn.context.some(context => context.identifier.id === value.place.identifier.id)) {
+                    temporaries.set(lvalue.identifier.id, {
+                        identifier: value.place.identifier,
+                        path: [],
+                    });
+                }
+            }
+            else if (value.kind === 'FunctionExpression' ||
+                value.kind === 'ObjectMethod') {
+                collectTemporariesSidemapImpl(value.loweredFunc.func, usedOutsideDeclaringScope, temporaries, innerFnContext !== null && innerFnContext !== void 0 ? innerFnContext : { instrId });
+            }
+        }
+    }
+}
+function getProperty(object, propertyName, optional, temporaries) {
+    const resolvedDependency = temporaries.get(object.identifier.id);
+    let property;
+    if (resolvedDependency == null) {
+        property = {
+            identifier: object.identifier,
+            path: [{ property: propertyName, optional }],
+        };
+    }
+    else {
+        property = {
+            identifier: resolvedDependency.identifier,
+            path: [...resolvedDependency.path, { property: propertyName, optional }],
+        };
+    }
+    return property;
+}
+class DependencyCollectionContext {
+    constructor(temporariesUsedOutsideScope, temporaries, processedInstrsInOptional) {
+        _DependencyCollectionContext_instances.add(this);
+        _DependencyCollectionContext_declarations.set(this, new Map());
+        _DependencyCollectionContext_reassignments.set(this, new Map());
+        _DependencyCollectionContext_scopes.set(this, empty());
+        _DependencyCollectionContext_dependencies.set(this, empty());
+        this.deps = new Map();
+        _DependencyCollectionContext_temporaries.set(this, void 0);
+        _DependencyCollectionContext_temporariesUsedOutsideScope.set(this, void 0);
+        _DependencyCollectionContext_processedInstrsInOptional.set(this, void 0);
+        _DependencyCollectionContext_innerFnContext.set(this, null);
+        __classPrivateFieldSet(this, _DependencyCollectionContext_temporariesUsedOutsideScope, temporariesUsedOutsideScope, "f");
+        __classPrivateFieldSet(this, _DependencyCollectionContext_temporaries, temporaries, "f");
+        __classPrivateFieldSet(this, _DependencyCollectionContext_processedInstrsInOptional, processedInstrsInOptional, "f");
+    }
+    enterScope(scope) {
+        __classPrivateFieldSet(this, _DependencyCollectionContext_dependencies, __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").push([]), "f");
+        __classPrivateFieldSet(this, _DependencyCollectionContext_scopes, __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f").push(scope), "f");
+    }
+    exitScope(scope, pruned) {
+        var _a;
+        const scopedDependencies = __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").value;
+        CompilerError.invariant(scopedDependencies != null, {
+            reason: '[PropagateScopeDeps]: Unexpected scope mismatch',
+            loc: scope.loc,
+        });
+        __classPrivateFieldSet(this, _DependencyCollectionContext_scopes, __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f").pop(), "f");
+        __classPrivateFieldSet(this, _DependencyCollectionContext_dependencies, __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").pop(), "f");
+        for (const dep of scopedDependencies) {
+            if (__classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_checkValidDependency).call(this, dep)) {
+                (_a = __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").value) === null || _a === void 0 ? void 0 : _a.push(dep);
+            }
+        }
+        if (!pruned) {
+            this.deps.set(scope, scopedDependencies);
+        }
+    }
+    isUsedOutsideDeclaringScope(place) {
+        return __classPrivateFieldGet(this, _DependencyCollectionContext_temporariesUsedOutsideScope, "f").has(place.identifier.declarationId);
+    }
+    declare(identifier, decl) {
+        if (__classPrivateFieldGet(this, _DependencyCollectionContext_innerFnContext, "f") != null)
+            return;
+        if (!__classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").has(identifier.declarationId)) {
+            __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").set(identifier.declarationId, decl);
+        }
+        __classPrivateFieldGet(this, _DependencyCollectionContext_reassignments, "f").set(identifier, decl);
+    }
+    get currentScope() {
+        return __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f");
+    }
+    visitOperand(place) {
+        var _a;
+        this.visitDependency((_a = __classPrivateFieldGet(this, _DependencyCollectionContext_temporaries, "f").get(place.identifier.id)) !== null && _a !== void 0 ? _a : {
+            identifier: place.identifier,
+            path: [],
+        });
+    }
+    visitProperty(object, property, optional) {
+        const nextDependency = getProperty(object, property, optional, __classPrivateFieldGet(this, _DependencyCollectionContext_temporaries, "f"));
+        this.visitDependency(nextDependency);
+    }
+    visitDependency(maybeDependency) {
+        var _a;
+        const originalDeclaration = __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").get(maybeDependency.identifier.declarationId);
+        if (originalDeclaration !== undefined &&
+            originalDeclaration.scope.value !== null) {
+            originalDeclaration.scope.each(scope => {
+                if (!__classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_isScopeActive).call(this, scope) &&
+                    !Iterable_some(scope.declarations.values(), decl => decl.identifier.declarationId ===
+                        maybeDependency.identifier.declarationId)) {
+                    scope.declarations.set(maybeDependency.identifier.id, {
+                        identifier: maybeDependency.identifier,
+                        scope: originalDeclaration.scope.value,
+                    });
+                }
+            });
+        }
+        if (isUseRefType(maybeDependency.identifier) &&
+            ((_a = maybeDependency.path.at(0)) === null || _a === void 0 ? void 0 : _a.property) === 'current') {
+            maybeDependency = {
+                identifier: maybeDependency.identifier,
+                path: [],
+            };
+        }
+        if (__classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_checkValidDependency).call(this, maybeDependency)) {
+            __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").value.push(maybeDependency);
+        }
+    }
+    visitReassignment(place) {
+        const currentScope = this.currentScope.value;
+        if (currentScope != null &&
+            !Iterable_some(currentScope.reassignments, identifier => identifier.declarationId === place.identifier.declarationId) &&
+            __classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_checkValidDependency).call(this, { identifier: place.identifier, path: [] })) {
+            currentScope.reassignments.add(place.identifier);
+        }
+    }
+    enterInnerFn(innerFn, cb) {
+        var _a;
+        const prevContext = __classPrivateFieldGet(this, _DependencyCollectionContext_innerFnContext, "f");
+        __classPrivateFieldSet(this, _DependencyCollectionContext_innerFnContext, (_a = __classPrivateFieldGet(this, _DependencyCollectionContext_innerFnContext, "f")) !== null && _a !== void 0 ? _a : { outerInstrId: innerFn.id }, "f");
+        const result = cb();
+        __classPrivateFieldSet(this, _DependencyCollectionContext_innerFnContext, prevContext, "f");
+        return result;
+    }
+    isDeferredDependency(instr) {
+        return (__classPrivateFieldGet(this, _DependencyCollectionContext_processedInstrsInOptional, "f").has(instr.value) ||
+            (instr.kind === HIRValue.Instruction &&
+                __classPrivateFieldGet(this, _DependencyCollectionContext_temporaries, "f").has(instr.value.lvalue.identifier.id)));
+    }
+}
+_DependencyCollectionContext_declarations = new WeakMap(), _DependencyCollectionContext_reassignments = new WeakMap(), _DependencyCollectionContext_scopes = new WeakMap(), _DependencyCollectionContext_dependencies = new WeakMap(), _DependencyCollectionContext_temporaries = new WeakMap(), _DependencyCollectionContext_temporariesUsedOutsideScope = new WeakMap(), _DependencyCollectionContext_processedInstrsInOptional = new WeakMap(), _DependencyCollectionContext_innerFnContext = new WeakMap(), _DependencyCollectionContext_instances = new WeakSet(), _DependencyCollectionContext_checkValidDependency = function _DependencyCollectionContext_checkValidDependency(maybeDependency) {
+    var _a;
+    if (isRefValueType(maybeDependency.identifier)) {
+        return false;
+    }
+    if (isObjectMethodType(maybeDependency.identifier)) {
+        return false;
+    }
+    const identifier = maybeDependency.identifier;
+    const currentDeclaration = (_a = __classPrivateFieldGet(this, _DependencyCollectionContext_reassignments, "f").get(identifier)) !== null && _a !== void 0 ? _a : __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").get(identifier.declarationId);
+    const currentScope = this.currentScope.value;
+    return (currentScope != null &&
+        currentDeclaration !== undefined &&
+        currentDeclaration.id < currentScope.range.start);
+}, _DependencyCollectionContext_isScopeActive = function _DependencyCollectionContext_isScopeActive(scope) {
+    if (__classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f") === null) {
+        return false;
+    }
+    return __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f").find(state => state === scope);
+};
+var HIRValue;
+(function (HIRValue) {
+    HIRValue[HIRValue["Instruction"] = 1] = "Instruction";
+    HIRValue[HIRValue["Terminal"] = 2] = "Terminal";
+})(HIRValue || (HIRValue = {}));
+function handleInstruction(instr, context) {
+    const { id, value, lvalue } = instr;
+    context.declare(lvalue.identifier, {
+        id,
+        scope: context.currentScope,
+    });
+    if (context.isDeferredDependency({ kind: HIRValue.Instruction, value: instr })) {
+        return;
+    }
+    if (value.kind === 'PropertyLoad') {
+        context.visitProperty(value.object, value.property, false);
+    }
+    else if (value.kind === 'StoreLocal') {
+        context.visitOperand(value.value);
+        if (value.lvalue.kind === InstructionKind.Reassign) {
+            context.visitReassignment(value.lvalue.place);
+        }
+        context.declare(value.lvalue.place.identifier, {
+            id,
+            scope: context.currentScope,
+        });
+    }
+    else if (value.kind === 'DeclareLocal' || value.kind === 'DeclareContext') {
+        context.declare(value.lvalue.place.identifier, {
+            id,
+            scope: context.currentScope,
+        });
+    }
+    else if (value.kind === 'Destructure') {
+        context.visitOperand(value.value);
+        for (const place of eachPatternOperand(value.lvalue.pattern)) {
+            if (value.lvalue.kind === InstructionKind.Reassign) {
+                context.visitReassignment(place);
+            }
+            context.declare(place.identifier, {
+                id,
+                scope: context.currentScope,
+            });
+        }
+    }
+    else {
+        for (const operand of eachInstructionValueOperand(value)) {
+            context.visitOperand(operand);
+        }
+    }
+}
+function collectDependencies(fn, usedOutsideDeclaringScope, temporaries, processedInstrsInOptional) {
+    const context = new DependencyCollectionContext(usedOutsideDeclaringScope, temporaries, processedInstrsInOptional);
+    for (const param of fn.params) {
+        if (param.kind === 'Identifier') {
+            context.declare(param.identifier, {
+                id: makeInstructionId(0),
+                scope: empty(),
+            });
+        }
+        else {
+            context.declare(param.place.identifier, {
+                id: makeInstructionId(0),
+                scope: empty(),
+            });
+        }
+    }
+    const scopeTraversal = new ScopeBlockTraversal();
+    const handleFunction = (fn) => {
+        for (const [blockId, block] of fn.body.blocks) {
+            scopeTraversal.recordScopes(block);
+            const scopeBlockInfo = scopeTraversal.blockInfos.get(blockId);
+            if ((scopeBlockInfo === null || scopeBlockInfo === void 0 ? void 0 : scopeBlockInfo.kind) === 'begin') {
+                context.enterScope(scopeBlockInfo.scope);
+            }
+            else if ((scopeBlockInfo === null || scopeBlockInfo === void 0 ? void 0 : scopeBlockInfo.kind) === 'end') {
+                context.exitScope(scopeBlockInfo.scope, scopeBlockInfo.pruned);
+            }
+            for (const phi of block.phis) {
+                for (const operand of phi.operands) {
+                    const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
+                    if (maybeOptionalChain) {
+                        context.visitDependency(maybeOptionalChain);
+                    }
+                }
+            }
+            for (const instr of block.instructions) {
+                if (instr.value.kind === 'FunctionExpression' ||
+                    instr.value.kind === 'ObjectMethod') {
+                    context.declare(instr.lvalue.identifier, {
+                        id: instr.id,
+                        scope: context.currentScope,
+                    });
+                    const innerFn = instr.value.loweredFunc.func;
+                    context.enterInnerFn(instr, () => {
+                        handleFunction(innerFn);
+                    });
+                }
+                else {
+                    handleInstruction(instr, context);
+                }
+            }
+            if (!context.isDeferredDependency({
+                kind: HIRValue.Terminal,
+                value: block.terminal,
+            })) {
+                for (const place of eachTerminalOperand(block.terminal)) {
+                    context.visitOperand(place);
+                }
+            }
+        }
+    };
+    handleFunction(fn);
+    return context.deps;
+}
+
 function inferEffectDependencies(fn) {
     var _a, _b;
     let hasRewrite = false;
@@ -49323,16 +50482,13 @@ function inferEffectDependencies(fn) {
     const loadGlobals = new Set();
     const reactiveIds = inferReactiveIdentifiers(fn);
     for (const [, block] of fn.body.blocks) {
-        if (block.terminal.kind === 'scope' ||
-            block.terminal.kind === 'pruned-scope') {
+        if (block.terminal.kind === 'scope') {
             const scopeBlock = fn.body.blocks.get(block.terminal.block);
-            scopeInfos.set(block.terminal.scope.id, {
-                pruned: block.terminal.kind === 'pruned-scope',
-                deps: block.terminal.scope.dependencies,
-                hasSingleInstr: scopeBlock.instructions.length === 1 &&
-                    scopeBlock.terminal.kind === 'goto' &&
-                    scopeBlock.terminal.block === block.terminal.fallthrough,
-            });
+            if (scopeBlock.instructions.length === 1 &&
+                scopeBlock.terminal.kind === 'goto' &&
+                scopeBlock.terminal.block === block.terminal.fallthrough) {
+                scopeInfos.set(block.terminal.scope.id, block.terminal.scope.dependencies);
+            }
         }
         const rewriteInstrs = new Map();
         for (const instr of block.instructions) {
@@ -49392,18 +50548,15 @@ function inferEffectDependencies(fn) {
                         const scopeInfo = fnExpr.lvalue.identifier.scope != null
                             ? scopeInfos.get(fnExpr.lvalue.identifier.scope.id)
                             : null;
-                        CompilerError.invariant(scopeInfo != null, {
-                            reason: 'Expected function expression scope to exist',
-                            loc: value.loc,
-                        });
-                        if (scopeInfo.pruned || !scopeInfo.hasSingleInstr) {
-                            CompilerError.throwTodo({
-                                reason: '[InferEffectDependencies] Expected effect function to have non-pruned scope and its scope to have exactly one instruction',
-                                loc: fnExpr.loc,
-                            });
+                        let minimalDeps;
+                        if (scopeInfo != null) {
+                            minimalDeps = new Set(scopeInfo);
+                        }
+                        else {
+                            minimalDeps = inferMinimalDependencies(fnExpr);
                         }
                         const usedDeps = [];
-                        for (const dep of scopeInfo.deps) {
+                        for (const dep of minimalDeps) {
                             if (((isUseRefType(dep.identifier) ||
                                 isSetStateType(dep.identifier)) &&
                                 !reactiveIds.has(dep.identifier.id)) ||
@@ -49576,6 +50729,90 @@ function collectDepUsages(deps, fnExpr) {
         }
     }
     return sourceLocations;
+}
+function inferMinimalDependencies(fnInstr) {
+    const fn = fnInstr.value.loweredFunc.func;
+    const temporaries = collectTemporariesSidemap(fn, new Set());
+    const { hoistableObjects, processedInstrsInOptional, temporariesReadInOptional, } = collectOptionalChainSidemap(fn);
+    const hoistablePropertyLoads = collectHoistablePropertyLoadsInInnerFn(fnInstr, temporaries, hoistableObjects);
+    const hoistableToFnEntry = hoistablePropertyLoads.get(fn.body.entry);
+    CompilerError.invariant(hoistableToFnEntry != null, {
+        reason: '[InferEffectDependencies] Internal invariant broken: missing entry block',
+        loc: fnInstr.loc,
+    });
+    const dependencies = inferDependencies(fnInstr, new Map([...temporaries, ...temporariesReadInOptional]), processedInstrsInOptional);
+    const tree = new ReactiveScopeDependencyTreeHIR([...hoistableToFnEntry.assumedNonNullObjects].map(o => o.fullPath));
+    for (const dep of dependencies) {
+        tree.addDependency(Object.assign({}, dep));
+    }
+    return tree.deriveMinimalDependencies();
+}
+function inferDependencies(fnInstr, temporaries, processedInstrsInOptional) {
+    const fn = fnInstr.value.loweredFunc.func;
+    const context = new DependencyCollectionContext(new Set(), temporaries, processedInstrsInOptional);
+    for (const dep of fn.context) {
+        context.declare(dep.identifier, {
+            id: makeInstructionId(0),
+            scope: empty(),
+        });
+    }
+    const placeholderScope = {
+        id: makeScopeId(0),
+        range: {
+            start: fnInstr.id,
+            end: makeInstructionId(fnInstr.id + 1),
+        },
+        dependencies: new Set(),
+        reassignments: new Set(),
+        declarations: new Map(),
+        earlyReturnValue: null,
+        merged: new Set(),
+        loc: GeneratedSource,
+    };
+    context.enterScope(placeholderScope);
+    inferDependenciesInFn(fn, context, temporaries);
+    context.exitScope(placeholderScope, false);
+    const resultUnfiltered = context.deps.get(placeholderScope);
+    CompilerError.invariant(resultUnfiltered != null, {
+        reason: '[InferEffectDependencies] Internal invariant broken: missing scope dependencies',
+        loc: fn.loc,
+    });
+    const fnContext = new Set(fn.context.map(dep => dep.identifier.id));
+    const result = new Set();
+    for (const dep of resultUnfiltered) {
+        if (fnContext.has(dep.identifier.id)) {
+            result.add(dep);
+        }
+    }
+    return result;
+}
+function inferDependenciesInFn(fn, context, temporaries) {
+    for (const [, block] of fn.body.blocks) {
+        for (const phi of block.phis) {
+            for (const operand of phi.operands) {
+                const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
+                if (maybeOptionalChain) {
+                    context.visitDependency(maybeOptionalChain);
+                }
+            }
+        }
+        for (const instr of block.instructions) {
+            if (instr.value.kind === 'FunctionExpression' ||
+                instr.value.kind === 'ObjectMethod') {
+                context.declare(instr.lvalue.identifier, {
+                    id: instr.id,
+                    scope: context.currentScope,
+                });
+                const innerFn = instr.value.loweredFunc.func;
+                context.enterInnerFn(instr, () => {
+                    inferDependenciesInFn(innerFn, context, temporaries);
+                });
+            }
+            else {
+                handleInstruction(instr, context);
+            }
+        }
+    }
 }
 
 function instructionReordering(fn) {
@@ -52896,1147 +54133,6 @@ function validateNoJSXInTryStatement(fn) {
         }
     }
     return errors.asResult();
-}
-
-function collectHoistablePropertyLoads(fn, temporaries, hoistableFromOptionals) {
-    const registry = new PropertyPathRegistry();
-    const knownImmutableIdentifiers = new Set();
-    if (fn.fnType === 'Component' || fn.fnType === 'Hook') {
-        for (const p of fn.params) {
-            if (p.kind === 'Identifier') {
-                knownImmutableIdentifiers.add(p.identifier.id);
-            }
-        }
-    }
-    return collectHoistablePropertyLoadsImpl(fn, {
-        temporaries,
-        knownImmutableIdentifiers,
-        hoistableFromOptionals,
-        registry,
-        nestedFnImmutableContext: null,
-        assumedInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
-            ? new Set()
-            : getAssumedInvokedFunctions(fn),
-    });
-}
-function collectHoistablePropertyLoadsImpl(fn, context) {
-    const nodes = collectNonNullsInBlocks(fn, context);
-    propagateNonNull(fn, nodes, context.registry);
-    return nodes;
-}
-function keyByScopeId(fn, source) {
-    const keyedByScopeId = new Map();
-    for (const [_, block] of fn.body.blocks) {
-        if (block.terminal.kind === 'scope') {
-            keyedByScopeId.set(block.terminal.scope.id, source.get(block.terminal.block));
-        }
-    }
-    return keyedByScopeId;
-}
-class PropertyPathRegistry {
-    constructor() {
-        this.roots = new Map();
-    }
-    getOrCreateIdentifier(identifier) {
-        let rootNode = this.roots.get(identifier.id);
-        if (rootNode === undefined) {
-            rootNode = {
-                root: identifier.id,
-                properties: new Map(),
-                optionalProperties: new Map(),
-                fullPath: {
-                    identifier,
-                    path: [],
-                },
-                hasOptional: false,
-                parent: null,
-            };
-            this.roots.set(identifier.id, rootNode);
-        }
-        return rootNode;
-    }
-    static getOrCreatePropertyEntry(parent, entry) {
-        const map = entry.optional ? parent.optionalProperties : parent.properties;
-        let child = map.get(entry.property);
-        if (child == null) {
-            child = {
-                properties: new Map(),
-                optionalProperties: new Map(),
-                parent: parent,
-                fullPath: {
-                    identifier: parent.fullPath.identifier,
-                    path: parent.fullPath.path.concat(entry),
-                },
-                hasOptional: parent.hasOptional || entry.optional,
-            };
-            map.set(entry.property, child);
-        }
-        return child;
-    }
-    getOrCreateProperty(n) {
-        let currNode = this.getOrCreateIdentifier(n.identifier);
-        if (n.path.length === 0) {
-            return currNode;
-        }
-        for (let i = 0; i < n.path.length - 1; i++) {
-            currNode = PropertyPathRegistry.getOrCreatePropertyEntry(currNode, n.path[i]);
-        }
-        return PropertyPathRegistry.getOrCreatePropertyEntry(currNode, n.path.at(-1));
-    }
-}
-function getMaybeNonNullInInstruction(instr, context) {
-    var _a, _b, _c;
-    let path = null;
-    if (instr.kind === 'PropertyLoad') {
-        path = (_a = context.temporaries.get(instr.object.identifier.id)) !== null && _a !== void 0 ? _a : {
-            identifier: instr.object.identifier,
-            path: [],
-        };
-    }
-    else if (instr.kind === 'Destructure') {
-        path = (_b = context.temporaries.get(instr.value.identifier.id)) !== null && _b !== void 0 ? _b : null;
-    }
-    else if (instr.kind === 'ComputedLoad') {
-        path = (_c = context.temporaries.get(instr.object.identifier.id)) !== null && _c !== void 0 ? _c : null;
-    }
-    return path != null ? context.registry.getOrCreateProperty(path) : null;
-}
-function isImmutableAtInstr(identifier, instr, context) {
-    if (context.nestedFnImmutableContext != null) {
-        return context.nestedFnImmutableContext.has(identifier.id);
-    }
-    else {
-        const mutableAtInstr = identifier.mutableRange.end > identifier.mutableRange.start + 1 &&
-            identifier.scope != null &&
-            inRange({
-                id: instr,
-            }, identifier.scope.range);
-        return (!mutableAtInstr || context.knownImmutableIdentifiers.has(identifier.id));
-    }
-}
-function collectNonNullsInBlocks(fn, context) {
-    var _a;
-    const knownNonNullIdentifiers = new Set();
-    if (fn.fnType === 'Component' &&
-        fn.params.length > 0 &&
-        fn.params[0].kind === 'Identifier') {
-        const identifier = fn.params[0].identifier;
-        knownNonNullIdentifiers.add(context.registry.getOrCreateIdentifier(identifier));
-    }
-    const nodes = new Map();
-    for (const [_, block] of fn.body.blocks) {
-        const assumedNonNullObjects = new Set(knownNonNullIdentifiers);
-        const maybeOptionalChain = context.hoistableFromOptionals.get(block.id);
-        if (maybeOptionalChain != null) {
-            assumedNonNullObjects.add(context.registry.getOrCreateProperty(maybeOptionalChain));
-        }
-        for (const instr of block.instructions) {
-            const maybeNonNull = getMaybeNonNullInInstruction(instr.value, context);
-            if (maybeNonNull != null &&
-                isImmutableAtInstr(maybeNonNull.fullPath.identifier, instr.id, context)) {
-                assumedNonNullObjects.add(maybeNonNull);
-            }
-            if (instr.value.kind === 'FunctionExpression') {
-                const innerFn = instr.value.loweredFunc;
-                if (context.assumedInvokedFns.has(innerFn)) {
-                    const innerHoistableMap = collectHoistablePropertyLoadsImpl(innerFn.func, Object.assign(Object.assign({}, context), { nestedFnImmutableContext: (_a = context.nestedFnImmutableContext) !== null && _a !== void 0 ? _a : new Set(innerFn.func.context
-                            .filter(place => isImmutableAtInstr(place.identifier, instr.id, context))
-                            .map(place => place.identifier.id)) }));
-                    const innerHoistables = assertNonNull(innerHoistableMap.get(innerFn.func.body.entry));
-                    for (const entry of innerHoistables.assumedNonNullObjects) {
-                        assumedNonNullObjects.add(entry);
-                    }
-                }
-            }
-        }
-        nodes.set(block.id, {
-            block,
-            assumedNonNullObjects,
-        });
-    }
-    return nodes;
-}
-function propagateNonNull(fn, nodes, registry) {
-    const blockSuccessors = new Map();
-    const terminalPreds = new Set();
-    for (const [blockId, block] of fn.body.blocks) {
-        for (const pred of block.preds) {
-            getOrInsertDefault(blockSuccessors, pred, new Set()).add(blockId);
-        }
-        if (block.terminal.kind === 'throw' || block.terminal.kind === 'return') {
-            terminalPreds.add(blockId);
-        }
-    }
-    function recursivelyPropagateNonNull(nodeId, direction, traversalState) {
-        var _a;
-        if (traversalState.has(nodeId)) {
-            return false;
-        }
-        traversalState.set(nodeId, 'active');
-        const node = nodes.get(nodeId);
-        if (node == null) {
-            CompilerError.invariant(false, {
-                reason: `Bad node ${nodeId}, kind: ${direction}`,
-                loc: GeneratedSource,
-            });
-        }
-        const neighbors = Array.from(direction === 'backward'
-            ? ((_a = blockSuccessors.get(nodeId)) !== null && _a !== void 0 ? _a : [])
-            : node.block.preds);
-        let changed = false;
-        for (const pred of neighbors) {
-            if (!traversalState.has(pred)) {
-                const neighborChanged = recursivelyPropagateNonNull(pred, direction, traversalState);
-                changed || (changed = neighborChanged);
-            }
-        }
-        const neighborAccesses = Set_intersect(Array.from(neighbors)
-            .filter(n => traversalState.get(n) === 'done')
-            .map(n => assertNonNull(nodes.get(n)).assumedNonNullObjects));
-        const prevObjects = assertNonNull(nodes.get(nodeId)).assumedNonNullObjects;
-        const mergedObjects = Set_union(prevObjects, neighborAccesses);
-        reduceMaybeOptionalChains(mergedObjects, registry);
-        assertNonNull(nodes.get(nodeId)).assumedNonNullObjects = mergedObjects;
-        traversalState.set(nodeId, 'done');
-        changed || (changed = !Set_equal(prevObjects, mergedObjects));
-        return changed;
-    }
-    const traversalState = new Map();
-    const reversedBlocks = [...fn.body.blocks];
-    reversedBlocks.reverse();
-    let changed;
-    let i = 0;
-    do {
-        CompilerError.invariant(i++ < 100, {
-            reason: '[CollectHoistablePropertyLoads] fixed point iteration did not terminate after 100 loops',
-            loc: GeneratedSource,
-        });
-        changed = false;
-        for (const [blockId] of fn.body.blocks) {
-            const forwardChanged = recursivelyPropagateNonNull(blockId, 'forward', traversalState);
-            changed || (changed = forwardChanged);
-        }
-        traversalState.clear();
-        for (const [blockId] of reversedBlocks) {
-            const backwardChanged = recursivelyPropagateNonNull(blockId, 'backward', traversalState);
-            changed || (changed = backwardChanged);
-        }
-        traversalState.clear();
-    } while (changed);
-}
-function assertNonNull(value, source) {
-    CompilerError.invariant(value != null, {
-        reason: 'Unexpected null',
-        description: source != null ? `(from ${source})` : null,
-        loc: GeneratedSource,
-    });
-    return value;
-}
-function reduceMaybeOptionalChains(nodes, registry) {
-    let optionalChainNodes = Set_filter(nodes, n => n.hasOptional);
-    if (optionalChainNodes.size === 0) {
-        return;
-    }
-    let changed;
-    do {
-        changed = false;
-        for (const original of optionalChainNodes) {
-            let { identifier, path: origPath } = original.fullPath;
-            let currNode = registry.getOrCreateIdentifier(identifier);
-            for (let i = 0; i < origPath.length; i++) {
-                const entry = origPath[i];
-                const nextEntry = entry.optional && nodes.has(currNode)
-                    ? { property: entry.property, optional: false }
-                    : entry;
-                currNode = PropertyPathRegistry.getOrCreatePropertyEntry(currNode, nextEntry);
-            }
-            if (currNode !== original) {
-                changed = true;
-                optionalChainNodes.delete(original);
-                optionalChainNodes.add(currNode);
-                nodes.delete(original);
-                nodes.add(currNode);
-            }
-        }
-    } while (changed);
-}
-function getAssumedInvokedFunctions(fn, temporaries = new Map()) {
-    var _a;
-    const hoistableFunctions = new Set();
-    for (const block of fn.body.blocks.values()) {
-        for (const { lvalue, value } of block.instructions) {
-            if (value.kind === 'FunctionExpression') {
-                temporaries.set(lvalue.identifier.id, {
-                    fn: value.loweredFunc,
-                    mayInvoke: new Set(),
-                });
-            }
-            else if (value.kind === 'StoreLocal') {
-                const lvalue = value.lvalue.place.identifier;
-                const maybeLoweredFunc = temporaries.get(value.value.identifier.id);
-                if (maybeLoweredFunc != null) {
-                    temporaries.set(lvalue.id, maybeLoweredFunc);
-                }
-            }
-            else if (value.kind === 'LoadLocal') {
-                const maybeLoweredFunc = temporaries.get(value.place.identifier.id);
-                if (maybeLoweredFunc != null) {
-                    temporaries.set(lvalue.identifier.id, maybeLoweredFunc);
-                }
-            }
-        }
-    }
-    for (const block of fn.body.blocks.values()) {
-        for (const { lvalue, value } of block.instructions) {
-            if (value.kind === 'CallExpression') {
-                const callee = value.callee;
-                const maybeHook = getHookKind(fn.env, callee.identifier);
-                const maybeLoweredFunc = temporaries.get(callee.identifier.id);
-                if (maybeLoweredFunc != null) {
-                    hoistableFunctions.add(maybeLoweredFunc.fn);
-                }
-                else if (maybeHook != null) {
-                    for (const arg of value.args) {
-                        if (arg.kind === 'Identifier') {
-                            const maybeLoweredFunc = temporaries.get(arg.identifier.id);
-                            if (maybeLoweredFunc != null) {
-                                hoistableFunctions.add(maybeLoweredFunc.fn);
-                            }
-                        }
-                    }
-                }
-            }
-            else if (value.kind === 'JsxExpression') {
-                for (const attr of value.props) {
-                    if (attr.kind === 'JsxSpreadAttribute') {
-                        continue;
-                    }
-                    const maybeLoweredFunc = temporaries.get(attr.place.identifier.id);
-                    if (maybeLoweredFunc != null) {
-                        hoistableFunctions.add(maybeLoweredFunc.fn);
-                    }
-                }
-                for (const child of (_a = value.children) !== null && _a !== void 0 ? _a : []) {
-                    const maybeLoweredFunc = temporaries.get(child.identifier.id);
-                    if (maybeLoweredFunc != null) {
-                        hoistableFunctions.add(maybeLoweredFunc.fn);
-                    }
-                }
-            }
-            else if (value.kind === 'FunctionExpression') {
-                const loweredFunc = value.loweredFunc.func;
-                const lambdasCalled = getAssumedInvokedFunctions(loweredFunc, temporaries);
-                const maybeLoweredFunc = temporaries.get(lvalue.identifier.id);
-                if (maybeLoweredFunc != null) {
-                    for (const called of lambdasCalled) {
-                        maybeLoweredFunc.mayInvoke.add(called);
-                    }
-                }
-            }
-        }
-        if (block.terminal.kind === 'return') {
-            const maybeLoweredFunc = temporaries.get(block.terminal.value.identifier.id);
-            if (maybeLoweredFunc != null) {
-                hoistableFunctions.add(maybeLoweredFunc.fn);
-            }
-        }
-    }
-    for (const [_, { fn, mayInvoke }] of temporaries) {
-        if (hoistableFunctions.has(fn)) {
-            for (const called of mayInvoke) {
-                hoistableFunctions.add(called);
-            }
-        }
-    }
-    return hoistableFunctions;
-}
-
-var _Node_value, _Node_next;
-function empty() {
-    return EMPTY;
-}
-class Node {
-    constructor(value, next = EMPTY) {
-        _Node_value.set(this, void 0);
-        _Node_next.set(this, void 0);
-        __classPrivateFieldSet(this, _Node_value, value, "f");
-        __classPrivateFieldSet(this, _Node_next, next, "f");
-    }
-    push(value) {
-        return new Node(value, this);
-    }
-    pop() {
-        return __classPrivateFieldGet(this, _Node_next, "f");
-    }
-    find(fn) {
-        return fn(__classPrivateFieldGet(this, _Node_value, "f")) ? true : __classPrivateFieldGet(this, _Node_next, "f").find(fn);
-    }
-    contains(value) {
-        return (value === __classPrivateFieldGet(this, _Node_value, "f") ||
-            (__classPrivateFieldGet(this, _Node_next, "f") !== null && __classPrivateFieldGet(this, _Node_next, "f").contains(value)));
-    }
-    each(fn) {
-        fn(__classPrivateFieldGet(this, _Node_value, "f"));
-        __classPrivateFieldGet(this, _Node_next, "f").each(fn);
-    }
-    get value() {
-        return __classPrivateFieldGet(this, _Node_value, "f");
-    }
-    print(fn) {
-        return fn(__classPrivateFieldGet(this, _Node_value, "f")) + __classPrivateFieldGet(this, _Node_next, "f").print(fn);
-    }
-}
-_Node_value = new WeakMap(), _Node_next = new WeakMap();
-class Empty {
-    push(value) {
-        return new Node(value, this);
-    }
-    pop() {
-        return this;
-    }
-    find(_fn) {
-        return false;
-    }
-    contains(_value) {
-        return false;
-    }
-    each(_fn) {
-        return;
-    }
-    get value() {
-        return null;
-    }
-    print(_) {
-        return '';
-    }
-}
-const EMPTY = new Empty();
-
-var _a, _ReactiveScopeDependencyTreeHIR_hoistableObjects, _ReactiveScopeDependencyTreeHIR_deps, _ReactiveScopeDependencyTreeHIR_getOrCreateRoot, _ReactiveScopeDependencyTreeHIR_debugImpl;
-class ReactiveScopeDependencyTreeHIR {
-    constructor(hoistableObjects) {
-        var _b;
-        _ReactiveScopeDependencyTreeHIR_hoistableObjects.set(this, new Map());
-        _ReactiveScopeDependencyTreeHIR_deps.set(this, new Map());
-        for (const { path, identifier } of hoistableObjects) {
-            let currNode = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_hoistableObjects, "f"), path.length > 0 && path[0].optional ? 'Optional' : 'NonNull');
-            for (let i = 0; i < path.length; i++) {
-                const prevAccessType = (_b = currNode.properties.get(path[i].property)) === null || _b === void 0 ? void 0 : _b.accessType;
-                const accessType = i + 1 < path.length && path[i + 1].optional ? 'Optional' : 'NonNull';
-                CompilerError.invariant(prevAccessType == null || prevAccessType === accessType, {
-                    reason: 'Conflicting access types',
-                    loc: GeneratedSource,
-                });
-                let nextNode = currNode.properties.get(path[i].property);
-                if (nextNode == null) {
-                    nextNode = {
-                        properties: new Map(),
-                        accessType,
-                    };
-                    currNode.properties.set(path[i].property, nextNode);
-                }
-                currNode = nextNode;
-            }
-        }
-    }
-    addDependency(dep) {
-        const { identifier, path } = dep;
-        let depCursor = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f"), PropertyAccessType.UnconditionalAccess);
-        let hoistableCursor = __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_hoistableObjects, "f").get(identifier);
-        for (const entry of path) {
-            let nextHoistableCursor;
-            let nextDepCursor;
-            if (entry.optional) {
-                if (hoistableCursor != null) {
-                    nextHoistableCursor = hoistableCursor === null || hoistableCursor === void 0 ? void 0 : hoistableCursor.properties.get(entry.property);
-                }
-                let accessType;
-                if (hoistableCursor != null &&
-                    hoistableCursor.accessType === 'NonNull') {
-                    accessType = PropertyAccessType.UnconditionalAccess;
-                }
-                else {
-                    accessType = PropertyAccessType.OptionalAccess;
-                }
-                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, accessType);
-            }
-            else if (hoistableCursor != null &&
-                hoistableCursor.accessType === 'NonNull') {
-                nextHoistableCursor = hoistableCursor.properties.get(entry.property);
-                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, PropertyAccessType.UnconditionalAccess);
-            }
-            else {
-                break;
-            }
-            depCursor = nextDepCursor;
-            hoistableCursor = nextHoistableCursor;
-        }
-        depCursor.accessType = merge(depCursor.accessType, PropertyAccessType.OptionalDependency);
-    }
-    deriveMinimalDependencies() {
-        const results = new Set();
-        for (const [rootId, rootNode] of __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f").entries()) {
-            collectMinimalDependenciesInSubtree(rootNode, rootId, [], results);
-        }
-        return results;
-    }
-    printDeps(includeAccesses) {
-        let res = [];
-        for (const [rootId, rootNode] of __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f").entries()) {
-            const rootResults = printSubtree(rootNode, includeAccesses).map(result => `${printIdentifier(rootId)}.${result}`);
-            res.push(rootResults);
-        }
-        return res.flat().join('\n');
-    }
-    static debug(roots) {
-        const buf = [`tree() [`];
-        for (const [rootId, rootNode] of roots) {
-            buf.push(`${printIdentifier(rootId)} (${rootNode.accessType}):`);
-            __classPrivateFieldGet(this, _a, "m", _ReactiveScopeDependencyTreeHIR_debugImpl).call(this, buf, rootNode, 1);
-        }
-        buf.push(']');
-        return buf.length > 2 ? buf.join('\n') : buf.join('');
-    }
-}
-_a = ReactiveScopeDependencyTreeHIR, _ReactiveScopeDependencyTreeHIR_hoistableObjects = new WeakMap(), _ReactiveScopeDependencyTreeHIR_deps = new WeakMap(), _ReactiveScopeDependencyTreeHIR_getOrCreateRoot = function _ReactiveScopeDependencyTreeHIR_getOrCreateRoot(identifier, roots, defaultAccessType) {
-    let rootNode = roots.get(identifier);
-    if (rootNode === undefined) {
-        rootNode = {
-            properties: new Map(),
-            accessType: defaultAccessType,
-        };
-        roots.set(identifier, rootNode);
-    }
-    return rootNode;
-}, _ReactiveScopeDependencyTreeHIR_debugImpl = function _ReactiveScopeDependencyTreeHIR_debugImpl(buf, node, depth = 0) {
-    for (const [property, childNode] of node.properties) {
-        buf.push(`${'  '.repeat(depth)}.${property} (${childNode.accessType}):`);
-        __classPrivateFieldGet(this, _a, "m", _ReactiveScopeDependencyTreeHIR_debugImpl).call(this, buf, childNode, depth + 1);
-    }
-};
-var PropertyAccessType;
-(function (PropertyAccessType) {
-    PropertyAccessType["OptionalAccess"] = "OptionalAccess";
-    PropertyAccessType["UnconditionalAccess"] = "UnconditionalAccess";
-    PropertyAccessType["OptionalDependency"] = "OptionalDependency";
-    PropertyAccessType["UnconditionalDependency"] = "UnconditionalDependency";
-})(PropertyAccessType || (PropertyAccessType = {}));
-function isOptional(access) {
-    return (access === PropertyAccessType.OptionalAccess ||
-        access === PropertyAccessType.OptionalDependency);
-}
-function isDependency(access) {
-    return (access === PropertyAccessType.OptionalDependency ||
-        access === PropertyAccessType.UnconditionalDependency);
-}
-function merge(access1, access2) {
-    const resultIsUnconditional = !(isOptional(access1) && isOptional(access2));
-    const resultIsDependency = isDependency(access1) || isDependency(access2);
-    if (resultIsUnconditional) {
-        if (resultIsDependency) {
-            return PropertyAccessType.UnconditionalDependency;
-        }
-        else {
-            return PropertyAccessType.UnconditionalAccess;
-        }
-    }
-    else {
-        if (resultIsDependency) {
-            return PropertyAccessType.OptionalDependency;
-        }
-        else {
-            return PropertyAccessType.OptionalAccess;
-        }
-    }
-}
-function collectMinimalDependenciesInSubtree(node, rootIdentifier, path, results) {
-    if (isDependency(node.accessType)) {
-        results.add({ identifier: rootIdentifier, path });
-    }
-    else {
-        for (const [childName, childNode] of node.properties) {
-            collectMinimalDependenciesInSubtree(childNode, rootIdentifier, [
-                ...path,
-                {
-                    property: childName,
-                    optional: isOptional(childNode.accessType),
-                },
-            ], results);
-        }
-    }
-}
-function printSubtree(node, includeAccesses) {
-    const results = [];
-    for (const [propertyName, propertyNode] of node.properties) {
-        if (includeAccesses || isDependency(propertyNode.accessType)) {
-            results.push(`${propertyName} (${propertyNode.accessType})`);
-        }
-        const propertyResults = printSubtree(propertyNode, includeAccesses);
-        results.push(...propertyResults.map(result => `${propertyName}.${result}`));
-    }
-    return results;
-}
-function makeOrMergeProperty(node, property, accessType) {
-    let child = node.properties.get(property);
-    if (child == null) {
-        child = {
-            properties: new Map(),
-            accessType,
-        };
-        node.properties.set(property, child);
-    }
-    else {
-        child.accessType = merge(child.accessType, accessType);
-    }
-    return child;
-}
-
-function collectOptionalChainSidemap(fn) {
-    const context = {
-        currFn: fn,
-        blocks: fn.body.blocks,
-        seenOptionals: new Set(),
-        processedInstrsInOptional: new Set(),
-        temporariesReadInOptional: new Map(),
-        hoistableObjects: new Map(),
-    };
-    traverseFunction(fn, context);
-    return {
-        temporariesReadInOptional: context.temporariesReadInOptional,
-        processedInstrsInOptional: context.processedInstrsInOptional,
-        hoistableObjects: context.hoistableObjects,
-    };
-}
-function traverseFunction(fn, context) {
-    for (const [_, block] of fn.body.blocks) {
-        for (const instr of block.instructions) {
-            if (instr.value.kind === 'FunctionExpression' ||
-                instr.value.kind === 'ObjectMethod') {
-                traverseFunction(instr.value.loweredFunc.func, Object.assign(Object.assign({}, context), { currFn: instr.value.loweredFunc.func, blocks: instr.value.loweredFunc.func.body.blocks }));
-            }
-        }
-        if (block.terminal.kind === 'optional' &&
-            !context.seenOptionals.has(block.id)) {
-            traverseOptionalBlock(block, context, null);
-        }
-    }
-}
-function matchOptionalTestBlock(terminal, blocks) {
-    const consequentBlock = assertNonNull(blocks.get(terminal.consequent));
-    if (consequentBlock.instructions.length === 2 &&
-        consequentBlock.instructions[0].value.kind === 'PropertyLoad' &&
-        consequentBlock.instructions[1].value.kind === 'StoreLocal') {
-        const propertyLoad = consequentBlock
-            .instructions[0];
-        const storeLocal = consequentBlock.instructions[1].value;
-        const storeLocalInstr = consequentBlock.instructions[1];
-        CompilerError.invariant(propertyLoad.value.object.identifier.id === terminal.test.identifier.id, {
-            reason: '[OptionalChainDeps] Inconsistent optional chaining property load',
-            description: `Test=${printIdentifier(terminal.test.identifier)} PropertyLoad base=${printIdentifier(propertyLoad.value.object.identifier)}`,
-            loc: propertyLoad.loc,
-        });
-        CompilerError.invariant(storeLocal.value.identifier.id === propertyLoad.lvalue.identifier.id, {
-            reason: '[OptionalChainDeps] Unexpected storeLocal',
-            loc: propertyLoad.loc,
-        });
-        if (consequentBlock.terminal.kind !== 'goto' ||
-            consequentBlock.terminal.variant !== GotoVariant.Break) {
-            return null;
-        }
-        const alternate = assertNonNull(blocks.get(terminal.alternate));
-        CompilerError.invariant(alternate.instructions.length === 2 &&
-            alternate.instructions[0].value.kind === 'Primitive' &&
-            alternate.instructions[1].value.kind === 'StoreLocal', {
-            reason: 'Unexpected alternate structure',
-            loc: terminal.loc,
-        });
-        return {
-            consequentId: storeLocal.lvalue.place.identifier.id,
-            property: propertyLoad.value.property,
-            propertyId: propertyLoad.lvalue.identifier.id,
-            storeLocalInstr,
-            consequentGoto: consequentBlock.terminal.block,
-        };
-    }
-    return null;
-}
-function traverseOptionalBlock(optional, context, outerAlternate) {
-    context.seenOptionals.add(optional.id);
-    const maybeTest = context.blocks.get(optional.terminal.test);
-    let test;
-    let baseObject;
-    if (maybeTest.terminal.kind === 'branch') {
-        CompilerError.invariant(optional.terminal.optional, {
-            reason: '[OptionalChainDeps] Expect base case to be always optional',
-            loc: optional.terminal.loc,
-        });
-        if (maybeTest.instructions.length === 0 ||
-            maybeTest.instructions[0].value.kind !== 'LoadLocal') {
-            return null;
-        }
-        const path = [];
-        for (let i = 1; i < maybeTest.instructions.length; i++) {
-            const instrVal = maybeTest.instructions[i].value;
-            const prevInstr = maybeTest.instructions[i - 1];
-            if (instrVal.kind === 'PropertyLoad' &&
-                instrVal.object.identifier.id === prevInstr.lvalue.identifier.id) {
-                path.push({ property: instrVal.property, optional: false });
-            }
-            else {
-                return null;
-            }
-        }
-        CompilerError.invariant(maybeTest.terminal.test.identifier.id ===
-            maybeTest.instructions.at(-1).lvalue.identifier.id, {
-            reason: '[OptionalChainDeps] Unexpected test expression',
-            loc: maybeTest.terminal.loc,
-        });
-        baseObject = {
-            identifier: maybeTest.instructions[0].value.place.identifier,
-            path,
-        };
-        test = maybeTest.terminal;
-    }
-    else if (maybeTest.terminal.kind === 'optional') {
-        const testBlock = context.blocks.get(maybeTest.terminal.fallthrough);
-        if (testBlock.terminal.kind !== 'branch') {
-            CompilerError.throwTodo({
-                reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional fallthrough block`,
-                loc: maybeTest.terminal.loc,
-            });
-        }
-        const innerOptional = traverseOptionalBlock(maybeTest, context, testBlock.terminal.alternate);
-        if (innerOptional == null) {
-            return null;
-        }
-        if (testBlock.terminal.test.identifier.id !== innerOptional) {
-            return null;
-        }
-        if (!optional.terminal.optional) {
-            context.hoistableObjects.set(optional.id, assertNonNull(context.temporariesReadInOptional.get(innerOptional)));
-        }
-        baseObject = assertNonNull(context.temporariesReadInOptional.get(innerOptional));
-        test = testBlock.terminal;
-    }
-    else {
-        return null;
-    }
-    if (test.alternate === outerAlternate) {
-        CompilerError.invariant(optional.instructions.length === 0, {
-            reason: '[OptionalChainDeps] Unexpected instructions an inner optional block. ' +
-                'This indicates that the compiler may be incorrectly concatenating two unrelated optional chains',
-            loc: optional.terminal.loc,
-        });
-    }
-    const matchConsequentResult = matchOptionalTestBlock(test, context.blocks);
-    if (!matchConsequentResult) {
-        return null;
-    }
-    CompilerError.invariant(matchConsequentResult.consequentGoto === optional.terminal.fallthrough, {
-        reason: '[OptionalChainDeps] Unexpected optional goto-fallthrough',
-        description: `${matchConsequentResult.consequentGoto} != ${optional.terminal.fallthrough}`,
-        loc: optional.terminal.loc,
-    });
-    const load = {
-        identifier: baseObject.identifier,
-        path: [
-            ...baseObject.path,
-            {
-                property: matchConsequentResult.property,
-                optional: optional.terminal.optional,
-            },
-        ],
-    };
-    context.processedInstrsInOptional.add(matchConsequentResult.storeLocalInstr);
-    context.processedInstrsInOptional.add(test);
-    context.temporariesReadInOptional.set(matchConsequentResult.consequentId, load);
-    context.temporariesReadInOptional.set(matchConsequentResult.propertyId, load);
-    return matchConsequentResult.consequentId;
-}
-
-var _Context_instances, _Context_declarations, _Context_reassignments, _Context_scopes, _Context_dependencies, _Context_temporaries, _Context_temporariesUsedOutsideScope, _Context_processedInstrsInOptional, _Context_innerFnContext, _Context_checkValidDependency, _Context_isScopeActive;
-function propagateScopeDependenciesHIR(fn) {
-    const usedOutsideDeclaringScope = findTemporariesUsedOutsideDeclaringScope(fn);
-    const temporaries = collectTemporariesSidemap(fn, usedOutsideDeclaringScope);
-    const { temporariesReadInOptional, processedInstrsInOptional, hoistableObjects, } = collectOptionalChainSidemap(fn);
-    const hoistablePropertyLoads = keyByScopeId(fn, collectHoistablePropertyLoads(fn, temporaries, hoistableObjects));
-    const scopeDeps = collectDependencies(fn, usedOutsideDeclaringScope, new Map([...temporaries, ...temporariesReadInOptional]), processedInstrsInOptional);
-    for (const [scope, deps] of scopeDeps) {
-        if (deps.length === 0) {
-            continue;
-        }
-        const hoistables = hoistablePropertyLoads.get(scope.id);
-        CompilerError.invariant(hoistables != null, {
-            reason: '[PropagateScopeDependencies] Scope not found in tracked blocks',
-            loc: GeneratedSource,
-        });
-        const tree = new ReactiveScopeDependencyTreeHIR([...hoistables.assumedNonNullObjects].map(o => o.fullPath));
-        for (const dep of deps) {
-            tree.addDependency(Object.assign({}, dep));
-        }
-        const candidates = tree.deriveMinimalDependencies();
-        for (const candidateDep of candidates) {
-            if (!Iterable_some(scope.dependencies, existingDep => existingDep.identifier.declarationId ===
-                candidateDep.identifier.declarationId &&
-                areEqualPaths(existingDep.path, candidateDep.path)))
-                scope.dependencies.add(candidateDep);
-        }
-    }
-}
-function findTemporariesUsedOutsideDeclaringScope(fn) {
-    const declarations = new Map();
-    const prunedScopes = new Set();
-    const scopeTraversal = new ScopeBlockTraversal();
-    const usedOutsideDeclaringScope = new Set();
-    function handlePlace(place) {
-        const declaringScope = declarations.get(place.identifier.declarationId);
-        if (declaringScope != null &&
-            !scopeTraversal.isScopeActive(declaringScope) &&
-            !prunedScopes.has(declaringScope)) {
-            usedOutsideDeclaringScope.add(place.identifier.declarationId);
-        }
-    }
-    function handleInstruction(instr) {
-        const scope = scopeTraversal.currentScope;
-        if (scope == null || prunedScopes.has(scope)) {
-            return;
-        }
-        switch (instr.value.kind) {
-            case 'LoadLocal':
-            case 'LoadContext':
-            case 'PropertyLoad': {
-                declarations.set(instr.lvalue.identifier.declarationId, scope);
-                break;
-            }
-        }
-    }
-    for (const [blockId, block] of fn.body.blocks) {
-        scopeTraversal.recordScopes(block);
-        const scopeStartInfo = scopeTraversal.blockInfos.get(blockId);
-        if ((scopeStartInfo === null || scopeStartInfo === void 0 ? void 0 : scopeStartInfo.kind) === 'begin' && scopeStartInfo.pruned) {
-            prunedScopes.add(scopeStartInfo.scope.id);
-        }
-        for (const instr of block.instructions) {
-            for (const place of eachInstructionOperand(instr)) {
-                handlePlace(place);
-            }
-            handleInstruction(instr);
-        }
-        for (const place of eachTerminalOperand(block.terminal)) {
-            handlePlace(place);
-        }
-    }
-    return usedOutsideDeclaringScope;
-}
-function collectTemporariesSidemap(fn, usedOutsideDeclaringScope) {
-    const temporaries = new Map();
-    collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporaries, null);
-    return temporaries;
-}
-function isLoadContextMutable(instrValue, id) {
-    if (instrValue.kind === 'LoadContext') {
-        CompilerError.invariant(instrValue.place.identifier.scope != null, {
-            reason: '[PropagateScopeDependencies] Expected all context variables to be assigned a scope',
-            loc: instrValue.loc,
-        });
-        return id >= instrValue.place.identifier.scope.range.end;
-    }
-    return false;
-}
-function collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporaries, innerFnContext) {
-    for (const [_, block] of fn.body.blocks) {
-        for (const { value, lvalue, id: origInstrId } of block.instructions) {
-            const instrId = innerFnContext != null ? innerFnContext.instrId : origInstrId;
-            const usedOutside = usedOutsideDeclaringScope.has(lvalue.identifier.declarationId);
-            if (value.kind === 'PropertyLoad' && !usedOutside) {
-                if (innerFnContext == null ||
-                    temporaries.has(value.object.identifier.id)) {
-                    const property = getProperty(value.object, value.property, false, temporaries);
-                    temporaries.set(lvalue.identifier.id, property);
-                }
-            }
-            else if ((value.kind === 'LoadLocal' || isLoadContextMutable(value, instrId)) &&
-                lvalue.identifier.name == null &&
-                value.place.identifier.name !== null &&
-                !usedOutside) {
-                if (innerFnContext == null ||
-                    fn.context.some(context => context.identifier.id === value.place.identifier.id)) {
-                    temporaries.set(lvalue.identifier.id, {
-                        identifier: value.place.identifier,
-                        path: [],
-                    });
-                }
-            }
-            else if (value.kind === 'FunctionExpression' ||
-                value.kind === 'ObjectMethod') {
-                collectTemporariesSidemapImpl(value.loweredFunc.func, usedOutsideDeclaringScope, temporaries, innerFnContext !== null && innerFnContext !== void 0 ? innerFnContext : { instrId });
-            }
-        }
-    }
-}
-function getProperty(object, propertyName, optional, temporaries) {
-    const resolvedDependency = temporaries.get(object.identifier.id);
-    let property;
-    if (resolvedDependency == null) {
-        property = {
-            identifier: object.identifier,
-            path: [{ property: propertyName, optional }],
-        };
-    }
-    else {
-        property = {
-            identifier: resolvedDependency.identifier,
-            path: [...resolvedDependency.path, { property: propertyName, optional }],
-        };
-    }
-    return property;
-}
-let Context$1 = class Context {
-    constructor(temporariesUsedOutsideScope, temporaries, processedInstrsInOptional) {
-        _Context_instances.add(this);
-        _Context_declarations.set(this, new Map());
-        _Context_reassignments.set(this, new Map());
-        _Context_scopes.set(this, empty());
-        _Context_dependencies.set(this, empty());
-        this.deps = new Map();
-        _Context_temporaries.set(this, void 0);
-        _Context_temporariesUsedOutsideScope.set(this, void 0);
-        _Context_processedInstrsInOptional.set(this, void 0);
-        _Context_innerFnContext.set(this, null);
-        __classPrivateFieldSet(this, _Context_temporariesUsedOutsideScope, temporariesUsedOutsideScope, "f");
-        __classPrivateFieldSet(this, _Context_temporaries, temporaries, "f");
-        __classPrivateFieldSet(this, _Context_processedInstrsInOptional, processedInstrsInOptional, "f");
-    }
-    enterScope(scope) {
-        __classPrivateFieldSet(this, _Context_dependencies, __classPrivateFieldGet(this, _Context_dependencies, "f").push([]), "f");
-        __classPrivateFieldSet(this, _Context_scopes, __classPrivateFieldGet(this, _Context_scopes, "f").push(scope), "f");
-    }
-    exitScope(scope, pruned) {
-        var _a;
-        const scopedDependencies = __classPrivateFieldGet(this, _Context_dependencies, "f").value;
-        CompilerError.invariant(scopedDependencies != null, {
-            reason: '[PropagateScopeDeps]: Unexpected scope mismatch',
-            loc: scope.loc,
-        });
-        __classPrivateFieldSet(this, _Context_scopes, __classPrivateFieldGet(this, _Context_scopes, "f").pop(), "f");
-        __classPrivateFieldSet(this, _Context_dependencies, __classPrivateFieldGet(this, _Context_dependencies, "f").pop(), "f");
-        for (const dep of scopedDependencies) {
-            if (__classPrivateFieldGet(this, _Context_instances, "m", _Context_checkValidDependency).call(this, dep)) {
-                (_a = __classPrivateFieldGet(this, _Context_dependencies, "f").value) === null || _a === void 0 ? void 0 : _a.push(dep);
-            }
-        }
-        if (!pruned) {
-            this.deps.set(scope, scopedDependencies);
-        }
-    }
-    isUsedOutsideDeclaringScope(place) {
-        return __classPrivateFieldGet(this, _Context_temporariesUsedOutsideScope, "f").has(place.identifier.declarationId);
-    }
-    declare(identifier, decl) {
-        if (__classPrivateFieldGet(this, _Context_innerFnContext, "f") != null)
-            return;
-        if (!__classPrivateFieldGet(this, _Context_declarations, "f").has(identifier.declarationId)) {
-            __classPrivateFieldGet(this, _Context_declarations, "f").set(identifier.declarationId, decl);
-        }
-        __classPrivateFieldGet(this, _Context_reassignments, "f").set(identifier, decl);
-    }
-    get currentScope() {
-        return __classPrivateFieldGet(this, _Context_scopes, "f");
-    }
-    visitOperand(place) {
-        var _a;
-        this.visitDependency((_a = __classPrivateFieldGet(this, _Context_temporaries, "f").get(place.identifier.id)) !== null && _a !== void 0 ? _a : {
-            identifier: place.identifier,
-            path: [],
-        });
-    }
-    visitProperty(object, property, optional) {
-        const nextDependency = getProperty(object, property, optional, __classPrivateFieldGet(this, _Context_temporaries, "f"));
-        this.visitDependency(nextDependency);
-    }
-    visitDependency(maybeDependency) {
-        var _a;
-        const originalDeclaration = __classPrivateFieldGet(this, _Context_declarations, "f").get(maybeDependency.identifier.declarationId);
-        if (originalDeclaration !== undefined &&
-            originalDeclaration.scope.value !== null) {
-            originalDeclaration.scope.each(scope => {
-                if (!__classPrivateFieldGet(this, _Context_instances, "m", _Context_isScopeActive).call(this, scope) &&
-                    !Iterable_some(scope.declarations.values(), decl => decl.identifier.declarationId ===
-                        maybeDependency.identifier.declarationId)) {
-                    scope.declarations.set(maybeDependency.identifier.id, {
-                        identifier: maybeDependency.identifier,
-                        scope: originalDeclaration.scope.value,
-                    });
-                }
-            });
-        }
-        if (isUseRefType(maybeDependency.identifier) &&
-            ((_a = maybeDependency.path.at(0)) === null || _a === void 0 ? void 0 : _a.property) === 'current') {
-            maybeDependency = {
-                identifier: maybeDependency.identifier,
-                path: [],
-            };
-        }
-        if (__classPrivateFieldGet(this, _Context_instances, "m", _Context_checkValidDependency).call(this, maybeDependency)) {
-            __classPrivateFieldGet(this, _Context_dependencies, "f").value.push(maybeDependency);
-        }
-    }
-    visitReassignment(place) {
-        const currentScope = this.currentScope.value;
-        if (currentScope != null &&
-            !Iterable_some(currentScope.reassignments, identifier => identifier.declarationId === place.identifier.declarationId) &&
-            __classPrivateFieldGet(this, _Context_instances, "m", _Context_checkValidDependency).call(this, { identifier: place.identifier, path: [] })) {
-            currentScope.reassignments.add(place.identifier);
-        }
-    }
-    enterInnerFn(innerFn, cb) {
-        var _a;
-        const prevContext = __classPrivateFieldGet(this, _Context_innerFnContext, "f");
-        __classPrivateFieldSet(this, _Context_innerFnContext, (_a = __classPrivateFieldGet(this, _Context_innerFnContext, "f")) !== null && _a !== void 0 ? _a : { outerInstrId: innerFn.id }, "f");
-        const result = cb();
-        __classPrivateFieldSet(this, _Context_innerFnContext, prevContext, "f");
-        return result;
-    }
-    isDeferredDependency(instr) {
-        return (__classPrivateFieldGet(this, _Context_processedInstrsInOptional, "f").has(instr.value) ||
-            (instr.kind === HIRValue.Instruction &&
-                __classPrivateFieldGet(this, _Context_temporaries, "f").has(instr.value.lvalue.identifier.id)));
-    }
-};
-_Context_declarations = new WeakMap(), _Context_reassignments = new WeakMap(), _Context_scopes = new WeakMap(), _Context_dependencies = new WeakMap(), _Context_temporaries = new WeakMap(), _Context_temporariesUsedOutsideScope = new WeakMap(), _Context_processedInstrsInOptional = new WeakMap(), _Context_innerFnContext = new WeakMap(), _Context_instances = new WeakSet(), _Context_checkValidDependency = function _Context_checkValidDependency(maybeDependency) {
-    var _a;
-    if (isRefValueType(maybeDependency.identifier)) {
-        return false;
-    }
-    if (isObjectMethodType(maybeDependency.identifier)) {
-        return false;
-    }
-    const identifier = maybeDependency.identifier;
-    const currentDeclaration = (_a = __classPrivateFieldGet(this, _Context_reassignments, "f").get(identifier)) !== null && _a !== void 0 ? _a : __classPrivateFieldGet(this, _Context_declarations, "f").get(identifier.declarationId);
-    const currentScope = this.currentScope.value;
-    return (currentScope != null &&
-        currentDeclaration !== undefined &&
-        currentDeclaration.id < currentScope.range.start);
-}, _Context_isScopeActive = function _Context_isScopeActive(scope) {
-    if (__classPrivateFieldGet(this, _Context_scopes, "f") === null) {
-        return false;
-    }
-    return __classPrivateFieldGet(this, _Context_scopes, "f").find(state => state === scope);
-};
-var HIRValue;
-(function (HIRValue) {
-    HIRValue[HIRValue["Instruction"] = 1] = "Instruction";
-    HIRValue[HIRValue["Terminal"] = 2] = "Terminal";
-})(HIRValue || (HIRValue = {}));
-function handleInstruction(instr, context) {
-    const { id, value, lvalue } = instr;
-    context.declare(lvalue.identifier, {
-        id,
-        scope: context.currentScope,
-    });
-    if (context.isDeferredDependency({ kind: HIRValue.Instruction, value: instr })) {
-        return;
-    }
-    if (value.kind === 'PropertyLoad') {
-        context.visitProperty(value.object, value.property, false);
-    }
-    else if (value.kind === 'StoreLocal') {
-        context.visitOperand(value.value);
-        if (value.lvalue.kind === InstructionKind.Reassign) {
-            context.visitReassignment(value.lvalue.place);
-        }
-        context.declare(value.lvalue.place.identifier, {
-            id,
-            scope: context.currentScope,
-        });
-    }
-    else if (value.kind === 'DeclareLocal' || value.kind === 'DeclareContext') {
-        context.declare(value.lvalue.place.identifier, {
-            id,
-            scope: context.currentScope,
-        });
-    }
-    else if (value.kind === 'Destructure') {
-        context.visitOperand(value.value);
-        for (const place of eachPatternOperand(value.lvalue.pattern)) {
-            if (value.lvalue.kind === InstructionKind.Reassign) {
-                context.visitReassignment(place);
-            }
-            context.declare(place.identifier, {
-                id,
-                scope: context.currentScope,
-            });
-        }
-    }
-    else {
-        for (const operand of eachInstructionValueOperand(value)) {
-            context.visitOperand(operand);
-        }
-    }
-}
-function collectDependencies(fn, usedOutsideDeclaringScope, temporaries, processedInstrsInOptional) {
-    const context = new Context$1(usedOutsideDeclaringScope, temporaries, processedInstrsInOptional);
-    for (const param of fn.params) {
-        if (param.kind === 'Identifier') {
-            context.declare(param.identifier, {
-                id: makeInstructionId(0),
-                scope: empty(),
-            });
-        }
-        else {
-            context.declare(param.place.identifier, {
-                id: makeInstructionId(0),
-                scope: empty(),
-            });
-        }
-    }
-    const scopeTraversal = new ScopeBlockTraversal();
-    const handleFunction = (fn) => {
-        for (const [blockId, block] of fn.body.blocks) {
-            scopeTraversal.recordScopes(block);
-            const scopeBlockInfo = scopeTraversal.blockInfos.get(blockId);
-            if ((scopeBlockInfo === null || scopeBlockInfo === void 0 ? void 0 : scopeBlockInfo.kind) === 'begin') {
-                context.enterScope(scopeBlockInfo.scope);
-            }
-            else if ((scopeBlockInfo === null || scopeBlockInfo === void 0 ? void 0 : scopeBlockInfo.kind) === 'end') {
-                context.exitScope(scopeBlockInfo.scope, scopeBlockInfo.pruned);
-            }
-            for (const phi of block.phis) {
-                for (const operand of phi.operands) {
-                    const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
-                    if (maybeOptionalChain) {
-                        context.visitDependency(maybeOptionalChain);
-                    }
-                }
-            }
-            for (const instr of block.instructions) {
-                if (instr.value.kind === 'FunctionExpression' ||
-                    instr.value.kind === 'ObjectMethod') {
-                    context.declare(instr.lvalue.identifier, {
-                        id: instr.id,
-                        scope: context.currentScope,
-                    });
-                    const innerFn = instr.value.loweredFunc.func;
-                    context.enterInnerFn(instr, () => {
-                        handleFunction(innerFn);
-                    });
-                }
-                else {
-                    handleInstruction(instr, context);
-                }
-            }
-            if (!context.isDeferredDependency({
-                kind: HIRValue.Terminal,
-                value: block.terminal,
-            })) {
-                for (const place of eachTerminalOperand(block.terminal)) {
-                    context.visitOperand(place);
-                }
-            }
-        }
-    };
-    handleFunction(fn);
-    return context.deps;
 }
 
 function outlineJSX(fn) {
