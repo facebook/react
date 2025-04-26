@@ -2637,6 +2637,7 @@ function pushLink(
             rules: ([]: Array<Chunk | PrecomputedChunk>),
             hrefs: ([]: Array<Chunk | PrecomputedChunk>),
             sheets: (new Map(): Map<string, StylesheetResource>),
+            nonce: props.nonce,
           };
           renderState.styles.set(precedence, styleQueue);
         }
@@ -2944,7 +2945,7 @@ function pushStyleImpl(
 function pushStyleContents(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-): void {
+): Array<Chunk | PrecomputedChunk> {
   let children = null;
   let innerHTML = null;
   for (const propKey in props) {
@@ -6164,6 +6165,7 @@ function preinitStyle(
           rules: ([]: Array<Chunk | PrecomputedChunk>),
           hrefs: ([]: Array<Chunk | PrecomputedChunk>),
           sheets: (new Map(): Map<string, StylesheetResource>),
+          nonce: options ? options.nonce : undefined,
         };
         renderState.styles.set(precedence, styleQueue);
       }
