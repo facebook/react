@@ -34,7 +34,6 @@ export {
   unstable_SuspenseList,
   unstable_ViewTransition,
   unstable_startGestureTransition,
-  unstable_useSwipeTransition,
   unstable_addTransitionType,
   unstable_useCacheRefresh,
   useId,

@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import {
   ScopeId,
   HIRFunction,
@@ -109,7 +116,7 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   }
 }
 
-function findTemporariesUsedOutsideDeclaringScope(
+export function findTemporariesUsedOutsideDeclaringScope(
   fn: HIRFunction,
 ): ReadonlySet<DeclarationId> {
   /*
@@ -371,7 +378,7 @@ type Decl = {
   scope: Stack<ReactiveScope>;
 };
 
-class Context {
+export class DependencyCollectionContext {
   #declarations: Map<DeclarationId, Decl> = new Map();
   #reassignments: Map<Identifier, Decl> = new Map();
 
@@ -638,7 +645,10 @@ enum HIRValue {
   Terminal,
 }
 
-function handleInstruction(instr: Instruction, context: Context): void {
+export function handleInstruction(
+  instr: Instruction,
+  context: DependencyCollectionContext,
+): void {
   const {id, value, lvalue} = instr;
   context.declare(lvalue.identifier, {
     id,
@@ -701,7 +711,7 @@ function collectDependencies(
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
   processedInstrsInOptional: ReadonlySet<Instruction | Terminal>,
 ): Map<ReactiveScope, Array<ReactiveScopeDependency>> {
-  const context = new Context(
+  const context = new DependencyCollectionContext(
     usedOutsideDeclaringScope,
     temporaries,
     processedInstrsInOptional,

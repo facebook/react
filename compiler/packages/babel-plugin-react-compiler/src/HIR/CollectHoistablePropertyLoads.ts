@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import {CompilerError} from '../CompilerError';
 import {inRange} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {printDependency} from '../ReactiveScopes/PrintReactiveFunction';
@@ -12,6 +19,7 @@ import {
   BasicBlock,
   BlockId,
   DependencyPathEntry,
+  FunctionExpression,
   GeneratedSource,
   getHookKind,
   HIRFunction,
@@ -23,6 +31,7 @@ import {
   PropertyLiteral,
   ReactiveScopeDependency,
   ScopeId,
+  TInstruction,
 } from './HIR';
 
 const DEBUG_PRINT = false;
@@ -118,6 +127,33 @@ export function collectHoistablePropertyLoads(
       ? new Set()
       : getAssumedInvokedFunctions(fn),
   });
+}
+
+export function collectHoistablePropertyLoadsInInnerFn(
+  fnInstr: TInstruction<FunctionExpression>,
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+  hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
+): ReadonlyMap<BlockId, BlockInfo> {
+  const fn = fnInstr.value.loweredFunc.func;
+  const initialContext: CollectHoistablePropertyLoadsContext = {
+    temporaries,
+    knownImmutableIdentifiers: new Set(),
+    hoistableFromOptionals,
+    registry: new PropertyPathRegistry(),
+    nestedFnImmutableContext: null,
+    assumedInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
+      ? new Set()
+      : getAssumedInvokedFunctions(fn),
+  };
+  const nestedFnImmutableContext = new Set(
+    fn.context
+      .filter(place =>
+        isImmutableAtInstr(place.identifier, fnInstr.id, initialContext),
+      )
+      .map(place => place.identifier.id),
+  );
+  initialContext.nestedFnImmutableContext = nestedFnImmutableContext;
+  return collectHoistablePropertyLoadsImpl(fn, initialContext);
 }
 
 type CollectHoistablePropertyLoadsContext = {

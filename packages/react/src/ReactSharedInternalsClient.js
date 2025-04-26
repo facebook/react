@@ -10,26 +10,31 @@
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Transition} from './ReactStartTransition';
-import type {TransitionTypes} from './ReactTransitionType';
 import type {GestureProvider, GestureOptions} from 'shared/ReactTypes';
 
-import {
-  enableViewTransition,
-  enableSwipeTransition,
-} from 'shared/ReactFeatureFlags';
+import {enableGestureTransition} from 'shared/ReactFeatureFlags';
+
+type onStartTransitionFinish = (Transition, mixed) => void;
+type onStartGestureTransitionFinish = (
+  Transition,
+  GestureProvider,
+  ?GestureOptions,
+) => () => void;
 
 export type SharedStateClient = {
   H: null | Dispatcher, // ReactCurrentDispatcher for Hooks
   A: null | AsyncDispatcher, // ReactCurrentCache for Cache
   T: null | Transition, // ReactCurrentBatchConfig for Transitions
-  S: null | ((Transition, mixed) => void), // onStartTransitionFinish
-  G: null | ((Transition, GestureProvider, ?GestureOptions) => () => void), // onStartGestureTransitionFinish
-  V: null | TransitionTypes, // Pending Transition Types for the Next Transition
+  S: null | onStartTransitionFinish,
+  G: null | onStartGestureTransitionFinish,
 
   // DEV-only
 
   // ReactCurrentActQueue
   actQueue: null | Array<RendererTask>,
+
+  // When zero this means we're outside an async startTransition.
+  asyncTransitions: number,
 
   // Used to reproduce behavior of `batchedUpdates` in legacy mode.
   isBatchingLegacy: boolean,
@@ -58,15 +63,13 @@ const ReactSharedInternals: SharedStateClient = ({
   T: null,
   S: null,
 }: any);
-if (enableSwipeTransition) {
+if (enableGestureTransition) {
   ReactSharedInternals.G = null;
-}
-if (enableViewTransition) {
-  ReactSharedInternals.V = null;
 }
 
 if (__DEV__) {
   ReactSharedInternals.actQueue = null;
+  ReactSharedInternals.asyncTransitions = 0;
   ReactSharedInternals.isBatchingLegacy = false;
   ReactSharedInternals.didScheduleLegacyUpdate = false;
   ReactSharedInternals.didUsePromise = false;

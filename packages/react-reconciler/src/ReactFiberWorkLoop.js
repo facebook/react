@@ -12,6 +12,7 @@ import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 import type {Wakeable, Thenable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
+import type {ActivityState} from './ReactFiberActivityComponent';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {Transition} from 'react/src/ReactStartTransition';
@@ -20,7 +21,7 @@ import type {
   PendingBoundaries,
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
-import type {OffscreenInstance} from './ReactFiberActivityComponent';
+import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 import type {
   Resource,
   ViewTransitionInstance,
@@ -31,7 +32,7 @@ import {
   getViewTransitionName,
   type ViewTransitionState,
 } from './ReactFiberViewTransitionComponent';
-import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import {
   enableCreateEventHandleAPI,
@@ -51,7 +52,7 @@ import {
   enableYieldingBeforePassive,
   enableThrottledScheduling,
   enableViewTransition,
-  enableSwipeTransition,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -124,6 +125,7 @@ import {
 import {
   HostRoot,
   ClassComponent,
+  ActivityComponent,
   SuspenseComponent,
   SuspenseListComponent,
   OffscreenComponent,
@@ -358,6 +360,7 @@ import {
   deleteScheduledGesture,
   stopCompletedGestures,
 } from './ReactFiberGestureScheduler';
+import {claimQueuedTransitionTypes} from './ReactFiberTransitionTypes';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -753,7 +756,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
   const transition = requestCurrentTransition();
   if (transition !== null) {
-    if (enableSwipeTransition) {
+    if (enableGestureTransition) {
       if (transition.gesture) {
         throw new Error(
           'Cannot setState on regular state inside a startGestureTransition. ' +
@@ -1451,7 +1454,7 @@ function commitRootWhenReady(
   const subtreeFlags = finishedWork.subtreeFlags;
   const isViewTransitionEligible =
     enableViewTransition && includesOnlyViewTransitionEligibleLanes(lanes); // TODO: Use a subtreeFlag to optimize.
-  const isGestureTransition = enableSwipeTransition && isGestureRender(lanes);
+  const isGestureTransition = enableGestureTransition && isGestureRender(lanes);
   const maySuspendCommit =
     subtreeFlags & ShouldSuspendCommit ||
     (subtreeFlags & BothVisibilityAndMaySuspendCommit) ===
@@ -1466,11 +1469,11 @@ function commitRootWhenReady(
     // transaction, so it track state in its own module scope.
     // This will also track any newly added or appearing ViewTransition
     // components for the purposes of forming pairs.
-    accumulateSuspenseyCommit(finishedWork);
+    accumulateSuspenseyCommit(finishedWork, lanes);
     if (isViewTransitionEligible || isGestureTransition) {
       // If we're stopping gestures we don't have to wait for any pending
       // view transition. We'll stop it when we commit.
-      if (!enableSwipeTransition || root.stoppingGestures === null) {
+      if (!enableGestureTransition || root.stoppingGestures === null) {
         suspendOnActiveViewTransition(root.containerInfo);
       }
     }
@@ -2637,7 +2640,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
                 const props = hostFiber.pendingProps;
                 const isReady = resource
                   ? preloadResource(resource)
-                  : preloadInstance(type, props);
+                  : preloadInstance(hostFiber.stateNode, type, props);
                 if (isReady) {
                   // The data resolved. Resume the work loop as if nothing
                   // suspended. Unlike when a user component suspends, we don't
@@ -3297,7 +3300,7 @@ function commitRoot(
     if (enableSchedulingProfiler) {
       markCommitStopped();
     }
-    if (enableSwipeTransition) {
+    if (enableGestureTransition) {
       // Stop any gestures that were completed and is now being reverted.
       if (root.stoppingGestures !== null) {
         stopCompletedGestures(root);
@@ -3331,7 +3334,7 @@ function commitRoot(
   const concurrentlyUpdatedLanes = getConcurrentlyUpdatedLanes();
   remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
 
-  if (enableSwipeTransition && root.pendingGestures === null) {
+  if (enableGestureTransition && root.pendingGestures === null) {
     // Gestures don't clear their lanes while the gesture is still active but it
     // might not be scheduled to do any more renders and so we shouldn't schedule
     // any more gesture lane work until a new gesture is scheduled.
@@ -3379,7 +3382,7 @@ function commitRoot(
     pendingSuspendedCommitReason = suspendedCommitReason;
   }
 
-  if (enableSwipeTransition && isGestureRender(lanes)) {
+  if (enableGestureTransition && isGestureRender(lanes)) {
     // This is a special kind of render that doesn't commit regular effects.
     commitGestureOnRoot(
       root,
@@ -3404,11 +3407,7 @@ function commitRoot(
     pendingViewTransitionEvents = null;
     if (includesOnlyViewTransitionEligibleLanes(lanes)) {
       // Claim any pending Transition Types for this commit.
-      // This means that multiple roots committing independent View Transitions
-      // 1) end up staggered because we can only have one at a time.
-      // 2) only the first one gets all the Transition Types.
-      pendingTransitionTypes = ReactSharedInternals.V;
-      ReactSharedInternals.V = null;
+      pendingTransitionTypes = claimQueuedTransitionTypes(root);
       passiveSubtreeMask = PassiveTransitionMask;
     } else {
       pendingTransitionTypes = null;
@@ -3505,7 +3504,7 @@ function commitRoot(
   }
 
   let willStartViewTransition = shouldStartViewTransition;
-  if (enableSwipeTransition) {
+  if (enableGestureTransition) {
     // Stop any gestures that were completed and is now being committed.
     if (root.stoppingGestures !== null) {
       stopCompletedGestures(root);
@@ -3925,17 +3924,14 @@ function commitGestureOnRoot(
     setCurrentUpdatePriority(previousPriority);
     ReactSharedInternals.T = prevTransition;
   }
-  // TODO: Collect transition types.
-  pendingTransitionTypes = null;
+  pendingTransitionTypes = finishedGesture.types;
   pendingEffectsStatus = PENDING_GESTURE_MUTATION_PHASE;
 
   pendingViewTransition = finishedGesture.running = startGestureTransition(
     root.containerInfo,
     finishedGesture.provider,
-    finishedGesture.rangeCurrent,
-    finishedGesture.direction
-      ? finishedGesture.rangeNext
-      : finishedGesture.rangePrevious,
+    finishedGesture.rangeStart,
+    finishedGesture.rangeEnd,
     pendingTransitionTypes,
     flushGestureMutations,
     flushGestureAnimations,
@@ -3944,7 +3940,7 @@ function commitGestureOnRoot(
 }
 
 function flushGestureMutations(): void {
-  if (!enableSwipeTransition) {
+  if (!enableGestureTransition) {
     return;
   }
   if (pendingEffectsStatus !== PENDING_GESTURE_MUTATION_PHASE) {
@@ -3973,7 +3969,7 @@ function flushGestureMutations(): void {
 }
 
 function flushGestureAnimations(): void {
-  if (!enableSwipeTransition) {
+  if (!enableGestureTransition) {
     return;
   }
   // If we get canceled before we start we might not have applied
@@ -4495,9 +4491,11 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
   let retryLane: Lane = NoLane; // Default
   let retryCache: WeakSet<Wakeable> | Set<Wakeable> | null;
   switch (boundaryFiber.tag) {
+    case ActivityComponent:
     case SuspenseComponent:
       retryCache = boundaryFiber.stateNode;
-      const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
+      const suspenseState: null | SuspenseState | ActivityState =
+        boundaryFiber.memoizedState;
       if (suspenseState !== null) {
         retryLane = suspenseState.retryLane;
       }

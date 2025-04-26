@@ -33,7 +33,8 @@ import {
   enableUpdaterTracking,
   enableTransitionTracing,
   disableLegacyMode,
-  enableSwipeTransition,
+  enableViewTransition,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
@@ -98,7 +99,11 @@ function FiberRootNode(
 
   this.formState = formState;
 
-  if (enableSwipeTransition) {
+  if (enableViewTransition) {
+    this.transitionTypes = null;
+  }
+
+  if (enableGestureTransition) {
     this.pendingGestures = null;
     this.stoppingGestures = null;
     this.gestureClone = null;
@@ -107,10 +112,7 @@ function FiberRootNode(
   this.incompleteTransitions = new Map();
   if (enableTransitionTracing) {
     this.transitionCallbacks = null;
-    const transitionLanesMap = (this.transitionLanes = []);
-    for (let i = 0; i < TotalLanes; i++) {
-      transitionLanesMap.push(null);
-    }
+    this.transitionLanes = createLaneMap(null);
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {

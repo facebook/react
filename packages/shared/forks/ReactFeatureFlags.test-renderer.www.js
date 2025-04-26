@@ -80,10 +80,12 @@ export const enableYieldingBeforePassive = false;
 
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;
-export const enableSwipeTransition = false;
+export const enableGestureTransition = false;
 export const enableFastAddPropertiesInDiffing = false;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
+export const enableSuspenseyImages = false;
+export const enableSrcObject = false;
 
 export const enableFragmentRefs = false;
 export const ownerStackLimit = 1e4;

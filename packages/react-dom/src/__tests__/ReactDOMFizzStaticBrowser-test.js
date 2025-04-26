@@ -187,7 +187,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
     );
   });
 
@@ -201,7 +201,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(
-      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script id="«R»">INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 
@@ -1428,7 +1428,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(await readContent(content)).toBe(
       '<!DOCTYPE html><html lang="en"><head>' +
         '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
-        '</head><body>Hello</body></html>',
+        '<link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body>Hello<template id="«R»"></template></body></html>',
     );
   });
 
@@ -1474,7 +1475,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(await readContent(content)).toBe(
       '<!DOCTYPE html><html lang="en"><head>' +
         '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
-        '</head><body>Hello</body></html>',
+        '<link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body>Hello<template id="«R»"></template></body></html>',
     );
   });
 
@@ -1525,7 +1527,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(await readContent(content)).toBe(
       '<!DOCTYPE html><html><head>' +
         '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
-        '</head><body><div>Hello</div></body></html>',
+        '<link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body><div>Hello</div><template id="«R»"></template></body></html>',
     );
   });
 
@@ -1607,7 +1610,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
     let result = decoder.decode(value, {stream: true});
 
     expect(result).toBe(
-      '<!DOCTYPE html><html><head></head><body>hello<!--$?--><template id="B:1"></template><!--/$-->',
+      '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><template id="«R»"></template>',
     );
 
     await 1;
@@ -1631,7 +1635,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const slice = result.slice(0, instructionIndex + '$RC'.length);
 
     expect(slice).toBe(
-      '<!DOCTYPE html><html><head></head><body>hello<!--$?--><template id="B:1"></template><!--/$--><div hidden id="S:1">world<!-- --></div><script>$RC',
+      '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><template id="«R»"></template>' +
+        '<div hidden id="S:1">world<!-- --></div><script>$RC',
     );
   });
 

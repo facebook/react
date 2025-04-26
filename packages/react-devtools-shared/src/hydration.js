@@ -43,7 +43,7 @@ export type Dehydrated = {
   type: string,
 };
 
-// Typed arrays and other complex iteratable objects (e.g. Map, Set, ImmutableJS) need special handling.
+// Typed arrays, other complex iteratable objects (e.g. Map, Set, ImmutableJS) or Promises need special handling.
 // These objects can't be serialized without losing type information,
 // so a "Unserializable" type wrapper is used (with meta-data keys) to send nested values-
 // while preserving the original type and name.
@@ -303,6 +303,76 @@ export function dehydrate(
         type,
       };
 
+    case 'thenable':
+      isPathAllowedCheck = isPathAllowed(path);
+
+      if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
+        return {
+          inspectable:
+            data.status === 'fulfilled' || data.status === 'rejected',
+          preview_short: formatDataForPreview(data, false),
+          preview_long: formatDataForPreview(data, true),
+          name: data.toString(),
+          type,
+        };
+      }
+
+      switch (data.status) {
+        case 'fulfilled': {
+          const unserializableValue: Unserializable = {
+            unserializable: true,
+            type: type,
+            preview_short: formatDataForPreview(data, false),
+            preview_long: formatDataForPreview(data, true),
+            name: 'fulfilled Thenable',
+          };
+
+          unserializableValue.value = dehydrate(
+            data.value,
+            cleaned,
+            unserializable,
+            path.concat(['value']),
+            isPathAllowed,
+            isPathAllowedCheck ? 1 : level + 1,
+          );
+
+          unserializable.push(path);
+
+          return unserializableValue;
+        }
+        case 'rejected': {
+          const unserializableValue: Unserializable = {
+            unserializable: true,
+            type: type,
+            preview_short: formatDataForPreview(data, false),
+            preview_long: formatDataForPreview(data, true),
+            name: 'rejected Thenable',
+          };
+
+          unserializableValue.reason = dehydrate(
+            data.reason,
+            cleaned,
+            unserializable,
+            path.concat(['reason']),
+            isPathAllowed,
+            isPathAllowedCheck ? 1 : level + 1,
+          );
+
+          unserializable.push(path);
+
+          return unserializableValue;
+        }
+        default:
+          cleaned.push(path);
+          return {
+            inspectable: false,
+            preview_short: formatDataForPreview(data, false),
+            preview_long: formatDataForPreview(data, true),
+            name: data.toString(),
+            type,
+          };
+      }
+
     case 'object':
       isPathAllowedCheck = isPathAllowed(path);
 
@@ -327,7 +397,7 @@ export function dehydrate(
         return object;
       }
 
-    case 'class_instance':
+    case 'class_instance': {
       isPathAllowedCheck = isPathAllowed(path);
 
       if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
@@ -363,7 +433,69 @@ export function dehydrate(
       unserializable.push(path);
 
       return value;
+    }
+    case 'error': {
+      isPathAllowedCheck = isPathAllowed(path);
 
+      if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
+        return createDehydrated(type, true, data, cleaned, path);
+      }
+
+      const value: Unserializable = {
+        unserializable: true,
+        type,
+        readonly: true,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data.name,
+      };
+
+      // name, message, stack and cause are not enumerable yet still interesting.
+      value.message = dehydrate(
+        data.message,
+        cleaned,
+        unserializable,
+        path.concat(['message']),
+        isPathAllowed,
+        isPathAllowedCheck ? 1 : level + 1,
+      );
+      value.stack = dehydrate(
+        data.stack,
+        cleaned,
+        unserializable,
+        path.concat(['stack']),
+        isPathAllowed,
+        isPathAllowedCheck ? 1 : level + 1,
+      );
+
+      if ('cause' in data) {
+        value.cause = dehydrate(
+          data.cause,
+          cleaned,
+          unserializable,
+          path.concat(['cause']),
+          isPathAllowed,
+          isPathAllowedCheck ? 1 : level + 1,
+        );
+      }
+
+      getAllEnumerableKeys(data).forEach(key => {
+        const keyAsString = key.toString();
+
+        value[keyAsString] = dehydrate(
+          data[key],
+          cleaned,
+          unserializable,
+          path.concat([keyAsString]),
+          isPathAllowed,
+          isPathAllowedCheck ? 1 : level + 1,
+        );
+      });
+
+      unserializable.push(path);
+
+      return value;
+    }
     case 'infinity':
     case 'nan':
     case 'undefined':

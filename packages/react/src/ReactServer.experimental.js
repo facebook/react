@@ -17,6 +17,7 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
+  REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
 import {
   cloneElement,
@@ -80,4 +81,5 @@ export {
   // Experimental
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
   REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
+  REACT_ACTIVITY_TYPE as unstable_Activity,
 };

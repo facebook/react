@@ -7,16 +7,15 @@
  * @flow
  */
 
+import type {ViewTransitionProps} from 'shared/ReactTypes';
+
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 
 import type {Instance, TextInstance, Props} from './ReactFiberConfig';
 
-import type {OffscreenState} from './ReactFiberActivityComponent';
+import type {OffscreenState} from './ReactFiberOffscreenComponent';
 
-import type {
-  ViewTransitionState,
-  ViewTransitionProps,
-} from './ReactFiberViewTransitionComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 
 import {
   cloneMutableInstance,
@@ -412,7 +411,7 @@ function recursivelyInsertNewFiber(
           // had any effect.
           if (finishedWork.flags & Update) {
             console.error(
-              'useSwipeTransition() caused something to render a new <%s>. ' +
+              'startGestureTransition() caused something to render a new <%s>. ' +
                 'This is not possible in the current implementation. ' +
                 "Make sure that the swipe doesn't mount any new <%s> elements.",
               finishedWork.type,
@@ -632,6 +631,12 @@ function recursivelyInsertClonesFromExistingTree(
         const viewTransitionState: ViewTransitionState = child.stateNode;
         // TODO: If this was already cloned by a previous pass we can reuse those clones.
         viewTransitionState.clones = null;
+        // "Existing" view transitions are in subtrees that didn't update so
+        // this is a "current". We normally clear this upon rerendering
+        // but we use this flag to track changes from layout in the commit.
+        // So we need it to be cleared before we do that.
+        // TODO: Use some other temporary state to track this.
+        child.flags &= ~Update;
         let nextPhase;
         if (visitPhase === CLONE_EXIT) {
           // This was an Enter of a ViewTransition. We now move onto unhiding the inner
@@ -789,7 +794,7 @@ function insertDestinationClonesOfFiber(
               commitUpdate(instance, type, oldProps, newProps, finishedWork);
               if (viewTransitionMutationContext) {
                 console.error(
-                  'useSwipeTransition() caused something to mutate <%s>. ' +
+                  'startGestureTransition() caused something to mutate <%s>. ' +
                     'This is not possible in the current implementation. ' +
                     "Make sure that the swipe doesn't update any state which " +
                     'causes <%s> to change.',
@@ -834,18 +839,18 @@ function insertDestinationClonesOfFiber(
       }
 
       if (visitPhase === CLONE_EXIT || visitPhase === CLONE_UNHIDE) {
+        appendChild(hostParentClone, clone);
+        unhideInstance(clone, finishedWork.memoizedProps);
         recursivelyInsertClones(
           finishedWork,
           clone,
           null,
           CLONE_APPEARING_PAIR,
         );
-        appendChild(hostParentClone, clone);
-        unhideInstance(clone, finishedWork.memoizedProps);
         trackHostMutation();
       } else {
-        recursivelyInsertClones(finishedWork, clone, null, visitPhase);
         appendChild(hostParentClone, clone);
+        recursivelyInsertClones(finishedWork, clone, null, visitPhase);
       }
       if (parentViewTransition !== null) {
         if (parentViewTransition.clones === null) {
@@ -977,10 +982,10 @@ export function insertDestinationClones(
       if (!didWarnForRootClone) {
         didWarnForRootClone = true;
         console.warn(
-          'useSwipeTransition() caused something to mutate or relayout the root. ' +
+          'startGestureTransition() caused something to mutate or relayout the root. ' +
             'This currently requires a clone of the whole document. Make sure to ' +
             'add a <ViewTransition> directly around an absolutely positioned DOM node ' +
-            'to minimize the impact of any changes caused by the Swipe Transition.',
+            'to minimize the impact of any changes caused by the Gesture Transition.',
         );
       }
     }

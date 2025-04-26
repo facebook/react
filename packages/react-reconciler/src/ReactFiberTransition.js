@@ -12,7 +12,7 @@ import type {
   GestureProvider,
   GestureOptions,
 } from 'shared/ReactTypes';
-import type {Lanes} from './ReactFiberLane';
+import {NoLane, type Lanes} from './ReactFiberLane';
 import type {StackCursor} from './ReactFiberStack';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
 import type {Transition} from 'react/src/ReactStartTransition';
@@ -20,7 +20,8 @@ import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 import {
   enableTransitionTracing,
-  enableSwipeTransition,
+  enableViewTransition,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
@@ -33,9 +34,17 @@ import {
   retainCache,
   CacheContext,
 } from './ReactFiberCacheComponent';
+import {
+  queueTransitionTypes,
+  entangleAsyncTransitionTypes,
+  entangledTransitionTypes,
+} from './ReactFiberTransitionTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {entangleAsyncAction} from './ReactFiberAsyncAction';
+import {
+  entangleAsyncAction,
+  peekEntangledActionLane,
+} from './ReactFiberAsyncAction';
 import {startAsyncTransitionTimer} from './ReactProfilerTimer';
 import {firstScheduledRoot} from './ReactFiberRootScheduler';
 import {
@@ -86,6 +95,33 @@ ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
     const thenable: Thenable<mixed> = (returnValue: any);
     entangleAsyncAction(transition, thenable);
   }
+  if (enableViewTransition) {
+    if (entangledTransitionTypes !== null) {
+      // If we scheduled work on any new roots, we need to add any entangled async
+      // transition types to those roots too.
+      let root = firstScheduledRoot;
+      while (root !== null) {
+        queueTransitionTypes(root, entangledTransitionTypes);
+        root = root.next;
+      }
+    }
+    const transitionTypes = transition.types;
+    if (transitionTypes !== null) {
+      // Within this Transition we should've now scheduled any roots we have updates
+      // to work on. If there are no updates on a root, then the Transition type won't
+      // be applied to that root.
+      let root = firstScheduledRoot;
+      while (root !== null) {
+        queueTransitionTypes(root, transitionTypes);
+        root = root.next;
+      }
+      if (peekEntangledActionLane() !== NoLane) {
+        // If we have entangled, async actions going on, the update associated with
+        // these types might come later. We need to save them for later.
+        entangleAsyncTransitionTypes(transitionTypes);
+      }
+    }
+  }
   if (prevOnStartTransitionFinish !== null) {
     prevOnStartTransitionFinish(transition, returnValue);
   }
@@ -106,7 +142,7 @@ function chainGestureCancellation(
   };
 }
 
-if (enableSwipeTransition) {
+if (enableGestureTransition) {
   const prevOnStartGestureTransitionFinish = ReactSharedInternals.G;
   ReactSharedInternals.G = function onStartGestureTransitionFinishForReconciler(
     transition: Transition,
@@ -131,7 +167,12 @@ if (enableSwipeTransition) {
     // that it's conceptually started globally.
     let root = firstScheduledRoot;
     while (root !== null) {
-      const scheduledGesture = startScheduledGesture(root, provider, options);
+      const scheduledGesture = startScheduledGesture(
+        root,
+        provider,
+        options,
+        transition.types,
+      );
       if (scheduledGesture !== null) {
         cancel = chainGestureCancellation(root, scheduledGesture, cancel);
       }

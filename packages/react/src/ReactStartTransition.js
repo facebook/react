@@ -13,23 +13,32 @@ import type {
   GestureProvider,
   GestureOptions,
 } from 'shared/ReactTypes';
+import type {TransitionTypes} from './ReactTransitionType';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {
   enableTransitionTracing,
-  enableSwipeTransition,
+  enableViewTransition,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 
 import reportGlobalError from 'shared/reportGlobalError';
 
 export type Transition = {
-  gesture: null | GestureProvider, // enableSwipeTransition
+  types: null | TransitionTypes, // enableViewTransition
+  gesture: null | GestureProvider, // enableGestureTransition
   name: null | string, // enableTransitionTracing only
   startTime: number, // enableTransitionTracing only
   _updatedFibers: Set<Fiber>, // DEV-only
   ...
 };
+
+function releaseAsyncTransition() {
+  if (__DEV__) {
+    ReactSharedInternals.asyncTransitions--;
+  }
+}
 
 export function startTransition(
   scope: () => void,
@@ -37,7 +46,18 @@ export function startTransition(
 ): void {
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
-  if (enableSwipeTransition) {
+  if (enableViewTransition) {
+    currentTransition.types =
+      prevTransition !== null
+        ? // If we're a nested transition, we should use the same set as the parent
+          // since we're conceptually always joined into the same entangled transition.
+          // In practice, this only matters if we add transition types in the inner
+          // without setting state. In that case, the inner transition can finish
+          // without waiting for the outer.
+          prevTransition.types
+        : null;
+  }
+  if (enableGestureTransition) {
     currentTransition.gesture = null;
   }
   if (enableTransitionTracing) {
@@ -61,12 +81,35 @@ export function startTransition(
       returnValue !== null &&
       typeof returnValue.then === 'function'
     ) {
+      if (__DEV__) {
+        // Keep track of the number of async transitions still running so we can warn.
+        ReactSharedInternals.asyncTransitions++;
+        returnValue.then(releaseAsyncTransition, releaseAsyncTransition);
+      }
       returnValue.then(noop, reportGlobalError);
     }
   } catch (error) {
     reportGlobalError(error);
   } finally {
     warnAboutTransitionSubscriptions(prevTransition, currentTransition);
+    if (prevTransition !== null && currentTransition.types !== null) {
+      // If we created a new types set in the inner transition, we transfer it to the parent
+      // since they should share the same set. They're conceptually entangled.
+      if (__DEV__) {
+        if (
+          prevTransition.types !== null &&
+          prevTransition.types !== currentTransition.types
+        ) {
+          // Just assert that assumption holds that we're not overriding anything.
+          console.error(
+            'We expected inner Transitions to have transferred the outer types set and ' +
+              'that you cannot add to the outer Transition while inside the inner.' +
+              'This is a bug in React.',
+          );
+        }
+      }
+      prevTransition.types = currentTransition.types;
+    }
     ReactSharedInternals.T = prevTransition;
   }
 }
@@ -76,10 +119,10 @@ export function startGestureTransition(
   scope: () => void,
   options?: GestureOptions & StartTransitionOptions,
 ): () => void {
-  if (!enableSwipeTransition) {
+  if (!enableGestureTransition) {
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'startGestureTransition should not be exported when the enableSwipeTransition flag is off.',
+      'startGestureTransition should not be exported when the enableGestureTransition flag is off.',
     );
   }
   if (provider == null) {
@@ -92,7 +135,10 @@ export function startGestureTransition(
   }
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
-  if (enableSwipeTransition) {
+  if (enableViewTransition) {
+    currentTransition.types = null;
+  }
+  if (enableGestureTransition) {
     currentTransition.gesture = provider;
   }
   if (enableTransitionTracing) {

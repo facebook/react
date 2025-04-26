@@ -10,6 +10,7 @@
 import type {FiberRoot} from './ReactInternalTypes';
 import type {GestureOptions} from 'shared/ReactTypes';
 import type {GestureTimeline, RunningViewTransition} from './ReactFiberConfig';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import {
   GestureLane,
@@ -17,98 +18,19 @@ import {
   includesTransitionLane,
 } from './ReactFiberLane';
 import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
-import {
-  subscribeToGestureDirection,
-  getCurrentGestureOffset,
-  stopViewTransition,
-} from './ReactFiberConfig';
+import {getCurrentGestureOffset, stopViewTransition} from './ReactFiberConfig';
 
 // This type keeps track of any scheduled or active gestures.
 export type ScheduledGesture = {
   provider: GestureTimeline,
   count: number, // The number of times this same provider has been started.
-  direction: boolean, // false = previous, true = next
-  rangePrevious: number, // The end along the timeline where the previous state is reached.
-  rangeCurrent: number, // The starting offset along the timeline.
-  rangeNext: number, // The end along the timeline where the next state is reached.
-  cancel: () => void, // Cancel the subscription to direction change. // TODO: Delete this.
+  rangeStart: number, // The percentage along the timeline where the "current" state starts.
+  rangeEnd: number, // The percentage along the timeline where the "destination" state is reached.
+  types: null | TransitionTypes, // Any addTransitionType call made during startGestureTransition.
   running: null | RunningViewTransition, // Used to cancel the running transition after we're done.
   prev: null | ScheduledGesture, // The previous scheduled gesture in the queue for this root.
   next: null | ScheduledGesture, // The next scheduled gesture in the queue for this root.
 };
-
-// TODO: Delete this when deleting useSwipeTransition.
-export function scheduleGestureLegacy(
-  root: FiberRoot,
-  provider: GestureTimeline,
-  initialDirection: boolean,
-  rangePrevious: number,
-  rangeCurrent: number,
-  rangeNext: number,
-): ScheduledGesture {
-  let prev = root.pendingGestures;
-  while (prev !== null) {
-    if (prev.provider === provider) {
-      // Existing instance found.
-      prev.count++;
-      return prev;
-    }
-    const next = prev.next;
-    if (next === null) {
-      break;
-    }
-    prev = next;
-  }
-  const isFlippedDirection = rangePrevious > rangeNext;
-  // Add new instance to the end of the queue.
-  const cancel = subscribeToGestureDirection(
-    provider,
-    rangeCurrent,
-    (direction: boolean) => {
-      if (isFlippedDirection) {
-        direction = !direction;
-      }
-      if (gesture.direction !== direction) {
-        gesture.direction = direction;
-        if (gesture.prev === null && root.pendingGestures !== gesture) {
-          // This gesture is not in the schedule, meaning it was already rendered.
-          // We need to rerender in the new direction. Insert it into the first slot
-          // in case other gestures are queued after the on-going one.
-          const existing = root.pendingGestures;
-          gesture.next = existing;
-          if (existing !== null) {
-            existing.prev = gesture;
-          }
-          root.pendingGestures = gesture;
-          // Schedule the lane on the root. The Fibers will already be marked as
-          // long as the gesture is active on that Hook.
-          root.pendingLanes |= GestureLane;
-          ensureRootIsScheduled(root);
-        }
-        // TODO: If we're currently rendering this gesture, we need to restart it.
-      }
-    },
-  );
-  const gesture: ScheduledGesture = {
-    provider: provider,
-    count: 1,
-    direction: initialDirection,
-    rangePrevious: rangePrevious,
-    rangeCurrent: rangeCurrent,
-    rangeNext: rangeNext,
-    cancel: cancel,
-    running: null,
-    prev: prev,
-    next: null,
-  };
-  if (prev === null) {
-    root.pendingGestures = gesture;
-  } else {
-    prev.next = gesture;
-  }
-  ensureRootIsScheduled(root);
-  return gesture;
-}
 
 export function scheduleGesture(
   root: FiberRoot,
@@ -129,11 +51,9 @@ export function scheduleGesture(
   const gesture: ScheduledGesture = {
     provider: provider,
     count: 0,
-    direction: false,
-    rangePrevious: -1,
-    rangeCurrent: -1,
-    rangeNext: -1,
-    cancel: () => {}, // TODO: Delete this with useSwipeTransition.
+    rangeStart: 0, // Uninitialized
+    rangeEnd: 100, // Uninitialized
+    types: null,
     running: null,
     prev: prev,
     next: null,
@@ -151,46 +71,38 @@ export function startScheduledGesture(
   root: FiberRoot,
   gestureTimeline: GestureTimeline,
   gestureOptions: ?GestureOptions,
+  transitionTypes: null | TransitionTypes,
 ): null | ScheduledGesture {
-  const currentOffset = getCurrentGestureOffset(gestureTimeline);
-  const range = gestureOptions && gestureOptions.range;
-  const rangePrevious: number = range ? range[0] : 0; // If no range is provider we assume it's the starting point of the range.
-  const rangeCurrent: number = range ? range[1] : currentOffset;
-  const rangeNext: number = range ? range[2] : 100; // If no range is provider we assume it's the starting point of the range.
-  if (__DEV__) {
-    if (
-      (rangePrevious > rangeCurrent && rangeNext > rangeCurrent) ||
-      (rangePrevious < rangeCurrent && rangeNext < rangeCurrent)
-    ) {
-      console.error(
-        'The range of a gesture needs "previous" and "next" to be on either side of ' +
-          'the "current" offset. Both cannot be above current and both cannot be below current.',
-      );
-    }
-  }
-  const isFlippedDirection = rangePrevious > rangeNext;
-  const initialDirection =
-    // If a range is specified we can imply initial direction if it's not the current
-    // value such as if the gesture starts after it has already moved.
-    currentOffset < rangeCurrent
-      ? isFlippedDirection
-      : currentOffset > rangeCurrent
-        ? !isFlippedDirection
-        : // Otherwise, look for an explicit option.
-          gestureOptions
-          ? gestureOptions.direction === 'next'
-          : false;
-
+  const rangeStart =
+    gestureOptions && gestureOptions.rangeStart != null
+      ? gestureOptions.rangeStart
+      : getCurrentGestureOffset(gestureTimeline);
+  const rangeEnd =
+    gestureOptions && gestureOptions.rangeEnd != null
+      ? gestureOptions.rangeEnd
+      : rangeStart < 50
+        ? 100
+        : 0;
   let prev = root.pendingGestures;
   while (prev !== null) {
     if (prev.provider === gestureTimeline) {
       // Existing instance found.
       prev.count++;
       // Update the options.
-      prev.direction = initialDirection;
-      prev.rangePrevious = rangePrevious;
-      prev.rangeCurrent = rangeCurrent;
-      prev.rangeNext = rangeNext;
+      prev.rangeStart = rangeStart;
+      prev.rangeEnd = rangeEnd;
+      if (transitionTypes !== null) {
+        let scheduledTypes = prev.types;
+        if (scheduledTypes === null) {
+          scheduledTypes = prev.types = [];
+        }
+        for (let i = 0; i < transitionTypes.length; i++) {
+          const transitionType = transitionTypes[i];
+          if (scheduledTypes.indexOf(transitionType) === -1) {
+            scheduledTypes.push(transitionType);
+          }
+        }
+      }
       return prev;
     }
     const next = prev.next;
@@ -210,8 +122,6 @@ export function cancelScheduledGesture(
 ): void {
   gesture.count--;
   if (gesture.count === 0) {
-    const cancelDirectionSubscription = gesture.cancel;
-    cancelDirectionSubscription();
     // Delete the scheduled gesture from the pending queue.
     deleteScheduledGesture(root, gesture);
     // TODO: If we're currently rendering this gesture, we need to restart the render

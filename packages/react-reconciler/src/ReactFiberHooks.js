@@ -14,9 +14,6 @@ import type {
   Thenable,
   RejectedThenable,
   Awaited,
-  StartGesture,
-  GestureProvider,
-  GestureOptions,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -28,7 +25,7 @@ import type {
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Flags} from './ReactFiberFlags';
-import type {TransitionStatus, GestureTimeline} from './ReactFiberConfig';
+import type {TransitionStatus} from './ReactFiberConfig';
 import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 import {
@@ -36,7 +33,6 @@ import {
   NotPendingTransition as NoPendingHostTransition,
   setCurrentUpdatePriority,
   getCurrentUpdatePriority,
-  getCurrentGestureOffset,
 } from './ReactFiberConfig';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -46,7 +42,8 @@ import {
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
-  enableSwipeTransition,
+  enableViewTransition,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -137,7 +134,6 @@ import {
   enqueueConcurrentHookUpdate,
   enqueueConcurrentHookUpdateAndEagerlyBailout,
   enqueueConcurrentRenderForLane,
-  enqueueGestureRender,
 } from './ReactFiberConcurrentUpdates';
 import {getTreeId} from './ReactFiberTreeContext';
 import {now} from './Scheduler';
@@ -161,11 +157,7 @@ import {requestCurrentTransition} from './ReactFiberTransition';
 
 import {callComponentInDEV} from './ReactFiberCallUserSpace';
 
-import {
-  scheduleGesture,
-  scheduleGestureLegacy,
-  cancelScheduledGesture,
-} from './ReactFiberGestureScheduler';
+import {scheduleGesture} from './ReactFiberGestureScheduler';
 
 export type Update<S, A> = {
   lane: Lane,
@@ -174,7 +166,7 @@ export type Update<S, A> = {
   hasEagerState: boolean,
   eagerState: S | null,
   next: Update<S, A>,
-  gesture: null | ScheduledGesture, // enableSwipeTransition
+  gesture: null | ScheduledGesture, // enableGestureTransition
 };
 
 export type UpdateQueue<S, A> = {
@@ -1383,7 +1375,7 @@ function updateReducerImpl<S, A>(
         ? !isSubsetOfLanes(getWorkInProgressRootRenderLanes(), updateLane)
         : !isSubsetOfLanes(renderLanes, updateLane);
 
-      if (enableSwipeTransition && updateLane === GestureLane) {
+      if (enableGestureTransition && updateLane === GestureLane) {
         // This is a gesture optimistic update. It should only be considered as part of the
         // rendered state while rendering the gesture lane and if the rendering the associated
         // ScheduledGesture.
@@ -2168,7 +2160,18 @@ function runActionStateAction<S, P>(
     // This is a fork of startTransition
     const prevTransition = ReactSharedInternals.T;
     const currentTransition: Transition = ({}: any);
-    if (enableSwipeTransition) {
+    if (enableViewTransition) {
+      currentTransition.types =
+        prevTransition !== null
+          ? // If we're a nested transition, we should use the same set as the parent
+            // since we're conceptually always joined into the same entangled transition.
+            // In practice, this only matters if we add transition types in the inner
+            // without setting state. In that case, the inner transition can finish
+            // without waiting for the outer.
+            prevTransition.types
+          : null;
+    }
+    if (enableGestureTransition) {
       currentTransition.gesture = null;
     }
     if (enableTransitionTracing) {
@@ -2189,6 +2192,24 @@ function runActionStateAction<S, P>(
     } catch (error) {
       onActionError(actionQueue, node, error);
     } finally {
+      if (prevTransition !== null && currentTransition.types !== null) {
+        // If we created a new types set in the inner transition, we transfer it to the parent
+        // since they should share the same set. They're conceptually entangled.
+        if (__DEV__) {
+          if (
+            prevTransition.types !== null &&
+            prevTransition.types !== currentTransition.types
+          ) {
+            // Just assert that assumption holds that we're not overriding anything.
+            console.error(
+              'We expected inner Transitions to have transferred the outer types set and ' +
+                'that you cannot add to the outer Transition while inside the inner.' +
+                'This is a bug in React.',
+            );
+          }
+        }
+        prevTransition.types = currentTransition.types;
+      }
       ReactSharedInternals.T = prevTransition;
 
       if (__DEV__) {
@@ -2228,6 +2249,11 @@ function handleActionReturnValue<S, P>(
     typeof returnValue.then === 'function'
   ) {
     const thenable = ((returnValue: any): Thenable<Awaited<S>>);
+    if (__DEV__) {
+      // Keep track of the number of async transitions still running so we can warn.
+      ReactSharedInternals.asyncTransitions++;
+      thenable.then(releaseAsyncTransition, releaseAsyncTransition);
+    }
     // Attach a listener to read the return state of the action. As soon as
     // this resolves, we can run the next action in the sequence.
     thenable.then(
@@ -3007,7 +3033,9 @@ function updateDeferredValueImpl<T>(
       return resultValue;
     }
 
-    const shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes);
+    const shouldDeferValue =
+      !includesOnlyNonUrgentLanes(renderLanes) &&
+      !includesSomeLane(renderLanes, DeferredLane);
     if (shouldDeferValue) {
       // This is an urgent update. Since the value has changed, keep using the
       // previous value and spawn a deferred render to update it later.
@@ -3035,6 +3063,12 @@ function updateDeferredValueImpl<T>(
   }
 }
 
+function releaseAsyncTransition() {
+  if (__DEV__) {
+    ReactSharedInternals.asyncTransitions--;
+  }
+}
+
 function startTransition<S>(
   fiber: Fiber,
   queue: UpdateQueue<S | Thenable<S>, BasicStateAction<S | Thenable<S>>>,
@@ -3050,7 +3084,18 @@ function startTransition<S>(
 
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: Transition = ({}: any);
-  if (enableSwipeTransition) {
+  if (enableViewTransition) {
+    currentTransition.types =
+      prevTransition !== null
+        ? // If we're a nested transition, we should use the same set as the parent
+          // since we're conceptually always joined into the same entangled transition.
+          // In practice, this only matters if we add transition types in the inner
+          // without setting state. In that case, the inner transition can finish
+          // without waiting for the outer.
+          prevTransition.types
+        : null;
+  }
+  if (enableGestureTransition) {
     currentTransition.gesture = null;
   }
   if (enableTransitionTracing) {
@@ -3092,6 +3137,11 @@ function startTransition<S>(
       typeof returnValue.then === 'function'
     ) {
       const thenable = ((returnValue: any): Thenable<mixed>);
+      if (__DEV__) {
+        // Keep track of the number of async transitions still running so we can warn.
+        ReactSharedInternals.asyncTransitions++;
+        thenable.then(releaseAsyncTransition, releaseAsyncTransition);
+      }
       // Create a thenable that resolves to `finishedState` once the async
       // action has completed.
       const thenableForFinishedState = chainThenableValue(
@@ -3130,6 +3180,24 @@ function startTransition<S>(
   } finally {
     setCurrentUpdatePriority(previousPriority);
 
+    if (prevTransition !== null && currentTransition.types !== null) {
+      // If we created a new types set in the inner transition, we transfer it to the parent
+      // since they should share the same set. They're conceptually entangled.
+      if (__DEV__) {
+        if (
+          prevTransition.types !== null &&
+          prevTransition.types !== currentTransition.types
+        ) {
+          // Just assert that assumption holds that we're not overriding anything.
+          console.error(
+            'We expected inner Transitions to have transferred the outer types set and ' +
+              'that you cannot add to the outer Transition while inside the inner.' +
+              'This is a bug in React.',
+          );
+        }
+      }
+      prevTransition.types = currentTransition.types;
+    }
     ReactSharedInternals.T = prevTransition;
 
     if (__DEV__) {
@@ -3278,7 +3346,7 @@ export function requestFormReset(formFiber: Fiber) {
           'fix, move to an action, or wrap with startTransition.',
       );
     }
-  } else if (enableSwipeTransition && transition.gesture) {
+  } else if (enableGestureTransition && transition.gesture) {
     throw new Error(
       'Cannot requestFormReset() inside a startGestureTransition. ' +
         'There should be no side-effects associated with starting a ' +
@@ -3655,7 +3723,7 @@ function dispatchOptimisticSetState<S, A>(
   // For regular Transitions an optimistic update commits synchronously.
   // For gesture Transitions an optimistic update commits on the GestureLane.
   const lane =
-    enableSwipeTransition && transition !== null && transition.gesture
+    enableGestureTransition && transition !== null && transition.gesture
       ? GestureLane
       : SyncLane;
   const update: Update<S, A> = {
@@ -3696,7 +3764,7 @@ function dispatchOptimisticSetState<S, A>(
       scheduleUpdateOnFiber(root, fiber, lane);
       // Optimistic updates are always synchronous, so we don't need to call
       // entangleTransitionUpdate here.
-      if (enableSwipeTransition && transition !== null) {
+      if (enableGestureTransition && transition !== null) {
         const provider = transition.gesture;
         if (provider !== null) {
           // If this was a gesture, ensure we have a scheduled gesture and that
@@ -3770,183 +3838,6 @@ function markUpdateInDevTools<A>(fiber: Fiber, lane: Lane, action: A): void {
   }
 }
 
-type SwipeTransitionGestureUpdate = {
-  gesture: ScheduledGesture,
-  prev: SwipeTransitionGestureUpdate | null,
-  next: SwipeTransitionGestureUpdate | null,
-};
-
-type SwipeTransitionUpdateQueue = {
-  pending: null | SwipeTransitionGestureUpdate,
-  dispatch: StartGesture,
-  initialDirection: boolean,
-};
-
-function startGesture(
-  fiber: Fiber,
-  queue: SwipeTransitionUpdateQueue,
-  gestureProvider: GestureProvider,
-  gestureOptions?: GestureOptions,
-): () => void {
-  const root = enqueueGestureRender(fiber);
-  if (root === null) {
-    // Already unmounted.
-    // TODO: Should we warn here about starting on an unmounted Fiber?
-    return function cancelGesture() {
-      // Noop.
-    };
-  }
-  const gestureTimeline: GestureTimeline = gestureProvider;
-  const currentOffset = getCurrentGestureOffset(gestureTimeline);
-  const range = gestureOptions && gestureOptions.range;
-  const rangePrevious: number = range ? range[0] : 0; // If no range is provider we assume it's the starting point of the range.
-  const rangeCurrent: number = range ? range[1] : currentOffset;
-  const rangeNext: number = range ? range[2] : 100; // If no range is provider we assume it's the starting point of the range.
-  if (__DEV__) {
-    if (
-      (rangePrevious > rangeCurrent && rangeNext > rangeCurrent) ||
-      (rangePrevious < rangeCurrent && rangeNext < rangeCurrent)
-    ) {
-      console.error(
-        'The range of a gesture needs "previous" and "next" to be on either side of ' +
-          'the "current" offset. Both cannot be above current and both cannot be below current.',
-      );
-    }
-  }
-  const isFlippedDirection = rangePrevious > rangeNext;
-  const initialDirection =
-    // If a range is specified we can imply initial direction if it's not the current
-    // value such as if the gesture starts after it has already moved.
-    currentOffset < rangeCurrent
-      ? isFlippedDirection
-      : currentOffset > rangeCurrent
-        ? !isFlippedDirection
-        : // Otherwise, look for an explicit option.
-          gestureOptions && gestureOptions.direction === 'next'
-          ? true
-          : gestureOptions && gestureOptions.direction === 'previous'
-            ? false
-            : // If no option is specified, imply from the values specified.
-              queue.initialDirection;
-  const scheduledGesture = scheduleGestureLegacy(
-    root,
-    gestureTimeline,
-    initialDirection,
-    rangePrevious,
-    rangeCurrent,
-    rangeNext,
-  );
-  // Add this particular instance to the queue.
-  // We add multiple of the same timeline even if they get batched so
-  // that if we cancel one but not the other we can keep track of this.
-  // Order doesn't matter but we insert in the beginning to avoid two fields.
-  const update: SwipeTransitionGestureUpdate = {
-    gesture: scheduledGesture,
-    prev: null,
-    next: queue.pending,
-  };
-  if (queue.pending !== null) {
-    queue.pending.prev = update;
-  }
-  queue.pending = update;
-  return function cancelGesture(): void {
-    if (update.prev === null) {
-      if (queue.pending === update) {
-        queue.pending = update.next;
-      } else {
-        // This was already cancelled. Avoid double decrementing if someone calls this twice by accident.
-        // TODO: Should we warn here about double cancelling?
-        return;
-      }
-    } else {
-      update.prev.next = update.next;
-      if (update.next !== null) {
-        update.next.prev = update.prev;
-      }
-      update.prev = null;
-      update.next = null;
-    }
-    const cancelledGestured = update.gesture;
-    // Decrement ref count of the root schedule.
-    cancelScheduledGesture(root, cancelledGestured);
-  };
-}
-
-function mountSwipeTransition<T>(
-  previous: T,
-  current: T,
-  next: T,
-): [T, StartGesture] {
-  const queue: SwipeTransitionUpdateQueue = {
-    pending: null,
-    dispatch: (null: any),
-    initialDirection: previous === current,
-  };
-  const startGestureOnHook: StartGesture = (queue.dispatch = (startGesture.bind(
-    null,
-    currentlyRenderingFiber,
-    queue,
-  ): any));
-  const hook = mountWorkInProgressHook();
-  hook.queue = queue;
-  return [current, startGestureOnHook];
-}
-
-function updateSwipeTransition<T>(
-  previous: T,
-  current: T,
-  next: T,
-): [T, StartGesture] {
-  const hook = updateWorkInProgressHook();
-  const queue: SwipeTransitionUpdateQueue = hook.queue;
-  const startGestureOnHook: StartGesture = queue.dispatch;
-  const rootRenderLanes = getWorkInProgressRootRenderLanes();
-  let value = current;
-  if (queue.pending !== null) {
-    if (isGestureRender(rootRenderLanes)) {
-      // We're inside a gesture render. We'll traverse the queue to see if
-      // this specific Hook is part of this gesture and, if so, which
-      // direction to render.
-      const root: FiberRoot | null = getWorkInProgressRoot();
-      if (root === null) {
-        throw new Error(
-          'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-        );
-      }
-      // We assume that the currently rendering gesture is the one first in the queue.
-      const rootRenderGesture = root.pendingGestures;
-      if (rootRenderGesture !== null) {
-        let update = queue.pending;
-        while (update !== null) {
-          if (rootRenderGesture === update.gesture) {
-            // We had a match, meaning we're currently rendering a direction of this
-            // hook for this gesture.
-            value = rootRenderGesture.direction ? next : previous;
-            break;
-          }
-          update = update.next;
-        }
-      }
-      // This lane cannot be cleared as long as we have active gestures.
-      markWorkInProgressReceivedUpdate();
-    }
-    // As long as there are any active gestures we need to leave the lane on
-    // in case we need to render it later. Since a gesture render doesn't commit
-    // the only time it really fully gets cleared is if something else rerenders
-    // this component after all the active gestures has cleared.
-    currentlyRenderingFiber.lanes = mergeLanes(
-      currentlyRenderingFiber.lanes,
-      GestureLane,
-    );
-  }
-  // By default, we don't know which direction we should start until a movement
-  // has happened. However, if one direction has the same value as current we
-  // know that it's probably not that direction since it won't do anything anyway.
-  // TODO: Add an explicit option to provide this.
-  queue.initialDirection = previous === current;
-  return [value, startGestureOnHook];
-}
-
 export const ContextOnlyDispatcher: Dispatcher = {
   readContext,
 
@@ -3975,10 +3866,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
-}
-if (enableSwipeTransition) {
-  (ContextOnlyDispatcher: Dispatcher).useSwipeTransition =
-    throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -4010,10 +3897,6 @@ const HooksDispatcherOnMount: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
 }
-if (enableSwipeTransition) {
-  (HooksDispatcherOnMount: Dispatcher).useSwipeTransition =
-    mountSwipeTransition;
-}
 
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
@@ -4044,10 +3927,6 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
-if (enableSwipeTransition) {
-  (HooksDispatcherOnUpdate: Dispatcher).useSwipeTransition =
-    updateSwipeTransition;
-}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -4077,10 +3956,6 @@ const HooksDispatcherOnRerender: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
-}
-if (enableSwipeTransition) {
-  (HooksDispatcherOnRerender: Dispatcher).useSwipeTransition =
-    updateSwipeTransition;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -4282,18 +4157,6 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableSwipeTransition) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useSwipeTransition =
-      function useSwipeTransition<T>(
-        previous: T,
-        current: T,
-        next: T,
-      ): [T, StartGesture] {
-        currentHookNameInDev = 'useSwipeTransition';
-        mountHookTypesDev();
-        return mountSwipeTransition(previous, current, next);
-      };
-  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4459,18 +4322,6 @@ if (__DEV__) {
         currentHookNameInDev = 'useEffectEvent';
         updateHookTypesDev();
         return mountEvent(callback);
-      };
-  }
-  if (enableSwipeTransition) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useSwipeTransition =
-      function useSwipeTransition<T>(
-        previous: T,
-        current: T,
-        next: T,
-      ): [T, StartGesture] {
-        currentHookNameInDev = 'useSwipeTransition';
-        updateHookTypesDev();
-        return updateSwipeTransition(previous, current, next);
       };
   }
 
@@ -4640,18 +4491,6 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableSwipeTransition) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useSwipeTransition =
-      function useSwipeTransition<T>(
-        previous: T,
-        current: T,
-        next: T,
-      ): [T, StartGesture] {
-        currentHookNameInDev = 'useSwipeTransition';
-        updateHookTypesDev();
-        return updateSwipeTransition(previous, current, next);
-      };
-  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4817,18 +4656,6 @@ if (__DEV__) {
         currentHookNameInDev = 'useEffectEvent';
         updateHookTypesDev();
         return updateEvent(callback);
-      };
-  }
-  if (enableSwipeTransition) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useSwipeTransition =
-      function useSwipeTransition<T>(
-        previous: T,
-        current: T,
-        next: T,
-      ): [T, StartGesture] {
-        currentHookNameInDev = 'useSwipeTransition';
-        updateHookTypesDev();
-        return updateSwipeTransition(previous, current, next);
       };
   }
 
@@ -5023,19 +4850,6 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableSwipeTransition) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useSwipeTransition =
-      function useSwipeTransition<T>(
-        previous: T,
-        current: T,
-        next: T,
-      ): [T, StartGesture] {
-        currentHookNameInDev = 'useSwipeTransition';
-        warnInvalidHookAccess();
-        mountHookTypesDev();
-        return mountSwipeTransition(previous, current, next);
-      };
-  }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5228,19 +5042,6 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableSwipeTransition) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useSwipeTransition =
-      function useSwipeTransition<T>(
-        previous: T,
-        current: T,
-        next: T,
-      ): [T, StartGesture] {
-        currentHookNameInDev = 'useSwipeTransition';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return updateSwipeTransition(previous, current, next);
-      };
-  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5431,19 +5232,6 @@ if (__DEV__) {
         warnInvalidHookAccess();
         updateHookTypesDev();
         return updateEvent(callback);
-      };
-  }
-  if (enableSwipeTransition) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useSwipeTransition =
-      function useSwipeTransition<T>(
-        previous: T,
-        current: T,
-        next: T,
-      ): [T, StartGesture] {
-        currentHookNameInDev = 'useSwipeTransition';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return updateSwipeTransition(previous, current, next);
       };
   }
 }

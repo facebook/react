@@ -4,6 +4,8 @@ import Theme, {ThemeToggleButton} from './Theme';
 
 import './Chrome.css';
 
+import LargeContent from './LargeContent';
+
 export default class Chrome extends Component {
   state = {theme: 'light'};
   render() {
@@ -25,7 +27,6 @@ export default class Chrome extends Component {
           />
           <Suspense fallback="Loading...">
             <Theme.Provider value={this.state.theme}>
-              {this.props.children}
               <div>
                 <ThemeToggleButton
                   onChange={theme => {
@@ -35,7 +36,13 @@ export default class Chrome extends Component {
                   }}
                 />
               </div>
+              {this.props.children}
             </Theme.Provider>
+          </Suspense>
+          <p>This should appear in the first paint.</p>
+          <Suspense fallback="Loading...">
+            <p>This content should not block paint.</p>
+            <LargeContent />
           </Suspense>
           <script
             dangerouslySetInnerHTML={{

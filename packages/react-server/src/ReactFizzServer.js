@@ -16,12 +16,14 @@ import type {
   ReactNodeList,
   ReactContext,
   ReactConsumerType,
-  OffscreenMode,
   Wakeable,
   Thenable,
   ReactFormState,
   ReactComponentInfo,
   ReactDebugInfo,
+  ViewTransitionProps,
+  ActivityProps,
+  SuspenseProps,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -35,6 +37,7 @@ import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
 import type {ThenableState} from './ReactFizzThenable';
+
 import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 
 import {
@@ -47,10 +50,13 @@ import {
   flushBuffered,
   close,
   closeWithError,
+  byteLengthOfChunk,
 } from './ReactServerStreamConfig';
 import {
   writeCompletedRoot,
   writePlaceholder,
+  pushStartActivityBoundary,
+  pushEndActivityBoundary,
   writeStartCompletedSuspenseBoundary,
   writeStartPendingSuspenseBoundary,
   writeStartClientRenderedSuspenseBoundary,
@@ -343,6 +349,7 @@ export opaque type Request = {
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
   completedPreambleSegments: null | Array<Array<Segment>>, // contains the ready-to-flush segments that make up the preamble
+  byteSize: number, // counts the number of bytes accumulated in the shell
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
   // Queues to flush in order of priority
@@ -393,6 +400,13 @@ type Preamble = PreambleState;
 // 500 * 1024 / 8 * .8 * 0.5 / 2
 const DEFAULT_PROGRESSIVE_CHUNK_SIZE = 12800;
 
+function isEligibleForOutlining(
+  request: Request,
+  boundary: SuspenseBoundary,
+): boolean {
+  return boundary.byteSize > request.progressiveChunkSize;
+}
+
 function defaultErrorHandler(error: mixed) {
   if (
     typeof error === 'object' &&
@@ -442,6 +456,7 @@ function RequestInstance(
   this.pendingRootTasks = 0;
   this.completedRootSegment = null;
   this.completedPreambleSegments = null;
+  this.byteSize = 0;
   this.abortableTasks = abortSet;
   this.pingedTasks = pingedTasks;
   this.clientRenderedBoundaries = ([]: Array<SuspenseBoundary>);
@@ -1122,7 +1137,7 @@ function renderSuspenseBoundary(
   request: Request,
   someTask: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: SuspenseProps,
 ): void {
   if (someTask.replay !== null) {
     // If we're replaying through this pass, it means we're replaying through
@@ -1230,6 +1245,7 @@ function renderSuspenseBoundary(
         boundarySegment.textEmbedded,
       );
       boundarySegment.status = COMPLETED;
+      finishedSegment(request, parentBoundary, boundarySegment);
     } catch (thrownValue: mixed) {
       if (request.status === ABORTING) {
         boundarySegment.status = ABORTED;
@@ -1296,20 +1312,24 @@ function renderSuspenseBoundary(
         contentRootSegment.textEmbedded,
       );
       contentRootSegment.status = COMPLETED;
+      finishedSegment(request, newBoundary, contentRootSegment);
       queueCompletedSegment(newBoundary, contentRootSegment);
       if (newBoundary.pendingTasks === 0 && newBoundary.status === PENDING) {
         // This must have been the last segment we were waiting on. This boundary is now complete.
-        // Therefore we won't need the fallback. We early return so that we don't have to create
-        // the fallback.
         newBoundary.status = COMPLETED;
-        if (request.pendingRootTasks === 0 && task.blockedPreamble) {
-          // The root is complete and this boundary may contribute part of the preamble.
-          // We eagerly attempt to prepare the preamble here because we expect most requests
-          // to have few boundaries which contribute preambles and it allow us to do this
-          // preparation work during the work phase rather than the when flushing.
-          preparePreamble(request);
+        // Therefore we won't need the fallback. We early return so that we don't have to create
+        // the fallback. However, if this boundary ended up big enough to be eligible for outlining
+        // we can't do that because we might still need the fallback if we outline it.
+        if (!isEligibleForOutlining(request, newBoundary)) {
+          if (request.pendingRootTasks === 0 && task.blockedPreamble) {
+            // The root is complete and this boundary may contribute part of the preamble.
+            // We eagerly attempt to prepare the preamble here because we expect most requests
+            // to have few boundaries which contribute preambles and it allow us to do this
+            // preparation work during the work phase rather than the when flushing.
+            preparePreamble(request);
+          }
+          return;
         }
-        return;
       }
     } catch (thrownValue: mixed) {
       newBoundary.status = CLIENT_RENDERED;
@@ -2200,23 +2220,46 @@ function renderLazyComponent(
   renderElement(request, task, keyPath, Component, resolvedProps, ref);
 }
 
-function renderOffscreen(
+function renderActivity(
   request: Request,
   task: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: ActivityProps,
 ): void {
-  const mode: ?OffscreenMode = (props.mode: any);
-  if (mode === 'hidden') {
-    // A hidden Offscreen boundary is not server rendered. Prerendering happens
-    // on the client.
+  const segment = task.blockedSegment;
+  if (segment === null) {
+    // Replay
+    const mode = props.mode;
+    if (mode === 'hidden') {
+      // A hidden Activity boundary is not server rendered. Prerendering happens
+      // on the client.
+    } else {
+      // A visible Activity boundary has its children rendered inside the boundary.
+      const prevKeyPath = task.keyPath;
+      task.keyPath = keyPath;
+      renderNode(request, task, props.children, -1);
+      task.keyPath = prevKeyPath;
+    }
   } else {
-    // A visible Offscreen boundary is treated exactly like a fragment: a
-    // pure indirection.
-    const prevKeyPath = task.keyPath;
-    task.keyPath = keyPath;
-    renderNodeDestructive(request, task, props.children, -1);
-    task.keyPath = prevKeyPath;
+    // Render
+    const mode = props.mode;
+    if (mode === 'hidden') {
+      // A hidden Activity boundary is not server rendered. Prerendering happens
+      // on the client.
+    } else {
+      // An Activity boundary is delimited so that we can hydrate it separately.
+      pushStartActivityBoundary(segment.chunks, request.renderState);
+      segment.lastPushedText = false;
+      // A visible Activity boundary has its children rendered inside the boundary.
+      const prevKeyPath = task.keyPath;
+      task.keyPath = keyPath;
+      // We use the non-destructive form because if something suspends, we still
+      // need to pop back up and finish the end comment.
+      renderNode(request, task, props.children, -1);
+      task.keyPath = prevKeyPath;
+      pushEndActivityBoundary(segment.chunks, request.renderState);
+      segment.lastPushedText = false;
+    }
   }
 }
 
@@ -2224,7 +2267,7 @@ function renderViewTransition(
   request: Request,
   task: Task,
   keyPath: KeyNode,
-  props: Object,
+  props: ViewTransitionProps,
 ) {
   const prevKeyPath = task.keyPath;
   task.keyPath = keyPath;
@@ -2291,7 +2334,7 @@ function renderElement(
       return;
     }
     case REACT_ACTIVITY_TYPE: {
-      renderOffscreen(request, task, keyPath, props);
+      renderActivity(request, task, keyPath, props);
       return;
     }
     case REACT_SUSPENSE_LIST_TYPE: {
@@ -2423,6 +2466,7 @@ function resumeNode(
     renderTask.blockedSegment = resumedSegment;
     renderNode(request, task, node, childIndex);
     resumedSegment.status = COMPLETED;
+    finishedSegment(request, blockedBoundary, resumedSegment);
     if (blockedBoundary === null) {
       request.completedRootSegment = resumedSegment;
     } else {
@@ -4244,6 +4288,27 @@ function queueCompletedSegment(
   }
 }
 
+function finishedSegment(
+  request: Request,
+  boundary: Root | SuspenseBoundary,
+  segment: Segment,
+) {
+  if (byteLengthOfChunk !== null) {
+    // Count the bytes of all the chunks of this segment.
+    const chunks = segment.chunks;
+    let segmentByteSize = 0;
+    for (let i = 0; i < chunks.length; i++) {
+      segmentByteSize += byteLengthOfChunk(chunks[i]);
+    }
+    // Accumulate on the parent boundary to power heuristics.
+    if (boundary === null) {
+      request.byteSize += segmentByteSize;
+    } else {
+      boundary.byteSize += segmentByteSize;
+    }
+  }
+}
+
 function finishedTask(
   request: Request,
   boundary: Root | SuspenseBoundary,
@@ -4290,9 +4355,13 @@ function finishedTask(
       // This needs to happen after we read the parentFlushed flags because aborting can finish
       // work which can trigger user code, which can start flushing, which can change those flags.
       // If the boundary was POSTPONED, we still need to finish the fallback first.
+      // If the boundary is eligible to be outlined during flushing we can't cancel the fallback
+      // since we might need it when it's being outlined.
       if (boundary.status === COMPLETED) {
-        boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
-        boundary.fallbackAbortableTasks.clear();
+        if (!isEligibleForOutlining(request, boundary)) {
+          boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
+          boundary.fallbackAbortableTasks.clear();
+        }
 
         if (
           request.pendingRootTasks === 0 &&
@@ -4390,6 +4459,7 @@ function retryRenderTask(
 
     task.abortSet.delete(task);
     segment.status = COMPLETED;
+    finishedSegment(request, task.blockedBoundary, segment);
     finishedTask(request, task.blockedBoundary, segment);
   } catch (thrownValue: mixed) {
     resetHooksState();
@@ -4876,7 +4946,6 @@ function flushSegment(
     return writeEndClientRenderedSuspenseBoundary(
       destination,
       request.renderState,
-      boundary.fallbackPreamble,
     );
   } else if (boundary.status !== COMPLETED) {
     if (boundary.status === PENDING) {
@@ -4902,7 +4971,7 @@ function flushSegment(
     flushSubtree(request, destination, segment, hoistableState);
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
-  } else if (boundary.byteSize > request.progressiveChunkSize) {
+  } else if (isEligibleForOutlining(request, boundary)) {
     // This boundary is large and will be emitted separately so that we can progressively show
     // other content. We add it to the queue during the flush because we have to ensure that
     // the parent flushes first so that there's something to inject it into.
@@ -4947,11 +5016,7 @@ function flushSegment(
     const contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment, hoistableState);
 
-    return writeEndCompletedSuspenseBoundary(
-      destination,
-      request.renderState,
-      boundary.contentPreamble,
-    );
+    return writeEndCompletedSuspenseBoundary(destination, request.renderState);
   }
 }
 
@@ -5134,7 +5199,11 @@ function flushCompletedQueues(
       );
       flushSegment(request, destination, completedRootSegment, null);
       request.completedRootSegment = null;
-      writeCompletedRoot(destination, request.renderState);
+      writeCompletedRoot(
+        destination,
+        request.resumableState,
+        request.renderState,
+      );
     }
 
     writeHoistables(destination, request.resumableState, request.renderState);

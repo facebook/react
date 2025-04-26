@@ -1722,6 +1722,12 @@ export function isDispatcherType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
 }
 
+export function isFireFunctionType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction'
+  );
+}
+
 export function isStableType(id: Identifier): boolean {
   return (
     isSetStateType(id) ||
@@ -1730,6 +1736,40 @@ export function isStableType(id: Identifier): boolean {
     isUseRefType(id) ||
     isStartTransitionType(id)
   );
+}
+
+export function isStableTypeContainer(id: Identifier): boolean {
+  const type_ = id.type;
+  if (type_.kind !== 'Object') {
+    return false;
+  }
+  return (
+    isUseStateType(id) || // setState
+    type_.shapeId === 'BuiltInUseActionState' || // setActionState
+    isUseReducerType(id) || // dispatcher
+    type_.shapeId === 'BuiltInUseTransition' // startTransition
+  );
+}
+
+export function evaluatesToStableTypeOrContainer(
+  env: Environment,
+  {value}: Instruction,
+): boolean {
+  if (value.kind === 'CallExpression' || value.kind === 'MethodCall') {
+    const callee =
+      value.kind === 'CallExpression' ? value.callee : value.property;
+
+    const calleeHookKind = getHookKind(env, callee.identifier);
+    switch (calleeHookKind) {
+      case 'useState':
+      case 'useReducer':
+      case 'useActionState':
+      case 'useRef':
+      case 'useTransition':
+        return true;
+    }
+  }
+  return false;
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {

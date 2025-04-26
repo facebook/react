@@ -79,7 +79,7 @@ describe('ReactDOMFizzServerNode', () => {
     });
     // with Float, we emit empty heads if they are elided when rendering <html>
     expect(output.result).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
     );
   });
 
@@ -97,7 +97,7 @@ describe('ReactDOMFizzServerNode', () => {
       pipe(writable);
     });
     expect(output.result).toMatchInlineSnapshot(
-      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script id="«R»">INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 
