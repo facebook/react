@@ -397,7 +397,7 @@ export function dehydrate(
         return object;
       }
 
-    case 'class_instance':
+    case 'class_instance': {
       isPathAllowedCheck = isPathAllowed(path);
 
       if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
@@ -433,7 +433,69 @@ export function dehydrate(
       unserializable.push(path);
 
       return value;
+    }
+    case 'error': {
+      isPathAllowedCheck = isPathAllowed(path);
 
+      if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
+        return createDehydrated(type, true, data, cleaned, path);
+      }
+
+      const value: Unserializable = {
+        unserializable: true,
+        type,
+        readonly: true,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data.name,
+      };
+
+      // name, message, stack and cause are not enumerable yet still interesting.
+      value.message = dehydrate(
+        data.message,
+        cleaned,
+        unserializable,
+        path.concat(['message']),
+        isPathAllowed,
+        isPathAllowedCheck ? 1 : level + 1,
+      );
+      value.stack = dehydrate(
+        data.stack,
+        cleaned,
+        unserializable,
+        path.concat(['stack']),
+        isPathAllowed,
+        isPathAllowedCheck ? 1 : level + 1,
+      );
+
+      if ('cause' in data) {
+        value.cause = dehydrate(
+          data.cause,
+          cleaned,
+          unserializable,
+          path.concat(['cause']),
+          isPathAllowed,
+          isPathAllowedCheck ? 1 : level + 1,
+        );
+      }
+
+      getAllEnumerableKeys(data).forEach(key => {
+        const keyAsString = key.toString();
+
+        value[keyAsString] = dehydrate(
+          data[key],
+          cleaned,
+          unserializable,
+          path.concat([keyAsString]),
+          isPathAllowed,
+          isPathAllowedCheck ? 1 : level + 1,
+        );
+      });
+
+      unserializable.push(path);
+
+      return value;
+    }
     case 'infinity':
     case 'nan':
     case 'undefined':

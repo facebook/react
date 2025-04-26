@@ -554,6 +554,7 @@ export type DataType =
   | 'class_instance'
   | 'data_view'
   | 'date'
+  | 'error'
   | 'function'
   | 'html_all_collection'
   | 'html_element'
@@ -572,6 +573,21 @@ export type DataType =
   | 'typed_array'
   | 'undefined'
   | 'unknown';
+
+function isError(data: Object): boolean {
+  // If it doesn't event look like an error, it won't be an actual error.
+  if ('name' in data && 'message' in data) {
+    while (data) {
+      // $FlowFixMe[method-unbinding]
+      if (Object.prototype.toString.call(data) === '[object Error]') {
+        return true;
+      }
+      data = Object.getPrototypeOf(data);
+    }
+  }
+
+  return false;
+}
 
 /**
  * Get a enhanced/artificial type string based on the object instance
@@ -634,6 +650,8 @@ export function getDataType(data: Object): DataType {
         return 'regexp';
       } else if (typeof data.then === 'function') {
         return 'thenable';
+      } else if (isError(data)) {
+        return 'error';
       } else {
         // $FlowFixMe[method-unbinding]
         const toStringValue = Object.prototype.toString.call(data);
@@ -996,6 +1014,8 @@ export function formatDataForPreview(
       } else {
         return '{…}';
       }
+    case 'error':
+      return truncateForDisplay(String(data));
     case 'boolean':
     case 'number':
     case 'infinity':
