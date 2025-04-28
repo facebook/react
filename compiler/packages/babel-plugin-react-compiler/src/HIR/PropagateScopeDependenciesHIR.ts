@@ -30,6 +30,7 @@ import {
   FunctionExpression,
   ObjectMethod,
   PropertyLiteral,
+  convertHoistedLValueKind,
 } from './HIR';
 import {
   collectHoistablePropertyLoads,
@@ -246,12 +247,10 @@ function isLoadContextMutable(
   id: InstructionId,
 ): instrValue is LoadContext {
   if (instrValue.kind === 'LoadContext') {
-    CompilerError.invariant(instrValue.place.identifier.scope != null, {
-      reason:
-        '[PropagateScopeDependencies] Expected all context variables to be assigned a scope',
-      loc: instrValue.loc,
-    });
-    return id >= instrValue.place.identifier.scope.range.end;
+    return (
+      instrValue.place.identifier.scope != null &&
+      id >= instrValue.place.identifier.scope.range.end
+    );
   }
   return false;
 }
@@ -471,6 +470,9 @@ export class DependencyCollectionContext {
     }
     this.#reassignments.set(identifier, decl);
   }
+  hasDeclared(identifier: Identifier): boolean {
+    return this.#declarations.has(identifier.declarationId);
+  }
 
   // Checks if identifier is a valid dependency in the current scope
   #checkValidDependency(maybeDependency: ReactiveScopeDependency): boolean {
@@ -672,21 +674,21 @@ export function handleInstruction(
     });
   } else if (value.kind === 'DeclareLocal' || value.kind === 'DeclareContext') {
     /*
-     * Some variables may be declared and never initialized. We need
-     * to retain (and hoist) these declarations if they are included
-     * in a reactive scope. One approach is to simply add all `DeclareLocal`s
-     * as scope declarations.
+     * Some variables may be declared and never initialized. We need to retain
+     * (and hoist) these declarations if they are included in a reactive scope.
+     * One approach is to simply add all `DeclareLocal`s as scope declarations.
+     *
+     * Context variables with hoisted declarations only become live after their
+     * first assignment. We only declare real DeclareLocal / DeclareContext
+     * instructions (not hoisted ones) to avoid generating dependencies on
+     * hoisted declarations.
      */
-
-    /*
-     * We add context variable declarations here, not at `StoreContext`, since
-     * context Store / Loads are modeled as reads and mutates to the underlying
-     * variable reference (instead of through intermediate / inlined temporaries)
-     */
-    context.declare(value.lvalue.place.identifier, {
-      id,
-      scope: context.currentScope,
-    });
+    if (convertHoistedLValueKind(value.lvalue.kind) === null) {
+      context.declare(value.lvalue.place.identifier, {
+        id,
+        scope: context.currentScope,
+      });
+    }
   } else if (value.kind === 'Destructure') {
     context.visitOperand(value.value);
     for (const place of eachPatternOperand(value.lvalue.pattern)) {
@@ -697,6 +699,26 @@ export function handleInstruction(
         id,
         scope: context.currentScope,
       });
+    }
+  } else if (value.kind === 'StoreContext') {
+    /**
+     * Some StoreContext variables have hoisted declarations. If we're storing
+     * to a context variable that hasn't yet been declared, the StoreContext is
+     * the declaration.
+     * (see corresponding logic in PruneHoistedContext)
+     */
+    if (
+      !context.hasDeclared(value.lvalue.place.identifier) ||
+      value.lvalue.kind !== InstructionKind.Reassign
+    ) {
+      context.declare(value.lvalue.place.identifier, {
+        id,
+        scope: context.currentScope,
+      });
+    }
+
+    for (const operand of eachInstructionValueOperand(value)) {
+      context.visitOperand(operand);
     }
   } else {
     for (const operand of eachInstructionValueOperand(value)) {
