@@ -20,6 +20,7 @@ import * as cheerio from 'cheerio';
 import {queryAlgolia} from './utils/algolia';
 import assertExhaustive from './utils/assertExhaustive';
 import {convert} from 'html-to-text';
+import {measurePerformance} from './utils/runtimePerf';
 
 const server = new McpServer({
   name: 'React',
@@ -357,13 +358,43 @@ server.tool('review-react-runtime', 'Review the runtime of the code and get perf
   text: z.string(),
 },
 async ({text}) => {
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text: `LOOKS GOOD TO ME! ${text}`
-      }
-    ]
+  try {
+    const performanceResults = await measurePerformance(text);
+
+    const formattedResults = `
+# React Component Performance Results
+
+## Render Time
+${performanceResults.renderTime.toFixed(2)}ms
+
+## Web Vitals
+- Cumulative Layout Shift (CLS): ${performanceResults.webVitals.cls?.value.toFixed(3) || 'N/A'}
+- Largest Contentful Paint (LCP): ${performanceResults.webVitals.lcp?.value.toFixed(0) || 'N/A'}ms
+- Interaction to Next Paint (INP): ${performanceResults.webVitals.inp?.value.toFixed(0) || 'N/A'}ms
+- First Input Delay (FID): ${performanceResults.webVitals.fid?.value.toFixed(0) || 'N/A'}ms
+- Time to First Byte (TTFB): ${performanceResults.webVitals.ttfb?.value.toFixed(0) || 'N/A'}ms
+
+These metrics can help you evaluate the performance of your React component. Lower values generally indicate better performance.
+`;
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: formattedResults
+        }
+      ]
+    };
+  } catch (error) {
+    return {
+      isError: true,
+      content: [
+        {
+          type: 'text' as const,
+          text: `Error measuring performance: ${error.message}\n\n${error.stack}`
+        }
+      ]
+    };
   }
 });
 
