@@ -148,6 +148,7 @@ const TreeStateContext: ReactContext<StateContext> =
   createContext<StateContext>(((null: any): StateContext));
 TreeStateContext.displayName = 'TreeStateContext';
 
+// TODO: `dispatch` is an Action and should be named accordingly.
 const TreeDispatcherContext: ReactContext<DispatcherContext> =
   createContext<DispatcherContext>(((null: any): DispatcherContext));
 TreeDispatcherContext.displayName = 'TreeDispatcherContext';
@@ -953,7 +954,7 @@ function TreeContextController({
 
   return (
     <TreeStateContext.Provider value={state}>
-      <TreeDispatcherContext.Provider value={dispatch}>
+      <TreeDispatcherContext.Provider value={transitionDispatch}>
         {children}
       </TreeDispatcherContext.Provider>
     </TreeStateContext.Provider>
