@@ -169,7 +169,7 @@ describe('ReactTransition', () => {
   }
 
   // @gate enableLegacyCache
-  it('commits outside a suspended Suspense boundary', async () => {
+  it('does not commit outside a suspended Suspense boundary', async () => {
     const neverResolve = new Promise(() => {});
 
     function App({step, shouldSuspend}) {
@@ -198,7 +198,9 @@ describe('ReactTransition', () => {
       });
     });
     assertLog(['A1', 'Suspend! [B1]', 'Loading1']);
-    expect(root).toMatchRenderedOutput('A1');
+    // We don't commit a partial tree outside the boundary since that could lead
+    // to a teared UI.
+    expect(root).toMatchRenderedOutput('A0');
   });
 
   // @gate enableLegacyCache
