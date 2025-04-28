@@ -695,6 +695,7 @@ export function resetResumableState(
   resumableState.scriptResources = {};
   resumableState.moduleUnknownResources = {};
   resumableState.moduleScriptResources = {};
+  resumableState.instructions = NothingSent; // Nothing was flushed so no instructions could've flushed.
 }
 
 export function completeResumableState(resumableState: ResumableState): void {
