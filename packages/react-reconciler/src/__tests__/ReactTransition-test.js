@@ -168,6 +168,7 @@ describe('ReactTransition', () => {
     }
   }
 
+  // @gate enableLegacyCache
   it('commits outside a suspended Suspense boundary', async () => {
     const neverResolve = new Promise(() => {});
 
