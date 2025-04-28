@@ -19,6 +19,7 @@ import type {Lanes} from './ReactFiberLane';
 import type {ThenableState} from './ReactFiberThenable';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import findIndicesOfNumbersNotInLIS from 'react-reconciler/src/findIndicesOfNumbersNotInLIS';
 import {
   Placement,
   ChildDeletion,
@@ -448,36 +449,6 @@ function createChildReconciler(
     return clone;
   }
 
-  function placeChild(
-    newFiber: Fiber,
-    lastPlacedIndex: number,
-    newIndex: number,
-  ): number {
-    newFiber.index = newIndex;
-    if (!shouldTrackSideEffects) {
-      // During hydration, the useId algorithm needs to know which fibers are
-      // part of a list of children (arrays, iterators).
-      newFiber.flags |= Forked;
-      return lastPlacedIndex;
-    }
-    const current = newFiber.alternate;
-    if (current !== null) {
-      const oldIndex = current.index;
-      if (oldIndex < lastPlacedIndex) {
-        // This is a move.
-        newFiber.flags |= Placement | PlacementDEV;
-        return lastPlacedIndex;
-      } else {
-        // This item can stay in place.
-        return oldIndex;
-      }
-    } else {
-      // This is an insertion.
-      newFiber.flags |= Placement | PlacementDEV;
-      return lastPlacedIndex;
-    }
-  }
-
   function placeSingleChild(newFiber: Fiber): Fiber {
     // This is simpler for the single child case. We only need to do a
     // placement for inserting new children.
@@ -485,6 +456,70 @@ function createChildReconciler(
       newFiber.flags |= Placement | PlacementDEV;
     }
     return newFiber;
+  }
+
+  function placeChildren(firstChildFiber: Fiber | null): void {
+    if (firstChildFiber === null) {
+      return;
+    }
+
+    let updatedFibers: Array<Fiber> | null = null;
+    let updatedFibersOldIndices: Array<number> | null = null;
+
+    let nextFiber: Fiber | null = firstChildFiber;
+    while (nextFiber !== null) {
+      if (!shouldTrackSideEffects) {
+        // During hydration, the useId algorithm needs to know which fibers are
+        // part of a list of children (arrays, iterators).
+        nextFiber.flags |= Forked;
+        nextFiber = nextFiber.sibling;
+        continue;
+      }
+
+      const oldFiber = nextFiber.alternate;
+      if (oldFiber !== null) {
+        // This is an update. Defer placement calculation.
+        (updatedFibers || (updatedFibers = [])).push(nextFiber);
+        (updatedFibersOldIndices || (updatedFibersOldIndices = [])).push(
+          oldFiber.index,
+        );
+      } else {
+        // This is an insertion.
+        nextFiber.flags |= Placement | PlacementDEV;
+      }
+
+      nextFiber = nextFiber.sibling;
+    }
+
+    if (
+      updatedFibers === null ||
+      updatedFibersOldIndices === null || // make flow happy
+      updatedFibers.length <= 1
+    ) {
+      // No updated fibers or only one. A single updated fiber can stay,
+      // because it's either a single child or all other children are insertions
+      // and will be placed around it appropriately during commit.
+      return;
+    }
+
+    // Now that we have updated fibers old indices in the order they appear in the
+    // new list, we will find which elements inside of updatedFibersOldIndices
+    // do not belong to the longest increasing subsequence (LIS). All elements
+    // within the LIS can preserve their relative order and all non-LIS elements
+    // must be moved (placed).
+    //
+    // For example, if updatedFibersOldIndices is [0, 1, 5, 2, 3, 4],
+    // findIndicesOfMembersNotInLIS will return [2 (index of 5)].
+    // Because both updatedFibersOldIndices and updatedFibers are in the same order,
+    // we can use that index to access the corresponding fiber and mark it for placement.
+    const updatedFibersIndicesToMarkForPlacement = findIndicesOfNumbersNotInLIS(
+      updatedFibersOldIndices,
+    );
+
+    for (let i = 0; i < updatedFibersIndicesToMarkForPlacement.length; i++) {
+      const updatedFiberIdx = updatedFibersIndicesToMarkForPlacement[i];
+      updatedFibers[updatedFiberIdx].flags |= Placement | PlacementDEV;
+    }
   }
 
   function updateTextNode(
@@ -1139,7 +1174,6 @@ function createChildReconciler(
     let previousNewFiber: Fiber | null = null;
 
     let oldFiber = currentFirstChild;
-    let lastPlacedIndex = 0;
     let newIdx = 0;
     let nextOldFiber = null;
     for (; oldFiber !== null && newIdx < newChildren.length; newIdx++) {
@@ -1182,7 +1216,7 @@ function createChildReconciler(
           deleteChild(returnFiber, oldFiber);
         }
       }
-      lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+      newFiber.index = newIdx;
       if (previousNewFiber === null) {
         // TODO: Move out of the loop. This only happens for the first run.
         resultingFirstChild = newFiber;
@@ -1200,6 +1234,7 @@ function createChildReconciler(
     if (newIdx === newChildren.length) {
       // We've reached the end of the new children. We can delete the rest.
       deleteRemainingChildren(returnFiber, oldFiber);
+      placeChildren(resultingFirstChild);
       if (getIsHydrating()) {
         const numberOfForks = newIdx;
         pushTreeFork(returnFiber, numberOfForks);
@@ -1223,7 +1258,7 @@ function createChildReconciler(
             knownKeys,
           );
         }
-        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+        newFiber.index = newIdx;
         if (previousNewFiber === null) {
           // TODO: Move out of the loop. This only happens for the first run.
           resultingFirstChild = newFiber;
@@ -1232,6 +1267,7 @@ function createChildReconciler(
         }
         previousNewFiber = newFiber;
       }
+      placeChildren(resultingFirstChild);
       if (getIsHydrating()) {
         const numberOfForks = newIdx;
         pushTreeFork(returnFiber, numberOfForks);
@@ -1271,7 +1307,7 @@ function createChildReconciler(
             );
           }
         }
-        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+        newFiber.index = newIdx;
         if (previousNewFiber === null) {
           resultingFirstChild = newFiber;
         } else {
@@ -1287,6 +1323,7 @@ function createChildReconciler(
       existingChildren.forEach(child => deleteChild(returnFiber, child));
     }
 
+    placeChildren(resultingFirstChild);
     if (getIsHydrating()) {
       const numberOfForks = newIdx;
       pushTreeFork(returnFiber, numberOfForks);
@@ -1430,7 +1467,6 @@ function createChildReconciler(
     let previousNewFiber: Fiber | null = null;
 
     let oldFiber = currentFirstChild;
-    let lastPlacedIndex = 0;
     let newIdx = 0;
     let nextOldFiber = null;
 
@@ -1476,7 +1512,7 @@ function createChildReconciler(
           deleteChild(returnFiber, oldFiber);
         }
       }
-      lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+      newFiber.index = newIdx;
       if (previousNewFiber === null) {
         // TODO: Move out of the loop. This only happens for the first run.
         resultingFirstChild = newFiber;
@@ -1494,6 +1530,7 @@ function createChildReconciler(
     if (step.done) {
       // We've reached the end of the new children. We can delete the rest.
       deleteRemainingChildren(returnFiber, oldFiber);
+      placeChildren(resultingFirstChild);
       if (getIsHydrating()) {
         const numberOfForks = newIdx;
         pushTreeFork(returnFiber, numberOfForks);
@@ -1517,7 +1554,7 @@ function createChildReconciler(
             knownKeys,
           );
         }
-        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+        newFiber.index = newIdx;
         if (previousNewFiber === null) {
           // TODO: Move out of the loop. This only happens for the first run.
           resultingFirstChild = newFiber;
@@ -1526,6 +1563,7 @@ function createChildReconciler(
         }
         previousNewFiber = newFiber;
       }
+      placeChildren(resultingFirstChild);
       if (getIsHydrating()) {
         const numberOfForks = newIdx;
         pushTreeFork(returnFiber, numberOfForks);
@@ -1565,7 +1603,7 @@ function createChildReconciler(
             );
           }
         }
-        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+        newFiber.index = newIdx;
         if (previousNewFiber === null) {
           resultingFirstChild = newFiber;
         } else {
@@ -1580,7 +1618,7 @@ function createChildReconciler(
       // to add them to the deletion list.
       existingChildren.forEach(child => deleteChild(returnFiber, child));
     }
-
+    placeChildren(resultingFirstChild);
     if (getIsHydrating()) {
       const numberOfForks = newIdx;
       pushTreeFork(returnFiber, numberOfForks);

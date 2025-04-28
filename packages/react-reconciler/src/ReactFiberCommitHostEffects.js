@@ -346,6 +346,60 @@ function getHostSibling(fiber: Fiber): ?Instance {
   }
 }
 
+// Cache used during the placement commit to optimize finding host siblings.
+// Reset via resetPlacementCommitCache() before the walk begins.
+type PlacementCommitCacheEntry = {
+  lastPlacedChild: Fiber | null,
+  cachedNextHostSibling: ?Instance,
+};
+let placementCommitCache: Map<Fiber, PlacementCommitCacheEntry> | null = null;
+
+export function resetPlacementCommitCache() {
+  placementCommitCache = null;
+}
+
+// Retrieves or creates the placement commit cache entry for a given fiber.
+export function getPlacementCommitCacheEntry(
+  fiber: Fiber,
+): PlacementCommitCacheEntry {
+  const cache = placementCommitCache || (placementCommitCache = new Map());
+  let entry = cache.get(fiber);
+  if (entry === undefined) {
+    entry = {
+      lastPlacedChild: null,
+      cachedNextHostSibling: null,
+    };
+    cache.set(fiber, entry);
+  }
+  return entry;
+}
+
+function getHostSiblingCached(fiber: Fiber): ?Instance {
+  const parent = fiber.return;
+  if (parent === null) {
+    return getHostSibling(fiber);
+  }
+
+  const parentCacheEntry = getPlacementCommitCacheEntry(parent);
+  // Optimization: If the current fiber is the direct sibling of the last placed child
+  // under this parent, we can reuse the cached host sibling to avoid tree traversal.
+  if (
+    parentCacheEntry.lastPlacedChild !== null &&
+    parentCacheEntry.lastPlacedChild.sibling === fiber
+  ) {
+    parentCacheEntry.lastPlacedChild = fiber;
+    return parentCacheEntry.cachedNextHostSibling;
+  }
+
+  // Cache miss or first child for this parent in this pass.
+  // Find the actual host sibling by traversing and update the cache.
+  const hostSibling = getHostSibling(fiber);
+  parentCacheEntry.lastPlacedChild = fiber;
+  parentCacheEntry.cachedNextHostSibling = hostSibling;
+
+  return hostSibling;
+}
+
 function insertOrAppendPlacementNodeIntoContainer(
   node: Fiber,
   before: ?Instance,
@@ -505,7 +559,7 @@ function commitPlacement(finishedWork: Fiber): void {
     case HostSingleton: {
       if (supportsSingletons) {
         const parent: Instance = hostParentFiber.stateNode;
-        const before = getHostSibling(finishedWork);
+        const before = getHostSiblingCached(finishedWork);
         // We only have the top Fiber that was inserted but we need to recurse down its
         // children to find all the terminal nodes.
         insertOrAppendPlacementNode(
@@ -527,7 +581,7 @@ function commitPlacement(finishedWork: Fiber): void {
         hostParentFiber.flags &= ~ContentReset;
       }
 
-      const before = getHostSibling(finishedWork);
+      const before = getHostSiblingCached(finishedWork);
       // We only have the top Fiber that was inserted but we need to recurse down its
       // children to find all the terminal nodes.
       insertOrAppendPlacementNode(
@@ -541,7 +595,7 @@ function commitPlacement(finishedWork: Fiber): void {
     case HostRoot:
     case HostPortal: {
       const parent: Container = hostParentFiber.stateNode.containerInfo;
-      const before = getHostSibling(finishedWork);
+      const before = getHostSiblingCached(finishedWork);
       insertOrAppendPlacementNodeIntoContainer(
         finishedWork,
         before,

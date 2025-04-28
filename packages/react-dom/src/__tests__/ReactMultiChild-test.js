@@ -287,6 +287,70 @@ describe('ReactMultiChild', () => {
           '    in div (at **)',
       ]);
     });
+
+    it('should correctly reorder iterable and non-iterable children', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      const containerIterable = document.createElement('div');
+      const rootIterable = ReactDOMClient.createRoot(containerIterable);
+
+      function createIterable(array) {
+        return {
+          [Symbol.iterator]: function () {
+            let i = 0;
+            return {
+              next() {
+                const next = {
+                  value: i < array.length ? array[i] : undefined,
+                  done: i === array.length,
+                };
+                i++;
+                return next;
+              },
+            };
+          },
+        };
+      }
+
+      async function renderCharsAndAssertDom(chars) {
+        const charsChildren = chars
+          .split('')
+          .map(char => <div key={char}>{char}</div>);
+
+        // Non-iterable
+        await act(async () => {
+          root.render(<div>{charsChildren}</div>);
+        });
+        expect(container.textContent).toBe(chars);
+
+        // Iterable
+        await act(async () => {
+          rootIterable.render(<div>{createIterable(charsChildren)}</div>);
+        });
+        expect(containerIterable.textContent).toBe(chars);
+      }
+
+      await renderCharsAndAssertDom('ABCDEFGH');
+      // Switch first and last
+      await renderCharsAndAssertDom('HBCDEFGA');
+      // Remove item in the middle
+      await renderCharsAndAssertDom('HBCDFGA');
+      // Add removed item in front
+      await renderCharsAndAssertDom('EHBCDFGA');
+      // Remove every second item
+      await renderCharsAndAssertDom('EBDGA');
+      // Insert removed items back
+      await renderCharsAndAssertDom('EHBCDFGA');
+      // Clear all items except one
+      await renderCharsAndAssertDom('D');
+      // Render original order
+      await renderCharsAndAssertDom('ABCDEFGH');
+      // Reverse order
+      await renderCharsAndAssertDom('HGFEDCBA');
+      // Clear all items
+      await renderCharsAndAssertDom('');
+    });
   });
 
   it('should warn for using maps as children with owner info', async () => {

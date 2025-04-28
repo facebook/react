@@ -245,6 +245,7 @@ import {
   commitHostSingletonRelease,
   commitFragmentInstanceDeletionEffects,
   commitFragmentInstanceInsertionEffects,
+  resetPlacementCommitCache,
 } from './ReactFiberCommitHostEffects';
 import {
   trackEnterViewTransitions,
@@ -1927,8 +1928,9 @@ export function commitMutationEffects(
   rootViewTransitionAffected = false;
 
   resetComponentEffectTimers();
-
+  resetPlacementCommitCache();
   commitMutationEffectsOnFiber(finishedWork, root, committedLanes);
+  resetPlacementCommitCache();
 
   inProgressLanes = null;
   inProgressRoot = null;
