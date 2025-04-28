@@ -368,11 +368,11 @@ async ({text}) => {
 ${performanceResults.renderTime.toFixed(2)}ms
 
 ## Web Vitals
-- Cumulative Layout Shift (CLS): ${performanceResults.webVitals.cls?.value.toFixed(3) || 'N/A'}
-- Largest Contentful Paint (LCP): ${performanceResults.webVitals.lcp?.value.toFixed(0) || 'N/A'}ms
-- Interaction to Next Paint (INP): ${performanceResults.webVitals.inp?.value.toFixed(0) || 'N/A'}ms
-- First Input Delay (FID): ${performanceResults.webVitals.fid?.value.toFixed(0) || 'N/A'}ms
-- Time to First Byte (TTFB): ${performanceResults.webVitals.ttfb?.value.toFixed(0) || 'N/A'}ms
+- Cumulative Layout Shift (CLS): ${performanceResults.webVitals.cls?.value || 'N/A'}
+- Largest Contentful Paint (LCP): ${performanceResults.webVitals.lcp?.value || 'N/A'}ms
+- Interaction to Next Paint (INP): ${performanceResults.webVitals.inp?.value || 'N/A'}ms
+- First Input Delay (FID): ${performanceResults.webVitals.fid?.value || 'N/A'}ms
+- Time to First Byte (TTFB): ${performanceResults.webVitals.ttfb?.value || 'N/A'}ms
 
 These metrics can help you evaluate the performance of your React component. Lower values generally indicate better performance.
 `;
