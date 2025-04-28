@@ -130,6 +130,14 @@ const usedRejectedPromise = Promise.reject(
   new Error('test-error-do-not-surface'),
 );
 
+class DigestError extends Error {
+  digest: string;
+  constructor(message: string, options: any, digest: string) {
+    super(message, options);
+    this.digest = digest;
+  }
+}
+
 export default function Hydration(): React.Node {
   return (
     <Fragment>
@@ -149,6 +157,13 @@ export default function Hydration(): React.Node {
         usedFulfilledRichPromise={usedFulfilledRichPromise}
         usedPendingPromise={usedPendingPromise}
         usedRejectedPromise={usedRejectedPromise}
+        // eslint-disable-next-line react-internal/prod-error-codes
+        error={new Error('test')}
+        // eslint-disable-next-line react-internal/prod-error-codes
+        errorWithCause={new Error('one', {cause: new TypeError('two')})}
+        errorWithDigest={new DigestError('test', {}, 'some-digest')}
+        // $FlowFixMe[cannot-resolve-name] Flow doesn't know about DOMException
+        domexception={new DOMException('test')}
       />
       <DeepHooks />
     </Fragment>

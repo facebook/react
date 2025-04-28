@@ -906,8 +906,8 @@ describe('InspectedElement', () => {
         },
         "usedRejectedPromise": {
           "reason": Dehydrated {
-            "preview_short": Error,
-            "preview_long": Error,
+            "preview_short": Error: test-error-do-not-surface,
+            "preview_long": Error: test-error-do-not-surface,
           },
         },
       }
