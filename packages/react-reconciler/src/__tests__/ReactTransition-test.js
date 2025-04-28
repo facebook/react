@@ -168,6 +168,38 @@ describe('ReactTransition', () => {
     }
   }
 
+  it('commits outside a suspended Suspense boundary', async () => {
+    const neverResolve = new Promise(() => {});
+
+    function App({step, shouldSuspend}) {
+      return (
+        <>
+          <Text text={`A${step}`} />
+          <Suspense fallback={<Text text={`Loading${step}`} />}>
+            {shouldSuspend ? <AsyncText text={`B${step}`} /> : null}
+          </Suspense>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    await act(() => {
+      root.render(<App step={0} shouldSuspend={false} />);
+    });
+
+    assertLog(['A0']);
+    expect(root).toMatchRenderedOutput('A0');
+
+    await act(() => {
+      startTransition(() => {
+        root.render(<App step={1} shouldSuspend={true} />);
+      });
+    });
+    assertLog(['A1', 'Suspend! [B1]', 'Loading1']);
+    expect(root).toMatchRenderedOutput('A1');
+  });
+
   // @gate enableLegacyCache
   it('isPending works even if called from outside an input event', async () => {
     let start;
