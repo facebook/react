@@ -22,10 +22,10 @@
     "start": "node bin.js"
   },
   "dependencies": {
-    "cross-spawn": "^5.0.1",
-    "electron": "^23.1.2",
+    "cross-spawn": "^6.0.6",
+    "electron": "^24.8.5",
     "internal-ip": "^6.2.0",
-    "minimist": "^1.2.3",
+    "minimist": "^1.2.6",
     "react-devtools-core": "6.1.1",
     "update-notifier": "^2.1.0"
   }
