@@ -354,6 +354,16 @@ export function traverseFragmentInstance<A, B, C>(
   traverseVisibleHostChildren(fragmentFiber.child, false, fn, a, b, c);
 }
 
+export function traverseFragmentInstanceDeeply<A, B, C>(
+  fragmentFiber: Fiber,
+  fn: (Fiber, A, B, C) => boolean,
+  a: A,
+  b: B,
+  c: C,
+): void {
+  traverseVisibleHostChildren(fragmentFiber.child, true, fn, a, b, c);
+}
+
 function traverseVisibleHostChildren<A, B, C>(
   child: Fiber | null,
   searchWithinHosts: boolean,
@@ -363,24 +373,8 @@ function traverseVisibleHostChildren<A, B, C>(
   c: C,
 ): boolean {
   while (child !== null) {
-    if (child.tag === HostComponent) {
-      if (fn(child, a, b, c)) {
-        return true;
-      }
-      if (searchWithinHosts) {
-        if (
-          traverseVisibleHostChildren(
-            child.child,
-            searchWithinHosts,
-            fn,
-            a,
-            b,
-            c,
-          )
-        ) {
-          return true;
-        }
-      }
+    if (child.tag === HostComponent && fn(child, a, b, c)) {
+      return true;
     } else if (
       child.tag === OffscreenComponent &&
       child.memoizedState !== null
@@ -388,6 +382,7 @@ function traverseVisibleHostChildren<A, B, C>(
       // Skip hidden subtrees
     } else {
       if (
+        (searchWithinHosts || child.tag !== HostComponent) &&
         traverseVisibleHostChildren(child.child, searchWithinHosts, fn, a, b, c)
       ) {
         return true;
