@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<567daf56c9bec1598de3d0108311e62b>>
+ * @generated SignedSource<<6b7daed9e669f9c8306753763956f3b4>>
  */
 
 /*
@@ -5440,10 +5440,11 @@ function ensureFormComponentIsStateful(formFiber) {
   return existingStateHook;
 }
 function requestFormReset$2(formFiber) {
-  var resetStateQueue = ensureFormComponentIsStateful(formFiber).next.queue;
+  var stateHook = ensureFormComponentIsStateful(formFiber);
+  null === stateHook.next && (stateHook = formFiber.alternate.memoizedState);
   dispatchSetStateInternal(
     formFiber,
-    resetStateQueue,
+    stateHook.next.queue,
     {},
     requestUpdateLane(formFiber)
   );
@@ -16345,14 +16346,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1839 = React.version;
 if (
-  "19.2.0-native-fb-0038c501-20250429" !==
+  "19.2.0-native-fb-88b97674-20250429" !==
   isomorphicReactPackageVersion$jscomp$inline_1839
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1839,
-      "19.2.0-native-fb-0038c501-20250429"
+      "19.2.0-native-fb-88b97674-20250429"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16374,10 +16375,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2319 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-0038c501-20250429",
+  version: "19.2.0-native-fb-88b97674-20250429",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-0038c501-20250429"
+  reconcilerVersion: "19.2.0-native-fb-88b97674-20250429"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2320 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16635,4 +16636,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-0038c501-20250429";
+exports.version = "19.2.0-native-fb-88b97674-20250429";
