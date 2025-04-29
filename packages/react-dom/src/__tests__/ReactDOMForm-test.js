@@ -36,6 +36,7 @@ describe('ReactDOMForm', () => {
   let Scheduler;
   let assertLog;
   let assertConsoleErrorDev;
+  let waitForMicrotasks;
   let waitForThrow;
   let useState;
   let Suspense;
@@ -55,6 +56,7 @@ describe('ReactDOMForm', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
+    waitForMicrotasks = require('internal-test-utils').waitForMicrotasks;
     waitForThrow = require('internal-test-utils').waitForThrow;
     assertConsoleErrorDev =
       require('internal-test-utils').assertConsoleErrorDev;
@@ -1671,18 +1673,9 @@ describe('ReactDOMForm', () => {
   });
 
   it('multiple form submissions in rapid succession do not throw', async () => {
-    const submitFormTwiceButtonRef = React.createRef();
+    const formRef = React.createRef();
     let actionCounter = 0;
     function App() {
-      const formRef = React.createRef();
-      // Submits the form twice in quick succession
-      // This simulates a user clicking a button twice in rapid succession
-      async function submitFormTwice() {
-        formRef.current.requestSubmit();
-        await new Promise(res => setTimeout(res, 1));
-        formRef.current.requestSubmit();
-      }
-
       // This is a userspace action. it must take a non-zero amount of time to
       // allow the form to be submitted again before the first one finishes.
       // Otherwise, the form transitions will be batched and will not run sepereately.
@@ -1696,9 +1689,6 @@ describe('ReactDOMForm', () => {
           <form ref={formRef} action={submitForm}>
             <button type="submit">Submit</button>
           </form>
-          <button ref={submitFormTwiceButtonRef} onClick={submitFormTwice}>
-            Submit twice
-          </button>
         </>
       );
     }
@@ -1707,7 +1697,9 @@ describe('ReactDOMForm', () => {
     await act(() => root.render(<App />));
 
     await act(async () => {
-      submitFormTwiceButtonRef.current.click();
+      formRef.current.requestSubmit();
+      await waitForMicrotasks();
+      formRef.current.requestSubmit();
     });
     expect(actionCounter).toBe(2);
   });
