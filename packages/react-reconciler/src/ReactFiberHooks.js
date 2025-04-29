@@ -3355,8 +3355,16 @@ export function requestFormReset(formFiber: Fiber) {
     );
   }
 
-  const stateHook = ensureFormComponentIsStateful(formFiber);
+  let stateHook: Hook = ensureFormComponentIsStateful(formFiber);
   const newResetState = {};
+  if (stateHook.next === null) {
+    // Hack alert. If formFiber is the workInProgress Fiber then
+    // we might get a broken intermediate state. Try the alternate
+    // instead.
+    // TODO: We should really stash the Queue somewhere stateful
+    // just like how setState binds the Queue.
+    stateHook = (formFiber.alternate: any).memoizedState;
+  }
   const resetStateHook: Hook = (stateHook.next: any);
   const resetStateQueue = resetStateHook.queue;
   dispatchSetStateInternal(
