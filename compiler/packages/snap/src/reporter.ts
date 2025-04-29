@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {BabelFileResult} from '@babel/core';
 import chalk from 'chalk';
 import fs from 'fs';
 import invariant from 'invariant';
@@ -24,6 +25,7 @@ export function writeOutputToString(
   evaluatorOutput: string | null,
   logs: string | null,
   errorMessage: string | null,
+  sourceMap: BabelFileResult['map'] | null,
 ) {
   // leading newline intentional
   let result = `
@@ -40,6 +42,14 @@ ${wrapWithTripleBackticks(compilerOutput, 'javascript')}
 `;
   } else {
     result += '\n';
+  }
+
+  if (sourceMap != null) {
+    result += `
+## Source Map
+
+${wrapWithTripleBackticks(JSON.stringify(sourceMap, null, 2))}
+`;
   }
 
   if (logs != null) {

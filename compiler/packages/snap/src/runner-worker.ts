@@ -245,6 +245,7 @@ export async function transformFixture(
     sproutOutput,
     compileResult?.logs ?? null,
     error,
+    compileResult?.sourceMap ?? null,
   );
 
   return {
