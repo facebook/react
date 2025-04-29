@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5754cca2d1255ac615656e4737b87dea>>
+ * @generated SignedSource<<01794f0b94bd85229e5725df24a38d9f>>
  */
 
 "use strict";
@@ -1297,15 +1297,15 @@ __DEV__ &&
     }
     function addNestedProperty(updatePayload, nextProp, validAttributes) {
       if (!nextProp) return updatePayload;
+      if (enableFastAddPropertiesInDiffing)
+        return fastAddProperties(updatePayload, nextProp, validAttributes);
       if (!isArrayImpl(nextProp))
-        return enableFastAddPropertiesInDiffing
-          ? fastAddProperties(updatePayload, nextProp, validAttributes)
-          : diffProperties(
-              updatePayload,
-              emptyObject$1,
-              nextProp,
-              validAttributes
-            );
+        return diffProperties(
+          updatePayload,
+          emptyObject$1,
+          nextProp,
+          validAttributes
+        );
       for (var i = 0; i < nextProp.length; i++)
         updatePayload = addNestedProperty(
           updatePayload,
@@ -17347,10 +17347,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-3ef31d19-20250422",
+        version: "19.2.0-native-fb-0038c501-20250429",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-3ef31d19-20250422"
+        reconcilerVersion: "19.2.0-native-fb-0038c501-20250429"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

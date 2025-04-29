@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9fc1ce3cfcc10981145f460fa861c321>>
+ * @generated SignedSource<<04928b2865b2da85beb8ac11c426e1e1>>
  */
 
 "use strict";
@@ -1424,10 +1424,15 @@ function diffNestedProperty(
 }
 function addNestedProperty(updatePayload, nextProp, validAttributes) {
   if (!nextProp) return updatePayload;
+  if (enableFastAddPropertiesInDiffing)
+    return fastAddProperties(updatePayload, nextProp, validAttributes);
   if (!isArrayImpl(nextProp))
-    return enableFastAddPropertiesInDiffing
-      ? fastAddProperties(updatePayload, nextProp, validAttributes)
-      : diffProperties(updatePayload, emptyObject, nextProp, validAttributes);
+    return diffProperties(
+      updatePayload,
+      emptyObject,
+      nextProp,
+      validAttributes
+    );
   for (var i = 0; i < nextProp.length; i++)
     updatePayload = addNestedProperty(
       updatePayload,
@@ -11095,10 +11100,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1235 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-3ef31d19-20250422",
+    version: "19.2.0-native-fb-0038c501-20250429",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-3ef31d19-20250422"
+    reconcilerVersion: "19.2.0-native-fb-0038c501-20250429"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1235.rendererConfig = extraDevToolsConfig);
