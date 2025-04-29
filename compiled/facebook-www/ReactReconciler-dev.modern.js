@@ -21416,7 +21416,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-8e9a5fc6-20250425"
+        reconcilerVersion: "19.2.0-www-modern-88b97674-20250429"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -21499,11 +21499,12 @@ __DEV__ &&
                 console.error(
                   "requestFormReset was called outside a transition or action. To fix, move to an action, or wrap with startTransition."
                 );
-              var resetStateQueue =
-                ensureFormComponentIsStateful(formFiber).next.queue;
+              var stateHook = ensureFormComponentIsStateful(formFiber);
+              null === stateHook.next &&
+                (stateHook = formFiber.alternate.memoizedState);
               dispatchSetStateInternal(
                 formFiber,
-                resetStateQueue,
+                stateHook.next.queue,
                 {},
                 requestUpdateLane(formFiber)
               );

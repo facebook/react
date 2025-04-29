@@ -14088,7 +14088,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-8e9a5fc6-20250425"
+      reconcilerVersion: "19.2.0-www-classic-88b97674-20250429"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
@@ -14149,11 +14149,12 @@ module.exports = function ($$$config) {
       null === action
         ? noop
         : function () {
-            var resetStateQueue =
-              ensureFormComponentIsStateful(formFiber).next.queue;
+            var stateHook = ensureFormComponentIsStateful(formFiber);
+            null === stateHook.next &&
+              (stateHook = formFiber.alternate.memoizedState);
             dispatchSetStateInternal(
               formFiber,
-              resetStateQueue,
+              stateHook.next.queue,
               {},
               requestUpdateLane()
             );
