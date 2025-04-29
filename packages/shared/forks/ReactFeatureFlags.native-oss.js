@@ -76,6 +76,8 @@ export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
 export const enableSrcObject = false;
+export const enableGranularChildrenPlacement = false;
+export const enablePlacementCommitCache = false;
 export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefs = false;

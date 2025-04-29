@@ -41,6 +41,7 @@ import type {
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
 import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
+import type {PlacementCommitCache} from './ReactFiberCommitHostEffects';
 
 import {
   alwaysThrottleRetries,
@@ -59,6 +60,7 @@ import {
   enableComponentPerformanceTrack,
   enableViewTransition,
   enableFragmentRefs,
+  enablePlacementCommitCache,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -245,7 +247,6 @@ import {
   commitHostSingletonRelease,
   commitFragmentInstanceDeletionEffects,
   commitFragmentInstanceInsertionEffects,
-  resetPlacementCommitCache,
 } from './ReactFiberCommitHostEffects';
 import {
   trackEnterViewTransitions,
@@ -1928,9 +1929,7 @@ export function commitMutationEffects(
   rootViewTransitionAffected = false;
 
   resetComponentEffectTimers();
-  resetPlacementCommitCache();
-  commitMutationEffectsOnFiber(finishedWork, root, committedLanes);
-  resetPlacementCommitCache();
+  commitMutationEffectsOnFiber(finishedWork, root, committedLanes, null);
 
   inProgressLanes = null;
   inProgressRoot = null;
@@ -1955,9 +1954,22 @@ function recursivelyTraverseMutationEffects(
     parentFiber.subtreeFlags &
     (enablePersistedModeClonedFlag ? MutationMask | Cloned : MutationMask)
   ) {
+    let placementCommitCache: PlacementCommitCache | null = null;
+
     let child = parentFiber.child;
     while (child !== null) {
-      commitMutationEffectsOnFiber(child, root, lanes);
+      if (
+        enablePlacementCommitCache &&
+        placementCommitCache === null &&
+        child.flags & Placement
+      ) {
+        // This should be instantiated per each set of children we're committing if they contain placements.
+        placementCommitCache = {
+          lastPlacedChild: null,
+          lastPlacedChildHostSibling: null,
+        };
+      }
+      commitMutationEffectsOnFiber(child, root, lanes, placementCommitCache);
       child = child.sibling;
     }
   }
@@ -1969,6 +1981,7 @@ function commitMutationEffectsOnFiber(
   finishedWork: Fiber,
   root: FiberRoot,
   lanes: Lanes,
+  placementCommitCache: PlacementCommitCache | null,
 ) {
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
@@ -1985,7 +1998,7 @@ function commitMutationEffectsOnFiber(
     case MemoComponent:
     case SimpleMemoComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork, lanes);
+      commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
 
       if (flags & Update) {
         commitHookEffectListUnmount(
@@ -2005,7 +2018,7 @@ function commitMutationEffectsOnFiber(
     }
     case ClassComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork, lanes);
+      commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
 
       if (flags & Ref) {
         if (!offscreenSubtreeWasHidden && current !== null) {
@@ -2028,7 +2041,7 @@ function commitMutationEffectsOnFiber(
         // null while we are processing mutation effects
         const hoistableRoot: HoistableRoot = (currentHoistableRoot: any);
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
 
         if (flags & Ref) {
           if (!offscreenSubtreeWasHidden && current !== null) {
@@ -2103,7 +2116,7 @@ function commitMutationEffectsOnFiber(
     case HostSingleton: {
       if (supportsSingletons) {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
         if (flags & Ref) {
           if (!offscreenSubtreeWasHidden && current !== null) {
             safelyDetachRef(current, current.return);
@@ -2121,7 +2134,7 @@ function commitMutationEffectsOnFiber(
     case HostComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
 
-      commitReconciliationEffects(finishedWork, lanes);
+      commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
 
       if (flags & Ref) {
         if (!offscreenSubtreeWasHidden && current !== null) {
@@ -2171,7 +2184,7 @@ function commitMutationEffectsOnFiber(
     }
     case HostText: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork, lanes);
+      commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
 
       if (flags & Update) {
         if (supportsMutation) {
@@ -2206,10 +2219,10 @@ function commitMutationEffectsOnFiber(
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         currentHoistableRoot = previousHoistableRoot;
 
-        commitReconciliationEffects(finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
       } else {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
       }
 
       if (flags & Update) {
@@ -2256,11 +2269,11 @@ function commitMutationEffectsOnFiber(
           finishedWork.stateNode.containerInfo,
         );
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
         currentHoistableRoot = previousHoistableRoot;
       } else {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
       }
       if (viewTransitionMutationContext) {
         // A Portal doesn't necessarily exist within the context of this subtree.
@@ -2286,7 +2299,7 @@ function commitMutationEffectsOnFiber(
       const prevProfilerEffectDuration = pushNestedEffectDurations();
 
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork, lanes);
+      commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
 
       if (enableProfilerTimer && enableProfilerCommitHooks) {
         const profilerInstance = finishedWork.stateNode;
@@ -2300,7 +2313,7 @@ function commitMutationEffectsOnFiber(
     }
     case ActivityComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork, lanes);
+      commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
       if (flags & Update) {
         const retryQueue: RetryQueue | null = (finishedWork.updateQueue: any);
         if (retryQueue !== null) {
@@ -2312,7 +2325,7 @@ function commitMutationEffectsOnFiber(
     }
     case SuspenseComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork, lanes);
+      commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
 
       // TODO: We should mark a flag on the Suspense fiber itself, rather than
       // relying on the Offscreen fiber having a flag also being marked. The
@@ -2403,7 +2416,7 @@ function commitMutationEffectsOnFiber(
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       }
 
-      commitReconciliationEffects(finishedWork, lanes);
+      commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
 
       if (flags & Visibility) {
         const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
@@ -2477,7 +2490,7 @@ function commitMutationEffectsOnFiber(
     }
     case SuspenseListComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork, lanes);
+      commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
 
       if (flags & Update) {
         const retryQueue: Set<Wakeable> | null =
@@ -2498,7 +2511,7 @@ function commitMutationEffectsOnFiber(
         }
         const prevMutationContext = pushMutationContext();
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
         const isViewTransitionEligible =
           enableViewTransition &&
           includesOnlyViewTransitionEligibleLanes(lanes);
@@ -2522,7 +2535,7 @@ function commitMutationEffectsOnFiber(
     case ScopeComponent: {
       if (enableScopeAPI) {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
 
         // TODO: This is a temporary solution that allowed us to transition away
         // from React Flare on www.
@@ -2550,7 +2563,7 @@ function commitMutationEffectsOnFiber(
     // Fallthrough
     default: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork, lanes);
+      commitReconciliationEffects(finishedWork, lanes, placementCommitCache);
 
       break;
     }
@@ -2602,13 +2615,14 @@ function commitMutationEffectsOnFiber(
 function commitReconciliationEffects(
   finishedWork: Fiber,
   committedLanes: Lanes,
+  placementCommitCache: PlacementCommitCache | null,
 ) {
   // Placement effects (insertions, reorders) can be scheduled on any fiber
   // type. They needs to happen after the children effects have fired, but
   // before the effects on this fiber have fired.
   const flags = finishedWork.flags;
   if (flags & Placement) {
-    commitHostPlacement(finishedWork);
+    commitHostPlacement(finishedWork, placementCommitCache);
     // Clear the "placement" from effect tag so that we know that this is
     // inserted, before any life-cycles like componentDidMount gets called.
     // TODO: findDOMNode doesn't rely on this any more but isMounted does

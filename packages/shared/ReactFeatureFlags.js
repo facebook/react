@@ -100,6 +100,10 @@ export const enableSuspenseyImages = false;
 
 export const enableSrcObject = __EXPERIMENTAL__;
 
+export const enableGranularChildrenPlacement = false;
+
+export const enablePlacementCommitCache = false;
+
 /**
  * Switches the Fabric API from doing layout in commit work instead of complete work.
  */

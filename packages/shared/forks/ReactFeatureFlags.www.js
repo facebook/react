@@ -116,6 +116,9 @@ export const enableGestureTransition = false;
 export const enableSuspenseyImages = false;
 export const enableSrcObject = false;
 
+export const enableGranularChildrenPlacement = false;
+export const enablePlacementCommitCache = false;
+
 export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
