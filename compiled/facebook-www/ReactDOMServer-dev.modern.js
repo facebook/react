@@ -5744,7 +5744,7 @@ __DEV__ &&
                     0 === newBoundary.pendingTasks &&
                       newBoundary.status === PENDING &&
                       ((newBoundary.status = COMPLETED),
-                      !(newBoundary.byteSize > request.progressiveChunkSize)))
+                      !(500 < newBoundary.byteSize)))
                   ) {
                     0 === request.pendingRootTasks &&
                       task.blockedPreamble &&
@@ -6865,7 +6865,7 @@ __DEV__ &&
                 boundary.parentFlushed &&
                   request.completedBoundaries.push(boundary),
                 boundary.status === COMPLETED &&
-                  (boundary.byteSize > request.progressiveChunkSize ||
+                  (500 < boundary.byteSize ||
                     (boundary.fallbackAbortableTasks.forEach(
                       abortTaskSoft,
                       request
@@ -7295,7 +7295,10 @@ __DEV__ &&
           flushSubtree(request, destination, segment, hoistableState),
           destination.push(endSuspenseBoundary)
         );
-      if (boundary.byteSize > request.progressiveChunkSize)
+      if (
+        500 < boundary.byteSize &&
+        flushedByteSize + boundary.byteSize > request.progressiveChunkSize
+      )
         return (
           (boundary.rootSegmentID = request.nextSegmentId++),
           request.completedBoundaries.push(boundary),
@@ -7307,6 +7310,7 @@ __DEV__ &&
           flushSubtree(request, destination, segment, hoistableState),
           destination.push(endSuspenseBoundary)
         );
+      flushedByteSize += boundary.byteSize;
       hoistableState &&
         ((segment = boundary.contentState),
         segment.styles.forEach(hoistStyleQueueDependency, hoistableState),
@@ -7340,6 +7344,7 @@ __DEV__ &&
       return writeEndSegment(destination, segment.parentFormatContext);
     }
     function flushCompletedBoundary(request, destination, boundary) {
+      flushedByteSize = boundary.byteSize;
       for (
         var completedSegments = boundary.completedSegments, i = 0;
         i < completedSegments.length;
@@ -7477,6 +7482,7 @@ __DEV__ &&
             if (completedRootSegment.status === POSTPONED) return;
             var completedPreambleSegments = request.completedPreambleSegments;
             if (null === completedPreambleSegments) return;
+            flushedByteSize = request.byteSize;
             var resumableState = request.resumableState,
               renderState = request.renderState;
             if (
@@ -7764,8 +7770,9 @@ __DEV__ &&
             a: {
               clientRenderedBoundaries = request;
               boundary = destination;
-              var boundary$jscomp$0 = partialBoundaries[i],
-                completedSegments = boundary$jscomp$0.completedSegments;
+              var boundary$jscomp$0 = partialBoundaries[i];
+              flushedByteSize = boundary$jscomp$0.byteSize;
+              var completedSegments = boundary$jscomp$0.completedSegments;
               for (
                 JSCompiler_inline_result = 0;
                 JSCompiler_inline_result < completedSegments.length;
@@ -9415,7 +9422,8 @@ __DEV__ &&
       didWarnAboutReassigningProps = !1,
       didWarnAboutDefaultPropsOnFunctionComponent = {},
       didWarnAboutGenerators = !1,
-      didWarnAboutMaps = !1;
+      didWarnAboutMaps = !1,
+      flushedByteSize = 0;
     exports.renderToStaticMarkup = function (children, options) {
       return renderToStringImpl(
         children,
@@ -9432,5 +9440,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-modern-88b97674-20250429";
+    exports.version = "19.2.0-www-modern-18212ca9-20250429";
   })();

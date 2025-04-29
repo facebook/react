@@ -4449,8 +4449,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
                 queueCompletedSegment(newBoundary, contentRootSegment),
                 0 === newBoundary.pendingTasks &&
                   0 === newBoundary.status &&
-                  ((newBoundary.status = 1),
-                  !(newBoundary.byteSize > request.progressiveChunkSize)))
+                  ((newBoundary.status = 1), !(500 < newBoundary.byteSize)))
               ) {
                 0 === request.pendingRootTasks &&
                   task.blockedPreamble &&
@@ -5292,7 +5291,7 @@ function finishedTask(request, boundary, segment) {
             boundary.parentFlushed &&
               request.completedBoundaries.push(boundary),
             1 === boundary.status &&
-              (boundary.byteSize > request.progressiveChunkSize ||
+              (500 < boundary.byteSize ||
                 (boundary.fallbackAbortableTasks.forEach(
                   abortTaskSoft,
                   request
@@ -5598,6 +5597,7 @@ function flushSubtree(request, destination, segment, hoistableState) {
       throw Error(formatProdErrorMessage(390));
   }
 }
+var flushedByteSize = 0;
 function flushSegment(request, destination, segment, hoistableState) {
   var boundary = segment.boundary;
   if (null === boundary)
@@ -5642,7 +5642,10 @@ function flushSegment(request, destination, segment, hoistableState) {
       flushSubtree(request, destination, segment, hoistableState),
       destination.push("\x3c!--/$--\x3e")
     );
-  if (boundary.byteSize > request.progressiveChunkSize)
+  if (
+    500 < boundary.byteSize &&
+    flushedByteSize + boundary.byteSize > request.progressiveChunkSize
+  )
     return (
       (boundary.rootSegmentID = request.nextSegmentId++),
       request.completedBoundaries.push(boundary),
@@ -5654,6 +5657,7 @@ function flushSegment(request, destination, segment, hoistableState) {
       flushSubtree(request, destination, segment, hoistableState),
       destination.push("\x3c!--/$--\x3e")
     );
+  flushedByteSize += boundary.byteSize;
   hoistableState &&
     ((segment = boundary.contentState),
     segment.styles.forEach(hoistStyleQueueDependency, hoistableState),
@@ -5679,6 +5683,7 @@ function flushSegmentContainer(request, destination, segment, hoistableState) {
   return writeEndSegment(destination, segment.parentFormatContext);
 }
 function flushCompletedBoundary(request, destination, boundary) {
+  flushedByteSize = boundary.byteSize;
   for (
     var completedSegments = boundary.completedSegments, i = 0;
     i < completedSegments.length;
@@ -5794,6 +5799,7 @@ function flushCompletedQueues(request, destination) {
         if (5 === completedRootSegment.status) return;
         var completedPreambleSegments = request.completedPreambleSegments;
         if (null === completedPreambleSegments) return;
+        flushedByteSize = request.byteSize;
         var resumableState = request.resumableState,
           renderState = request.renderState;
         if (
@@ -5997,6 +6003,7 @@ function flushCompletedQueues(request, destination) {
         a: {
           clientRenderedBoundaries = request;
           boundary = destination;
+          flushedByteSize = boundary$56.byteSize;
           var completedSegments = boundary$56.completedSegments;
           for (
             JSCompiler_inline_result = 0;
@@ -6173,4 +6180,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-modern-88b97674-20250429";
+exports.version = "19.2.0-www-modern-18212ca9-20250429";

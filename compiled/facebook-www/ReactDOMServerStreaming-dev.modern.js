@@ -5451,8 +5451,7 @@ __DEV__ &&
                     queueCompletedSegment(newBoundary, contentRootSegment),
                     0 === newBoundary.pendingTasks &&
                       0 === newBoundary.status &&
-                      ((newBoundary.status = 1),
-                      !(newBoundary.byteSize > request.progressiveChunkSize)))
+                      ((newBoundary.status = 1), !(500 < newBoundary.byteSize)))
                   ) {
                     0 === request.pendingRootTasks &&
                       task.blockedPreamble &&
@@ -6573,7 +6572,7 @@ __DEV__ &&
                 boundary.parentFlushed &&
                   request.completedBoundaries.push(boundary),
                 1 === boundary.status &&
-                  (boundary.byteSize > request.progressiveChunkSize ||
+                  (500 < boundary.byteSize ||
                     (boundary.fallbackAbortableTasks.forEach(
                       abortTaskSoft,
                       request
@@ -6759,7 +6758,10 @@ __DEV__ &&
               hoistableState
             )),
           flushSubtree(request, destination, segment, hoistableState);
-      else if (boundary.byteSize > request.progressiveChunkSize)
+      else if (
+        500 < boundary.byteSize &&
+        flushedByteSize + boundary.byteSize > request.progressiveChunkSize
+      )
         (boundary.rootSegmentID = request.nextSegmentId++),
           request.completedBoundaries.push(boundary),
           writeStartPendingSuspenseBoundary(
@@ -6769,6 +6771,7 @@ __DEV__ &&
           ),
           flushSubtree(request, destination, segment, hoistableState);
       else {
+        flushedByteSize += boundary.byteSize;
         hoistableState &&
           ((segment = boundary.contentState),
           segment.styles.forEach(hoistStyleQueueDependency, hoistableState),
@@ -6802,6 +6805,7 @@ __DEV__ &&
       return writeEndSegment(destination, segment.parentFormatContext);
     }
     function flushCompletedBoundary(request, destination, boundary) {
+      flushedByteSize = boundary.byteSize;
       for (
         var completedSegments = boundary.completedSegments, i = 0;
         i < completedSegments.length;
@@ -6937,6 +6941,7 @@ __DEV__ &&
             if (5 === completedRootSegment.status) return;
             var completedPreambleSegments = request.completedPreambleSegments;
             if (null === completedPreambleSegments) return;
+            flushedByteSize = request.byteSize;
             var resumableState = request.resumableState,
               renderState = request.renderState;
             if (
@@ -7217,8 +7222,9 @@ __DEV__ &&
             a: {
               clientRenderedBoundaries = request;
               boundary = destination;
-              var boundary$jscomp$0 = partialBoundaries[i],
-                completedSegments = boundary$jscomp$0.completedSegments;
+              var boundary$jscomp$0 = partialBoundaries[i];
+              flushedByteSize = boundary$jscomp$0.byteSize;
+              var completedSegments = boundary$jscomp$0.completedSegments;
               for (
                 JSCompiler_inline_result = 0;
                 JSCompiler_inline_result < completedSegments.length;
@@ -8684,7 +8690,8 @@ __DEV__ &&
       didWarnAboutReassigningProps = !1,
       didWarnAboutDefaultPropsOnFunctionComponent = {},
       didWarnAboutGenerators = !1,
-      didWarnAboutMaps = !1;
+      didWarnAboutMaps = !1,
+      flushedByteSize = 0;
     exports.abortStream = function (stream, reason) {
       abort(stream.request, reason);
     };
