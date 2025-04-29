@@ -22,6 +22,7 @@ import {
   isUseRefType,
   isUseStateType,
 } from '../HIR';
+import {readScopeDependenciesRHIR} from '../HIR/ScopeDependencyUtils';
 import {eachCallArgument, eachInstructionLValue} from '../HIR/visitors';
 import DisjointSet from '../Utils/DisjointSet';
 import {assertExhaustive} from '../Utils/utils';
@@ -178,14 +179,22 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
       ].map(id => this.map.get(id) ?? 'Unknown'),
     );
     super.visitScope(scope, state);
-    [...scope.scope.dependencies].forEach(ident => {
+    // TODO
+    const scopeDeps = readScopeDependenciesRHIR(scope);
+    [...scopeDeps].forEach(([place, dep]) => {
       let target: undefined | IdentifierId =
-        this.aliases.find(ident.identifier.id) ?? ident.identifier.id;
-      ident.path.forEach(token => {
+        this.aliases.find(dep.identifier.id) ?? dep.identifier.id;
+      dep.path.forEach(token => {
         target &&= this.paths.get(target)?.get(token.property);
       });
       if (target && this.map.get(target) === 'Create') {
-        scope.scope.dependencies.delete(ident);
+        const idx = scope.scope.dependencies.indexOf(place);
+        CompilerError.invariant(idx !== -1, {
+          reason: 'Expected dependency to be found',
+          loc: place.loc,
+        });
+
+        scope.scope.dependencies.splice(idx, 1);
       }
     });
   }

@@ -62,12 +62,14 @@ export type ReactiveFunction = {
 
 export type ReactiveScopeBlock = {
   kind: 'scope';
+  dependencyInstructions: Array<ReactiveInstructionStatement>;
   scope: ReactiveScope;
   instructions: ReactiveBlock;
 };
 
 export type PrunedReactiveScopeBlock = {
   kind: 'pruned-scope';
+  dependencyInstructions: Array<ReactiveInstructionStatement>;
   scope: ReactiveScope;
   instructions: ReactiveBlock;
 };
@@ -614,6 +616,7 @@ export type MaybeThrowTerminal = {
 export type ReactiveScopeTerminal = {
   kind: 'scope';
   fallthrough: BlockId;
+  dependencies: BlockId;
   block: BlockId;
   scope: ReactiveScope;
   id: InstructionId;
@@ -623,6 +626,7 @@ export type ReactiveScopeTerminal = {
 export type PrunedScopeTerminal = {
   kind: 'pruned-scope';
   fallthrough: BlockId;
+  dependencies: BlockId;
   block: BlockId;
   scope: ReactiveScope;
   id: InstructionId;
@@ -1472,9 +1476,10 @@ export type ReactiveScope = {
   range: MutableRange;
 
   /**
-   * The inputs to this reactive scope
+   * Note the dependencies of a reactive scope are tracked in HIR and
+   * ReactiveFunction
    */
-  dependencies: ReactiveScopeDependencies;
+  dependencies: Array<Place>;
 
   /**
    * The set of values produced by this scope. This may be empty
@@ -1535,6 +1540,18 @@ export type DependencyPathEntry = {
 export type DependencyPath = Array<DependencyPathEntry>;
 export type ReactiveScopeDependency = {
   identifier: Identifier;
+  /**
+   * Reflects whether the base identifier is reactive. Note that some reactive
+   * objects may have non-reactive properties, but we do not currently track
+   * this.
+   *
+   * ```js
+   * // Technically, result[0] is reactive and result[1] is not.
+   * // Currently, both dependencies would be marked as reactive.
+   * const result = useState();
+   * ```
+   */
+  reactive: boolean;
   path: DependencyPath;
 };
 
