@@ -1670,7 +1670,7 @@ describe('ReactDOMForm', () => {
     expect(divRef.current.textContent).toEqual('Current username: acdlite');
   });
 
-  it.only('multiple form submissions in rapid succession do not throw', async () => {
+  it('multiple form submissions in rapid succession do not throw', async () => {
     const submitFormTwiceButtonRef = React.createRef();
     let actionCounter = 0;
     function App() {
@@ -1685,7 +1685,7 @@ describe('ReactDOMForm', () => {
 
       // This is a userspace action. it must take a non-zero amount of time to
       // allow the form to be submitted again before the first one finishes.
-      // Otherwise, the form transitions will be batched and will not run concurrently.
+      // Otherwise, the form transitions will be batched and will not run sepereately.
       async function submitForm() {
         actionCounter++;
         return new Promise(res => setTimeout(res, 1));
