@@ -3261,7 +3261,7 @@ export function startHostTransition<F>(
 
 function ensureFormComponentIsStateful(formFiber: Fiber) {
   const existingStateHook: Hook | null = formFiber.memoizedState;
-  if (existingStateHook !== null && existingStateHook.next !== null) {
+  if (existingStateHook !== null) {
     // This fiber was already upgraded to be stateful.
     return existingStateHook;
   }
