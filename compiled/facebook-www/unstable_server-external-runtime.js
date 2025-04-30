@@ -223,7 +223,6 @@
       }
     });
   })();
-  window.$RC || ((window.$RC = completeBoundary), (window.$RM = new Map()));
   if (null != document.body)
     "loading" === document.readyState &&
       installFizzInstrObserver(document.body),
