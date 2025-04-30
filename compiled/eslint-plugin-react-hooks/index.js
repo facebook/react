@@ -17549,6 +17549,24 @@ var InstructionKind;
     InstructionKind["HoistedFunction"] = "HoistedFunction";
     InstructionKind["Function"] = "Function";
 })(InstructionKind || (InstructionKind = {}));
+function convertHoistedLValueKind(kind) {
+    switch (kind) {
+        case InstructionKind.HoistedLet:
+            return InstructionKind.Let;
+        case InstructionKind.HoistedConst:
+            return InstructionKind.Const;
+        case InstructionKind.HoistedFunction:
+            return InstructionKind.Function;
+        case InstructionKind.Let:
+        case InstructionKind.Const:
+        case InstructionKind.Function:
+        case InstructionKind.Reassign:
+        case InstructionKind.Catch:
+            return null;
+        default:
+            assertExhaustive$1(kind, 'Unexpected lvalue kind');
+    }
+}
 function makeTemporaryIdentifier(id, loc) {
     return {
         id,
@@ -33151,7 +33169,7 @@ function lowerIdentifierForAssignment(builder, loc, kind, path) {
     return place;
 }
 function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2;
     const lvalueNode = lvaluePath.node;
     switch (lvalueNode.type) {
         case 'Identifier': {
@@ -33176,30 +33194,38 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
             const isHoistedIdentifier = builder.environment.isHoistedIdentifier(lvalue.node);
             let temporary;
             if (builder.isContextIdentifier(lvalue)) {
-                if (kind !== InstructionKind.Reassign && !isHoistedIdentifier) {
-                    if (kind === InstructionKind.Const) {
-                        builder.errors.push({
-                            reason: `Expected \`const\` declaration not to be reassigned`,
-                            severity: ErrorSeverity.InvalidJS,
-                            loc: (_b = lvalue.node.loc) !== null && _b !== void 0 ? _b : null,
-                            suggestions: null,
-                        });
-                    }
-                    lowerValueToTemporary(builder, {
-                        kind: 'DeclareContext',
-                        lvalue: {
-                            kind: InstructionKind.Let,
-                            place: Object.assign({}, place),
-                        },
-                        loc: place.loc,
+                if (kind === InstructionKind.Const && !isHoistedIdentifier) {
+                    builder.errors.push({
+                        reason: `Expected \`const\` declaration not to be reassigned`,
+                        severity: ErrorSeverity.InvalidJS,
+                        loc: (_b = lvalue.node.loc) !== null && _b !== void 0 ? _b : null,
+                        suggestions: null,
                     });
                 }
-                temporary = lowerValueToTemporary(builder, {
-                    kind: 'StoreContext',
-                    lvalue: { place: Object.assign({}, place), kind: InstructionKind.Reassign },
-                    value,
-                    loc,
-                });
+                if (kind !== InstructionKind.Const &&
+                    kind !== InstructionKind.Reassign &&
+                    kind !== InstructionKind.Let &&
+                    kind !== InstructionKind.Function) {
+                    builder.errors.push({
+                        reason: `Unexpected context variable kind`,
+                        severity: ErrorSeverity.InvalidJS,
+                        loc: (_c = lvalue.node.loc) !== null && _c !== void 0 ? _c : null,
+                        suggestions: null,
+                    });
+                    temporary = lowerValueToTemporary(builder, {
+                        kind: 'UnsupportedNode',
+                        node: lvalueNode,
+                        loc: (_d = lvalueNode.loc) !== null && _d !== void 0 ? _d : GeneratedSource,
+                    });
+                }
+                else {
+                    temporary = lowerValueToTemporary(builder, {
+                        kind: 'StoreContext',
+                        lvalue: { place: Object.assign({}, place), kind },
+                        value,
+                        loc,
+                    });
+                }
             }
             else {
                 const typeAnnotation = lvalue.get('typeAnnotation');
@@ -33229,7 +33255,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
             CompilerError.invariant(kind === InstructionKind.Reassign, {
                 reason: 'MemberExpression may only appear in an assignment expression',
                 description: null,
-                loc: (_c = lvaluePath.node.loc) !== null && _c !== void 0 ? _c : null,
+                loc: (_e = lvaluePath.node.loc) !== null && _e !== void 0 ? _e : null,
                 suggestions: null,
             });
             const lvalue = lvaluePath;
@@ -33259,7 +33285,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     builder.errors.push({
                         reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in MemberExpression`,
                         severity: ErrorSeverity.Todo,
-                        loc: (_d = property.node.loc) !== null && _d !== void 0 ? _d : null,
+                        loc: (_f = property.node.loc) !== null && _f !== void 0 ? _f : null,
                         suggestions: null,
                     });
                     return { kind: 'UnsupportedNode', node: lvalueNode, loc };
@@ -33271,7 +33297,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     builder.errors.push({
                         reason: '(BuildHIR::lowerAssignment) Expected private name to appear as a non-computed property',
                         severity: ErrorSeverity.Todo,
-                        loc: (_e = property.node.loc) !== null && _e !== void 0 ? _e : null,
+                        loc: (_g = property.node.loc) !== null && _g !== void 0 ? _g : null,
                         suggestions: null,
                     });
                     return { kind: 'UnsupportedNode', node: lvalueNode, loc };
@@ -33311,7 +33337,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         !forceTemporaries &&
                         (assignmentKind === 'Assignment' ||
                             getStoreKind(builder, argument) === 'StoreLocal')) {
-                        const identifier = lowerIdentifierForAssignment(builder, (_f = element.node.loc) !== null && _f !== void 0 ? _f : GeneratedSource, kind, argument);
+                        const identifier = lowerIdentifierForAssignment(builder, (_h = element.node.loc) !== null && _h !== void 0 ? _h : GeneratedSource, kind, argument);
                         if (identifier === null) {
                             continue;
                         }
@@ -33319,7 +33345,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                             builder.errors.push({
                                 severity: ErrorSeverity.Todo,
                                 reason: 'Expected reassignment of globals to enable forceTemporaries',
-                                loc: (_g = element.node.loc) !== null && _g !== void 0 ? _g : GeneratedSource,
+                                loc: (_j = element.node.loc) !== null && _j !== void 0 ? _j : GeneratedSource,
                             });
                             continue;
                         }
@@ -33329,7 +33355,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         });
                     }
                     else {
-                        const temp = buildTemporaryPlace(builder, (_h = element.node.loc) !== null && _h !== void 0 ? _h : GeneratedSource);
+                        const temp = buildTemporaryPlace(builder, (_k = element.node.loc) !== null && _k !== void 0 ? _k : GeneratedSource);
                         promoteTemporary(temp.identifier);
                         items.push({
                             kind: 'Spread',
@@ -33342,7 +33368,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     !forceTemporaries &&
                     (assignmentKind === 'Assignment' ||
                         getStoreKind(builder, element) === 'StoreLocal')) {
-                    const identifier = lowerIdentifierForAssignment(builder, (_j = element.node.loc) !== null && _j !== void 0 ? _j : GeneratedSource, kind, element);
+                    const identifier = lowerIdentifierForAssignment(builder, (_l = element.node.loc) !== null && _l !== void 0 ? _l : GeneratedSource, kind, element);
                     if (identifier === null) {
                         continue;
                     }
@@ -33350,14 +33376,14 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             severity: ErrorSeverity.Todo,
                             reason: 'Expected reassignment of globals to enable forceTemporaries',
-                            loc: (_k = element.node.loc) !== null && _k !== void 0 ? _k : GeneratedSource,
+                            loc: (_m = element.node.loc) !== null && _m !== void 0 ? _m : GeneratedSource,
                         });
                         continue;
                     }
                     items.push(identifier);
                 }
                 else {
-                    const temp = buildTemporaryPlace(builder, (_l = element.node.loc) !== null && _l !== void 0 ? _l : GeneratedSource);
+                    const temp = buildTemporaryPlace(builder, (_o = element.node.loc) !== null && _o !== void 0 ? _o : GeneratedSource);
                     promoteTemporary(temp.identifier);
                     items.push(Object.assign({}, temp));
                     followups.push({ place: temp, path: element });
@@ -33376,7 +33402,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                 loc,
             });
             for (const { place, path } of followups) {
-                lowerAssignment(builder, (_m = path.node.loc) !== null && _m !== void 0 ? _m : loc, kind, path, place, assignmentKind);
+                lowerAssignment(builder, (_p = path.node.loc) !== null && _p !== void 0 ? _p : loc, kind, path, place, assignmentKind);
             }
             return { kind: 'LoadLocal', place: temporary, loc: value.loc };
         }
@@ -33398,14 +33424,14 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ObjectPattern`,
                             severity: ErrorSeverity.Todo,
-                            loc: (_o = argument.node.loc) !== null && _o !== void 0 ? _o : null,
+                            loc: (_q = argument.node.loc) !== null && _q !== void 0 ? _q : null,
                             suggestions: null,
                         });
                         continue;
                     }
                     if (forceTemporaries ||
                         getStoreKind(builder, argument) === 'StoreContext') {
-                        const temp = buildTemporaryPlace(builder, (_p = property.node.loc) !== null && _p !== void 0 ? _p : GeneratedSource);
+                        const temp = buildTemporaryPlace(builder, (_r = property.node.loc) !== null && _r !== void 0 ? _r : GeneratedSource);
                         promoteTemporary(temp.identifier);
                         properties.push({
                             kind: 'Spread',
@@ -33414,7 +33440,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         followups.push({ place: temp, path: argument });
                     }
                     else {
-                        const identifier = lowerIdentifierForAssignment(builder, (_q = property.node.loc) !== null && _q !== void 0 ? _q : GeneratedSource, kind, argument);
+                        const identifier = lowerIdentifierForAssignment(builder, (_s = property.node.loc) !== null && _s !== void 0 ? _s : GeneratedSource, kind, argument);
                         if (identifier === null) {
                             continue;
                         }
@@ -33422,7 +33448,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                             builder.errors.push({
                                 severity: ErrorSeverity.Todo,
                                 reason: 'Expected reassignment of globals to enable forceTemporaries',
-                                loc: (_r = property.node.loc) !== null && _r !== void 0 ? _r : GeneratedSource,
+                                loc: (_t = property.node.loc) !== null && _t !== void 0 ? _t : GeneratedSource,
                             });
                             continue;
                         }
@@ -33437,7 +33463,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in ObjectPattern`,
                             severity: ErrorSeverity.Todo,
-                            loc: (_s = property.node.loc) !== null && _s !== void 0 ? _s : null,
+                            loc: (_u = property.node.loc) !== null && _u !== void 0 ? _u : null,
                             suggestions: null,
                         });
                         continue;
@@ -33446,7 +33472,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern`,
                             severity: ErrorSeverity.Todo,
-                            loc: (_t = property.node.loc) !== null && _t !== void 0 ? _t : null,
+                            loc: (_v = property.node.loc) !== null && _v !== void 0 ? _v : null,
                             suggestions: null,
                         });
                         continue;
@@ -33460,7 +33486,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
                             severity: ErrorSeverity.Todo,
-                            loc: (_u = element.node.loc) !== null && _u !== void 0 ? _u : null,
+                            loc: (_w = element.node.loc) !== null && _w !== void 0 ? _w : null,
                             suggestions: null,
                         });
                         continue;
@@ -33469,7 +33495,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         !forceTemporaries &&
                         (assignmentKind === 'Assignment' ||
                             getStoreKind(builder, element) === 'StoreLocal')) {
-                        const identifier = lowerIdentifierForAssignment(builder, (_v = element.node.loc) !== null && _v !== void 0 ? _v : GeneratedSource, kind, element);
+                        const identifier = lowerIdentifierForAssignment(builder, (_x = element.node.loc) !== null && _x !== void 0 ? _x : GeneratedSource, kind, element);
                         if (identifier === null) {
                             continue;
                         }
@@ -33477,7 +33503,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                             builder.errors.push({
                                 severity: ErrorSeverity.Todo,
                                 reason: 'Expected reassignment of globals to enable forceTemporaries',
-                                loc: (_w = element.node.loc) !== null && _w !== void 0 ? _w : GeneratedSource,
+                                loc: (_y = element.node.loc) !== null && _y !== void 0 ? _y : GeneratedSource,
                             });
                             continue;
                         }
@@ -33489,7 +33515,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         });
                     }
                     else {
-                        const temp = buildTemporaryPlace(builder, (_x = element.node.loc) !== null && _x !== void 0 ? _x : GeneratedSource);
+                        const temp = buildTemporaryPlace(builder, (_z = element.node.loc) !== null && _z !== void 0 ? _z : GeneratedSource);
                         promoteTemporary(temp.identifier);
                         properties.push({
                             kind: 'ObjectProperty',
@@ -33514,13 +33540,13 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                 loc,
             });
             for (const { place, path } of followups) {
-                lowerAssignment(builder, (_y = path.node.loc) !== null && _y !== void 0 ? _y : loc, kind, path, place, assignmentKind);
+                lowerAssignment(builder, (_0 = path.node.loc) !== null && _0 !== void 0 ? _0 : loc, kind, path, place, assignmentKind);
             }
             return { kind: 'LoadLocal', place: temporary, loc: value.loc };
         }
         case 'AssignmentPattern': {
             const lvalue = lvaluePath;
-            const loc = (_z = lvalue.node.loc) !== null && _z !== void 0 ? _z : GeneratedSource;
+            const loc = (_1 = lvalue.node.loc) !== null && _1 !== void 0 ? _1 : GeneratedSource;
             const temp = buildTemporaryPlace(builder, loc);
             const testBlock = builder.reserve('value');
             const continuationBlock = builder.reserve(builder.currentBlockKind());
@@ -33591,7 +33617,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
             builder.errors.push({
                 reason: `(BuildHIR::lowerAssignment) Handle ${lvaluePath.type} assignments`,
                 severity: ErrorSeverity.Todo,
-                loc: (_0 = lvaluePath.node.loc) !== null && _0 !== void 0 ? _0 : null,
+                loc: (_2 = lvaluePath.node.loc) !== null && _2 !== void 0 ? _2 : null,
                 suggestions: null,
             });
             return { kind: 'UnsupportedNode', node: lvalueNode, loc };
@@ -43587,6 +43613,14 @@ function codegenTerminal(cx, terminal) {
                     lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
                     break;
                 }
+                case 'StoreContext': {
+                    CompilerError.throwTodo({
+                        reason: 'Support non-trivial for..in inits',
+                        description: null,
+                        loc: terminal.init.loc,
+                        suggestions: null,
+                    });
+                }
                 default:
                     CompilerError.invariant(false, {
                         reason: `Expected a StoreLocal or Destructure to be assigned to the collection`,
@@ -43662,6 +43696,14 @@ function codegenTerminal(cx, terminal) {
                 case 'Destructure': {
                     lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
                     break;
+                }
+                case 'StoreContext': {
+                    CompilerError.throwTodo({
+                        reason: 'Support non-trivial for..of inits',
+                        description: null,
+                        loc: terminal.init.loc,
+                        suggestions: null,
+                    });
                 }
                 default:
                     CompilerError.invariant(false, {
@@ -45634,73 +45676,92 @@ let Transform$3 = class Transform extends ReactiveFunctionTransform {
     }
 };
 
-function pruneHoistedContexts(fn) {
-    const hoistedIdentifiers = new Map();
-    visitReactiveFunction(fn, new Visitor$8(), hoistedIdentifiers);
+var _Node_value, _Node_next;
+function empty() {
+    return EMPTY;
 }
-const REWRITTEN_HOISTED_CONST = Symbol('REWRITTEN_HOISTED_CONST');
-const REWRITTEN_HOISTED_LET = Symbol('REWRITTEN_HOISTED_LET');
+class Node {
+    constructor(value, next = EMPTY) {
+        _Node_value.set(this, void 0);
+        _Node_next.set(this, void 0);
+        __classPrivateFieldSet(this, _Node_value, value, "f");
+        __classPrivateFieldSet(this, _Node_next, next, "f");
+    }
+    push(value) {
+        return new Node(value, this);
+    }
+    pop() {
+        return __classPrivateFieldGet(this, _Node_next, "f");
+    }
+    find(fn) {
+        return fn(__classPrivateFieldGet(this, _Node_value, "f")) ? true : __classPrivateFieldGet(this, _Node_next, "f").find(fn);
+    }
+    contains(value) {
+        return (value === __classPrivateFieldGet(this, _Node_value, "f") ||
+            (__classPrivateFieldGet(this, _Node_next, "f") !== null && __classPrivateFieldGet(this, _Node_next, "f").contains(value)));
+    }
+    each(fn) {
+        fn(__classPrivateFieldGet(this, _Node_value, "f"));
+        __classPrivateFieldGet(this, _Node_next, "f").each(fn);
+    }
+    get value() {
+        return __classPrivateFieldGet(this, _Node_value, "f");
+    }
+    print(fn) {
+        return fn(__classPrivateFieldGet(this, _Node_value, "f")) + __classPrivateFieldGet(this, _Node_next, "f").print(fn);
+    }
+}
+_Node_value = new WeakMap(), _Node_next = new WeakMap();
+class Empty {
+    push(value) {
+        return new Node(value, this);
+    }
+    pop() {
+        return this;
+    }
+    find(_fn) {
+        return false;
+    }
+    contains(_value) {
+        return false;
+    }
+    each(_fn) {
+        return;
+    }
+    get value() {
+        return null;
+    }
+    print(_) {
+        return '';
+    }
+}
+const EMPTY = new Empty();
+
+function pruneHoistedContexts(fn) {
+    visitReactiveFunction(fn, new Visitor$8(), {
+        activeScopes: empty(),
+    });
+}
 let Visitor$8 = class Visitor extends ReactiveFunctionTransform {
+    visitScope(scope, state) {
+        state.activeScopes = state.activeScopes.push(new Set(scope.scope.declarations.keys()));
+        this.traverseScope(scope, state);
+        state.activeScopes.pop();
+    }
     transformInstruction(instruction, state) {
         this.visitInstruction(instruction, state);
-        if (instruction.value.kind === 'DeclareContext' &&
-            instruction.value.lvalue.kind === 'HoistedConst') {
-            state.set(instruction.value.lvalue.place.identifier.declarationId, InstructionKind.Const);
-            return { kind: 'remove' };
+        if (instruction.value.kind === 'DeclareContext') {
+            const maybeNonHoisted = convertHoistedLValueKind(instruction.value.lvalue.kind);
+            if (maybeNonHoisted != null) {
+                return { kind: 'remove' };
+            }
         }
-        if (instruction.value.kind === 'DeclareContext' &&
-            instruction.value.lvalue.kind === 'HoistedLet') {
-            state.set(instruction.value.lvalue.place.identifier.declarationId, InstructionKind.Let);
-            return { kind: 'remove' };
-        }
-        if (instruction.value.kind === 'DeclareContext' &&
-            instruction.value.lvalue.kind === 'HoistedFunction') {
-            state.set(instruction.value.lvalue.place.identifier.declarationId, InstructionKind.Function);
-            return { kind: 'remove' };
-        }
-        if (instruction.value.kind === 'StoreContext') {
-            const kind = state.get(instruction.value.lvalue.place.identifier.declarationId);
-            if (kind != null) {
-                CompilerError.invariant(kind !== REWRITTEN_HOISTED_CONST, {
-                    reason: 'Expected exactly one store to a hoisted const variable',
-                    loc: instruction.loc,
-                });
-                if (kind === InstructionKind.Const ||
-                    kind === InstructionKind.Function) {
-                    state.set(instruction.value.lvalue.place.identifier.declarationId, REWRITTEN_HOISTED_CONST);
-                    return {
-                        kind: 'replace',
-                        value: {
-                            kind: 'instruction',
-                            instruction: Object.assign(Object.assign({}, instruction), { value: Object.assign(Object.assign({}, instruction.value), { lvalue: Object.assign(Object.assign({}, instruction.value.lvalue), { kind }), type: null, kind: 'StoreLocal' }) }),
-                        },
-                    };
-                }
-                else if (kind !== REWRITTEN_HOISTED_LET) {
-                    state.set(instruction.value.lvalue.place.identifier.declarationId, REWRITTEN_HOISTED_LET);
-                    return {
-                        kind: 'replace-many',
-                        value: [
-                            {
-                                kind: 'instruction',
-                                instruction: {
-                                    id: instruction.id,
-                                    lvalue: null,
-                                    value: {
-                                        kind: 'DeclareContext',
-                                        lvalue: {
-                                            kind: InstructionKind.Let,
-                                            place: Object.assign({}, instruction.value.lvalue.place),
-                                        },
-                                        loc: instruction.value.loc,
-                                    },
-                                    loc: instruction.loc,
-                                },
-                            },
-                            { kind: 'instruction', instruction },
-                        ],
-                    };
-                }
+        if (instruction.value.kind === 'StoreContext' &&
+            instruction.value.lvalue.kind !== InstructionKind.Reassign) {
+            const lvalueId = instruction.value.lvalue.place.identifier.id;
+            const isDeclaredByScope = state.activeScopes.find(scope => scope.has(lvalueId));
+            if (isDeclaredByScope) {
+                instruction.value.lvalue.kind = InstructionKind.Reassign;
             }
         }
         return { kind: 'keep' };
@@ -46168,7 +46229,10 @@ class InferenceState {
     }
     freezeValues(values, reason) {
         for (const value of values) {
-            if (value.kind === 'DeclareContext') {
+            if (value.kind === 'DeclareContext' ||
+                (value.kind === 'StoreContext' &&
+                    (value.lvalue.kind === InstructionKind.Let ||
+                        value.lvalue.kind === InstructionKind.Const))) {
                 continue;
             }
             __classPrivateFieldGet(this, _InferenceState_values, "f").set(value, {
@@ -46954,6 +47018,14 @@ function inferBlock(env, state, block, functionEffects) {
                 state.referenceAndRecordEffects(freezeActions, instrValue.value, Effect.ConditionallyMutate, ValueReason.Other);
                 state.referenceAndRecordEffects(freezeActions, instrValue.lvalue.place, Effect.Mutate, ValueReason.Other);
                 const lvalue = instr.lvalue;
+                if (instrValue.lvalue.kind !== InstructionKind.Reassign) {
+                    state.initialize(instrValue, {
+                        kind: ValueKind.Mutable,
+                        reason: new Set([ValueReason.Other]),
+                        context: new Set(),
+                    });
+                    state.define(instrValue.lvalue.place, instrValue);
+                }
                 state.alias(lvalue, instrValue.value);
                 lvalue.effect = Effect.Store;
                 continuation = { kind: 'funeffects' };
@@ -48445,7 +48517,8 @@ function inferMutableLifetimes(func, inferMutableRangeForStores) {
             }
             if (instr.value.kind === 'DeclareContext' ||
                 (instr.value.kind === 'StoreContext' &&
-                    instr.value.lvalue.kind !== InstructionKind.Reassign)) {
+                    instr.value.lvalue.kind !== InstructionKind.Reassign &&
+                    !contextVariableDeclarationInstructions.has(instr.value.lvalue.place.identifier))) {
                 contextVariableDeclarationInstructions.set(instr.value.lvalue.place.identifier, instr.id);
             }
             else if (instr.value.kind === 'StoreContext') {
@@ -50028,67 +50101,6 @@ function makeOrMergeProperty(node, property, accessType) {
     return child;
 }
 
-var _Node_value, _Node_next;
-function empty() {
-    return EMPTY;
-}
-class Node {
-    constructor(value, next = EMPTY) {
-        _Node_value.set(this, void 0);
-        _Node_next.set(this, void 0);
-        __classPrivateFieldSet(this, _Node_value, value, "f");
-        __classPrivateFieldSet(this, _Node_next, next, "f");
-    }
-    push(value) {
-        return new Node(value, this);
-    }
-    pop() {
-        return __classPrivateFieldGet(this, _Node_next, "f");
-    }
-    find(fn) {
-        return fn(__classPrivateFieldGet(this, _Node_value, "f")) ? true : __classPrivateFieldGet(this, _Node_next, "f").find(fn);
-    }
-    contains(value) {
-        return (value === __classPrivateFieldGet(this, _Node_value, "f") ||
-            (__classPrivateFieldGet(this, _Node_next, "f") !== null && __classPrivateFieldGet(this, _Node_next, "f").contains(value)));
-    }
-    each(fn) {
-        fn(__classPrivateFieldGet(this, _Node_value, "f"));
-        __classPrivateFieldGet(this, _Node_next, "f").each(fn);
-    }
-    get value() {
-        return __classPrivateFieldGet(this, _Node_value, "f");
-    }
-    print(fn) {
-        return fn(__classPrivateFieldGet(this, _Node_value, "f")) + __classPrivateFieldGet(this, _Node_next, "f").print(fn);
-    }
-}
-_Node_value = new WeakMap(), _Node_next = new WeakMap();
-class Empty {
-    push(value) {
-        return new Node(value, this);
-    }
-    pop() {
-        return this;
-    }
-    find(_fn) {
-        return false;
-    }
-    contains(_value) {
-        return false;
-    }
-    each(_fn) {
-        return;
-    }
-    get value() {
-        return null;
-    }
-    print(_) {
-        return '';
-    }
-}
-const EMPTY = new Empty();
-
 var _DependencyCollectionContext_instances, _DependencyCollectionContext_declarations, _DependencyCollectionContext_reassignments, _DependencyCollectionContext_scopes, _DependencyCollectionContext_dependencies, _DependencyCollectionContext_temporaries, _DependencyCollectionContext_temporariesUsedOutsideScope, _DependencyCollectionContext_processedInstrsInOptional, _DependencyCollectionContext_innerFnContext, _DependencyCollectionContext_checkValidDependency, _DependencyCollectionContext_isScopeActive;
 function propagateScopeDependenciesHIR(fn) {
     const usedOutsideDeclaringScope = findTemporariesUsedOutsideDeclaringScope(fn);
@@ -50170,11 +50182,8 @@ function collectTemporariesSidemap(fn, usedOutsideDeclaringScope) {
 }
 function isLoadContextMutable(instrValue, id) {
     if (instrValue.kind === 'LoadContext') {
-        CompilerError.invariant(instrValue.place.identifier.scope != null, {
-            reason: '[PropagateScopeDependencies] Expected all context variables to be assigned a scope',
-            loc: instrValue.loc,
-        });
-        return id >= instrValue.place.identifier.scope.range.end;
+        return (instrValue.place.identifier.scope != null &&
+            id >= instrValue.place.identifier.scope.range.end);
     }
     return false;
 }
@@ -50274,6 +50283,9 @@ class DependencyCollectionContext {
             __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").set(identifier.declarationId, decl);
         }
         __classPrivateFieldGet(this, _DependencyCollectionContext_reassignments, "f").set(identifier, decl);
+    }
+    hasDeclared(identifier) {
+        return __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").has(identifier.declarationId);
     }
     get currentScope() {
         return __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f");
@@ -50386,10 +50398,12 @@ function handleInstruction(instr, context) {
         });
     }
     else if (value.kind === 'DeclareLocal' || value.kind === 'DeclareContext') {
-        context.declare(value.lvalue.place.identifier, {
-            id,
-            scope: context.currentScope,
-        });
+        if (convertHoistedLValueKind(value.lvalue.kind) === null) {
+            context.declare(value.lvalue.place.identifier, {
+                id,
+                scope: context.currentScope,
+            });
+        }
     }
     else if (value.kind === 'Destructure') {
         context.visitOperand(value.value);
@@ -50401,6 +50415,18 @@ function handleInstruction(instr, context) {
                 id,
                 scope: context.currentScope,
             });
+        }
+    }
+    else if (value.kind === 'StoreContext') {
+        if (!context.hasDeclared(value.lvalue.place.identifier) ||
+            value.lvalue.kind !== InstructionKind.Reassign) {
+            context.declare(value.lvalue.place.identifier, {
+                id,
+                scope: context.currentScope,
+            });
+        }
+        for (const operand of eachInstructionValueOperand(value)) {
+            context.visitOperand(operand);
         }
     }
     else {
