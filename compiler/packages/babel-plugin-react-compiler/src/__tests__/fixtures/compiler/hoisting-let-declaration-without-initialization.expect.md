@@ -2,21 +2,21 @@
 ## Input
 
 ```javascript
-import {CONST_NUMBER0, CONST_NUMBER1, Stringify} from 'shared-runtime';
+import {CONST_NUMBER1, Stringify} from 'shared-runtime';
 
 function useHook({cond}) {
   'use memo';
   const getX = () => x;
 
-  let x = CONST_NUMBER0;
+  let x;
   if (cond) {
-    x += CONST_NUMBER1;
+    x = CONST_NUMBER1;
   }
   return <Stringify getX={getX} shouldInvokeFns={true} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: useHook,
+  fn: () => {},
   params: [{cond: true}],
   sequentialRenders: [{cond: true}, {cond: true}, {cond: false}],
 };
@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-import { CONST_NUMBER0, CONST_NUMBER1, Stringify } from "shared-runtime";
+import { CONST_NUMBER1, Stringify } from "shared-runtime";
 
 function useHook(t0) {
   "use memo";
@@ -37,10 +37,9 @@ function useHook(t0) {
   if ($[0] !== cond) {
     const getX = () => x;
 
-    let x = CONST_NUMBER0;
+    let x;
     if (cond) {
-      x = x + CONST_NUMBER1;
-      x;
+      x = CONST_NUMBER1;
     }
 
     t1 = <Stringify getX={getX} shouldInvokeFns={true} />;
@@ -53,7 +52,7 @@ function useHook(t0) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: useHook,
+  fn: () => {},
   params: [{ cond: true }],
   sequentialRenders: [{ cond: true }, { cond: true }, { cond: false }],
 };
@@ -61,6 +60,5 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div>{"getX":{"kind":"Function","result":1},"shouldInvokeFns":true}</div>
-<div>{"getX":{"kind":"Function","result":1},"shouldInvokeFns":true}</div>
-<div>{"getX":{"kind":"Function","result":0},"shouldInvokeFns":true}</div>
+(kind: ok) 
+
