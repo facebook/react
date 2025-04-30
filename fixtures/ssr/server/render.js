@@ -19,7 +19,7 @@ class ThrottledWritable extends Writable {
   constructor(destination) {
     super();
     this.destination = destination;
-    this.delay = 150;
+    this.delay = 10;
   }
 
   _write(chunk, encoding, callback) {
@@ -49,10 +49,10 @@ export default function render(url, res) {
     // Log fatal errors
     console.error('Fatal', error);
   });
-  console.log('hello');
   let didError = false;
   const {pipe, abort} = renderToPipeableStream(<App assets={assets} />, {
     bootstrapScripts: [assets['main.js']],
+    progressiveChunkSize: 1024,
     onShellReady() {
       // If something errored before we started streaming, we set the error code appropriately.
       res.statusCode = didError ? 500 : 200;
