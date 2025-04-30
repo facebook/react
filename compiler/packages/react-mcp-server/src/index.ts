@@ -356,7 +356,11 @@ Server Components - Shift data-heavy logic to the server whenever possible. Brea
 
 server.tool(
   'review-react-runtime',
-  'Review the runtime of the code and get performance data to evaluate the proposed solution, the react code that is passed into this tool MUST contain an App functional component without arrow function. And DO NOT export anything',
+  `
+  Run this tool every time you propose a performance related change to verify if your suggestion actually improves performance.
+
+  The react code that is passed into this tool MUST contain an App functional component without arrow function. And DO NOT export anything since we can't parse export syntax with this tool.
+  `,
   {
     text: z.string(),
   },

@@ -1,8 +1,8 @@
 import * as babel from '@babel/core';
 import puppeteer from 'puppeteer';
 
-export async function measurePerformance(code: any) {
-  let options = {
+export async function measurePerformance(code: string) {
+  const babelOptions = {
     configFile: false,
     babelrc: false,
     presets: [
@@ -11,14 +11,31 @@ export async function measurePerformance(code: any) {
     ],
   };
 
-  const parsed = await babel.parseAsync(code, options);
-
+  // Parse the code to AST
+  const parsed = await babel.parseAsync(code, babelOptions);
   if (!parsed) {
     throw new Error('Failed to parse code');
   }
 
-  const transpiled = await transformAsync(parsed, options);
+  // Transform AST to browser-compatible JavaScript
+  const transformResult = await babel.transformFromAstAsync(parsed, undefined, {
+    ...babelOptions,
+    filename: 'file.jsx',
+    plugins: [
+      () => ({
+        visitor: {
+          ImportDeclaration(path: babel.NodePath<babel.types.ImportDeclaration>) {
+            const value = path.node.source.value;
+            if (value === 'react' || value === 'react-dom') {
+              path.remove();
+            }
+          },
+        },
+      }),
+    ],
+  });
 
+  const transpiled = transformResult?.code || undefined;
   if (!transpiled) {
     throw new Error('Failed to transpile code');
   }
@@ -42,32 +59,6 @@ export async function measurePerformance(code: any) {
   return result;
 }
 
-/**
- * Transform AST into browser-compatible JavaScript
- * @param {babel.types.File} ast - The AST to transform
- * @param {Object} opts - Transformation options
- * @returns {Promise<string>} - The transpiled code
- */
-async function transformAsync(ast: babel.types.Node, options: any) {
-  const result = await babel.transformFromAstAsync(ast, undefined, {
-    ...options,
-    filename: 'file.jsx',
-    plugins: [
-      () => ({
-        visitor: {
-          ImportDeclaration(path: any) {
-            const value = path.node.source.value;
-            if (value === 'react' || value === 'react-dom') {
-              path.remove();
-            }
-          },
-        },
-      }),
-    ],
-  });
-
-  return result?.code || '';
-}
 
 function buildHtml(transpiled: string) {
   const html = `
