@@ -5,7 +5,10 @@ export async function measurePerformance(code: any) {
   let options = {
     configFile: false,
     babelrc: false,
-    presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')],
+    presets: [
+      require.resolve('@babel/preset-env'),
+      require.resolve('@babel/preset-react'),
+    ],
   };
 
   const parsed = await babel.parseAsync(code, options);
@@ -28,7 +31,7 @@ export async function measurePerformance(code: any) {
   await page.setContent(html, {waitUntil: 'networkidle0'});
 
   await page.waitForFunction(
-    'window.__RESULT__ !== undefined && (window.__RESULT__.renderTime !== null || window.__RESULT__.error !== null)'
+    'window.__RESULT__ !== undefined && (window.__RESULT__.renderTime !== null || window.__RESULT__.error !== null)',
   );
 
   const result = await page.evaluate(() => {

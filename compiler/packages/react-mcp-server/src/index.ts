@@ -391,8 +391,7 @@ server.tool(
         perfData.webVitals.lcp += performanceResults.webVitals.lcp || 0;
         perfData.webVitals.inp += performanceResults.webVitals.inp || 0;
         perfData.webVitals.fid += performanceResults.webVitals.fid || 0;
-        perfData.webVitals.ttfb +=
-          performanceResults.webVitals.ttfb || 0;
+        perfData.webVitals.ttfb += performanceResults.webVitals.ttfb || 0;
 
         perfData.reactProfilerMetrics.id +=
           performanceResults.reactProfilerMetrics.actualDuration || 0;
