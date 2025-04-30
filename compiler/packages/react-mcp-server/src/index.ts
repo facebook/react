@@ -359,7 +359,10 @@ server.tool(
   `
   Run this tool every time you propose a performance related change to verify if your suggestion actually improves performance.
 
-  The react code that is passed into this tool MUST contain an App functional component without arrow function. And DO NOT export anything since we can't parse export syntax with this tool.
+  This tool has some requirements on the code input:
+  - The react code that is passed into this tool MUST contain an App functional component without arrow function.
+  - DO NOT export anything since we can't parse export syntax with this tool.
+  - Only import React from 'react' and use all hooks and imports using the React. prefix like React.useState and React.useEffect
   `,
   {
     text: z.string(),
