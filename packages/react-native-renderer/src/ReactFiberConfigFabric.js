@@ -647,8 +647,12 @@ FragmentInstance.prototype.observeUsing = function (
   traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
 };
 function observeChild(instance: Instance, observer: IntersectionObserver) {
+  const publicInstance = getPublicInstance(instance);
+  if (publicInstance == null) {
+    throw new Error('Expected to find a host node. This is a bug in React.');
+  }
   // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
-  observer.observe(getPublicInstance(instance));
+  observer.observe(publicInstance);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -669,8 +673,12 @@ FragmentInstance.prototype.unobserveUsing = function (
   }
 };
 function unobserveChild(instance: Instance, observer: IntersectionObserver) {
+  const publicInstance = getPublicInstance(instance);
+  if (publicInstance == null) {
+    throw new Error('Expected to find a host node. This is a bug in React.');
+  }
   // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
-  observer.unobserve(getPublicInstance(instance));
+  observer.unobserve(publicInstance);
   return false;
 }
 
@@ -693,8 +701,7 @@ export function commitNewChildToFragmentInstance(
 ): void {
   if (fragmentInstance._observers !== null) {
     fragmentInstance._observers.forEach(observer => {
-      // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
-      observer.observe(getPublicInstance(child));
+      observeChild(child, observer);
     });
   }
 }

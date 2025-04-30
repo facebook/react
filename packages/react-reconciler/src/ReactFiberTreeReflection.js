@@ -345,9 +345,9 @@ export function doesFiberContain(
   return false;
 }
 
-export function traverseFragmentInstance<A, B, C>(
+export function traverseFragmentInstance<I, A, B, C>(
   fragmentFiber: Fiber,
-  fn: (Instance, A, B, C) => boolean,
+  fn: (I, A, B, C) => boolean,
   a: A,
   b: B,
   c: C,
@@ -355,9 +355,9 @@ export function traverseFragmentInstance<A, B, C>(
   traverseFragmentInstanceChildren(fragmentFiber.child, fn, a, b, c);
 }
 
-function traverseFragmentInstanceChildren<A, B, C>(
+function traverseFragmentInstanceChildren<I, A, B, C>(
   child: Fiber | null,
-  fn: (Instance, A, B, C) => boolean,
+  fn: (I, A, B, C) => boolean,
   a: A,
   b: B,
   c: C,
