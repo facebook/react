@@ -14,6 +14,10 @@ const inlineCodeStringsFilename =
 
 const config = [
   {
+    entry: 'ReactDOMFizzInlineShellTime.js',
+    exportName: 'markShellTime',
+  },
+  {
     entry: 'ReactDOMFizzInlineClientRenderBoundary.js',
     exportName: 'clientRenderBoundary',
   },

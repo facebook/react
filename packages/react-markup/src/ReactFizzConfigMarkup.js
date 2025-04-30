@@ -224,6 +224,7 @@ export function writeCompletedRoot(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
+  isComplete: boolean,
 ): boolean {
   // Markup doesn't have any bootstrap scripts nor shell completions.
   return true;

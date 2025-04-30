@@ -1,6 +1,8 @@
 // This is a generated file. The source files are in react-dom-bindings/src/server/fizz-instruction-set.
 // The build script is at scripts/rollup/generate-inline-fizz-runtime.js.
 // Run `yarn generate-inline-fizz-runtime` to generate.
+export const markShellTime =
+  'requestAnimationFrame(function(){$RT=performance.now()});';
 export const clientRenderBoundary =
   '$RX=function(b,c,d,e,f){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),f&&(a.cstck=f),b._reactRetry&&b._reactRetry())};';
 export const completeBoundary =

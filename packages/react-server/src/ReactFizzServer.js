@@ -5217,10 +5217,19 @@ function flushCompletedQueues(
       );
       flushSegment(request, destination, completedRootSegment, null);
       request.completedRootSegment = null;
+      const isComplete =
+        request.allPendingTasks === 0 &&
+        request.pingedTasks.length === 0 &&
+        request.clientRenderedBoundaries.length === 0 &&
+        request.completedBoundaries.length === 0 &&
+        (request.trackedPostpones === null ||
+          (request.trackedPostpones.rootNodes.length === 0 &&
+            request.trackedPostpones.rootSlots === null));
       writeCompletedRoot(
         destination,
         request.resumableState,
         request.renderState,
+        isComplete,
       );
     }
 

@@ -63,6 +63,9 @@ describe('ReactDOMFloat', () => {
     global.Node = global.window.Node;
     global.addEventListener = global.window.addEventListener;
     global.MutationObserver = global.window.MutationObserver;
+    // The Fizz runtime assumes requestAnimationFrame exists so we need to polyfill it.
+    global.requestAnimationFrame = global.window.requestAnimationFrame = cb =>
+      setTimeout(cb);
     container = document.getElementById('container');
 
     React = require('react');
@@ -729,7 +732,9 @@ describe('ReactDOMFloat', () => {
     });
 
     expect(
-      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
+      Array.from(document.querySelectorAll('script[async]')).map(
+        n => n.outerHTML,
+      ),
     ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
   });
 

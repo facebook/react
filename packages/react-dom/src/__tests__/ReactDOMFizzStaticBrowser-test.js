@@ -1611,7 +1611,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     expect(result).toBe(
       '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head>' +
-        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><template id="«R»"></template>',
+        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><script id="«R»">requestAnimationFrame(function(){$RT=performance.now()});</script>',
     );
 
     await 1;
@@ -1636,7 +1636,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     expect(slice).toBe(
       '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head>' +
-        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><template id="«R»"></template>' +
+        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><script id="«R»">requestAnimationFrame(function(){$RT=performance.now()});</script>' +
         '<div hidden id="S:1">world<!-- --></div><script>$RX',
     );
   });
