@@ -34,11 +34,7 @@ export const Button = () => {
   "version": 3,
   "names": [
     "Button",
-    "$",
-    "_c",
-    "t0",
-    "Symbol",
-    "for"
+    "t0"
   ],
   "sources": [
     "sourcemaps-simple.ts"
@@ -46,7 +42,7 @@ export const Button = () => {
   "sourcesContent": [
     "// @sourceMaps\nexport const Button = () => {\n  return <button>Click me</button>;\n};\n"
   ],
-  "mappings": "kDAAA;AACA,OAAO,MAAMA,MAAM,GAAGA,CAAA,YAAAC,CAAA,GAAAC,EAAA,QAAAC,EAAA,KAAAF,CAAA,QAAAG,MAAA,CAAAC,GAAA;IACbF,EAAA,UAAyB,CAAjB,QAAQ,EAAhB,MAAyB,EAAAF,CAAA,MAAAE,EAAA,SAAAA,EAAA,GAAAF,CAAA,YAAzBE,EAAyB,EACjC",
+  "mappings": "kDAAA;AACA,OAAO,MAAMA,MAAM,GAAGA,CAAA,K;SACb,OAAyB,CAAjB,QAAQ,EAAhB,MAAyB,C,qCAAzBC,EAAyB,C,CACjC",
   "ignoreList": []
 }
 ```
