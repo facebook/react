@@ -34,13 +34,7 @@ import {
   eachReactiveValueOperand,
   visitReactiveFunction,
 } from './visitors';
-import {
-  printReactiveFunction,
-  printReactiveTerminal,
-  printReactiveValue,
-} from './PrintReactiveFunction';
 import {printPlace} from '../HIR/PrintHIR';
-import prettyFormat from 'pretty-format';
 
 /*
  * This pass prunes reactive scopes that are not necessary to bound downstream computation.
@@ -130,34 +124,11 @@ export function pruneNonEscapingScopes(fn: ReactiveFunction): void {
   }
   visitReactiveFunction(fn, new CollectDependenciesVisitor(fn.env, state), []);
 
-  // console.log('collect dependencies');
-  // console.log(
-  //   prettyFormat({
-  //     definitions: state.definitions,
-  //     escapingValues: state.escapingValues,
-  //     identifiers: state.identifiers,
-  //     scopes: state.scopes,
-  //   }),
-  // );
-
   /*
    * Then walk outward from the returned values and find all captured operands.
    * This forms the set of identifiers which should be memoized.
    */
   const memoized = computeMemoizedIdentifiers(state);
-
-  // console.log('compute memoized identifiers');
-  // console.log(
-  //   prettyFormat({
-  //     definitions: state.definitions,
-  //     escapingValues: state.escapingValues,
-  //     identifiers: state.identifiers,
-  //     scopes: state.scopes,
-  //   }),
-  // );
-  // console.log(prettyFormat(memoized));
-
-  // log(() => printReactiveFunction(fn));
 
   // Prune scopes that do not declare/reassign any escaping values
   visitReactiveFunction(fn, new PruneScopesTransform(), memoized);
@@ -957,9 +928,8 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    scopes: Array<ReactiveScope>,
+    _scopes: Array<ReactiveScope>,
   ): void {
-    this.traverseInstruction(instruction, scopes);
     this.visitValueForMemoization(
       instruction.id,
       instruction.value,
@@ -988,9 +958,6 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
       for (const scope of scopes) {
         identifierNode.scopes.add(scope.id);
       }
-    } else if (stmt.terminal.kind === 'for-of') {
-      this.visitValueForMemoization(stmt.terminal.id, stmt.terminal.init, null);
-      this.visitValueForMemoization(stmt.terminal.id, stmt.terminal.test, null);
     }
   }
 
@@ -998,6 +965,21 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
     scope: ReactiveScopeBlock,
     scopes: Array<ReactiveScope>,
   ): void {
+    for (const reassignment of scope.scope.reassignments) {
+      const identifierNode = this.state.identifiers.get(
+        reassignment.declarationId,
+      );
+      CompilerError.invariant(identifierNode !== undefined, {
+        reason: 'Expected identifier to be initialized',
+        description: null,
+        loc: reassignment.loc,
+        suggestions: null,
+      });
+      for (const scope of scopes) {
+        identifierNode.scopes.add(scope.id);
+      }
+      identifierNode.scopes.add(scope.scope.id);
+    }
     this.traverseScope(scope, [...scopes, scope.scope]);
   }
 }
