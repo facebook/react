@@ -38,6 +38,7 @@ import ButtonIcon from '../ButtonIcon';
 import Button from '../Button';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 import {useExtensionComponentsPanelVisibility} from 'react-devtools-shared/src/frontend/hooks/useExtensionComponentsPanelVisibility';
+import {useChangeOwnerAction} from './OwnersListContext';
 
 // Never indent more than this number of pixels (even if we have the room).
 const DEFAULT_INDENTATION_SIZE = 12;
@@ -217,13 +218,14 @@ export default function Tree(): React.Node {
   const handleBlur = useCallback(() => setTreeFocused(false), []);
   const handleFocus = useCallback(() => setTreeFocused(true), []);
 
+  const changeOwnerAction = useChangeOwnerAction();
   const handleKeyPress = useCallback(
     (event: $FlowFixMe) => {
       switch (event.key) {
         case 'Enter':
         case ' ':
           if (inspectedElementID !== null) {
-            dispatch({type: 'SELECT_OWNER', payload: inspectedElementID});
+            changeOwnerAction(inspectedElementID);
           }
           break;
         default:
