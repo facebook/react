@@ -379,10 +379,10 @@ server.tool(
           actualDuration: 0,
           baseDuration: 0,
           startTime: 0,
-          commitTime: 0
+          commitTime: 0,
         },
-        error: null
-      }
+        error: null,
+      };
 
       for (let i = 0; i < iterations; i++) {
         const performanceResults = await measurePerformance(text);
@@ -391,14 +391,21 @@ server.tool(
         perfData.webVitals.lcp += performanceResults.webVitals.lcp?.value || 0;
         perfData.webVitals.inp += performanceResults.webVitals.inp?.value || 0;
         perfData.webVitals.fid += performanceResults.webVitals.fid?.value || 0;
-        perfData.webVitals.ttfb += performanceResults.webVitals.ttfb?.value || 0;
+        perfData.webVitals.ttfb +=
+          performanceResults.webVitals.ttfb?.value || 0;
 
-        perfData.reactProfilerMetrics.id += performanceResults.reactProfilerMetrics.actualDuration?.value || 0;
-        perfData.reactProfilerMetrics.phase += performanceResults.reactProfilerMetrics.phase?.value || 0;
-        perfData.reactProfilerMetrics.actualDuration += performanceResults.reactProfilerMetrics.actualDuration?.value || 0;
-        perfData.reactProfilerMetrics.baseDuration += performanceResults.reactProfilerMetrics.baseDuration?.value || 0;
-        perfData.reactProfilerMetrics.startTime += performanceResults.reactProfilerMetrics.startTime?.value || 0;
-        perfData.reactProfilerMetrics.commitTime += performanceResults.reactProfilerMetrics.commitTim?.value || 0;
+        perfData.reactProfilerMetrics.id +=
+          performanceResults.reactProfilerMetrics.actualDuration?.value || 0;
+        perfData.reactProfilerMetrics.phase +=
+          performanceResults.reactProfilerMetrics.phase?.value || 0;
+        perfData.reactProfilerMetrics.actualDuration +=
+          performanceResults.reactProfilerMetrics.actualDuration?.value || 0;
+        perfData.reactProfilerMetrics.baseDuration +=
+          performanceResults.reactProfilerMetrics.baseDuration?.value || 0;
+        perfData.reactProfilerMetrics.startTime +=
+          performanceResults.reactProfilerMetrics.startTime?.value || 0;
+        perfData.reactProfilerMetrics.commitTime +=
+          performanceResults.reactProfilerMetrics.commitTim?.value || 0;
       }
 
       const formattedResults = `
@@ -417,8 +424,8 @@ ${perfData.renderTime / iterations}ms
 ## Mean React Profiler
 - Actual Duration: ${perfData.reactProfilerMetrics.actualDuration / iterations}ms
 - Base Duration: ${perfData.reactProfilerMetrics.baseDuration / iterations}ms
-- Start Time: ${perfData.reactProfilerMetrics.startTime/ iterations}ms
-- Commit Time: ${perfData.reactProfilerMetrics.commitTime/ iterations}ms
+- Start Time: ${perfData.reactProfilerMetrics.startTime / iterations}ms
+- Commit Time: ${perfData.reactProfilerMetrics.commitTime / iterations}ms
 
 These metrics can help you evaluate the performance of your React component. Lower values generally indicate better performance.
 `;

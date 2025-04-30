@@ -2,44 +2,44 @@ import * as babel from '@babel/core';
 import puppeteer from 'puppeteer';
 
 export async function measurePerformance(code: any) {
-    let options = {
-      configFile: false,
-      babelrc: false,
-      presets: [['@babel/preset-env'], '@babel/preset-react'],
-    }
+  let options = {
+    configFile: false,
+    babelrc: false,
+    presets: [['@babel/preset-env'], '@babel/preset-react'],
+  };
 
-    const parsed = await babel.parseAsync(code, options);
+  const parsed = await babel.parseAsync(code, options);
 
-    if (!parsed) {
-      throw new Error('Failed to parse code');
-    }
+  if (!parsed) {
+    throw new Error('Failed to parse code');
+  }
 
-    const transpiled = await transformAsync(parsed);
+  const transpiled = await transformAsync(parsed);
 
-    if (!transpiled) {
-      throw new Error('Failed to transpile code');
-    }
+  if (!transpiled) {
+    throw new Error('Failed to transpile code');
+  }
 
-    const browser = await puppeteer.launch({
-      protocolTimeout: 600_000,
-    });
+  const browser = await puppeteer.launch({
+    protocolTimeout: 600_000,
+  });
 
-    const page = await browser.newPage();
-    await page.setViewport({width: 1280, height: 720});
-    const html = buildHtml(transpiled);
-    await page.setContent(html, {waitUntil: 'networkidle0'});
+  const page = await browser.newPage();
+  await page.setViewport({width: 1280, height: 720});
+  const html = buildHtml(transpiled);
+  await page.setContent(html, {waitUntil: 'networkidle0'});
 
-    await page.waitForFunction(
-      'window.__RESULT__ !== undefined && (window.__RESULT__.renderTime !== null || window.__RESULT__.error !== null)',
-      { timeout: 600_000 }
-    );
+  await page.waitForFunction(
+    'window.__RESULT__ !== undefined && (window.__RESULT__.renderTime !== null || window.__RESULT__.error !== null)',
+    {timeout: 600_000},
+  );
 
-    const result = await page.evaluate(() => {
-      return (window as any).__RESULT__;
-    });
+  const result = await page.evaluate(() => {
+    return (window as any).__RESULT__;
+  });
 
-    await browser.close();
-    return result;
+  await browser.close();
+  return result;
 }
 
 /**
@@ -70,7 +70,7 @@ async function transformAsync(ast: babel.types.Node) {
 }
 
 function buildHtml(transpiled: string) {
-    const html = `
+  const html = `
         <!DOCTYPE html>
         <html>
         <head>
