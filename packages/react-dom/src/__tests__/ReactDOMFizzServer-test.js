@@ -5142,7 +5142,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  it.only('Suspending in a suspense fallback should not throw', async () => {
+  it('Suspending in a suspense fallback should not throw', async () => {
     function FallbackWithSuspense() {
       return (
         <Suspense fallback={'nested suspense fallback'}>
@@ -5175,6 +5175,10 @@ describe('ReactDOMFizzServer', () => {
     });
 
     const errors = [];
+    window.onerror = function (e) {
+      errors.push('onerror: ' + e);
+    }
+    
     ReactDOMClient.hydrateRoot(document, <App />, {
       onUncaughtError(error) {
         errors.push('uncaught: ' + error.message);
@@ -5210,6 +5214,20 @@ describe('ReactDOMFizzServer', () => {
         </head>
         <body>A</body>
       </html>,
+    );
+
+    await act(() => {
+      resolveText('suspense fallback');
+    });
+
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(document)).toEqual(
+        <html data-html="html">
+        <head data-foo="foo">
+          <title>a title</title>
+        </head>
+        <body>A</body>
+        </html>,
     );
   });
 
