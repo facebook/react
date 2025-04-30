@@ -230,24 +230,7 @@ export function completeBoundaryWithStyles(
 
   Promise.all(dependencies).then(
     window['$RC'].bind(null, suspenseBoundaryID, contentID),
-    () => {
-      // We're going to error the boundary.
-      // Find the fallback's first element.
-      const suspenseIdNode = document.getElementById(suspenseBoundaryID);
-      if (!suspenseIdNode) {
-        // The user must have already navigated away from this tree.
-        // E.g. because the parent was hydrated. That's fine there's nothing to do
-        // but we have to make sure that we already deleted the container node.
-        return;
-      }
-      // Find the boundary around the fallback. This is always the previous node.
-      const suspenseNode = suspenseIdNode.previousSibling;
-      suspenseNode.data = SUSPENSE_FALLBACK_START_DATA;
-      suspenseIdNode.setAttribute('data-dgst', 'CSS failed to load');
-      if (suspenseNode['_reactRetry']) {
-        suspenseNode['_reactRetry']();
-      }
-    },
+    window['$RX'].bind(null, suspenseBoundaryID, 'CSS failed to load'),
   );
 }
 
