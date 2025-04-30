@@ -387,25 +387,25 @@ server.tool(
       for (let i = 0; i < iterations; i++) {
         const performanceResults = await measurePerformance(text);
         perfData.renderTime += performanceResults.renderTime;
-        perfData.webVitals.cls += performanceResults.webVitals.cls?.value || 0;
-        perfData.webVitals.lcp += performanceResults.webVitals.lcp?.value || 0;
-        perfData.webVitals.inp += performanceResults.webVitals.inp?.value || 0;
-        perfData.webVitals.fid += performanceResults.webVitals.fid?.value || 0;
+        perfData.webVitals.cls += performanceResults.webVitals.cls || 0;
+        perfData.webVitals.lcp += performanceResults.webVitals.lcp || 0;
+        perfData.webVitals.inp += performanceResults.webVitals.inp || 0;
+        perfData.webVitals.fid += performanceResults.webVitals.fid || 0;
         perfData.webVitals.ttfb +=
-          performanceResults.webVitals.ttfb?.value || 0;
+          performanceResults.webVitals.ttfb || 0;
 
         perfData.reactProfilerMetrics.id +=
-          performanceResults.reactProfilerMetrics.actualDuration?.value || 0;
+          performanceResults.reactProfilerMetrics.actualDuration || 0;
         perfData.reactProfilerMetrics.phase +=
-          performanceResults.reactProfilerMetrics.phase?.value || 0;
+          performanceResults.reactProfilerMetrics.phase || 0;
         perfData.reactProfilerMetrics.actualDuration +=
-          performanceResults.reactProfilerMetrics.actualDuration?.value || 0;
+          performanceResults.reactProfilerMetrics.actualDuration || 0;
         perfData.reactProfilerMetrics.baseDuration +=
-          performanceResults.reactProfilerMetrics.baseDuration?.value || 0;
+          performanceResults.reactProfilerMetrics.baseDuration || 0;
         perfData.reactProfilerMetrics.startTime +=
-          performanceResults.reactProfilerMetrics.startTime?.value || 0;
+          performanceResults.reactProfilerMetrics.startTime || 0;
         perfData.reactProfilerMetrics.commitTime +=
-          performanceResults.reactProfilerMetrics.commitTim?.value || 0;
+          performanceResults.reactProfilerMetrics.commitTime || 0;
       }
 
       const formattedResults = `
