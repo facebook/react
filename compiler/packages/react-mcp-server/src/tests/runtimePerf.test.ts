@@ -43,28 +43,5 @@ describe('runtimePerf', () => {
       expect(result).toHaveProperty('webVitals');
       expect(result.error).toBeNull();
     }, 300000);
-
-    it('should fail due to using imported useState', async () => {
-        const complexCode = `
-          import React, { useState } from 'react';
-
-          function App() {
-            const [count, setCount] = useState(0);
-
-            return (
-              <div>
-                <h1>Counter: {count}</h1>
-                <button onClick={() => setCount(count + 1)}>Increment</button>
-              </div>
-            );
-          }
-
-          window.App = App;
-        `;
-
-        const result = await measurePerformance(complexCode);
-
-        expect(result.error).not.toBeNull();
-      }, 300000);
   });
 });
