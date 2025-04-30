@@ -79,8 +79,7 @@ function Component(props) {
 
 function Inner(props) {
   const $ = _c(7);
-  let input;
-  input = null;
+  let input = null;
   if (props.cond) {
     input = use(FooContext);
   }
