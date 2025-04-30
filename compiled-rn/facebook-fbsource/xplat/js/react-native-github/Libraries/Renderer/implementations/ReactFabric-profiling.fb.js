@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0d98783b269d66608b5baedf9f83b0de>>
+ * @generated SignedSource<<6fc38d35b650703f7562fab865b2710c>>
  */
 
 "use strict";
@@ -40,6 +40,7 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   enableLazyPublicInstanceInFabric =
     dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
   renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
+  enableFragmentRefs = dynamicFlagsUntyped.enableFragmentRefs,
   assign = Object.assign,
   prefix,
   suffix;
@@ -2151,6 +2152,16 @@ function findCurrentHostFiberImpl(node) {
   }
   return null;
 }
+function traverseFragmentInstanceChildren(child, fn, a, b, c) {
+  for (; null !== child; ) {
+    if (5 === child.tag) {
+      if (fn(child.stateNode, a, b, c)) break;
+    } else
+      (22 === child.tag && null !== child.memoizedState) ||
+        traverseFragmentInstanceChildren(child.child, fn, a, b, c);
+    child = child.sibling;
+  }
+}
 var valueStack = [],
   index = -1;
 function createCursor(defaultValue) {
@@ -3090,12 +3101,16 @@ function createChildReconciler(shouldTrackSideEffects) {
   function updateElement(returnFiber, current, element, lanes) {
     var elementType = element.type;
     if (elementType === REACT_FRAGMENT_TYPE)
-      return updateFragment(
-        returnFiber,
-        current,
-        element.props.children,
-        lanes,
-        element.key
+      return (
+        (returnFiber = updateFragment(
+          returnFiber,
+          current,
+          element.props.children,
+          lanes,
+          element.key
+        )),
+        enableFragmentRefs && coerceRef(returnFiber, element),
+        returnFiber
       );
     if (
       null !== current &&
@@ -3517,6 +3532,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       null !== newChild &&
       newChild.type === REACT_FRAGMENT_TYPE &&
       null === newChild.key &&
+      (enableFragmentRefs ? void 0 === newChild.props.ref : 1) &&
       (newChild = newChild.props.children);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
@@ -3535,6 +3551,7 @@ function createChildReconciler(shouldTrackSideEffects) {
                       currentFirstChild,
                       newChild.props.children
                     );
+                    enableFragmentRefs && coerceRef(lanes, newChild);
                     lanes.return = returnFiber;
                     returnFiber = lanes;
                     break a;
@@ -3568,6 +3585,7 @@ function createChildReconciler(shouldTrackSideEffects) {
                   lanes,
                   newChild.key
                 )),
+                enableFragmentRefs && coerceRef(lanes, newChild),
                 (lanes.return = returnFiber),
                 (returnFiber = lanes))
               : ((lanes = createFiberFromTypeAndProps(
@@ -7219,12 +7237,9 @@ function beginWork(current, workInProgress, renderLanes) {
       );
     case 7:
       return (
-        reconcileChildren(
-          current,
-          workInProgress,
-          workInProgress.pendingProps,
-          renderLanes
-        ),
+        (elementType = workInProgress.pendingProps),
+        enableFragmentRefs && markRef(current, workInProgress),
+        reconcileChildren(current, workInProgress, elementType, renderLanes),
         workInProgress.child
       );
     case 8:
@@ -8498,6 +8513,13 @@ function safelyAttachRef(current, nearestMountedAncestor) {
         case 30:
           instanceToUse = current.stateNode;
           break;
+        case 7:
+          if (enableFragmentRefs) {
+            null === current.stateNode &&
+              (current.stateNode = new FragmentInstance(current));
+            instanceToUse = current.stateNode;
+            break;
+          }
         default:
           instanceToUse = current.stateNode;
       }
@@ -8829,6 +8851,10 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       break;
     case 30:
       break;
+    case 7:
+      enableFragmentRefs &&
+        flags & 512 &&
+        safelyAttachRef(finishedWork, finishedWork.return);
     default:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
   }
@@ -8959,6 +8985,18 @@ function commitDeletionEffectsOnFiber(
             deletedFiber
           );
       break;
+    case 30:
+    case 7:
+      if (enableFragmentRefs) {
+        offscreenSubtreeWasHidden ||
+          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber
+        );
+        break;
+      }
     default:
       recursivelyTraverseDeletionEffects(
         finishedRoot,
@@ -9195,6 +9233,11 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       break;
     case 21:
       break;
+    case 7:
+      enableFragmentRefs &&
+        current &&
+        null !== current.stateNode &&
+        (current.stateNode._fragmentFiber = finishedWork);
     default:
       recursivelyTraverseMutationEffects(root, finishedWork),
         commitReconciliationEffects(finishedWork);
@@ -9248,6 +9291,9 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
       case 30:
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
         break;
+      case 7:
+        enableFragmentRefs &&
+          safelyDetachRef(finishedWork, finishedWork.return);
       default:
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
     }
@@ -9318,6 +9364,20 @@ function recursivelyTraverseReappearLayoutEffects(
       case 27:
       case 26:
       case 5:
+        if (enableFragmentRefs && 5 === finishedWork.tag) {
+          instance = finishedWork;
+          for (var parent = instance.return; null !== parent; ) {
+            parent &&
+              7 === parent.tag &&
+              null !== parent.stateNode &&
+              commitNewChildToFragmentInstance(
+                instance.stateNode,
+                parent.stateNode
+              );
+            if (5 === parent.tag || 3 === parent.tag || 4 === parent.tag) break;
+            parent = parent.return;
+          }
+        }
         recursivelyTraverseReappearLayoutEffects(
           finishedRoot,
           finishedWork,
@@ -9376,6 +9436,9 @@ function recursivelyTraverseReappearLayoutEffects(
         break;
       case 30:
         break;
+      case 7:
+        enableFragmentRefs &&
+          safelyAttachRef(finishedWork, finishedWork.return);
       default:
         recursivelyTraverseReappearLayoutEffects(
           finishedRoot,
@@ -11717,6 +11780,53 @@ function cloneHiddenInstance(instance) {
     canonical: instance.canonical
   };
 }
+function FragmentInstance(fragmentFiber) {
+  this._fragmentFiber = fragmentFiber;
+  this._observers = null;
+}
+FragmentInstance.prototype.observeUsing = function (observer) {
+  null === this._observers && (this._observers = new Set());
+  this._observers.add(observer);
+  traverseFragmentInstanceChildren(
+    this._fragmentFiber.child,
+    observeChild,
+    observer,
+    void 0,
+    void 0
+  );
+};
+function observeChild(instance, observer) {
+  instance = getPublicInstance(instance);
+  if (null == instance)
+    throw Error("Expected to find a host node. This is a bug in React.");
+  observer.observe(instance);
+  return !1;
+}
+FragmentInstance.prototype.unobserveUsing = function (observer) {
+  null !== this._observers &&
+    this._observers.has(observer) &&
+    (this._observers.delete(observer),
+    traverseFragmentInstanceChildren(
+      this._fragmentFiber.child,
+      unobserveChild,
+      observer,
+      void 0,
+      void 0
+    ));
+};
+function unobserveChild(instance, observer) {
+  instance = getPublicInstance(instance);
+  if (null == instance)
+    throw Error("Expected to find a host node. This is a bug in React.");
+  observer.unobserve(instance);
+  return !1;
+}
+function commitNewChildToFragmentInstance(child, fragmentInstance) {
+  null !== fragmentInstance._observers &&
+    fragmentInstance._observers.forEach(function (observer) {
+      observeChild(child, observer);
+    });
+}
 var HostTransitionContext = {
     $$typeof: REACT_CONTEXT_TYPE,
     Provider: null,
@@ -11799,16 +11909,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1336 = {
+  internals$jscomp$inline_1352 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-88b97674-20250429",
+    version: "19.2.0-native-fb-408d055a-20250430",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-88b97674-20250429"
+    reconcilerVersion: "19.2.0-native-fb-408d055a-20250430"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1336.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1336.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1352.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1352.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$162 = 0;
     31 > index$162;
@@ -11820,20 +11930,20 @@ internals$jscomp$inline_1336.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1336.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1352.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1620 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1640 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1620.isDisabled &&
-    hook$jscomp$inline_1620.supportsFiber
+    !hook$jscomp$inline_1640.isDisabled &&
+    hook$jscomp$inline_1640.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1620.inject(
-        internals$jscomp$inline_1336
+      (rendererID = hook$jscomp$inline_1640.inject(
+        internals$jscomp$inline_1352
       )),
-        (injectedHook = hook$jscomp$inline_1620);
+        (injectedHook = hook$jscomp$inline_1640);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c52e3842ea040eb10f6f90941e6f0b50>>
+ * @generated SignedSource<<1c25a90d8a5a3c80bfd20c68cb7150fd>>
  */
 
 "use strict";
@@ -2085,6 +2085,16 @@ __DEV__ &&
       }
       return !1;
     }
+    function traverseFragmentInstanceChildren(child, fn, a, b, c) {
+      for (; null !== child; ) {
+        if (5 === child.tag) {
+          if (fn(child.stateNode, a, b, c)) break;
+        } else
+          (22 === child.tag && null !== child.memoizedState) ||
+            traverseFragmentInstanceChildren(child.child, fn, a, b, c);
+        child = child.sibling;
+      }
+    }
     function createCursor(defaultValue) {
       return { current: defaultValue };
     }
@@ -3474,7 +3484,11 @@ __DEV__ &&
     function validateFragmentProps(element, fiber, returnFiber) {
       for (var keys = Object.keys(element.props), i = 0; i < keys.length; i++) {
         var key = keys[i];
-        if ("children" !== key && "key" !== key) {
+        if (
+          "children" !== key &&
+          "key" !== key &&
+          (enableFragmentRefs ? "ref" !== key : 1)
+        ) {
           null === fiber &&
             ((fiber = createFiberFromElement(element, returnFiber.mode, 0)),
             (fiber._debugInfo = currentDebugInfo),
@@ -3482,10 +3496,15 @@ __DEV__ &&
           runWithFiberInDEV(
             fiber,
             function (erroredKey) {
-              console.error(
-                "Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.",
-                erroredKey
-              );
+              enableFragmentRefs
+                ? console.error(
+                    "Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key`, `ref`, and `children` props.",
+                    erroredKey
+                  )
+                : console.error(
+                    "Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.",
+                    erroredKey
+                  );
             },
             key
           );
@@ -3638,6 +3657,7 @@ __DEV__ &&
               lanes,
               element.key
             )),
+            enableFragmentRefs && coerceRef(current, element),
             validateFragmentProps(element, current, returnFiber),
             current
           );
@@ -4230,6 +4250,7 @@ __DEV__ &&
           null !== newChild &&
           newChild.type === REACT_FRAGMENT_TYPE &&
           null === newChild.key &&
+          (enableFragmentRefs ? void 0 === newChild.props.ref : 1) &&
           (validateFragmentProps(newChild, null, returnFiber),
           (newChild = newChild.props.children));
         if ("object" === typeof newChild && null !== newChild) {
@@ -4250,6 +4271,7 @@ __DEV__ &&
                           currentFirstChild,
                           newChild.props.children
                         );
+                        enableFragmentRefs && coerceRef(lanes, newChild);
                         lanes.return = returnFiber;
                         lanes._debugOwner = newChild._owner;
                         lanes._debugInfo = currentDebugInfo;
@@ -4292,6 +4314,7 @@ __DEV__ &&
                       lanes,
                       newChild.key
                     )),
+                    enableFragmentRefs && coerceRef(lanes, newChild),
                     (lanes.return = returnFiber),
                     (lanes._debugOwner = returnFiber),
                     (lanes._debugTask = returnFiber._debugTask),
@@ -8940,10 +8963,12 @@ __DEV__ &&
           );
         case 7:
           return (
+            (returnFiber = workInProgress.pendingProps),
+            enableFragmentRefs && markRef(current, workInProgress),
             reconcileChildren(
               current,
               workInProgress,
-              workInProgress.pendingProps,
+              returnFiber,
               renderLanes
             ),
             workInProgress.child
@@ -10413,6 +10438,13 @@ __DEV__ &&
           case 30:
             instanceToUse = finishedWork.stateNode;
             break;
+          case 7:
+            if (enableFragmentRefs) {
+              null === finishedWork.stateNode &&
+                (finishedWork.stateNode = new FragmentInstance(finishedWork));
+              instanceToUse = finishedWork.stateNode;
+              break;
+            }
           default:
             instanceToUse = finishedWork.stateNode;
         }
@@ -10788,6 +10820,10 @@ __DEV__ &&
           break;
         case 30:
           break;
+        case 7:
+          enableFragmentRefs &&
+            flags & 512 &&
+            safelyAttachRef(finishedWork, finishedWork.return);
         default:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
       }
@@ -10945,6 +10981,18 @@ __DEV__ &&
                 deletedFiber
               );
           break;
+        case 30:
+        case 7:
+          if (enableFragmentRefs) {
+            offscreenSubtreeWasHidden ||
+              safelyDetachRef(deletedFiber, nearestMountedAncestor);
+            recursivelyTraverseDeletionEffects(
+              finishedRoot,
+              nearestMountedAncestor,
+              deletedFiber
+            );
+            break;
+          }
         default:
           recursivelyTraverseDeletionEffects(
             finishedRoot,
@@ -11199,6 +11247,11 @@ __DEV__ &&
           break;
         case 21:
           break;
+        case 7:
+          enableFragmentRefs &&
+            current &&
+            null !== current.stateNode &&
+            (current.stateNode._fragmentFiber = finishedWork);
         default:
           recursivelyTraverseMutationEffects(root, finishedWork),
             commitReconciliationEffects(finishedWork);
@@ -11261,6 +11314,9 @@ __DEV__ &&
         case 30:
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
+        case 7:
+          enableFragmentRefs &&
+            safelyDetachRef(finishedWork, finishedWork.return);
         default:
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
       }
@@ -11319,6 +11375,19 @@ __DEV__ &&
         case 27:
         case 26:
         case 5:
+          if (enableFragmentRefs && 5 === finishedWork.tag)
+            a: for (var parent = finishedWork.return; null !== parent; ) {
+              parent &&
+                7 === parent.tag &&
+                null !== parent.stateNode &&
+                commitNewChildToFragmentInstance(
+                  finishedWork.stateNode,
+                  parent.stateNode
+                );
+              if (5 === parent.tag || 3 === parent.tag || 4 === parent.tag)
+                break a;
+              parent = parent.return;
+            }
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
             finishedWork,
@@ -11385,6 +11454,9 @@ __DEV__ &&
           break;
         case 30:
           break;
+        case 7:
+          enableFragmentRefs &&
+            safelyAttachRef(finishedWork, finishedWork.return);
         default:
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
@@ -14510,6 +14582,30 @@ __DEV__ &&
       enableFabricCompleteRootInCommitPhase &&
         completeRoot(container.containerTag, newChildren);
     }
+    function FragmentInstance(fragmentFiber) {
+      this._fragmentFiber = fragmentFiber;
+      this._observers = null;
+    }
+    function observeChild(instance, observer) {
+      instance = getPublicInstance(instance);
+      if (null == instance)
+        throw Error("Expected to find a host node. This is a bug in React.");
+      observer.observe(instance);
+      return !1;
+    }
+    function unobserveChild(instance, observer) {
+      instance = getPublicInstance(instance);
+      if (null == instance)
+        throw Error("Expected to find a host node. This is a bug in React.");
+      observer.unobserve(instance);
+      return !1;
+    }
+    function commitNewChildToFragmentInstance(child, fragmentInstance) {
+      null !== fragmentInstance._observers &&
+        fragmentInstance._observers.forEach(function (observer) {
+          observeChild(child, observer);
+        });
+    }
     function nativeOnUncaughtError(error, errorInfo) {
       !1 !==
         ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog({
@@ -14598,6 +14694,7 @@ __DEV__ &&
       enableLazyPublicInstanceInFabric =
         dynamicFlagsUntyped.enableLazyPublicInstanceInFabric,
       renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
+      enableFragmentRefs = dynamicFlagsUntyped.enableFragmentRefs,
       assign = Object.assign,
       disabledDepth = 0,
       prevLog,
@@ -17261,8 +17358,33 @@ __DEV__ &&
       warnsIfNotActing = !1,
       scheduleTimeout = setTimeout,
       cancelTimeout = clearTimeout,
-      noTimeout = -1,
-      NotPendingTransition = null,
+      noTimeout = -1;
+    FragmentInstance.prototype.observeUsing = function (observer) {
+      null === this._observers && (this._observers = new Set());
+      this._observers.add(observer);
+      traverseFragmentInstanceChildren(
+        this._fragmentFiber.child,
+        observeChild,
+        observer,
+        void 0,
+        void 0
+      );
+    };
+    FragmentInstance.prototype.unobserveUsing = function (observer) {
+      null !== this._observers && this._observers.has(observer)
+        ? (this._observers.delete(observer),
+          traverseFragmentInstanceChildren(
+            this._fragmentFiber.child,
+            unobserveChild,
+            observer,
+            void 0,
+            void 0
+          ))
+        : console.error(
+            "You are calling unobserveUsing() with an observer that is not being observed with this fragment instance. First attach the observer with observeUsing()"
+          );
+    };
+    var NotPendingTransition = null,
       HostTransitionContext = {
         $$typeof: REACT_CONTEXT_TYPE,
         Provider: null,
@@ -17347,10 +17469,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-88b97674-20250429",
+        version: "19.2.0-native-fb-408d055a-20250430",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-88b97674-20250429"
+        reconcilerVersion: "19.2.0-native-fb-408d055a-20250430"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c5b8bc2fe7776c4024f75e5cc33fe90c>>
+ * @generated SignedSource<<64184277efd5b8ffe3ce56cb8aa18685>>
  */
 
 "use strict";
@@ -27,6 +27,7 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
   enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
   renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
+  enableFragmentRefs = dynamicFlagsUntyped.enableFragmentRefs,
   assign = Object.assign,
   prefix,
   suffix;
@@ -3099,12 +3100,16 @@ function createChildReconciler(shouldTrackSideEffects) {
   function updateElement(returnFiber, current, element, lanes) {
     var elementType = element.type;
     if (elementType === REACT_FRAGMENT_TYPE)
-      return updateFragment(
-        returnFiber,
-        current,
-        element.props.children,
-        lanes,
-        element.key
+      return (
+        (returnFiber = updateFragment(
+          returnFiber,
+          current,
+          element.props.children,
+          lanes,
+          element.key
+        )),
+        enableFragmentRefs && coerceRef(returnFiber, element),
+        returnFiber
       );
     if (
       null !== current &&
@@ -3526,6 +3531,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       null !== newChild &&
       newChild.type === REACT_FRAGMENT_TYPE &&
       null === newChild.key &&
+      (enableFragmentRefs ? void 0 === newChild.props.ref : 1) &&
       (newChild = newChild.props.children);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
@@ -3544,6 +3550,7 @@ function createChildReconciler(shouldTrackSideEffects) {
                       currentFirstChild,
                       newChild.props.children
                     );
+                    enableFragmentRefs && coerceRef(lanes, newChild);
                     lanes.return = returnFiber;
                     returnFiber = lanes;
                     break a;
@@ -3577,6 +3584,7 @@ function createChildReconciler(shouldTrackSideEffects) {
                   lanes,
                   newChild.key
                 )),
+                enableFragmentRefs && coerceRef(lanes, newChild),
                 (lanes.return = returnFiber),
                 (returnFiber = lanes))
               : ((lanes = createFiberFromTypeAndProps(
@@ -7187,12 +7195,9 @@ function beginWork(current, workInProgress, renderLanes) {
       );
     case 7:
       return (
-        reconcileChildren(
-          current,
-          workInProgress,
-          workInProgress.pendingProps,
-          renderLanes
-        ),
+        (elementType = workInProgress.pendingProps),
+        enableFragmentRefs && markRef(current, workInProgress),
+        reconcileChildren(current, workInProgress, elementType, renderLanes),
         workInProgress.child
       );
     case 8:
@@ -8090,6 +8095,12 @@ function safelyAttachRef(current, nearestMountedAncestor) {
         case 30:
           instanceToUse = current.stateNode;
           break;
+        case 7:
+          if (enableFragmentRefs) {
+            null === current.stateNode && (current.stateNode = null);
+            instanceToUse = current.stateNode;
+            break;
+          }
         default:
           instanceToUse = current.stateNode;
       }
@@ -8411,6 +8422,10 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       break;
     case 30:
       break;
+    case 7:
+      enableFragmentRefs &&
+        flags & 512 &&
+        safelyAttachRef(finishedWork, finishedWork.return);
     default:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
   }
@@ -8591,6 +8606,18 @@ function commitDeletionEffectsOnFiber(
             deletedFiber
           );
       break;
+    case 30:
+    case 7:
+      if (enableFragmentRefs) {
+        offscreenSubtreeWasHidden ||
+          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber
+        );
+        break;
+      }
     default:
       recursivelyTraverseDeletionEffects(
         finishedRoot,
@@ -8966,10 +8993,23 @@ function commitReconciliationEffects(finishedWork) {
   if (flags & 2) {
     try {
       for (
-        var hostParentFiber, parentFiber = finishedWork.return;
+        var hostParentFiber,
+          parentFragmentInstances = null,
+          parentFiber = finishedWork.return;
         null !== parentFiber;
 
       ) {
+        if (
+          enableFragmentRefs &&
+          parentFiber &&
+          7 === parentFiber.tag &&
+          null !== parentFiber.stateNode
+        ) {
+          var fragmentInstance = parentFiber.stateNode;
+          null === parentFragmentInstances
+            ? (parentFragmentInstances = [fragmentInstance])
+            : parentFragmentInstances.push(fragmentInstance);
+        }
         if (isHostParent(parentFiber)) {
           hostParentFiber = parentFiber;
           break;
@@ -9051,6 +9091,9 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
       case 30:
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
         break;
+      case 7:
+        enableFragmentRefs &&
+          safelyDetachRef(finishedWork, finishedWork.return);
       default:
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
     }
@@ -9157,6 +9200,9 @@ function recursivelyTraverseReappearLayoutEffects(
         break;
       case 30:
         break;
+      case 7:
+        enableFragmentRefs &&
+          safelyAttachRef(finishedWork, finishedWork.return);
       default:
         recursivelyTraverseReappearLayoutEffects(
           finishedRoot,
@@ -11197,11 +11243,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-88b97674-20250429" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-408d055a-20250430" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-88b97674-20250429\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-408d055a-20250430\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11248,26 +11294,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1298 = {
+  internals$jscomp$inline_1299 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-88b97674-20250429",
+    version: "19.2.0-native-fb-408d055a-20250430",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-88b97674-20250429"
+    reconcilerVersion: "19.2.0-native-fb-408d055a-20250430"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1298.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1299.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1644 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1647 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1644.isDisabled &&
-    hook$jscomp$inline_1644.supportsFiber
+    !hook$jscomp$inline_1647.isDisabled &&
+    hook$jscomp$inline_1647.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1644.inject(
-        internals$jscomp$inline_1298
+      (rendererID = hook$jscomp$inline_1647.inject(
+        internals$jscomp$inline_1299
       )),
-        (injectedHook = hook$jscomp$inline_1644);
+        (injectedHook = hook$jscomp$inline_1647);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

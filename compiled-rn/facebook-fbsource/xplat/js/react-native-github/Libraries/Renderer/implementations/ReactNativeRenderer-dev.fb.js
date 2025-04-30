@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<249935d5d3adfa64695e673bd0e7acd0>>
+ * @generated SignedSource<<05d596b5928341b56ad1e7ab98512001>>
  */
 
 "use strict";
@@ -3598,7 +3598,11 @@ __DEV__ &&
     function validateFragmentProps(element, fiber, returnFiber) {
       for (var keys = Object.keys(element.props), i = 0; i < keys.length; i++) {
         var key = keys[i];
-        if ("children" !== key && "key" !== key) {
+        if (
+          "children" !== key &&
+          "key" !== key &&
+          (enableFragmentRefs ? "ref" !== key : 1)
+        ) {
           null === fiber &&
             ((fiber = createFiberFromElement(element, returnFiber.mode, 0)),
             (fiber._debugInfo = currentDebugInfo),
@@ -3606,10 +3610,15 @@ __DEV__ &&
           runWithFiberInDEV(
             fiber,
             function (erroredKey) {
-              console.error(
-                "Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.",
-                erroredKey
-              );
+              enableFragmentRefs
+                ? console.error(
+                    "Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key`, `ref`, and `children` props.",
+                    erroredKey
+                  )
+                : console.error(
+                    "Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.",
+                    erroredKey
+                  );
             },
             key
           );
@@ -3762,6 +3771,7 @@ __DEV__ &&
               lanes,
               element.key
             )),
+            enableFragmentRefs && coerceRef(current, element),
             validateFragmentProps(element, current, returnFiber),
             current
           );
@@ -4354,6 +4364,7 @@ __DEV__ &&
           null !== newChild &&
           newChild.type === REACT_FRAGMENT_TYPE &&
           null === newChild.key &&
+          (enableFragmentRefs ? void 0 === newChild.props.ref : 1) &&
           (validateFragmentProps(newChild, null, returnFiber),
           (newChild = newChild.props.children));
         if ("object" === typeof newChild && null !== newChild) {
@@ -4374,6 +4385,7 @@ __DEV__ &&
                           currentFirstChild,
                           newChild.props.children
                         );
+                        enableFragmentRefs && coerceRef(lanes, newChild);
                         lanes.return = returnFiber;
                         lanes._debugOwner = newChild._owner;
                         lanes._debugInfo = currentDebugInfo;
@@ -4416,6 +4428,7 @@ __DEV__ &&
                       lanes,
                       newChild.key
                     )),
+                    enableFragmentRefs && coerceRef(lanes, newChild),
                     (lanes.return = returnFiber),
                     (lanes._debugOwner = returnFiber),
                     (lanes._debugTask = returnFiber._debugTask),
@@ -9064,10 +9077,12 @@ __DEV__ &&
           );
         case 7:
           return (
+            (returnFiber = workInProgress.pendingProps),
+            enableFragmentRefs && markRef(current, workInProgress),
             reconcileChildren(
               current,
               workInProgress,
-              workInProgress.pendingProps,
+              returnFiber,
               renderLanes
             ),
             workInProgress.child
@@ -10345,6 +10360,13 @@ __DEV__ &&
           case 30:
             instanceToUse = finishedWork.stateNode;
             break;
+          case 7:
+            if (enableFragmentRefs) {
+              null === finishedWork.stateNode &&
+                (finishedWork.stateNode = null);
+              instanceToUse = finishedWork.stateNode;
+              break;
+            }
           default:
             instanceToUse = finishedWork.stateNode;
         }
@@ -10576,10 +10598,23 @@ __DEV__ &&
     }
     function commitPlacement(finishedWork) {
       for (
-        var hostParentFiber, parentFiber = finishedWork.return;
+        var hostParentFiber,
+          parentFragmentInstances = null,
+          parentFiber = finishedWork.return;
         null !== parentFiber;
 
       ) {
+        if (
+          enableFragmentRefs &&
+          parentFiber &&
+          7 === parentFiber.tag &&
+          null !== parentFiber.stateNode
+        ) {
+          var fragmentInstance = parentFiber.stateNode;
+          null === parentFragmentInstances
+            ? (parentFragmentInstances = [fragmentInstance])
+            : parentFragmentInstances.push(fragmentInstance);
+        }
         if (isHostParent(parentFiber)) {
           hostParentFiber = parentFiber;
           break;
@@ -10593,22 +10628,22 @@ __DEV__ &&
       switch (hostParentFiber.tag) {
         case 27:
         case 5:
-          parentFiber = hostParentFiber.stateNode;
+          parentFragmentInstances = hostParentFiber.stateNode;
           hostParentFiber.flags & 32 && (hostParentFiber.flags &= -33);
           hostParentFiber = getHostSibling(finishedWork);
           insertOrAppendPlacementNode(
             finishedWork,
             hostParentFiber,
-            parentFiber
+            parentFragmentInstances
           );
           break;
         case 3:
         case 4:
           hostParentFiber = hostParentFiber.stateNode.containerInfo;
-          parentFiber = getHostSibling(finishedWork);
+          parentFragmentInstances = getHostSibling(finishedWork);
           insertOrAppendPlacementNodeIntoContainer(
             finishedWork,
-            parentFiber,
+            parentFragmentInstances,
             hostParentFiber
           );
           break;
@@ -10851,6 +10886,10 @@ __DEV__ &&
           break;
         case 30:
           break;
+        case 7:
+          enableFragmentRefs &&
+            flags & 512 &&
+            safelyAttachRef(finishedWork, finishedWork.return);
         default:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
       }
@@ -11049,6 +11088,18 @@ __DEV__ &&
                 deletedFiber
               );
           break;
+        case 30:
+        case 7:
+          if (enableFragmentRefs) {
+            offscreenSubtreeWasHidden ||
+              safelyDetachRef(deletedFiber, nearestMountedAncestor);
+            recursivelyTraverseDeletionEffects(
+              finishedRoot,
+              nearestMountedAncestor,
+              deletedFiber
+            );
+            break;
+          }
         default:
           recursivelyTraverseDeletionEffects(
             finishedRoot,
@@ -11535,6 +11586,9 @@ __DEV__ &&
         case 30:
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
+        case 7:
+          enableFragmentRefs &&
+            safelyDetachRef(finishedWork, finishedWork.return);
         default:
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
       }
@@ -11659,6 +11713,9 @@ __DEV__ &&
           break;
         case 30:
           break;
+        case 7:
+          enableFragmentRefs &&
+            safelyAttachRef(finishedWork, finishedWork.return);
         default:
           recursivelyTraverseReappearLayoutEffects(
             finishedRoot,
@@ -14744,6 +14801,7 @@ __DEV__ &&
         dynamicFlagsUntyped.enablePersistedModeClonedFlag,
       enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
       renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
+      enableFragmentRefs = dynamicFlagsUntyped.enableFragmentRefs,
       assign = Object.assign,
       disabledDepth = 0,
       prevLog,
@@ -17564,11 +17622,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-88b97674-20250429" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-408d055a-20250430" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-88b97674-20250429\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-408d055a-20250430\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17594,10 +17652,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-88b97674-20250429",
+        version: "19.2.0-native-fb-408d055a-20250430",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-88b97674-20250429"
+        reconcilerVersion: "19.2.0-native-fb-408d055a-20250430"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
