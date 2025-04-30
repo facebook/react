@@ -14,13 +14,6 @@ import {
   completeSegment,
 } from './fizz-instruction-set/ReactDOMFizzInstructionSetExternalRuntime';
 
-if (!window.$RC) {
-  // TODO: Eventually remove, we currently need to set these globals for
-  // compatibility with ReactDOMFizzInstructionSet
-  window.$RC = completeBoundary;
-  window.$RM = new Map();
-}
-
 if (document.body != null) {
   if (document.readyState === 'loading') {
     installFizzInstrObserver(document.body);
