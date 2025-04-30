@@ -1,61 +1,32 @@
 import * as babel from '@babel/core';
 import puppeteer from 'puppeteer';
 
-export async function measurePerformance(code: any) {
-  let options = {
+export async function measurePerformance(code: string) {
+  const babelOptions = {
     configFile: false,
     babelrc: false,
-    presets: [['@babel/preset-env'], '@babel/preset-react'],
+    presets: [
+      require.resolve('@babel/preset-env'),
+      require.resolve('@babel/preset-react'),
+    ],
   };
 
-  const parsed = await babel.parseAsync(code, options);
-
+  // Parse the code to AST
+  const parsed = await babel.parseAsync(code, babelOptions);
   if (!parsed) {
     throw new Error('Failed to parse code');
   }
 
-  const transpiled = await transformAsync(parsed);
-
-  if (!transpiled) {
-    throw new Error('Failed to transpile code');
-  }
-
-  const browser = await puppeteer.launch({
-    protocolTimeout: 600_000,
-  });
-
-  const page = await browser.newPage();
-  await page.setViewport({width: 1280, height: 720});
-  const html = buildHtml(transpiled);
-  await page.setContent(html, {waitUntil: 'networkidle0'});
-
-  await page.waitForFunction(
-    'window.__RESULT__ !== undefined && (window.__RESULT__.renderTime !== null || window.__RESULT__.error !== null)',
-    {timeout: 600_000},
-  );
-
-  const result = await page.evaluate(() => {
-    return (window as any).__RESULT__;
-  });
-
-  await browser.close();
-  return result;
-}
-
-/**
- * Transform AST into browser-compatible JavaScript
- * @param {babel.types.File} ast - The AST to transform
- * @param {Object} opts - Transformation options
- * @returns {Promise<string>} - The transpiled code
- */
-async function transformAsync(ast: babel.types.Node) {
-  const result = await babel.transformFromAstAsync(ast, undefined, {
+  // Transform AST to browser-compatible JavaScript
+  const transformResult = await babel.transformFromAstAsync(parsed, undefined, {
+    ...babelOptions,
     filename: 'file.jsx',
-    presets: [['@babel/preset-env'], '@babel/preset-react'],
     plugins: [
       () => ({
         visitor: {
-          ImportDeclaration(path: any) {
+          ImportDeclaration(
+            path: babel.NodePath<babel.types.ImportDeclaration>,
+          ) {
             const value = path.node.source.value;
             if (value === 'react' || value === 'react-dom') {
               path.remove();
@@ -66,7 +37,28 @@ async function transformAsync(ast: babel.types.Node) {
     ],
   });
 
-  return result?.code || '';
+  const transpiled = transformResult?.code || undefined;
+  if (!transpiled) {
+    throw new Error('Failed to transpile code');
+  }
+
+  const browser = await puppeteer.launch();
+
+  const page = await browser.newPage();
+  await page.setViewport({width: 1280, height: 720});
+  const html = buildHtml(transpiled);
+  await page.setContent(html, {waitUntil: 'networkidle0'});
+
+  await page.waitForFunction(
+    'window.__RESULT__ !== undefined && (window.__RESULT__.renderTime !== null || window.__RESULT__.error !== null)',
+  );
+
+  const result = await page.evaluate(() => {
+    return (window as any).__RESULT__;
+  });
+
+  await browser.close();
+  return result;
 }
 
 function buildHtml(transpiled: string) {

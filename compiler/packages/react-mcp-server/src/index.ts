@@ -356,7 +356,14 @@ Server Components - Shift data-heavy logic to the server whenever possible. Brea
 
 server.tool(
   'review-react-runtime',
-  'Review the runtime of the code and get performance data to evaluate the proposed solution, the react code that is passed into this tool MUST contain an App component.',
+  `
+  Run this tool every time you propose a performance related change to verify if your suggestion actually improves performance.
+
+  This tool has some requirements on the code input:
+  - The react code that is passed into this tool MUST contain an App functional component without arrow function.
+  - DO NOT export anything since we can't parse export syntax with this tool.
+  - Only import React from 'react' and use all hooks and imports using the React. prefix like React.useState and React.useEffect
+  `,
   {
     text: z.string(),
   },
@@ -387,25 +394,24 @@ server.tool(
       for (let i = 0; i < iterations; i++) {
         const performanceResults = await measurePerformance(text);
         perfData.renderTime += performanceResults.renderTime;
-        perfData.webVitals.cls += performanceResults.webVitals.cls?.value || 0;
-        perfData.webVitals.lcp += performanceResults.webVitals.lcp?.value || 0;
-        perfData.webVitals.inp += performanceResults.webVitals.inp?.value || 0;
-        perfData.webVitals.fid += performanceResults.webVitals.fid?.value || 0;
-        perfData.webVitals.ttfb +=
-          performanceResults.webVitals.ttfb?.value || 0;
+        perfData.webVitals.cls += performanceResults.webVitals.cls || 0;
+        perfData.webVitals.lcp += performanceResults.webVitals.lcp || 0;
+        perfData.webVitals.inp += performanceResults.webVitals.inp || 0;
+        perfData.webVitals.fid += performanceResults.webVitals.fid || 0;
+        perfData.webVitals.ttfb += performanceResults.webVitals.ttfb || 0;
 
         perfData.reactProfilerMetrics.id +=
-          performanceResults.reactProfilerMetrics.actualDuration?.value || 0;
+          performanceResults.reactProfilerMetrics.actualDuration || 0;
         perfData.reactProfilerMetrics.phase +=
-          performanceResults.reactProfilerMetrics.phase?.value || 0;
+          performanceResults.reactProfilerMetrics.phase || 0;
         perfData.reactProfilerMetrics.actualDuration +=
-          performanceResults.reactProfilerMetrics.actualDuration?.value || 0;
+          performanceResults.reactProfilerMetrics.actualDuration || 0;
         perfData.reactProfilerMetrics.baseDuration +=
-          performanceResults.reactProfilerMetrics.baseDuration?.value || 0;
+          performanceResults.reactProfilerMetrics.baseDuration || 0;
         perfData.reactProfilerMetrics.startTime +=
-          performanceResults.reactProfilerMetrics.startTime?.value || 0;
+          performanceResults.reactProfilerMetrics.startTime || 0;
         perfData.reactProfilerMetrics.commitTime +=
-          performanceResults.reactProfilerMetrics.commitTim?.value || 0;
+          performanceResults.reactProfilerMetrics.commitTime || 0;
       }
 
       const formattedResults = `
