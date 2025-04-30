@@ -103,6 +103,8 @@ function buildHtml(transpiled: string) {
                 try {
                     ${transpiled}
 
+                    window.App = App;
+
                     // Render the component to the DOM with profiling
                     const AppComponent = window.App || (() => React.createElement('div', null, 'No App component exported'));
 

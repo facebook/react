@@ -356,7 +356,7 @@ Server Components - Shift data-heavy logic to the server whenever possible. Brea
 
 server.tool(
   'review-react-runtime',
-  'Review the runtime of the code and get performance data to evaluate the proposed solution',
+  'Review the runtime of the code and get performance data to evaluate the proposed solution, the react code that is passed into this tool MUST contain an App component.',
   {
     text: z.string(),
   },
