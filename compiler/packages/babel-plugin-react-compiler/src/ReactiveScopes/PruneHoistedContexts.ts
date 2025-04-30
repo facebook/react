@@ -5,14 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError} from '..';
 import {
-  DeclarationId,
+  convertHoistedLValueKind,
+  IdentifierId,
   InstructionKind,
   ReactiveFunction,
   ReactiveInstruction,
+  ReactiveScopeBlock,
   ReactiveStatement,
 } from '../HIR';
+import {empty, Stack} from '../Utils/Stack';
 import {
   ReactiveFunctionTransform,
   Transformed,
@@ -24,133 +26,54 @@ import {
  * original instruction kind.
  */
 export function pruneHoistedContexts(fn: ReactiveFunction): void {
-  const hoistedIdentifiers: HoistedIdentifiers = new Map();
-  visitReactiveFunction(fn, new Visitor(), hoistedIdentifiers);
+  visitReactiveFunction(fn, new Visitor(), {
+    activeScopes: empty(),
+  });
 }
 
-const REWRITTEN_HOISTED_CONST: unique symbol = Symbol(
-  'REWRITTEN_HOISTED_CONST',
-);
-const REWRITTEN_HOISTED_LET: unique symbol = Symbol('REWRITTEN_HOISTED_LET');
+type VisitorState = {
+  activeScopes: Stack<Set<IdentifierId>>;
+};
 
-type HoistedIdentifiers = Map<
-  DeclarationId,
-  | InstructionKind
-  | typeof REWRITTEN_HOISTED_CONST
-  | typeof REWRITTEN_HOISTED_LET
->;
-
-class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
+class Visitor extends ReactiveFunctionTransform<VisitorState> {
+  override visitScope(scope: ReactiveScopeBlock, state: VisitorState): void {
+    state.activeScopes = state.activeScopes.push(
+      new Set(scope.scope.declarations.keys()),
+    );
+    this.traverseScope(scope, state);
+    state.activeScopes.pop();
+  }
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: HoistedIdentifiers,
+    state: VisitorState,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, state);
 
     /**
      * Remove hoisted declarations to preserve TDZ
      */
-    if (
-      instruction.value.kind === 'DeclareContext' &&
-      instruction.value.lvalue.kind === 'HoistedConst'
-    ) {
-      state.set(
-        instruction.value.lvalue.place.identifier.declarationId,
-        InstructionKind.Const,
+    if (instruction.value.kind === 'DeclareContext') {
+      const maybeNonHoisted = convertHoistedLValueKind(
+        instruction.value.lvalue.kind,
       );
-      return {kind: 'remove'};
+      if (maybeNonHoisted != null) {
+        return {kind: 'remove'};
+      }
     }
-
     if (
-      instruction.value.kind === 'DeclareContext' &&
-      instruction.value.lvalue.kind === 'HoistedLet'
+      instruction.value.kind === 'StoreContext' &&
+      instruction.value.lvalue.kind !== InstructionKind.Reassign
     ) {
-      state.set(
-        instruction.value.lvalue.place.identifier.declarationId,
-        InstructionKind.Let,
+      /**
+       * Rewrite StoreContexts let/const/functions that will be pre-declared in
+       * codegen to reassignments.
+       */
+      const lvalueId = instruction.value.lvalue.place.identifier.id;
+      const isDeclaredByScope = state.activeScopes.find(scope =>
+        scope.has(lvalueId),
       );
-      return {kind: 'remove'};
-    }
-
-    if (
-      instruction.value.kind === 'DeclareContext' &&
-      instruction.value.lvalue.kind === 'HoistedFunction'
-    ) {
-      state.set(
-        instruction.value.lvalue.place.identifier.declarationId,
-        InstructionKind.Function,
-      );
-      return {kind: 'remove'};
-    }
-
-    if (instruction.value.kind === 'StoreContext') {
-      const kind = state.get(
-        instruction.value.lvalue.place.identifier.declarationId,
-      );
-      if (kind != null) {
-        CompilerError.invariant(kind !== REWRITTEN_HOISTED_CONST, {
-          reason: 'Expected exactly one store to a hoisted const variable',
-          loc: instruction.loc,
-        });
-        if (
-          kind === InstructionKind.Const ||
-          kind === InstructionKind.Function
-        ) {
-          state.set(
-            instruction.value.lvalue.place.identifier.declarationId,
-            REWRITTEN_HOISTED_CONST,
-          );
-          return {
-            kind: 'replace',
-            value: {
-              kind: 'instruction',
-              instruction: {
-                ...instruction,
-                value: {
-                  ...instruction.value,
-                  lvalue: {
-                    ...instruction.value.lvalue,
-                    kind,
-                  },
-                  type: null,
-                  kind: 'StoreLocal',
-                },
-              },
-            },
-          };
-        } else if (kind !== REWRITTEN_HOISTED_LET) {
-          /**
-           * Context variables declared with let may have reassignments. Only
-           * insert a `DeclareContext` for the first encountered `StoreContext`
-           * instruction.
-           */
-          state.set(
-            instruction.value.lvalue.place.identifier.declarationId,
-            REWRITTEN_HOISTED_LET,
-          );
-          return {
-            kind: 'replace-many',
-            value: [
-              {
-                kind: 'instruction',
-                instruction: {
-                  id: instruction.id,
-                  lvalue: null,
-                  value: {
-                    kind: 'DeclareContext',
-                    lvalue: {
-                      kind: InstructionKind.Let,
-                      place: {...instruction.value.lvalue.place},
-                    },
-                    loc: instruction.value.loc,
-                  },
-                  loc: instruction.loc,
-                },
-              },
-              {kind: 'instruction', instruction},
-            ],
-          };
-        }
+      if (isDeclaredByScope) {
+        instruction.value.lvalue.kind = InstructionKind.Reassign;
       }
     }
 
