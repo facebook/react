@@ -35,7 +35,6 @@ function Component(props) {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     Component = Stringify;
     let t0;
-
     t0 = Component;
     Component = t0;
     $[0] = Component;

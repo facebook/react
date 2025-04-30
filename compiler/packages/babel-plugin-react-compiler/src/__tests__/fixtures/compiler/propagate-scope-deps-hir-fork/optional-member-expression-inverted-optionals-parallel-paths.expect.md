@@ -24,7 +24,6 @@ import { ValidateMemoization } from "shared-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-
   const x$0 = [];
   x$0.push(props?.a.b?.c.d?.e);
   x$0.push(props.a?.b.c?.d.e);
