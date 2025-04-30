@@ -33,6 +33,46 @@ declare interface ConsoleTask {
   run<T>(f: () => T): T;
 }
 
+declare var console: {
+  assert(condition: mixed, ...data: Array<any>): void,
+  clear(): void,
+  count(label?: string): void,
+  countReset(label?: string): void,
+  debug(...data: Array<any>): void,
+  dir(...data: Array<any>): void,
+  dirxml(...data: Array<any>): void,
+  error(...data: Array<any>): void,
+  _exception(...data: Array<any>): void,
+  group(...data: Array<any>): void,
+  groupCollapsed(...data: Array<any>): void,
+  groupEnd(): void,
+  info(...data: Array<any>): void,
+  log(...data: Array<any>): void,
+  profile(name?: string): void,
+  profileEnd(name?: string): void,
+  table(
+    tabularData:
+      | {[key: string]: any, ...}
+      | Array<{[key: string]: any, ...}>
+      | Array<Array<any>>,
+  ): void,
+  time(label?: string): void,
+  timeEnd(label: string): void,
+  timeStamp(
+    label?: string,
+    start?: string | number,
+    end?: string | number,
+    trackName?: string,
+    trackGroup?: string,
+    color?: string,
+  ): void,
+  timeLog(label?: string, ...data?: Array<any>): void,
+  trace(...data: Array<any>): void,
+  warn(...data: Array<any>): void,
+  createTask(label: string): ConsoleTask,
+  ...
+};
+
 type ScrollTimelineOptions = {
   source: Element,
   axis?: 'block' | 'inline' | 'x' | 'y',
