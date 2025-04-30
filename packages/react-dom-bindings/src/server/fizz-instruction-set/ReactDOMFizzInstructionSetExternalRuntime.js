@@ -13,6 +13,7 @@ import {
 // This is a string so Closure's advanced compilation mode doesn't mangle it.
 // These will be renamed to local references by the external-runtime-plugin.
 window['$RM'] = new Map();
+window['$RB'] = [];
 window['$RX'] = clientRenderBoundary;
 window['$RC'] = completeBoundary;
 window['$RR'] = completeBoundaryWithStyles;
