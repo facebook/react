@@ -16,7 +16,6 @@ function component(a) {
 ```javascript
 function component(a) {
   let t0;
-
   mutate(a);
   t0 = undefined;
 }

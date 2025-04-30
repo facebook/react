@@ -3,8 +3,9 @@
 
 ```javascript
 // @sourceMaps
-export const Button = () => {
-  return <button>Click me</button>;
+export const Button = name => {
+  const greeting = `Hello, ${name}`;
+  return <button>{greeting}</button>;
 };
 
 ```
@@ -13,14 +14,16 @@ export const Button = () => {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @sourceMaps
-export const Button = () => {
-  const $ = _c(1);
+export const Button = (name) => {
+  const $ = _c(2);
+  const greeting = `Hello, ${name}`;
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <button>Click me</button>;
-    $[0] = t0;
+  if ($[0] !== greeting) {
+    t0 = <button>{greeting}</button>;
+    $[0] = greeting;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
   return t0;
 };
@@ -34,15 +37,17 @@ export const Button = () => {
   "version": 3,
   "names": [
     "Button",
+    "name",
+    "greeting",
     "t0"
   ],
   "sources": [
     "sourcemaps-simple.ts"
   ],
   "sourcesContent": [
-    "// @sourceMaps\nexport const Button = () => {\n  return <button>Click me</button>;\n};\n"
+    "// @sourceMaps\nexport const Button = name => {\n  const greeting = `Hello, ${name}`;\n  return <button>{greeting}</button>;\n};\n"
   ],
-  "mappings": "kDAAA;AACA,OAAO,MAAMA,MAAM,GAAGA,CAAA,K;SACb,OAAyB,CAAjB,QAAQ,EAAhB,MAAyB,C,qCAAzBC,EAAyB,C,CACjC",
+  "mappings": "kDAAA;AACA,OAAO,MAAMA,MAAM,GAAGA,CAAAC,IAAA,K;EACpB,M,WAAiBC,UAAUD,IAAI,EAAjB,C;SACP,OAA2B,CAAlBC,SAAO,CAAE,EAAlB,MAA2B,C,qDAA3BC,EAA2B,C,CACnC",
   "ignoreList": []
 }
 ```

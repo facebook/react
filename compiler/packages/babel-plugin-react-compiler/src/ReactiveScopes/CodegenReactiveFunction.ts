@@ -1277,7 +1277,11 @@ function codegenInstructionNullable(
           suggestions: null,
         });
         return createVariableDeclaration(instr.loc, 'const', [
-          t.variableDeclarator(codegenLValue(cx, lvalue), value),
+          createVariableDeclarator(
+            lvalue.kind === 'Identifier' ? lvalue.identifier.loc : null,
+            codegenLValue(cx, lvalue),
+            value,
+          ),
         ]);
       }
       case InstructionKind.Function: {
@@ -1317,7 +1321,11 @@ function codegenInstructionNullable(
           suggestions: null,
         });
         return createVariableDeclaration(instr.loc, 'let', [
-          t.variableDeclarator(codegenLValue(cx, lvalue), value),
+          createVariableDeclarator(
+            lvalue.kind === 'Identifier' ? lvalue.identifier.loc : null,
+            codegenLValue(cx, lvalue),
+            value,
+          ),
         ]);
       }
       case InstructionKind.Reassign: {
@@ -1327,7 +1335,8 @@ function codegenInstructionNullable(
           loc: instr.value.loc,
           suggestions: null,
         });
-        const expr = t.assignmentExpression(
+        const expr = createAssignmentExpression(
+          instr.loc,
           '=',
           codegenLValue(cx, lvalue),
           value,
@@ -1530,6 +1539,8 @@ const createBinaryExpression = withLoc(t.binaryExpression);
 const createExpressionStatement = withLoc(t.expressionStatement);
 const _createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
+const createVariableDeclarator = withLoc(t.variableDeclarator);
+const createAssignmentExpression = withLoc(t.assignmentExpression);
 const createFunctionDeclaration = withLoc(t.functionDeclaration);
 const _createWhileStatement = withLoc(t.whileStatement);
 const createTaggedTemplateExpression = withLoc(t.taggedTemplateExpression);

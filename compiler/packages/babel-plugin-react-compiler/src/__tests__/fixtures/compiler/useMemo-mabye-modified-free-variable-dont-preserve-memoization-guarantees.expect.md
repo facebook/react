@@ -52,7 +52,6 @@ function Component(props) {
 
   useHook();
   let t0;
-
   const x = makeObject_Primitives();
   x.value = props.value;
   mutate(x, free, part);
