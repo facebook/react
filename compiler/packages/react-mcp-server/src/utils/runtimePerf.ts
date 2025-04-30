@@ -18,7 +18,6 @@ export async function measurePerformance(code: any) {
 
     const browser = await puppeteer.launch({
       protocolTimeout: 600_000,
-      headless: false,
     });
 
     const page = await browser.newPage();
