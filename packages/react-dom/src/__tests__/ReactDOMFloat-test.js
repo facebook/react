@@ -1265,9 +1265,7 @@ body {
     const suspenseInstance = boundaryTemplateInstance.previousSibling;
 
     expect(suspenseInstance.data).toEqual('$!');
-    expect(boundaryTemplateInstance.dataset.dgst).toBe(
-      'Resource failed to load',
-    );
+    expect(boundaryTemplateInstance.dataset.dgst).toBe('CSS failed to load');
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -1313,7 +1311,7 @@ body {
     );
     expect(errors).toEqual([
       'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-      'Resource failed to load',
+      'CSS failed to load',
     ]);
   });
 
