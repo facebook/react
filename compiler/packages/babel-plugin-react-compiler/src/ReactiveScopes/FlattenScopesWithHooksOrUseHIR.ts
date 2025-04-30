@@ -83,28 +83,50 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
       body.terminal.kind === 'goto' &&
       body.terminal.block === terminal.fallthrough
     ) {
+      /**
+       * Note that scope blocks are unique in that they represent two nested
+       * goto-labels. We entirely remove dependency blocks here to simplify
+       * rewrite logic
+       */
+      const dependencyBlock = fn.body.blocks.get(terminal.dependencies);
+      CompilerError.invariant(
+        dependencyBlock != null &&
+          dependencyBlock.instructions.length === 0 &&
+          dependencyBlock.terminal.kind === 'goto' &&
+          dependencyBlock.terminal.block === terminal.block,
+        {
+          reason: `Expected scope dependency block to have no instructions and goto scope block`,
+          loc: terminal.loc,
+        },
+      );
+      fn.body.blocks.delete(terminal.dependencies);
+      const scopeBlock = fn.body.blocks.get(terminal.block)!;
+      scopeBlock.preds = new Set([block.id]);
       /*
        * This was a scope just for a hook call, which doesn't need memoization.
        * flatten it away. We rely on the PrunedUnusedLabel step to do the actual
        * flattening
        */
-      block.terminal = {
+      const newTerminal: LabelTerminal = {
         kind: 'label',
         block: terminal.block,
         fallthrough: terminal.fallthrough,
         id: terminal.id,
         loc: terminal.loc,
-      } as LabelTerminal;
+      };
+      block.terminal = newTerminal;
       continue;
     }
 
-    block.terminal = {
+    const newTerminal: PrunedScopeTerminal = {
       kind: 'pruned-scope',
       block: terminal.block,
+      dependencies: terminal.dependencies,
       fallthrough: terminal.fallthrough,
       id: terminal.id,
       loc: terminal.loc,
       scope: terminal.scope,
-    } as PrunedScopeTerminal;
+    };
+    block.terminal = newTerminal;
   }
 }
