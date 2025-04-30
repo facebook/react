@@ -19,12 +19,12 @@ import type {
   // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
   MeasureOnSuccessCallback,
   // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
-  PublicInstance,
+  HostInstance as PublicInstance,
   // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
   PublicRootInstance,
   // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
   PublicTextInstance,
-} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+} from 'react-native';
 
 export type AttributeType<T, V> =
   | true
