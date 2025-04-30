@@ -16,6 +16,10 @@ export async function measurePerformance(code: any) {
 
     const transpiled = await transformAsync(parsed);
 
+    if (!transpiled) {
+      throw new Error('Failed to transpile code');
+    }
+
     const browser = await puppeteer.launch({
       protocolTimeout: 600_000,
     });
@@ -65,7 +69,7 @@ async function transformAsync(ast: babel.types.Node) {
   return result?.code || '';
 }
 
-function buildHtml(transpiled: string | null | undefined) {
+function buildHtml(transpiled: string) {
     const html = `
         <!DOCTYPE html>
         <html>
