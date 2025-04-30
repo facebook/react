@@ -2680,7 +2680,12 @@ function setMissingLocationsToNull(ast: any): void {
     return;
   }
   if (ast['loc'] == null) {
-    ast['loc'] = null;
+    ast['loc'] = {
+      start: {line: null, column: null, index: null},
+      end: {line: null, column: null, index: null},
+      filename: null,
+      identifierName: null,
+    };
   }
   for (const key in ast) {
     if (!hasOwnProperty(ast, key)) {

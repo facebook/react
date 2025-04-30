@@ -306,6 +306,7 @@ export type TransformResult = {
     original: string;
     forget: string;
   } | null;
+  sourceMap: BabelCore.BabelFileResult['map'];
 };
 
 export async function transformFixtureInput(
@@ -330,6 +331,9 @@ export async function transformFixtureInput(
   // Give babel transforms an absolute path as relative paths get prefixed
   // with `cwd`, which is different across machines
   const virtualFilepath = '/' + filename;
+
+  // Check if we should emit source maps in the test fixture
+  const includeSourceMaps = firstLine.includes('@sourceMaps');
 
   const presets =
     language === 'typescript'
@@ -357,6 +361,7 @@ export async function transformFixtureInput(
       'babel-plugin-idx',
     ],
     sourceType: 'module',
+    sourceMaps: includeSourceMaps,
     ast: includeEvaluator,
     cloneInputAst: includeEvaluator,
     configFile: false,
@@ -447,6 +452,7 @@ export async function transformFixtureInput(
       forgetOutput,
       logs: formattedLogs,
       evaluatorCode,
+      sourceMap: includeSourceMaps ? forgetResult.map : null,
     },
   };
 }
