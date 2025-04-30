@@ -1938,7 +1938,7 @@ __DEV__ &&
       return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
     }
     function setCurrentTrackFromLanes(lanes) {
-      reusableLaneDevToolDetails.track =
+      currentTrack =
         lanes & 127
           ? "Blocking"
           : lanes & 4194176
@@ -1951,10 +1951,26 @@ __DEV__ &&
     }
     function logComponentTrigger(fiber, startTime, endTime, trigger) {
       supportsUserTiming &&
-        ((reusableComponentDevToolDetails.color = "warning"),
-        (reusableComponentOptions.start = startTime),
-        (reusableComponentOptions.end = endTime),
-        performance.measure(trigger, reusableComponentOptions));
+        ((fiber = fiber._debugTask)
+          ? fiber.run(
+              console.timeStamp.bind(
+                console,
+                trigger,
+                startTime,
+                endTime,
+                "Components \u269b",
+                void 0,
+                "warning"
+              )
+            )
+          : console.timeStamp(
+              trigger,
+              startTime,
+              endTime,
+              "Components \u269b",
+              void 0,
+              "warning"
+            ));
     }
     function logComponentReappeared(fiber, startTime, endTime) {
       logComponentTrigger(fiber, startTime, endTime, "Reconnect");
@@ -1964,9 +1980,9 @@ __DEV__ &&
       if (null !== name && supportsUserTiming) {
         var selfTime = fiber.actualDuration;
         if (null === fiber.alternate || fiber.alternate.child !== fiber.child)
-          for (fiber = fiber.child; null !== fiber; fiber = fiber.sibling)
-            selfTime -= fiber.actualDuration;
-        reusableComponentDevToolDetails.color =
+          for (var child = fiber.child; null !== child; child = child.sibling)
+            selfTime -= child.actualDuration;
+        wasHydrated =
           0.5 > selfTime
             ? wasHydrated
               ? "tertiary-light"
@@ -1980,15 +1996,256 @@ __DEV__ &&
                   ? "tertiary-dark"
                   : "primary-dark"
                 : "error";
-        reusableComponentOptions.start = startTime;
-        reusableComponentOptions.end = endTime;
-        performance.measure(name, reusableComponentOptions);
+        (fiber = fiber._debugTask)
+          ? fiber.run(
+              console.timeStamp.bind(
+                console,
+                name,
+                startTime,
+                endTime,
+                "Components \u269b",
+                void 0,
+                wasHydrated
+              )
+            )
+          : console.timeStamp(
+              name,
+              startTime,
+              endTime,
+              "Components \u269b",
+              void 0,
+              wasHydrated
+            );
       }
     }
     function logComponentErrored(fiber, startTime, endTime, errors) {
       if (supportsUserTiming) {
         var name = getComponentNameFromFiber(fiber);
-        if (null !== name) {
+        if (null !== name)
+          if (
+            "undefined" !== typeof performance &&
+            "function" === typeof performance.measure
+          ) {
+            for (
+              var debugTask = null, properties = [], i = 0;
+              i < errors.length;
+              i++
+            ) {
+              var capturedValue = errors[i];
+              null == debugTask &&
+                null !== capturedValue.source &&
+                (debugTask = capturedValue.source._debugTask);
+              capturedValue = capturedValue.value;
+              properties.push([
+                "Error",
+                "object" === typeof capturedValue &&
+                null !== capturedValue &&
+                "string" === typeof capturedValue.message
+                  ? String(capturedValue.message)
+                  : String(capturedValue)
+              ]);
+            }
+            null == debugTask && (debugTask = fiber._debugTask);
+            fiber = {
+              start: startTime,
+              end: endTime,
+              detail: {
+                devtools: {
+                  color: "error",
+                  track: "Components \u269b",
+                  tooltipText:
+                    13 === fiber.tag
+                      ? "Hydration failed"
+                      : "Error boundary caught an error",
+                  properties: properties
+                }
+              }
+            };
+            debugTask
+              ? debugTask.run(
+                  performance.measure.bind(performance, name, fiber)
+                )
+              : performance.measure(name, fiber);
+          } else
+            console.timeStamp(
+              name,
+              startTime,
+              endTime,
+              "Components \u269b",
+              void 0,
+              "error"
+            );
+      }
+    }
+    function logComponentEffect(fiber, startTime, endTime, selfTime, errors) {
+      if (null !== errors) {
+        if (supportsUserTiming) {
+          var name = getComponentNameFromFiber(fiber);
+          if (null !== name)
+            if (
+              "undefined" !== typeof performance &&
+              "function" === typeof performance.measure
+            ) {
+              selfTime = [];
+              for (var i = 0; i < errors.length; i++) {
+                var error = errors[i].value;
+                selfTime.push([
+                  "Error",
+                  "object" === typeof error &&
+                  null !== error &&
+                  "string" === typeof error.message
+                    ? String(error.message)
+                    : String(error)
+                ]);
+              }
+              startTime = {
+                start: startTime,
+                end: endTime,
+                detail: {
+                  devtools: {
+                    color: "error",
+                    track: "Components \u269b",
+                    tooltipText: "A lifecycle or effect errored",
+                    properties: selfTime
+                  }
+                }
+              };
+              (fiber = fiber._debugTask)
+                ? fiber.run(
+                    performance.measure.bind(performance, name, startTime)
+                  )
+                : performance.measure(name, startTime);
+            } else
+              console.timeStamp(
+                name,
+                startTime,
+                endTime,
+                "Components \u269b",
+                void 0,
+                "error"
+              );
+        }
+      } else
+        (name = getComponentNameFromFiber(fiber)),
+          null !== name &&
+            supportsUserTiming &&
+            ((errors =
+              1 > selfTime
+                ? "secondary-light"
+                : 100 > selfTime
+                  ? "secondary"
+                  : 500 > selfTime
+                    ? "secondary-dark"
+                    : "error"),
+            (fiber = fiber._debugTask)
+              ? fiber.run(
+                  console.timeStamp.bind(
+                    console,
+                    name,
+                    startTime,
+                    endTime,
+                    "Components \u269b",
+                    void 0,
+                    errors
+                  )
+                )
+              : console.timeStamp(
+                  name,
+                  startTime,
+                  endTime,
+                  "Components \u269b",
+                  void 0,
+                  errors
+                ));
+    }
+    function logSuspendedRenderPhase(startTime, endTime, lanes) {
+      supportsUserTiming &&
+        console.timeStamp(
+          "Prewarm",
+          startTime,
+          endTime,
+          currentTrack,
+          "Scheduler \u269b",
+          (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark"
+        );
+    }
+    function logSuspendedWithDelayPhase(startTime, endTime, lanes) {
+      supportsUserTiming &&
+        console.timeStamp(
+          "Suspended",
+          startTime,
+          endTime,
+          currentTrack,
+          "Scheduler \u269b",
+          (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark"
+        );
+    }
+    function logRecoveredRenderPhase(
+      startTime,
+      endTime,
+      lanes,
+      recoverableErrors,
+      hydrationFailed
+    ) {
+      if (supportsUserTiming)
+        if (
+          "undefined" !== typeof performance &&
+          "function" === typeof performance.measure
+        ) {
+          lanes = [];
+          for (var i = 0; i < recoverableErrors.length; i++) {
+            var error = recoverableErrors[i].value;
+            lanes.push([
+              "Recoverable Error",
+              "object" === typeof error &&
+              null !== error &&
+              "string" === typeof error.message
+                ? String(error.message)
+                : String(error)
+            ]);
+          }
+          performance.measure("Recovered", {
+            start: startTime,
+            end: endTime,
+            detail: {
+              devtools: {
+                color: "primary-dark",
+                track: currentTrack,
+                trackGroup: "Scheduler \u269b",
+                tooltipText: hydrationFailed
+                  ? "Hydration Failed"
+                  : "Recovered after Error",
+                properties: lanes
+              }
+            }
+          });
+        } else
+          console.timeStamp(
+            "Recovered",
+            startTime,
+            endTime,
+            currentTrack,
+            "Scheduler \u269b",
+            "error"
+          );
+    }
+    function logErroredRenderPhase(startTime, endTime) {
+      supportsUserTiming &&
+        console.timeStamp(
+          "Errored",
+          startTime,
+          endTime,
+          currentTrack,
+          "Scheduler \u269b",
+          "error"
+        );
+    }
+    function logCommitErrored(startTime, endTime, errors, passive) {
+      if (supportsUserTiming)
+        if (
+          "undefined" !== typeof performance &&
+          "function" === typeof performance.measure
+        ) {
           for (var properties = [], i = 0; i < errors.length; i++) {
             var error = errors[i].value;
             properties.push([
@@ -2000,208 +2257,43 @@ __DEV__ &&
                 : String(error)
             ]);
           }
-          performance.measure(name, {
+          performance.measure("Errored", {
             start: startTime,
             end: endTime,
             detail: {
               devtools: {
                 color: "error",
-                track: "Components \u269b",
-                tooltipText:
-                  13 === fiber.tag
-                    ? "Hydration failed"
-                    : "Error boundary caught an error",
+                track: currentTrack,
+                trackGroup: "Scheduler \u269b",
+                tooltipText: passive
+                  ? "Remaining Effects Errored"
+                  : "Commit Errored",
                 properties: properties
               }
             }
           });
-        }
-      }
-    }
-    function logComponentEffect(fiber, startTime, endTime, selfTime, errors) {
-      if (null !== errors) {
-        if (
-          supportsUserTiming &&
-          ((selfTime = getComponentNameFromFiber(fiber)), null !== selfTime)
-        ) {
-          fiber = [];
-          for (var i = 0; i < errors.length; i++) {
-            var error = errors[i].value;
-            fiber.push([
-              "Error",
-              "object" === typeof error &&
-              null !== error &&
-              "string" === typeof error.message
-                ? String(error.message)
-                : String(error)
-            ]);
-          }
-          performance.measure(selfTime, {
-            start: startTime,
-            end: endTime,
-            detail: {
-              devtools: {
-                color: "error",
-                track: "Components \u269b",
-                tooltipText: "A lifecycle or effect errored",
-                properties: fiber
-              }
-            }
-          });
-        }
-      } else
-        (errors = getComponentNameFromFiber(fiber)),
-          null !== errors &&
-            supportsUserTiming &&
-            ((reusableComponentDevToolDetails.color =
-              1 > selfTime
-                ? "secondary-light"
-                : 100 > selfTime
-                  ? "secondary"
-                  : 500 > selfTime
-                    ? "secondary-dark"
-                    : "error"),
-            (reusableComponentOptions.start = startTime),
-            (reusableComponentOptions.end = endTime),
-            performance.measure(errors, reusableComponentOptions));
-    }
-    function logRenderPhase(startTime, endTime, lanes) {
-      supportsUserTiming &&
-        ((reusableLaneDevToolDetails.color =
-          (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark"),
-        (reusableLaneOptions.start = startTime),
-        (reusableLaneOptions.end = endTime),
-        performance.measure(
-          (lanes & 536870912) === lanes
-            ? "Prepared"
-            : (lanes & 201326741) === lanes
-              ? "Hydrated"
-              : "Render",
-          reusableLaneOptions
-        ));
-    }
-    function logSuspendedRenderPhase(startTime, endTime, lanes) {
-      supportsUserTiming &&
-        ((reusableLaneDevToolDetails.color =
-          (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark"),
-        (reusableLaneOptions.start = startTime),
-        (reusableLaneOptions.end = endTime),
-        performance.measure("Prewarm", reusableLaneOptions));
-    }
-    function logSuspendedWithDelayPhase(startTime, endTime, lanes) {
-      supportsUserTiming &&
-        ((reusableLaneDevToolDetails.color =
-          (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark"),
-        (reusableLaneOptions.start = startTime),
-        (reusableLaneOptions.end = endTime),
-        performance.measure("Suspended", reusableLaneOptions));
-    }
-    function logRecoveredRenderPhase(
-      startTime,
-      endTime,
-      lanes,
-      recoverableErrors,
-      hydrationFailed
-    ) {
-      if (supportsUserTiming) {
-        lanes = [];
-        for (var i = 0; i < recoverableErrors.length; i++) {
-          var error = recoverableErrors[i].value;
-          lanes.push([
-            "Recoverable Error",
-            "object" === typeof error &&
-            null !== error &&
-            "string" === typeof error.message
-              ? String(error.message)
-              : String(error)
-          ]);
-        }
-        performance.measure("Recovered", {
-          start: startTime,
-          end: endTime,
-          detail: {
-            devtools: {
-              color: "primary-dark",
-              track: reusableLaneDevToolDetails.track,
-              trackGroup: "Scheduler \u269b",
-              tooltipText: hydrationFailed
-                ? "Hydration Failed"
-                : "Recovered after Error",
-              properties: lanes
-            }
-          }
-        });
-      }
-    }
-    function logErroredRenderPhase(startTime, endTime) {
-      supportsUserTiming &&
-        ((reusableLaneDevToolDetails.color = "error"),
-        (reusableLaneOptions.start = startTime),
-        (reusableLaneOptions.end = endTime),
-        performance.measure("Errored", reusableLaneOptions));
-    }
-    function logSuspenseThrottlePhase(startTime, endTime) {
-      supportsUserTiming &&
-        ((reusableLaneDevToolDetails.color = "secondary-light"),
-        (reusableLaneOptions.start = startTime),
-        (reusableLaneOptions.end = endTime),
-        performance.measure("Throttled", reusableLaneOptions));
-    }
-    function logSuspendedCommitPhase(startTime, endTime) {
-      supportsUserTiming &&
-        ((reusableLaneDevToolDetails.color = "secondary-light"),
-        (reusableLaneOptions.start = startTime),
-        (reusableLaneOptions.end = endTime),
-        performance.measure("Suspended on CSS or Images", reusableLaneOptions));
-    }
-    function logCommitErrored(startTime, endTime, errors, passive) {
-      if (supportsUserTiming) {
-        for (var properties = [], i = 0; i < errors.length; i++) {
-          var error = errors[i].value;
-          properties.push([
-            "Error",
-            "object" === typeof error &&
-            null !== error &&
-            "string" === typeof error.message
-              ? String(error.message)
-              : String(error)
-          ]);
-        }
-        performance.measure("Errored", {
-          start: startTime,
-          end: endTime,
-          detail: {
-            devtools: {
-              color: "error",
-              track: reusableLaneDevToolDetails.track,
-              trackGroup: "Scheduler \u269b",
-              tooltipText: passive
-                ? "Remaining Effects Errored"
-                : "Commit Errored",
-              properties: properties
-            }
-          }
-        });
-      }
-    }
-    function logPaintYieldPhase(startTime, endTime, delayedUntilPaint) {
-      supportsUserTiming &&
-        ((reusableLaneDevToolDetails.color = "secondary-light"),
-        (reusableLaneOptions.start = startTime),
-        (reusableLaneOptions.end = endTime),
-        performance.measure(
-          delayedUntilPaint ? "Waiting for Paint" : "",
-          reusableLaneOptions
-        ));
+        } else
+          console.timeStamp(
+            "Errored",
+            startTime,
+            endTime,
+            currentTrack,
+            "Scheduler \u269b",
+            "error"
+          );
     }
     function logPassiveCommitPhase(startTime, endTime, errors) {
       null !== errors
         ? logCommitErrored(startTime, endTime, errors, !0)
         : supportsUserTiming &&
-          ((reusableLaneDevToolDetails.color = "secondary-dark"),
-          (reusableLaneOptions.start = startTime),
-          (reusableLaneOptions.end = endTime),
-          performance.measure("Remaining Effects", reusableLaneOptions));
+          console.timeStamp(
+            "Remaining Effects",
+            startTime,
+            endTime,
+            currentTrack,
+            "Scheduler \u269b",
+            "secondary-dark"
+          );
     }
     function resetContextDependencies() {
       lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -2454,7 +2546,7 @@ __DEV__ &&
       root.transitionTypes = null;
       return claimed;
     }
-    function startUpdateTimerByLane(lane) {
+    function startUpdateTimerByLane(lane, method) {
       if (enableComponentPerformanceTrack) {
         var JSCompiler_temp;
         (JSCompiler_temp = 0 !== (lane & 3)) ||
@@ -2462,6 +2554,7 @@ __DEV__ &&
         if (JSCompiler_temp) {
           if (0 > blockingUpdateTime) {
             blockingUpdateTime = now();
+            blockingUpdateTask = createTask(method);
             (executionContext & (RenderContext | CommitContext)) !==
               NoContext && (blockingSpawnedUpdate = !0);
             if (-1.1 !== blockingEventTime || null !== blockingEventType)
@@ -2472,7 +2565,9 @@ __DEV__ &&
         } else if (
           0 !== (lane & 4194048) &&
           0 > transitionUpdateTime &&
-          ((transitionUpdateTime = now()), 0 > transitionStartTime)
+          ((transitionUpdateTime = now()),
+          (transitionUpdateTask = createTask(method)),
+          0 > transitionStartTime)
         ) {
           if (-1.1 !== transitionEventTime || null !== transitionEventType)
             transitionEventIsRepeat = !1;
@@ -5225,7 +5320,9 @@ __DEV__ &&
     }
     function subscribeToStore(fiber, inst, subscribe) {
       return subscribe(function () {
-        checkIfSnapshotChanged(inst) && forceStoreRerender(fiber);
+        checkIfSnapshotChanged(inst) &&
+          (startUpdateTimerByLane(2, "updateSyncExternalStore()"),
+          forceStoreRerender(fiber));
       });
     }
     function checkIfSnapshotChanged(inst) {
@@ -5936,7 +6033,7 @@ __DEV__ &&
             fiber = createUpdate(lane);
             var root = enqueueUpdate(provider, fiber, lane);
             null !== root &&
-              (startUpdateTimerByLane(lane),
+              (startUpdateTimerByLane(lane, "refresh()"),
               scheduleUpdateOnFiber(root, provider, lane),
               entangleTransitions(root, provider, lane));
             provider = createCache();
@@ -5970,7 +6067,7 @@ __DEV__ &&
         ? enqueueRenderPhaseUpdate(queue, update)
         : ((update = enqueueConcurrentHookUpdate(fiber, queue, update, args)),
           null !== update &&
-            (startUpdateTimerByLane(args),
+            (startUpdateTimerByLane(args, "dispatch()"),
             scheduleUpdateOnFiber(update, fiber, args),
             entangleTransitionUpdate(update, queue, args)));
       enableSchedulingProfiler && markStateUpdateScheduled(fiber, args);
@@ -5983,7 +6080,7 @@ __DEV__ &&
         );
       args = requestUpdateLane(fiber);
       dispatchSetStateInternal(fiber, queue, action, args) &&
-        startUpdateTimerByLane(args);
+        startUpdateTimerByLane(args, "setState()");
       enableSchedulingProfiler && markStateUpdateScheduled(fiber, args);
     }
     function dispatchSetStateInternal(fiber, queue, action, lane) {
@@ -6065,7 +6162,7 @@ __DEV__ &&
           2
         )),
           null !== throwIfDuringRender &&
-            (startUpdateTimerByLane(2),
+            (startUpdateTimerByLane(2, "setOptimistic()"),
             scheduleUpdateOnFiber(throwIfDuringRender, fiber, 2));
       enableSchedulingProfiler && markStateUpdateScheduled(fiber, 2);
     }
@@ -13666,56 +13763,91 @@ __DEV__ &&
         0 !== workInProgressRootRenderLanes &&
         null !== workInProgress
       ) {
-        var yieldEndTime = now$1();
+        var yieldedFiber = workInProgress,
+          yieldEndTime = now$1();
         switch (yieldReason) {
           case SuspendedOnImmediate:
           case SuspendedOnData:
             var startTime = yieldStartTime;
             supportsUserTiming &&
-              ((reusableComponentDevToolDetails.color = "primary-light"),
-              (reusableComponentOptions.start = startTime),
-              (reusableComponentOptions.end = yieldEndTime),
-              performance.measure("Suspended", reusableComponentOptions));
+              ((yieldedFiber = yieldedFiber._debugTask)
+                ? yieldedFiber.run(
+                    console.timeStamp.bind(
+                      console,
+                      "Suspended",
+                      startTime,
+                      yieldEndTime,
+                      "Components \u269b",
+                      void 0,
+                      "primary-light"
+                    )
+                  )
+                : console.timeStamp(
+                    "Suspended",
+                    startTime,
+                    yieldEndTime,
+                    "Components \u269b",
+                    void 0,
+                    "primary-light"
+                  ));
             break;
           case SuspendedOnAction:
             startTime = yieldStartTime;
             supportsUserTiming &&
-              ((reusableComponentDevToolDetails.color = "primary-light"),
-              (reusableComponentOptions.start = startTime),
-              (reusableComponentOptions.end = yieldEndTime),
-              performance.measure("Action", reusableComponentOptions));
+              ((yieldedFiber = yieldedFiber._debugTask)
+                ? yieldedFiber.run(
+                    console.timeStamp.bind(
+                      console,
+                      "Action",
+                      startTime,
+                      yieldEndTime,
+                      "Components \u269b",
+                      void 0,
+                      "primary-light"
+                    )
+                  )
+                : console.timeStamp(
+                    "Action",
+                    startTime,
+                    yieldEndTime,
+                    "Components \u269b",
+                    void 0,
+                    "primary-light"
+                  ));
             break;
           default:
-            if (((startTime = yieldStartTime), supportsUserTiming)) {
-              var yieldDuration = yieldEndTime - startTime;
-              3 > yieldDuration ||
-                ((reusableComponentDevToolDetails.color =
-                  5 > yieldDuration
+            supportsUserTiming &&
+              ((yieldedFiber = yieldEndTime - yieldStartTime),
+              3 > yieldedFiber ||
+                console.timeStamp(
+                  "Blocked",
+                  yieldStartTime,
+                  yieldEndTime,
+                  "Components \u269b",
+                  void 0,
+                  5 > yieldedFiber
                     ? "primary-light"
-                    : 10 > yieldDuration
+                    : 10 > yieldedFiber
                       ? "primary"
-                      : 100 > yieldDuration
+                      : 100 > yieldedFiber
                         ? "primary-dark"
-                        : "error"),
-                (reusableComponentOptions.start = startTime),
-                (reusableComponentOptions.end = yieldEndTime),
-                performance.measure("Blocked", reusableComponentOptions));
-            }
+                        : "error"
+                ));
         }
       }
-      yieldDuration = (yieldEndTime =
+      startTime = (yieldedFiber =
         (!forceSync &&
           0 === (lanes & 124) &&
           0 === (lanes & root.expiredLanes)) ||
         (enableSiblingPrerendering && checkIfRootIsPrerendering(root, lanes)))
         ? renderRootConcurrent(root, lanes)
         : renderRootSync(root, lanes, !0);
-      var renderWasConcurrent = yieldEndTime;
+      var renderWasConcurrent = yieldedFiber;
       do {
-        if (yieldDuration === RootInProgress) {
+        if (startTime === RootInProgress) {
           enableSiblingPrerendering &&
             workInProgressRootIsPrerendering &&
-            !yieldEndTime &&
+            !yieldedFiber &&
             markRootSuspended(root, lanes, 0, !1);
           enableComponentPerformanceTrack &&
             ((lanes = workInProgressSuspendedReason),
@@ -13725,26 +13857,28 @@ __DEV__ &&
         } else {
           forceSync = 0;
           enableComponentPerformanceTrack && (forceSync = now$1());
-          startTime = root.current.alternate;
+          yieldEndTime = root.current.alternate;
           if (
             renderWasConcurrent &&
-            !isRenderConsistentWithExternalStores(startTime)
+            !isRenderConsistentWithExternalStores(yieldEndTime)
           ) {
             enableComponentPerformanceTrack &&
               (setCurrentTrackFromLanes(lanes),
-              (startTime = renderStartTime),
-              (yieldDuration = forceSync),
               supportsUserTiming &&
-                ((reusableLaneDevToolDetails.color = "error"),
-                (reusableLaneOptions.start = startTime),
-                (reusableLaneOptions.end = yieldDuration),
-                performance.measure("Teared Render", reusableLaneOptions)),
+                console.timeStamp(
+                  "Teared Render",
+                  renderStartTime,
+                  forceSync,
+                  currentTrack,
+                  "Scheduler \u269b",
+                  "error"
+                ),
               finalizeRender(lanes, forceSync));
-            yieldDuration = renderRootSync(root, lanes, !1);
+            startTime = renderRootSync(root, lanes, !1);
             renderWasConcurrent = !1;
             continue;
           }
-          if (yieldDuration === RootErrored) {
+          if (startTime === RootErrored) {
             var lanesThatJustErrored = lanes;
             root.errorRecoveryDisabledLanes & lanesThatJustErrored
               ? (renderWasConcurrent = 0)
@@ -13762,41 +13896,41 @@ __DEV__ &&
                 finalizeRender(lanes, forceSync));
               lanes = renderWasConcurrent;
               a: {
-                yieldDuration = root;
+                startTime = root;
                 var originallyAttemptedLanes = lanesThatJustErrored;
                 lanesThatJustErrored = workInProgressRootConcurrentErrors;
                 renderWasConcurrent = renderRootSync(
-                  yieldDuration,
+                  startTime,
                   renderWasConcurrent,
                   !1
                 );
                 if (renderWasConcurrent !== RootErrored) {
                   if (workInProgressRootDidAttachPingListener) {
-                    yieldDuration.errorRecoveryDisabledLanes |=
+                    startTime.errorRecoveryDisabledLanes |=
                       originallyAttemptedLanes;
                     workInProgressRootInterleavedUpdatedLanes |=
                       originallyAttemptedLanes;
-                    yieldDuration = RootSuspendedWithDelay;
+                    startTime = RootSuspendedWithDelay;
                     break a;
                   }
-                  yieldDuration = workInProgressRootRecoverableErrors;
+                  startTime = workInProgressRootRecoverableErrors;
                   workInProgressRootRecoverableErrors = lanesThatJustErrored;
-                  null !== yieldDuration &&
+                  null !== startTime &&
                     (null === workInProgressRootRecoverableErrors
-                      ? (workInProgressRootRecoverableErrors = yieldDuration)
+                      ? (workInProgressRootRecoverableErrors = startTime)
                       : workInProgressRootRecoverableErrors.push.apply(
                           workInProgressRootRecoverableErrors,
-                          yieldDuration
+                          startTime
                         ));
                 }
-                yieldDuration = renderWasConcurrent;
+                startTime = renderWasConcurrent;
               }
               renderWasConcurrent = !1;
-              if (yieldDuration !== RootErrored) continue;
+              if (startTime !== RootErrored) continue;
               else enableComponentPerformanceTrack && (forceSync = now$1());
             }
           }
-          if (yieldDuration === RootFatalErrored) {
+          if (startTime === RootFatalErrored) {
             enableComponentPerformanceTrack &&
               (setCurrentTrackFromLanes(lanes),
               logErroredRenderPhase(renderStartTime, forceSync),
@@ -13806,8 +13940,8 @@ __DEV__ &&
             break;
           }
           a: {
-            yieldEndTime = root;
-            switch (yieldDuration) {
+            yieldedFiber = root;
+            switch (startTime) {
               case RootInProgress:
               case RootFatalErrored:
                 throw Error("Root did not complete. This is a bug in React.");
@@ -13818,14 +13952,14 @@ __DEV__ &&
                   (setCurrentTrackFromLanes(lanes),
                   logSuspendedRenderPhase(renderStartTime, forceSync, lanes),
                   finalizeRender(lanes, forceSync),
-                  (startTime = lanes),
+                  (yieldEndTime = lanes),
                   enableComponentPerformanceTrack &&
-                    (0 !== (startTime & 3) || 0 !== (startTime & 124)
+                    (0 !== (yieldEndTime & 3) || 0 !== (yieldEndTime & 124)
                       ? (blockingSuspendedTime = forceSync)
-                      : 0 !== (startTime & 4194048) &&
+                      : 0 !== (yieldEndTime & 4194048) &&
                         (transitionSuspendedTime = forceSync)));
                 markRootSuspended(
-                  yieldEndTime,
+                  yieldedFiber,
                   lanes,
                   workInProgressDeferredLane,
                   !workInProgressRootDidSkipSuspendedSiblings
@@ -13842,8 +13976,8 @@ __DEV__ &&
             }
             if (null !== ReactSharedInternals.actQueue)
               commitRoot(
+                yieldedFiber,
                 yieldEndTime,
-                startTime,
                 lanes,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
@@ -13851,7 +13985,7 @@ __DEV__ &&
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
-                yieldDuration,
+                startTime,
                 IMMEDIATE_COMMIT,
                 renderStartTime,
                 forceSync
@@ -13859,7 +13993,7 @@ __DEV__ &&
             else {
               if (
                 (lanes & 62914560) === lanes &&
-                (alwaysThrottleRetries || yieldDuration === RootSuspended) &&
+                (alwaysThrottleRetries || startTime === RootSuspended) &&
                 ((renderWasConcurrent =
                   globalMostRecentFallbackTime +
                   FALLBACK_THROTTLE_MS -
@@ -13867,17 +14001,17 @@ __DEV__ &&
                 10 < renderWasConcurrent)
               ) {
                 markRootSuspended(
-                  yieldEndTime,
+                  yieldedFiber,
                   lanes,
                   workInProgressDeferredLane,
                   !workInProgressRootDidSkipSuspendedSiblings
                 );
-                if (0 !== getNextLanes(yieldEndTime, 0, !0)) break a;
-                yieldEndTime.timeoutHandle = scheduleTimeout(
+                if (0 !== getNextLanes(yieldedFiber, 0, !0)) break a;
+                yieldedFiber.timeoutHandle = scheduleTimeout(
                   commitRootWhenReady.bind(
                     null,
+                    yieldedFiber,
                     yieldEndTime,
-                    startTime,
                     workInProgressRootRecoverableErrors,
                     workInProgressTransitions,
                     workInProgressRootDidIncludeRecursiveRenderUpdate,
@@ -13886,7 +14020,7 @@ __DEV__ &&
                     workInProgressRootInterleavedUpdatedLanes,
                     workInProgressSuspendedRetryLanes,
                     workInProgressRootDidSkipSuspendedSiblings,
-                    yieldDuration,
+                    startTime,
                     THROTTLED_COMMIT,
                     renderStartTime,
                     forceSync
@@ -13896,8 +14030,8 @@ __DEV__ &&
                 break a;
               }
               commitRootWhenReady(
+                yieldedFiber,
                 yieldEndTime,
-                startTime,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
                 workInProgressRootDidIncludeRecursiveRenderUpdate,
@@ -13906,7 +14040,7 @@ __DEV__ &&
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
                 workInProgressRootDidSkipSuspendedSiblings,
-                yieldDuration,
+                startTime,
                 IMMEDIATE_COMMIT,
                 renderStartTime,
                 forceSync
@@ -14063,10 +14197,38 @@ __DEV__ &&
     function prepareFreshStack(root, lanes) {
       if (enableComponentPerformanceTrack) {
         supportsUserTiming &&
-          (performance.mark("Blocking Track", blockingLaneMarker),
-          performance.mark("Transition Track", transitionLaneMarker),
-          performance.mark("Suspense Track", suspenseLaneMarker),
-          performance.mark("Idle Track", idleLaneMarker));
+          (console.timeStamp(
+            "Blocking Track",
+            0.003,
+            0.003,
+            "Blocking",
+            "Scheduler \u269b",
+            "primary-light"
+          ),
+          console.timeStamp(
+            "Transition Track",
+            0.003,
+            0.003,
+            "Transition",
+            "Scheduler \u269b",
+            "primary-light"
+          ),
+          console.timeStamp(
+            "Suspense Track",
+            0.003,
+            0.003,
+            "Suspense",
+            "Scheduler \u269b",
+            "primary-light"
+          ),
+          console.timeStamp(
+            "Idle Track",
+            0.003,
+            0.003,
+            "Idle",
+            "Scheduler \u269b",
+            "primary-light"
+          ));
         var previousRenderStartTime = renderStartTime;
         enableComponentPerformanceTrack && (renderStartTime = now());
         if (
@@ -14086,20 +14248,18 @@ __DEV__ &&
           else {
             var endTime = renderStartTime;
             supportsUserTiming &&
-              ((reusableLaneDevToolDetails.color =
-                (lanes & 738197653) === lanes
-                  ? "tertiary-dark"
-                  : "primary-dark"),
-              (reusableLaneOptions.start = previousRenderStartTime),
-              (reusableLaneOptions.end = endTime),
-              performance.measure(
+              console.timeStamp(
                 (lanes & 536870912) === lanes
                   ? "Prewarm"
                   : (lanes & 201326741) === lanes
                     ? "Interrupted Hydration"
                     : "Interrupted Render",
-                reusableLaneOptions
-              ));
+                previousRenderStartTime,
+                endTime,
+                currentTrack,
+                "Scheduler \u269b",
+                (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark"
+              );
           }
           finalizeRender(workInProgressRootRenderLanes, renderStartTime);
         }
@@ -14108,7 +14268,7 @@ __DEV__ &&
             0 <= blockingUpdateTime && blockingUpdateTime < blockingClampTime
               ? blockingClampTime
               : blockingUpdateTime;
-          endTime =
+          var clampedEventTime =
             0 <= blockingEventTime && blockingEventTime < blockingClampTime
               ? blockingClampTime
               : blockingEventTime;
@@ -14116,122 +14276,198 @@ __DEV__ &&
             (setCurrentTrackFromLanes(lanes),
             logSuspendedWithDelayPhase(
               blockingSuspendedTime,
-              0 <= endTime
-                ? endTime
+              0 <= clampedEventTime
+                ? clampedEventTime
                 : 0 <= previousRenderStartTime
                   ? previousRenderStartTime
                   : renderStartTime,
               lanes
             ));
           var eventType = blockingEventType,
-            eventIsRepeat = blockingEventIsRepeat,
-            isSpawnedUpdate = blockingSpawnedUpdate,
-            renderStartTime$jscomp$0 = renderStartTime;
-          supportsUserTiming &&
-            ((reusableLaneDevToolDetails.track = "Blocking"),
-            0 < endTime &&
-              null !== eventType &&
-              ((reusableLaneDevToolDetails.color = eventIsRepeat
-                ? "secondary-light"
-                : "warning"),
-              (reusableLaneOptions.start = endTime),
-              (reusableLaneOptions.end =
-                0 < previousRenderStartTime
-                  ? previousRenderStartTime
-                  : renderStartTime$jscomp$0),
-              performance.measure(
-                eventIsRepeat ? "" : "Event: " + eventType,
-                reusableLaneOptions
-              )),
+            eventIsRepeat = blockingEventIsRepeat;
+          endTime = blockingSpawnedUpdate;
+          var renderStartTime$jscomp$0 = renderStartTime,
+            debugTask = blockingUpdateTask;
+          if (supportsUserTiming) {
+            currentTrack = "Blocking";
+            if (0 < clampedEventTime && null !== eventType) {
+              var color = eventIsRepeat ? "secondary-light" : "warning";
+              debugTask
+                ? debugTask.run(
+                    console.timeStamp.bind(
+                      console,
+                      eventIsRepeat ? "" : "Event: " + eventType,
+                      clampedEventTime,
+                      0 < previousRenderStartTime
+                        ? previousRenderStartTime
+                        : renderStartTime$jscomp$0,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      color
+                    )
+                  )
+                : console.timeStamp(
+                    eventIsRepeat ? "" : "Event: " + eventType,
+                    clampedEventTime,
+                    0 < previousRenderStartTime
+                      ? previousRenderStartTime
+                      : renderStartTime$jscomp$0,
+                    currentTrack,
+                    "Scheduler \u269b",
+                    color
+                  );
+            }
             0 < previousRenderStartTime &&
-              ((reusableLaneDevToolDetails.color = isSpawnedUpdate
+              ((clampedEventTime = endTime
                 ? "error"
                 : (lanes & 738197653) === lanes
                   ? "tertiary-light"
                   : "primary-light"),
-              (reusableLaneOptions.start = previousRenderStartTime),
-              (reusableLaneOptions.end = renderStartTime$jscomp$0),
-              performance.measure(
-                isSpawnedUpdate
-                  ? "Cascading Update"
-                  : 5 < renderStartTime$jscomp$0 - previousRenderStartTime
-                    ? "Update Blocked"
-                    : "Update",
-                reusableLaneOptions
-              )));
-          blockingSuspendedTime = blockingUpdateTime = -1.1;
+              debugTask
+                ? debugTask.run(
+                    console.timeStamp.bind(
+                      console,
+                      endTime
+                        ? "Cascading Update"
+                        : 5 < renderStartTime$jscomp$0 - previousRenderStartTime
+                          ? "Update Blocked"
+                          : "Update",
+                      previousRenderStartTime,
+                      renderStartTime$jscomp$0,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      clampedEventTime
+                    )
+                  )
+                : console.timeStamp(
+                    endTime
+                      ? "Cascading Update"
+                      : 5 < renderStartTime$jscomp$0 - previousRenderStartTime
+                        ? "Update Blocked"
+                        : "Update",
+                    previousRenderStartTime,
+                    renderStartTime$jscomp$0,
+                    currentTrack,
+                    "Scheduler \u269b",
+                    clampedEventTime
+                  ));
+          }
+          blockingUpdateTime = -1.1;
+          blockingUpdateTask = null;
+          blockingSuspendedTime = -1.1;
           blockingEventIsRepeat = !0;
           blockingSpawnedUpdate = !1;
         }
-        0 !== (lanes & 4194048) &&
-          ((previousRenderStartTime =
+        if (0 !== (lanes & 4194048)) {
+          previousRenderStartTime =
             0 <= transitionStartTime &&
             transitionStartTime < transitionClampTime
               ? transitionClampTime
-              : transitionStartTime),
-          (endTime =
+              : transitionStartTime;
+          endTime =
             0 <= transitionUpdateTime &&
             transitionUpdateTime < transitionClampTime
               ? transitionClampTime
-              : transitionUpdateTime),
-          (eventType =
+              : transitionUpdateTime;
+          renderStartTime$jscomp$0 =
             0 <= transitionEventTime &&
             transitionEventTime < transitionClampTime
               ? transitionClampTime
-              : transitionEventTime),
+              : transitionEventTime;
           0 <= transitionSuspendedTime &&
             (setCurrentTrackFromLanes(lanes),
             logSuspendedWithDelayPhase(
               transitionSuspendedTime,
-              0 <= eventType
-                ? eventType
+              0 <= renderStartTime$jscomp$0
+                ? renderStartTime$jscomp$0
                 : 0 <= endTime
                   ? endTime
                   : renderStartTime,
               lanes
-            )),
-          (eventIsRepeat = transitionEventType),
-          (isSpawnedUpdate = transitionEventIsRepeat),
-          (renderStartTime$jscomp$0 = renderStartTime),
-          supportsUserTiming &&
-            ((reusableLaneDevToolDetails.track = "Transition"),
-            0 < eventType &&
-              null !== eventIsRepeat &&
-              ((reusableLaneDevToolDetails.color = isSpawnedUpdate
-                ? "secondary-light"
-                : "warning"),
-              (reusableLaneOptions.start = eventType),
-              (reusableLaneOptions.end =
+            ));
+          debugTask = transitionEventType;
+          clampedEventTime = transitionEventIsRepeat;
+          eventType = renderStartTime;
+          eventIsRepeat = transitionUpdateTask;
+          if (supportsUserTiming) {
+            currentTrack = "Transition";
+            if (0 < renderStartTime$jscomp$0 && null !== debugTask) {
+              color = clampedEventTime ? "secondary-light" : "warning";
+              var endTime$jscomp$0 =
                 0 < previousRenderStartTime
                   ? previousRenderStartTime
                   : 0 < endTime
                     ? endTime
-                    : renderStartTime$jscomp$0),
-              performance.measure(
-                isSpawnedUpdate ? "" : "Event: " + eventIsRepeat,
-                reusableLaneOptions
-              )),
+                    : eventType;
+              eventIsRepeat
+                ? eventIsRepeat.run(
+                    console.timeStamp.bind(
+                      console,
+                      clampedEventTime ? "" : "Event: " + debugTask,
+                      renderStartTime$jscomp$0,
+                      endTime$jscomp$0,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      color
+                    )
+                  )
+                : console.timeStamp(
+                    clampedEventTime ? "" : "Event: " + debugTask,
+                    renderStartTime$jscomp$0,
+                    endTime$jscomp$0,
+                    currentTrack,
+                    "Scheduler \u269b",
+                    color
+                  );
+            }
             0 < previousRenderStartTime &&
-              ((reusableLaneDevToolDetails.color = "primary-dark"),
-              (reusableLaneOptions.start = previousRenderStartTime),
-              (reusableLaneOptions.end =
-                0 < endTime ? endTime : renderStartTime$jscomp$0),
-              performance.measure("Action", reusableLaneOptions)),
+              (eventIsRepeat
+                ? eventIsRepeat.run(
+                    console.timeStamp.bind(
+                      console,
+                      "Action",
+                      previousRenderStartTime,
+                      0 < endTime ? endTime : eventType,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      "primary-dark"
+                    )
+                  )
+                : console.timeStamp(
+                    "Action",
+                    previousRenderStartTime,
+                    0 < endTime ? endTime : eventType,
+                    currentTrack,
+                    "Scheduler \u269b",
+                    "primary-dark"
+                  ));
             0 < endTime &&
-              ((reusableLaneDevToolDetails.color = "primary-light"),
-              (reusableLaneOptions.start = endTime),
-              (reusableLaneOptions.end = renderStartTime$jscomp$0),
-              performance.measure(
-                5 < renderStartTime$jscomp$0 - endTime
-                  ? "Update Blocked"
-                  : "Update",
-                reusableLaneOptions
-              ))),
-          (transitionSuspendedTime =
-            transitionUpdateTime =
-            transitionStartTime =
-              -1.1),
-          (transitionEventIsRepeat = !0));
+              (eventIsRepeat
+                ? eventIsRepeat.run(
+                    console.timeStamp.bind(
+                      console,
+                      5 < eventType - endTime ? "Update Blocked" : "Update",
+                      endTime,
+                      eventType,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      "primary-light"
+                    )
+                  )
+                : console.timeStamp(
+                    5 < eventType - endTime ? "Update Blocked" : "Update",
+                    endTime,
+                    eventType,
+                    currentTrack,
+                    "Scheduler \u269b",
+                    "primary-light"
+                  ));
+          }
+          transitionUpdateTime = transitionStartTime = -1.1;
+          transitionUpdateTask = null;
+          transitionSuspendedTime = -1.1;
+          transitionEventIsRepeat = !0;
+        }
       }
       previousRenderStartTime = root.timeoutHandle;
       -1 !== previousRenderStartTime &&
@@ -14265,10 +14501,10 @@ __DEV__ &&
       endTime = root.entangledLanes;
       if (0 !== endTime)
         for (root = root.entanglements, endTime &= lanes; 0 < endTime; )
-          (eventType = 31 - clz32(endTime)),
-            (eventIsRepeat = 1 << eventType),
-            (lanes |= root[eventType]),
-            (endTime &= ~eventIsRepeat);
+          (renderStartTime$jscomp$0 = 31 - clz32(endTime)),
+            (debugTask = 1 << renderStartTime$jscomp$0),
+            (lanes |= root[renderStartTime$jscomp$0]),
+            (endTime &= ~debugTask);
       entangledRenderLanes = lanes;
       finishQueueingConcurrentUpdates();
       root = getCurrentTime();
@@ -14906,10 +15142,18 @@ __DEV__ &&
                   finishedWork.alternate.memoizedState.isDehydrated &&
                   0 !== (finishedWork.flags & 256)
               )
-            : logRenderPhase(
+            : supportsUserTiming &&
+              console.timeStamp(
+                (lanes & 536870912) === lanes
+                  ? "Prepared"
+                  : (lanes & 201326741) === lanes
+                    ? "Hydrated"
+                    : "Render",
                 completedRenderStartTime,
                 completedRenderEndTime,
-                lanes
+                currentTrack,
+                "Scheduler \u269b",
+                (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark"
               ));
       enableSchedulingProfiler &&
         enableSchedulingProfiler &&
@@ -14972,11 +15216,24 @@ __DEV__ &&
         commitStartTime = now();
         enableComponentPerformanceTrack &&
           (suspendedCommitReason === SUSPENDED_COMMIT
-            ? logSuspendedCommitPhase(completedRenderEndTime, commitStartTime)
-            : suspendedCommitReason === THROTTLED_COMMIT &&
-              logSuspenseThrottlePhase(
+            ? supportsUserTiming &&
+              console.timeStamp(
+                "Suspended on CSS or Images",
                 completedRenderEndTime,
-                commitStartTime
+                commitStartTime,
+                currentTrack,
+                "Scheduler \u269b",
+                "secondary-light"
+              )
+            : suspendedCommitReason === THROTTLED_COMMIT &&
+              supportsUserTiming &&
+              console.timeStamp(
+                "Throttled",
+                completedRenderEndTime,
+                commitStartTime,
+                currentTrack,
+                "Scheduler \u269b",
+                "secondary-light"
               ));
         shouldStartViewTransition = !1;
         suspendedCommitReason = 0 !== (finishedWork.flags & 13878);
@@ -15113,10 +15370,14 @@ __DEV__ &&
                 !1
               )
             : supportsUserTiming &&
-              ((reusableLaneDevToolDetails.color = "secondary-dark"),
-              (reusableLaneOptions.start = completedRenderEndTime),
-              (reusableLaneOptions.end = suspendedCommitReason),
-              performance.measure("Commit", reusableLaneOptions)));
+              console.timeStamp(
+                "Commit",
+                completedRenderEndTime,
+                suspendedCommitReason,
+                currentTrack,
+                "Scheduler \u269b",
+                "secondary-dark"
+              ));
         completedRenderEndTime =
           enableViewTransition && (lanes & 335544064) === lanes ? 10262 : 10256;
         (completedRenderEndTime =
@@ -15303,11 +15564,15 @@ __DEV__ &&
       enableComponentPerformanceTrack &&
         ((commitErrors = null),
         (passiveEffectStartTime = now$1()),
-        logPaintYieldPhase(
-          commitEndTime,
-          passiveEffectStartTime,
-          !!wasDelayedCommit
-        ));
+        supportsUserTiming &&
+          console.timeStamp(
+            wasDelayedCommit ? "Waiting for Paint" : "",
+            commitEndTime,
+            passiveEffectStartTime,
+            currentTrack,
+            "Scheduler \u269b",
+            "secondary-light"
+          ));
       enableSchedulingProfiler &&
         enableSchedulingProfiler &&
         null !== injectedProfilingHooks &&
@@ -16304,7 +16569,7 @@ __DEV__ &&
         (container.callback = callback));
       element = enqueueUpdate(parentComponent, container, 2);
       null !== element &&
-        (startUpdateTimerByLane(2),
+        (startUpdateTimerByLane(2, "root.render()"),
         scheduleUpdateOnFiber(element, parentComponent, 2),
         entangleTransitions(element, parentComponent, 2));
       return 2;
@@ -16501,67 +16766,9 @@ __DEV__ &&
     }
     var objectIs = "function" === typeof Object.is ? Object.is : is,
       supportsUserTiming =
-        "undefined" !== typeof performance &&
-        "function" === typeof performance.measure,
-      reusableComponentDevToolDetails = {
-        color: "primary",
-        track: "Components \u269b"
-      },
-      reusableComponentOptions = {
-        start: -0,
-        end: -0,
-        detail: { devtools: reusableComponentDevToolDetails }
-      },
-      reusableLaneDevToolDetails = {
-        color: "primary",
-        track: "Blocking",
-        trackGroup: "Scheduler \u269b"
-      },
-      reusableLaneOptions = {
-        start: -0,
-        end: -0,
-        detail: { devtools: reusableLaneDevToolDetails }
-      },
-      blockingLaneMarker = {
-        startTime: 0.003,
-        detail: {
-          devtools: {
-            color: "primary-light",
-            track: "Blocking",
-            trackGroup: "Scheduler \u269b"
-          }
-        }
-      },
-      transitionLaneMarker = {
-        startTime: 0.003,
-        detail: {
-          devtools: {
-            color: "primary-light",
-            track: "Transition",
-            trackGroup: "Scheduler \u269b"
-          }
-        }
-      },
-      suspenseLaneMarker = {
-        startTime: 0.003,
-        detail: {
-          devtools: {
-            color: "primary-light",
-            track: "Suspense",
-            trackGroup: "Scheduler \u269b"
-          }
-        }
-      },
-      idleLaneMarker = {
-        startTime: 0.003,
-        detail: {
-          devtools: {
-            color: "primary-light",
-            track: "Idle",
-            trackGroup: "Scheduler \u269b"
-          }
-        }
-      },
+        "undefined" !== typeof console &&
+        "function" === typeof console.timeStamp,
+      currentTrack = "Blocking",
       valueCursor = createCursor(null);
     var renderer2CursorDEV = createCursor(null);
     var rendererSigil = {};
@@ -16600,6 +16807,11 @@ __DEV__ &&
       },
       entangledTransitionTypes = null,
       now = Scheduler.unstable_now,
+      createTask = console.createTask
+        ? console.createTask
+        : function () {
+            return null;
+          },
       renderStartTime = -0,
       commitStartTime = -0,
       commitEndTime = -0,
@@ -16612,6 +16824,7 @@ __DEV__ &&
       componentEffectErrors = null,
       blockingClampTime = -0,
       blockingUpdateTime = -1.1,
+      blockingUpdateTask = null,
       blockingEventTime = -1.1,
       blockingEventType = null,
       blockingEventIsRepeat = !1,
@@ -16620,6 +16833,7 @@ __DEV__ &&
       transitionClampTime = -0,
       transitionStartTime = -1.1,
       transitionUpdateTime = -1.1,
+      transitionUpdateTask = null,
       transitionEventTime = -1.1,
       transitionEventType = null,
       transitionEventIsRepeat = !1,
@@ -18134,7 +18348,7 @@ __DEV__ &&
           (warnOnInvalidCallback(callback), (update.callback = callback));
         payload = enqueueUpdate(inst, update, lane);
         null !== payload &&
-          (startUpdateTimerByLane(lane),
+          (startUpdateTimerByLane(lane, "this.setState()"),
           scheduleUpdateOnFiber(payload, inst, lane),
           entangleTransitions(payload, inst, lane));
         enableSchedulingProfiler && markStateUpdateScheduled(inst, lane);
@@ -18150,7 +18364,7 @@ __DEV__ &&
           (warnOnInvalidCallback(callback), (update.callback = callback));
         payload = enqueueUpdate(inst, update, lane);
         null !== payload &&
-          (startUpdateTimerByLane(lane),
+          (startUpdateTimerByLane(lane, "this.replaceState()"),
           scheduleUpdateOnFiber(payload, inst, lane),
           entangleTransitions(payload, inst, lane));
         enableSchedulingProfiler && markStateUpdateScheduled(inst, lane);
@@ -18165,7 +18379,7 @@ __DEV__ &&
           (warnOnInvalidCallback(callback), (update.callback = callback));
         callback = enqueueUpdate(inst, update, lane);
         null !== callback &&
-          (startUpdateTimerByLane(lane),
+          (startUpdateTimerByLane(lane, "this.forceUpdate()"),
           scheduleUpdateOnFiber(callback, inst, lane),
           entangleTransitions(callback, inst, lane));
         enableSchedulingProfiler &&
@@ -18572,10 +18786,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-18212ca9-20250429",
+        version: "19.2.0-www-modern-62960c67-20250429",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-18212ca9-20250429"
+        reconcilerVersion: "19.2.0-www-modern-62960c67-20250429"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18609,7 +18823,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-18212ca9-20250429";
+    exports.version = "19.2.0-www-modern-62960c67-20250429";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
