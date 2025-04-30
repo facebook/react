@@ -111,7 +111,10 @@ export default function inferReferenceEffects(
    * Initial state contains function params
    * TODO: include module declarations here as well
    */
-  const initialState = InferenceState.empty(fn.env);
+  const initialState = InferenceState.empty(
+    fn.env,
+    options.isFunctionExpression,
+  );
   const value: InstructionValue = {
     kind: 'Primitive',
     loc: fn.loc,
@@ -255,6 +258,7 @@ type FreezeAction = {values: Set<InstructionValue>; reason: Set<ValueReason>};
 // Maintains a mapping of top-level variables to the kind of value they hold
 class InferenceState {
   env: Environment;
+  #isFunctionExpression: boolean;
 
   // The kind of each value, based on its allocation site
   #values: Map<InstructionValue, AbstractValue>;
@@ -267,16 +271,25 @@ class InferenceState {
 
   constructor(
     env: Environment,
+    isFunctionExpression: boolean,
     values: Map<InstructionValue, AbstractValue>,
     variables: Map<IdentifierId, Set<InstructionValue>>,
   ) {
     this.env = env;
+    this.#isFunctionExpression = isFunctionExpression;
     this.#values = values;
     this.#variables = variables;
   }
 
-  static empty(env: Environment): InferenceState {
-    return new InferenceState(env, new Map(), new Map());
+  static empty(
+    env: Environment,
+    isFunctionExpression: boolean,
+  ): InferenceState {
+    return new InferenceState(env, isFunctionExpression, new Map(), new Map());
+  }
+
+  get isFunctionExpression(): boolean {
+    return this.#isFunctionExpression;
   }
 
   // (Re)initializes a @param value with its default @param kind.
@@ -613,6 +626,7 @@ class InferenceState {
     } else {
       return new InferenceState(
         this.env,
+        this.#isFunctionExpression,
         nextValues ?? new Map(this.#values),
         nextVariables ?? new Map(this.#variables),
       );
@@ -627,6 +641,7 @@ class InferenceState {
   clone(): InferenceState {
     return new InferenceState(
       this.env,
+      this.#isFunctionExpression,
       new Map(this.#values),
       new Map(this.#variables),
     );
@@ -1781,8 +1796,15 @@ function inferBlock(
     if (block.terminal.kind === 'return' || block.terminal.kind === 'throw') {
       if (
         state.isDefined(operand) &&
-        state.kind(operand).kind === ValueKind.Context
+        ((operand.identifier.type.kind === 'Function' &&
+          state.isFunctionExpression) ||
+          state.kind(operand).kind === ValueKind.Context)
       ) {
+        /**
+         * Returned values should only be typed as 'frozen' if they are both (1)
+         * local and (2) not a function expression which may capture and mutate
+         * this function's outer context.
+         */
         effect = Effect.ConditionallyMutate;
       } else {
         effect = Effect.Freeze;
