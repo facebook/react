@@ -362,7 +362,7 @@ server.tool(
   },
   async ({text}) => {
     try {
-      const iterations = 5;
+      const iterations = 20;
 
       let perfData = {
         renderTime: 0,
