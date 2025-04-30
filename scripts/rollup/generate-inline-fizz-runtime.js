@@ -46,7 +46,6 @@ async function main() {
         js: [
           require.resolve('./externs/closure-externs.js'),
           fullEntryPath,
-          instructionDir + '/ReactDOMFizzInstructionSetInlineSource.js',
           instructionDir + '/ReactDOMFizzInstructionSetShared.js',
         ],
         compilation_level: 'ADVANCED',
