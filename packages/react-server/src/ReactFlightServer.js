@@ -3927,10 +3927,10 @@ function emitChunk(
   }
   // For anything else we need to try to serialize it using JSON.
   // We stash the outer parent size so we can restore it when we exit.
+  const parentSerializedSize = serializedSize;
   // We don't reset the serialized size counter from reentry because that indicates that we
   // are outlining a model and we actually want to include that size into the parent since
   // it will still block the parent row. It only restores to zero at the top of the stack.
-  const parentSerializedSize = 0;
   try {
     // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
     const json: string = stringify(value, task.toJSON);
