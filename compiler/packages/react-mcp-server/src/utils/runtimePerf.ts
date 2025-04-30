@@ -47,9 +47,7 @@ export async function measurePerformance(code: any) {
  */
 async function transformAsync(ast: babel.types.Node, options: any) {
   const result = await babel.transformFromAstAsync(ast, undefined, {
-    configFile: false,
-    babelrc: false,
-    presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')],
+    ...options,
     filename: 'file.jsx',
     plugins: [
       () => ({
