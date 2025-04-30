@@ -45941,7 +45941,7 @@ function getWriteErrorReason(abstractValue) {
     }
 }
 
-var _InferenceState_values, _InferenceState_variables;
+var _InferenceState_isFunctionExpression, _InferenceState_values, _InferenceState_variables;
 const UndefinedValue = {
     kind: 'Primitive',
     loc: GeneratedSource,
@@ -45949,7 +45949,7 @@ const UndefinedValue = {
 };
 function inferReferenceEffects(fn, options = { isFunctionExpression: false }) {
     var _a;
-    const initialState = InferenceState.empty(fn.env);
+    const initialState = InferenceState.empty(fn.env, options.isFunctionExpression);
     const value = {
         kind: 'Primitive',
         loc: fn.loc,
@@ -46070,15 +46070,20 @@ function inferReferenceEffects(fn, options = { isFunctionExpression: false }) {
     }
 }
 class InferenceState {
-    constructor(env, values, variables) {
+    constructor(env, isFunctionExpression, values, variables) {
+        _InferenceState_isFunctionExpression.set(this, void 0);
         _InferenceState_values.set(this, void 0);
         _InferenceState_variables.set(this, void 0);
         this.env = env;
+        __classPrivateFieldSet(this, _InferenceState_isFunctionExpression, isFunctionExpression, "f");
         __classPrivateFieldSet(this, _InferenceState_values, values, "f");
         __classPrivateFieldSet(this, _InferenceState_variables, variables, "f");
     }
-    static empty(env) {
-        return new InferenceState(env, new Map(), new Map());
+    static empty(env, isFunctionExpression) {
+        return new InferenceState(env, isFunctionExpression, new Map(), new Map());
+    }
+    get isFunctionExpression() {
+        return __classPrivateFieldGet(this, _InferenceState_isFunctionExpression, "f");
     }
     initialize(value, kind) {
         CompilerError.invariant(value.kind !== 'LoadLocal', {
@@ -46332,11 +46337,11 @@ class InferenceState {
             return null;
         }
         else {
-            return new InferenceState(this.env, nextValues !== null && nextValues !== void 0 ? nextValues : new Map(__classPrivateFieldGet(this, _InferenceState_values, "f")), nextVariables !== null && nextVariables !== void 0 ? nextVariables : new Map(__classPrivateFieldGet(this, _InferenceState_variables, "f")));
+            return new InferenceState(this.env, __classPrivateFieldGet(this, _InferenceState_isFunctionExpression, "f"), nextValues !== null && nextValues !== void 0 ? nextValues : new Map(__classPrivateFieldGet(this, _InferenceState_values, "f")), nextVariables !== null && nextVariables !== void 0 ? nextVariables : new Map(__classPrivateFieldGet(this, _InferenceState_variables, "f")));
         }
     }
     clone() {
-        return new InferenceState(this.env, new Map(__classPrivateFieldGet(this, _InferenceState_values, "f")), new Map(__classPrivateFieldGet(this, _InferenceState_variables, "f")));
+        return new InferenceState(this.env, __classPrivateFieldGet(this, _InferenceState_isFunctionExpression, "f"), new Map(__classPrivateFieldGet(this, _InferenceState_values, "f")), new Map(__classPrivateFieldGet(this, _InferenceState_variables, "f")));
     }
     debug() {
         const result = { values: {}, variables: {} };
@@ -46373,7 +46378,7 @@ class InferenceState {
         }
     }
 }
-_InferenceState_values = new WeakMap(), _InferenceState_variables = new WeakMap();
+_InferenceState_isFunctionExpression = new WeakMap(), _InferenceState_values = new WeakMap(), _InferenceState_variables = new WeakMap();
 function inferParam(param, initialState, paramKind) {
     let value;
     let place;
@@ -47064,7 +47069,9 @@ function inferBlock(env, state, block, functionEffects) {
         let effect;
         if (block.terminal.kind === 'return' || block.terminal.kind === 'throw') {
             if (state.isDefined(operand) &&
-                state.kind(operand).kind === ValueKind.Context) {
+                ((operand.identifier.type.kind === 'Function' &&
+                    state.isFunctionExpression) ||
+                    state.kind(operand).kind === ValueKind.Context)) {
                 effect = Effect.ConditionallyMutate;
             }
             else {
