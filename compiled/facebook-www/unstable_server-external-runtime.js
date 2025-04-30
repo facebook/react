@@ -1,39 +1,40 @@
 (function () {
   function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {
-    contentID = document.getElementById(contentID);
-    contentID.parentNode.removeChild(contentID);
-    var suspenseIdNode = document.getElementById(suspenseBoundaryID);
-    if (suspenseIdNode) {
-      suspenseBoundaryID = suspenseIdNode.previousSibling;
-      if (errorDigest)
-        (suspenseBoundaryID.data = "$!"),
-          suspenseIdNode.setAttribute("data-dgst", errorDigest);
-      else {
-        errorDigest = suspenseBoundaryID.parentNode;
-        suspenseIdNode = suspenseBoundaryID.nextSibling;
-        var depth = 0;
-        do {
-          if (suspenseIdNode && 8 === suspenseIdNode.nodeType) {
-            var data = suspenseIdNode.data;
-            if ("/$" === data || "/&" === data)
-              if (0 === depth) break;
-              else depth--;
-            else
-              ("$" !== data &&
-                "$?" !== data &&
-                "$!" !== data &&
-                "&" !== data) ||
-                depth++;
-          }
-          data = suspenseIdNode.nextSibling;
-          errorDigest.removeChild(suspenseIdNode);
-          suspenseIdNode = data;
-        } while (suspenseIdNode);
-        for (; contentID.firstChild; )
-          errorDigest.insertBefore(contentID.firstChild, suspenseIdNode);
-        suspenseBoundaryID.data = "$";
+    if ((contentID = document.getElementById(contentID))) {
+      contentID.parentNode.removeChild(contentID);
+      var suspenseIdNode = document.getElementById(suspenseBoundaryID);
+      if (suspenseIdNode) {
+        suspenseBoundaryID = suspenseIdNode.previousSibling;
+        if (errorDigest)
+          (suspenseBoundaryID.data = "$!"),
+            suspenseIdNode.setAttribute("data-dgst", errorDigest);
+        else {
+          errorDigest = suspenseBoundaryID.parentNode;
+          suspenseIdNode = suspenseBoundaryID.nextSibling;
+          var depth = 0;
+          do {
+            if (suspenseIdNode && 8 === suspenseIdNode.nodeType) {
+              var data = suspenseIdNode.data;
+              if ("/$" === data || "/&" === data)
+                if (0 === depth) break;
+                else depth--;
+              else
+                ("$" !== data &&
+                  "$?" !== data &&
+                  "$!" !== data &&
+                  "&" !== data) ||
+                  depth++;
+            }
+            data = suspenseIdNode.nextSibling;
+            errorDigest.removeChild(suspenseIdNode);
+            suspenseIdNode = data;
+          } while (suspenseIdNode);
+          for (; contentID.firstChild; )
+            errorDigest.insertBefore(contentID.firstChild, suspenseIdNode);
+          suspenseBoundaryID.data = "$";
+        }
+        suspenseBoundaryID._reactRetry && suspenseBoundaryID._reactRetry();
       }
-      suspenseBoundaryID._reactRetry && suspenseBoundaryID._reactRetry();
     }
   }
   function completeBoundaryWithStyles(
