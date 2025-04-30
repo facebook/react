@@ -24,7 +24,9 @@ export async function measurePerformance(code: string) {
     plugins: [
       () => ({
         visitor: {
-          ImportDeclaration(path: babel.NodePath<babel.types.ImportDeclaration>) {
+          ImportDeclaration(
+            path: babel.NodePath<babel.types.ImportDeclaration>,
+          ) {
             const value = path.node.source.value;
             if (value === 'react' || value === 'react-dom') {
               path.remove();
@@ -58,7 +60,6 @@ export async function measurePerformance(code: string) {
   await browser.close();
   return result;
 }
-
 
 function buildHtml(transpiled: string) {
   const html = `
