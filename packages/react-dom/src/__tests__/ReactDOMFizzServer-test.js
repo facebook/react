@@ -5142,6 +5142,77 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it.only('Suspending in a suspense fallback should not throw', async () => {
+    function FallbackWithSuspense() {
+      return (
+        <Suspense fallback={'nested suspense fallback'}>
+          <AsyncText text="suspense fallback" />
+        </Suspense>
+      );
+    }
+
+    function App() {
+      return (
+        <html data-html="html">
+          <head data-foo="foo">
+            <title>a title</title>
+          </head>
+          <body>
+            <Suspense fallback={<FallbackWithSuspense />}>
+              <AsyncText text="A" />
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady() {
+          pipe(writable);
+        },
+      });
+    });
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(document, <App />, {
+      onUncaughtError(error) {
+        errors.push('uncaught: ' + error.message);
+      },
+      onCaughtError(error) {
+        errors.push('caught: ' + error.message);
+      },
+      onRecoverableError(error) {
+        errors.push('recoverable: ' + error.message);
+      },
+    });
+
+    await waitForAll([]);
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-html="html">
+        <head data-foo="foo">
+          <title>a title</title>
+        </head>
+        <body>nested suspense fallback</body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('A');
+    });
+
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-html="html">
+        <head data-foo="foo">
+          <title>a title</title>
+        </head>
+        <body>A</body>
+      </html>,
+    );
+  });
+
   it('hydration warnings for mismatched text with multiple text nodes caused by suspending should be suppressed', async () => {
     let resolve;
     const Lazy = React.lazy(() => {
