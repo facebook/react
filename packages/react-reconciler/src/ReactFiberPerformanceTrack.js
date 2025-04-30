@@ -103,14 +103,29 @@ function logComponentTrigger(
   trigger: string,
 ) {
   if (supportsUserTiming) {
-    console.timeStamp(
-      trigger,
-      startTime,
-      endTime,
-      COMPONENTS_TRACK,
-      undefined,
-      'warning',
-    );
+    const debugTask = fiber._debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        console.timeStamp.bind(
+          console,
+          trigger,
+          startTime,
+          endTime,
+          COMPONENTS_TRACK,
+          undefined,
+          'warning',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        trigger,
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        'warning',
+      );
+    }
   }
 }
 
@@ -178,14 +193,30 @@ export function logComponentRender(
               ? 'tertiary-dark'
               : 'primary-dark'
             : 'error';
-    console.timeStamp(
-      name,
-      startTime,
-      endTime,
-      COMPONENTS_TRACK,
-      undefined,
-      color,
-    );
+    const debugTask = fiber._debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          name,
+          startTime,
+          endTime,
+          COMPONENTS_TRACK,
+          undefined,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        name,
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        color,
+      );
+    }
   }
 }
 
@@ -207,9 +238,18 @@ export function logComponentErrored(
       // $FlowFixMe[method-unbinding]
       typeof performance.measure === 'function'
     ) {
+      let debugTask: ?ConsoleTask = null;
       const properties = [];
       for (let i = 0; i < errors.length; i++) {
         const capturedValue = errors[i];
+        if (debugTask == null && capturedValue.source !== null) {
+          // If the captured value has a source Fiber, use its debugTask for
+          // the stack instead of the error boundary's stack. So you can find
+          // which component errored since we don't show the errored render tree.
+          // TODO: Ideally we should instead, store the failed fibers and log the
+          // whole subtree including the component that errored.
+          debugTask = capturedValue.source._debugTask;
+        }
         const error = capturedValue.value;
         const message =
           typeof error === 'object' &&
@@ -221,7 +261,12 @@ export function logComponentErrored(
               String(error);
         properties.push(['Error', message]);
       }
-      performance.measure(name, {
+      if (debugTask == null) {
+        // If the captured values don't have a debug task, fallback to the
+        // error boundary itself.
+        debugTask = fiber._debugTask;
+      }
+      const options = {
         start: startTime,
         end: endTime,
         detail: {
@@ -235,7 +280,15 @@ export function logComponentErrored(
             properties,
           },
         },
-      });
+      };
+      if (__DEV__ && debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          performance.measure.bind(performance, name, options),
+        );
+      } else {
+        performance.measure(name, options);
+      }
     } else {
       console.timeStamp(
         name,
@@ -281,7 +334,7 @@ function logComponentEffectErrored(
               String(error);
         properties.push(['Error', message]);
       }
-      performance.measure(name, {
+      const options = {
         start: startTime,
         end: endTime,
         detail: {
@@ -292,7 +345,16 @@ function logComponentEffectErrored(
             properties,
           },
         },
-      });
+      };
+      const debugTask = fiber._debugTask;
+      if (debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          performance.measure.bind(performance, name, options),
+        );
+      } else {
+        performance.measure(name, options);
+      }
     } else {
       console.timeStamp(
         name,
@@ -331,14 +393,30 @@ export function logComponentEffect(
           : selfTime < 500
             ? 'secondary-dark'
             : 'error';
-    console.timeStamp(
-      name,
-      startTime,
-      endTime,
-      COMPONENTS_TRACK,
-      undefined,
-      color,
-    );
+    const debugTask = fiber._debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          name,
+          startTime,
+          endTime,
+          COMPONENTS_TRACK,
+          undefined,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        name,
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        color,
+      );
+    }
   }
 }
 
@@ -379,14 +457,30 @@ export function logSuspendedYieldTime(
   suspendedFiber: Fiber,
 ): void {
   if (supportsUserTiming) {
-    console.timeStamp(
-      'Suspended',
-      startTime,
-      endTime,
-      COMPONENTS_TRACK,
-      undefined,
-      'primary-light',
-    );
+    const debugTask = suspendedFiber._debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Suspended',
+          startTime,
+          endTime,
+          COMPONENTS_TRACK,
+          undefined,
+          'primary-light',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Suspended',
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        'primary-light',
+      );
+    }
   }
 }
 
@@ -396,14 +490,30 @@ export function logActionYieldTime(
   suspendedFiber: Fiber,
 ): void {
   if (supportsUserTiming) {
-    console.timeStamp(
-      'Action',
-      startTime,
-      endTime,
-      COMPONENTS_TRACK,
-      undefined,
-      'primary-light',
-    );
+    const debugTask = suspendedFiber._debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Action',
+          startTime,
+          endTime,
+          COMPONENTS_TRACK,
+          undefined,
+          'primary-light',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Action',
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        'primary-light',
+      );
+    }
   }
 }
 
@@ -415,6 +525,7 @@ export function logBlockingStart(
   isSpawnedUpdate: boolean,
   renderStartTime: number,
   lanes: Lanes,
+  debugTask: null | ConsoleTask, // DEV-only
 ): void {
   if (supportsUserTiming) {
     currentTrack = 'Blocking';
@@ -424,14 +535,29 @@ export function logBlockingStart(
     if (eventTime > 0 && eventType !== null) {
       // Log the time from the event timeStamp until we called setState.
       const color = eventIsRepeat ? 'secondary-light' : 'warning';
-      console.timeStamp(
-        eventIsRepeat ? '' : 'Event: ' + eventType,
-        eventTime,
-        updateTime > 0 ? updateTime : renderStartTime,
-        currentTrack,
-        LANES_TRACK_GROUP,
-        color,
-      );
+      if (__DEV__ && debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          console.timeStamp.bind(
+            console,
+            eventIsRepeat ? '' : 'Event: ' + eventType,
+            eventTime,
+            updateTime > 0 ? updateTime : renderStartTime,
+            currentTrack,
+            LANES_TRACK_GROUP,
+            color,
+          ),
+        );
+      } else {
+        console.timeStamp(
+          eventIsRepeat ? '' : 'Event: ' + eventType,
+          eventTime,
+          updateTime > 0 ? updateTime : renderStartTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          color,
+        );
+      }
     }
     if (updateTime > 0) {
       // Log the time from when we called setState until we started rendering.
@@ -440,18 +566,37 @@ export function logBlockingStart(
         : includesOnlyHydrationOrOffscreenLanes(lanes)
           ? 'tertiary-light'
           : 'primary-light';
-      console.timeStamp(
-        isSpawnedUpdate
-          ? 'Cascading Update'
-          : renderStartTime - updateTime > 5
-            ? 'Update Blocked'
-            : 'Update',
-        updateTime,
-        renderStartTime,
-        currentTrack,
-        LANES_TRACK_GROUP,
-        color,
-      );
+      if (__DEV__ && debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          console.timeStamp.bind(
+            console,
+            isSpawnedUpdate
+              ? 'Cascading Update'
+              : renderStartTime - updateTime > 5
+                ? 'Update Blocked'
+                : 'Update',
+            updateTime,
+            renderStartTime,
+            currentTrack,
+            LANES_TRACK_GROUP,
+            color,
+          ),
+        );
+      } else {
+        console.timeStamp(
+          isSpawnedUpdate
+            ? 'Cascading Update'
+            : renderStartTime - updateTime > 5
+              ? 'Update Blocked'
+              : 'Update',
+          updateTime,
+          renderStartTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          color,
+        );
+      }
     }
   }
 }
@@ -463,6 +608,7 @@ export function logTransitionStart(
   eventType: null | string,
   eventIsRepeat: boolean,
   renderStartTime: number,
+  debugTask: null | ConsoleTask, // DEV-only
 ): void {
   if (supportsUserTiming) {
     currentTrack = 'Transition';
@@ -475,36 +621,82 @@ export function logTransitionStart(
           : updateTime > 0
             ? updateTime
             : renderStartTime;
-      console.timeStamp(
-        eventIsRepeat ? '' : 'Event: ' + eventType,
-        eventTime,
-        endTime,
-        currentTrack,
-        LANES_TRACK_GROUP,
-        color,
-      );
+      if (__DEV__ && debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          console.timeStamp.bind(
+            console,
+            eventIsRepeat ? '' : 'Event: ' + eventType,
+            eventTime,
+            endTime,
+            currentTrack,
+            LANES_TRACK_GROUP,
+            color,
+          ),
+        );
+      } else {
+        console.timeStamp(
+          eventIsRepeat ? '' : 'Event: ' + eventType,
+          eventTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          color,
+        );
+      }
     }
     if (startTime > 0) {
       // Log the time from when we started an async transition until we called setState or started rendering.
-      console.timeStamp(
-        'Action',
-        startTime,
-        updateTime > 0 ? updateTime : renderStartTime,
-        currentTrack,
-        LANES_TRACK_GROUP,
-        'primary-dark',
-      );
+      // TODO: Ideally this would use the debugTask of the startTransition call perhaps.
+      if (__DEV__ && debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          console.timeStamp.bind(
+            console,
+            'Action',
+            startTime,
+            updateTime > 0 ? updateTime : renderStartTime,
+            currentTrack,
+            LANES_TRACK_GROUP,
+            'primary-dark',
+          ),
+        );
+      } else {
+        console.timeStamp(
+          'Action',
+          startTime,
+          updateTime > 0 ? updateTime : renderStartTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'primary-dark',
+        );
+      }
     }
     if (updateTime > 0) {
       // Log the time from when we called setState until we started rendering.
-      console.timeStamp(
-        renderStartTime - updateTime > 5 ? 'Update Blocked' : 'Update',
-        updateTime,
-        renderStartTime,
-        currentTrack,
-        LANES_TRACK_GROUP,
-        'primary-light',
-      );
+      if (__DEV__ && debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          console.timeStamp.bind(
+            console,
+            renderStartTime - updateTime > 5 ? 'Update Blocked' : 'Update',
+            updateTime,
+            renderStartTime,
+            currentTrack,
+            LANES_TRACK_GROUP,
+            'primary-light',
+          ),
+        );
+      } else {
+        console.timeStamp(
+          renderStartTime - updateTime > 5 ? 'Update Blocked' : 'Update',
+          updateTime,
+          renderStartTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'primary-light',
+        );
+      }
     }
   }
 }
