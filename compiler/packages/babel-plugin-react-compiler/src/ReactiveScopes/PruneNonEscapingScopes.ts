@@ -946,6 +946,15 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
       this.state.escapingValues.add(
         stmt.terminal.value.identifier.declarationId,
       );
+
+      /*
+       * If the return is within a scope, then those scopes must be evaluated
+       * with the return and should be considered dependencies of the returned
+       * value.
+       *
+       * This ensures that if those scopes have dependencies that those deps
+       * are also memoized.
+       */
       const identifierNode = this.state.identifiers.get(
         stmt.terminal.value.identifier.declarationId,
       );
@@ -965,6 +974,11 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
     scope: ReactiveScopeBlock,
     scopes: Array<ReactiveScope>,
   ): void {
+    /*
+     * If a scope reassigns any variables, set the chain of active scopes as a dependency
+     * of those variables. This ensures that if the variable escapes that we treat the
+     * reassignment scopes — and importantly their dependencies — as needing memoization.
+     */
     for (const reassignment of scope.scope.reassignments) {
       const identifierNode = this.state.identifiers.get(
         reassignment.declarationId,
@@ -980,6 +994,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
       }
       identifierNode.scopes.add(scope.scope.id);
     }
+
     this.traverseScope(scope, [...scopes, scope.scope]);
   }
 }
