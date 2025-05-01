@@ -120,6 +120,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_POSTPONE_TYPE,
+  REACT_SERVER_CONTEXT_TYPE,
   ASYNC_ITERATOR,
 } from 'shared/ReactSymbols';
 
@@ -2474,6 +2475,29 @@ function renderModelDestructive(
           // are not elements. Leading to the wrong attribution on the server. We could fix
           // that if we switch to a proper stack instead of JSON.stringify's trampoline.
           // Attribution on the client is still correct since it has a pop.
+        }
+
+        // Handle Server Context Provider elements
+        if (element.type !== null && element.type.$$typeof === REACT_SERVER_CONTEXT_TYPE) {
+          const context = element.type;
+          
+          const prevKeyPath = task.keyPath;
+          task.keyPath = task.keyPath !== null ? task.keyPath + ',' + element.key : element.key;
+          
+          const result = ReactSharedInternals.setServerContextValue(
+            context,
+            props.value,
+            () => renderModelDestructive(
+              request,
+              task,
+              emptyRoot,
+              '',
+              props.children,
+            )
+          );
+          
+          task.keyPath = prevKeyPath;
+          return result;
         }
 
         const newChild = renderElement(

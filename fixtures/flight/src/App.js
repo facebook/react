@@ -38,6 +38,17 @@ async function ServerComponent() {
   await new Promise(resolve => setTimeout(() => resolve('deferred text'), 50));
 }
 
+const ServerContext = React.createServerContext(41);
+
+function ServerContextProvider(props) {
+  return <ServerContext value={props.value}>{props.children}</ServerContext>;
+}
+
+async function ServerContextConsumer(props) {
+  const value = React.useServerContext(ServerContext);
+  return <div>value: {value}<br/>{props.children}</div>;
+}
+
 export default async function App({prerender}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
@@ -89,6 +100,13 @@ export default async function App({prerender}) {
           <Note />
           <Foo>{dedupedChild}</Foo>
           <Bar>{Promise.resolve([dedupedChild])}</Bar>
+          <ServerContextProvider value={42}>
+            <ServerContextConsumer >
+              <ServerContextProvider value={43}>
+                <ServerContextConsumer />
+              </ServerContextProvider>
+            </ServerContextConsumer>
+          </ServerContextProvider>
         </Container>
       </body>
     </html>

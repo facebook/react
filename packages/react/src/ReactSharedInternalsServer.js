@@ -23,6 +23,12 @@ import {
   TaintRegistryPendingRequests,
 } from './ReactTaintRegistry';
 
+import {
+  SERVER_CONTEXT_STORAGE,
+  getServerContextValue,
+  setServerContextValue,
+} from './ReactContextRegistryServer';
+
 import {enableTaint} from 'shared/ReactFeatureFlags';
 
 export type SharedStateServer = {
@@ -34,6 +40,11 @@ export type SharedStateServer = {
   TaintRegistryValues: Map<string | bigint, TaintEntry>,
   TaintRegistryByteLengths: Set<number>,
   TaintRegistryPendingRequests: Set<RequestCleanupQueue>,
+
+  // Server Context
+  SERVER_CONTEXT_STORAGE: AsyncLocalStorage<any>,
+  getServerContextValue: typeof getServerContextValue,
+  setServerContextValue: typeof setServerContextValue,
 
   // DEV-only
 
@@ -58,6 +69,11 @@ if (enableTaint) {
   ReactSharedInternals.TaintRegistryPendingRequests =
     TaintRegistryPendingRequests;
 }
+
+// Server Context Registry
+ReactSharedInternals.SERVER_CONTEXT_STORAGE = SERVER_CONTEXT_STORAGE;
+ReactSharedInternals.getServerContextValue = getServerContextValue;
+ReactSharedInternals.setServerContextValue = setServerContextValue;
 
 if (__DEV__) {
   // Stack implementation injected by the current renderer.
