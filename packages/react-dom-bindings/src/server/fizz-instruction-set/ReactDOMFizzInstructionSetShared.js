@@ -9,6 +9,7 @@ const ACTIVITY_END_DATA = '/&';
 const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
 const SUSPENSE_PENDING_START_DATA = '$?';
+const SUSPENSE_QUEUED_START_DATA = '$~';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
 
 // TODO: Symbols that are referenced outside this module use dynamic accessor
@@ -106,6 +107,7 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
           } else if (
             data === SUSPENSE_START_DATA ||
             data === SUSPENSE_PENDING_START_DATA ||
+            data === SUSPENSE_QUEUED_START_DATA ||
             data === SUSPENSE_FALLBACK_START_DATA ||
             data === ACTIVITY_START_DATA
           ) {
@@ -132,6 +134,10 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
     }
   }
 
+  // Mark this Suspense boundary as queued so we know not to client render it
+  // at the end of document load.
+  const suspenseNodeOuter = suspenseIdNodeOuter.previousSibling;
+  suspenseNodeOuter.data = SUSPENSE_QUEUED_START_DATA;
   // Queue this boundary for the next batch
   window['$RB'].push(suspenseIdNodeOuter, contentNodeOuter);
 
@@ -259,6 +265,14 @@ export function completeBoundaryWithStyles(
       const head = thisDocument.head;
       head.insertBefore(resourceEl, head.firstChild);
     }
+  }
+
+  const suspenseIdNodeOuter = document.getElementById(suspenseBoundaryID);
+  if (suspenseIdNodeOuter) {
+    // Mark this Suspense boundary as queued so we know not to client render it
+    // at the end of document load.
+    const suspenseNodeOuter = suspenseIdNodeOuter.previousSibling;
+    suspenseNodeOuter.data = SUSPENSE_QUEUED_START_DATA;
   }
 
   Promise.all(dependencies).then(
