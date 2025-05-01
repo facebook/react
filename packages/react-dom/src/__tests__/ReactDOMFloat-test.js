@@ -701,6 +701,9 @@ describe('ReactDOMFloat', () => {
     });
     expect(chunks).toEqual([
       '<!DOCTYPE html><html><head><script async="" src="foo"></script>' +
+        (gate(flags => flags.shouldUseFizzExternalRuntime)
+          ? '<script src="react-dom/unstable_server-external-runtime" async=""></script>'
+          : '') +
         '<link rel="expect" href="#«R»" blocking="render"/><title>foo</title></head>' +
         '<body>bar<template id="«R»"></template>',
       '</body></html>',
