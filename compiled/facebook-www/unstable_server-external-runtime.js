@@ -1,5 +1,66 @@
 (function () {
-  function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {
+  function handleExistingNodes(target) {
+    target = target.querySelectorAll("template");
+    for (var i = 0; i < target.length; i++) handleNode(target[i]);
+  }
+  function installFizzInstrObserver(target) {
+    function handleMutations(mutations) {
+      for (var i = 0; i < mutations.length; i++)
+        for (
+          var addedNodes = mutations[i].addedNodes, j = 0;
+          j < addedNodes.length;
+          j++
+        )
+          addedNodes[j].parentNode && handleNode(addedNodes[j]);
+    }
+    var fizzInstrObserver = new MutationObserver(handleMutations);
+    fizzInstrObserver.observe(target, { childList: !0 });
+    window.addEventListener("DOMContentLoaded", function () {
+      handleMutations(fizzInstrObserver.takeRecords());
+      fizzInstrObserver.disconnect();
+    });
+  }
+  function handleNode(node_) {
+    if (1 === node_.nodeType && node_.dataset) {
+      var dataset = node_.dataset;
+      null != dataset.rxi
+        ? ($RX(
+            dataset.bid,
+            dataset.dgst,
+            dataset.msg,
+            dataset.stck,
+            dataset.cstck
+          ),
+          node_.remove())
+        : null != dataset.rri
+          ? ($RR(dataset.bid, dataset.sid, JSON.parse(dataset.sty)),
+            node_.remove())
+          : null != dataset.rci
+            ? ($RC(dataset.bid, dataset.sid), node_.remove())
+            : null != dataset.rsi &&
+              ($RS(dataset.sid, dataset.pid), node_.remove());
+    }
+  }
+  var $RM = new Map();
+  var $RX = function (
+    suspenseBoundaryID,
+    errorDigest,
+    errorMsg,
+    errorStack,
+    errorComponentStack
+  ) {
+    var suspenseIdNode = document.getElementById(suspenseBoundaryID);
+    suspenseIdNode &&
+      ((suspenseBoundaryID = suspenseIdNode.previousSibling),
+      (suspenseBoundaryID.data = "$!"),
+      (suspenseIdNode = suspenseIdNode.dataset),
+      errorDigest && (suspenseIdNode.dgst = errorDigest),
+      errorMsg && (suspenseIdNode.msg = errorMsg),
+      errorStack && (suspenseIdNode.stck = errorStack),
+      errorComponentStack && (suspenseIdNode.cstck = errorComponentStack),
+      suspenseBoundaryID._reactRetry && suspenseBoundaryID._reactRetry());
+  };
+  var $RC = function (suspenseBoundaryID, contentID, errorDigest) {
     if ((contentID = document.getElementById(contentID))) {
       contentID.parentNode.removeChild(contentID);
       var suspenseIdNode = document.getElementById(suspenseBoundaryID);
@@ -36,12 +97,8 @@
         suspenseBoundaryID._reactRetry && suspenseBoundaryID._reactRetry();
       }
     }
-  }
-  function completeBoundaryWithStyles(
-    suspenseBoundaryID,
-    contentID,
-    stylesheetDescriptors
-  ) {
+  };
+  var $RR = function (suspenseBoundaryID, contentID, stylesheetDescriptors) {
     function cleanupWith(cb) {
       this._p = null;
       cb();
@@ -61,8 +118,7 @@
     )
       "not all" === node.getAttribute("media")
         ? styleTagsToHoist.push(node)
-        : ("LINK" === node.tagName &&
-            resourceMap.set(node.getAttribute("href"), node),
+        : ("LINK" === node.tagName && $RM.set(node.getAttribute("href"), node),
           precedences.set(node.dataset.precedence, (lastResource = node)));
     node = 0;
     nodes = [];
@@ -78,7 +134,7 @@
         var avoidInsert = !1,
           j = 0;
         var href = stylesheetDescriptor[j++];
-        if ((resourceEl = resourceMap.get(href))) {
+        if ((resourceEl = $RM.get(href))) {
           var attr = resourceEl._p;
           avoidInsert = !0;
         } else {
@@ -96,7 +152,7 @@
             resourceEl.onload = cleanupWith.bind(resourceEl, resolve);
             resourceEl.onerror = cleanupWith.bind(resourceEl, reject);
           });
-          resourceMap.set(href, resourceEl);
+          $RM.set(href, resourceEl);
         }
         href = resourceEl.getAttribute("media");
         !attr || (href && !window.matchMedia(href).matches) || nodes.push(attr);
@@ -119,76 +175,24 @@
           avoidInsert.insertBefore(resourceEl, avoidInsert.firstChild));
     }
     Promise.all(nodes).then(
-      completeBoundary.bind(null, suspenseBoundaryID, contentID, ""),
-      completeBoundary.bind(
-        null,
-        suspenseBoundaryID,
-        contentID,
-        "Resource failed to load"
-      )
+      $RC.bind(null, suspenseBoundaryID, contentID, ""),
+      $RC.bind(null, suspenseBoundaryID, contentID, "Resource failed to load")
     );
-  }
-  function handleExistingNodes(target) {
-    target = target.querySelectorAll("template");
-    for (var i = 0; i < target.length; i++) handleNode(target[i]);
-  }
-  function installFizzInstrObserver(target) {
-    function handleMutations(mutations) {
-      for (var i = 0; i < mutations.length; i++)
-        for (
-          var addedNodes = mutations[i].addedNodes, j = 0;
-          j < addedNodes.length;
-          j++
-        )
-          addedNodes[j].parentNode && handleNode(addedNodes[j]);
-    }
-    var fizzInstrObserver = new MutationObserver(handleMutations);
-    fizzInstrObserver.observe(target, { childList: !0 });
-    window.addEventListener("DOMContentLoaded", function () {
-      handleMutations(fizzInstrObserver.takeRecords());
-      fizzInstrObserver.disconnect();
-    });
-  }
-  function handleNode(node_) {
-    if (1 === node_.nodeType && node_.dataset) {
-      var dataset = node_.dataset;
-      if (null != dataset.rxi) {
-        var errorDigest = dataset.dgst,
-          errorMsg = dataset.msg,
-          errorStack = dataset.stck,
-          errorComponentStack = dataset.cstck,
-          suspenseIdNode = document.getElementById(dataset.bid);
-        suspenseIdNode &&
-          ((dataset = suspenseIdNode.previousSibling),
-          (dataset.data = "$!"),
-          (suspenseIdNode = suspenseIdNode.dataset),
-          errorDigest && (suspenseIdNode.dgst = errorDigest),
-          errorMsg && (suspenseIdNode.msg = errorMsg),
-          errorStack && (suspenseIdNode.stck = errorStack),
-          errorComponentStack && (suspenseIdNode.cstck = errorComponentStack),
-          dataset._reactRetry && dataset._reactRetry());
-        node_.remove();
-      } else if (null != dataset.rri)
-        completeBoundaryWithStyles(
-          dataset.bid,
-          dataset.sid,
-          JSON.parse(dataset.sty)
-        ),
-          node_.remove();
-      else if (null != dataset.rci)
-        completeBoundary(dataset.bid, dataset.sid), node_.remove();
-      else if (null != dataset.rsi) {
-        errorDigest = dataset.pid;
-        errorMsg = document.getElementById(dataset.sid);
-        errorDigest = document.getElementById(errorDigest);
-        for (errorMsg.parentNode.removeChild(errorMsg); errorMsg.firstChild; )
-          errorDigest.parentNode.insertBefore(errorMsg.firstChild, errorDigest);
-        errorDigest.parentNode.removeChild(errorDigest);
-        node_.remove();
-      }
-    }
-  }
-  var resourceMap = new Map();
+  };
+  var $RS = function (containerID, placeholderID) {
+    containerID = document.getElementById(containerID);
+    placeholderID = document.getElementById(placeholderID);
+    for (
+      containerID.parentNode.removeChild(containerID);
+      containerID.firstChild;
+
+    )
+      placeholderID.parentNode.insertBefore(
+        containerID.firstChild,
+        placeholderID
+      );
+    placeholderID.parentNode.removeChild(placeholderID);
+  };
   (function () {
     addEventListener("submit", function (event) {
       if (!event.defaultPrevented) {
