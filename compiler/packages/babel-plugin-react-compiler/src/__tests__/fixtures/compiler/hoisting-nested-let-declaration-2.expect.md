@@ -36,8 +36,7 @@ function hoisting(cond) {
         items.push(bar());
       };
 
-      let bar;
-      bar = _temp;
+      let bar = _temp;
       foo();
     }
     $[0] = cond;

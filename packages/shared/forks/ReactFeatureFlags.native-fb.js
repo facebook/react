@@ -30,6 +30,7 @@ export const {
   enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric,
   renameElementSymbol,
+  enableFragmentRefs,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -84,7 +85,6 @@ export const enableGestureTransition = false;
 export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
 export const enableSrcObject = false;
-export const enableFragmentRefs = false;
 export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
