@@ -4835,14 +4835,7 @@ function flushPreamble(
   preambleSegments: Array<Array<Segment>>,
 ) {
   // The preamble is ready.
-  const willFlushAllSegments =
-    request.allPendingTasks === 0 && request.trackedPostpones === null;
-  writePreambleStart(
-    destination,
-    request.resumableState,
-    request.renderState,
-    willFlushAllSegments,
-  );
+  writePreambleStart(destination, request.resumableState, request.renderState);
   for (let i = 0; i < preambleSegments.length; i++) {
     const segments = preambleSegments[i];
     for (let j = 0; j < segments.length; j++) {

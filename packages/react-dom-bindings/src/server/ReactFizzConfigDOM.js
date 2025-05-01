@@ -5089,15 +5089,10 @@ export function writePreambleStart(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
-  willFlushAllSegments: boolean,
   skipExpect?: boolean, // Used as an override by ReactFizzConfigMarkup
 ): void {
   // This function must be called exactly once on every request
-  if (
-    enableFizzExternalRuntime &&
-    !willFlushAllSegments &&
-    renderState.externalRuntimeScript
-  ) {
+  if (enableFizzExternalRuntime && renderState.externalRuntimeScript) {
     // If the root segment is incomplete due to suspended tasks
     // (e.g. willFlushAllSegments = false) and we are using data
     // streaming format, ensure the external runtime is sent.
