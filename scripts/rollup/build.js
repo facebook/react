@@ -393,7 +393,8 @@ function getPlugins(
               };
             },
           },
-      bundle.tsconfig != null ? commonjs() : false,
+      // See https://github.com/rollup/plugins/issues/1425
+      bundle.tsconfig != null ? commonjs({strictRequires: true}) : false,
       // Shim any modules that need forking in this environment.
       useForks(forks),
       // Ensure we don't try to bundle any fbjs modules.

@@ -17,7 +17,10 @@ import type {
   FormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
-import {pushStartInstance as pushStartInstanceImpl} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import {
+  pushStartInstance as pushStartInstanceImpl,
+  writePreambleStart as writePreambleStartImpl,
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 import type {
   Destination,
@@ -62,13 +65,11 @@ export {
   writeEndPendingSuspenseBoundary,
   writeHoistablesForBoundary,
   writePlaceholder,
-  writeCompletedRoot,
   createRootFormatContext,
   createRenderState,
   createResumableState,
   createPreambleState,
   createHoistableState,
-  writePreambleStart,
   writePreambleEnd,
   writeHoistables,
   writePostamble,
@@ -200,6 +201,31 @@ export function writeEndClientRenderedSuspenseBoundary(
   renderState: RenderState,
 ): boolean {
   // Markup doesn't have any instructions.
+  return true;
+}
+
+export function writePreambleStart(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  willFlushAllSegments: boolean,
+  skipExpect?: boolean, // Used as an override by ReactFizzConfigMarkup
+): void {
+  return writePreambleStartImpl(
+    destination,
+    resumableState,
+    renderState,
+    willFlushAllSegments,
+    true, // skipExpect
+  );
+}
+
+export function writeCompletedRoot(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+): boolean {
+  // Markup doesn't have any bootstrap scripts nor shell completions.
   return true;
 }
 

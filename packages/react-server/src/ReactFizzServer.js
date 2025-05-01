@@ -50,6 +50,7 @@ import {
   flushBuffered,
   close,
   closeWithError,
+  byteLengthOfChunk,
 } from './ReactServerStreamConfig';
 import {
   writeCompletedRoot,
@@ -348,6 +349,7 @@ export opaque type Request = {
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
   completedPreambleSegments: null | Array<Array<Segment>>, // contains the ready-to-flush segments that make up the preamble
+  byteSize: number, // counts the number of bytes accumulated in the shell
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
   // Queues to flush in order of priority
@@ -398,6 +400,16 @@ type Preamble = PreambleState;
 // 500 * 1024 / 8 * .8 * 0.5 / 2
 const DEFAULT_PROGRESSIVE_CHUNK_SIZE = 12800;
 
+function isEligibleForOutlining(
+  request: Request,
+  boundary: SuspenseBoundary,
+): boolean {
+  // For very small boundaries, don't bother producing a fallback for outlining.
+  // The larger this limit is, the more we can save on preparing fallbacks in case we end up
+  // outlining.
+  return boundary.byteSize > 500;
+}
+
 function defaultErrorHandler(error: mixed) {
   if (
     typeof error === 'object' &&
@@ -447,6 +459,7 @@ function RequestInstance(
   this.pendingRootTasks = 0;
   this.completedRootSegment = null;
   this.completedPreambleSegments = null;
+  this.byteSize = 0;
   this.abortableTasks = abortSet;
   this.pingedTasks = pingedTasks;
   this.clientRenderedBoundaries = ([]: Array<SuspenseBoundary>);
@@ -1235,6 +1248,7 @@ function renderSuspenseBoundary(
         boundarySegment.textEmbedded,
       );
       boundarySegment.status = COMPLETED;
+      finishedSegment(request, parentBoundary, boundarySegment);
     } catch (thrownValue: mixed) {
       if (request.status === ABORTING) {
         boundarySegment.status = ABORTED;
@@ -1301,20 +1315,24 @@ function renderSuspenseBoundary(
         contentRootSegment.textEmbedded,
       );
       contentRootSegment.status = COMPLETED;
+      finishedSegment(request, newBoundary, contentRootSegment);
       queueCompletedSegment(newBoundary, contentRootSegment);
       if (newBoundary.pendingTasks === 0 && newBoundary.status === PENDING) {
         // This must have been the last segment we were waiting on. This boundary is now complete.
-        // Therefore we won't need the fallback. We early return so that we don't have to create
-        // the fallback.
         newBoundary.status = COMPLETED;
-        if (request.pendingRootTasks === 0 && task.blockedPreamble) {
-          // The root is complete and this boundary may contribute part of the preamble.
-          // We eagerly attempt to prepare the preamble here because we expect most requests
-          // to have few boundaries which contribute preambles and it allow us to do this
-          // preparation work during the work phase rather than the when flushing.
-          preparePreamble(request);
+        // Therefore we won't need the fallback. We early return so that we don't have to create
+        // the fallback. However, if this boundary ended up big enough to be eligible for outlining
+        // we can't do that because we might still need the fallback if we outline it.
+        if (!isEligibleForOutlining(request, newBoundary)) {
+          if (request.pendingRootTasks === 0 && task.blockedPreamble) {
+            // The root is complete and this boundary may contribute part of the preamble.
+            // We eagerly attempt to prepare the preamble here because we expect most requests
+            // to have few boundaries which contribute preambles and it allow us to do this
+            // preparation work during the work phase rather than the when flushing.
+            preparePreamble(request);
+          }
+          return;
         }
-        return;
       }
     } catch (thrownValue: mixed) {
       newBoundary.status = CLIENT_RENDERED;
@@ -2451,6 +2469,7 @@ function resumeNode(
     renderTask.blockedSegment = resumedSegment;
     renderNode(request, task, node, childIndex);
     resumedSegment.status = COMPLETED;
+    finishedSegment(request, blockedBoundary, resumedSegment);
     if (blockedBoundary === null) {
       request.completedRootSegment = resumedSegment;
     } else {
@@ -4272,6 +4291,27 @@ function queueCompletedSegment(
   }
 }
 
+function finishedSegment(
+  request: Request,
+  boundary: Root | SuspenseBoundary,
+  segment: Segment,
+) {
+  if (byteLengthOfChunk !== null) {
+    // Count the bytes of all the chunks of this segment.
+    const chunks = segment.chunks;
+    let segmentByteSize = 0;
+    for (let i = 0; i < chunks.length; i++) {
+      segmentByteSize += byteLengthOfChunk(chunks[i]);
+    }
+    // Accumulate on the parent boundary to power heuristics.
+    if (boundary === null) {
+      request.byteSize += segmentByteSize;
+    } else {
+      boundary.byteSize += segmentByteSize;
+    }
+  }
+}
+
 function finishedTask(
   request: Request,
   boundary: Root | SuspenseBoundary,
@@ -4318,9 +4358,13 @@ function finishedTask(
       // This needs to happen after we read the parentFlushed flags because aborting can finish
       // work which can trigger user code, which can start flushing, which can change those flags.
       // If the boundary was POSTPONED, we still need to finish the fallback first.
+      // If the boundary is eligible to be outlined during flushing we can't cancel the fallback
+      // since we might need it when it's being outlined.
       if (boundary.status === COMPLETED) {
-        boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
-        boundary.fallbackAbortableTasks.clear();
+        if (!isEligibleForOutlining(request, boundary)) {
+          boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
+          boundary.fallbackAbortableTasks.clear();
+        }
 
         if (
           request.pendingRootTasks === 0 &&
@@ -4418,6 +4462,7 @@ function retryRenderTask(
 
     task.abortSet.delete(task);
     segment.status = COMPLETED;
+    finishedSegment(request, task.blockedBoundary, segment);
     finishedTask(request, task.blockedBoundary, segment);
   } catch (thrownValue: mixed) {
     resetHooksState();
@@ -4860,6 +4905,10 @@ function flushSubtree(
   }
 }
 
+// Running count for how much bytes of boundaries have flushed inlined into the currently
+// flushing root or completed boundary.
+let flushedByteSize = 0;
+
 function flushSegment(
   request: Request,
   destination: Destination,
@@ -4929,9 +4978,14 @@ function flushSegment(
     flushSubtree(request, destination, segment, hoistableState);
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
-  } else if (boundary.byteSize > request.progressiveChunkSize) {
-    // This boundary is large and will be emitted separately so that we can progressively show
-    // other content. We add it to the queue during the flush because we have to ensure that
+  } else if (
+    isEligibleForOutlining(request, boundary) &&
+    flushedByteSize + boundary.byteSize > request.progressiveChunkSize
+  ) {
+    // Inlining this boundary would make the current sequence being written too large
+    // and block the parent for too long. Instead, it will be emitted separately so that we
+    // can progressively show other content.
+    // We add it to the queue during the flush because we have to ensure that
     // the parent flushes first so that there's something to inject it into.
     // We also have to make sure that it's emitted into the queue in a deterministic slot.
     // I.e. we can't insert it here when it completes.
@@ -4957,6 +5011,8 @@ function flushSegment(
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else {
+    // We're inlining this boundary so its bytes get counted to the current running count.
+    flushedByteSize += boundary.byteSize;
     if (hoistableState) {
       hoistHoistables(hoistableState, boundary.contentState);
     }
@@ -5029,6 +5085,7 @@ function flushCompletedBoundary(
   destination: Destination,
   boundary: SuspenseBoundary,
 ): boolean {
+  flushedByteSize = boundary.byteSize; // Start counting bytes
   const completedSegments = boundary.completedSegments;
   let i = 0;
   for (; i < completedSegments.length; i++) {
@@ -5056,6 +5113,7 @@ function flushPartialBoundary(
   destination: Destination,
   boundary: SuspenseBoundary,
 ): boolean {
+  flushedByteSize = boundary.byteSize; // Start counting bytes
   const completedSegments = boundary.completedSegments;
   let i = 0;
   for (; i < completedSegments.length; i++) {
@@ -5149,6 +5207,8 @@ function flushCompletedQueues(
         return;
       }
 
+      flushedByteSize = request.byteSize; // Start counting bytes
+      // TODO: Count the size of the preamble chunks too.
       flushPreamble(
         request,
         destination,
@@ -5157,7 +5217,11 @@ function flushCompletedQueues(
       );
       flushSegment(request, destination, completedRootSegment, null);
       request.completedRootSegment = null;
-      writeCompletedRoot(destination, request.renderState);
+      writeCompletedRoot(
+        destination,
+        request.resumableState,
+        request.renderState,
+      );
     }
 
     writeHoistables(destination, request.resumableState, request.renderState);

@@ -412,7 +412,7 @@ describe('ReactInteractionTracing', () => {
           {navigate ? (
             <Suspense
               fallback={<Text text="Loading..." />}
-              unstable_name="suspense page">
+              name="suspense page">
               <AsyncText text="Page Two" />
             </Suspense>
           ) : (
@@ -498,14 +498,14 @@ describe('ReactInteractionTracing', () => {
             <>
               {showText ? (
                 <Suspense
-                  unstable_name="show text"
+                  name="show text"
                   fallback={<Text text="Show Text Loading..." />}>
                   <AsyncText text="Show Text" />
                 </Suspense>
               ) : null}
               <Suspense
                 fallback={<Text text="Loading..." />}
-                unstable_name="suspense page">
+                name="suspense page">
                 <AsyncText text="Page Two" />
               </Suspense>
             </>
@@ -605,14 +605,14 @@ describe('ReactInteractionTracing', () => {
             <>
               {showText ? (
                 <Suspense
-                  unstable_name="show text"
+                  name="show text"
                   fallback={<Text text="Show Text Loading..." />}>
                   <AsyncText text="Show Text" />
                 </Suspense>
               ) : null}
               <Suspense
                 fallback={<Text text="Loading..." />}
-                unstable_name="suspense page">
+                name="suspense page">
                 <AsyncText text="Page Two" />
               </Suspense>
             </>
@@ -719,16 +719,16 @@ describe('ReactInteractionTracing', () => {
             <>
               <Suspense
                 fallback={<Text text="Loading..." />}
-                unstable_name="suspense page">
+                name="suspense page">
                 <AsyncText text="Page Two" />
                 <Suspense
-                  unstable_name="show text one"
+                  name="show text one"
                   fallback={<Text text="Show Text One Loading..." />}>
                   <AsyncText text="Show Text One" />
                 </Suspense>
                 <div>
                   <Suspense
-                    unstable_name="show text two"
+                    name="show text two"
                     fallback={<Text text="Show Text Two Loading..." />}>
                     <AsyncText text="Show Text Two" />
                   </Suspense>
@@ -848,12 +848,12 @@ describe('ReactInteractionTracing', () => {
             <>
               <Suspense
                 fallback={<Text text="Loading..." />}
-                unstable_name="suspense page">
+                name="suspense page">
                 <AsyncText text="Page Two" />
                 {/* showTextOne is entangled with navigate */}
                 {showTextOne ? (
                   <Suspense
-                    unstable_name="show text one"
+                    name="show text one"
                     fallback={<Text text="Show Text One Loading..." />}>
                     <AsyncText text="Show Text One" />
                   </Suspense>
@@ -865,7 +865,7 @@ describe('ReactInteractionTracing', () => {
                  from completing */}
                 {showTextTwo ? (
                   <Suspense
-                    unstable_name="show text two"
+                    name="show text two"
                     fallback={<Text text="Show Text Two Loading..." />}>
                     <AsyncText text="Show Text Two" />
                   </Suspense>
@@ -1115,13 +1115,13 @@ describe('ReactInteractionTracing', () => {
           {navigate ? (
             <Suspense
               fallback={<Text text="Loading..." />}
-              unstable_name="suspense page">
+              name="suspense page">
               <AsyncText text="Page Two" />
               <React.unstable_TracingMarker name="sync marker" />
               <React.unstable_TracingMarker name="async marker">
                 <Suspense
                   fallback={<Text text="Loading..." />}
-                  unstable_name="marker suspense">
+                  name="marker suspense">
                   <AsyncText text="Marker Text" />
                 </Suspense>
               </React.unstable_TracingMarker>
@@ -1226,20 +1226,18 @@ describe('ReactInteractionTracing', () => {
         <div>
           {navigate ? (
             <React.unstable_TracingMarker name="outer marker">
-              <Suspense
-                fallback={<Text text="Outer..." />}
-                unstable_name="outer">
+              <Suspense fallback={<Text text="Outer..." />} name="outer">
                 <AsyncText text="Outer Text" />
                 <Suspense
                   fallback={<Text text="Inner One..." />}
-                  unstable_name="inner one">
+                  name="inner one">
                   <React.unstable_TracingMarker name="marker one">
                     <AsyncText text="Inner Text One" />
                   </React.unstable_TracingMarker>
                 </Suspense>
                 <Suspense
                   fallback={<Text text="Inner Two..." />}
-                  unstable_name="inner two">
+                  name="inner two">
                   <React.unstable_TracingMarker name="marker two">
                     <AsyncText text="Inner Text Two" />
                   </React.unstable_TracingMarker>
@@ -1488,21 +1486,21 @@ describe('ReactInteractionTracing', () => {
               {showMarker ? (
                 <React.unstable_TracingMarker name="marker one">
                   <Suspense
-                    unstable_name="suspense page"
+                    name="suspense page"
                     fallback={<Text text="Loading..." />}>
                     <AsyncText text="Page Two" />
                   </Suspense>
                 </React.unstable_TracingMarker>
               ) : (
                 <Suspense
-                  unstable_name="suspense page"
+                  name="suspense page"
                   fallback={<Text text="Loading..." />}>
                   <AsyncText text="Page Two" />
                 </Suspense>
               )}
               <React.unstable_TracingMarker name="sibling">
                 <Suspense
-                  unstable_name="suspense sibling"
+                  name="suspense sibling"
                   fallback={<Text text="Sibling Loading..." />}>
                   <AsyncText text="Sibling Text" />
                 </Suspense>
@@ -1652,7 +1650,7 @@ describe('ReactInteractionTracing', () => {
                 <div>
                   <React.unstable_TracingMarker name="one">
                     <Suspense
-                      unstable_name="suspense one"
+                      name="suspense one"
                       fallback={<Text text="Loading One..." />}>
                       <AsyncText text="Page One" />
                     </Suspense>
@@ -1661,7 +1659,7 @@ describe('ReactInteractionTracing', () => {
               ) : null}
               <React.unstable_TracingMarker name="two">
                 <Suspense
-                  unstable_name="suspense two"
+                  name="suspense two"
                   fallback={<Text text="Loading Two..." />}>
                   <AsyncText text="Page Two" />
                 </Suspense>
@@ -1788,12 +1786,12 @@ describe('ReactInteractionTracing', () => {
               <React.unstable_TracingMarker name="one">
                 {!deleteOne ? (
                   <Suspense
-                    unstable_name="suspense one"
+                    name="suspense one"
                     fallback={<Text text="Loading One..." />}>
                     <AsyncText text="Page One" />
                     <React.unstable_TracingMarker name="page one" />
                     <Suspense
-                      unstable_name="suspense child"
+                      name="suspense child"
                       fallback={<Text text="Loading Child..." />}>
                       <React.unstable_TracingMarker name="child" />
                       <AsyncText text="Child" />
@@ -1803,7 +1801,7 @@ describe('ReactInteractionTracing', () => {
               </React.unstable_TracingMarker>
               <React.unstable_TracingMarker name="two">
                 <Suspense
-                  unstable_name="suspense two"
+                  name="suspense two"
                   fallback={<Text text="Loading Two..." />}>
                   <AsyncText text="Page Two" />
                 </Suspense>
@@ -1948,11 +1946,11 @@ describe('ReactInteractionTracing', () => {
       return (
         <React.unstable_TracingMarker name="parent">
           {show ? (
-            <Suspense unstable_name="appended child">
+            <Suspense name="appended child">
               <AsyncText text="Appended child" />
             </Suspense>
           ) : null}
-          <Suspense unstable_name="child">
+          <Suspense name="child">
             <AsyncText text="Child" />
           </Suspense>
         </React.unstable_TracingMarker>
@@ -2068,13 +2066,13 @@ describe('ReactInteractionTracing', () => {
           {show ? (
             <React.unstable_TracingMarker name="appended child">
               {showSuspense ? (
-                <Suspense unstable_name="appended child">
+                <Suspense name="appended child">
                   <AsyncText text="Appended child" />
                 </Suspense>
               ) : null}
             </React.unstable_TracingMarker>
           ) : null}
-          <Suspense unstable_name="child">
+          <Suspense name="child">
             <AsyncText text="Child" />
           </Suspense>
         </React.unstable_TracingMarker>
@@ -2349,9 +2347,7 @@ describe('ReactInteractionTracing', () => {
 
     function App() {
       return (
-        <Suspense
-          fallback={<Text text="Loading..." />}
-          unstable_name="suspense page">
+        <Suspense fallback={<Text text="Loading..." />} name="suspense page">
           <AsyncText text="Page Two" />
         </Suspense>
       );
@@ -2416,12 +2412,10 @@ describe('ReactInteractionTracing', () => {
       });
       return (
         <>
-          <Suspense unstable_name="one" fallback={<Text text="Loading..." />}>
+          <Suspense name="one" fallback={<Text text="Loading..." />}>
             <AsyncText text="Text" />
           </Suspense>
-          <Suspense
-            unstable_name="two"
-            fallback={<Text text="Loading Two..." />}>
+          <Suspense name="two" fallback={<Text text="Loading Two..." />}>
             <AsyncText text="Text Two" />
           </Suspense>
         </>
@@ -2490,9 +2484,7 @@ describe('ReactInteractionTracing', () => {
     function App({name}) {
       return (
         <>
-          <Suspense
-            unstable_name={name}
-            fallback={<Text text={`Loading ${name}...`} />}>
+          <Suspense name={name} fallback={<Text text={`Loading ${name}...`} />}>
             <AsyncText text={`Text ${name}`} />
           </Suspense>
         </>

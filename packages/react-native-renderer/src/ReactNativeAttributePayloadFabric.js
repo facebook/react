@@ -219,13 +219,13 @@ function addNestedProperty(
     return updatePayload;
   }
 
+  if (enableFastAddPropertiesInDiffing) {
+    return fastAddProperties(updatePayload, nextProp, validAttributes);
+  }
+
   if (!isArray(nextProp)) {
     // Add each property of the leaf.
-    if (enableFastAddPropertiesInDiffing) {
-      return fastAddProperties(updatePayload, nextProp, validAttributes);
-    } else {
-      return addProperties(updatePayload, nextProp, validAttributes);
-    }
+    return slowAddProperties(updatePayload, nextProp, validAttributes);
   }
 
   for (let i = 0; i < nextProp.length; i++) {
@@ -516,7 +516,7 @@ function fastAddProperties(
 /**
  * addProperties adds all the valid props to the payload after being processed.
  */
-function addProperties(
+function slowAddProperties(
   updatePayload: null | Object,
   props: Object,
   validAttributes: AttributeConfiguration,
