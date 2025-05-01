@@ -6,7 +6,7 @@ function useHook(nodeID, condition) {
   const graph = useContext(GraphContext);
   const node = nodeID != null ? graph[nodeID] : null;
 
-  // (2) Instead we can create a scope around the loop since the loop produces an escapinng value
+  // (2) Instead we can create a scope around the loop since the loop produces an escaping value
   let value;
   for (const key of Object.keys(node?.fields ?? {})) {
     if (condition) {
