@@ -5219,7 +5219,6 @@ function flushCompletedQueues(
       request.completedRootSegment = null;
       const isComplete =
         request.allPendingTasks === 0 &&
-        request.pingedTasks.length === 0 &&
         request.clientRenderedBoundaries.length === 0 &&
         request.completedBoundaries.length === 0 &&
         (request.trackedPostpones === null ||
@@ -5302,7 +5301,6 @@ function flushCompletedQueues(
   } finally {
     if (
       request.allPendingTasks === 0 &&
-      request.pingedTasks.length === 0 &&
       request.clientRenderedBoundaries.length === 0 &&
       request.completedBoundaries.length === 0
       // We don't need to check any partially completed segments because
