@@ -60,43 +60,38 @@
       errorComponentStack && (suspenseIdNode.cstck = errorComponentStack),
       suspenseBoundaryID._reactRetry && suspenseBoundaryID._reactRetry());
   };
-  var $RC = function (suspenseBoundaryID, contentID, errorDigest) {
-    if ((contentID = document.getElementById(contentID))) {
-      contentID.parentNode.removeChild(contentID);
-      var suspenseIdNode = document.getElementById(suspenseBoundaryID);
-      if (suspenseIdNode) {
-        suspenseBoundaryID = suspenseIdNode.previousSibling;
-        if (errorDigest)
-          (suspenseBoundaryID.data = "$!"),
-            suspenseIdNode.setAttribute("data-dgst", errorDigest);
-        else {
-          errorDigest = suspenseBoundaryID.parentNode;
-          suspenseIdNode = suspenseBoundaryID.nextSibling;
-          var depth = 0;
-          do {
-            if (suspenseIdNode && 8 === suspenseIdNode.nodeType) {
-              var data = suspenseIdNode.data;
-              if ("/$" === data || "/&" === data)
-                if (0 === depth) break;
-                else depth--;
-              else
-                ("$" !== data &&
-                  "$?" !== data &&
-                  "$!" !== data &&
-                  "&" !== data) ||
-                  depth++;
-            }
-            data = suspenseIdNode.nextSibling;
-            errorDigest.removeChild(suspenseIdNode);
-            suspenseIdNode = data;
-          } while (suspenseIdNode);
-          for (; contentID.firstChild; )
-            errorDigest.insertBefore(contentID.firstChild, suspenseIdNode);
-          suspenseBoundaryID.data = "$";
-        }
+  var $RC = function (suspenseBoundaryID, contentID) {
+    if ((contentID = document.getElementById(contentID)))
+      if (
+        (contentID.parentNode.removeChild(contentID),
+        (suspenseBoundaryID = document.getElementById(suspenseBoundaryID)))
+      ) {
+        suspenseBoundaryID = suspenseBoundaryID.previousSibling;
+        var parentInstance = suspenseBoundaryID.parentNode,
+          node = suspenseBoundaryID.nextSibling,
+          depth = 0;
+        do {
+          if (node && 8 === node.nodeType) {
+            var data = node.data;
+            if ("/$" === data || "/&" === data)
+              if (0 === depth) break;
+              else depth--;
+            else
+              ("$" !== data &&
+                "$?" !== data &&
+                "$!" !== data &&
+                "&" !== data) ||
+                depth++;
+          }
+          data = node.nextSibling;
+          parentInstance.removeChild(node);
+          node = data;
+        } while (node);
+        for (; contentID.firstChild; )
+          parentInstance.insertBefore(contentID.firstChild, node);
+        suspenseBoundaryID.data = "$";
         suspenseBoundaryID._reactRetry && suspenseBoundaryID._reactRetry();
       }
-    }
   };
   var $RR = function (suspenseBoundaryID, contentID, stylesheetDescriptors) {
     function cleanupWith(cb) {
@@ -175,8 +170,8 @@
           avoidInsert.insertBefore(resourceEl, avoidInsert.firstChild));
     }
     Promise.all(nodes).then(
-      $RC.bind(null, suspenseBoundaryID, contentID, ""),
-      $RC.bind(null, suspenseBoundaryID, contentID, "Resource failed to load")
+      $RC.bind(null, suspenseBoundaryID, contentID),
+      $RX.bind(null, suspenseBoundaryID, "CSS failed to load")
     );
   };
   var $RS = function (containerID, placeholderID) {

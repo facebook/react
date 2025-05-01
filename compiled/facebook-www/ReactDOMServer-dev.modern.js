@@ -7374,23 +7374,24 @@ __DEV__ &&
         ? (destination.push(request.startInlineScript),
           destination.push(endOfStartTag),
           requiresStyleInsertion
-            ? (completedSegments.instructions &
+            ? ((completedSegments.instructions & SentClientRenderFunction) ===
+                NothingSent &&
+                ((completedSegments.instructions |= SentClientRenderFunction),
+                destination.push(clientRenderScriptFunctionOnly)),
+              (completedSegments.instructions &
                 SentCompleteBoundaryFunction) ===
-              NothingSent
-              ? ((completedSegments.instructions =
-                  completedSegments.instructions |
-                  SentStyleInsertionFunction |
+                NothingSent &&
+                ((completedSegments.instructions |=
                   SentCompleteBoundaryFunction),
-                destination.push(completeBoundaryWithStylesScript1FullBoth))
-              : (completedSegments.instructions &
-                    SentStyleInsertionFunction) ===
-                  NothingSent
+                destination.push(completeBoundaryScriptFunctionOnly)),
+              (completedSegments.instructions & SentStyleInsertionFunction) ===
+              NothingSent
                 ? ((completedSegments.instructions |=
                     SentStyleInsertionFunction),
                   destination.push(
                     completeBoundaryWithStylesScript1FullPartial
                   ))
-                : destination.push(completeBoundaryWithStylesScript1Partial)
+                : destination.push(completeBoundaryWithStylesScript1Partial))
             : (completedSegments.instructions &
                   SentCompleteBoundaryFunction) ===
                 NothingSent
@@ -9118,13 +9119,13 @@ __DEV__ &&
       completeSegmentData1 = '<template data-rsi="" data-sid="',
       completeSegmentData2 = '" data-pid="',
       completeSegmentDataEnd = '"></template>',
+      completeBoundaryScriptFunctionOnly =
+        '$RC=function(a,d){if(d=document.getElementById(d))if(d.parentNode.removeChild(d),a=document.getElementById(a)){a=a.previousSibling;var f=a.parentNode,b=a.nextSibling,e=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===e)break;else e--;else"$"!==c&&"$?"!==c&&"$!"!==c&&"&"!==c||e++}c=b.nextSibling;f.removeChild(b);b=c}while(b);for(;d.firstChild;)f.insertBefore(d.firstChild,b);a.data="$";a._reactRetry&&a._reactRetry()}};',
       completeBoundaryScript1Full =
-        '$RC=function(b,d,e){if(d=document.getElementById(d)){d.parentNode.removeChild(d);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var c=a.data;if("/$"===c||"/&"===c)if(0===f)break;else f--;else"$"!==c&&"$?"!==c&&"$!"!==c&&"&"!==c||f++}c=a.nextSibling;e.removeChild(a);a=c}while(a);for(;d.firstChild;)e.insertBefore(d.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}}};$RC("',
+        '$RC=function(a,d){if(d=document.getElementById(d))if(d.parentNode.removeChild(d),a=document.getElementById(a)){a=a.previousSibling;var f=a.parentNode,b=a.nextSibling,e=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===e)break;else e--;else"$"!==c&&"$?"!==c&&"$!"!==c&&"&"!==c||e++}c=b.nextSibling;f.removeChild(b);b=c}while(b);for(;d.firstChild;)f.insertBefore(d.firstChild,b);a.data="$";a._reactRetry&&a._reactRetry()}};$RC("',
       completeBoundaryScript1Partial = '$RC("',
-      completeBoundaryWithStylesScript1FullBoth =
-        '$RC=function(b,d,e){if(d=document.getElementById(d)){d.parentNode.removeChild(d);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var c=a.data;if("/$"===c||"/&"===c)if(0===f)break;else f--;else"$"!==c&&"$?"!==c&&"$!"!==c&&"&"!==c||f++}c=a.nextSibling;e.removeChild(a);a=c}while(a);for(;d.firstChild;)e.insertBefore(d.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}}};$RM=new Map;\n$RR=function(r,t,w){function u(n){this._p=null;n()}for(var p=new Map,q=document,g,b,h=q.querySelectorAll("link[data-precedence],style[data-precedence]"),v=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?v.push(b):("LINK"===b.tagName&&$RM.set(b.getAttribute("href"),b),p.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var e=w[b++];if(!e){k=!1;b=0;continue}var c=!1,m=0;var d=e[m++];if(a=$RM.get(d)){var f=a._p;c=!0}else{a=q.createElement("link");a.href=d;a.rel=\n"stylesheet";for(a.dataset.precedence=l=e[m++];f=e[m++];)a.setAttribute(f,e[m++]);f=a._p=new Promise(function(n,x){a.onload=u.bind(a,n);a.onerror=u.bind(a,x)});$RM.set(d,a)}d=a.getAttribute("media");!f||d&&!matchMedia(d).matches||h.push(f);if(c)continue}else{a=v[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=p.get(l)||g;c===g&&(g=a);p.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=q.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then($RC.bind(null,\nr,t,""),$RC.bind(null,r,t,"Resource failed to load"))};$RR("',
       completeBoundaryWithStylesScript1FullPartial =
-        '$RM=new Map;\n$RR=function(r,t,w){function u(n){this._p=null;n()}for(var p=new Map,q=document,g,b,h=q.querySelectorAll("link[data-precedence],style[data-precedence]"),v=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?v.push(b):("LINK"===b.tagName&&$RM.set(b.getAttribute("href"),b),p.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var e=w[b++];if(!e){k=!1;b=0;continue}var c=!1,m=0;var d=e[m++];if(a=$RM.get(d)){var f=a._p;c=!0}else{a=q.createElement("link");a.href=d;a.rel=\n"stylesheet";for(a.dataset.precedence=l=e[m++];f=e[m++];)a.setAttribute(f,e[m++]);f=a._p=new Promise(function(n,x){a.onload=u.bind(a,n);a.onerror=u.bind(a,x)});$RM.set(d,a)}d=a.getAttribute("media");!f||d&&!matchMedia(d).matches||h.push(f);if(c)continue}else{a=v[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=p.get(l)||g;c===g&&(g=a);p.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=q.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then($RC.bind(null,\nr,t,""),$RC.bind(null,r,t,"Resource failed to load"))};$RR("',
+        '$RM=new Map;\n$RR=function(r,v,w){function t(n){this._p=null;n()}for(var p=new Map,q=document,g,b,h=q.querySelectorAll("link[data-precedence],style[data-precedence]"),u=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?u.push(b):("LINK"===b.tagName&&$RM.set(b.getAttribute("href"),b),p.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var e=w[b++];if(!e){k=!1;b=0;continue}var c=!1,m=0;var d=e[m++];if(a=$RM.get(d)){var f=a._p;c=!0}else{a=q.createElement("link");a.href=d;a.rel=\n"stylesheet";for(a.dataset.precedence=l=e[m++];f=e[m++];)a.setAttribute(f,e[m++]);f=a._p=new Promise(function(n,x){a.onload=t.bind(a,n);a.onerror=t.bind(a,x)});$RM.set(d,a)}d=a.getAttribute("media");!f||d&&!matchMedia(d).matches||h.push(f);if(c)continue}else{a=u[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=p.get(l)||g;c===g&&(g=a);p.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=q.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then($RC.bind(null,\nr,v),$RX.bind(null,r,"CSS failed to load"))};$RR("',
       completeBoundaryWithStylesScript1Partial = '$RR("',
       completeBoundaryScript2 = '","',
       completeBoundaryScript3a = '",',
@@ -9135,6 +9136,8 @@ __DEV__ &&
       completeBoundaryData2 = '" data-sid="',
       completeBoundaryData3a = '" data-sty="',
       completeBoundaryDataEnd = '"></template>',
+      clientRenderScriptFunctionOnly =
+        '$RX=function(b,c,d,e,f){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),f&&(a.cstck=f),b._reactRetry&&b._reactRetry())};',
       clientRenderScript1Full =
         '$RX=function(b,c,d,e,f){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),f&&(a.cstck=f),b._reactRetry&&b._reactRetry())};;$RX("',
       clientRenderScript1Partial = '$RX("',
@@ -9440,5 +9443,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-modern-bb57fa73-20250501";
+    exports.version = "19.2.0-www-modern-ee077b6c-20250501";
   })();
