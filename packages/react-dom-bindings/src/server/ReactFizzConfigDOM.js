@@ -81,6 +81,7 @@ import {
   completeBoundaryWithStyles as styleInsertionFunction,
   completeSegment as completeSegmentFunction,
   formReplaying as formReplayingRuntime,
+  markShellTime,
 } from './fizz-instruction-set/ReactDOMFizzInstructionSetInlineCodeStrings';
 
 import {getValueDescriptorExpectingObjectForWarning} from '../shared/ReactDOMResourceValidation';
@@ -120,13 +121,14 @@ const ScriptStreamingFormat: StreamingFormat = 0;
 const DataStreamingFormat: StreamingFormat = 1;
 
 export type InstructionState = number;
-const NothingSent /*                      */ = 0b000000;
-const SentCompleteSegmentFunction /*      */ = 0b000001;
-const SentCompleteBoundaryFunction /*     */ = 0b000010;
-const SentClientRenderFunction /*         */ = 0b000100;
-const SentStyleInsertionFunction /*       */ = 0b001000;
-const SentFormReplayingRuntime /*         */ = 0b010000;
-const SentCompletedShellId /*             */ = 0b100000;
+const NothingSent /*                      */ = 0b0000000;
+const SentCompleteSegmentFunction /*      */ = 0b0000001;
+const SentCompleteBoundaryFunction /*     */ = 0b0000010;
+const SentClientRenderFunction /*         */ = 0b0000100;
+const SentStyleInsertionFunction /*       */ = 0b0001000;
+const SentFormReplayingRuntime /*         */ = 0b0010000;
+const SentCompletedShellId /*             */ = 0b0100000;
+const SentMarkShellTime /*                */ = 0b1000000;
 
 // Per request, global state that is not contextual to the rendering subtree.
 // This cannot be resumed and therefore should only contain things that are
@@ -4107,21 +4109,53 @@ function writeBootstrap(
   return true;
 }
 
-export function writeCompletedRoot(
+const shellTimeRuntimeScript = stringToPrecomputedChunk(markShellTime);
+
+function writeShellTimeInstruction(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
 ): boolean {
+  if (
+    enableFizzExternalRuntime &&
+    resumableState.streamingFormat !== ScriptStreamingFormat
+  ) {
+    // External runtime always tracks the shell time in the runtime.
+    return true;
+  }
+  if ((resumableState.instructions & SentMarkShellTime) !== NothingSent) {
+    // We already sent this instruction.
+    return true;
+  }
+  resumableState.instructions |= SentMarkShellTime;
+  writeChunk(destination, renderState.startInlineScript);
+  writeCompletedShellIdAttribute(destination, resumableState);
+  writeChunk(destination, endOfStartTag);
+  writeChunk(destination, shellTimeRuntimeScript);
+  return writeChunkAndReturn(destination, endInlineScript);
+}
+
+export function writeCompletedRoot(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  isComplete: boolean,
+): boolean {
+  if (!isComplete) {
+    // If we're not already fully complete, we might complete another boundary. If so,
+    // we need to track the paint time of the shell so we know how much to throttle the reveal.
+    writeShellTimeInstruction(destination, resumableState, renderState);
+  }
   const preamble = renderState.preamble;
   if (preamble.htmlChunks || preamble.headChunks) {
     // If we rendered the whole document, then we emitted a rel="expect" that needs a
     // matching target. Normally we use one of the bootstrap scripts for this but if
     // there are none, then we need to emit a tag to complete the shell.
     if ((resumableState.instructions & SentCompletedShellId) === NothingSent) {
-      const bootstrapChunks = renderState.bootstrapChunks;
-      bootstrapChunks.push(startChunkForTag('template'));
-      pushCompletedShellIdAttribute(bootstrapChunks, resumableState);
-      bootstrapChunks.push(endOfStartTag, endChunkForTag('template'));
+      writeChunk(destination, startChunkForTag('template'));
+      writeCompletedShellIdAttribute(destination, resumableState);
+      writeChunk(destination, endOfStartTag);
+      writeChunk(destination, endChunkForTag('template'));
     }
   }
   return writeBootstrap(destination, renderState);
@@ -5014,6 +5048,21 @@ function writeBlockingRenderInstruction(
 }
 
 const completedShellIdAttributeStart = stringToPrecomputedChunk(' id="');
+
+function writeCompletedShellIdAttribute(
+  destination: Destination,
+  resumableState: ResumableState,
+): void {
+  if ((resumableState.instructions & SentCompletedShellId) !== NothingSent) {
+    return;
+  }
+  resumableState.instructions |= SentCompletedShellId;
+  const idPrefix = resumableState.idPrefix;
+  const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+  writeChunk(destination, completedShellIdAttributeStart);
+  writeChunk(destination, stringToChunk(escapeTextForBrowser(shellId)));
+  writeChunk(destination, attributeEnd);
+}
 
 function pushCompletedShellIdAttribute(
   target: Array<Chunk | PrecomputedChunk>,

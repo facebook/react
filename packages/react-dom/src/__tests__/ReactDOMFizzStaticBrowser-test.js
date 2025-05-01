@@ -38,6 +38,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
     jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
 
+    // We need the mocked version of setTimeout inside the document.
+    window.setTimeout = setTimeout;
+
     Scheduler = require('scheduler');
     patchMessageChannel(Scheduler);
     act = require('internal-test-utils').act;
@@ -133,13 +136,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const temp = document.createElement('div');
     temp.innerHTML = result;
     await insertNodesAndExecuteScripts(temp, container, null);
+    jest.runAllTimers();
   }
 
   async function readIntoNewDocument(stream) {
     const content = await readContent(stream);
-    const jsdom = new JSDOM(content, {
-      runScripts: 'dangerously',
-    });
+    const jsdom = new JSDOM(
+      // The Fizz runtime assumes requestAnimationFrame exists so we need to polyfill it.
+      '<script>window.requestAnimationFrame = setTimeout;</script>' + content,
+      {
+        runScripts: 'dangerously',
+      },
+    );
     const originalWindow = global.window;
     const originalDocument = global.document;
     const originalNavigator = global.navigator;
@@ -167,6 +175,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const temp = document.createElement('div');
     temp.innerHTML = content;
     await insertNodesAndExecuteScripts(temp, document.body, null);
+    jest.runAllTimers();
   }
 
   it('should call prerender', async () => {
@@ -980,6 +989,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     // Wait for the instruction microtasks to flush.
     await 0;
     await 0;
+    jest.runAllTimers();
 
     expect(getVisibleChildren(container)).toEqual([
       <link href="example.com" rel="preconnect" />,
@@ -1611,7 +1621,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     expect(result).toBe(
       '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head>' +
-        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><template id="«R»"></template>',
+        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><script id="«R»">requestAnimationFrame(function(){$RT=performance.now()});</script>',
     );
 
     await 1;
@@ -1636,7 +1646,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     expect(slice).toBe(
       '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head>' +
-        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><template id="«R»"></template>' +
+        '<body>hello<!--$?--><template id="B:1"></template><!--/$--><script id="«R»">requestAnimationFrame(function(){$RT=performance.now()});</script>' +
         '<div hidden id="S:1">world<!-- --></div><script>$RX',
     );
   });

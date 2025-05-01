@@ -83,6 +83,9 @@ describe('ReactDOMFizzServer', () => {
     global.Node = global.window.Node;
     global.addEventListener = global.window.addEventListener;
     global.MutationObserver = global.window.MutationObserver;
+    // The Fizz runtime assumes requestAnimationFrame exists so we need to polyfill it.
+    global.requestAnimationFrame = global.window.requestAnimationFrame = cb =>
+      setTimeout(cb);
     container = document.getElementById('container');
 
     Scheduler = require('scheduler');
@@ -206,6 +209,7 @@ describe('ReactDOMFizzServer', () => {
     buffer = '';
 
     if (!bufferedContent) {
+      jest.runAllTimers();
       return;
     }
 
@@ -314,6 +318,8 @@ describe('ReactDOMFizzServer', () => {
       div.innerHTML = bufferedContent;
       await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
     }
+    // Let throttled boundaries reveal
+    jest.runAllTimers();
   }
 
   function resolveText(text) {
@@ -602,12 +608,12 @@ describe('ReactDOMFizzServer', () => {
       ]);
 
       // check that there are 6 scripts with a matching nonce:
-      // The runtime script, an inline bootstrap script, two bootstrap scripts and two bootstrap modules
+      // The runtime script or initial paint time, an inline bootstrap script, two bootstrap scripts and two bootstrap modules
       expect(
         Array.from(container.getElementsByTagName('script')).filter(
           node => node.getAttribute('nonce') === CSPnonce,
         ).length,
-      ).toEqual(gate(flags => flags.shouldUseFizzExternalRuntime) ? 6 : 5);
+      ).toEqual(6);
 
       await act(() => {
         resolve({default: Text});
@@ -836,7 +842,7 @@ describe('ReactDOMFizzServer', () => {
         container.childNodes,
         renderOptions.unstable_externalRuntimeSrc,
       ).length,
-    ).toBe(1);
+    ).toBe(gate(flags => flags.shouldUseFizzExternalRuntime) ? 1 : 2);
     await act(() => {
       resolveElement({default: <Text text="Hello" />});
     });
