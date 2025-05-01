@@ -232,8 +232,16 @@ export function commitShowHideHostTextInstance(node: Fiber, isHidden: boolean) {
 
 export function commitNewChildToFragmentInstances(
   fiber: Fiber,
-  parentFragmentInstances: Array<FragmentInstanceType>,
+  parentFragmentInstances: null | Array<FragmentInstanceType>,
 ): void {
+  if (
+    fiber.tag !== HostComponent ||
+    // Only run fragment insertion effects for initial insertions
+    fiber.alternate !== null ||
+    parentFragmentInstances === null
+  ) {
+    return;
+  }
   for (let i = 0; i < parentFragmentInstances.length; i++) {
     const fragmentInstance = parentFragmentInstances[i];
     commitNewChildToFragmentInstance(fiber.stateNode, fragmentInstance);
@@ -361,14 +369,7 @@ function insertOrAppendPlacementNodeIntoContainer(
     } else {
       appendChildToContainer(parent, stateNode);
     }
-    // TODO: Enable HostText for RN
-    if (
-      enableFragmentRefs &&
-      tag === HostComponent &&
-      // Only run fragment insertion effects for initial insertions
-      node.alternate === null &&
-      parentFragmentInstances !== null
-    ) {
+    if (enableFragmentRefs) {
       commitNewChildToFragmentInstances(node, parentFragmentInstances);
     }
     trackHostMutation();
@@ -426,14 +427,7 @@ function insertOrAppendPlacementNode(
     } else {
       appendChild(parent, stateNode);
     }
-    // TODO: Enable HostText for RN
-    if (
-      enableFragmentRefs &&
-      tag === HostComponent &&
-      // Only run fragment insertion effects for initial insertions
-      node.alternate === null &&
-      parentFragmentInstances !== null
-    ) {
+    if (enableFragmentRefs) {
       commitNewChildToFragmentInstances(node, parentFragmentInstances);
     }
     trackHostMutation();
@@ -471,7 +465,7 @@ function insertOrAppendPlacementNode(
 }
 
 function commitPlacement(finishedWork: Fiber): void {
-  if (!supportsMutation) {
+  if (!supportsMutation && !enableFragmentRefs) {
     return;
   }
 
@@ -499,6 +493,13 @@ function commitPlacement(finishedWork: Fiber): void {
       'Expected to find a host parent. This error is likely caused by a bug ' +
         'in React. Please file an issue.',
     );
+  }
+  if (!supportsMutation && enableFragmentRefs) {
+    appendImmutableNodeToFragmentInstances(
+      finishedWork,
+      parentFragmentInstances,
+    );
+    return;
   }
 
   switch (hostParentFiber.tag) {
@@ -555,6 +556,35 @@ function commitPlacement(finishedWork: Fiber): void {
         'Invalid host parent fiber. This error is likely caused by a bug ' +
           'in React. Please file an issue.',
       );
+  }
+}
+
+function appendImmutableNodeToFragmentInstances(
+  finishedWork: Fiber,
+  parentFragmentInstances: null | Array<FragmentInstanceType>,
+): void {
+  if (!enableFragmentRefs) {
+    return;
+  }
+  const isHost = finishedWork.tag === HostComponent;
+  if (isHost) {
+    commitNewChildToFragmentInstances(finishedWork, parentFragmentInstances);
+    return;
+  } else if (finishedWork.tag === HostPortal) {
+    // If the insertion itself is a portal, then we don't want to traverse
+    // down its children. Instead, we'll get insertions from each child in
+    // the portal directly.
+    return;
+  }
+
+  const child = finishedWork.child;
+  if (child !== null) {
+    appendImmutableNodeToFragmentInstances(child, parentFragmentInstances);
+    let sibling = child.sibling;
+    while (sibling !== null) {
+      appendImmutableNodeToFragmentInstances(sibling, parentFragmentInstances);
+      sibling = sibling.sibling;
+    }
   }
 }
 
