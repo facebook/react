@@ -543,5 +543,6 @@
   "555": "Cannot requestFormReset() inside a startGestureTransition. There should be no side-effects associated with starting a Gesture until its Action is invoked. Move side-effects to the Action instead.",
   "556": "Expected prepareToHydrateHostActivityInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.",
   "557": "Expected to have a hydrated activity instance. This error is likely caused by a bug in React. Please file an issue.",
-  "558": "Client rendering an Activity suspended it again. This is a bug in React."
+  "558": "Client rendering an Activity suspended it again. This is a bug in React.",
+  "559": "Expected to find a host node. This is a bug in React."
 }

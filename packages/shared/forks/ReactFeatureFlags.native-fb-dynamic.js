@@ -28,3 +28,4 @@ export const enableSiblingPrerendering = __VARIANT__;
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = __VARIANT__;
 export const renameElementSymbol = __VARIANT__;
+export const enableFragmentRefs = __VARIANT__;
