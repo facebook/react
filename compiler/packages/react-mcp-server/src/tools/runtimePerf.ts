@@ -1,7 +1,30 @@
 import * as babel from '@babel/core';
 import puppeteer from 'puppeteer';
 
-export async function measurePerformance(code: string) {
+type PerformanceResults = {
+  renderTime: number;
+  webVitals: {
+    cls: number;
+    lcp: number;
+    inp: number;
+    fid: number;
+    ttfb: number;
+  };
+  reactProfiler: {
+    id: number;
+    phase: number;
+    actualDuration: number;
+    baseDuration: number;
+    startTime: number;
+    commitTime: number;
+  };
+  error: Error | null;
+};
+
+export async function measurePerformance(
+  code: string,
+  iterations: number,
+): Promise<PerformanceResults> {
   const babelOptions = {
     configFile: false,
     babelrc: false,
@@ -43,22 +66,76 @@ export async function measurePerformance(code: string) {
   }
 
   const browser = await puppeteer.launch();
-
   const page = await browser.newPage();
   await page.setViewport({width: 1280, height: 720});
   const html = buildHtml(transpiled);
-  await page.setContent(html, {waitUntil: 'networkidle0'});
 
-  await page.waitForFunction(
-    'window.__RESULT__ !== undefined && (window.__RESULT__.renderTime !== null || window.__RESULT__.error !== null)',
-  );
+  let performanceResults: PerformanceResults = {
+    renderTime: 0,
+    webVitals: {
+      cls: 0,
+      lcp: 0,
+      inp: 0,
+      fid: 0,
+      ttfb: 0,
+    },
+    reactProfiler: {
+      id: 0,
+      phase: 0,
+      actualDuration: 0,
+      baseDuration: 0,
+      startTime: 0,
+      commitTime: 0,
+    },
+    error: null,
+  };
 
-  const result = await page.evaluate(() => {
-    return (window as any).__RESULT__;
-  });
+  for (let ii = 0; ii < iterations; ii++) {
+    await page.setContent(html, {waitUntil: 'networkidle0'});
+    await page.waitForFunction(
+      'window.__RESULT__ !== undefined && (window.__RESULT__.renderTime !== null || window.__RESULT__.error !== null)',
+    );
+    // ui chaos monkey
+    await page.waitForFunction(`window.__RESULT__ !== undefined && (function() {
+      for (const el of [...document.querySelectorAll('a'), ...document.querySelectorAll('button')]) {
+        console.log(el);
+        el.click();
+      }
+      return true;
+    })() `);
+    const evaluationResult: PerformanceResults = await page.evaluate(() => {
+      return (window as any).__RESULT__;
+    });
+
+    console.error(JSON.stringify(evaluationResult, null, 2));
+
+    // TODO: investigate why webvital metrics are not populating correctly
+    performanceResults.renderTime += evaluationResult.renderTime;
+    performanceResults.webVitals.cls += evaluationResult.webVitals.cls || 0;
+    performanceResults.webVitals.lcp += evaluationResult.webVitals.lcp || 0;
+    performanceResults.webVitals.inp += evaluationResult.webVitals.inp || 0;
+    performanceResults.webVitals.fid += evaluationResult.webVitals.fid || 0;
+    performanceResults.webVitals.ttfb += evaluationResult.webVitals.ttfb || 0;
+
+    performanceResults.reactProfiler.id +=
+      evaluationResult.reactProfiler.actualDuration || 0;
+    performanceResults.reactProfiler.phase +=
+      evaluationResult.reactProfiler.phase || 0;
+    performanceResults.reactProfiler.actualDuration +=
+      evaluationResult.reactProfiler.actualDuration || 0;
+    performanceResults.reactProfiler.baseDuration +=
+      evaluationResult.reactProfiler.baseDuration || 0;
+    performanceResults.reactProfiler.startTime +=
+      evaluationResult.reactProfiler.startTime || 0;
+    performanceResults.reactProfiler.commitTime +=
+      evaluationResult.reactProfiler.commitTime || 0;
+
+    performanceResults.error = evaluationResult.error;
+  }
 
   await browser.close();
-  return result;
+
+  return performanceResults;
 }
 
 function buildHtml(transpiled: string) {
@@ -82,7 +159,7 @@ function buildHtml(transpiled: string) {
                 window.__RESULT__ = {
                     renderTime: null,
                     webVitals: {},
-                    reactProfilerMetrics: {},
+                    reactProfiler: {},
                     error: null
                 };
 
@@ -112,12 +189,12 @@ function buildHtml(transpiled: string) {
                         React.createElement(React.Profiler, {
                             id: 'App',
                             onRender: (id, phase, actualDuration, baseDuration, startTime, commitTime) => {
-                                window.__RESULT__.reactProfilerMetrics.id = id;
-                                window.__RESULT__.reactProfilerMetrics.phase = phase;
-                                window.__RESULT__.reactProfilerMetrics.actualDuration = actualDuration;
-                                window.__RESULT__.reactProfilerMetrics.baseDuration = baseDuration;
-                                window.__RESULT__.reactProfilerMetrics.startTime = startTime;
-                                window.__RESULT__.reactProfilerMetrics.commitTime = commitTime;
+                                window.__RESULT__.reactProfiler.id = id;
+                                window.__RESULT__.reactProfiler.phase = phase;
+                                window.__RESULT__.reactProfiler.actualDuration = actualDuration;
+                                window.__RESULT__.reactProfiler.baseDuration = baseDuration;
+                                window.__RESULT__.reactProfiler.startTime = startTime;
+                                window.__RESULT__.reactProfiler.commitTime = commitTime;
                             }
                         }, React.createElement(AppComponent))
                     );
@@ -127,10 +204,7 @@ function buildHtml(transpiled: string) {
                     window.__RESULT__.renderTime = renderEnd - renderStart;
                 } catch (error) {
                     console.error('Error rendering component:', error);
-                    window.__RESULT__.error = {
-                        message: error.message,
-                        stack: error.stack
-                    };
+                    window.__RESULT__.error = error;
                 }
             </script>
             <script>

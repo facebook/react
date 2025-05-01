@@ -387,72 +387,26 @@ server.tool(
   `,
   {
     text: z.string(),
+    iterations: z.number().optional().default(2),
   },
-  async ({text}) => {
+  async ({text, iterations}) => {
     try {
-      const iterations = 20;
-
-      let perfData = {
-        renderTime: 0,
-        webVitals: {
-          cls: 0,
-          lcp: 0,
-          inp: 0,
-          fid: 0,
-          ttfb: 0,
-        },
-        reactProfilerMetrics: {
-          id: 0,
-          phase: 0,
-          actualDuration: 0,
-          baseDuration: 0,
-          startTime: 0,
-          commitTime: 0,
-        },
-        error: null,
-      };
-
-      for (let i = 0; i < iterations; i++) {
-        const performanceResults = await measurePerformance(text);
-        perfData.renderTime += performanceResults.renderTime;
-        perfData.webVitals.cls += performanceResults.webVitals.cls || 0;
-        perfData.webVitals.lcp += performanceResults.webVitals.lcp || 0;
-        perfData.webVitals.inp += performanceResults.webVitals.inp || 0;
-        perfData.webVitals.fid += performanceResults.webVitals.fid || 0;
-        perfData.webVitals.ttfb += performanceResults.webVitals.ttfb || 0;
-
-        perfData.reactProfilerMetrics.id +=
-          performanceResults.reactProfilerMetrics.actualDuration || 0;
-        perfData.reactProfilerMetrics.phase +=
-          performanceResults.reactProfilerMetrics.phase || 0;
-        perfData.reactProfilerMetrics.actualDuration +=
-          performanceResults.reactProfilerMetrics.actualDuration || 0;
-        perfData.reactProfilerMetrics.baseDuration +=
-          performanceResults.reactProfilerMetrics.baseDuration || 0;
-        perfData.reactProfilerMetrics.startTime +=
-          performanceResults.reactProfilerMetrics.startTime || 0;
-        perfData.reactProfilerMetrics.commitTime +=
-          performanceResults.reactProfilerMetrics.commitTime || 0;
-      }
-
+      const results = await measurePerformance(text, iterations);
       const formattedResults = `
 # React Component Performance Results
 
 ## Mean Render Time
-${perfData.renderTime / iterations}ms
+${results.renderTime / iterations}ms
 
 ## Mean Web Vitals
-- Cumulative Layout Shift (CLS): ${perfData.webVitals.cls / iterations}
-- Largest Contentful Paint (LCP): ${perfData.webVitals.lcp / iterations}ms
-- Interaction to Next Paint (INP): ${perfData.webVitals.inp / iterations}ms
-- First Input Delay (FID): ${perfData.webVitals.fid / iterations}ms
-- Time to First Byte (TTFB): ${perfData.webVitals.ttfb / iterations}ms
+- Cumulative Layout Shift (CLS): ${results.webVitals.cls / iterations}ms
+- Largest Contentful Paint (LCP): ${results.webVitals.lcp / iterations}ms
+- Interaction to Next Paint (INP): ${results.webVitals.inp / iterations}ms
+- First Input Delay (FID): ${results.webVitals.fid / iterations}ms
 
 ## Mean React Profiler
-- Actual Duration: ${perfData.reactProfilerMetrics.actualDuration / iterations}ms
-- Base Duration: ${perfData.reactProfilerMetrics.baseDuration / iterations}ms
-- Start Time: ${perfData.reactProfilerMetrics.startTime / iterations}ms
-- Commit Time: ${perfData.reactProfilerMetrics.commitTime / iterations}ms
+- Actual Duration: ${results.reactProfiler.actualDuration / iterations}ms
+- Base Duration: ${results.reactProfiler.baseDuration / iterations}ms
 `;
 
       return {
