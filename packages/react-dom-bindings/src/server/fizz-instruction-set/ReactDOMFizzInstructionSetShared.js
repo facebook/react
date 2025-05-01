@@ -49,6 +49,12 @@ export function clientRenderBoundary(
 
 export function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {
   const contentNode = document.getElementById(contentID);
+  if (!contentNode) {
+    // If the client has failed hydration we may have already deleted the streaming
+    // segments. The server may also have emitted a complete instruction but cancelled
+    // the segment. Regardless we can ignore this case.
+    return;
+  }
   // We'll detach the content node so that regardless of what happens next we don't leave in the tree.
   // This might also help by not causing recalcing each time we move a child from here to the target.
   contentNode.parentNode.removeChild(contentNode);

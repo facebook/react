@@ -255,6 +255,12 @@ function writeReactiveValue(writer: Writer, value: ReactiveValue): void {
   }
 }
 
+export function printReactiveTerminal(terminal: ReactiveTerminal): string {
+  const writer = new Writer();
+  writeTerminal(writer, terminal);
+  return writer.complete();
+}
+
 function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
   switch (terminal.kind) {
     case 'break': {

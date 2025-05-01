@@ -39,11 +39,7 @@ export default class Chrome extends Component {
               {this.props.children}
             </Theme.Provider>
           </Suspense>
-          <p>This should appear in the first paint.</p>
-          <Suspense fallback="Loading...">
-            <p>This content should not block paint.</p>
-            <LargeContent />
-          </Suspense>
+          <LargeContent />
           <script
             dangerouslySetInnerHTML={{
               __html: `assetManifest = ${JSON.stringify(assets)};`,
