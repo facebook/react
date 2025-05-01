@@ -6956,11 +6956,7 @@ __DEV__ &&
             flushedByteSize = request.byteSize;
             var resumableState = request.resumableState,
               renderState = request.renderState;
-            if (
-              (0 !== request.allPendingTasks ||
-                null !== request.trackedPostpones) &&
-              renderState.externalRuntimeScript
-            ) {
+            if (renderState.externalRuntimeScript) {
               var _renderState$external = renderState.externalRuntimeScript,
                 src = _renderState$external.src,
                 chunks = _renderState$external.chunks;
