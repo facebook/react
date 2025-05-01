@@ -41,7 +41,9 @@
               ($RS(dataset.sid, dataset.pid), node_.remove());
     }
   }
+  var $RT;
   var $RM = new Map();
+  var $RB = [];
   var $RX = function (
     suspenseBoundaryID,
     errorDigest,
@@ -61,37 +63,51 @@
       suspenseBoundaryID._reactRetry && suspenseBoundaryID._reactRetry());
   };
   var $RC = function (suspenseBoundaryID, contentID) {
+    function revealCompletedBoundaries() {
+      $RT = performance.now();
+      var batch = $RB;
+      $RB = [];
+      for (var i = 0; i < batch.length; i += 2) {
+        var suspenseIdNode = batch[i],
+          contentNode = batch[i + 1],
+          parentInstance = suspenseIdNode.parentNode;
+        if (parentInstance) {
+          var suspenseNode = suspenseIdNode.previousSibling,
+            depth = 0;
+          do {
+            if (suspenseIdNode && 8 === suspenseIdNode.nodeType) {
+              var data = suspenseIdNode.data;
+              if ("/$" === data || "/&" === data)
+                if (0 === depth) break;
+                else depth--;
+              else
+                ("$" !== data &&
+                  "$?" !== data &&
+                  "$!" !== data &&
+                  "&" !== data) ||
+                  depth++;
+            }
+            data = suspenseIdNode.nextSibling;
+            parentInstance.removeChild(suspenseIdNode);
+            suspenseIdNode = data;
+          } while (suspenseIdNode);
+          for (; contentNode.firstChild; )
+            parentInstance.insertBefore(contentNode.firstChild, suspenseIdNode);
+          suspenseNode.data = "$";
+          suspenseNode._reactRetry && suspenseNode._reactRetry();
+        }
+      }
+    }
     if ((contentID = document.getElementById(contentID)))
       if (
         (contentID.parentNode.removeChild(contentID),
         (suspenseBoundaryID = document.getElementById(suspenseBoundaryID)))
-      ) {
-        suspenseBoundaryID = suspenseBoundaryID.previousSibling;
-        var parentInstance = suspenseBoundaryID.parentNode,
-          node = suspenseBoundaryID.nextSibling,
-          depth = 0;
-        do {
-          if (node && 8 === node.nodeType) {
-            var data = node.data;
-            if ("/$" === data || "/&" === data)
-              if (0 === depth) break;
-              else depth--;
-            else
-              ("$" !== data &&
-                "$?" !== data &&
-                "$!" !== data &&
-                "&" !== data) ||
-                depth++;
-          }
-          data = node.nextSibling;
-          parentInstance.removeChild(node);
-          node = data;
-        } while (node);
-        for (; contentID.firstChild; )
-          parentInstance.insertBefore(contentID.firstChild, node);
-        suspenseBoundaryID.data = "$";
-        suspenseBoundaryID._reactRetry && suspenseBoundaryID._reactRetry();
-      }
+      )
+        $RB.push(suspenseBoundaryID, contentID),
+          2 === $RB.length &&
+            ((suspenseBoundaryID =
+              ("number" !== typeof $RT ? 0 : $RT) + 300 - performance.now()),
+            setTimeout(revealCompletedBoundaries, suspenseBoundaryID));
   };
   var $RR = function (suspenseBoundaryID, contentID, stylesheetDescriptors) {
     function cleanupWith(cb) {
@@ -223,6 +239,14 @@
       }
     });
   })();
+  var entries = performance.getEntriesByType
+    ? performance.getEntriesByType("paint")
+    : [];
+  0 < entries.length
+    ? ($RT = entries[0].startTime)
+    : requestAnimationFrame(function () {
+        $RT = performance.now();
+      });
   if (null != document.body)
     "loading" === document.readyState &&
       installFizzInstrObserver(document.body),

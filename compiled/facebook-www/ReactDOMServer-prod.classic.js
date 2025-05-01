@@ -2150,6 +2150,15 @@ function preloadLateStyles(styleQueue) {
   styleQueue.sheets.forEach(preloadLateStyle, this);
   styleQueue.sheets.clear();
 }
+function writeCompletedShellIdAttribute(destination, resumableState) {
+  0 === (resumableState.instructions & 32) &&
+    ((resumableState.instructions |= 32),
+    (resumableState = "\u00ab" + resumableState.idPrefix + "R\u00bb"),
+    destination.push(' id="'),
+    (resumableState = escapeTextForBrowser(resumableState)),
+    destination.push(resumableState),
+    destination.push('"'));
+}
 function pushCompletedShellIdAttribute(target, resumableState) {
   0 === (resumableState.instructions & 32) &&
     ((resumableState.instructions |= 32),
@@ -2774,17 +2783,17 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     ));
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1744 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1785 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preamble_1747 = createPreambleState(),
-    JSCompiler_object_inline_preconnects_1757 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1758 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1759 = new Set(),
-    JSCompiler_object_inline_styles_1760 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1761 = new Set(),
-    JSCompiler_object_inline_scripts_1762 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1763 = new Set(),
-    JSCompiler_object_inline_preloads_1764 = {
+  var JSCompiler_object_inline_preamble_1788 = createPreambleState(),
+    JSCompiler_object_inline_preconnects_1798 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1799 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1800 = new Set(),
+    JSCompiler_object_inline_styles_1801 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1802 = new Set(),
+    JSCompiler_object_inline_scripts_1803 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1804 = new Set(),
+    JSCompiler_object_inline_preloads_1805 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2821,7 +2830,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1761.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1802.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src), '"');
       "string" === typeof integrity &&
         bootstrapChunks.push(
@@ -2868,7 +2877,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1761.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1802.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i),
@@ -2890,10 +2899,10 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push(' async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1744,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1785,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script",
-    preamble: JSCompiler_object_inline_preamble_1747,
+    preamble: JSCompiler_object_inline_preamble_1788,
     externalRuntimeScript: null,
     bootstrapChunks: bootstrapChunks,
     importMapChunks: [],
@@ -2909,14 +2918,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1757,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1758,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1759,
-    styles: JSCompiler_object_inline_styles_1760,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1761,
-    scripts: JSCompiler_object_inline_scripts_1762,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1763,
-    preloads: JSCompiler_object_inline_preloads_1764,
+    preconnects: JSCompiler_object_inline_preconnects_1798,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1799,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1800,
+    styles: JSCompiler_object_inline_styles_1801,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1802,
+    scripts: JSCompiler_object_inline_scripts_1803,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1804,
+    preloads: JSCompiler_object_inline_preloads_1805,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
   };
@@ -5808,18 +5817,18 @@ function flushCompletedBoundary(request, destination, boundary) {
           0 === (completedSegments.instructions & 2) &&
             ((completedSegments.instructions |= 2),
             destination.push(
-              '$RC=function(a,d){if(d=document.getElementById(d))if(d.parentNode.removeChild(d),a=document.getElementById(a)){a=a.previousSibling;var f=a.parentNode,b=a.nextSibling,e=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===e)break;else e--;else"$"!==c&&"$?"!==c&&"$!"!==c&&"&"!==c||e++}c=b.nextSibling;f.removeChild(b);b=c}while(b);for(;d.firstChild;)f.insertBefore(d.firstChild,b);a.data="$";a._reactRetry&&a._reactRetry()}};'
+              '$RB=[];$RC=function(e,c){function m(){$RT=performance.now();var f=$RB;$RB=[];for(var d=0;d<f.length;d+=2){var a=f[d],l=f[d+1],g=a.parentNode;if(g){var h=a.previousSibling,k=0;do{if(a&&8===a.nodeType){var b=a.data;if("/$"===b||"/&"===b)if(0===k)break;else k--;else"$"!==b&&"$?"!==b&&"$!"!==b&&"&"!==b||k++}b=a.nextSibling;g.removeChild(a);a=b}while(a);for(;l.firstChild;)g.insertBefore(l.firstChild,a);h.data="$";h._reactRetry&&h._reactRetry()}}}if(c=document.getElementById(c))if(c.parentNode.removeChild(c),e=\ndocument.getElementById(e))$RB.push(e,c),2===$RB.length&&setTimeout(m,("number"!==typeof $RT?0:$RT)+300-performance.now())};'
             )),
           0 === (completedSegments.instructions & 8)
             ? ((completedSegments.instructions |= 8),
               destination.push(
-                '$RM=new Map;\n$RR=function(r,v,w){function t(n){this._p=null;n()}for(var p=new Map,q=document,g,b,h=q.querySelectorAll("link[data-precedence],style[data-precedence]"),u=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?u.push(b):("LINK"===b.tagName&&$RM.set(b.getAttribute("href"),b),p.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var e=w[b++];if(!e){k=!1;b=0;continue}var c=!1,m=0;var d=e[m++];if(a=$RM.get(d)){var f=a._p;c=!0}else{a=q.createElement("link");a.href=d;a.rel=\n"stylesheet";for(a.dataset.precedence=l=e[m++];f=e[m++];)a.setAttribute(f,e[m++]);f=a._p=new Promise(function(n,x){a.onload=t.bind(a,n);a.onerror=t.bind(a,x)});$RM.set(d,a)}d=a.getAttribute("media");!f||d&&!matchMedia(d).matches||h.push(f);if(c)continue}else{a=u[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=p.get(l)||g;c===g&&(g=a);p.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=q.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then($RC.bind(null,\nr,v),$RX.bind(null,r,"CSS failed to load"))};$RR("'
+                '$RM=new Map;$RR=function(r,v,w){function t(n){this._p=null;n()}for(var p=new Map,q=document,g,b,h=q.querySelectorAll("link[data-precedence],style[data-precedence]"),u=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?u.push(b):("LINK"===b.tagName&&$RM.set(b.getAttribute("href"),b),p.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var e=w[b++];if(!e){k=!1;b=0;continue}var c=!1,m=0;var d=e[m++];if(a=$RM.get(d)){var f=a._p;c=!0}else{a=q.createElement("link");a.href=d;a.rel=\n"stylesheet";for(a.dataset.precedence=l=e[m++];f=e[m++];)a.setAttribute(f,e[m++]);f=a._p=new Promise(function(n,x){a.onload=t.bind(a,n);a.onerror=t.bind(a,x)});$RM.set(d,a)}d=a.getAttribute("media");!f||d&&!matchMedia(d).matches||h.push(f);if(c)continue}else{a=u[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=p.get(l)||g;c===g&&(g=a);p.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=q.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then($RC.bind(null,\nr,v),$RX.bind(null,r,"CSS failed to load"))};$RR("'
               ))
             : destination.push('$RR("'))
         : 0 === (completedSegments.instructions & 2)
           ? ((completedSegments.instructions |= 2),
             destination.push(
-              '$RC=function(a,d){if(d=document.getElementById(d))if(d.parentNode.removeChild(d),a=document.getElementById(a)){a=a.previousSibling;var f=a.parentNode,b=a.nextSibling,e=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===e)break;else e--;else"$"!==c&&"$?"!==c&&"$!"!==c&&"&"!==c||e++}c=b.nextSibling;f.removeChild(b);b=c}while(b);for(;d.firstChild;)f.insertBefore(d.firstChild,b);a.data="$";a._reactRetry&&a._reactRetry()}};$RC("'
+              '$RB=[];$RC=function(e,c){function m(){$RT=performance.now();var f=$RB;$RB=[];for(var d=0;d<f.length;d+=2){var a=f[d],l=f[d+1],g=a.parentNode;if(g){var h=a.previousSibling,k=0;do{if(a&&8===a.nodeType){var b=a.data;if("/$"===b||"/&"===b)if(0===k)break;else k--;else"$"!==b&&"$?"!==b&&"$!"!==b&&"&"!==b||k++}b=a.nextSibling;g.removeChild(a);a=b}while(a);for(;l.firstChild;)g.insertBefore(l.firstChild,a);h.data="$";h._reactRetry&&h._reactRetry()}}}if(c=document.getElementById(c))if(c.parentNode.removeChild(c),e=\ndocument.getElementById(e))$RB.push(e,c),2===$RB.length&&setTimeout(m,("number"!==typeof $RT?0:$RT)+300-performance.now())};$RC("'
             ))
           : destination.push('$RC("'))
     : requiresStyleInsertion
@@ -5985,19 +5994,34 @@ function flushCompletedQueues(request, destination) {
         flushSegment(request, destination, completedRootSegment, null);
         request.completedRootSegment = null;
         var resumableState$jscomp$0 = request.resumableState,
-          renderState$jscomp$0 = request.renderState,
-          preamble$jscomp$1 = renderState$jscomp$0.preamble;
+          renderState$jscomp$0 = request.renderState;
+        (0 === request.allPendingTasks &&
+          0 === request.clientRenderedBoundaries.length &&
+          0 === request.completedBoundaries.length &&
+          (null === request.trackedPostpones ||
+            (0 === request.trackedPostpones.rootNodes.length &&
+              null === request.trackedPostpones.rootSlots))) ||
+          0 !== resumableState$jscomp$0.streamingFormat ||
+          0 !== (resumableState$jscomp$0.instructions & 64) ||
+          ((resumableState$jscomp$0.instructions |= 64),
+          destination.push(renderState$jscomp$0.startInlineScript),
+          writeCompletedShellIdAttribute(destination, resumableState$jscomp$0),
+          destination.push(">"),
+          destination.push(
+            "requestAnimationFrame(function(){$RT=performance.now()});"
+          ),
+          destination.push("\x3c/script>"));
+        var preamble$jscomp$1 = renderState$jscomp$0.preamble;
         if (
           (preamble$jscomp$1.htmlChunks || preamble$jscomp$1.headChunks) &&
           0 === (resumableState$jscomp$0.instructions & 32)
         ) {
-          var bootstrapChunks = renderState$jscomp$0.bootstrapChunks;
-          bootstrapChunks.push(startChunkForTag("template"));
-          pushCompletedShellIdAttribute(
-            bootstrapChunks,
-            resumableState$jscomp$0
-          );
-          bootstrapChunks.push(">", endChunkForTag("template"));
+          var chunk$jscomp$2 = startChunkForTag("template");
+          destination.push(chunk$jscomp$2);
+          writeCompletedShellIdAttribute(destination, resumableState$jscomp$0);
+          destination.push(">");
+          var chunk$jscomp$3 = endChunkForTag("template");
+          destination.push(chunk$jscomp$3);
         }
         writeBootstrap(destination, renderState$jscomp$0);
       }
@@ -6053,20 +6077,20 @@ function flushCompletedQueues(request, destination) {
               : renderState$jscomp$1.push('$RX("'))
           : renderState$jscomp$1.push('<template data-rxi="" data-bid="');
         renderState$jscomp$1.push(renderState$jscomp$2.boundaryPrefix);
-        var chunk$jscomp$2 = id.toString(16);
-        renderState$jscomp$1.push(chunk$jscomp$2);
+        var chunk$jscomp$4 = id.toString(16);
+        renderState$jscomp$1.push(chunk$jscomp$4);
         scriptFormat && renderState$jscomp$1.push('"');
         if (errorDigest)
           if (scriptFormat) {
             renderState$jscomp$1.push(",");
-            var chunk$jscomp$3 = escapeJSStringsForInstructionScripts(
+            var chunk$jscomp$5 = escapeJSStringsForInstructionScripts(
               errorDigest || ""
             );
-            renderState$jscomp$1.push(chunk$jscomp$3);
+            renderState$jscomp$1.push(chunk$jscomp$5);
           } else {
             renderState$jscomp$1.push('" data-dgst="');
-            var chunk$jscomp$4 = escapeTextForBrowser(errorDigest || "");
-            renderState$jscomp$1.push(chunk$jscomp$4);
+            var chunk$jscomp$6 = escapeTextForBrowser(errorDigest || "");
+            renderState$jscomp$1.push(chunk$jscomp$6);
           }
         var JSCompiler_inline_result = scriptFormat
           ? renderState$jscomp$1.push(")\x3c/script>")
@@ -6143,7 +6167,6 @@ function flushCompletedQueues(request, destination) {
     }
   } finally {
     0 === request.allPendingTasks &&
-      0 === request.pingedTasks.length &&
       0 === request.clientRenderedBoundaries.length &&
       0 === request.completedBoundaries.length &&
       ((request.flushScheduled = !1),
@@ -6273,4 +6296,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-classic-ee077b6c-20250501";
+exports.version = "19.2.0-www-classic-ee7fee8f-20250501";

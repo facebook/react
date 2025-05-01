@@ -3053,6 +3053,15 @@ __DEV__ &&
       styleQueue.sheets.forEach(preloadLateStyle, this);
       styleQueue.sheets.clear();
     }
+    function writeCompletedShellIdAttribute(destination, resumableState) {
+      0 === (resumableState.instructions & 32) &&
+        ((resumableState.instructions |= 32),
+        (resumableState = "\u00ab" + resumableState.idPrefix + "R\u00bb"),
+        (destination.buffer += completedShellIdAttributeStart),
+        (resumableState = escapeTextForBrowser(resumableState)),
+        (destination.buffer += resumableState),
+        (destination.buffer += attributeEnd));
+    }
     function pushCompletedShellIdAttribute(target, resumableState) {
       0 === (resumableState.instructions & 32) &&
         ((resumableState.instructions |= 32),
@@ -6841,20 +6850,20 @@ __DEV__ &&
                 ((completedSegments.instructions |= 2),
                 writeChunk(
                   destination,
-                  '$RC=function(a,d){if(d=document.getElementById(d))if(d.parentNode.removeChild(d),a=document.getElementById(a)){a=a.previousSibling;var f=a.parentNode,b=a.nextSibling,e=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===e)break;else e--;else"$"!==c&&"$?"!==c&&"$!"!==c&&"&"!==c||e++}c=b.nextSibling;f.removeChild(b);b=c}while(b);for(;d.firstChild;)f.insertBefore(d.firstChild,b);a.data="$";a._reactRetry&&a._reactRetry()}};'
+                  '$RB=[];$RC=function(e,c){function m(){$RT=performance.now();var f=$RB;$RB=[];for(var d=0;d<f.length;d+=2){var a=f[d],l=f[d+1],g=a.parentNode;if(g){var h=a.previousSibling,k=0;do{if(a&&8===a.nodeType){var b=a.data;if("/$"===b||"/&"===b)if(0===k)break;else k--;else"$"!==b&&"$?"!==b&&"$!"!==b&&"&"!==b||k++}b=a.nextSibling;g.removeChild(a);a=b}while(a);for(;l.firstChild;)g.insertBefore(l.firstChild,a);h.data="$";h._reactRetry&&h._reactRetry()}}}if(c=document.getElementById(c))if(c.parentNode.removeChild(c),e=\ndocument.getElementById(e))$RB.push(e,c),2===$RB.length&&setTimeout(m,("number"!==typeof $RT?0:$RT)+300-performance.now())};'
                 )),
               0 === (completedSegments.instructions & 8)
                 ? ((completedSegments.instructions |= 8),
                   writeChunk(
                     destination,
-                    '$RM=new Map;\n$RR=function(r,v,w){function t(n){this._p=null;n()}for(var p=new Map,q=document,g,b,h=q.querySelectorAll("link[data-precedence],style[data-precedence]"),u=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?u.push(b):("LINK"===b.tagName&&$RM.set(b.getAttribute("href"),b),p.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var e=w[b++];if(!e){k=!1;b=0;continue}var c=!1,m=0;var d=e[m++];if(a=$RM.get(d)){var f=a._p;c=!0}else{a=q.createElement("link");a.href=d;a.rel=\n"stylesheet";for(a.dataset.precedence=l=e[m++];f=e[m++];)a.setAttribute(f,e[m++]);f=a._p=new Promise(function(n,x){a.onload=t.bind(a,n);a.onerror=t.bind(a,x)});$RM.set(d,a)}d=a.getAttribute("media");!f||d&&!matchMedia(d).matches||h.push(f);if(c)continue}else{a=u[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=p.get(l)||g;c===g&&(g=a);p.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=q.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then($RC.bind(null,\nr,v),$RX.bind(null,r,"CSS failed to load"))};$RR("'
+                    '$RM=new Map;$RR=function(r,v,w){function t(n){this._p=null;n()}for(var p=new Map,q=document,g,b,h=q.querySelectorAll("link[data-precedence],style[data-precedence]"),u=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?u.push(b):("LINK"===b.tagName&&$RM.set(b.getAttribute("href"),b),p.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var e=w[b++];if(!e){k=!1;b=0;continue}var c=!1,m=0;var d=e[m++];if(a=$RM.get(d)){var f=a._p;c=!0}else{a=q.createElement("link");a.href=d;a.rel=\n"stylesheet";for(a.dataset.precedence=l=e[m++];f=e[m++];)a.setAttribute(f,e[m++]);f=a._p=new Promise(function(n,x){a.onload=t.bind(a,n);a.onerror=t.bind(a,x)});$RM.set(d,a)}d=a.getAttribute("media");!f||d&&!matchMedia(d).matches||h.push(f);if(c)continue}else{a=u[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=p.get(l)||g;c===g&&(g=a);p.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=q.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then($RC.bind(null,\nr,v),$RX.bind(null,r,"CSS failed to load"))};$RR("'
                   ))
                 : writeChunk(destination, '$RR("'))
             : 0 === (completedSegments.instructions & 2)
               ? ((completedSegments.instructions |= 2),
                 writeChunk(
                   destination,
-                  '$RC=function(a,d){if(d=document.getElementById(d))if(d.parentNode.removeChild(d),a=document.getElementById(a)){a=a.previousSibling;var f=a.parentNode,b=a.nextSibling,e=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===e)break;else e--;else"$"!==c&&"$?"!==c&&"$!"!==c&&"&"!==c||e++}c=b.nextSibling;f.removeChild(b);b=c}while(b);for(;d.firstChild;)f.insertBefore(d.firstChild,b);a.data="$";a._reactRetry&&a._reactRetry()}};$RC("'
+                  '$RB=[];$RC=function(e,c){function m(){$RT=performance.now();var f=$RB;$RB=[];for(var d=0;d<f.length;d+=2){var a=f[d],l=f[d+1],g=a.parentNode;if(g){var h=a.previousSibling,k=0;do{if(a&&8===a.nodeType){var b=a.data;if("/$"===b||"/&"===b)if(0===k)break;else k--;else"$"!==b&&"$?"!==b&&"$!"!==b&&"&"!==b||k++}b=a.nextSibling;g.removeChild(a);a=b}while(a);for(;l.firstChild;)g.insertBefore(l.firstChild,a);h.data="$";h._reactRetry&&h._reactRetry()}}}if(c=document.getElementById(c))if(c.parentNode.removeChild(c),e=\ndocument.getElementById(e))$RB.push(e,c),2===$RB.length&&setTimeout(m,("number"!==typeof $RT?0:$RT)+300-performance.now())};$RC("'
                 ))
               : writeChunk(destination, '$RC("'))
         : requiresStyleInsertion
@@ -7061,20 +7070,35 @@ __DEV__ &&
             flushSegment(request, destination, completedRootSegment, null);
             request.completedRootSegment = null;
             var resumableState$jscomp$0 = request.resumableState,
-              renderState$jscomp$0 = request.renderState,
-              preamble$jscomp$1 = renderState$jscomp$0.preamble;
-            if (
-              (preamble$jscomp$1.htmlChunks || preamble$jscomp$1.headChunks) &&
-              0 === (resumableState$jscomp$0.instructions & 32)
-            ) {
-              var bootstrapChunks = renderState$jscomp$0.bootstrapChunks;
-              bootstrapChunks.push(startChunkForTag("template"));
-              pushCompletedShellIdAttribute(
-                bootstrapChunks,
+              renderState$jscomp$0 = request.renderState;
+            (0 === request.allPendingTasks &&
+              0 === request.clientRenderedBoundaries.length &&
+              0 === request.completedBoundaries.length &&
+              (null === request.trackedPostpones ||
+                (0 === request.trackedPostpones.rootNodes.length &&
+                  null === request.trackedPostpones.rootSlots))) ||
+              0 !== resumableState$jscomp$0.streamingFormat ||
+              0 !== (resumableState$jscomp$0.instructions & 64) ||
+              ((resumableState$jscomp$0.instructions |= 64),
+              (destination.buffer += renderState$jscomp$0.startInlineScript),
+              writeCompletedShellIdAttribute(
+                destination,
                 resumableState$jscomp$0
-              );
-              bootstrapChunks.push(endOfStartTag, endChunkForTag("template"));
-            }
+              ),
+              (destination.buffer += endOfStartTag),
+              (destination.buffer +=
+                "requestAnimationFrame(function(){$RT=performance.now()});"),
+              writeChunkAndReturn(destination, "\x3c/script>"));
+            var preamble$jscomp$1 = renderState$jscomp$0.preamble;
+            (preamble$jscomp$1.htmlChunks || preamble$jscomp$1.headChunks) &&
+              0 === (resumableState$jscomp$0.instructions & 32) &&
+              (writeChunk(destination, startChunkForTag("template")),
+              writeCompletedShellIdAttribute(
+                destination,
+                resumableState$jscomp$0
+              ),
+              writeChunk(destination, endOfStartTag),
+              writeChunk(destination, endChunkForTag("template")));
             writeBootstrap(destination, renderState$jscomp$0);
           }
           var renderState$jscomp$1 = request.renderState;
@@ -7275,7 +7299,6 @@ __DEV__ &&
         }
       } finally {
         0 === request.allPendingTasks &&
-          0 === request.pingedTasks.length &&
           0 === request.clientRenderedBoundaries.length &&
           0 === request.completedBoundaries.length &&
           ((request.flushScheduled = !1),

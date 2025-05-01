@@ -1362,13 +1362,13 @@ __DEV__ &&
             bootstrapChunks.push(
               endOfStartTag,
               formReplayingRuntimeScript,
-              "\x3c/script>"
+              endInlineScript
             ))
           : bootstrapChunks.unshift(
               renderState.startInlineScript,
               endOfStartTag,
               formReplayingRuntimeScript,
-              "\x3c/script>"
+              endInlineScript
             );
       }
     }
@@ -3098,6 +3098,15 @@ __DEV__ &&
       styleQueue.sheets.forEach(preloadLateStyle, this);
       styleQueue.sheets.clear();
     }
+    function writeCompletedShellIdAttribute(destination, resumableState) {
+      (resumableState.instructions & SentCompletedShellId) === NothingSent &&
+        ((resumableState.instructions |= SentCompletedShellId),
+        (resumableState = "\u00ab" + resumableState.idPrefix + "R\u00bb"),
+        destination.push(completedShellIdAttributeStart),
+        (resumableState = escapeTextForBrowser(resumableState)),
+        destination.push(resumableState),
+        destination.push(attributeEnd));
+    }
     function pushCompletedShellIdAttribute(target, resumableState) {
       (resumableState.instructions & SentCompletedShellId) === NothingSent &&
         ((resumableState.instructions |= SentCompletedShellId),
@@ -3431,7 +3440,7 @@ __DEV__ &&
         bootstrapChunks.push(
           endOfStartTag,
           escapeEntireInlineScriptContent(bootstrapScriptContent),
-          "\x3c/script>"
+          endInlineScript
         ));
       idPrefix = {
         placeholderPrefix: idPrefix + "P:",
@@ -7600,20 +7609,41 @@ __DEV__ &&
             flushSegment(request, destination, completedRootSegment, null);
             request.completedRootSegment = null;
             var resumableState$jscomp$0 = request.resumableState,
-              renderState$jscomp$0 = request.renderState,
-              preamble$jscomp$1 = renderState$jscomp$0.preamble;
+              renderState$jscomp$0 = request.renderState;
+            (0 === request.allPendingTasks &&
+              0 === request.clientRenderedBoundaries.length &&
+              0 === request.completedBoundaries.length &&
+              (null === request.trackedPostpones ||
+                (0 === request.trackedPostpones.rootNodes.length &&
+                  null === request.trackedPostpones.rootSlots))) ||
+              resumableState$jscomp$0.streamingFormat !==
+                ScriptStreamingFormat ||
+              (resumableState$jscomp$0.instructions & SentMarkShellTime) !==
+                NothingSent ||
+              ((resumableState$jscomp$0.instructions |= SentMarkShellTime),
+              destination.push(renderState$jscomp$0.startInlineScript),
+              writeCompletedShellIdAttribute(
+                destination,
+                resumableState$jscomp$0
+              ),
+              destination.push(endOfStartTag),
+              destination.push(shellTimeRuntimeScript),
+              destination.push(endInlineScript));
+            var preamble$jscomp$1 = renderState$jscomp$0.preamble;
             if (
               (preamble$jscomp$1.htmlChunks || preamble$jscomp$1.headChunks) &&
               (resumableState$jscomp$0.instructions & SentCompletedShellId) ===
                 NothingSent
             ) {
-              var bootstrapChunks = renderState$jscomp$0.bootstrapChunks;
-              bootstrapChunks.push(startChunkForTag("template"));
-              pushCompletedShellIdAttribute(
-                bootstrapChunks,
+              var chunk$jscomp$2 = startChunkForTag("template");
+              destination.push(chunk$jscomp$2);
+              writeCompletedShellIdAttribute(
+                destination,
                 resumableState$jscomp$0
               );
-              bootstrapChunks.push(endOfStartTag, endChunkForTag("template"));
+              destination.push(endOfStartTag);
+              var chunk$jscomp$3 = endChunkForTag("template");
+              destination.push(chunk$jscomp$3);
             }
             writeBootstrap(destination, renderState$jscomp$0);
           }
@@ -7677,8 +7707,8 @@ __DEV__ &&
                   : renderState$jscomp$1.push(clientRenderScript1Partial))
               : renderState$jscomp$1.push(clientRenderData1);
             renderState$jscomp$1.push(renderState$jscomp$2.boundaryPrefix);
-            var chunk$jscomp$2 = id.toString(16);
-            renderState$jscomp$1.push(chunk$jscomp$2);
+            var chunk$jscomp$4 = id.toString(16);
+            renderState$jscomp$1.push(chunk$jscomp$4);
             scriptFormat && renderState$jscomp$1.push(clientRenderScript1A);
             if (
               errorDigest ||
@@ -7690,55 +7720,55 @@ __DEV__ &&
                 renderState$jscomp$1.push(
                   clientRenderErrorScriptArgInterstitial
                 );
-                var chunk$jscomp$3 = escapeJSStringsForInstructionScripts(
+                var chunk$jscomp$5 = escapeJSStringsForInstructionScripts(
                   errorDigest || ""
                 );
-                renderState$jscomp$1.push(chunk$jscomp$3);
+                renderState$jscomp$1.push(chunk$jscomp$5);
               } else {
                 renderState$jscomp$1.push(clientRenderData2);
-                var chunk$jscomp$4 = escapeTextForBrowser(errorDigest || "");
-                renderState$jscomp$1.push(chunk$jscomp$4);
+                var chunk$jscomp$6 = escapeTextForBrowser(errorDigest || "");
+                renderState$jscomp$1.push(chunk$jscomp$6);
               }
             if (errorMessage || errorStack || errorComponentStack)
               if (scriptFormat) {
                 renderState$jscomp$1.push(
                   clientRenderErrorScriptArgInterstitial
                 );
-                var chunk$jscomp$5 = escapeJSStringsForInstructionScripts(
+                var chunk$jscomp$7 = escapeJSStringsForInstructionScripts(
                   errorMessage || ""
                 );
-                renderState$jscomp$1.push(chunk$jscomp$5);
+                renderState$jscomp$1.push(chunk$jscomp$7);
               } else {
                 renderState$jscomp$1.push(clientRenderData3);
-                var chunk$jscomp$6 = escapeTextForBrowser(errorMessage || "");
-                renderState$jscomp$1.push(chunk$jscomp$6);
+                var chunk$jscomp$8 = escapeTextForBrowser(errorMessage || "");
+                renderState$jscomp$1.push(chunk$jscomp$8);
               }
             if (errorStack || errorComponentStack)
               if (scriptFormat) {
                 renderState$jscomp$1.push(
                   clientRenderErrorScriptArgInterstitial
                 );
-                var chunk$jscomp$7 = escapeJSStringsForInstructionScripts(
+                var chunk$jscomp$9 = escapeJSStringsForInstructionScripts(
                   errorStack || ""
                 );
-                renderState$jscomp$1.push(chunk$jscomp$7);
+                renderState$jscomp$1.push(chunk$jscomp$9);
               } else {
                 renderState$jscomp$1.push(clientRenderData4);
-                var chunk$jscomp$8 = escapeTextForBrowser(errorStack || "");
-                renderState$jscomp$1.push(chunk$jscomp$8);
+                var chunk$jscomp$10 = escapeTextForBrowser(errorStack || "");
+                renderState$jscomp$1.push(chunk$jscomp$10);
               }
             if (errorComponentStack)
               if (scriptFormat) {
                 renderState$jscomp$1.push(
                   clientRenderErrorScriptArgInterstitial
                 );
-                var chunk$jscomp$9 =
+                var chunk$jscomp$11 =
                   escapeJSStringsForInstructionScripts(errorComponentStack);
-                renderState$jscomp$1.push(chunk$jscomp$9);
+                renderState$jscomp$1.push(chunk$jscomp$11);
               } else {
                 renderState$jscomp$1.push(clientRenderData5);
-                var chunk$jscomp$10 = escapeTextForBrowser(errorComponentStack);
-                renderState$jscomp$1.push(chunk$jscomp$10);
+                var chunk$jscomp$12 = escapeTextForBrowser(errorComponentStack);
+                renderState$jscomp$1.push(chunk$jscomp$12);
               }
             var JSCompiler_inline_result = scriptFormat
               ? renderState$jscomp$1.push(clientRenderScriptEnd)
@@ -7821,7 +7851,6 @@ __DEV__ &&
         }
       } finally {
         0 === request.allPendingTasks &&
-          0 === request.pingedTasks.length &&
           0 === request.clientRenderedBoundaries.length &&
           0 === request.completedBoundaries.length &&
           ((request.flushScheduled = !1),
@@ -9030,10 +9059,12 @@ __DEV__ &&
       SentClientRenderFunction = 4,
       SentStyleInsertionFunction = 8,
       SentCompletedShellId = 32,
+      SentMarkShellTime = 64,
       EXISTS = null,
       PRELOAD_NO_CREDS = [];
     Object.freeze(PRELOAD_NO_CREDS);
-    var scriptRegex = /(<\/|<)(s)(cript)/gi;
+    var endInlineScript = "\x3c/script>",
+      scriptRegex = /(<\/|<)(s)(cript)/gi;
     var didWarnForNewBooleanPropsWithEmptyValue = {};
     var ROOT_HTML_MODE = 0,
       HTML_HTML_MODE = 1,
@@ -9076,6 +9107,8 @@ __DEV__ &&
       VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/,
       validatedTagCache = new Map(),
       endTagCache = new Map(),
+      shellTimeRuntimeScript =
+        "requestAnimationFrame(function(){$RT=performance.now()});",
       placeholder1 = '<template id="',
       placeholder2 = '"></template>',
       startCompletedSuspenseBoundary = "\x3c!--$--\x3e",
@@ -9120,12 +9153,12 @@ __DEV__ &&
       completeSegmentData2 = '" data-pid="',
       completeSegmentDataEnd = '"></template>',
       completeBoundaryScriptFunctionOnly =
-        '$RC=function(a,d){if(d=document.getElementById(d))if(d.parentNode.removeChild(d),a=document.getElementById(a)){a=a.previousSibling;var f=a.parentNode,b=a.nextSibling,e=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===e)break;else e--;else"$"!==c&&"$?"!==c&&"$!"!==c&&"&"!==c||e++}c=b.nextSibling;f.removeChild(b);b=c}while(b);for(;d.firstChild;)f.insertBefore(d.firstChild,b);a.data="$";a._reactRetry&&a._reactRetry()}};',
+        '$RB=[];$RC=function(e,c){function m(){$RT=performance.now();var f=$RB;$RB=[];for(var d=0;d<f.length;d+=2){var a=f[d],l=f[d+1],g=a.parentNode;if(g){var h=a.previousSibling,k=0;do{if(a&&8===a.nodeType){var b=a.data;if("/$"===b||"/&"===b)if(0===k)break;else k--;else"$"!==b&&"$?"!==b&&"$!"!==b&&"&"!==b||k++}b=a.nextSibling;g.removeChild(a);a=b}while(a);for(;l.firstChild;)g.insertBefore(l.firstChild,a);h.data="$";h._reactRetry&&h._reactRetry()}}}if(c=document.getElementById(c))if(c.parentNode.removeChild(c),e=\ndocument.getElementById(e))$RB.push(e,c),2===$RB.length&&setTimeout(m,("number"!==typeof $RT?0:$RT)+300-performance.now())};',
       completeBoundaryScript1Full =
-        '$RC=function(a,d){if(d=document.getElementById(d))if(d.parentNode.removeChild(d),a=document.getElementById(a)){a=a.previousSibling;var f=a.parentNode,b=a.nextSibling,e=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===e)break;else e--;else"$"!==c&&"$?"!==c&&"$!"!==c&&"&"!==c||e++}c=b.nextSibling;f.removeChild(b);b=c}while(b);for(;d.firstChild;)f.insertBefore(d.firstChild,b);a.data="$";a._reactRetry&&a._reactRetry()}};$RC("',
+        '$RB=[];$RC=function(e,c){function m(){$RT=performance.now();var f=$RB;$RB=[];for(var d=0;d<f.length;d+=2){var a=f[d],l=f[d+1],g=a.parentNode;if(g){var h=a.previousSibling,k=0;do{if(a&&8===a.nodeType){var b=a.data;if("/$"===b||"/&"===b)if(0===k)break;else k--;else"$"!==b&&"$?"!==b&&"$!"!==b&&"&"!==b||k++}b=a.nextSibling;g.removeChild(a);a=b}while(a);for(;l.firstChild;)g.insertBefore(l.firstChild,a);h.data="$";h._reactRetry&&h._reactRetry()}}}if(c=document.getElementById(c))if(c.parentNode.removeChild(c),e=\ndocument.getElementById(e))$RB.push(e,c),2===$RB.length&&setTimeout(m,("number"!==typeof $RT?0:$RT)+300-performance.now())};$RC("',
       completeBoundaryScript1Partial = '$RC("',
       completeBoundaryWithStylesScript1FullPartial =
-        '$RM=new Map;\n$RR=function(r,v,w){function t(n){this._p=null;n()}for(var p=new Map,q=document,g,b,h=q.querySelectorAll("link[data-precedence],style[data-precedence]"),u=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?u.push(b):("LINK"===b.tagName&&$RM.set(b.getAttribute("href"),b),p.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var e=w[b++];if(!e){k=!1;b=0;continue}var c=!1,m=0;var d=e[m++];if(a=$RM.get(d)){var f=a._p;c=!0}else{a=q.createElement("link");a.href=d;a.rel=\n"stylesheet";for(a.dataset.precedence=l=e[m++];f=e[m++];)a.setAttribute(f,e[m++]);f=a._p=new Promise(function(n,x){a.onload=t.bind(a,n);a.onerror=t.bind(a,x)});$RM.set(d,a)}d=a.getAttribute("media");!f||d&&!matchMedia(d).matches||h.push(f);if(c)continue}else{a=u[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=p.get(l)||g;c===g&&(g=a);p.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=q.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then($RC.bind(null,\nr,v),$RX.bind(null,r,"CSS failed to load"))};$RR("',
+        '$RM=new Map;$RR=function(r,v,w){function t(n){this._p=null;n()}for(var p=new Map,q=document,g,b,h=q.querySelectorAll("link[data-precedence],style[data-precedence]"),u=[],k=0;b=h[k++];)"not all"===b.getAttribute("media")?u.push(b):("LINK"===b.tagName&&$RM.set(b.getAttribute("href"),b),p.set(b.dataset.precedence,g=b));b=0;h=[];var l,a;for(k=!0;;){if(k){var e=w[b++];if(!e){k=!1;b=0;continue}var c=!1,m=0;var d=e[m++];if(a=$RM.get(d)){var f=a._p;c=!0}else{a=q.createElement("link");a.href=d;a.rel=\n"stylesheet";for(a.dataset.precedence=l=e[m++];f=e[m++];)a.setAttribute(f,e[m++]);f=a._p=new Promise(function(n,x){a.onload=t.bind(a,n);a.onerror=t.bind(a,x)});$RM.set(d,a)}d=a.getAttribute("media");!f||d&&!matchMedia(d).matches||h.push(f);if(c)continue}else{a=u[b++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=p.get(l)||g;c===g&&(g=a);p.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=q.head,c.insertBefore(a,c.firstChild))}Promise.all(h).then($RC.bind(null,\nr,v),$RX.bind(null,r,"CSS failed to load"))};$RR("',
       completeBoundaryWithStylesScript1Partial = '$RR("',
       completeBoundaryScript2 = '","',
       completeBoundaryScript3a = '",',
@@ -9443,5 +9476,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-modern-ee077b6c-20250501";
+    exports.version = "19.2.0-www-modern-ee7fee8f-20250501";
   })();
