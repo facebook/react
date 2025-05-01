@@ -37,8 +37,7 @@ function useHook(t0) {
   if ($[0] !== cond) {
     const getX = () => x;
 
-    let x;
-    x = CONST_NUMBER0;
+    let x = CONST_NUMBER0;
     if (cond) {
       x = x + CONST_NUMBER1;
       x;
