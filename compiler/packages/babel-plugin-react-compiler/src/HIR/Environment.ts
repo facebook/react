@@ -367,6 +367,11 @@ const EnvironmentConfigSchema = z.object({
    */
   validateNoImpureFunctionsInRender: z.boolean().default(false),
 
+  /**
+   * Validate against passing mutable functions to hooks
+   */
+  validateNoFreezingKnownMutableFunctions: z.boolean().default(false),
+
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
    * - Hooks may memoize computation based on any of their parameters, thus
