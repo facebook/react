@@ -47,6 +47,8 @@ export function clientRenderBoundary(
   }
 }
 
+const FALLBACK_THROTTLE_MS = 300;
+
 export function completeBoundary(suspenseBoundaryID, contentID) {
   const contentNodeOuter = document.getElementById(contentID);
   if (!contentNodeOuter) {
@@ -69,6 +71,7 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
   }
 
   function revealCompletedBoundaries() {
+    window['$RT'] = performance.now();
     const batch = window['$RB'];
     window['$RB'] = [];
     for (let i = 0; i < batch.length; i += 2) {
@@ -132,7 +135,18 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
   // Queue this boundary for the next batch
   window['$RB'].push(suspenseIdNodeOuter, contentNodeOuter);
 
-  revealCompletedBoundaries();
+  if (window['$RB'].length === 2) {
+    // This is the first time we've pushed to the batch. We need to schedule a callback
+    // to flush the batch. This is delayed by the throttle heuristic.
+    const globalMostRecentFallbackTime =
+      typeof window['$RT'] !== 'number' ? 0 : window['$RT'];
+    const msUntilTimeout =
+      globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - performance.now();
+    // We always schedule the flush in a timer even if it's very low or negative to allow
+    // for multiple completeBoundary calls that are already queued to have a chance to
+    // make the batch.
+    setTimeout(revealCompletedBoundaries, msUntilTimeout);
+  }
 }
 
 export function completeBoundaryWithStyles(

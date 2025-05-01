@@ -125,6 +125,7 @@ describe('ReactDOMFloat', () => {
     buffer = '';
 
     if (!bufferedContent) {
+      jest.runAllTimers();
       return;
     }
 
@@ -233,6 +234,9 @@ describe('ReactDOMFloat', () => {
       div.innerHTML = bufferedContent;
       await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
     }
+    await 0;
+    // Let throttled boundaries reveal
+    jest.runAllTimers();
   }
 
   function getMeaningfulChildren(element) {
@@ -3614,6 +3618,7 @@ body {
     assertConsoleErrorDev([
       "Hydration failed because the server rendered HTML didn't match the client.",
     ]);
+    jest.runAllTimers();
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -5207,6 +5212,10 @@ body {
       </html>,
     );
     loadStylesheets();
+    // Let the styles flush and then flush the boundaries
+    await 0;
+    await 0;
+    jest.runAllTimers();
     assertLog([
       'load stylesheet: shell preinit/shell',
       'load stylesheet: shell/shell preinit',

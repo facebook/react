@@ -209,6 +209,7 @@ describe('ReactDOMFizzServer', () => {
     buffer = '';
 
     if (!bufferedContent) {
+      jest.runAllTimers();
       return;
     }
 
@@ -317,6 +318,8 @@ describe('ReactDOMFizzServer', () => {
       div.innerHTML = bufferedContent;
       await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
     }
+    // Let throttled boundaries reveal
+    jest.runAllTimers();
   }
 
   function resolveText(text) {
