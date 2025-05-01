@@ -47,7 +47,7 @@ export function clientRenderBoundary(
   }
 }
 
-export function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {
+export function completeBoundary(suspenseBoundaryID, contentID) {
   const contentNode = document.getElementById(contentID);
   if (!contentNode) {
     // If the client has failed hydration we may have already deleted the streaming
@@ -70,51 +70,46 @@ export function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {
   // Find the boundary around the fallback. This is always the previous node.
   const suspenseNode = suspenseIdNode.previousSibling;
 
-  if (!errorDigest) {
-    // Clear all the existing children. This is complicated because
-    // there can be embedded Suspense boundaries in the fallback.
-    // This is similar to clearSuspenseBoundary in ReactFiberConfigDOM.
-    // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
-    // They never hydrate anyway. However, currently we support incrementally loading the fallback.
-    const parentInstance = suspenseNode.parentNode;
-    let node = suspenseNode.nextSibling;
-    let depth = 0;
-    do {
-      if (node && node.nodeType === COMMENT_NODE) {
-        const data = node.data;
-        if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
-          if (depth === 0) {
-            break;
-          } else {
-            depth--;
-          }
-        } else if (
-          data === SUSPENSE_START_DATA ||
-          data === SUSPENSE_PENDING_START_DATA ||
-          data === SUSPENSE_FALLBACK_START_DATA ||
-          data === ACTIVITY_START_DATA
-        ) {
-          depth++;
+  // Clear all the existing children. This is complicated because
+  // there can be embedded Suspense boundaries in the fallback.
+  // This is similar to clearSuspenseBoundary in ReactFiberConfigDOM.
+  // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
+  // They never hydrate anyway. However, currently we support incrementally loading the fallback.
+  const parentInstance = suspenseNode.parentNode;
+  let node = suspenseNode.nextSibling;
+  let depth = 0;
+  do {
+    if (node && node.nodeType === COMMENT_NODE) {
+      const data = node.data;
+      if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
+        if (depth === 0) {
+          break;
+        } else {
+          depth--;
         }
+      } else if (
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === ACTIVITY_START_DATA
+      ) {
+        depth++;
       }
-
-      const nextNode = node.nextSibling;
-      parentInstance.removeChild(node);
-      node = nextNode;
-    } while (node);
-
-    const endOfBoundary = node;
-
-    // Insert all the children from the contentNode between the start and end of suspense boundary.
-    while (contentNode.firstChild) {
-      parentInstance.insertBefore(contentNode.firstChild, endOfBoundary);
     }
 
-    suspenseNode.data = SUSPENSE_START_DATA;
-  } else {
-    suspenseNode.data = SUSPENSE_FALLBACK_START_DATA;
-    suspenseIdNode.setAttribute('data-dgst', errorDigest);
+    const nextNode = node.nextSibling;
+    parentInstance.removeChild(node);
+    node = nextNode;
+  } while (node);
+
+  const endOfBoundary = node;
+
+  // Insert all the children from the contentNode between the start and end of suspense boundary.
+  while (contentNode.firstChild) {
+    parentInstance.insertBefore(contentNode.firstChild, endOfBoundary);
   }
+
+  suspenseNode.data = SUSPENSE_START_DATA;
 
   if (suspenseNode['_reactRetry']) {
     suspenseNode['_reactRetry']();
@@ -234,13 +229,8 @@ export function completeBoundaryWithStyles(
   }
 
   Promise.all(dependencies).then(
-    window['$RC'].bind(null, suspenseBoundaryID, contentID, ''),
-    window['$RC'].bind(
-      null,
-      suspenseBoundaryID,
-      contentID,
-      'Resource failed to load',
-    ),
+    window['$RC'].bind(null, suspenseBoundaryID, contentID),
+    window['$RX'].bind(null, suspenseBoundaryID, 'CSS failed to load'),
   );
 }
 

@@ -1630,14 +1630,14 @@ describe('ReactDOMFizzStaticBrowser', () => {
     // We are mostly just trying to assert that no preload for our stylesheet was emitted
     // prior to sending the segment the stylesheet was for. This test is asserting this
     // because the boundary complete instruction is sent when we are writing the
-    const instructionIndex = result.indexOf('$RC');
+    const instructionIndex = result.indexOf('$RX');
     expect(instructionIndex > -1).toBe(true);
-    const slice = result.slice(0, instructionIndex + '$RC'.length);
+    const slice = result.slice(0, instructionIndex + '$RX'.length);
 
     expect(slice).toBe(
       '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head>' +
         '<body>hello<!--$?--><template id="B:1"></template><!--/$--><template id="«R»"></template>' +
-        '<div hidden id="S:1">world<!-- --></div><script>$RC',
+        '<div hidden id="S:1">world<!-- --></div><script>$RX',
     );
   });
 

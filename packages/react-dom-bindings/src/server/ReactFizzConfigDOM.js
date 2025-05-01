@@ -4482,14 +4482,14 @@ export function writeCompletedSegmentInstruction(
   }
 }
 
+const completeBoundaryScriptFunctionOnly = stringToPrecomputedChunk(
+  completeBoundaryFunction,
+);
 const completeBoundaryScript1Full = stringToPrecomputedChunk(
   completeBoundaryFunction + '$RC("',
 );
 const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
 
-const completeBoundaryWithStylesScript1FullBoth = stringToPrecomputedChunk(
-  completeBoundaryFunction + styleInsertionFunction + '$RR("',
-);
 const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
   styleInsertionFunction + '$RR("',
 );
@@ -4532,18 +4532,26 @@ export function writeCompletedBoundaryInstruction(
     writeChunk(destination, endOfStartTag);
     if (requiresStyleInsertion) {
       if (
+        (resumableState.instructions & SentClientRenderFunction) ===
+        NothingSent
+      ) {
+        // The completeBoundaryWithStyles function depends on the client render function.
+        resumableState.instructions |= SentClientRenderFunction;
+        writeChunk(destination, clientRenderScriptFunctionOnly);
+      }
+      if (
         (resumableState.instructions & SentCompleteBoundaryFunction) ===
         NothingSent
       ) {
-        resumableState.instructions |=
-          SentStyleInsertionFunction | SentCompleteBoundaryFunction;
-        writeChunk(destination, completeBoundaryWithStylesScript1FullBoth);
-      } else if (
+        // The completeBoundaryWithStyles function depends on the complete boundary function.
+        resumableState.instructions |= SentCompleteBoundaryFunction;
+        writeChunk(destination, completeBoundaryScriptFunctionOnly);
+      }
+      if (
         (resumableState.instructions & SentStyleInsertionFunction) ===
         NothingSent
       ) {
         resumableState.instructions |= SentStyleInsertionFunction;
-
         writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
       } else {
         writeChunk(destination, completeBoundaryWithStylesScript1Partial);
@@ -4607,6 +4615,9 @@ export function writeCompletedBoundaryInstruction(
   }
   return writeBootstrap(destination, renderState) && writeMore;
 }
+
+const clientRenderScriptFunctionOnly =
+  stringToPrecomputedChunk(clientRenderFunction);
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
   clientRenderFunction + ';$RX("',
