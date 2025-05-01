@@ -29,7 +29,7 @@ const server = new McpServer({
 
 server.tool(
   'query-react-dev-docs',
-  'Search/look up official docs from react.dev',
+  'This tool lets you search for official docs from react.dev. This always has the most up to date information on React. You can look for documentation on APIs such as <ViewTransition>, <Activity>, and hooks like useOptimistic, useSyncExternalStore, useTransition, and more. Whenever you think hard about React, please use this tool to get more information before proceeding.',
   {
     query: z.string(),
   },
@@ -72,7 +72,7 @@ server.tool(
 
 server.tool(
   'compile',
-  'Compile code with React Compiler. Optionally, for debugging provide a pass name like "HIR" to see more information.',
+  'Compile code with React Compiler. This tool will return the compiled output, which is automatically memoized React components and hooks, written in JavaScript or TypeScript. You can run this tool whenever you want to check if some React code will compile successfully. You can also run this tool every time you make a suggestion to code, to see how it affects the compiled output. If the compiler returns a diagnostic message, you should read the diagnostic message and try to fix the code and run the compiler again to verify.',
   {
     text: z.string(),
     passName: z.enum(['HIR', 'ReactiveFunction', 'All', '@DEBUG']).optional(),
@@ -356,13 +356,34 @@ Server Components - Shift data-heavy logic to the server whenever possible. Brea
 
 server.tool(
   'review-react-runtime',
-  `
-  Run this tool every time you propose a performance related change to verify if your suggestion actually improves performance.
-
+  `Run this tool every time you propose a performance related change to verify if your suggestion actually improves performance.
+  <requirements>
   This tool has some requirements on the code input:
   - The react code that is passed into this tool MUST contain an App functional component without arrow function.
   - DO NOT export anything since we can't parse export syntax with this tool.
   - Only import React from 'react' and use all hooks and imports using the React. prefix like React.useState and React.useEffect
+  </requirements>
+
+  <goals>
+  - LCP - loading speed: good ≤ 2.5 s, needs-improvement 2.5-4 s, poor > 4 s
+  - INP - input responsiveness: good ≤ 200 ms, needs-improvement 200-500 ms, poor > 500 ms
+  - CLS - visual stability: good ≤ 0.10, needs-improvement 0.10-0.25, poor > 0.25
+  - (Optional: FCP ≤ 1.8 s, TTFB ≤ 0.8 s)
+  </goals>
+
+  <evaluation>
+  Classify each metric with the thresholds above. Identify the worst category in the order poor > needs-improvement > good.
+  </evaluation>
+
+  <iterate>
+  (repeat until every metric is good or two consecutive cycles show no gain)
+  - Apply one focused change based on the failing metric plus React-specific guidance:
+    - LCP: lazy-load off-screen images, inline critical CSS, preconnect, use React.lazy + Suspense for below-the-fold modules. if the user requests for it, use React Server Components for static content (Server Components).
+    - INP: wrap non-critical updates in useTransition, avoid calling setState inside useEffect.
+    - CLS: reserve space via explicit width/height or aspect-ratio, keep stable list keys, use fixed-size skeleton loaders, animate only transform/opacity, avoid inserting ads or banners without placeholders.
+
+    Stop when every metric is classified as good. Return the final metric table and the list of applied changes.
+  </iterate>
   `,
   {
     text: z.string(),
@@ -432,8 +453,6 @@ ${perfData.renderTime / iterations}ms
 - Base Duration: ${perfData.reactProfilerMetrics.baseDuration / iterations}ms
 - Start Time: ${perfData.reactProfilerMetrics.startTime / iterations}ms
 - Commit Time: ${perfData.reactProfilerMetrics.commitTime / iterations}ms
-
-These metrics can help you evaluate the performance of your React component. Lower values generally indicate better performance.
 `;
 
       return {

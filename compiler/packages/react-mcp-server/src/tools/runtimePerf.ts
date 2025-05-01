@@ -5,7 +5,10 @@ export async function measurePerformance(code: string) {
   const babelOptions = {
     configFile: false,
     babelrc: false,
-    presets: ['@babel/preset-env', '@babel/preset-react'],
+    presets: [
+      require.resolve('@babel/preset-env'),
+      require.resolve('@babel/preset-react'),
+    ],
   };
 
   // Parse the code to AST
