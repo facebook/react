@@ -83,6 +83,7 @@
               else
                 ("$" !== data &&
                   "$?" !== data &&
+                  "$~" !== data &&
                   "$!" !== data &&
                   "&" !== data) ||
                   depth++;
@@ -103,7 +104,8 @@
         (contentID.parentNode.removeChild(contentID),
         (suspenseBoundaryID = document.getElementById(suspenseBoundaryID)))
       )
-        $RB.push(suspenseBoundaryID, contentID),
+        (suspenseBoundaryID.previousSibling.data = "$~"),
+          $RB.push(suspenseBoundaryID, contentID),
           2 === $RB.length &&
             ((suspenseBoundaryID =
               ("number" !== typeof $RT ? 0 : $RT) + 300 - performance.now()),
@@ -131,15 +133,15 @@
         ? styleTagsToHoist.push(node)
         : ("LINK" === node.tagName && $RM.set(node.getAttribute("href"), node),
           precedences.set(node.dataset.precedence, (lastResource = node)));
-    node = 0;
-    nodes = [];
+    nodes = 0;
+    node = [];
     var precedence, resourceEl;
     for (i$0 = !0; ; ) {
       if (i$0) {
-        var stylesheetDescriptor = stylesheetDescriptors[node++];
+        var stylesheetDescriptor = stylesheetDescriptors[nodes++];
         if (!stylesheetDescriptor) {
           i$0 = !1;
-          node = 0;
+          nodes = 0;
           continue;
         }
         var avoidInsert = !1,
@@ -166,10 +168,10 @@
           $RM.set(href, resourceEl);
         }
         href = resourceEl.getAttribute("media");
-        !attr || (href && !window.matchMedia(href).matches) || nodes.push(attr);
+        !attr || (href && !window.matchMedia(href).matches) || node.push(attr);
         if (avoidInsert) continue;
       } else {
-        resourceEl = styleTagsToHoist[node++];
+        resourceEl = styleTagsToHoist[nodes++];
         if (!resourceEl) break;
         precedence = resourceEl.getAttribute("data-precedence");
         resourceEl.removeAttribute("media");
@@ -185,7 +187,9 @@
         : ((avoidInsert = thisDocument.head),
           avoidInsert.insertBefore(resourceEl, avoidInsert.firstChild));
     }
-    Promise.all(nodes).then(
+    if ((stylesheetDescriptors = document.getElementById(suspenseBoundaryID)))
+      stylesheetDescriptors.previousSibling.data = "$~";
+    Promise.all(node).then(
       $RC.bind(null, suspenseBoundaryID, contentID),
       $RX.bind(null, suspenseBoundaryID, "CSS failed to load")
     );
