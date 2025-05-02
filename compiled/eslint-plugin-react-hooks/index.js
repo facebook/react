@@ -57017,6 +57017,2806 @@ const rule$1 = {
     },
 };
 
+var assert_1;
+var hasRequiredAssert;
+function requireAssert() {
+  if (hasRequiredAssert) return assert_1;
+  hasRequiredAssert = 1;
+  function assert(cond) {
+    if (!cond) {
+      throw new Error('Assertion violated.');
+    }
+  }
+  assert_1 = assert;
+  return assert_1;
+}
+
+var codePathSegment;
+var hasRequiredCodePathSegment;
+function requireCodePathSegment() {
+  if (hasRequiredCodePathSegment) return codePathSegment;
+  hasRequiredCodePathSegment = 1;
+
+  //------------------------------------------------------------------------------
+  // Requirements
+  //------------------------------------------------------------------------------
+
+  //------------------------------------------------------------------------------
+  // Helpers
+  //------------------------------------------------------------------------------
+
+  /**
+   * Checks whether or not a given segment is reachable.
+   * @param {CodePathSegment} segment A segment to check.
+   * @returns {boolean} `true` if the segment is reachable.
+   */
+  function isReachable(segment) {
+    return segment.reachable;
+  }
+
+  //------------------------------------------------------------------------------
+  // Public Interface
+  //------------------------------------------------------------------------------
+
+  /**
+   * A code path segment.
+   */
+  class CodePathSegment {
+    /**
+     * @param {string} id An identifier.
+     * @param {CodePathSegment[]} allPrevSegments An array of the previous segments.
+     *   This array includes unreachable segments.
+     * @param {boolean} reachable A flag which shows this is reachable.
+     */
+    constructor(id, allPrevSegments, reachable) {
+      /**
+       * The identifier of this code path.
+       * Rules use it to store additional information of each rule.
+       * @type {string}
+       */
+      this.id = id;
+
+      /**
+       * An array of the next segments.
+       * @type {CodePathSegment[]}
+       */
+      this.nextSegments = [];
+
+      /**
+       * An array of the previous segments.
+       * @type {CodePathSegment[]}
+       */
+      this.prevSegments = allPrevSegments.filter(isReachable);
+
+      /**
+       * An array of the next segments.
+       * This array includes unreachable segments.
+       * @type {CodePathSegment[]}
+       */
+      this.allNextSegments = [];
+
+      /**
+       * An array of the previous segments.
+       * This array includes unreachable segments.
+       * @type {CodePathSegment[]}
+       */
+      this.allPrevSegments = allPrevSegments;
+
+      /**
+       * A flag which shows this is reachable.
+       * @type {boolean}
+       */
+      this.reachable = reachable;
+
+      // Internal data.
+      Object.defineProperty(this, 'internal', {
+        value: {
+          used: false,
+          loopedPrevSegments: []
+        }
+      });
+    }
+
+    /**
+     * Checks a given previous segment is coming from the end of a loop.
+     * @param {CodePathSegment} segment A previous segment to check.
+     * @returns {boolean} `true` if the segment is coming from the end of a loop.
+     */
+    isLoopedPrevSegment(segment) {
+      return this.internal.loopedPrevSegments.includes(segment);
+    }
+
+    /**
+     * Creates the root segment.
+     * @param {string} id An identifier.
+     * @returns {CodePathSegment} The created segment.
+     */
+    static newRoot(id) {
+      return new CodePathSegment(id, [], true);
+    }
+
+    /**
+     * Creates a segment that follows given segments.
+     * @param {string} id An identifier.
+     * @param {CodePathSegment[]} allPrevSegments An array of the previous segments.
+     * @returns {CodePathSegment} The created segment.
+     */
+    static newNext(id, allPrevSegments) {
+      return new CodePathSegment(id, CodePathSegment.flattenUnusedSegments(allPrevSegments), allPrevSegments.some(isReachable));
+    }
+
+    /**
+     * Creates an unreachable segment that follows given segments.
+     * @param {string} id An identifier.
+     * @param {CodePathSegment[]} allPrevSegments An array of the previous segments.
+     * @returns {CodePathSegment} The created segment.
+     */
+    static newUnreachable(id, allPrevSegments) {
+      var segment = new CodePathSegment(id, CodePathSegment.flattenUnusedSegments(allPrevSegments), false);
+
+      /*
+       * In `if (a) return a; foo();` case, the unreachable segment preceded by
+       * the return statement is not used but must not be remove.
+       */
+      CodePathSegment.markUsed(segment);
+      return segment;
+    }
+
+    /**
+     * Creates a segment that follows given segments.
+     * This factory method does not connect with `allPrevSegments`.
+     * But this inherits `reachable` flag.
+     * @param {string} id An identifier.
+     * @param {CodePathSegment[]} allPrevSegments An array of the previous segments.
+     * @returns {CodePathSegment} The created segment.
+     */
+    static newDisconnected(id, allPrevSegments) {
+      return new CodePathSegment(id, [], allPrevSegments.some(isReachable));
+    }
+
+    /**
+     * Makes a given segment being used.
+     *
+     * And this function registers the segment into the previous segments as a next.
+     * @param {CodePathSegment} segment A segment to mark.
+     * @returns {void}
+     */
+    static markUsed(segment) {
+      if (segment.internal.used) {
+        return;
+      }
+      segment.internal.used = true;
+      var i;
+      if (segment.reachable) {
+        for (i = 0; i < segment.allPrevSegments.length; ++i) {
+          var prevSegment = segment.allPrevSegments[i];
+          prevSegment.allNextSegments.push(segment);
+          prevSegment.nextSegments.push(segment);
+        }
+      } else {
+        for (i = 0; i < segment.allPrevSegments.length; ++i) {
+          segment.allPrevSegments[i].allNextSegments.push(segment);
+        }
+      }
+    }
+
+    /**
+     * Marks a previous segment as looped.
+     * @param {CodePathSegment} segment A segment.
+     * @param {CodePathSegment} prevSegment A previous segment to mark.
+     * @returns {void}
+     */
+    static markPrevSegmentAsLooped(segment, prevSegment) {
+      segment.internal.loopedPrevSegments.push(prevSegment);
+    }
+
+    /**
+     * Replaces unused segments with the previous segments of each unused segment.
+     * @param {CodePathSegment[]} segments An array of segments to replace.
+     * @returns {CodePathSegment[]} The replaced array.
+     */
+    static flattenUnusedSegments(segments) {
+      var done = Object.create(null);
+      var retv = [];
+      for (var i = 0; i < segments.length; ++i) {
+        var segment = segments[i];
+
+        // Ignores duplicated.
+        if (done[segment.id]) {
+          continue;
+        }
+
+        // Use previous segments if unused.
+        if (!segment.internal.used) {
+          for (var j = 0; j < segment.allPrevSegments.length; ++j) {
+            var prevSegment = segment.allPrevSegments[j];
+            if (!done[prevSegment.id]) {
+              done[prevSegment.id] = true;
+              retv.push(prevSegment);
+            }
+          }
+        } else {
+          done[segment.id] = true;
+          retv.push(segment);
+        }
+      }
+      return retv;
+    }
+  }
+  codePathSegment = CodePathSegment;
+  return codePathSegment;
+}
+
+var forkContext;
+var hasRequiredForkContext;
+function requireForkContext() {
+  if (hasRequiredForkContext) return forkContext;
+  hasRequiredForkContext = 1;
+
+  //------------------------------------------------------------------------------
+  // Requirements
+  //------------------------------------------------------------------------------
+
+  // eslint-disable-next-line
+  var assert = requireAssert();
+  // eslint-disable-next-line
+  var CodePathSegment = requireCodePathSegment();
+
+  //------------------------------------------------------------------------------
+  // Helpers
+  //------------------------------------------------------------------------------
+
+  /**
+   * Gets whether or not a given segment is reachable.
+   * @param {CodePathSegment} segment A segment to get.
+   * @returns {boolean} `true` if the segment is reachable.
+   */
+  function isReachable(segment) {
+    return segment.reachable;
+  }
+
+  /**
+   * Creates new segments from the specific range of `context.segmentsList`.
+   *
+   * When `context.segmentsList` is `[[a, b], [c, d], [e, f]]`, `begin` is `0`, and
+   * `end` is `-1`, this creates `[g, h]`. This `g` is from `a`, `c`, and `e`.
+   * This `h` is from `b`, `d`, and `f`.
+   * @param {ForkContext} context An instance.
+   * @param {number} begin The first index of the previous segments.
+   * @param {number} end The last index of the previous segments.
+   * @param {Function} create A factory function of new segments.
+   * @returns {CodePathSegment[]} New segments.
+   */
+  function makeSegments(context, begin, end, create) {
+    var list = context.segmentsList;
+    var normalizedBegin = begin >= 0 ? begin : list.length + begin;
+    var normalizedEnd = end >= 0 ? end : list.length + end;
+    var segments = [];
+    for (var i = 0; i < context.count; ++i) {
+      var allPrevSegments = [];
+      for (var j = normalizedBegin; j <= normalizedEnd; ++j) {
+        allPrevSegments.push(list[j][i]);
+      }
+      segments.push(create(context.idGenerator.next(), allPrevSegments));
+    }
+    return segments;
+  }
+
+  /**
+   * `segments` becomes doubly in a `finally` block. Then if a code path exits by a
+   * control statement (such as `break`, `continue`) from the `finally` block, the
+   * destination's segments may be half of the source segments. In that case, this
+   * merges segments.
+   * @param {ForkContext} context An instance.
+   * @param {CodePathSegment[]} segments Segments to merge.
+   * @returns {CodePathSegment[]} The merged segments.
+   */
+  function mergeExtraSegments(context, segments) {
+    var currentSegments = segments;
+    while (currentSegments.length > context.count) {
+      var merged = [];
+      for (var i = 0, length = currentSegments.length / 2 | 0; i < length; ++i) {
+        merged.push(CodePathSegment.newNext(context.idGenerator.next(), [currentSegments[i], currentSegments[i + length]]));
+      }
+      currentSegments = merged;
+    }
+    return currentSegments;
+  }
+
+  //------------------------------------------------------------------------------
+  // Public Interface
+  //------------------------------------------------------------------------------
+
+  /**
+   * A class to manage forking.
+   */
+  class ForkContext {
+    /**
+     * @param {IdGenerator} idGenerator An identifier generator for segments.
+     * @param {ForkContext|null} upper An upper fork context.
+     * @param {number} count A number of parallel segments.
+     */
+    constructor(idGenerator, upper, count) {
+      this.idGenerator = idGenerator;
+      this.upper = upper;
+      this.count = count;
+      this.segmentsList = [];
+    }
+
+    /**
+     * The head segments.
+     * @type {CodePathSegment[]}
+     */
+    get head() {
+      var list = this.segmentsList;
+      return list.length === 0 ? [] : list[list.length - 1];
+    }
+
+    /**
+     * A flag which shows empty.
+     * @type {boolean}
+     */
+    get empty() {
+      return this.segmentsList.length === 0;
+    }
+
+    /**
+     * A flag which shows reachable.
+     * @type {boolean}
+     */
+    get reachable() {
+      var segments = this.head;
+      return segments.length > 0 && segments.some(isReachable);
+    }
+
+    /**
+     * Creates new segments from this context.
+     * @param {number} begin The first index of previous segments.
+     * @param {number} end The last index of previous segments.
+     * @returns {CodePathSegment[]} New segments.
+     */
+    makeNext(begin, end) {
+      return makeSegments(this, begin, end, CodePathSegment.newNext);
+    }
+
+    /**
+     * Creates new segments from this context.
+     * The new segments is always unreachable.
+     * @param {number} begin The first index of previous segments.
+     * @param {number} end The last index of previous segments.
+     * @returns {CodePathSegment[]} New segments.
+     */
+    makeUnreachable(begin, end) {
+      return makeSegments(this, begin, end, CodePathSegment.newUnreachable);
+    }
+
+    /**
+     * Creates new segments from this context.
+     * The new segments don't have connections for previous segments.
+     * But these inherit the reachable flag from this context.
+     * @param {number} begin The first index of previous segments.
+     * @param {number} end The last index of previous segments.
+     * @returns {CodePathSegment[]} New segments.
+     */
+    makeDisconnected(begin, end) {
+      return makeSegments(this, begin, end, CodePathSegment.newDisconnected);
+    }
+
+    /**
+     * Adds segments into this context.
+     * The added segments become the head.
+     * @param {CodePathSegment[]} segments Segments to add.
+     * @returns {void}
+     */
+    add(segments) {
+      assert(segments.length >= this.count, segments.length + " >= " + this.count);
+      this.segmentsList.push(mergeExtraSegments(this, segments));
+    }
+
+    /**
+     * Replaces the head segments with given segments.
+     * The current head segments are removed.
+     * @param {CodePathSegment[]} segments Segments to add.
+     * @returns {void}
+     */
+    replaceHead(segments) {
+      assert(segments.length >= this.count, segments.length + " >= " + this.count);
+      this.segmentsList.splice(-1, 1, mergeExtraSegments(this, segments));
+    }
+
+    /**
+     * Adds all segments of a given fork context into this context.
+     * @param {ForkContext} context A fork context to add.
+     * @returns {void}
+     */
+    addAll(context) {
+      assert(context.count === this.count);
+      var source = context.segmentsList;
+      for (var i = 0; i < source.length; ++i) {
+        this.segmentsList.push(source[i]);
+      }
+    }
+
+    /**
+     * Clears all segments in this context.
+     * @returns {void}
+     */
+    clear() {
+      this.segmentsList = [];
+    }
+
+    /**
+     * Creates the root fork context.
+     * @param {IdGenerator} idGenerator An identifier generator for segments.
+     * @returns {ForkContext} New fork context.
+     */
+    static newRoot(idGenerator) {
+      var context = new ForkContext(idGenerator, null, 1);
+      context.add([CodePathSegment.newRoot(idGenerator.next())]);
+      return context;
+    }
+
+    /**
+     * Creates an empty fork context preceded by a given context.
+     * @param {ForkContext} parentContext The parent fork context.
+     * @param {boolean} forkLeavingPath A flag which shows inside of `finally` block.
+     * @returns {ForkContext} New fork context.
+     */
+    static newEmpty(parentContext, forkLeavingPath) {
+      return new ForkContext(parentContext.idGenerator, parentContext, (forkLeavingPath ? 2 : 1) * parentContext.count);
+    }
+  }
+  forkContext = ForkContext;
+  return forkContext;
+}
+
+var codePathState;
+var hasRequiredCodePathState;
+function requireCodePathState() {
+  if (hasRequiredCodePathState) return codePathState;
+  hasRequiredCodePathState = 1;
+
+  //------------------------------------------------------------------------------
+  // Requirements
+  //------------------------------------------------------------------------------
+
+  // eslint-disable-next-line
+  var CodePathSegment = requireCodePathSegment();
+  // eslint-disable-next-line
+  var ForkContext = requireForkContext();
+
+  //------------------------------------------------------------------------------
+  // Helpers
+  //------------------------------------------------------------------------------
+
+  /**
+   * Adds given segments into the `dest` array.
+   * If the `others` array does not includes the given segments, adds to the `all`
+   * array as well.
+   *
+   * This adds only reachable and used segments.
+   * @param {CodePathSegment[]} dest A destination array (`returnedSegments` or `thrownSegments`).
+   * @param {CodePathSegment[]} others Another destination array (`returnedSegments` or `thrownSegments`).
+   * @param {CodePathSegment[]} all The unified destination array (`finalSegments`).
+   * @param {CodePathSegment[]} segments Segments to add.
+   * @returns {void}
+   */
+  function addToReturnedOrThrown(dest, others, all, segments) {
+    for (var i = 0; i < segments.length; ++i) {
+      var segment = segments[i];
+      dest.push(segment);
+      if (!others.includes(segment)) {
+        all.push(segment);
+      }
+    }
+  }
+
+  /**
+   * Gets a loop-context for a `continue` statement.
+   * @param {CodePathState} state A state to get.
+   * @param {string} label The label of a `continue` statement.
+   * @returns {LoopContext} A loop-context for a `continue` statement.
+   */
+  function getContinueContext(state, label) {
+    if (!label) {
+      return state.loopContext;
+    }
+    var context = state.loopContext;
+    while (context) {
+      if (context.label === label) {
+        return context;
+      }
+      context = context.upper;
+    }
+
+    /* c8 ignore next */
+    return null;
+  }
+
+  /**
+   * Gets a context for a `break` statement.
+   * @param {CodePathState} state A state to get.
+   * @param {string} label The label of a `break` statement.
+   * @returns {LoopContext|SwitchContext} A context for a `break` statement.
+   */
+  function getBreakContext(state, label) {
+    var context = state.breakContext;
+    while (context) {
+      if (label ? context.label === label : context.breakable) {
+        return context;
+      }
+      context = context.upper;
+    }
+
+    /* c8 ignore next */
+    return null;
+  }
+
+  /**
+   * Gets a context for a `return` statement.
+   * @param {CodePathState} state A state to get.
+   * @returns {TryContext|CodePathState} A context for a `return` statement.
+   */
+  function getReturnContext(state) {
+    var context = state.tryContext;
+    while (context) {
+      if (context.hasFinalizer && context.position !== 'finally') {
+        return context;
+      }
+      context = context.upper;
+    }
+    return state;
+  }
+
+  /**
+   * Gets a context for a `throw` statement.
+   * @param {CodePathState} state A state to get.
+   * @returns {TryContext|CodePathState} A context for a `throw` statement.
+   */
+  function getThrowContext(state) {
+    var context = state.tryContext;
+    while (context) {
+      if (context.position === 'try' || context.hasFinalizer && context.position === 'catch') {
+        return context;
+      }
+      context = context.upper;
+    }
+    return state;
+  }
+
+  /**
+   * Removes a given element from a given array.
+   * @param {any[]} xs An array to remove the specific element.
+   * @param {any} x An element to be removed.
+   * @returns {void}
+   */
+  function remove(xs, x) {
+    xs.splice(xs.indexOf(x), 1);
+  }
+
+  /**
+   * Disconnect given segments.
+   *
+   * This is used in a process for switch statements.
+   * If there is the "default" chunk before other cases, the order is different
+   * between node's and running's.
+   * @param {CodePathSegment[]} prevSegments Forward segments to disconnect.
+   * @param {CodePathSegment[]} nextSegments Backward segments to disconnect.
+   * @returns {void}
+   */
+  function removeConnection(prevSegments, nextSegments) {
+    for (var i = 0; i < prevSegments.length; ++i) {
+      var prevSegment = prevSegments[i];
+      var nextSegment = nextSegments[i];
+      remove(prevSegment.nextSegments, nextSegment);
+      remove(prevSegment.allNextSegments, nextSegment);
+      remove(nextSegment.prevSegments, prevSegment);
+      remove(nextSegment.allPrevSegments, prevSegment);
+    }
+  }
+
+  /**
+   * Creates looping path.
+   * @param {CodePathState} state The instance.
+   * @param {CodePathSegment[]} unflattenedFromSegments Segments which are source.
+   * @param {CodePathSegment[]} unflattenedToSegments Segments which are destination.
+   * @returns {void}
+   */
+  function makeLooped(state, unflattenedFromSegments, unflattenedToSegments) {
+    var fromSegments = CodePathSegment.flattenUnusedSegments(unflattenedFromSegments);
+    var toSegments = CodePathSegment.flattenUnusedSegments(unflattenedToSegments);
+    var end = Math.min(fromSegments.length, toSegments.length);
+    for (var i = 0; i < end; ++i) {
+      var fromSegment = fromSegments[i];
+      var toSegment = toSegments[i];
+      if (toSegment.reachable) {
+        fromSegment.nextSegments.push(toSegment);
+      }
+      if (fromSegment.reachable) {
+        toSegment.prevSegments.push(fromSegment);
+      }
+      fromSegment.allNextSegments.push(toSegment);
+      toSegment.allPrevSegments.push(fromSegment);
+      if (toSegment.allPrevSegments.length >= 2) {
+        CodePathSegment.markPrevSegmentAsLooped(toSegment, fromSegment);
+      }
+      state.notifyLooped(fromSegment, toSegment);
+    }
+  }
+
+  /**
+   * Finalizes segments of `test` chunk of a ForStatement.
+   *
+   * - Adds `false` paths to paths which are leaving from the loop.
+   * - Sets `true` paths to paths which go to the body.
+   * @param {LoopContext} context A loop context to modify.
+   * @param {ChoiceContext} choiceContext A choice context of this loop.
+   * @param {CodePathSegment[]} head The current head paths.
+   * @returns {void}
+   */
+  function finalizeTestSegmentsOfFor(context, choiceContext, head) {
+    if (!choiceContext.processed) {
+      choiceContext.trueForkContext.add(head);
+      choiceContext.falseForkContext.add(head);
+      choiceContext.qqForkContext.add(head);
+    }
+    if (context.test !== true) {
+      context.brokenForkContext.addAll(choiceContext.falseForkContext);
+    }
+    context.endOfTestSegments = choiceContext.trueForkContext.makeNext(0, -1);
+  }
+
+  //------------------------------------------------------------------------------
+  // Public Interface
+  //------------------------------------------------------------------------------
+
+  /**
+   * A class which manages state to analyze code paths.
+   */
+  class CodePathState {
+    /**
+     * @param {IdGenerator} idGenerator An id generator to generate id for code
+     *   path segments.
+     * @param {Function} onLooped A callback function to notify looping.
+     */
+    constructor(idGenerator, onLooped) {
+      this.idGenerator = idGenerator;
+      this.notifyLooped = onLooped;
+      this.forkContext = ForkContext.newRoot(idGenerator);
+      this.choiceContext = null;
+      this.switchContext = null;
+      this.tryContext = null;
+      this.loopContext = null;
+      this.breakContext = null;
+      this.chainContext = null;
+      this.currentSegments = [];
+      this.initialSegment = this.forkContext.head[0];
+
+      // returnedSegments and thrownSegments push elements into finalSegments also.
+      var final = this.finalSegments = [];
+      var returned = this.returnedForkContext = [];
+      var thrown = this.thrownForkContext = [];
+      returned.add = addToReturnedOrThrown.bind(null, returned, thrown, final);
+      thrown.add = addToReturnedOrThrown.bind(null, thrown, returned, final);
+    }
+
+    /**
+     * The head segments.
+     * @type {CodePathSegment[]}
+     */
+    get headSegments() {
+      return this.forkContext.head;
+    }
+
+    /**
+     * The parent forking context.
+     * This is used for the root of new forks.
+     * @type {ForkContext}
+     */
+    get parentForkContext() {
+      var current = this.forkContext;
+      return current && current.upper;
+    }
+
+    /**
+     * Creates and stacks new forking context.
+     * @param {boolean} forkLeavingPath A flag which shows being in a
+     *   "finally" block.
+     * @returns {ForkContext} The created context.
+     */
+    pushForkContext(forkLeavingPath) {
+      this.forkContext = ForkContext.newEmpty(this.forkContext, forkLeavingPath);
+      return this.forkContext;
+    }
+
+    /**
+     * Pops and merges the last forking context.
+     * @returns {ForkContext} The last context.
+     */
+    popForkContext() {
+      var lastContext = this.forkContext;
+      this.forkContext = lastContext.upper;
+      this.forkContext.replaceHead(lastContext.makeNext(0, -1));
+      return lastContext;
+    }
+
+    /**
+     * Creates a new path.
+     * @returns {void}
+     */
+    forkPath() {
+      this.forkContext.add(this.parentForkContext.makeNext(-1, -1));
+    }
+
+    /**
+     * Creates a bypass path.
+     * This is used for such as IfStatement which does not have "else" chunk.
+     * @returns {void}
+     */
+    forkBypassPath() {
+      this.forkContext.add(this.parentForkContext.head);
+    }
+
+    //--------------------------------------------------------------------------
+    // ConditionalExpression, LogicalExpression, IfStatement
+    //--------------------------------------------------------------------------
+
+    /**
+     * Creates a context for ConditionalExpression, LogicalExpression, AssignmentExpression (logical assignments only),
+     * IfStatement, WhileStatement, DoWhileStatement, or ForStatement.
+     *
+     * LogicalExpressions have cases that it goes different paths between the
+     * `true` case and the `false` case.
+     *
+     * For Example:
+     *
+     *     if (a || b) {
+     *         foo();
+     *     } else {
+     *         bar();
+     *     }
+     *
+     * In this case, `b` is evaluated always in the code path of the `else`
+     * block, but it's not so in the code path of the `if` block.
+     * So there are 3 paths.
+     *
+     *     a -> foo();
+     *     a -> b -> foo();
+     *     a -> b -> bar();
+     * @param {string} kind A kind string.
+     *   If the new context is LogicalExpression's or AssignmentExpression's, this is `"&&"` or `"||"` or `"??"`.
+     *   If it's IfStatement's or ConditionalExpression's, this is `"test"`.
+     *   Otherwise, this is `"loop"`.
+     * @param {boolean} isForkingAsResult A flag that shows that goes different
+     *   paths between `true` and `false`.
+     * @returns {void}
+     */
+    pushChoiceContext(kind, isForkingAsResult) {
+      this.choiceContext = {
+        upper: this.choiceContext,
+        kind: kind,
+        isForkingAsResult: isForkingAsResult,
+        trueForkContext: ForkContext.newEmpty(this.forkContext),
+        falseForkContext: ForkContext.newEmpty(this.forkContext),
+        qqForkContext: ForkContext.newEmpty(this.forkContext),
+        processed: false
+      };
+    }
+
+    /**
+     * Pops the last choice context and finalizes it.
+     * @throws {Error} (Unreachable.)
+     * @returns {ChoiceContext} The popped context.
+     */
+    popChoiceContext() {
+      var context = this.choiceContext;
+      this.choiceContext = context.upper;
+      var forkContext = this.forkContext;
+      var headSegments = forkContext.head;
+      switch (context.kind) {
+        case '&&':
+        case '||':
+        case '??':
+          /*
+           * If any result were not transferred from child contexts,
+           * this sets the head segments to both cases.
+           * The head segments are the path of the right-hand operand.
+           */
+          if (!context.processed) {
+            context.trueForkContext.add(headSegments);
+            context.falseForkContext.add(headSegments);
+            context.qqForkContext.add(headSegments);
+          }
+
+          /*
+           * Transfers results to upper context if this context is in
+           * test chunk.
+           */
+          if (context.isForkingAsResult) {
+            var parentContext = this.choiceContext;
+            parentContext.trueForkContext.addAll(context.trueForkContext);
+            parentContext.falseForkContext.addAll(context.falseForkContext);
+            parentContext.qqForkContext.addAll(context.qqForkContext);
+            parentContext.processed = true;
+            return context;
+          }
+          break;
+        case 'test':
+          if (!context.processed) {
+            /*
+             * The head segments are the path of the `if` block here.
+             * Updates the `true` path with the end of the `if` block.
+             */
+            context.trueForkContext.clear();
+            context.trueForkContext.add(headSegments);
+          } else {
+            /*
+             * The head segments are the path of the `else` block here.
+             * Updates the `false` path with the end of the `else`
+             * block.
+             */
+            context.falseForkContext.clear();
+            context.falseForkContext.add(headSegments);
+          }
+          break;
+        case 'loop':
+          /*
+           * Loops are addressed in popLoopContext().
+           * This is called from popLoopContext().
+           */
+          return context;
+
+        /* c8 ignore next */
+        default:
+          throw new Error('unreachable');
+      }
+
+      // Merges all paths.
+      var prevForkContext = context.trueForkContext;
+      prevForkContext.addAll(context.falseForkContext);
+      forkContext.replaceHead(prevForkContext.makeNext(0, -1));
+      return context;
+    }
+
+    /**
+     * Makes a code path segment of the right-hand operand of a logical
+     * expression.
+     * @throws {Error} (Unreachable.)
+     * @returns {void}
+     */
+    makeLogicalRight() {
+      var context = this.choiceContext;
+      var forkContext = this.forkContext;
+      if (context.processed) {
+        /*
+         * This got segments already from the child choice context.
+         * Creates the next path from own true/false fork context.
+         */
+        var prevForkContext;
+        switch (context.kind) {
+          case '&&':
+            // if true then go to the right-hand side.
+            prevForkContext = context.trueForkContext;
+            break;
+          case '||':
+            // if false then go to the right-hand side.
+            prevForkContext = context.falseForkContext;
+            break;
+          case '??':
+            // Both true/false can short-circuit, so needs the third path to go to the right-hand side. That's qqForkContext.
+            prevForkContext = context.qqForkContext;
+            break;
+          default:
+            throw new Error('unreachable');
+        }
+        forkContext.replaceHead(prevForkContext.makeNext(0, -1));
+        prevForkContext.clear();
+        context.processed = false;
+      } else {
+        /*
+         * This did not get segments from the child choice context.
+         * So addresses the head segments.
+         * The head segments are the path of the left-hand operand.
+         */
+        switch (context.kind) {
+          case '&&':
+            // the false path can short-circuit.
+            context.falseForkContext.add(forkContext.head);
+            break;
+          case '||':
+            // the true path can short-circuit.
+            context.trueForkContext.add(forkContext.head);
+            break;
+          case '??':
+            // both can short-circuit.
+            context.trueForkContext.add(forkContext.head);
+            context.falseForkContext.add(forkContext.head);
+            break;
+          default:
+            throw new Error('unreachable');
+        }
+        forkContext.replaceHead(forkContext.makeNext(-1, -1));
+      }
+    }
+
+    /**
+     * Makes a code path segment of the `if` block.
+     * @returns {void}
+     */
+    makeIfConsequent() {
+      var context = this.choiceContext;
+      var forkContext = this.forkContext;
+
+      /*
+       * If any result were not transferred from child contexts,
+       * this sets the head segments to both cases.
+       * The head segments are the path of the test expression.
+       */
+      if (!context.processed) {
+        context.trueForkContext.add(forkContext.head);
+        context.falseForkContext.add(forkContext.head);
+        context.qqForkContext.add(forkContext.head);
+      }
+      context.processed = false;
+
+      // Creates new path from the `true` case.
+      forkContext.replaceHead(context.trueForkContext.makeNext(0, -1));
+    }
+
+    /**
+     * Makes a code path segment of the `else` block.
+     * @returns {void}
+     */
+    makeIfAlternate() {
+      var context = this.choiceContext;
+      var forkContext = this.forkContext;
+
+      /*
+       * The head segments are the path of the `if` block.
+       * Updates the `true` path with the end of the `if` block.
+       */
+      context.trueForkContext.clear();
+      context.trueForkContext.add(forkContext.head);
+      context.processed = true;
+
+      // Creates new path from the `false` case.
+      forkContext.replaceHead(context.falseForkContext.makeNext(0, -1));
+    }
+
+    //--------------------------------------------------------------------------
+    // ChainExpression
+    //--------------------------------------------------------------------------
+
+    /**
+     * Push a new `ChainExpression` context to the stack.
+     * This method is called on entering to each `ChainExpression` node.
+     * This context is used to count forking in the optional chain then merge them on the exiting from the `ChainExpression` node.
+     * @returns {void}
+     */
+    pushChainContext() {
+      this.chainContext = {
+        upper: this.chainContext,
+        countChoiceContexts: 0
+      };
+    }
+
+    /**
+     * Pop a `ChainExpression` context from the stack.
+     * This method is called on exiting from each `ChainExpression` node.
+     * This merges all forks of the last optional chaining.
+     * @returns {void}
+     */
+    popChainContext() {
+      var context = this.chainContext;
+      this.chainContext = context.upper;
+
+      // pop all choice contexts of this.
+      for (var i = context.countChoiceContexts; i > 0; --i) {
+        this.popChoiceContext();
+      }
+    }
+
+    /**
+     * Create a choice context for optional access.
+     * This method is called on entering to each `(Call|Member)Expression[optional=true]` node.
+     * This creates a choice context as similar to `LogicalExpression[operator="??"]` node.
+     * @returns {void}
+     */
+    makeOptionalNode() {
+      if (this.chainContext) {
+        this.chainContext.countChoiceContexts += 1;
+        this.pushChoiceContext('??', false);
+      }
+    }
+
+    /**
+     * Create a fork.
+     * This method is called on entering to the `arguments|property` property of each `(Call|Member)Expression` node.
+     * @returns {void}
+     */
+    makeOptionalRight() {
+      if (this.chainContext) {
+        this.makeLogicalRight();
+      }
+    }
+
+    //--------------------------------------------------------------------------
+    // SwitchStatement
+    //--------------------------------------------------------------------------
+
+    /**
+     * Creates a context object of SwitchStatement and stacks it.
+     * @param {boolean} hasCase `true` if the switch statement has one or more
+     *   case parts.
+     * @param {string|null} label The label text.
+     * @returns {void}
+     */
+    pushSwitchContext(hasCase, label) {
+      this.switchContext = {
+        upper: this.switchContext,
+        hasCase: hasCase,
+        defaultSegments: null,
+        defaultBodySegments: null,
+        foundDefault: false,
+        lastIsDefault: false,
+        countForks: 0
+      };
+      this.pushBreakContext(true, label);
+    }
+
+    /**
+     * Pops the last context of SwitchStatement and finalizes it.
+     *
+     * - Disposes all forking stack for `case` and `default`.
+     * - Creates the next code path segment from `context.brokenForkContext`.
+     * - If the last `SwitchCase` node is not a `default` part, creates a path
+     *   to the `default` body.
+     * @returns {void}
+     */
+    popSwitchContext() {
+      var context = this.switchContext;
+      this.switchContext = context.upper;
+      var forkContext = this.forkContext;
+      var brokenForkContext = this.popBreakContext().brokenForkContext;
+      if (context.countForks === 0) {
+        /*
+         * When there is only one `default` chunk and there is one or more
+         * `break` statements, even if forks are nothing, it needs to merge
+         * those.
+         */
+        if (!brokenForkContext.empty) {
+          brokenForkContext.add(forkContext.makeNext(-1, -1));
+          forkContext.replaceHead(brokenForkContext.makeNext(0, -1));
+        }
+        return;
+      }
+      var lastSegments = forkContext.head;
+      this.forkBypassPath();
+      var lastCaseSegments = forkContext.head;
+
+      /*
+       * `brokenForkContext` is used to make the next segment.
+       * It must add the last segment into `brokenForkContext`.
+       */
+      brokenForkContext.add(lastSegments);
+
+      /*
+       * A path which is failed in all case test should be connected to path
+       * of `default` chunk.
+       */
+      if (!context.lastIsDefault) {
+        if (context.defaultBodySegments) {
+          /*
+           * Remove a link from `default` label to its chunk.
+           * It's false route.
+           */
+          removeConnection(context.defaultSegments, context.defaultBodySegments);
+          makeLooped(this, lastCaseSegments, context.defaultBodySegments);
+        } else {
+          /*
+           * It handles the last case body as broken if `default` chunk
+           * does not exist.
+           */
+          brokenForkContext.add(lastCaseSegments);
+        }
+      }
+
+      // Pops the segment context stack until the entry segment.
+      for (var i = 0; i < context.countForks; ++i) {
+        this.forkContext = this.forkContext.upper;
+      }
+
+      /*
+       * Creates a path from all brokenForkContext paths.
+       * This is a path after switch statement.
+       */
+      this.forkContext.replaceHead(brokenForkContext.makeNext(0, -1));
+    }
+
+    /**
+     * Makes a code path segment for a `SwitchCase` node.
+     * @param {boolean} isEmpty `true` if the body is empty.
+     * @param {boolean} isDefault `true` if the body is the default case.
+     * @returns {void}
+     */
+    makeSwitchCaseBody(isEmpty, isDefault) {
+      var context = this.switchContext;
+      if (!context.hasCase) {
+        return;
+      }
+
+      /*
+       * Merge forks.
+       * The parent fork context has two segments.
+       * Those are from the current case and the body of the previous case.
+       */
+      var parentForkContext = this.forkContext;
+      var forkContext = this.pushForkContext();
+      forkContext.add(parentForkContext.makeNext(0, -1));
+
+      /*
+       * Save `default` chunk info.
+       * If the `default` label is not at the last, we must make a path from
+       * the last `case` to the `default` chunk.
+       */
+      if (isDefault) {
+        context.defaultSegments = parentForkContext.head;
+        if (isEmpty) {
+          context.foundDefault = true;
+        } else {
+          context.defaultBodySegments = forkContext.head;
+        }
+      } else {
+        if (!isEmpty && context.foundDefault) {
+          context.foundDefault = false;
+          context.defaultBodySegments = forkContext.head;
+        }
+      }
+      context.lastIsDefault = isDefault;
+      context.countForks += 1;
+    }
+
+    //--------------------------------------------------------------------------
+    // TryStatement
+    //--------------------------------------------------------------------------
+
+    /**
+     * Creates a context object of TryStatement and stacks it.
+     * @param {boolean} hasFinalizer `true` if the try statement has a
+     *   `finally` block.
+     * @returns {void}
+     */
+    pushTryContext(hasFinalizer) {
+      this.tryContext = {
+        upper: this.tryContext,
+        position: 'try',
+        hasFinalizer: hasFinalizer,
+        returnedForkContext: hasFinalizer ? ForkContext.newEmpty(this.forkContext) : null,
+        thrownForkContext: ForkContext.newEmpty(this.forkContext),
+        lastOfTryIsReachable: false,
+        lastOfCatchIsReachable: false
+      };
+    }
+
+    /**
+     * Pops the last context of TryStatement and finalizes it.
+     * @returns {void}
+     */
+    popTryContext() {
+      var context = this.tryContext;
+      this.tryContext = context.upper;
+      if (context.position === 'catch') {
+        // Merges two paths from the `try` block and `catch` block merely.
+        this.popForkContext();
+        return;
+      }
+
+      /*
+       * The following process is executed only when there is the `finally`
+       * block.
+       */
+
+      var returned = context.returnedForkContext;
+      var thrown = context.thrownForkContext;
+      if (returned.empty && thrown.empty) {
+        return;
+      }
+
+      // Separate head to normal paths and leaving paths.
+      var headSegments = this.forkContext.head;
+      this.forkContext = this.forkContext.upper;
+      var normalSegments = headSegments.slice(0, headSegments.length / 2 | 0);
+      var leavingSegments = headSegments.slice(headSegments.length / 2 | 0);
+
+      // Forwards the leaving path to upper contexts.
+      if (!returned.empty) {
+        getReturnContext(this).returnedForkContext.add(leavingSegments);
+      }
+      if (!thrown.empty) {
+        getThrowContext(this).thrownForkContext.add(leavingSegments);
+      }
+
+      // Sets the normal path as the next.
+      this.forkContext.replaceHead(normalSegments);
+
+      /*
+       * If both paths of the `try` block and the `catch` block are
+       * unreachable, the next path becomes unreachable as well.
+       */
+      if (!context.lastOfTryIsReachable && !context.lastOfCatchIsReachable) {
+        this.forkContext.makeUnreachable();
+      }
+    }
+
+    /**
+     * Makes a code path segment for a `catch` block.
+     * @returns {void}
+     */
+    makeCatchBlock() {
+      var context = this.tryContext;
+      var forkContext = this.forkContext;
+      var thrown = context.thrownForkContext;
+
+      // Update state.
+      context.position = 'catch';
+      context.thrownForkContext = ForkContext.newEmpty(forkContext);
+      context.lastOfTryIsReachable = forkContext.reachable;
+
+      // Merge thrown paths.
+      thrown.add(forkContext.head);
+      var thrownSegments = thrown.makeNext(0, -1);
+
+      // Fork to a bypass and the merged thrown path.
+      this.pushForkContext();
+      this.forkBypassPath();
+      this.forkContext.add(thrownSegments);
+    }
+
+    /**
+     * Makes a code path segment for a `finally` block.
+     *
+     * In the `finally` block, parallel paths are created. The parallel paths
+     * are used as leaving-paths. The leaving-paths are paths from `return`
+     * statements and `throw` statements in a `try` block or a `catch` block.
+     * @returns {void}
+     */
+    makeFinallyBlock() {
+      var context = this.tryContext;
+      var forkContext = this.forkContext;
+      var returned = context.returnedForkContext;
+      var thrown = context.thrownForkContext;
+      var headOfLeavingSegments = forkContext.head;
+
+      // Update state.
+      if (context.position === 'catch') {
+        // Merges two paths from the `try` block and `catch` block.
+        this.popForkContext();
+        forkContext = this.forkContext;
+        context.lastOfCatchIsReachable = forkContext.reachable;
+      } else {
+        context.lastOfTryIsReachable = forkContext.reachable;
+      }
+      context.position = 'finally';
+      if (returned.empty && thrown.empty) {
+        // This path does not leave.
+        return;
+      }
+
+      /*
+       * Create a parallel segment from merging returned and thrown.
+       * This segment will leave at the end of this finally block.
+       */
+      var segments = forkContext.makeNext(-1, -1);
+      for (var i = 0; i < forkContext.count; ++i) {
+        var prevSegsOfLeavingSegment = [headOfLeavingSegments[i]];
+        for (var j = 0; j < returned.segmentsList.length; ++j) {
+          prevSegsOfLeavingSegment.push(returned.segmentsList[j][i]);
+        }
+        for (var _j = 0; _j < thrown.segmentsList.length; ++_j) {
+          prevSegsOfLeavingSegment.push(thrown.segmentsList[_j][i]);
+        }
+        segments.push(CodePathSegment.newNext(this.idGenerator.next(), prevSegsOfLeavingSegment));
+      }
+      this.pushForkContext(true);
+      this.forkContext.add(segments);
+    }
+
+    /**
+     * Makes a code path segment from the first throwable node to the `catch`
+     * block or the `finally` block.
+     * @returns {void}
+     */
+    makeFirstThrowablePathInTryBlock() {
+      var forkContext = this.forkContext;
+      if (!forkContext.reachable) {
+        return;
+      }
+      var context = getThrowContext(this);
+      if (context === this || context.position !== 'try' || !context.thrownForkContext.empty) {
+        return;
+      }
+      context.thrownForkContext.add(forkContext.head);
+      forkContext.replaceHead(forkContext.makeNext(-1, -1));
+    }
+
+    //--------------------------------------------------------------------------
+    // Loop Statements
+    //--------------------------------------------------------------------------
+
+    /**
+     * Creates a context object of a loop statement and stacks it.
+     * @param {string} type The type of the node which was triggered. One of
+     *   `WhileStatement`, `DoWhileStatement`, `ForStatement`, `ForInStatement`,
+     *   and `ForStatement`.
+     * @param {string|null} label A label of the node which was triggered.
+     * @throws {Error} (Unreachable - unknown type.)
+     * @returns {void}
+     */
+    pushLoopContext(type, label) {
+      var forkContext = this.forkContext;
+      var breakContext = this.pushBreakContext(true, label);
+      switch (type) {
+        case 'WhileStatement':
+          this.pushChoiceContext('loop', false);
+          this.loopContext = {
+            upper: this.loopContext,
+            type: type,
+            label: label,
+            test: void 0,
+            continueDestSegments: null,
+            brokenForkContext: breakContext.brokenForkContext
+          };
+          break;
+        case 'DoWhileStatement':
+          this.pushChoiceContext('loop', false);
+          this.loopContext = {
+            upper: this.loopContext,
+            type: type,
+            label: label,
+            test: void 0,
+            entrySegments: null,
+            continueForkContext: ForkContext.newEmpty(forkContext),
+            brokenForkContext: breakContext.brokenForkContext
+          };
+          break;
+        case 'ForStatement':
+          this.pushChoiceContext('loop', false);
+          this.loopContext = {
+            upper: this.loopContext,
+            type: type,
+            label: label,
+            test: void 0,
+            endOfInitSegments: null,
+            testSegments: null,
+            endOfTestSegments: null,
+            updateSegments: null,
+            endOfUpdateSegments: null,
+            continueDestSegments: null,
+            brokenForkContext: breakContext.brokenForkContext
+          };
+          break;
+        case 'ForInStatement':
+        case 'ForOfStatement':
+          this.loopContext = {
+            upper: this.loopContext,
+            type: type,
+            label: label,
+            prevSegments: null,
+            leftSegments: null,
+            endOfLeftSegments: null,
+            continueDestSegments: null,
+            brokenForkContext: breakContext.brokenForkContext
+          };
+          break;
+
+        /* c8 ignore next */
+        default:
+          throw new Error("unknown type: \"" + type + "\"");
+      }
+    }
+
+    /**
+     * Pops the last context of a loop statement and finalizes it.
+     * @throws {Error} (Unreachable - unknown type.)
+     * @returns {void}
+     */
+    popLoopContext() {
+      var context = this.loopContext;
+      this.loopContext = context.upper;
+      var forkContext = this.forkContext;
+      var brokenForkContext = this.popBreakContext().brokenForkContext;
+
+      // Creates a looped path.
+      switch (context.type) {
+        case 'WhileStatement':
+        case 'ForStatement':
+          this.popChoiceContext();
+          makeLooped(this, forkContext.head, context.continueDestSegments);
+          break;
+        case 'DoWhileStatement':
+          {
+            var choiceContext = this.popChoiceContext();
+            if (!choiceContext.processed) {
+              choiceContext.trueForkContext.add(forkContext.head);
+              choiceContext.falseForkContext.add(forkContext.head);
+            }
+            if (context.test !== true) {
+              brokenForkContext.addAll(choiceContext.falseForkContext);
+            }
+
+            // `true` paths go to looping.
+            var segmentsList = choiceContext.trueForkContext.segmentsList;
+            for (var i = 0; i < segmentsList.length; ++i) {
+              makeLooped(this, segmentsList[i], context.entrySegments);
+            }
+            break;
+          }
+        case 'ForInStatement':
+        case 'ForOfStatement':
+          brokenForkContext.add(forkContext.head);
+          makeLooped(this, forkContext.head, context.leftSegments);
+          break;
+
+        /* c8 ignore next */
+        default:
+          throw new Error('unreachable');
+      }
+
+      // Go next.
+      if (brokenForkContext.empty) {
+        forkContext.replaceHead(forkContext.makeUnreachable(-1, -1));
+      } else {
+        forkContext.replaceHead(brokenForkContext.makeNext(0, -1));
+      }
+    }
+
+    /**
+     * Makes a code path segment for the test part of a WhileStatement.
+     * @param {boolean|undefined} test The test value (only when constant).
+     * @returns {void}
+     */
+    makeWhileTest(test) {
+      var context = this.loopContext;
+      var forkContext = this.forkContext;
+      var testSegments = forkContext.makeNext(0, -1);
+
+      // Update state.
+      context.test = test;
+      context.continueDestSegments = testSegments;
+      forkContext.replaceHead(testSegments);
+    }
+
+    /**
+     * Makes a code path segment for the body part of a WhileStatement.
+     * @returns {void}
+     */
+    makeWhileBody() {
+      var context = this.loopContext;
+      var choiceContext = this.choiceContext;
+      var forkContext = this.forkContext;
+      if (!choiceContext.processed) {
+        choiceContext.trueForkContext.add(forkContext.head);
+        choiceContext.falseForkContext.add(forkContext.head);
+      }
+
+      // Update state.
+      if (context.test !== true) {
+        context.brokenForkContext.addAll(choiceContext.falseForkContext);
+      }
+      forkContext.replaceHead(choiceContext.trueForkContext.makeNext(0, -1));
+    }
+
+    /**
+     * Makes a code path segment for the body part of a DoWhileStatement.
+     * @returns {void}
+     */
+    makeDoWhileBody() {
+      var context = this.loopContext;
+      var forkContext = this.forkContext;
+      var bodySegments = forkContext.makeNext(-1, -1);
+
+      // Update state.
+      context.entrySegments = bodySegments;
+      forkContext.replaceHead(bodySegments);
+    }
+
+    /**
+     * Makes a code path segment for the test part of a DoWhileStatement.
+     * @param {boolean|undefined} test The test value (only when constant).
+     * @returns {void}
+     */
+    makeDoWhileTest(test) {
+      var context = this.loopContext;
+      var forkContext = this.forkContext;
+      context.test = test;
+
+      // Creates paths of `continue` statements.
+      if (!context.continueForkContext.empty) {
+        context.continueForkContext.add(forkContext.head);
+        var testSegments = context.continueForkContext.makeNext(0, -1);
+        forkContext.replaceHead(testSegments);
+      }
+    }
+
+    /**
+     * Makes a code path segment for the test part of a ForStatement.
+     * @param {boolean|undefined} test The test value (only when constant).
+     * @returns {void}
+     */
+    makeForTest(test) {
+      var context = this.loopContext;
+      var forkContext = this.forkContext;
+      var endOfInitSegments = forkContext.head;
+      var testSegments = forkContext.makeNext(-1, -1);
+
+      // Update state.
+      context.test = test;
+      context.endOfInitSegments = endOfInitSegments;
+      context.continueDestSegments = context.testSegments = testSegments;
+      forkContext.replaceHead(testSegments);
+    }
+
+    /**
+     * Makes a code path segment for the update part of a ForStatement.
+     * @returns {void}
+     */
+    makeForUpdate() {
+      var context = this.loopContext;
+      var choiceContext = this.choiceContext;
+      var forkContext = this.forkContext;
+
+      // Make the next paths of the test.
+      if (context.testSegments) {
+        finalizeTestSegmentsOfFor(context, choiceContext, forkContext.head);
+      } else {
+        context.endOfInitSegments = forkContext.head;
+      }
+
+      // Update state.
+      var updateSegments = forkContext.makeDisconnected(-1, -1);
+      context.continueDestSegments = context.updateSegments = updateSegments;
+      forkContext.replaceHead(updateSegments);
+    }
+
+    /**
+     * Makes a code path segment for the body part of a ForStatement.
+     * @returns {void}
+     */
+    makeForBody() {
+      var context = this.loopContext;
+      var choiceContext = this.choiceContext;
+      var forkContext = this.forkContext;
+
+      // Update state.
+      if (context.updateSegments) {
+        context.endOfUpdateSegments = forkContext.head;
+
+        // `update` -> `test`
+        if (context.testSegments) {
+          makeLooped(this, context.endOfUpdateSegments, context.testSegments);
+        }
+      } else if (context.testSegments) {
+        finalizeTestSegmentsOfFor(context, choiceContext, forkContext.head);
+      } else {
+        context.endOfInitSegments = forkContext.head;
+      }
+      var bodySegments = context.endOfTestSegments;
+      if (!bodySegments) {
+        /*
+         * If there is not the `test` part, the `body` path comes from the
+         * `init` part and the `update` part.
+         */
+        var prevForkContext = ForkContext.newEmpty(forkContext);
+        prevForkContext.add(context.endOfInitSegments);
+        if (context.endOfUpdateSegments) {
+          prevForkContext.add(context.endOfUpdateSegments);
+        }
+        bodySegments = prevForkContext.makeNext(0, -1);
+      }
+      context.continueDestSegments = context.continueDestSegments || bodySegments;
+      forkContext.replaceHead(bodySegments);
+    }
+
+    /**
+     * Makes a code path segment for the left part of a ForInStatement and a
+     * ForOfStatement.
+     * @returns {void}
+     */
+    makeForInOfLeft() {
+      var context = this.loopContext;
+      var forkContext = this.forkContext;
+      var leftSegments = forkContext.makeDisconnected(-1, -1);
+
+      // Update state.
+      context.prevSegments = forkContext.head;
+      context.leftSegments = context.continueDestSegments = leftSegments;
+      forkContext.replaceHead(leftSegments);
+    }
+
+    /**
+     * Makes a code path segment for the right part of a ForInStatement and a
+     * ForOfStatement.
+     * @returns {void}
+     */
+    makeForInOfRight() {
+      var context = this.loopContext;
+      var forkContext = this.forkContext;
+      var temp = ForkContext.newEmpty(forkContext);
+      temp.add(context.prevSegments);
+      var rightSegments = temp.makeNext(-1, -1);
+
+      // Update state.
+      context.endOfLeftSegments = forkContext.head;
+      forkContext.replaceHead(rightSegments);
+    }
+
+    /**
+     * Makes a code path segment for the body part of a ForInStatement and a
+     * ForOfStatement.
+     * @returns {void}
+     */
+    makeForInOfBody() {
+      var context = this.loopContext;
+      var forkContext = this.forkContext;
+      var temp = ForkContext.newEmpty(forkContext);
+      temp.add(context.endOfLeftSegments);
+      var bodySegments = temp.makeNext(-1, -1);
+
+      // Make a path: `right` -> `left`.
+      makeLooped(this, forkContext.head, context.leftSegments);
+
+      // Update state.
+      context.brokenForkContext.add(forkContext.head);
+      forkContext.replaceHead(bodySegments);
+    }
+
+    //--------------------------------------------------------------------------
+    // Control Statements
+    //--------------------------------------------------------------------------
+
+    /**
+     * Creates new context for BreakStatement.
+     * @param {boolean} breakable The flag to indicate it can break by
+     *      an unlabeled BreakStatement.
+     * @param {string|null} label The label of this context.
+     * @returns {Object} The new context.
+     */
+    pushBreakContext(breakable, label) {
+      this.breakContext = {
+        upper: this.breakContext,
+        breakable: breakable,
+        label: label,
+        brokenForkContext: ForkContext.newEmpty(this.forkContext)
+      };
+      return this.breakContext;
+    }
+
+    /**
+     * Removes the top item of the break context stack.
+     * @returns {Object} The removed context.
+     */
+    popBreakContext() {
+      var context = this.breakContext;
+      var forkContext = this.forkContext;
+      this.breakContext = context.upper;
+
+      // Process this context here for other than switches and loops.
+      if (!context.breakable) {
+        var brokenForkContext = context.brokenForkContext;
+        if (!brokenForkContext.empty) {
+          brokenForkContext.add(forkContext.head);
+          forkContext.replaceHead(brokenForkContext.makeNext(0, -1));
+        }
+      }
+      return context;
+    }
+
+    /**
+     * Makes a path for a `break` statement.
+     *
+     * It registers the head segment to a context of `break`.
+     * It makes new unreachable segment, then it set the head with the segment.
+     * @param {string} label A label of the break statement.
+     * @returns {void}
+     */
+    makeBreak(label) {
+      var forkContext = this.forkContext;
+      if (!forkContext.reachable) {
+        return;
+      }
+      var context = getBreakContext(this, label);
+      if (context) {
+        context.brokenForkContext.add(forkContext.head);
+      }
+
+      /* c8 ignore next */
+      forkContext.replaceHead(forkContext.makeUnreachable(-1, -1));
+    }
+
+    /**
+     * Makes a path for a `continue` statement.
+     *
+     * It makes a looping path.
+     * It makes new unreachable segment, then it set the head with the segment.
+     * @param {string} label A label of the continue statement.
+     * @returns {void}
+     */
+    makeContinue(label) {
+      var forkContext = this.forkContext;
+      if (!forkContext.reachable) {
+        return;
+      }
+      var context = getContinueContext(this, label);
+      if (context) {
+        if (context.continueDestSegments) {
+          makeLooped(this, forkContext.head, context.continueDestSegments);
+
+          // If the context is a for-in/of loop, this effects a break also.
+          if (context.type === 'ForInStatement' || context.type === 'ForOfStatement') {
+            context.brokenForkContext.add(forkContext.head);
+          }
+        } else {
+          context.continueForkContext.add(forkContext.head);
+        }
+      }
+      forkContext.replaceHead(forkContext.makeUnreachable(-1, -1));
+    }
+
+    /**
+     * Makes a path for a `return` statement.
+     *
+     * It registers the head segment to a context of `return`.
+     * It makes new unreachable segment, then it set the head with the segment.
+     * @returns {void}
+     */
+    makeReturn() {
+      var forkContext = this.forkContext;
+      if (forkContext.reachable) {
+        getReturnContext(this).returnedForkContext.add(forkContext.head);
+        forkContext.replaceHead(forkContext.makeUnreachable(-1, -1));
+      }
+    }
+
+    /**
+     * Makes a path for a `throw` statement.
+     *
+     * It registers the head segment to a context of `throw`.
+     * It makes new unreachable segment, then it set the head with the segment.
+     * @returns {void}
+     */
+    makeThrow() {
+      var forkContext = this.forkContext;
+      if (forkContext.reachable) {
+        getThrowContext(this).thrownForkContext.add(forkContext.head);
+        forkContext.replaceHead(forkContext.makeUnreachable(-1, -1));
+      }
+    }
+
+    /**
+     * Makes the final path.
+     * @returns {void}
+     */
+    makeFinal() {
+      var segments = this.currentSegments;
+      if (segments.length > 0 && segments[0].reachable) {
+        this.returnedForkContext.add(segments);
+      }
+    }
+  }
+  codePathState = CodePathState;
+  return codePathState;
+}
+
+var idGenerator;
+var hasRequiredIdGenerator;
+function requireIdGenerator() {
+  if (hasRequiredIdGenerator) return idGenerator;
+  hasRequiredIdGenerator = 1;
+
+  /* eslint-disable react-internal/safe-string-coercion */
+
+  //------------------------------------------------------------------------------
+  // Public Interface
+  //------------------------------------------------------------------------------
+
+  /**
+   * A generator for unique ids.
+   */
+  class IdGenerator {
+    /**
+     * @param {string} prefix Optional. A prefix of generated ids.
+     */
+    constructor(prefix) {
+      this.prefix = String(prefix);
+      this.n = 0;
+    }
+
+    /**
+     * Generates id.
+     * @returns {string} A generated id.
+     */
+    next() {
+      this.n = 1 + this.n | 0;
+
+      /* c8 ignore start */
+      if (this.n < 0) {
+        this.n = 1;
+      } /* c8 ignore stop */
+
+      return this.prefix + this.n;
+    }
+  }
+  idGenerator = IdGenerator;
+  return idGenerator;
+}
+
+var codePath;
+var hasRequiredCodePath;
+function requireCodePath() {
+  if (hasRequiredCodePath) return codePath;
+  hasRequiredCodePath = 1;
+
+  //------------------------------------------------------------------------------
+  // Requirements
+  //------------------------------------------------------------------------------
+
+  // eslint-disable-next-line
+  var CodePathState = requireCodePathState();
+  // eslint-disable-next-line
+  var IdGenerator = requireIdGenerator();
+
+  //------------------------------------------------------------------------------
+  // Public Interface
+  //------------------------------------------------------------------------------
+
+  /**
+   * A code path.
+   */
+  class CodePath {
+    /**
+     * Creates a new instance.
+     * @param {Object} options Options for the function (see below).
+     * @param {string} options.id An identifier.
+     * @param {string} options.origin The type of code path origin.
+     * @param {CodePath|null} options.upper The code path of the upper function scope.
+     * @param {Function} options.onLooped A callback function to notify looping.
+     */
+    constructor(_ref) {
+      var id = _ref.id,
+        origin = _ref.origin,
+        upper = _ref.upper,
+        onLooped = _ref.onLooped;
+      /**
+       * The identifier of this code path.
+       * Rules use it to store additional information of each rule.
+       * @type {string}
+       */
+      this.id = id;
+
+      /**
+       * The reason that this code path was started. May be "program",
+       * "function", "class-field-initializer", or "class-static-block".
+       * @type {string}
+       */
+      this.origin = origin;
+
+      /**
+       * The code path of the upper function scope.
+       * @type {CodePath|null}
+       */
+      this.upper = upper;
+
+      /**
+       * The code paths of nested function scopes.
+       * @type {CodePath[]}
+       */
+      this.childCodePaths = [];
+
+      // Initializes internal state.
+      Object.defineProperty(this, 'internal', {
+        value: new CodePathState(new IdGenerator(id + "_"), onLooped)
+      });
+
+      // Adds this into `childCodePaths` of `upper`.
+      if (upper) {
+        upper.childCodePaths.push(this);
+      }
+    }
+
+    /**
+     * Gets the state of a given code path.
+     * @param {CodePath} codePath A code path to get.
+     * @returns {CodePathState} The state of the code path.
+     */
+    static getState(codePath) {
+      return codePath.internal;
+    }
+
+    /**
+     * The initial code path segment.
+     * @type {CodePathSegment}
+     */
+    get initialSegment() {
+      return this.internal.initialSegment;
+    }
+
+    /**
+     * Final code path segments.
+     * This array is a mix of `returnedSegments` and `thrownSegments`.
+     * @type {CodePathSegment[]}
+     */
+    get finalSegments() {
+      return this.internal.finalSegments;
+    }
+
+    /**
+     * Final code path segments which is with `return` statements.
+     * This array contains the last path segment if it's reachable.
+     * Since the reachable last path returns `undefined`.
+     * @type {CodePathSegment[]}
+     */
+    get returnedSegments() {
+      return this.internal.returnedForkContext;
+    }
+
+    /**
+     * Final code path segments which is with `throw` statements.
+     * @type {CodePathSegment[]}
+     */
+    get thrownSegments() {
+      return this.internal.thrownForkContext;
+    }
+
+    /**
+     * Current code path segments.
+     * @type {CodePathSegment[]}
+     */
+    get currentSegments() {
+      return this.internal.currentSegments;
+    }
+
+    /**
+     * Traverses all segments in this code path.
+     *
+     *     codePath.traverseSegments(function(segment, controller) {
+     *         // do something.
+     *     });
+     *
+     * This method enumerates segments in order from the head.
+     *
+     * The `controller` object has two methods.
+     *
+     * - `controller.skip()` - Skip the following segments in this branch.
+     * - `controller.break()` - Skip all following segments.
+     * @param {Object} [options] Omittable.
+     * @param {CodePathSegment} [options.first] The first segment to traverse.
+     * @param {CodePathSegment} [options.last] The last segment to traverse.
+     * @param {Function} callback A callback function.
+     * @returns {void}
+     */
+    traverseSegments(options, callback) {
+      var resolvedOptions;
+      var resolvedCallback;
+      if (typeof options === 'function') {
+        resolvedCallback = options;
+        resolvedOptions = {};
+      } else {
+        resolvedOptions = options || {};
+        resolvedCallback = callback;
+      }
+      var startSegment = resolvedOptions.first || this.internal.initialSegment;
+      var lastSegment = resolvedOptions.last;
+      var item = null;
+      var index = 0;
+      var end = 0;
+      var segment = null;
+      var visited = Object.create(null);
+      var stack = [[startSegment, 0]];
+      var skippedSegment = null;
+      var broken = false;
+      var controller = {
+        skip: function () {
+          if (stack.length <= 1) {
+            broken = true;
+          } else {
+            skippedSegment = stack[stack.length - 2][0];
+          }
+        },
+        break: function () {
+          broken = true;
+        }
+      };
+
+      /**
+       * Checks a given previous segment has been visited.
+       * @param {CodePathSegment} prevSegment A previous segment to check.
+       * @returns {boolean} `true` if the segment has been visited.
+       */
+      function isVisited(prevSegment) {
+        return visited[prevSegment.id] || segment.isLoopedPrevSegment(prevSegment);
+      }
+      while (stack.length > 0) {
+        item = stack[stack.length - 1];
+        segment = item[0];
+        index = item[1];
+        if (index === 0) {
+          // Skip if this segment has been visited already.
+          if (visited[segment.id]) {
+            stack.pop();
+            continue;
+          }
+
+          // Skip if all previous segments have not been visited.
+          if (segment !== startSegment && segment.prevSegments.length > 0 && !segment.prevSegments.every(isVisited)) {
+            stack.pop();
+            continue;
+          }
+
+          // Reset the flag of skipping if all branches have been skipped.
+          if (skippedSegment && segment.prevSegments.includes(skippedSegment)) {
+            skippedSegment = null;
+          }
+          visited[segment.id] = true;
+
+          // Call the callback when the first time.
+          if (!skippedSegment) {
+            resolvedCallback.call(this, segment, controller);
+            if (segment === lastSegment) {
+              controller.skip();
+            }
+            if (broken) {
+              break;
+            }
+          }
+        }
+
+        // Update the stack.
+        end = segment.nextSegments.length - 1;
+        if (index < end) {
+          item[1] += 1;
+          stack.push([segment.nextSegments[index], 0]);
+        } else if (index === end) {
+          item[0] = segment.nextSegments[index];
+          item[1] = 0;
+        } else {
+          stack.pop();
+        }
+      }
+    }
+  }
+  codePath = CodePath;
+  return codePath;
+}
+
+var codePathAnalyzer;
+var hasRequiredCodePathAnalyzer;
+function requireCodePathAnalyzer() {
+  if (hasRequiredCodePathAnalyzer) return codePathAnalyzer;
+  hasRequiredCodePathAnalyzer = 1;
+
+  /* eslint-disable react-internal/no-primitive-constructors */
+
+  //------------------------------------------------------------------------------
+  // Requirements
+  //------------------------------------------------------------------------------
+
+  // eslint-disable-next-line
+  var assert = requireAssert();
+  // eslint-disable-next-line
+  var CodePath = requireCodePath();
+  // eslint-disable-next-line
+  var CodePathSegment = requireCodePathSegment();
+  // eslint-disable-next-line
+  var IdGenerator = requireIdGenerator();
+  var breakableTypePattern = /^(?:(?:Do)?While|For(?:In|Of)?|Switch)Statement$/u;
+
+  //------------------------------------------------------------------------------
+  // Helpers
+  //------------------------------------------------------------------------------
+
+  /**
+   * Checks whether or not a given node is a `case` node (not `default` node).
+   * @param {ASTNode} node A `SwitchCase` node to check.
+   * @returns {boolean} `true` if the node is a `case` node (not `default` node).
+   */
+  function isCaseNode(node) {
+    return Boolean(node.test);
+  }
+
+  /**
+   * Checks if a given node appears as the value of a PropertyDefinition node.
+   * @param {ASTNode} node THe node to check.
+   * @returns {boolean} `true` if the node is a PropertyDefinition value,
+   *      false if not.
+   */
+  function isPropertyDefinitionValue(node) {
+    var parent = node.parent;
+    return parent && parent.type === 'PropertyDefinition' && parent.value === node;
+  }
+
+  /**
+   * Checks whether the given logical operator is taken into account for the code
+   * path analysis.
+   * @param {string} operator The operator found in the LogicalExpression node
+   * @returns {boolean} `true` if the operator is "&&" or "||" or "??"
+   */
+  function isHandledLogicalOperator(operator) {
+    return operator === '&&' || operator === '||' || operator === '??';
+  }
+
+  /**
+   * Checks whether the given assignment operator is a logical assignment operator.
+   * Logical assignments are taken into account for the code path analysis
+   * because of their short-circuiting semantics.
+   * @param {string} operator The operator found in the AssignmentExpression node
+   * @returns {boolean} `true` if the operator is "&&=" or "||=" or "??="
+   */
+  function isLogicalAssignmentOperator(operator) {
+    return operator === '&&=' || operator === '||=' || operator === '??=';
+  }
+
+  /**
+   * Gets the label if the parent node of a given node is a LabeledStatement.
+   * @param {ASTNode} node A node to get.
+   * @returns {string|null} The label or `null`.
+   */
+  function getLabel(node) {
+    if (node.parent.type === 'LabeledStatement') {
+      return node.parent.label.name;
+    }
+    return null;
+  }
+
+  /**
+   * Checks whether or not a given logical expression node goes different path
+   * between the `true` case and the `false` case.
+   * @param {ASTNode} node A node to check.
+   * @returns {boolean} `true` if the node is a test of a choice statement.
+   */
+  function isForkingByTrueOrFalse(node) {
+    var parent = node.parent;
+    switch (parent.type) {
+      case 'ConditionalExpression':
+      case 'IfStatement':
+      case 'WhileStatement':
+      case 'DoWhileStatement':
+      case 'ForStatement':
+        return parent.test === node;
+      case 'LogicalExpression':
+        return isHandledLogicalOperator(parent.operator);
+      case 'AssignmentExpression':
+        return isLogicalAssignmentOperator(parent.operator);
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Gets the boolean value of a given literal node.
+   *
+   * This is used to detect infinity loops (e.g. `while (true) {}`).
+   * Statements preceded by an infinity loop are unreachable if the loop didn't
+   * have any `break` statement.
+   * @param {ASTNode} node A node to get.
+   * @returns {boolean|undefined} a boolean value if the node is a Literal node,
+   *   otherwise `undefined`.
+   */
+  function getBooleanValueIfSimpleConstant(node) {
+    if (node.type === 'Literal') {
+      return Boolean(node.value);
+    }
+    return void 0;
+  }
+
+  /**
+   * Checks that a given identifier node is a reference or not.
+   *
+   * This is used to detect the first throwable node in a `try` block.
+   * @param {ASTNode} node An Identifier node to check.
+   * @returns {boolean} `true` if the node is a reference.
+   */
+  function isIdentifierReference(node) {
+    var parent = node.parent;
+    switch (parent.type) {
+      case 'LabeledStatement':
+      case 'BreakStatement':
+      case 'ContinueStatement':
+      case 'ArrayPattern':
+      case 'RestElement':
+      case 'ImportSpecifier':
+      case 'ImportDefaultSpecifier':
+      case 'ImportNamespaceSpecifier':
+      case 'CatchClause':
+        return false;
+      case 'FunctionDeclaration':
+      case 'ComponentDeclaration':
+      case 'HookDeclaration':
+      case 'FunctionExpression':
+      case 'ArrowFunctionExpression':
+      case 'ClassDeclaration':
+      case 'ClassExpression':
+      case 'VariableDeclarator':
+        return parent.id !== node;
+      case 'Property':
+      case 'PropertyDefinition':
+      case 'MethodDefinition':
+        return parent.key !== node || parent.computed || parent.shorthand;
+      case 'AssignmentPattern':
+        return parent.key !== node;
+      default:
+        return true;
+    }
+  }
+
+  /**
+   * Updates the current segment with the head segment.
+   * This is similar to local branches and tracking branches of git.
+   *
+   * To separate the current and the head is in order to not make useless segments.
+   *
+   * In this process, both "onCodePathSegmentStart" and "onCodePathSegmentEnd"
+   * events are fired.
+   * @param {CodePathAnalyzer} analyzer The instance.
+   * @param {ASTNode} node The current AST node.
+   * @returns {void}
+   */
+  function forwardCurrentToHead(analyzer, node) {
+    var codePath = analyzer.codePath;
+    var state = CodePath.getState(codePath);
+    var currentSegments = state.currentSegments;
+    var headSegments = state.headSegments;
+    var end = Math.max(currentSegments.length, headSegments.length);
+    var i, currentSegment, headSegment;
+
+    // Fires leaving events.
+    for (i = 0; i < end; ++i) {
+      currentSegment = currentSegments[i];
+      headSegment = headSegments[i];
+      if (currentSegment !== headSegment && currentSegment) {
+        if (currentSegment.reachable) {
+          analyzer.emitter.emit('onCodePathSegmentEnd', currentSegment, node);
+        }
+      }
+    }
+
+    // Update state.
+    state.currentSegments = headSegments;
+
+    // Fires entering events.
+    for (i = 0; i < end; ++i) {
+      currentSegment = currentSegments[i];
+      headSegment = headSegments[i];
+      if (currentSegment !== headSegment && headSegment) {
+        CodePathSegment.markUsed(headSegment);
+        if (headSegment.reachable) {
+          analyzer.emitter.emit('onCodePathSegmentStart', headSegment, node);
+        }
+      }
+    }
+  }
+
+  /**
+   * Updates the current segment with empty.
+   * This is called at the last of functions or the program.
+   * @param {CodePathAnalyzer} analyzer The instance.
+   * @param {ASTNode} node The current AST node.
+   * @returns {void}
+   */
+  function leaveFromCurrentSegment(analyzer, node) {
+    var state = CodePath.getState(analyzer.codePath);
+    var currentSegments = state.currentSegments;
+    for (var i = 0; i < currentSegments.length; ++i) {
+      var currentSegment = currentSegments[i];
+      if (currentSegment.reachable) {
+        analyzer.emitter.emit('onCodePathSegmentEnd', currentSegment, node);
+      }
+    }
+    state.currentSegments = [];
+  }
+
+  /**
+   * Updates the code path due to the position of a given node in the parent node
+   * thereof.
+   *
+   * For example, if the node is `parent.consequent`, this creates a fork from the
+   * current path.
+   * @param {CodePathAnalyzer} analyzer The instance.
+   * @param {ASTNode} node The current AST node.
+   * @returns {void}
+   */
+  function preprocess(analyzer, node) {
+    var codePath = analyzer.codePath;
+    var state = CodePath.getState(codePath);
+    var parent = node.parent;
+    switch (parent.type) {
+      // The `arguments.length == 0` case is in `postprocess` function.
+      case 'CallExpression':
+        if (parent.optional === true && parent.arguments.length >= 1 && parent.arguments[0] === node) {
+          state.makeOptionalRight();
+        }
+        break;
+      case 'MemberExpression':
+        if (parent.optional === true && parent.property === node) {
+          state.makeOptionalRight();
+        }
+        break;
+      case 'LogicalExpression':
+        if (parent.right === node && isHandledLogicalOperator(parent.operator)) {
+          state.makeLogicalRight();
+        }
+        break;
+      case 'AssignmentExpression':
+        if (parent.right === node && isLogicalAssignmentOperator(parent.operator)) {
+          state.makeLogicalRight();
+        }
+        break;
+      case 'ConditionalExpression':
+      case 'IfStatement':
+        /*
+         * Fork if this node is at `consequent`/`alternate`.
+         * `popForkContext()` exists at `IfStatement:exit` and
+         * `ConditionalExpression:exit`.
+         */
+        if (parent.consequent === node) {
+          state.makeIfConsequent();
+        } else if (parent.alternate === node) {
+          state.makeIfAlternate();
+        }
+        break;
+      case 'SwitchCase':
+        if (parent.consequent[0] === node) {
+          state.makeSwitchCaseBody(false, !parent.test);
+        }
+        break;
+      case 'TryStatement':
+        if (parent.handler === node) {
+          state.makeCatchBlock();
+        } else if (parent.finalizer === node) {
+          state.makeFinallyBlock();
+        }
+        break;
+      case 'WhileStatement':
+        if (parent.test === node) {
+          state.makeWhileTest(getBooleanValueIfSimpleConstant(node));
+        } else {
+          assert(parent.body === node);
+          state.makeWhileBody();
+        }
+        break;
+      case 'DoWhileStatement':
+        if (parent.body === node) {
+          state.makeDoWhileBody();
+        } else {
+          assert(parent.test === node);
+          state.makeDoWhileTest(getBooleanValueIfSimpleConstant(node));
+        }
+        break;
+      case 'ForStatement':
+        if (parent.test === node) {
+          state.makeForTest(getBooleanValueIfSimpleConstant(node));
+        } else if (parent.update === node) {
+          state.makeForUpdate();
+        } else if (parent.body === node) {
+          state.makeForBody();
+        }
+        break;
+      case 'ForInStatement':
+      case 'ForOfStatement':
+        if (parent.left === node) {
+          state.makeForInOfLeft();
+        } else if (parent.right === node) {
+          state.makeForInOfRight();
+        } else {
+          assert(parent.body === node);
+          state.makeForInOfBody();
+        }
+        break;
+      case 'AssignmentPattern':
+        /*
+         * Fork if this node is at `right`.
+         * `left` is executed always, so it uses the current path.
+         * `popForkContext()` exists at `AssignmentPattern:exit`.
+         */
+        if (parent.right === node) {
+          state.pushForkContext();
+          state.forkBypassPath();
+          state.forkPath();
+        }
+        break;
+    }
+  }
+
+  /**
+   * Updates the code path due to the type of a given node in entering.
+   * @param {CodePathAnalyzer} analyzer The instance.
+   * @param {ASTNode} node The current AST node.
+   * @returns {void}
+   */
+  function processCodePathToEnter(analyzer, node) {
+    var codePath = analyzer.codePath;
+    var state = codePath && CodePath.getState(codePath);
+    var parent = node.parent;
+
+    /**
+     * Creates a new code path and trigger the onCodePathStart event
+     * based on the currently selected node.
+     * @param {string} origin The reason the code path was started.
+     * @returns {void}
+     */
+    function startCodePath(origin) {
+      if (codePath) {
+        // Emits onCodePathSegmentStart events if updated.
+        forwardCurrentToHead(analyzer, node);
+      }
+
+      // Create the code path of this scope.
+      codePath = analyzer.codePath = new CodePath({
+        id: analyzer.idGenerator.next(),
+        origin: origin,
+        upper: codePath,
+        onLooped: analyzer.onLooped
+      });
+      state = CodePath.getState(codePath);
+
+      // Emits onCodePathStart events.
+      analyzer.emitter.emit('onCodePathStart', codePath, node);
+    }
+
+    /*
+     * Special case: The right side of class field initializer is considered
+     * to be its own function, so we need to start a new code path in this
+     * case.
+     */
+    if (isPropertyDefinitionValue(node)) {
+      startCodePath('class-field-initializer');
+
+      /*
+       * Intentional fall through because `node` needs to also be
+       * processed by the code below. For example, if we have:
+       *
+       * class Foo {
+       *     a = () => {}
+       * }
+       *
+       * In this case, we also need start a second code path.
+       */
+    }
+    switch (node.type) {
+      case 'Program':
+        startCodePath('program');
+        break;
+      case 'FunctionDeclaration':
+      case 'ComponentDeclaration':
+      case 'HookDeclaration':
+      case 'FunctionExpression':
+      case 'ArrowFunctionExpression':
+        startCodePath('function');
+        break;
+      case 'StaticBlock':
+        startCodePath('class-static-block');
+        break;
+      case 'ChainExpression':
+        state.pushChainContext();
+        break;
+      case 'CallExpression':
+        if (node.optional === true) {
+          state.makeOptionalNode();
+        }
+        break;
+      case 'MemberExpression':
+        if (node.optional === true) {
+          state.makeOptionalNode();
+        }
+        break;
+      case 'LogicalExpression':
+        if (isHandledLogicalOperator(node.operator)) {
+          state.pushChoiceContext(node.operator, isForkingByTrueOrFalse(node));
+        }
+        break;
+      case 'AssignmentExpression':
+        if (isLogicalAssignmentOperator(node.operator)) {
+          state.pushChoiceContext(node.operator.slice(0, -1),
+          // removes `=` from the end
+          isForkingByTrueOrFalse(node));
+        }
+        break;
+      case 'ConditionalExpression':
+      case 'IfStatement':
+        state.pushChoiceContext('test', false);
+        break;
+      case 'SwitchStatement':
+        state.pushSwitchContext(node.cases.some(isCaseNode), getLabel(node));
+        break;
+      case 'TryStatement':
+        state.pushTryContext(Boolean(node.finalizer));
+        break;
+      case 'SwitchCase':
+        /*
+         * Fork if this node is after the 2st node in `cases`.
+         * It's similar to `else` blocks.
+         * The next `test` node is processed in this path.
+         */
+        if (parent.discriminant !== node && parent.cases[0] !== node) {
+          state.forkPath();
+        }
+        break;
+      case 'WhileStatement':
+      case 'DoWhileStatement':
+      case 'ForStatement':
+      case 'ForInStatement':
+      case 'ForOfStatement':
+        state.pushLoopContext(node.type, getLabel(node));
+        break;
+      case 'LabeledStatement':
+        if (!breakableTypePattern.test(node.body.type)) {
+          state.pushBreakContext(false, node.label.name);
+        }
+        break;
+    }
+
+    // Emits onCodePathSegmentStart events if updated.
+    forwardCurrentToHead(analyzer, node);
+  }
+
+  /**
+   * Updates the code path due to the type of a given node in leaving.
+   * @param {CodePathAnalyzer} analyzer The instance.
+   * @param {ASTNode} node The current AST node.
+   * @returns {void}
+   */
+  function processCodePathToExit(analyzer, node) {
+    var codePath = analyzer.codePath;
+    var state = CodePath.getState(codePath);
+    var dontForward = false;
+    switch (node.type) {
+      case 'ChainExpression':
+        state.popChainContext();
+        break;
+      case 'IfStatement':
+      case 'ConditionalExpression':
+        state.popChoiceContext();
+        break;
+      case 'LogicalExpression':
+        if (isHandledLogicalOperator(node.operator)) {
+          state.popChoiceContext();
+        }
+        break;
+      case 'AssignmentExpression':
+        if (isLogicalAssignmentOperator(node.operator)) {
+          state.popChoiceContext();
+        }
+        break;
+      case 'SwitchStatement':
+        state.popSwitchContext();
+        break;
+      case 'SwitchCase':
+        /*
+         * This is the same as the process at the 1st `consequent` node in
+         * `preprocess` function.
+         * Must do if this `consequent` is empty.
+         */
+        if (node.consequent.length === 0) {
+          state.makeSwitchCaseBody(true, !node.test);
+        }
+        if (state.forkContext.reachable) {
+          dontForward = true;
+        }
+        break;
+      case 'TryStatement':
+        state.popTryContext();
+        break;
+      case 'BreakStatement':
+        forwardCurrentToHead(analyzer, node);
+        state.makeBreak(node.label && node.label.name);
+        dontForward = true;
+        break;
+      case 'ContinueStatement':
+        forwardCurrentToHead(analyzer, node);
+        state.makeContinue(node.label && node.label.name);
+        dontForward = true;
+        break;
+      case 'ReturnStatement':
+        forwardCurrentToHead(analyzer, node);
+        state.makeReturn();
+        dontForward = true;
+        break;
+      case 'ThrowStatement':
+        forwardCurrentToHead(analyzer, node);
+        state.makeThrow();
+        dontForward = true;
+        break;
+      case 'Identifier':
+        if (isIdentifierReference(node)) {
+          state.makeFirstThrowablePathInTryBlock();
+          dontForward = true;
+        }
+        break;
+      case 'CallExpression':
+      case 'ImportExpression':
+      case 'MemberExpression':
+      case 'NewExpression':
+      case 'YieldExpression':
+        state.makeFirstThrowablePathInTryBlock();
+        break;
+      case 'WhileStatement':
+      case 'DoWhileStatement':
+      case 'ForStatement':
+      case 'ForInStatement':
+      case 'ForOfStatement':
+        state.popLoopContext();
+        break;
+      case 'AssignmentPattern':
+        state.popForkContext();
+        break;
+      case 'LabeledStatement':
+        if (!breakableTypePattern.test(node.body.type)) {
+          state.popBreakContext();
+        }
+        break;
+    }
+
+    // Emits onCodePathSegmentStart events if updated.
+    if (!dontForward) {
+      forwardCurrentToHead(analyzer, node);
+    }
+  }
+
+  /**
+   * Updates the code path to finalize the current code path.
+   * @param {CodePathAnalyzer} analyzer The instance.
+   * @param {ASTNode} node The current AST node.
+   * @returns {void}
+   */
+  function postprocess(analyzer, node) {
+    /**
+     * Ends the code path for the current node.
+     * @returns {void}
+     */
+    function endCodePath() {
+      var codePath = analyzer.codePath;
+
+      // Mark the current path as the final node.
+      CodePath.getState(codePath).makeFinal();
+
+      // Emits onCodePathSegmentEnd event of the current segments.
+      leaveFromCurrentSegment(analyzer, node);
+
+      // Emits onCodePathEnd event of this code path.
+      analyzer.emitter.emit('onCodePathEnd', codePath, node);
+      codePath = analyzer.codePath = analyzer.codePath.upper;
+    }
+    switch (node.type) {
+      case 'Program':
+      case 'FunctionDeclaration':
+      case 'ComponentDeclaration':
+      case 'HookDeclaration':
+      case 'FunctionExpression':
+      case 'ArrowFunctionExpression':
+      case 'StaticBlock':
+        {
+          endCodePath();
+          break;
+        }
+
+      // The `arguments.length >= 1` case is in `preprocess` function.
+      case 'CallExpression':
+        if (node.optional === true && node.arguments.length === 0) {
+          CodePath.getState(analyzer.codePath).makeOptionalRight();
+        }
+        break;
+    }
+
+    /*
+     * Special case: The right side of class field initializer is considered
+     * to be its own function, so we need to end a code path in this
+     * case.
+     *
+     * We need to check after the other checks in order to close the
+     * code paths in the correct order for code like this:
+     *
+     *
+     * class Foo {
+     *     a = () => {}
+     * }
+     *
+     * In this case, The ArrowFunctionExpression code path is closed first
+     * and then we need to close the code path for the PropertyDefinition
+     * value.
+     */
+    if (isPropertyDefinitionValue(node)) {
+      endCodePath();
+    }
+  }
+
+  //------------------------------------------------------------------------------
+  // Public Interface
+  //------------------------------------------------------------------------------
+
+  /**
+   * The class to analyze code paths.
+   * This class implements the EventGenerator interface.
+   */
+  class CodePathAnalyzer {
+    /**
+     * @param {EventGenerator} eventGenerator An event generator to wrap.
+     */
+    constructor(emitters) {
+      this.emitter = {
+        emit: function (event) {
+          for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+            args[_key - 1] = arguments[_key];
+          }
+          emitters[event]?.(...args);
+        }
+      };
+      this.codePath = null;
+      this.idGenerator = new IdGenerator('s');
+      this.currentNode = null;
+      this.onLooped = this.onLooped.bind(this);
+    }
+
+    /**
+     * Does the process to enter a given AST node.
+     * This updates state of analysis and calls `enterNode` of the wrapped.
+     * @param {ASTNode} node A node which is entering.
+     * @returns {void}
+     */
+    enterNode(node) {
+      this.currentNode = node;
+
+      // Updates the code path due to node's position in its parent node.
+      if (node.parent) {
+        preprocess(this, node);
+      }
+
+      /*
+       * Updates the code path.
+       * And emits onCodePathStart/onCodePathSegmentStart events.
+       */
+      processCodePathToEnter(this, node);
+      this.currentNode = null;
+    }
+
+    /**
+     * Does the process to leave a given AST node.
+     * This updates state of analysis and calls `leaveNode` of the wrapped.
+     * @param {ASTNode} node A node which is leaving.
+     * @returns {void}
+     */
+    leaveNode(node) {
+      this.currentNode = node;
+
+      /*
+       * Updates the code path.
+       * And emits onCodePathStart/onCodePathSegmentStart events.
+       */
+      processCodePathToExit(this, node);
+
+      // Emits the last onCodePathStart/onCodePathSegmentStart events.
+      postprocess(this, node);
+      this.currentNode = null;
+    }
+
+    /**
+     * This is called on a code path looped.
+     * Then this raises a looped event.
+     * @param {CodePathSegment} fromSegment A segment of prev.
+     * @param {CodePathSegment} toSegment A segment of next.
+     * @returns {void}
+     */
+    onLooped(fromSegment, toSegment) {
+      if (fromSegment.reachable && toSegment.reachable) {
+        this.emitter.emit('onCodePathSegmentLoop', fromSegment, toSegment, this.currentNode);
+      }
+    }
+  }
+  codePathAnalyzer = CodePathAnalyzer;
+  return codePathAnalyzer;
+}
+
+var codePathAnalyzerExports = requireCodePathAnalyzer();
+var CodePathAnalyzer = /*@__PURE__*/getDefaultExportFromCjs(codePathAnalyzerExports);
+
 function isHookName(s) {
     return s === 'use' || /^use[A-Z0-9]/.test(s);
 }
@@ -57137,8 +59937,17 @@ const rule = {
             : (node) => {
                 return getSourceCode().getScope(node);
             };
-        return {
-            onCodePathSegmentStart: segment => codePathSegmentStack.push(segment),
+        function hasFlowSuppression(node, suppression) {
+            const sourceCode = getSourceCode();
+            const comments = sourceCode.getAllComments();
+            const flowSuppressionRegex = new RegExp('\\$FlowFixMe\\[' + suppression + '\\]');
+            return comments.some(commentNode => flowSuppressionRegex.test(commentNode.value) &&
+                commentNode.loc != null &&
+                node.loc != null &&
+                commentNode.loc.end.line === node.loc.start.line - 1);
+        }
+        const analyzer = new CodePathAnalyzer({
+            onCodePathSegmentStart: (segment) => codePathSegmentStack.push(segment),
             onCodePathSegmentEnd: () => codePathSegmentStack.pop(),
             onCodePathStart: () => codePathReactHooksMapStack.push(new Map()),
             onCodePathEnd(codePath, codePathNode) {
@@ -57273,6 +60082,9 @@ const rule = {
                     const pathsFromStartToEnd = countPathsFromStart(segment) * countPathsToEnd(segment);
                     const cycled = cyclic.has(segment.id);
                     for (const hook of reactHooks) {
+                        if (hasFlowSuppression(hook, 'react-rule-hook')) {
+                            continue;
+                        }
                         if ((cycled || isInsideDoWhileLoop(hook)) &&
                             !isUseIdentifier(hook)) {
                             context.report({
@@ -57342,6 +60154,14 @@ const rule = {
                     }
                 }
             },
+        });
+        return {
+            '*'(node) {
+                analyzer.enterNode(node);
+            },
+            '*:exit'(node) {
+                analyzer.leaveNode(node);
+            },
             CallExpression(node) {
                 if (isHook(node.callee)) {
                     const reactHooksMap = last(codePathReactHooksMapStack);
@@ -57391,7 +60211,9 @@ const rule = {
 };
 function getFunctionName(node) {
     var _a, _b, _c, _d;
-    if (node.type === 'FunctionDeclaration' ||
+    if (node.type === 'ComponentDeclaration' ||
+        node.type === 'HookDeclaration' ||
+        node.type === 'FunctionDeclaration' ||
         (node.type === 'FunctionExpression' && node.id)) {
         return node.id;
     }
