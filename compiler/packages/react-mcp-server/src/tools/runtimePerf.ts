@@ -8,24 +8,51 @@ import * as babelPresetEnv from '@babel/preset-env';
 import * as babelPresetReact from '@babel/preset-react';
 
 type PerformanceResults = {
-  renderTime: number;
+  renderTime: number[];
   webVitals: {
-    cls: number;
-    lcp: number;
-    inp: number;
-    fid: number;
-    ttfb: number;
+    cls: number[];
+    lcp: number[];
+    inp: number[];
+    fid: number[];
+    ttfb: number[];
   };
   reactProfiler: {
-    id: number;
-    phase: number;
-    actualDuration: number;
-    baseDuration: number;
-    startTime: number;
-    commitTime: number;
+    id: number[];
+    phase: number[];
+    actualDuration: number[];
+    baseDuration: number[];
+    startTime: number[];
+    commitTime: number[];
   };
   error: Error | null;
 };
+
+
+type EvaluationResults = {
+  renderTime: number | null;
+  webVitals: {
+    cls: number | null;
+    lcp: number | null;
+    inp: number | null;
+    fid: number | null;
+    ttfb: number | null;
+  };
+  reactProfiler: {
+    id: number | null;
+    phase: number | null;
+    actualDuration: number | null;
+    baseDuration: number | null;
+    startTime: number | null;
+    commitTime: number | null;
+  };
+  error: Error | null;
+};
+
+function delay(time: number) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, time)
+  });
+}
 
 export async function measurePerformance(
   code: string,
@@ -68,66 +95,84 @@ export async function measurePerformance(
 
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-  await page.setViewport({width: 1280, height: 720});
+  await page.setViewport({ width: 1280, height: 720 });
   const html = buildHtml(transpiled);
 
   let performanceResults: PerformanceResults = {
-    renderTime: 0,
+    renderTime: [],
     webVitals: {
-      cls: 0,
-      lcp: 0,
-      inp: 0,
-      fid: 0,
-      ttfb: 0,
+      cls: [],
+      lcp: [],
+      inp: [],
+      fid: [],
+      ttfb: [],
     },
     reactProfiler: {
-      id: 0,
-      phase: 0,
-      actualDuration: 0,
-      baseDuration: 0,
-      startTime: 0,
-      commitTime: 0,
+      id: [],
+      phase: [],
+      actualDuration: [],
+      baseDuration: [],
+      startTime: [],
+      commitTime: [],
     },
     error: null,
   };
 
   for (let ii = 0; ii < iterations; ii++) {
-    await page.setContent(html, {waitUntil: 'networkidle0'});
+    await page.setContent(html, { waitUntil: 'networkidle0' });
     await page.waitForFunction(
       'window.__RESULT__ !== undefined && (window.__RESULT__.renderTime !== null || window.__RESULT__.error !== null)',
     );
+
     // ui chaos monkey
-    await page.waitForFunction(`window.__RESULT__ !== undefined && (function() {
-      for (const el of [...document.querySelectorAll('a'), ...document.querySelectorAll('button')]) {
-        console.log(el);
-        el.click();
+    const selectors = await page.evaluate(() => {
+      window.__INTERACTABLE_SELECTORS__ = [];
+      const elements = Array.from(document.querySelectorAll('a')).concat(Array.from(document.querySelectorAll('button')));
+      for (const el of elements) {
+        window.__INTERACTABLE_SELECTORS__.push(el.tagName.toLowerCase());
       }
-      return true;
-    })() `);
-    const evaluationResult: PerformanceResults = await page.evaluate(() => {
+      return window.__INTERACTABLE_SELECTORS__;
+    });
+
+    for (const selector of selectors) {
+      await page.click(selector);
+      await delay(500);
+    }
+
+    // Visit a new page for 1s to background the current page so that WebVitals can finish being calculated
+    const tempPage = await browser.newPage();
+    await tempPage.evaluate(() => {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve(true);
+        }, 1000);
+      });
+    });
+    await tempPage.close();
+
+    const evaluationResult: EvaluationResults = await page.evaluate(() => {
       return (window as any).__RESULT__;
     });
 
-    // TODO: investigate why webvital metrics are not populating correctly
-    performanceResults.renderTime += evaluationResult.renderTime;
-    performanceResults.webVitals.cls += evaluationResult.webVitals.cls || 0;
-    performanceResults.webVitals.lcp += evaluationResult.webVitals.lcp || 0;
-    performanceResults.webVitals.inp += evaluationResult.webVitals.inp || 0;
-    performanceResults.webVitals.fid += evaluationResult.webVitals.fid || 0;
-    performanceResults.webVitals.ttfb += evaluationResult.webVitals.ttfb || 0;
+    if (evaluationResult.renderTime !== null) {
+      performanceResults.renderTime.push(evaluationResult.renderTime);
+    }
 
-    performanceResults.reactProfiler.id +=
-      evaluationResult.reactProfiler.actualDuration || 0;
-    performanceResults.reactProfiler.phase +=
-      evaluationResult.reactProfiler.phase || 0;
-    performanceResults.reactProfiler.actualDuration +=
-      evaluationResult.reactProfiler.actualDuration || 0;
-    performanceResults.reactProfiler.baseDuration +=
-      evaluationResult.reactProfiler.baseDuration || 0;
-    performanceResults.reactProfiler.startTime +=
-      evaluationResult.reactProfiler.startTime || 0;
-    performanceResults.reactProfiler.commitTime +=
-      evaluationResult.reactProfiler.commitTime || 0;
+    const webVitalMetrics = ['cls', 'lcp', 'inp', 'fid', 'ttfb'] as const;
+    for (const metric of webVitalMetrics) {
+      if (evaluationResult.webVitals[metric] !== null) {
+        performanceResults.webVitals[metric].push(evaluationResult.webVitals[metric]);
+      }
+    }
+
+    const profilerMetrics = ['id', 'phase', 'actualDuration', 'baseDuration', 'startTime', 'commitTime'] as const;
+    for (const metric of profilerMetrics) {
+      if (evaluationResult.reactProfiler[metric] !== null) {
+        performanceResults.reactProfiler[metric].push(
+          evaluationResult.reactProfiler[metric]
+        );
+      }
+    }
 
     performanceResults.error = evaluationResult.error;
   }
@@ -159,14 +204,14 @@ function buildHtml(transpiled: string) {
       renderTime: null,
       webVitals: {},
       reactProfiler: {},
-      error: null
+      error: null,
     };
 
-    webVitals.onCLS((metric) => { window.__RESULT__.webVitals.cls = metric; });
-    webVitals.onLCP((metric) => { window.__RESULT__.webVitals.lcp = metric; });
-    webVitals.onINP((metric) => { window.__RESULT__.webVitals.inp = metric; });
-    webVitals.onFID((metric) => { window.__RESULT__.webVitals.fid = metric; });
-    webVitals.onTTFB((metric) => { window.__RESULT__.webVitals.ttfb = metric; });
+    webVitals.onCLS(({value}) => { window.__RESULT__.webVitals.cls = value; });
+    webVitals.onLCP(({value}) => { window.__RESULT__.webVitals.lcp = value; });
+    webVitals.onINP(({value}) => { window.__RESULT__.webVitals.inp = value; });
+    webVitals.onFID(({value}) => { window.__RESULT__.webVitals.fid = value; });
+    webVitals.onTTFB(({value}) => { window.__RESULT__.webVitals.ttfb = value; });
 
     try {
       ${transpiled}

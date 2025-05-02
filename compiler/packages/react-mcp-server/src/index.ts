@@ -22,6 +22,10 @@ import assertExhaustive from './utils/assertExhaustive';
 import {convert} from 'html-to-text';
 import {measurePerformance} from './tools/runtimePerf';
 
+function calculateMean(values: number[]): string {
+  return values.length > 0 ? (values.reduce((acc, curr) => acc + curr, 0) / values.length) + 'ms' : 'could not collect';
+}
+
 const server = new McpServer({
   name: 'React',
   version: '0.0.0',
@@ -286,7 +290,6 @@ server.tool(
 server.tool(
   'review-react-runtime',
   `Run this tool every time you propose a performance related change to verify if your suggestion actually improves performance.
-
   <requirements>
   This tool has some requirements on the code input:
   - The react code that is passed into this tool MUST contain an App functional component without arrow function.
@@ -307,12 +310,12 @@ server.tool(
 
   <iterate>
   (repeat until every metric is good or two consecutive cycles show no gain)
-  - Always run the tool once on the original code before any modification
-  - Run the tool again after making the modification, and apply one focused change based on the failing metric plus React-specific guidance:
+  - Apply one focused change based on the failing metric plus React-specific guidance:
     - LCP: lazy-load off-screen images, inline critical CSS, preconnect, use React.lazy + Suspense for below-the-fold modules. if the user requests for it, use React Server Components for static content (Server Components).
     - INP: wrap non-critical updates in useTransition, avoid calling setState inside useEffect.
     - CLS: reserve space via explicit width/height or aspect-ratio, keep stable list keys, use fixed-size skeleton loaders, animate only transform/opacity, avoid inserting ads or banners without placeholders.
-  - Compare the results of your modified code compared to the original to verify that your changes have improved performance.
+
+    Stop when every metric is classified as good. Return the final metric table and the list of applied changes.
   </iterate>
   `,
   {
@@ -326,17 +329,17 @@ server.tool(
 # React Component Performance Results
 
 ## Mean Render Time
-${results.renderTime / iterations}ms
+${calculateMean(results.renderTime)}
 
+TEST: ${results.webVitals.inp}
 ## Mean Web Vitals
-- Cumulative Layout Shift (CLS): ${results.webVitals.cls / iterations}ms
-- Largest Contentful Paint (LCP): ${results.webVitals.lcp / iterations}ms
-- Interaction to Next Paint (INP): ${results.webVitals.inp / iterations}ms
-- First Input Delay (FID): ${results.webVitals.fid / iterations}ms
+- Cumulative Layout Shift (CLS): ${calculateMean(results.webVitals.cls)}
+- Largest Contentful Paint (LCP): ${calculateMean(results.webVitals.lcp)}
+- Interaction to Next Paint (INP): ${calculateMean(results.webVitals.inp)}
 
 ## Mean React Profiler
-- Actual Duration: ${results.reactProfiler.actualDuration / iterations}ms
-- Base Duration: ${results.reactProfiler.baseDuration / iterations}ms
+- Actual Duration: ${calculateMean(results.reactProfiler.actualDuration)}
+- Base Duration: ${calculateMean(results.reactProfiler.baseDuration)}
 `;
 
       return {
