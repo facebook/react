@@ -132,9 +132,9 @@ jobs:
           mkdir ./compiled/facebook-www/__test_utils__
           mv build/__test_utils__/ReactAllWarnings.js ./compiled/facebook-www/__test_utils__/ReactAllWarnings.js
 
-          # Move eslint-plugin-react-hooks into eslint-plugin-react-hooks
+          # Copy eslint-plugin-react-hooks
           mkdir ./compiled/eslint-plugin-react-hooks
-          mv build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
+          cp build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
             ./compiled/eslint-plugin-react-hooks/index.js
 
           # Move unstable_server-external-runtime.js into facebook-www
@@ -166,6 +166,13 @@ jobs:
           RENDERER_FOLDER=$BASE_FOLDER/react-native-github/Libraries/Renderer/implementations/
           rm $RENDERER_FOLDER/ReactFabric-{dev,prod,profiling}.js
           rm $RENDERER_FOLDER/ReactNativeRenderer-{dev,prod,profiling}.js
+
+          # Copy eslint-plugin-react-hooks
+          # NOTE: This is different from www, here we include the full package
+          #       including package.json to include dependencies in fbsource.
+          mkdir $BASE_FOLDER/RKJSModules/vendor/react/eslint-plugin-react-hooks
+          cp -r build/oss-experimental/eslint-plugin-react-hooks \
+            $BASE_FOLDER/RKJSModules/vendor/react/eslint-plugin-react-hooks
 
           # Move React Native version file
           mv build/facebook-react-native/VERSION_NATIVE_FB ./compiled-rn/VERSION_NATIVE_FB
