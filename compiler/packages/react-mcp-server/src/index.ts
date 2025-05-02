@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
-import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
-import {z} from 'zod';
-import {compile, type PrintedCompilerPipelineValue} from './compiler';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
+import { compile, type PrintedCompilerPipelineValue } from './compiler';
 import {
   CompilerPipelineValue,
   printReactiveFunctionWithOutlined,
@@ -17,10 +17,10 @@ import {
   SourceLocation,
 } from 'babel-plugin-react-compiler/src';
 import * as cheerio from 'cheerio';
-import {queryAlgolia} from './utils/algolia';
+import { queryAlgolia } from './utils/algolia';
 import assertExhaustive from './utils/assertExhaustive';
-import {convert} from 'html-to-text';
-import {measurePerformance} from './tools/runtimePerf';
+import { convert } from 'html-to-text';
+import { measurePerformance } from './tools/runtimePerf';
 
 function calculateMean(values: number[]): string {
   return values.length > 0 ? (values.reduce((acc, curr) => acc + curr, 0) / values.length) + 'ms' : 'could not collect';
@@ -37,12 +37,12 @@ server.tool(
   {
     query: z.string(),
   },
-  async ({query}) => {
+  async ({ query }) => {
     try {
       const pages = await queryAlgolia(query);
       if (pages.length === 0) {
         return {
-          content: [{type: 'text' as const, text: `No results`}],
+          content: [{ type: 'text' as const, text: `No results` }],
         };
       }
       const content = pages.map(html => {
@@ -68,7 +68,7 @@ server.tool(
     } catch (err) {
       return {
         isError: true,
-        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
+        content: [{ type: 'text' as const, text: `Error: ${err.stack}` }],
       };
     }
   },
@@ -89,7 +89,7 @@ server.tool(
     text: z.string(),
     passName: z.enum(['HIR', 'ReactiveFunction', 'All', '@DEBUG']).optional(),
   },
-  async ({text, passName}) => {
+  async ({ text, passName }) => {
     const pipelinePasses = new Map<
       string,
       Array<PrintedCompilerPipelineValue>
@@ -141,7 +141,7 @@ server.tool(
         }
       }
     };
-    const errors: Array<{message: string; loc: SourceLocation | null}> = [];
+    const errors: Array<{ message: string; loc: SourceLocation | null }> = [];
     const compilerOptions: Partial<PluginOptions> = {
       panicThreshold: 'none',
       logger: {
@@ -170,10 +170,10 @@ server.tool(
       if (result.code == null) {
         return {
           isError: true,
-          content: [{type: 'text' as const, text: 'Error: Could not compile'}],
+          content: [{ type: 'text' as const, text: 'Error: Could not compile' }],
         };
       }
-      const requestedPasses: Array<{type: 'text'; text: string}> = [];
+      const requestedPasses: Array<{ type: 'text'; text: string }> = [];
       if (passName != null) {
         switch (passName) {
           case 'All': {
@@ -274,14 +274,14 @@ server.tool(
       }
       return {
         content: [
-          {type: 'text' as const, text: result.code},
+          { type: 'text' as const, text: result.code },
           ...requestedPasses,
         ],
       };
     } catch (err) {
       return {
         isError: true,
-        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
+        content: [{ type: 'text' as const, text: `Error: ${err.stack}` }],
       };
     }
   },
@@ -290,6 +290,7 @@ server.tool(
 server.tool(
   'review-react-runtime',
   `Run this tool every time you propose a performance related change to verify if your suggestion actually improves performance.
+
   <requirements>
   This tool has some requirements on the code input:
   - The react code that is passed into this tool MUST contain an App functional component without arrow function.
@@ -310,19 +311,19 @@ server.tool(
 
   <iterate>
   (repeat until every metric is good or two consecutive cycles show no gain)
-  - Apply one focused change based on the failing metric plus React-specific guidance:
+  - Always run the tool once on the original code before any modification
+  - Run the tool again after making the modification, and apply one focused change based on the failing metric plus React-specific guidance:
     - LCP: lazy-load off-screen images, inline critical CSS, preconnect, use React.lazy + Suspense for below-the-fold modules. if the user requests for it, use React Server Components for static content (Server Components).
     - INP: wrap non-critical updates in useTransition, avoid calling setState inside useEffect.
     - CLS: reserve space via explicit width/height or aspect-ratio, keep stable list keys, use fixed-size skeleton loaders, animate only transform/opacity, avoid inserting ads or banners without placeholders.
-
-    Stop when every metric is classified as good. Return the final metric table and the list of applied changes.
+  - Compare the results of your modified code compared to the original to verify that your changes have improved performance.
   </iterate>
   `,
   {
     text: z.string(),
     iterations: z.number().optional().default(2),
   },
-  async ({text, iterations}) => {
+  async ({ text, iterations }) => {
     try {
       const results = await measurePerformance(text, iterations);
       const formattedResults = `
