@@ -27,7 +27,6 @@ type PerformanceResults = {
   error: Error | null;
 };
 
-
 type EvaluationResults = {
   renderTime: number | null;
   webVitals: {
@@ -50,7 +49,7 @@ type EvaluationResults = {
 
 function delay(time: number) {
   return new Promise(function (resolve) {
-    setTimeout(resolve, time)
+    setTimeout(resolve, time);
   });
 }
 
@@ -95,7 +94,7 @@ export async function measurePerformance(
 
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 720 });
+  await page.setViewport({width: 1280, height: 720});
   const html = buildHtml(transpiled);
 
   let performanceResults: PerformanceResults = {
@@ -119,7 +118,7 @@ export async function measurePerformance(
   };
 
   for (let ii = 0; ii < iterations; ii++) {
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await page.setContent(html, {waitUntil: 'networkidle0'});
     await page.waitForFunction(
       'window.__RESULT__ !== undefined && (window.__RESULT__.renderTime !== null || window.__RESULT__.error !== null)',
     );
@@ -127,7 +126,9 @@ export async function measurePerformance(
     // ui chaos monkey
     const selectors = await page.evaluate(() => {
       window.__INTERACTABLE_SELECTORS__ = [];
-      const elements = Array.from(document.querySelectorAll('a')).concat(Array.from(document.querySelectorAll('button')));
+      const elements = Array.from(document.querySelectorAll('a')).concat(
+        Array.from(document.querySelectorAll('button')),
+      );
       for (const el of elements) {
         window.__INTERACTABLE_SELECTORS__.push(el.tagName.toLowerCase());
       }
@@ -161,15 +162,24 @@ export async function measurePerformance(
     const webVitalMetrics = ['cls', 'lcp', 'inp', 'fid', 'ttfb'] as const;
     for (const metric of webVitalMetrics) {
       if (evaluationResult.webVitals[metric] !== null) {
-        performanceResults.webVitals[metric].push(evaluationResult.webVitals[metric]);
+        performanceResults.webVitals[metric].push(
+          evaluationResult.webVitals[metric],
+        );
       }
     }
 
-    const profilerMetrics = ['id', 'phase', 'actualDuration', 'baseDuration', 'startTime', 'commitTime'] as const;
+    const profilerMetrics = [
+      'id',
+      'phase',
+      'actualDuration',
+      'baseDuration',
+      'startTime',
+      'commitTime',
+    ] as const;
     for (const metric of profilerMetrics) {
       if (evaluationResult.reactProfiler[metric] !== null) {
         performanceResults.reactProfiler[metric].push(
-          evaluationResult.reactProfiler[metric]
+          evaluationResult.reactProfiler[metric],
         );
       }
     }

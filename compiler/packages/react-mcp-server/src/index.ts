@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { z } from 'zod';
-import { compile, type PrintedCompilerPipelineValue } from './compiler';
+import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
+import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
+import {z} from 'zod';
+import {compile, type PrintedCompilerPipelineValue} from './compiler';
 import {
   CompilerPipelineValue,
   printReactiveFunctionWithOutlined,
@@ -17,13 +17,15 @@ import {
   SourceLocation,
 } from 'babel-plugin-react-compiler/src';
 import * as cheerio from 'cheerio';
-import { queryAlgolia } from './utils/algolia';
+import {queryAlgolia} from './utils/algolia';
 import assertExhaustive from './utils/assertExhaustive';
-import { convert } from 'html-to-text';
-import { measurePerformance } from './tools/runtimePerf';
+import {convert} from 'html-to-text';
+import {measurePerformance} from './tools/runtimePerf';
 
 function calculateMean(values: number[]): string {
-  return values.length > 0 ? (values.reduce((acc, curr) => acc + curr, 0) / values.length) + 'ms' : 'could not collect';
+  return values.length > 0
+    ? values.reduce((acc, curr) => acc + curr, 0) / values.length + 'ms'
+    : 'could not collect';
 }
 
 const server = new McpServer({
@@ -37,12 +39,12 @@ server.tool(
   {
     query: z.string(),
   },
-  async ({ query }) => {
+  async ({query}) => {
     try {
       const pages = await queryAlgolia(query);
       if (pages.length === 0) {
         return {
-          content: [{ type: 'text' as const, text: `No results` }],
+          content: [{type: 'text' as const, text: `No results`}],
         };
       }
       const content = pages.map(html => {
@@ -68,7 +70,7 @@ server.tool(
     } catch (err) {
       return {
         isError: true,
-        content: [{ type: 'text' as const, text: `Error: ${err.stack}` }],
+        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
       };
     }
   },
@@ -89,7 +91,7 @@ server.tool(
     text: z.string(),
     passName: z.enum(['HIR', 'ReactiveFunction', 'All', '@DEBUG']).optional(),
   },
-  async ({ text, passName }) => {
+  async ({text, passName}) => {
     const pipelinePasses = new Map<
       string,
       Array<PrintedCompilerPipelineValue>
@@ -141,7 +143,7 @@ server.tool(
         }
       }
     };
-    const errors: Array<{ message: string; loc: SourceLocation | null }> = [];
+    const errors: Array<{message: string; loc: SourceLocation | null}> = [];
     const compilerOptions: Partial<PluginOptions> = {
       panicThreshold: 'none',
       logger: {
@@ -170,10 +172,10 @@ server.tool(
       if (result.code == null) {
         return {
           isError: true,
-          content: [{ type: 'text' as const, text: 'Error: Could not compile' }],
+          content: [{type: 'text' as const, text: 'Error: Could not compile'}],
         };
       }
-      const requestedPasses: Array<{ type: 'text'; text: string }> = [];
+      const requestedPasses: Array<{type: 'text'; text: string}> = [];
       if (passName != null) {
         switch (passName) {
           case 'All': {
@@ -274,14 +276,14 @@ server.tool(
       }
       return {
         content: [
-          { type: 'text' as const, text: result.code },
+          {type: 'text' as const, text: result.code},
           ...requestedPasses,
         ],
       };
     } catch (err) {
       return {
         isError: true,
-        content: [{ type: 'text' as const, text: `Error: ${err.stack}` }],
+        content: [{type: 'text' as const, text: `Error: ${err.stack}`}],
       };
     }
   },
@@ -323,7 +325,7 @@ server.tool(
     text: z.string(),
     iterations: z.number().optional().default(2),
   },
-  async ({ text, iterations }) => {
+  async ({text, iterations}) => {
     try {
       const results = await measurePerformance(text, iterations);
       const formattedResults = `
