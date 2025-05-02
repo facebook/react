@@ -781,7 +781,7 @@ addObject(BUILTIN_SHAPES, BuiltInWeakSetId, [
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [Effect.Capture],
       restParam: null,
-      returnType: {kind: 'Object', shapeId: BuiltInSetId},
+      returnType: {kind: 'Object', shapeId: BuiltInWeakSetId},
       calleeEffect: Effect.Store,
       // returnValueKind is technically dependent on the ValueKind of the set itself
       returnValueKind: ValueKind.Mutable,
@@ -857,7 +857,7 @@ addObject(BUILTIN_SHAPES, BuiltInWeakMapId, [
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [Effect.Capture, Effect.Capture],
       restParam: null,
-      returnType: {kind: 'Object', shapeId: BuiltInMapId},
+      returnType: {kind: 'Object', shapeId: BuiltInWeakMapId},
       calleeEffect: Effect.Store,
       returnValueKind: ValueKind.Mutable,
     }),
