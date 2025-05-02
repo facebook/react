@@ -275,6 +275,83 @@ server.tool(
   },
 );
 
+server.tool(
+  'review-react-runtime',
+  `Run this tool every time you propose a performance related change to verify if your suggestion actually improves performance.
+  <requirements>
+  This tool has some requirements on the code input:
+  - The react code that is passed into this tool MUST contain an App functional component without arrow function.
+  - DO NOT export anything since we can't parse export syntax with this tool.
+  - Only import React from 'react' and use all hooks and imports using the React. prefix like React.useState and React.useEffect
+  </requirements>
+
+  <goals>
+  - LCP - loading speed: good ≤ 2.5 s, needs-improvement 2.5-4 s, poor > 4 s
+  - INP - input responsiveness: good ≤ 200 ms, needs-improvement 200-500 ms, poor > 500 ms
+  - CLS - visual stability: good ≤ 0.10, needs-improvement 0.10-0.25, poor > 0.25
+  - (Optional: FCP ≤ 1.8 s, TTFB ≤ 0.8 s)
+  </goals>
+
+  <evaluation>
+  Classify each metric with the thresholds above. Identify the worst category in the order poor > needs-improvement > good.
+  </evaluation>
+
+  <iterate>
+  (repeat until every metric is good or two consecutive cycles show no gain)
+  - Apply one focused change based on the failing metric plus React-specific guidance:
+    - LCP: lazy-load off-screen images, inline critical CSS, preconnect, use React.lazy + Suspense for below-the-fold modules. if the user requests for it, use React Server Components for static content (Server Components).
+    - INP: wrap non-critical updates in useTransition, avoid calling setState inside useEffect.
+    - CLS: reserve space via explicit width/height or aspect-ratio, keep stable list keys, use fixed-size skeleton loaders, animate only transform/opacity, avoid inserting ads or banners without placeholders.
+
+    Stop when every metric is classified as good. Return the final metric table and the list of applied changes.
+  </iterate>
+  `,
+  {
+    text: z.string(),
+    iterations: z.number().optional().default(2),
+  },
+  async ({text, iterations}) => {
+    try {
+      const results = await measurePerformance(text, iterations);
+      const formattedResults = `
+# React Component Performance Results
+
+## Mean Render Time
+${results.renderTime / iterations}ms
+
+## Mean Web Vitals
+- Cumulative Layout Shift (CLS): ${results.webVitals.cls / iterations}ms
+- Largest Contentful Paint (LCP): ${results.webVitals.lcp / iterations}ms
+- Interaction to Next Paint (INP): ${results.webVitals.inp / iterations}ms
+- First Input Delay (FID): ${results.webVitals.fid / iterations}ms
+
+## Mean React Profiler
+- Actual Duration: ${results.reactProfiler.actualDuration / iterations}ms
+- Base Duration: ${results.reactProfiler.baseDuration / iterations}ms
+`;
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: formattedResults,
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: 'text' as const,
+            text: `Error measuring performance: ${error.message}\n\n${error.stack}`,
+          },
+        ],
+      };
+    }
+  },
+);
+
 server.prompt('review-react-code', () => ({
   messages: [
     {
@@ -353,129 +430,6 @@ Server Components - Shift data-heavy logic to the server whenever possible. Brea
     },
   ],
 }));
-
-server.tool(
-  'review-react-runtime',
-  `Run this tool every time you propose a performance related change to verify if your suggestion actually improves performance.
-  <requirements>
-  This tool has some requirements on the code input:
-  - The react code that is passed into this tool MUST contain an App functional component without arrow function.
-  - DO NOT export anything since we can't parse export syntax with this tool.
-  - Only import React from 'react' and use all hooks and imports using the React. prefix like React.useState and React.useEffect
-  </requirements>
-
-  <goals>
-  - LCP - loading speed: good ≤ 2.5 s, needs-improvement 2.5-4 s, poor > 4 s
-  - INP - input responsiveness: good ≤ 200 ms, needs-improvement 200-500 ms, poor > 500 ms
-  - CLS - visual stability: good ≤ 0.10, needs-improvement 0.10-0.25, poor > 0.25
-  - (Optional: FCP ≤ 1.8 s, TTFB ≤ 0.8 s)
-  </goals>
-
-  <evaluation>
-  Classify each metric with the thresholds above. Identify the worst category in the order poor > needs-improvement > good.
-  </evaluation>
-
-  <iterate>
-  (repeat until every metric is good or two consecutive cycles show no gain)
-  - Apply one focused change based on the failing metric plus React-specific guidance:
-    - LCP: lazy-load off-screen images, inline critical CSS, preconnect, use React.lazy + Suspense for below-the-fold modules. if the user requests for it, use React Server Components for static content (Server Components).
-    - INP: wrap non-critical updates in useTransition, avoid calling setState inside useEffect.
-    - CLS: reserve space via explicit width/height or aspect-ratio, keep stable list keys, use fixed-size skeleton loaders, animate only transform/opacity, avoid inserting ads or banners without placeholders.
-
-    Stop when every metric is classified as good. Return the final metric table and the list of applied changes.
-  </iterate>
-  `,
-  {
-    text: z.string(),
-  },
-  async ({text}) => {
-    try {
-      const iterations = 20;
-
-      let perfData = {
-        renderTime: 0,
-        webVitals: {
-          cls: 0,
-          lcp: 0,
-          inp: 0,
-          fid: 0,
-          ttfb: 0,
-        },
-        reactProfilerMetrics: {
-          id: 0,
-          phase: 0,
-          actualDuration: 0,
-          baseDuration: 0,
-          startTime: 0,
-          commitTime: 0,
-        },
-        error: null,
-      };
-
-      for (let i = 0; i < iterations; i++) {
-        const performanceResults = await measurePerformance(text);
-        perfData.renderTime += performanceResults.renderTime;
-        perfData.webVitals.cls += performanceResults.webVitals.cls || 0;
-        perfData.webVitals.lcp += performanceResults.webVitals.lcp || 0;
-        perfData.webVitals.inp += performanceResults.webVitals.inp || 0;
-        perfData.webVitals.fid += performanceResults.webVitals.fid || 0;
-        perfData.webVitals.ttfb += performanceResults.webVitals.ttfb || 0;
-
-        perfData.reactProfilerMetrics.id +=
-          performanceResults.reactProfilerMetrics.actualDuration || 0;
-        perfData.reactProfilerMetrics.phase +=
-          performanceResults.reactProfilerMetrics.phase || 0;
-        perfData.reactProfilerMetrics.actualDuration +=
-          performanceResults.reactProfilerMetrics.actualDuration || 0;
-        perfData.reactProfilerMetrics.baseDuration +=
-          performanceResults.reactProfilerMetrics.baseDuration || 0;
-        perfData.reactProfilerMetrics.startTime +=
-          performanceResults.reactProfilerMetrics.startTime || 0;
-        perfData.reactProfilerMetrics.commitTime +=
-          performanceResults.reactProfilerMetrics.commitTime || 0;
-      }
-
-      const formattedResults = `
-# React Component Performance Results
-
-## Mean Render Time
-${perfData.renderTime / iterations}ms
-
-## Mean Web Vitals
-- Cumulative Layout Shift (CLS): ${perfData.webVitals.cls / iterations}
-- Largest Contentful Paint (LCP): ${perfData.webVitals.lcp / iterations}ms
-- Interaction to Next Paint (INP): ${perfData.webVitals.inp / iterations}ms
-- First Input Delay (FID): ${perfData.webVitals.fid / iterations}ms
-- Time to First Byte (TTFB): ${perfData.webVitals.ttfb / iterations}ms
-
-## Mean React Profiler
-- Actual Duration: ${perfData.reactProfilerMetrics.actualDuration / iterations}ms
-- Base Duration: ${perfData.reactProfilerMetrics.baseDuration / iterations}ms
-- Start Time: ${perfData.reactProfilerMetrics.startTime / iterations}ms
-- Commit Time: ${perfData.reactProfilerMetrics.commitTime / iterations}ms
-`;
-
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: formattedResults,
-          },
-        ],
-      };
-    } catch (error) {
-      return {
-        isError: true,
-        content: [
-          {
-            type: 'text' as const,
-            text: `Error measuring performance: ${error.message}\n\n${error.stack}`,
-          },
-        ],
-      };
-    }
-  },
-);
 
 async function main() {
   const transport = new StdioServerTransport();
