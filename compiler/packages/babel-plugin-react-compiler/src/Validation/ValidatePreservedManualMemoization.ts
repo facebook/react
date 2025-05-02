@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import prettyFormat from 'pretty-format';
 import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {
   DeclarationId,
