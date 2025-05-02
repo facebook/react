@@ -62,11 +62,9 @@ describe('ReactFlightDOM', () => {
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.node.unbundled'),
     );
-    if (__EXPERIMENTAL__) {
-      jest.mock('react-server-dom-webpack/static', () =>
-        require('react-server-dom-webpack/static.node.unbundled'),
-      );
-    }
+    jest.mock('react-server-dom-webpack/static', () =>
+      require('react-server-dom-webpack/static.node.unbundled'),
+    );
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     clientExportsESM = WebpackMock.clientExportsESM;
@@ -74,9 +72,7 @@ describe('ReactFlightDOM', () => {
     webpackMap = WebpackMock.webpackMap;
 
     ReactServerDOMServer = require('react-server-dom-webpack/server');
-    if (__EXPERIMENTAL__) {
-      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
-    }
+    ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
     // This reset is to load modules for the SSR/Browser scope.
     jest.unmock('react-server-dom-webpack/server');
@@ -2771,7 +2767,6 @@ describe('ReactFlightDOM', () => {
     );
   });
 
-  // @gate experimental
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -2834,7 +2829,6 @@ describe('ReactFlightDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<div>hello world</div>);
   });
 
-  // @gate enableHalt
   it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -2916,7 +2910,6 @@ describe('ReactFlightDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<div>loading...</div>);
   });
 
-  // @gate enableHalt
   it('will leave async iterables in an incomplete state when halting', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));
@@ -2976,7 +2969,6 @@ describe('ReactFlightDOM', () => {
     expect(await race).toBe('timeout');
   });
 
-  // @gate enableHalt
   it('will halt unfinished chunks inside Suspense when aborting a prerender', async () => {
     const controller = new AbortController();
     function ComponentThatAborts() {

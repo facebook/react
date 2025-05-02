@@ -87,12 +87,10 @@ describe('ReactFlightDOMEdge', () => {
 
     ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
-    if (__EXPERIMENTAL__) {
-      jest.mock('react-server-dom-webpack/static', () =>
-        require('react-server-dom-webpack/static.edge'),
-      );
-      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
-    }
+    jest.mock('react-server-dom-webpack/static', () =>
+      require('react-server-dom-webpack/static.edge'),
+    );
+    ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
     jest.resetModules();
     __unmockReact();
@@ -1291,7 +1289,6 @@ describe('ReactFlightDOMEdge', () => {
     ]);
   });
 
-  // @gate experimental
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -1345,7 +1342,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(result).toBe('<div>hello world</div>');
   });
 
-  // @gate enableHalt
   it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -1423,7 +1419,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(div.textContent).toBe('loading...');
   });
 
-  // @gate enableHalt
   it('should abort parsing an incomplete prerender payload', async () => {
     const infinitePromise = new Promise(() => {});
     const controller = new AbortController();
@@ -1471,7 +1466,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe('Connection closed.');
   });
 
-  // @gate experimental
   it('should be able to handle a rejected promise in unstable_prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
@@ -1510,7 +1504,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate experimental
   it('should be able to handle an erroring async iterable in unstable_prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
@@ -1557,7 +1550,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate experimental
   it('should be able to handle an erroring readable stream in unstable_prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
@@ -1605,7 +1597,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate experimental
   it('can prerender an async iterable', async () => {
     const errors = [];
 
@@ -1649,7 +1640,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(text).toBe('hello world');
   });
 
-  // @gate experimental
   it('can prerender a readable stream', async () => {
     const errors = [];
 
@@ -1683,7 +1673,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(result).toBe('hello world');
   });
 
-  // @gate experimental
   it('does not return a prerender prelude early when an error is emitted and there are still pending tasks', async () => {
     let rejectPromise;
     const rejectingPromise = new Promise(
