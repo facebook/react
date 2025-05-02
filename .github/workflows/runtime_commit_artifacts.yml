@@ -170,9 +170,7 @@ jobs:
           # Copy eslint-plugin-react-hooks
           # NOTE: This is different from www, here we include the full package
           #       including package.json to include dependencies in fbsource.
-          mkdir $BASE_FOLDER/RKJSModules/vendor/react/eslint-plugin-react-hooks
-          cp -r build/oss-experimental/eslint-plugin-react-hooks \
-            $BASE_FOLDER/RKJSModules/vendor/react/eslint-plugin-react-hooks
+          cp -r build/oss-experimental/eslint-plugin-react-hooks $BASE_FOLDER/RKJSModules/vendor/react
 
           # Move React Native version file
           mv build/facebook-react-native/VERSION_NATIVE_FB ./compiled-rn/VERSION_NATIVE_FB
