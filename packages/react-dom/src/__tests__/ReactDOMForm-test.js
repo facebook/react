@@ -36,7 +36,6 @@ describe('ReactDOMForm', () => {
   let Scheduler;
   let assertLog;
   let assertConsoleErrorDev;
-  let waitForMicrotasks;
   let waitForThrow;
   let useState;
   let Suspense;
@@ -56,7 +55,6 @@ describe('ReactDOMForm', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
-    waitForMicrotasks = require('internal-test-utils').waitForMicrotasks;
     waitForThrow = require('internal-test-utils').waitForThrow;
     assertConsoleErrorDev =
       require('internal-test-utils').assertConsoleErrorDev;
@@ -1672,36 +1670,35 @@ describe('ReactDOMForm', () => {
     expect(divRef.current.textContent).toEqual('Current username: acdlite');
   });
 
-  it('multiple form submissions in rapid succession do not throw', async () => {
+  it('parallel form submissions do not throw', async () => {
     const formRef = React.createRef();
-    let actionCounter = 0;
+    let resolve = null;
     function App() {
-      // This is a userspace action. it must take a non-zero amount of time to
-      // allow the form to be submitted again before the first one finishes.
-      // Otherwise, the form transitions will be batched and will not run sepereately.
       async function submitForm() {
-        actionCounter++;
-        return new Promise(res => setTimeout(res, 1));
+        Scheduler.log('Action');
+        if (!resolve) {
+          await new Promise(res => {
+            resolve = res;
+          });
+        }
       }
-
-      return (
-        <>
-          <form ref={formRef} action={submitForm}>
-            <button type="submit">Submit</button>
-          </form>
-        </>
-      );
+      return <form ref={formRef} action={submitForm} />;
     }
-
     const root = ReactDOMClient.createRoot(container);
     await act(() => root.render(<App />));
 
+    // Start first form submission
     await act(async () => {
       formRef.current.requestSubmit();
-      await waitForMicrotasks();
-      formRef.current.requestSubmit();
     });
-    expect(actionCounter).toBe(2);
+    assertLog(['Action']);
+
+    // Submit form again while first form action is still pending
+    await act(async () => {
+      formRef.current.requestSubmit();
+      resolve(); // Resolve the promise to allow the first form action to complete
+    });
+    assertLog(['Action']);
   });
 
   it(
