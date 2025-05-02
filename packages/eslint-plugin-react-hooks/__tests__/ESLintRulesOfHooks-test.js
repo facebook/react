@@ -34,12 +34,31 @@ function normalizeIndent(strings) {
 // }
 // ***************************************************
 
-const tests = {
+const allTests = {
   valid: [
     {
       code: normalizeIndent`
         // Valid because components can use hooks.
         function ComponentWithHook() {
+          useHook();
+        }
+      `,
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax
+        component Button() {
+          useHook();
+          return <div>Button!</div>;
+        }
+      `,
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Hook syntax
+        hook useSampleHook() {
           useHook();
         }
       `,
@@ -563,6 +582,28 @@ const tests = {
     },
   ],
   invalid: [
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        component Button(cond: boolean) {
+          if (cond) {
+            useConditionalHook();
+          }
+        }
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        hook useTest(cond: boolean) {
+          if (cond) {
+            useConditionalHook();
+          }
+        }
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
     {
       code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
@@ -1287,8 +1328,8 @@ const tests = {
 };
 
 if (__EXPERIMENTAL__) {
-  tests.valid = [
-    ...tests.valid,
+  allTests.valid = [
+    ...allTests.valid,
     {
       code: normalizeIndent`
         // Valid because functions created with useEffectEvent can be called in a useEffect.
@@ -1385,8 +1426,8 @@ if (__EXPERIMENTAL__) {
       `,
     },
   ];
-  tests.invalid = [
-    ...tests.invalid,
+  allTests.invalid = [
+    ...allTests.invalid,
     {
       code: normalizeIndent`
         function MyComponent({ theme }) {
@@ -1536,7 +1577,7 @@ function asyncComponentHookError(fn) {
 if (!process.env.CI) {
   let only = [];
   let skipped = [];
-  [...tests.valid, ...tests.invalid].forEach(t => {
+  [...allTests.valid, ...allTests.invalid].forEach(t => {
     if (t.skip) {
       delete t.skip;
       skipped.push(t);
@@ -1555,9 +1596,22 @@ if (!process.env.CI) {
     }
     return true;
   };
-  tests.valid = tests.valid.filter(predicate);
-  tests.invalid = tests.invalid.filter(predicate);
+  allTests.valid = allTests.valid.filter(predicate);
+  allTests.invalid = allTests.invalid.filter(predicate);
 }
+
+function filteredTests(predicate) {
+  return {
+    valid: allTests.valid.filter(predicate),
+    invalid: allTests.invalid.filter(predicate),
+  };
+}
+
+const flowTests = filteredTests(t => t.syntax == null || t.syntax === 'flow');
+const tests = filteredTests(t => t.syntax !== 'flow');
+
+allTests.valid.forEach(t => delete t.syntax);
+allTests.invalid.forEach(t => delete t.syntax);
 
 describe('rules-of-hooks/rules-of-hooks', () => {
   const parserOptionsV7 = {
@@ -1593,6 +1647,25 @@ describe('rules-of-hooks/rules-of-hooks', () => {
     ReactHooksESLintRule,
     tests
   );
+
+  new ESLintTesterV7({
+    parser: require.resolve('hermes-eslint'),
+    parserOptions: {
+      sourceType: 'module',
+      enableExperimentalComponentSyntax: true,
+    },
+  }).run('eslint: v7, parser: hermes-eslint', ReactHooksESLintRule, flowTests);
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('hermes-eslint'),
+      parserOptions: {
+        sourceType: 'module',
+        enableExperimentalComponentSyntax: true,
+      },
+    },
+  }).run('eslint: v9, parser: hermes-eslint', ReactHooksESLintRule, flowTests);
 
   new ESLintTesterV7({
     parser: require.resolve('@typescript-eslint/parser-v2'),
