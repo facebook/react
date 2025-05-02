@@ -1,5 +1,11 @@
 import * as babel from '@babel/core';
 import puppeteer from 'puppeteer';
+// @ts-ignore
+import * as babelPresetTypescript from '@babel/preset-typescript';
+// @ts-ignore
+import * as babelPresetEnv from '@babel/preset-env';
+// @ts-ignore
+import * as babelPresetReact from '@babel/preset-react';
 
 type PerformanceResults = {
   renderTime: number;
@@ -25,15 +31,11 @@ export async function measurePerformance(
   code: string,
   iterations: number,
 ): Promise<PerformanceResults> {
-  const babelOptions = {
+  const babelOptions: babel.TransformOptions = {
     filename: 'anonymous.tsx',
     configFile: false,
     babelrc: false,
-    presets: [
-      '@babel/preset-typescript',
-      '@babel/preset-env',
-      '@babel/preset-react',
-    ],
+    presets: [babelPresetTypescript, babelPresetEnv, babelPresetReact],
   };
 
   const parsed = await babel.parseAsync(code, babelOptions);
