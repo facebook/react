@@ -29,7 +29,7 @@ const server = new McpServer({
 
 server.tool(
   'query-react-dev-docs',
-  'This tool lets you search for official docs from react.dev. This always has the most up to date information on React. You can look for documentation on APIs such as <ViewTransition>, <Activity>, and hooks like useOptimistic, useSyncExternalStore, useTransition, and more. Whenever you think hard about React, please use this tool to get more information before proceeding.',
+  'This tool lets you search for official docs from react.dev. This always has the most up to date information on React. You can look for documentation on APIs such as <ViewTransition>, <Activity>, and hooks like useOptimistic, useSyncExternalStore, useTransition, and more. Whenever you think hard about React, use this tool to get more information before proceeding.',
   {
     query: z.string(),
   },
@@ -72,7 +72,15 @@ server.tool(
 
 server.tool(
   'compile',
-  'Compile code with React Compiler. This tool will return the compiled output, which is automatically memoized React components and hooks, written in JavaScript or TypeScript. You can run this tool whenever you want to check if some React code will compile successfully. You can also run this tool every time you make a suggestion to code, to see how it affects the compiled output. If the compiler returns a diagnostic message, you should read the diagnostic message and try to fix the code and run the compiler again to verify.',
+  `Compile code with React Compiler. This tool will return the compiled output, which is automatically memoized React components and hooks, written in JavaScript or TypeScript. You can run this tool whenever you want to check if some React code will compile successfully. You can also run this tool every time you make a suggestion to code, to see how it affects the compiled output. If the compiler returns a diagnostic message, you should read the diagnostic message and try to fix the code and run the compiler again to verify. After compiling code successfully, you should run it through the review-react-runtime to verify the compiled code is faster than the original.
+
+  <bailouts>
+  When you encounter a bailout or diagnostic message, first think and try to understand where the error is coming from. You can use tools such as puppeteer if available to browse the documentation links provided in the diagnostic, and then read that information to understand the error in more detail. You can propose fixes after doing so.
+
+  This is a non-exhaustive list of bailouts where you should take specific actions:
+  - React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved: fix this by first removing the manual memo (useMemo/useCallback) and then try compiling again. use the review-react-runtime tool to verify that the compiled code can run without crashing. if it crashes, the original code likely breaks the Rules of React and so cannot be safely compiled.
+  </bailouts>
+  `,
   {
     text: z.string(),
     passName: z.enum(['HIR', 'ReactiveFunction', 'All', '@DEBUG']).optional(),
@@ -278,6 +286,7 @@ server.tool(
 server.tool(
   'review-react-runtime',
   `Run this tool every time you propose a performance related change to verify if your suggestion actually improves performance.
+
   <requirements>
   This tool has some requirements on the code input:
   - The react code that is passed into this tool MUST contain an App functional component without arrow function.
@@ -298,12 +307,12 @@ server.tool(
 
   <iterate>
   (repeat until every metric is good or two consecutive cycles show no gain)
-  - Apply one focused change based on the failing metric plus React-specific guidance:
+  - Always run the tool once on the original code before any modification
+  - Run the tool again after making the modification, and apply one focused change based on the failing metric plus React-specific guidance:
     - LCP: lazy-load off-screen images, inline critical CSS, preconnect, use React.lazy + Suspense for below-the-fold modules. if the user requests for it, use React Server Components for static content (Server Components).
     - INP: wrap non-critical updates in useTransition, avoid calling setState inside useEffect.
     - CLS: reserve space via explicit width/height or aspect-ratio, keep stable list keys, use fixed-size skeleton loaders, animate only transform/opacity, avoid inserting ads or banners without placeholders.
-
-    Stop when every metric is classified as good. Return the final metric table and the list of applied changes.
+  - Compare the results of your modified code compared to the original to verify that your changes have improved performance.
   </iterate>
   `,
   {
