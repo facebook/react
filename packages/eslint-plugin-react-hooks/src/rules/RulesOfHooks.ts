@@ -9,6 +9,9 @@
 import type {Rule, Scope} from 'eslint';
 import type {CallExpression, DoWhileStatement, Node} from 'estree';
 
+// @ts-expect-error untyped module
+import CodePathAnalyzer from '../code-path-analysis/code-path-analyzer';
+
 /**
  * Catch all identifiers that begin with "use" followed by an uppercase Latin
  * character to exclude identifiers like "user".
@@ -184,9 +187,25 @@ const rule = {
             return getSourceCode().getScope(node);
           };
 
-    return {
+    function hasFlowSuppression(node: Node, suppression: string) {
+      const sourceCode = getSourceCode();
+      const comments = sourceCode.getAllComments();
+      const flowSuppressionRegex = new RegExp(
+        '\\$FlowFixMe\\[' + suppression + '\\]',
+      );
+      return comments.some(
+        commentNode =>
+          flowSuppressionRegex.test(commentNode.value) &&
+          commentNode.loc != null &&
+          node.loc != null &&
+          commentNode.loc.end.line === node.loc.start.line - 1,
+      );
+    }
+
+    const analyzer = new CodePathAnalyzer({
       // Maintain code segment path stack as we traverse.
-      onCodePathSegmentStart: segment => codePathSegmentStack.push(segment),
+      onCodePathSegmentStart: (segment: Rule.CodePathSegment) =>
+        codePathSegmentStack.push(segment),
       onCodePathSegmentEnd: () => codePathSegmentStack.pop(),
 
       // Maintain code path stack as we traverse.
@@ -199,7 +218,7 @@ const rule = {
       //
       // Everything is ok if all React Hooks are both reachable from the initial
       // segment and reachable from every final segment.
-      onCodePathEnd(codePath, codePathNode) {
+      onCodePathEnd(codePath: any, codePathNode: Node) {
         const reactHooksMap = codePathReactHooksMapStack.pop();
         if (reactHooksMap?.size === 0) {
           return;
@@ -508,6 +527,11 @@ const rule = {
           const cycled = cyclic.has(segment.id);
 
           for (const hook of reactHooks) {
+            // Skip reporting if this hook already has a relevant flow suppression.
+            if (hasFlowSuppression(hook, 'react-rule-hook')) {
+              continue;
+            }
+
             // Report an error if a hook may be called more then once.
             // `use(...)` can be called in loops.
             if (
@@ -611,6 +635,16 @@ const rule = {
           }
         }
       },
+    });
+
+    return {
+      '*'(node: any) {
+        analyzer.enterNode(node);
+      },
+
+      '*:exit'(node: any) {
+        analyzer.leaveNode(node);
+      },
 
       // Missed opportunity...We could visit all `Identifier`s instead of all
       // `CallExpression`s and check that _every use_ of a hook name is valid.
@@ -696,6 +730,10 @@ const rule = {
 
 function getFunctionName(node: Node) {
   if (
+    // @ts-expect-error parser-hermes produces these node types
+    node.type === 'ComponentDeclaration' ||
+    // @ts-expect-error parser-hermes produces these node types
+    node.type === 'HookDeclaration' ||
     node.type === 'FunctionDeclaration' ||
     (node.type === 'FunctionExpression' && node.id)
   ) {
