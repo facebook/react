@@ -7,12 +7,7 @@
 
 // Imports are resolved statically by the closure compiler in release bundles
 // and by rollup in jest unit tests
-import {
-  clientRenderBoundary,
-  completeBoundaryWithStyles,
-  completeBoundary,
-  completeSegment,
-} from './fizz-instruction-set/ReactDOMFizzInstructionSetExternalRuntime';
+import './fizz-instruction-set/ReactDOMFizzInstructionSetExternalRuntime';
 
 if (document.body != null) {
   if (document.readyState === 'loading') {
@@ -82,7 +77,7 @@ function handleNode(node_: Node) {
   const node = (node_: HTMLElement);
   const dataset = node.dataset;
   if (dataset['rxi'] != null) {
-    clientRenderBoundary(
+    window['$RX'](
       dataset['bid'],
       dataset['dgst'],
       dataset['msg'],
@@ -92,17 +87,13 @@ function handleNode(node_: Node) {
     node.remove();
   } else if (dataset['rri'] != null) {
     // Convert styles here, since its type is Array<Array<string>>
-    completeBoundaryWithStyles(
-      dataset['bid'],
-      dataset['sid'],
-      JSON.parse(dataset['sty']),
-    );
+    window['$RR'](dataset['bid'], dataset['sid'], JSON.parse(dataset['sty']));
     node.remove();
   } else if (dataset['rci'] != null) {
-    completeBoundary(dataset['bid'], dataset['sid']);
+    window['$RC'](dataset['bid'], dataset['sid']);
     node.remove();
   } else if (dataset['rsi'] != null) {
-    completeSegment(dataset['sid'], dataset['pid']);
+    window['$RS'](dataset['sid'], dataset['pid']);
     node.remove();
   }
 }
