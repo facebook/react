@@ -6,8 +6,9 @@ export async function measurePerformance(code: string) {
     configFile: false,
     babelrc: false,
     presets: [
-      require.resolve('@babel/preset-env'),
-      require.resolve('@babel/preset-react'),
+      '@babel/preset-typescript',
+      '@babel/preset-env',
+      '@babel/preset-react',
     ],
   };
 
