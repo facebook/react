@@ -20,7 +20,7 @@ import * as cheerio from 'cheerio';
 import {queryAlgolia} from './utils/algolia';
 import assertExhaustive from './utils/assertExhaustive';
 import {convert} from 'html-to-text';
-import {measurePerformance} from './utils/runtimePerf';
+import {measurePerformance} from './tools/runtimePerf';
 
 const server = new McpServer({
   name: 'React',
