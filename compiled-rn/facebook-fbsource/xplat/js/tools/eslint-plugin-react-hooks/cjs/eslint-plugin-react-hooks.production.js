@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<f11eb95927bcf6e5fc0334e2cf2e1714>>
+ * @generated SignedSource<<5876f8f9bad1e2aba5245215e0e99617>>
  */
 
 'use strict';
@@ -49790,7 +49790,7 @@ class ReactiveScopeDependencyTreeHIR {
             depCursor = nextDepCursor;
             hoistableCursor = nextHoistableCursor;
         }
-        depCursor.accessType = merge(depCursor.accessType, PropertyAccessType.OptionalDependency);
+        depCursor.accessType = merge$1(depCursor.accessType, PropertyAccessType.OptionalDependency);
     }
     deriveMinimalDependencies() {
         const results = new Set();
@@ -49848,7 +49848,7 @@ function isDependency(access) {
     return (access === PropertyAccessType.OptionalDependency ||
         access === PropertyAccessType.UnconditionalDependency);
 }
-function merge(access1, access2) {
+function merge$1(access1, access2) {
     const resultIsUnconditional = !(isOptional(access1) && isOptional(access2));
     const resultIsDependency = isDependency(access1) || isDependency(access2);
     if (resultIsUnconditional) {
@@ -49905,7 +49905,7 @@ function makeOrMergeProperty(node, property, accessType) {
         node.properties.set(property, child);
     }
     else {
-        child.accessType = merge(child.accessType, accessType);
+        child.accessType = merge$1(child.accessType, accessType);
     }
     return child;
 }
@@ -53099,6 +53099,17 @@ function validatePreservedManualMemoization(fn) {
     visitReactiveFunction(fn, new Visitor(), state);
     return state.errors.asResult();
 }
+function prettyPrintScopeDependency(val) {
+    var _a;
+    let rootStr;
+    if (((_a = val.identifier.name) === null || _a === void 0 ? void 0 : _a.kind) === 'named') {
+        rootStr = val.identifier.name.value;
+    }
+    else {
+        rootStr = '[unnamed]';
+    }
+    return `${rootStr}${val.path.map(v => `${v.optional ? '?.' : '.'}${v.property}`).join('')}`;
+}
 var CompareDependencyResult;
 (function (CompareDependencyResult) {
     CompareDependencyResult[CompareDependencyResult["Ok"] = 0] = "Ok";
@@ -53107,6 +53118,22 @@ var CompareDependencyResult;
     CompareDependencyResult[CompareDependencyResult["Subpath"] = 3] = "Subpath";
     CompareDependencyResult[CompareDependencyResult["RefAccessDifference"] = 4] = "RefAccessDifference";
 })(CompareDependencyResult || (CompareDependencyResult = {}));
+function merge(a, b) {
+    return Math.max(a, b);
+}
+function getCompareDependencyResultDescription(result) {
+    switch (result) {
+        case CompareDependencyResult.Ok:
+            return 'Dependencies equal';
+        case CompareDependencyResult.RootDifference:
+        case CompareDependencyResult.PathDifference:
+            return 'Inferred different dependency than source';
+        case CompareDependencyResult.RefAccessDifference:
+            return 'Differences in ref.current access';
+        case CompareDependencyResult.Subpath:
+            return 'Inferred less specific property than source';
+    }
+}
 function compareDeps(inferred, source) {
     const rootsEqual = (inferred.root.kind === 'Global' &&
         source.root.kind === 'Global' &&
@@ -53184,16 +53211,26 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
             return;
         }
     }
+    let errorDiagnostic = null;
     for (const originalDep of validDepsInMemoBlock) {
         const compareResult = compareDeps(normalizedDep, originalDep);
         if (compareResult === CompareDependencyResult.Ok) {
             return;
         }
+        else {
+            errorDiagnostic = merge(errorDiagnostic !== null && errorDiagnostic !== void 0 ? errorDiagnostic : compareResult, compareResult);
+        }
     }
     errorState.push({
         severity: ErrorSeverity.CannotPreserveMemoization,
         reason: 'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected',
-        description: null,
+        description: (dep.identifier.name != null && dep.identifier.name.kind === 'named')
+            ? `The inferred dependency was \`${prettyPrintScopeDependency(dep)}\`, but the source dependencies were [${validDepsInMemoBlock
+                .map(dep => printManualMemoDependency(dep, true))
+                .join(', ')}]. ${errorDiagnostic
+                ? getCompareDependencyResultDescription(errorDiagnostic)
+                : 'Inferred dependency not present in source'}`
+            : null,
         loc: memoLocation,
         suggestions: null,
     });
