@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<85ddb959da36c41b641d547b23d8c4d2>>
+ * @generated SignedSource<<f9961130cb61925c3f0f46d93c0b7e60>>
  */
 
 'use strict';
@@ -17793,6 +17793,11 @@ function isUseStateType(id) {
 function isRefOrRefValue(id) {
     return isUseRefType(id) || isRefValueType(id);
 }
+function isRefOrRefLikeMutableType(type) {
+    return (type.kind === 'Object' &&
+        (type.shapeId === 'BuiltInUseRefId' ||
+            type.shapeId == 'ReanimatedSharedValueId'));
+}
 function isSetStateType(id) {
     return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetState';
 }
@@ -29585,6 +29590,8 @@ const BuiltInPropsId = 'BuiltInProps';
 const BuiltInArrayId = 'BuiltInArray';
 const BuiltInSetId = 'BuiltInSet';
 const BuiltInMapId = 'BuiltInMap';
+const BuiltInWeakSetId = 'BuiltInWeakSet';
+const BuiltInWeakMapId = 'BuiltInWeakMap';
 const BuiltInFunctionId = 'BuiltInFunction';
 const BuiltInJsxId = 'BuiltInJsx';
 const BuiltInObjectId = 'BuiltInObject';
@@ -29606,6 +29613,7 @@ const BuiltInUseTransitionId = 'BuiltInUseTransition';
 const BuiltInStartTransitionId = 'BuiltInStartTransition';
 const BuiltInFireId = 'BuiltInFire';
 const BuiltInFireFunctionId = 'BuiltInFireFunction';
+const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
 const BUILTIN_SHAPES = new Map();
 addObject(BUILTIN_SHAPES, BuiltInPropsId, [
     ['ref', { kind: 'Object', shapeId: BuiltInUseRefId }],
@@ -30021,6 +30029,80 @@ addObject(BUILTIN_SHAPES, BuiltInMapId, [
             restParam: null,
             returnType: { kind: 'Poly' },
             calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+]);
+addObject(BUILTIN_SHAPES, BuiltInWeakSetId, [
+    [
+        'add',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Capture],
+            restParam: null,
+            returnType: { kind: 'Object', shapeId: BuiltInWeakSetId },
+            calleeEffect: Effect.Store,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    [
+        'delete',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Store,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+    [
+        'has',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+]);
+addObject(BUILTIN_SHAPES, BuiltInWeakMapId, [
+    [
+        'delete',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Store,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+    [
+        'get',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Capture,
+            returnValueKind: ValueKind.Mutable,
+        }),
+    ],
+    [
+        'has',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Read],
+            restParam: null,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Primitive,
+        }),
+    ],
+    [
+        'set',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [Effect.Capture, Effect.Capture],
+            restParam: null,
+            returnType: { kind: 'Object', shapeId: BuiltInWeakMapId },
+            calleeEffect: Effect.Store,
             returnValueKind: ValueKind.Mutable,
         }),
     ],
@@ -37958,6 +38040,26 @@ const TYPED_GLOBALS = [
             returnValueKind: ValueKind.Mutable,
         }, null, true),
     ],
+    [
+        'WeakMap',
+        addFunction(DEFAULT_SHAPES, [], {
+            positionalParams: [Effect.ConditionallyMutateIterator],
+            restParam: null,
+            returnType: { kind: 'Object', shapeId: BuiltInWeakMapId },
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Mutable,
+        }, null, true),
+    ],
+    [
+        'WeakSet',
+        addFunction(DEFAULT_SHAPES, [], {
+            positionalParams: [Effect.ConditionallyMutateIterator],
+            restParam: null,
+            returnType: { kind: 'Object', shapeId: BuiltInWeakSetId },
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Mutable,
+        }, null, true),
+    ],
 ];
 const REACT_APIS = [
     [
@@ -38283,7 +38385,7 @@ function getReanimatedModuleType(registry) {
             addHook(registry, {
                 positionalParams: [],
                 restParam: Effect.Freeze,
-                returnType: { kind: 'Poly' },
+                returnType: { kind: 'Object', shapeId: ReanimatedSharedValueId },
                 returnValueKind: ValueKind.Mutable,
                 noAlias: true,
                 calleeEffect: Effect.Read,
@@ -38427,6 +38529,7 @@ const EnvironmentConfigSchema = zod.z.object({
     validateNoCapitalizedCalls: zod.z.nullable(zod.z.array(zod.z.string())).default(null),
     validateBlocklistedImports: zod.z.nullable(zod.z.array(zod.z.string())).default(null),
     validateNoImpureFunctionsInRender: zod.z.boolean().default(false),
+    validateNoFreezingKnownMutableFunctions: zod.z.boolean().default(false),
     enableAssumeHooksFollowRulesOfReact: zod.z.boolean().default(true),
     enableTransitivelyFreezeFunctionExpressions: zod.z.boolean().default(true),
     enableEmitFreeze: ExternalFunctionSchema.nullable().default(null),
@@ -48390,6 +48493,49 @@ class RewriteBlockIds extends ReactiveFunctionVisitor {
     }
 }
 
+function inferAliasForUncalledFunctions(fn, aliases) {
+    var _a;
+    for (const block of fn.body.blocks.values()) {
+        instrs: for (const instr of block.instructions) {
+            const { lvalue, value } = instr;
+            if (value.kind !== 'ObjectMethod' &&
+                value.kind !== 'FunctionExpression') {
+                continue;
+            }
+            const range = lvalue.identifier.mutableRange;
+            if (range.end > range.start + 1) {
+                continue;
+            }
+            for (const operand of eachInstructionValueOperand(value)) {
+                if (isMutable(instr, operand)) {
+                    continue instrs;
+                }
+            }
+            const operands = new Set();
+            for (const effect of (_a = value.loweredFunc.func.effects) !== null && _a !== void 0 ? _a : []) {
+                if (effect.kind !== 'ContextMutation') {
+                    continue;
+                }
+                if (effect.effect === Effect.Store || effect.effect === Effect.Mutate) {
+                    for (const operand of effect.places) {
+                        if (isMutableEffect(operand.effect, operand.loc) &&
+                            !isRefOrRefLikeMutableType(operand.identifier.type)) {
+                            operands.add(operand.identifier);
+                        }
+                    }
+                }
+            }
+            if (operands.size !== 0) {
+                operands.add(lvalue.identifier);
+                aliases.union([...operands]);
+                for (const operand of operands) {
+                    operand.mutableRange.end = makeInstructionId(instr.id + 1);
+                }
+            }
+        }
+    }
+}
+
 function inferAliases(func) {
     const aliases = new DisjointSet();
     for (const [_, block] of func.body.blocks) {
@@ -48631,6 +48777,7 @@ function inferMutableRanges(ir) {
     while (true) {
         inferMutableRangesForAlias(ir, aliases);
         inferAliasForPhis(ir, aliases);
+        inferAliasForUncalledFunctions(ir, aliases);
         const nextAliases = aliases.canonicalize();
         if (areEqualMaps(prevAliases, nextAliases)) {
             break;
@@ -55141,6 +55288,76 @@ function validateStaticComponents(fn) {
     return error.asResult();
 }
 
+function validateNoFreezingKnownMutableFunctions(fn) {
+    var _a;
+    const errors = new CompilerError();
+    const contextMutationEffects = new Map();
+    function visitOperand(operand) {
+        if (operand.effect === Effect.Freeze) {
+            const effect = contextMutationEffects.get(operand.identifier.id);
+            if (effect != null) {
+                errors.push({
+                    reason: `This argument is a function which modifies local variables when called, which can bypass memoization and cause the UI not to update`,
+                    description: `Functions that are returned from hooks, passed as arguments to hooks, or passed as props to components may not mutate local variables`,
+                    loc: operand.loc,
+                    severity: ErrorSeverity.InvalidReact,
+                });
+                errors.push({
+                    reason: `The function modifies a local variable here`,
+                    loc: effect.loc,
+                    severity: ErrorSeverity.InvalidReact,
+                });
+            }
+        }
+    }
+    for (const block of fn.body.blocks.values()) {
+        for (const instr of block.instructions) {
+            const { lvalue, value } = instr;
+            switch (value.kind) {
+                case 'LoadLocal': {
+                    const effect = contextMutationEffects.get(value.place.identifier.id);
+                    if (effect != null) {
+                        contextMutationEffects.set(lvalue.identifier.id, effect);
+                    }
+                    break;
+                }
+                case 'StoreLocal': {
+                    const effect = contextMutationEffects.get(value.value.identifier.id);
+                    if (effect != null) {
+                        contextMutationEffects.set(lvalue.identifier.id, effect);
+                        contextMutationEffects.set(value.lvalue.place.identifier.id, effect);
+                    }
+                    break;
+                }
+                case 'FunctionExpression': {
+                    const knownMutation = ((_a = value.loweredFunc.func.effects) !== null && _a !== void 0 ? _a : []).find(effect => {
+                        return (effect.kind === 'ContextMutation' &&
+                            (effect.effect === Effect.Store ||
+                                effect.effect === Effect.Mutate) &&
+                            Iterable_some(effect.places, place => {
+                                return (isMutableEffect(place.effect, place.loc) &&
+                                    !isRefOrRefLikeMutableType(place.identifier.type));
+                            }));
+                    });
+                    if (knownMutation && knownMutation.kind === 'ContextMutation') {
+                        contextMutationEffects.set(lvalue.identifier.id, knownMutation);
+                    }
+                    break;
+                }
+                default: {
+                    for (const operand of eachInstructionValueOperand(value)) {
+                        visitOperand(operand);
+                    }
+                }
+            }
+        }
+        for (const operand of eachTerminalOperand(block.terminal)) {
+            visitOperand(operand);
+        }
+    }
+    return errors.asResult();
+}
+
 function run(func, config, fnType, mode, programContext, logger, filename, code) {
     var _a, _b;
     const contextIdentifiers = findContextIdentifiers(func);
@@ -55244,6 +55461,9 @@ function runWithEnvironment(func, env) {
         }
         if (env.config.validateNoImpureFunctionsInRender) {
             validateNoImpureFunctionsInRender(hir).unwrap();
+        }
+        if (env.config.validateNoFreezingKnownMutableFunctions) {
+            validateNoFreezingKnownMutableFunctions(hir).unwrap();
         }
     }
     inferReactivePlaces(hir);
