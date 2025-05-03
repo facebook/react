@@ -37,7 +37,7 @@ import {
 import {FunctionSignature} from '../HIR/ObjectShape';
 import {
   printIdentifier,
-  printMixedHIR,
+  printInstructionValue,
   printPlace,
   printSourceLocation,
 } from '../HIR/PrintHIR';
@@ -669,7 +669,14 @@ class InferenceState {
     }
     for (const [value, kind] of this.#values) {
       const id = identify(value);
-      result.values[id] = {kind, value: printMixedHIR(value)};
+      result.values[id] = {
+        abstract: {
+          kind: kind.kind,
+          context: [...kind.context].map(printPlace),
+          reason: [...kind.reason],
+        },
+        value: printInstructionValue(value),
+      };
     }
     for (const [variable, values] of this.#variables) {
       result.variables[`$${variable}`] = [...values].map(identify);
@@ -1844,11 +1851,11 @@ function getContextRefOperand(
 ): Array<Place> {
   const result = [];
   for (const place of eachInstructionValueOperand(instrValue)) {
-    if (
-      state.isDefined(place) &&
-      state.kind(place).kind === ValueKind.Context
-    ) {
-      result.push(place);
+    if (state.isDefined(place)) {
+      const kind = state.kind(place);
+      if (kind.kind === ValueKind.Context) {
+        result.push(...kind.context);
+      }
     }
   }
   return result;
