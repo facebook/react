@@ -121,6 +121,21 @@ export function Set_intersect<T>(sets: Array<ReadonlySet<T>>): Set<T> {
   return result;
 }
 
+/**
+ * @returns `true` if `a` is a superset of `b`.
+ */
+export function Set_isSuperset<T>(
+  a: ReadonlySet<T>,
+  b: ReadonlySet<T>,
+): boolean {
+  for (const v of b) {
+    if (!a.has(v)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function Iterable_some<T>(
   iter: Iterable<T>,
   pred: (item: T) => boolean,
@@ -131,6 +146,19 @@ export function Iterable_some<T>(
     }
   }
   return false;
+}
+
+export function Iterable_filter<T>(
+  iter: Iterable<T>,
+  pred: (item: T) => boolean,
+): Array<T> {
+  const result: Array<T> = [];
+  for (const item of iter) {
+    if (pred(item)) {
+      result.push(item);
+    }
+  }
+  return result;
 }
 
 export function nonNull<T extends NonNullable<U>, U>(
