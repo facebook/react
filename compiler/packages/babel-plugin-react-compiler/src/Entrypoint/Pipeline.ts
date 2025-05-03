@@ -103,6 +103,7 @@ import {transformFire} from '../Transform';
 import {validateNoImpureFunctionsInRender} from '../Validation/ValidateNoImpureFunctionsInRender';
 import {CompilerError} from '..';
 import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
+import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -273,6 +274,10 @@ function runWithEnvironment(
 
     if (env.config.validateNoImpureFunctionsInRender) {
       validateNoImpureFunctionsInRender(hir).unwrap();
+    }
+
+    if (env.config.validateNoFreezingKnownMutableFunctions) {
+      validateNoFreezingKnownMutableFunctions(hir).unwrap();
     }
   }
 
