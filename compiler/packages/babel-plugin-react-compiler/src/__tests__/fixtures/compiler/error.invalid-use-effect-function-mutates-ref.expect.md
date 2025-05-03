@@ -36,23 +36,13 @@ function Component() {
 ## Error
 
 ```
-  18 |   );
-  19 |   const ref = useRef(null);
-> 20 |   useEffect(() => {
-     |             ^^^^^^^
-> 21 |     if (ref.current === null) {
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 22 |       update();
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 23 |     }
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 24 |   }, [update]);
-     | ^^^^ InvalidReact: This argument is a function which modifies local variables when called, which can bypass memoization and cause the UI not to update. Functions that are returned from hooks, passed as arguments to hooks, or passed as props to components may not mutate local variables (20:24)
-
-InvalidReact: The function modifies a local variable here (14:14)
-  25 |
-  26 |   return 'ok';
-  27 | }
+  12 |         ...partialParams,
+  13 |       };
+> 14 |       nextParams.param = 'value';
+     |       ^^^^^^^^^^ InvalidReact: Mutating a value returned from a function whose return value should not be mutated. Found mutation of `params` (14:14)
+  15 |       console.log(nextParams);
+  16 |     },
+  17 |     [params]
 ```
           
       
