@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<324e2b6f51fe0b8c1b4b81d5b67dc594>>
+ * @generated SignedSource<<779cdaf32b30e64c4329b58f093932c0>>
  */
 
 'use strict';
@@ -44577,7 +44577,7 @@ function codegenInstructionValue(cx, instrValue) {
     }
     return value;
 }
-const STRING_REQUIRES_EXPR_CONTAINER_PATTERN = /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}]|"|\\/u;
+const STRING_REQUIRES_EXPR_CONTAINER_PATTERN = /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}\u{010000}-\u{10FFFF}]|"|\\/u;
 function codegenJsxAttribute(cx, attribute) {
     switch (attribute.kind) {
         case 'JsxAttribute': {

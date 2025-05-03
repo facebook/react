@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<cf1d40ae9b06db6474150ea3f2aec002>>
+ * @generated SignedSource<<f11eb95927bcf6e5fc0334e2cf2e1714>>
  */
 
 'use strict';
@@ -44356,7 +44356,7 @@ function codegenInstructionValue(cx, instrValue) {
     }
     return value;
 }
-const STRING_REQUIRES_EXPR_CONTAINER_PATTERN = /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}]|"|\\/u;
+const STRING_REQUIRES_EXPR_CONTAINER_PATTERN = /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}\u{010000}-\u{10FFFF}]|"|\\/u;
 function codegenJsxAttribute(cx, attribute) {
     switch (attribute.kind) {
         case 'JsxAttribute': {
