@@ -26,6 +26,7 @@ import {
   Place,
   promoteTemporary,
   promoteTemporaryJsxTag,
+  todoPopulateAliasingEffects,
 } from '../HIR/HIR';
 import {createTemporaryPlace} from '../HIR/HIRBuilder';
 import {printIdentifier} from '../HIR/PrintHIR';
@@ -297,6 +298,7 @@ function emitOutlinedJsx(
       },
       loc: GeneratedSource,
     },
+    effects: null,
   };
   promoteTemporaryJsxTag(loadJsx.lvalue.identifier);
   const jsxExpr: Instruction = {
@@ -312,6 +314,7 @@ function emitOutlinedJsx(
       openingLoc: GeneratedSource,
       closingLoc: GeneratedSource,
     },
+    effects: todoPopulateAliasingEffects(),
   };
 
   return [loadJsx, jsxExpr];
@@ -353,6 +356,7 @@ function emitOutlinedFn(
       kind: 'return',
       loc: GeneratedSource,
       value: instructions.at(-1)!.lvalue,
+      effects: null,
     },
     preds: new Set(),
     phis: new Set(),
@@ -366,6 +370,7 @@ function emitOutlinedFn(
     params: [propsObj],
     returnTypeAnnotation: null,
     returnType: makeType(),
+    returns: createTemporaryPlace(env, GeneratedSource),
     context: [],
     effects: null,
     body: {
@@ -517,6 +522,7 @@ function emitDestructureProps(
       loc: GeneratedSource,
       value: propsObj,
     },
+    effects: todoPopulateAliasingEffects(),
   };
   return destructurePropsInstr;
 }
