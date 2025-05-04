@@ -208,14 +208,12 @@ export function writePreambleStart(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
-  willFlushAllSegments: boolean,
   skipExpect?: boolean, // Used as an override by ReactFizzConfigMarkup
 ): void {
   return writePreambleStartImpl(
     destination,
     resumableState,
     renderState,
-    willFlushAllSegments,
     true, // skipExpect
   );
 }
@@ -224,6 +222,7 @@ export function writeCompletedRoot(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
+  isComplete: boolean,
 ): boolean {
   // Markup doesn't have any bootstrap scripts nor shell completions.
   return true;

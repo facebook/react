@@ -160,6 +160,61 @@ describe('ReactFlightDOMEdge', () => {
     });
   }
 
+  function dripStream(input) {
+    const reader = input.getReader();
+    let nextDrop = 0;
+    let controller = null;
+    let streamDone = false;
+    const buffer = [];
+    function flush() {
+      if (controller === null || nextDrop === 0) {
+        return;
+      }
+      while (buffer.length > 0 && nextDrop > 0) {
+        const nextChunk = buffer[0];
+        if (nextChunk.byteLength <= nextDrop) {
+          nextDrop -= nextChunk.byteLength;
+          controller.enqueue(nextChunk);
+          buffer.shift();
+          if (streamDone && buffer.length === 0) {
+            controller.done();
+          }
+        } else {
+          controller.enqueue(nextChunk.subarray(0, nextDrop));
+          buffer[0] = nextChunk.subarray(nextDrop);
+          nextDrop = 0;
+        }
+      }
+    }
+    const output = new ReadableStream({
+      start(c) {
+        controller = c;
+        async function pump() {
+          for (;;) {
+            const {value, done} = await reader.read();
+            if (done) {
+              streamDone = true;
+              break;
+            }
+            buffer.push(value);
+            flush();
+          }
+        }
+        pump();
+      },
+      pull() {},
+      cancel(reason) {
+        reader.cancel(reason);
+      },
+    });
+    function drip(n) {
+      nextDrop += n;
+      flush();
+    }
+
+    return [output, drip];
+  }
+
   async function readResult(stream) {
     const reader = stream.getReader();
     let result = '';
@@ -574,6 +629,67 @@ describe('ReactFlightDOMEdge', () => {
     const serializedContent = await readResult(stream);
     const expectedDebugInfoSize = __DEV__ ? 320 * 20 : 0;
     expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
+  });
+
+  it('should break up large sync components by outlining into streamable elements', async () => {
+    const paragraphs = [];
+    for (let i = 0; i < 20; i++) {
+      const text =
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris' +
+        'porttitor tortor ac lectus faucibus, eget eleifend elit hendrerit.' +
+        'Integer porttitor nisi in leo congue rutrum. Morbi sed ante posuere,' +
+        'aliquam lorem ac, imperdiet orci. Duis malesuada gravida pharetra. Cras' +
+        'facilisis arcu diam, id dictum lorem imperdiet a. Suspendisse aliquet' +
+        'tempus tortor et ultricies. Aliquam libero velit, posuere tempus ante' +
+        'sed, pellentesque tincidunt lorem. Nullam iaculis, eros a varius' +
+        'aliquet, tortor felis tempor metus, nec cursus felis eros aliquam nulla.' +
+        'Vivamus ut orci sed mauris congue lacinia. Cras eget blandit neque.' +
+        'Pellentesque a massa in turpis ullamcorper volutpat vel at massa. Sed' +
+        'ante est, auctor non diam non, vulputate ultrices metus. Maecenas dictum' +
+        'fermentum quam id aliquam. Donec porta risus vitae pretium posuere.' +
+        'Fusce facilisis eros in lacus tincidunt congue.' +
+        i; /* trick dedupe */
+      paragraphs.push(<p key={i}>{text}</p>);
+    }
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(paragraphs),
+    );
+
+    const [stream2, drip] = dripStream(stream);
+
+    // Allow some of the content through.
+    drip(5000);
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    // We should have resolved enough to be able to get the array even though some
+    // of the items inside are still lazy.
+    expect(result.length).toBe(20);
+
+    // Unblock the rest
+    drip(Infinity);
+
+    // Use the SSR render to resolve any lazy elements
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(result),
+    );
+    const html = await readResult(ssrStream);
+
+    const ssrStream2 = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(paragraphs),
+    );
+    const html2 = await readResult(ssrStream2);
+
+    expect(html).toBe(html2);
   });
 
   it('should be able to serialize any kind of typed array', async () => {

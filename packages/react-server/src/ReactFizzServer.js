@@ -404,7 +404,10 @@ function isEligibleForOutlining(
   request: Request,
   boundary: SuspenseBoundary,
 ): boolean {
-  return boundary.byteSize > request.progressiveChunkSize;
+  // For very small boundaries, don't bother producing a fallback for outlining.
+  // The larger this limit is, the more we can save on preparing fallbacks in case we end up
+  // outlining.
+  return boundary.byteSize > 500;
 }
 
 function defaultErrorHandler(error: mixed) {
@@ -4832,14 +4835,7 @@ function flushPreamble(
   preambleSegments: Array<Array<Segment>>,
 ) {
   // The preamble is ready.
-  const willFlushAllSegments =
-    request.allPendingTasks === 0 && request.trackedPostpones === null;
-  writePreambleStart(
-    destination,
-    request.resumableState,
-    request.renderState,
-    willFlushAllSegments,
-  );
+  writePreambleStart(destination, request.resumableState, request.renderState);
   for (let i = 0; i < preambleSegments.length; i++) {
     const segments = preambleSegments[i];
     for (let j = 0; j < segments.length; j++) {
@@ -4901,6 +4897,10 @@ function flushSubtree(
     }
   }
 }
+
+// Running count for how much bytes of boundaries have flushed inlined into the currently
+// flushing root or completed boundary.
+let flushedByteSize = 0;
 
 function flushSegment(
   request: Request,
@@ -4971,9 +4971,14 @@ function flushSegment(
     flushSubtree(request, destination, segment, hoistableState);
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
-  } else if (isEligibleForOutlining(request, boundary)) {
-    // This boundary is large and will be emitted separately so that we can progressively show
-    // other content. We add it to the queue during the flush because we have to ensure that
+  } else if (
+    isEligibleForOutlining(request, boundary) &&
+    flushedByteSize + boundary.byteSize > request.progressiveChunkSize
+  ) {
+    // Inlining this boundary would make the current sequence being written too large
+    // and block the parent for too long. Instead, it will be emitted separately so that we
+    // can progressively show other content.
+    // We add it to the queue during the flush because we have to ensure that
     // the parent flushes first so that there's something to inject it into.
     // We also have to make sure that it's emitted into the queue in a deterministic slot.
     // I.e. we can't insert it here when it completes.
@@ -4999,6 +5004,8 @@ function flushSegment(
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else {
+    // We're inlining this boundary so its bytes get counted to the current running count.
+    flushedByteSize += boundary.byteSize;
     if (hoistableState) {
       hoistHoistables(hoistableState, boundary.contentState);
     }
@@ -5071,6 +5078,7 @@ function flushCompletedBoundary(
   destination: Destination,
   boundary: SuspenseBoundary,
 ): boolean {
+  flushedByteSize = boundary.byteSize; // Start counting bytes
   const completedSegments = boundary.completedSegments;
   let i = 0;
   for (; i < completedSegments.length; i++) {
@@ -5098,6 +5106,7 @@ function flushPartialBoundary(
   destination: Destination,
   boundary: SuspenseBoundary,
 ): boolean {
+  flushedByteSize = boundary.byteSize; // Start counting bytes
   const completedSegments = boundary.completedSegments;
   let i = 0;
   for (; i < completedSegments.length; i++) {
@@ -5191,6 +5200,8 @@ function flushCompletedQueues(
         return;
       }
 
+      flushedByteSize = request.byteSize; // Start counting bytes
+      // TODO: Count the size of the preamble chunks too.
       flushPreamble(
         request,
         destination,
@@ -5199,10 +5210,18 @@ function flushCompletedQueues(
       );
       flushSegment(request, destination, completedRootSegment, null);
       request.completedRootSegment = null;
+      const isComplete =
+        request.allPendingTasks === 0 &&
+        request.clientRenderedBoundaries.length === 0 &&
+        request.completedBoundaries.length === 0 &&
+        (request.trackedPostpones === null ||
+          (request.trackedPostpones.rootNodes.length === 0 &&
+            request.trackedPostpones.rootSlots === null));
       writeCompletedRoot(
         destination,
         request.resumableState,
         request.renderState,
+        isComplete,
       );
     }
 
@@ -5275,7 +5294,6 @@ function flushCompletedQueues(
   } finally {
     if (
       request.allPendingTasks === 0 &&
-      request.pingedTasks.length === 0 &&
       request.clientRenderedBoundaries.length === 0 &&
       request.completedBoundaries.length === 0
       // We don't need to check any partially completed segments because
