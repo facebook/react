@@ -108,6 +108,7 @@ import {
   enableSuspenseyImages,
   enableSrcObject,
   enableViewTransition,
+  enableHydrationChangeEvent,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -611,6 +612,27 @@ export function finalizeInitialChildren(
   }
 }
 
+export function finalizeHydratedChildren(
+  domElement: Instance,
+  type: string,
+  props: Props,
+  hostContext: HostContext,
+): boolean {
+  // TOOD: Consider unifying this with hydrateInstance.
+  if (!enableHydrationChangeEvent) {
+    return false;
+  }
+  switch (type) {
+    case 'input':
+    case 'select':
+    case 'textarea':
+    case 'img':
+      return true;
+    default:
+      return false;
+  }
+}
+
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return (
     type === 'textarea' ||
@@ -817,6 +839,19 @@ export function commitMount(
       return;
     }
   }
+}
+
+export function commitHydratedInstance(
+  domElement: Instance,
+  type: string,
+  newProps: Props,
+  internalInstanceHandle: Object,
+): void {
+  // This fires in the commit phase if a hydrated instance needs to do further
+  // work in the commit phase. Similar to commitMount. However, this should not
+  // do things that would've already happened such as set auto focus since that
+  // would steal focus. It's only scheduled if finalizeHydratedChildren returns
+  // true.
 }
 
 export function commitUpdate(
