@@ -334,7 +334,6 @@ server.tool(
 ## Mean Render Time
 ${calculateMean(results.renderTime)}
 
-TEST: ${results.webVitals.inp}
 ## Mean Web Vitals
 - Cumulative Layout Shift (CLS): ${calculateMean(results.webVitals.cls)}
 - Largest Contentful Paint (LCP): ${calculateMean(results.webVitals.lcp)}
