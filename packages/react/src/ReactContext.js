@@ -17,8 +17,17 @@ import type {ReactContext} from 'shared/ReactTypes';
 import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
 export function createContext<T>(defaultValue: T): ReactContext<T> {
-  // TODO: Second argument used to be an optional `calculateChangedBits`
-  // function. Warn to reserve for future use?
+  // Second argument used to be an optional `calculateChangedBits` function
+  // We'll implement a runtime warning if it's provided
+  if (__DEV__) {
+    if (arguments.length > 1) {
+      console.warn(
+        'The second argument to createContext() is deprecated and will be ' +
+        'removed in a future major version. The calculateChangedBits parameter ' +
+        'is no longer used by React.'
+      );
+    }
+  }
 
   const context: ReactContext<T> = {
     $$typeof: REACT_CONTEXT_TYPE,
