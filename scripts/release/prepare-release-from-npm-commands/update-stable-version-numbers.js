@@ -9,7 +9,7 @@ const {join, relative} = require('path');
 const {confirm, execRead, printDiff} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, packages, version}, versionsMap) => {
+const run = async ({cwd, packages, version, ci}, versionsMap) => {
   const nodeModulesPath = join(cwd, 'build/node_modules');
 
   // Cache all package JSONs for easy lookup below.
@@ -107,25 +107,13 @@ const run = async ({cwd, packages, version}, versionsMap) => {
     printDependencies(packageJSON.dependencies, 'dependency');
     printDependencies(packageJSON.peerDependencies, 'peer');
   }
-  await confirm('Do the versions above look correct?');
+  if (ci !== true) {
+    await confirm('Do the versions above look correct?');
+  }
 
   clear();
 
   if (packages.includes('react')) {
-    // A separate "React version" is used for the embedded renderer version to support DevTools,
-    // since it needs to distinguish between different version ranges of React.
-    // We need to replace it as well as the "next" version number.
-    const buildInfoPath = join(nodeModulesPath, 'react', 'build-info.json');
-    const {reactVersion} = await readJson(buildInfoPath);
-
-    if (!reactVersion) {
-      console.error(
-        theme`{error Unsupported or invalid build metadata in} {path build/node_modules/react/build-info.json}` +
-          theme`{error . This could indicate that you have specified an outdated "next" version.}`
-      );
-      process.exit(1);
-    }
-
     // We print the diff to the console for review,
     // but it can be large so let's also write it to disk.
     const diffPath = join(cwd, 'build', 'temp.diff');
@@ -150,10 +138,6 @@ const run = async ({cwd, packages, version}, versionsMap) => {
         while (afterContents.indexOf(version) >= 0) {
           afterContents = afterContents.replace(version, newStableVersion);
         }
-        // Replace inline renderer version numbers (e.g. shared/ReactVersion).
-        while (afterContents.indexOf(reactVersion) >= 0) {
-          afterContents = afterContents.replace(reactVersion, newStableVersion);
-        }
         if (beforeContents !== afterContents) {
           numFilesModified++;
           // Using a relative path for diff helps with the snapshot test
@@ -167,7 +151,9 @@ const run = async ({cwd, packages, version}, versionsMap) => {
     console.log(
       theme`A full diff is available at {path ${relative(cwd, diffPath)}}.`
     );
-    await confirm('Do the changes above look correct?');
+    if (ci !== true) {
+      await confirm('Do the changes above look correct?');
+    }
   } else {
     console.log(
       theme`Skipping React renderer version update because React is not included in the release.`

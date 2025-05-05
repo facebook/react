@@ -20,6 +20,13 @@ const paramDefinitions = [
     defaultValue: ['untagged'],
   },
   {
+    name: 'onlyPackages',
+    type: String,
+    multiple: true,
+    description: 'Packages to include in publishing',
+    defaultValue: [],
+  },
+  {
     name: 'skipPackages',
     type: String,
     multiple: true,
@@ -32,11 +39,17 @@ const paramDefinitions = [
     description: 'Run in automated environment, without interactive prompts.',
     defaultValue: false,
   },
+  {
+    name: 'publishVersion',
+    type: String,
+    description: 'Version to publish',
+  },
 ];
 
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
   splitCommaParams(params.skipPackages);
+  splitCommaParams(params.onlyPackages);
   splitCommaParams(params.tags);
   params.tags.forEach(tag => {
     switch (tag) {

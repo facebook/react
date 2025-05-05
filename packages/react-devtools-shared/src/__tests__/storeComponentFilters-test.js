@@ -135,6 +135,172 @@ describe('Store component filters', () => {
   });
 
   // @reactVersion >= 16.0
+  it('should filter Suspense', async () => {
+    const Suspense = React.Suspense;
+    await actAsync(async () =>
+      render(
+        <React.Fragment>
+          <Suspense>
+            <div>Visible</div>
+          </Suspense>
+          <Suspense>
+            <div>Hidden</div>
+          </Suspense>
+        </React.Fragment>,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <div>
+        ▾ <Suspense>
+            <div>
+    `);
+
+    await actAsync(
+      async () =>
+        (store.componentFilters = [
+          utils.createElementTypeFilter(Types.ElementTypeActivity),
+        ]),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <div>
+        ▾ <Suspense>
+            <div>
+    `);
+
+    await actAsync(
+      async () =>
+        (store.componentFilters = [
+          utils.createElementTypeFilter(Types.ElementTypeActivity, false),
+        ]),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <div>
+        ▾ <Suspense>
+            <div>
+    `);
+  });
+
+  it('should filter Activity', async () => {
+    const Activity = React.unstable_Activity;
+
+    if (Activity != null) {
+      await actAsync(async () =>
+        render(
+          <React.Fragment>
+            <Activity mode="visible">
+              <div>Visible</div>
+            </Activity>
+            <Activity mode="hidden">
+              <div>Hidden</div>
+            </Activity>
+          </React.Fragment>,
+        ),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Activity>
+            <div>
+        ▾ <Activity>
+            <div>
+    `);
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity),
+          ]),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+      [root]
+          <div>
+          <div>
+    `);
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity, false),
+          ]),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Activity>
+            <div>
+        ▾ <Activity>
+            <div>
+    `);
+    }
+  });
+
+  it('should filter ViewTransition', async () => {
+    const ViewTransition = React.unstable_ViewTransition;
+
+    if (ViewTransition != null) {
+      await actAsync(async () =>
+        render(
+          <React.Fragment>
+            <ViewTransition>
+              <div>Visible</div>
+            </ViewTransition>
+            <ViewTransition>
+              <div>Hidden</div>
+            </ViewTransition>
+          </React.Fragment>,
+        ),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <ViewTransition>
+            <div>
+        ▾ <ViewTransition>
+            <div>
+    `);
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity),
+          ]),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <ViewTransition>
+            <div>
+        ▾ <ViewTransition>
+            <div>
+    `);
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createElementTypeFilter(Types.ElementTypeActivity, false),
+          ]),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <ViewTransition>
+            <div>
+        ▾ <ViewTransition>
+            <div>
+    `);
+    }
+  });
+
   it('should ignore invalid ElementTypeRoot filter', async () => {
     const Component = () => <div>Hi</div>;
 

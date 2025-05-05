@@ -12,11 +12,15 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   RenderState,
   ResumableState,
+  PreambleState,
   HoistableState,
   FormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
-import {pushStartInstance as pushStartInstanceImpl} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import {
+  pushStartInstance as pushStartInstanceImpl,
+  writePreambleStart as writePreambleStartImpl,
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 import type {
   Destination,
@@ -42,6 +46,7 @@ export type {
   RenderState,
   ResumableState,
   HoistableState,
+  PreambleState,
   FormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -60,12 +65,12 @@ export {
   writeEndPendingSuspenseBoundary,
   writeHoistablesForBoundary,
   writePlaceholder,
-  writeCompletedRoot,
   createRootFormatContext,
   createRenderState,
   createResumableState,
+  createPreambleState,
   createHoistableState,
-  writePreamble,
+  writePreambleEnd,
   writeHoistables,
   writePostamble,
   hoistHoistables,
@@ -73,6 +78,10 @@ export {
   completeResumableState,
   emitEarlyPreloads,
   doctypeChunk,
+  canHavePreamble,
+  hoistPreambleState,
+  isPreambleReady,
+  isPreambleContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 import escapeTextForBrowser from 'react-dom-bindings/src/server/escapeTextForBrowser';
@@ -83,6 +92,7 @@ export function pushStartInstance(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  preambleState: null | PreambleState,
   hoistableState: null | HoistableState,
   formatContext: FormatContext,
   textEmbedded: boolean,
@@ -113,6 +123,7 @@ export function pushStartInstance(
     props,
     resumableState,
     renderState,
+    preambleState,
     hoistableState,
     formatContext,
     textEmbedded,
@@ -141,6 +152,22 @@ export function pushSegmentFinale(
   return;
 }
 
+export function pushStartActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  // Markup doesn't have any instructions.
+  return;
+}
+
+export function pushEndActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  // Markup doesn't have any instructions.
+  return;
+}
+
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
@@ -148,6 +175,7 @@ export function writeStartCompletedSuspenseBoundary(
   // Markup doesn't have any instructions.
   return true;
 }
+
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
@@ -173,6 +201,30 @@ export function writeEndClientRenderedSuspenseBoundary(
   renderState: RenderState,
 ): boolean {
   // Markup doesn't have any instructions.
+  return true;
+}
+
+export function writePreambleStart(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  skipExpect?: boolean, // Used as an override by ReactFizzConfigMarkup
+): void {
+  return writePreambleStartImpl(
+    destination,
+    resumableState,
+    renderState,
+    true, // skipExpect
+  );
+}
+
+export function writeCompletedRoot(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  isComplete: boolean,
+): boolean {
+  // Markup doesn't have any bootstrap scripts nor shell completions.
   return true;
 }
 

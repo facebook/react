@@ -24,9 +24,20 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
+  REACT_SCOPE_TYPE,
+  REACT_LEGACY_HIDDEN_TYPE,
+  REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
-import isValidElementType from 'shared/isValidElementType';
-import {enableRenderableContext} from 'shared/ReactFeatureFlags';
+
+import {
+  enableRenderableContext,
+  enableScopeAPI,
+  enableTransitionTracing,
+  enableLegacyHidden,
+  enableViewTransition,
+} from 'shared/ReactFeatureFlags';
+
+const REACT_CLIENT_REFERENCE: symbol = Symbol.for('react.client.reference');
 
 export function typeOf(object: any): mixed {
   if (typeof object === 'object' && object !== null) {
@@ -91,7 +102,47 @@ export const StrictMode = REACT_STRICT_MODE_TYPE;
 export const Suspense = REACT_SUSPENSE_TYPE;
 export const SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 
-export {isValidElementType};
+export function isValidElementType(type: mixed): boolean {
+  if (typeof type === 'string' || typeof type === 'function') {
+    return true;
+  }
+
+  // Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
+  if (
+    type === REACT_FRAGMENT_TYPE ||
+    type === REACT_PROFILER_TYPE ||
+    type === REACT_STRICT_MODE_TYPE ||
+    type === REACT_SUSPENSE_TYPE ||
+    type === REACT_SUSPENSE_LIST_TYPE ||
+    (enableLegacyHidden && type === REACT_LEGACY_HIDDEN_TYPE) ||
+    (enableScopeAPI && type === REACT_SCOPE_TYPE) ||
+    (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE) ||
+    (enableViewTransition && type === REACT_VIEW_TRANSITION_TYPE)
+  ) {
+    return true;
+  }
+
+  if (typeof type === 'object' && type !== null) {
+    if (
+      type.$$typeof === REACT_LAZY_TYPE ||
+      type.$$typeof === REACT_MEMO_TYPE ||
+      type.$$typeof === REACT_CONTEXT_TYPE ||
+      (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
+      (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||
+      type.$$typeof === REACT_FORWARD_REF_TYPE ||
+      // This needs to include all possible module reference object
+      // types supported by any Flight configuration anywhere since
+      // we don't know which Flight build this will end up being used
+      // with.
+      type.$$typeof === REACT_CLIENT_REFERENCE ||
+      type.getModuleId !== undefined
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 export function isContextConsumer(object: any): boolean {
   if (enableRenderableContext) {

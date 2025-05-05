@@ -78,6 +78,7 @@ function getTestFlags() {
       classic: releaseChannel === 'classic',
       source: !process.env.IS_BUILD,
       www,
+      fb: www || xplat,
 
       // These aren't flags, just a useful aliases for tests.
       enableActivity: releaseChannel === 'experimental' || www || xplat,

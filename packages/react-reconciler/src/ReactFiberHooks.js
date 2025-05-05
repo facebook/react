@@ -26,6 +26,7 @@ import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Flags} from './ReactFiberFlags';
 import type {TransitionStatus} from './ReactFiberConfig';
+import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 import {
   HostTransitionContext,
@@ -38,10 +39,11 @@ import {
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableUseEffectEventHook,
-  enableUseResourceEffectHook,
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
+  enableViewTransition,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -70,6 +72,8 @@ import {
   isTransitionLane,
   markRootEntangled,
   includesSomeLane,
+  isGestureRender,
+  GestureLane,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -141,7 +145,7 @@ import {
   SuspenseActionException,
 } from './ReactFiberThenable';
 import type {ThenableState} from './ReactFiberThenable';
-import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
 import {
   peekEntangledActionLane,
   peekEntangledActionThenable,
@@ -153,6 +157,8 @@ import {requestCurrentTransition} from './ReactFiberTransition';
 
 import {callComponentInDEV} from './ReactFiberCallUserSpace';
 
+import {scheduleGesture} from './ReactFiberGestureScheduler';
+
 export type Update<S, A> = {
   lane: Lane,
   revertLane: Lane,
@@ -160,6 +166,7 @@ export type Update<S, A> = {
   hasEagerState: boolean,
   eagerState: S | null,
   next: Update<S, A>,
+  gesture: null | ScheduledGesture, // enableGestureTransition
 };
 
 export type UpdateQueue<S, A> = {
@@ -205,42 +212,15 @@ export type Hook = {
 // the additional memory and we can follow up with performance
 // optimizations later.
 type EffectInstance = {
-  resource: mixed,
-  destroy: void | (() => void) | ((resource: mixed) => void),
+  destroy: void | (() => void),
 };
 
-export const ResourceEffectIdentityKind: 0 = 0;
-export const ResourceEffectUpdateKind: 1 = 1;
-export type EffectKind =
-  | typeof ResourceEffectIdentityKind
-  | typeof ResourceEffectUpdateKind;
-export type Effect =
-  | SimpleEffect
-  | ResourceEffectIdentity
-  | ResourceEffectUpdate;
-export type SimpleEffect = {
+export type Effect = {
   tag: HookFlags,
   inst: EffectInstance,
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
   next: Effect,
-};
-export type ResourceEffectIdentity = {
-  resourceKind: typeof ResourceEffectIdentityKind,
-  tag: HookFlags,
-  inst: EffectInstance,
-  create: () => mixed,
-  deps: Array<mixed> | void | null,
-  next: Effect,
-};
-export type ResourceEffectUpdate = {
-  resourceKind: typeof ResourceEffectUpdateKind,
-  tag: HookFlags,
-  inst: EffectInstance,
-  update: ((resource: mixed) => void) | void,
-  deps: Array<mixed> | void | null,
-  next: Effect,
-  identity: ResourceEffectIdentity,
 };
 
 type StoreInstance<T> = {
@@ -363,23 +343,6 @@ function checkDepsAreArrayDev(deps: mixed): void {
   }
 }
 
-function checkDepsAreNonEmptyArrayDev(deps: mixed): void {
-  if (__DEV__) {
-    if (
-      deps !== undefined &&
-      deps !== null &&
-      isArray(deps) &&
-      deps.length === 0
-    ) {
-      console.error(
-        '%s received a dependency array with no dependencies. When ' +
-          'specified, the dependency array must have at least one dependency.',
-        currentHookNameInDev,
-      );
-    }
-  }
-}
-
 function warnOnHookMismatchInDev(currentHookName: HookType): void {
   if (__DEV__) {
     const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
@@ -461,10 +424,13 @@ function warnIfAsyncClientComponent(Component: Function) {
       if (!didWarnAboutAsyncClientComponent.has(componentName)) {
         didWarnAboutAsyncClientComponent.add(componentName);
         console.error(
-          'async/await is not yet supported in Client Components, only ' +
-            'Server Components. This error is often caused by accidentally ' +
+          '%s is an async Client Component. ' +
+            'Only Server Components can be async at the moment. This error is often caused by accidentally ' +
             "adding `'use client'` to a module that was originally written " +
             'for the server.',
+          componentName === null
+            ? 'An unknown Component'
+            : `<${componentName}>`,
         );
       }
     }
@@ -1405,9 +1371,34 @@ function updateReducerImpl<S, A>(
       // Check if this update was made while the tree was hidden. If so, then
       // it's not a "base" update and we should disregard the extra base lanes
       // that were added to renderLanes when we entered the Offscreen tree.
-      const shouldSkipUpdate = isHiddenUpdate
+      let shouldSkipUpdate = isHiddenUpdate
         ? !isSubsetOfLanes(getWorkInProgressRootRenderLanes(), updateLane)
         : !isSubsetOfLanes(renderLanes, updateLane);
+
+      if (enableGestureTransition && updateLane === GestureLane) {
+        // This is a gesture optimistic update. It should only be considered as part of the
+        // rendered state while rendering the gesture lane and if the rendering the associated
+        // ScheduledGesture.
+        const scheduledGesture = update.gesture;
+        if (scheduledGesture !== null) {
+          if (scheduledGesture.count === 0) {
+            // This gesture has already been cancelled. We can clean up this update.
+            update = update.next;
+            continue;
+          } else if (!isGestureRender(renderLanes)) {
+            shouldSkipUpdate = true;
+          } else {
+            const root: FiberRoot | null = getWorkInProgressRoot();
+            if (root === null) {
+              throw new Error(
+                'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+              );
+            }
+            // We assume that the currently rendering gesture is the one first in the queue.
+            shouldSkipUpdate = root.pendingGestures !== scheduledGesture;
+          }
+        }
+      }
 
       if (shouldSkipUpdate) {
         // Priority is insufficient. Skip this update. If this is the first
@@ -1416,6 +1407,7 @@ function updateReducerImpl<S, A>(
         const clone: Update<S, A> = {
           lane: updateLane,
           revertLane: update.revertLane,
+          gesture: update.gesture,
           action: update.action,
           hasEagerState: update.hasEagerState,
           eagerState: update.eagerState,
@@ -1451,6 +1443,7 @@ function updateReducerImpl<S, A>(
               // this will never be skipped by the check above.
               lane: NoLane,
               revertLane: NoLane,
+              gesture: null,
               action: update.action,
               hasEagerState: update.hasEagerState,
               eagerState: update.eagerState,
@@ -1494,6 +1487,7 @@ function updateReducerImpl<S, A>(
               // Reuse the same revertLane so we know when the transition
               // has finished.
               revertLane: update.revertLane,
+              gesture: null, // If it commits, it's no longer a gesture update.
               action: update.action,
               hasEagerState: update.hasEagerState,
               eagerState: update.eagerState,
@@ -1853,6 +1847,8 @@ function updateStoreInstance<T>(
   // snapsho and getSnapshot values to bail out. We need to check one more time.
   if (checkIfSnapshotChanged(inst)) {
     // Force a re-render.
+    // We intentionally don't log update times and stacks here because this
+    // was not an external trigger but rather an internal one.
     forceStoreRerender(fiber);
   }
 }
@@ -1867,6 +1863,7 @@ function subscribeToStore<T>(
     // read from the store.
     if (checkIfSnapshotChanged(inst)) {
       // Force a re-render.
+      startUpdateTimerByLane(SyncLane, 'updateSyncExternalStore()');
       forceStoreRerender(fiber);
     }
   };
@@ -2165,11 +2162,29 @@ function runActionStateAction<S, P>(
 
     // This is a fork of startTransition
     const prevTransition = ReactSharedInternals.T;
-    const currentTransition: BatchConfigTransition = {};
-    ReactSharedInternals.T = currentTransition;
-    if (__DEV__) {
-      ReactSharedInternals.T._updatedFibers = new Set();
+    const currentTransition: Transition = ({}: any);
+    if (enableViewTransition) {
+      currentTransition.types =
+        prevTransition !== null
+          ? // If we're a nested transition, we should use the same set as the parent
+            // since we're conceptually always joined into the same entangled transition.
+            // In practice, this only matters if we add transition types in the inner
+            // without setting state. In that case, the inner transition can finish
+            // without waiting for the outer.
+            prevTransition.types
+          : null;
     }
+    if (enableGestureTransition) {
+      currentTransition.gesture = null;
+    }
+    if (enableTransitionTracing) {
+      currentTransition.name = null;
+      currentTransition.startTime = -1;
+    }
+    if (__DEV__) {
+      currentTransition._updatedFibers = new Set();
+    }
+    ReactSharedInternals.T = currentTransition;
     try {
       const returnValue = action(prevState, payload);
       const onStartTransitionFinish = ReactSharedInternals.S;
@@ -2180,6 +2195,24 @@ function runActionStateAction<S, P>(
     } catch (error) {
       onActionError(actionQueue, node, error);
     } finally {
+      if (prevTransition !== null && currentTransition.types !== null) {
+        // If we created a new types set in the inner transition, we transfer it to the parent
+        // since they should share the same set. They're conceptually entangled.
+        if (__DEV__) {
+          if (
+            prevTransition.types !== null &&
+            prevTransition.types !== currentTransition.types
+          ) {
+            // Just assert that assumption holds that we're not overriding anything.
+            console.error(
+              'We expected inner Transitions to have transferred the outer types set and ' +
+                'that you cannot add to the outer Transition while inside the inner.' +
+                'This is a bug in React.',
+            );
+          }
+        }
+        prevTransition.types = currentTransition.types;
+      }
       ReactSharedInternals.T = prevTransition;
 
       if (__DEV__) {
@@ -2219,6 +2252,11 @@ function handleActionReturnValue<S, P>(
     typeof returnValue.then === 'function'
   ) {
     const thenable = ((returnValue: any): Thenable<Awaited<S>>);
+    if (__DEV__) {
+      // Keep track of the number of async transitions still running so we can warn.
+      ReactSharedInternals.asyncTransitions++;
+      thenable.then(releaseAsyncTransition, releaseAsyncTransition);
+    }
     // Attach a listener to read the return state of the action. As soon as
     // this resolves, we can run the next action in the sequence.
     thenable.then(
@@ -2231,10 +2269,10 @@ function handleActionReturnValue<S, P>(
     if (__DEV__) {
       if (!node.isTransition) {
         console.error(
-          'An async function was passed to useActionState, but it was ' +
-            'dispatched outside of an action context. This is likely not ' +
-            'what you intended. Either pass the dispatch function to an ' +
-            '`action` prop, or dispatch manually inside `startTransition`',
+          'An async function with useActionState was called outside of a transition. ' +
+            'This is likely not what you intended (for example, isPending will not update ' +
+            'correctly). Either call the returned function inside startTransition, or pass it ' +
+            'to an `action` or `formAction` prop.',
         );
       }
     }
@@ -2536,39 +2574,6 @@ function pushSimpleEffect(
   return pushEffectImpl(effect);
 }
 
-function pushResourceEffect(
-  identityTag: HookFlags,
-  updateTag: HookFlags,
-  inst: EffectInstance,
-  create: () => mixed,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-): Effect {
-  const effectIdentity: ResourceEffectIdentity = {
-    resourceKind: ResourceEffectIdentityKind,
-    tag: identityTag,
-    create,
-    deps: createDeps,
-    inst,
-    // Circular
-    next: (null: any),
-  };
-  pushEffectImpl(effectIdentity);
-
-  const effectUpdate: ResourceEffectUpdate = {
-    resourceKind: ResourceEffectUpdateKind,
-    tag: updateTag,
-    update,
-    deps: updateDeps,
-    inst,
-    identity: effectIdentity,
-    // Circular
-    next: (null: any),
-  };
-  return pushEffectImpl(effectUpdate);
-}
-
 function pushEffectImpl(effect: Effect): Effect {
   let componentUpdateQueue: null | FunctionComponentUpdateQueue =
     (currentlyRenderingFiber.updateQueue: any);
@@ -2589,7 +2594,7 @@ function pushEffectImpl(effect: Effect): Effect {
 }
 
 function createEffectInstance(): EffectInstance {
-  return {destroy: undefined, resource: undefined};
+  return {destroy: undefined};
 }
 
 function mountRef<T>(initialValue: T): {current: T} {
@@ -2691,149 +2696,6 @@ function updateEffect(
   deps: Array<mixed> | void | null,
 ): void {
   updateEffectImpl(PassiveEffect, HookPassive, create, deps);
-}
-
-function mountResourceEffect(
-  create: () => mixed,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
-) {
-  if (
-    __DEV__ &&
-    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode &&
-    (currentlyRenderingFiber.mode & NoStrictPassiveEffectsMode) === NoMode
-  ) {
-    mountResourceEffectImpl(
-      MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
-      HookPassive,
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy,
-    );
-  } else {
-    mountResourceEffectImpl(
-      PassiveEffect | PassiveStaticEffect,
-      HookPassive,
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy,
-    );
-  }
-}
-
-function mountResourceEffectImpl(
-  fiberFlags: Flags,
-  hookFlags: HookFlags,
-  create: () => mixed,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
-) {
-  const hook = mountWorkInProgressHook();
-  currentlyRenderingFiber.flags |= fiberFlags;
-  const inst = createEffectInstance();
-  inst.destroy = destroy;
-  hook.memoizedState = pushResourceEffect(
-    HookHasEffect | hookFlags,
-    hookFlags,
-    inst,
-    create,
-    createDeps,
-    update,
-    updateDeps,
-  );
-}
-
-function updateResourceEffect(
-  create: () => mixed,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
-) {
-  updateResourceEffectImpl(
-    PassiveEffect,
-    HookPassive,
-    create,
-    createDeps,
-    update,
-    updateDeps,
-    destroy,
-  );
-}
-
-function updateResourceEffectImpl(
-  fiberFlags: Flags,
-  hookFlags: HookFlags,
-  create: () => mixed,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
-) {
-  const hook = updateWorkInProgressHook();
-  const effect: Effect = hook.memoizedState;
-  const inst = effect.inst;
-  inst.destroy = destroy;
-
-  const nextCreateDeps = createDeps === undefined ? null : createDeps;
-  const nextUpdateDeps = updateDeps === undefined ? null : updateDeps;
-  let isCreateDepsSame: boolean;
-  let isUpdateDepsSame: boolean;
-
-  if (currentHook !== null) {
-    const prevEffect: Effect = currentHook.memoizedState;
-    if (nextCreateDeps !== null) {
-      let prevCreateDeps;
-      if (
-        prevEffect.resourceKind != null &&
-        prevEffect.resourceKind === ResourceEffectUpdateKind
-      ) {
-        prevCreateDeps =
-          prevEffect.identity.deps != null ? prevEffect.identity.deps : null;
-      } else {
-        throw new Error(
-          `Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React.`,
-        );
-      }
-      isCreateDepsSame = areHookInputsEqual(nextCreateDeps, prevCreateDeps);
-    }
-    if (nextUpdateDeps !== null) {
-      let prevUpdateDeps;
-      if (
-        prevEffect.resourceKind != null &&
-        prevEffect.resourceKind === ResourceEffectUpdateKind
-      ) {
-        prevUpdateDeps = prevEffect.deps != null ? prevEffect.deps : null;
-      } else {
-        throw new Error(
-          `Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React.`,
-        );
-      }
-      isUpdateDepsSame = areHookInputsEqual(nextUpdateDeps, prevUpdateDeps);
-    }
-  }
-
-  if (!(isCreateDepsSame && isUpdateDepsSame)) {
-    currentlyRenderingFiber.flags |= fiberFlags;
-  }
-
-  hook.memoizedState = pushResourceEffect(
-    isCreateDepsSame ? hookFlags : HookHasEffect | hookFlags,
-    isUpdateDepsSame ? hookFlags : HookHasEffect | hookFlags,
-    inst,
-    create,
-    nextCreateDeps,
-    update,
-    nextUpdateDeps,
-  );
 }
 
 function useEffectEventImpl<Args, Return, F: (...Array<Args>) => Return>(
@@ -3174,7 +3036,9 @@ function updateDeferredValueImpl<T>(
       return resultValue;
     }
 
-    const shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes);
+    const shouldDeferValue =
+      !includesOnlyNonUrgentLanes(renderLanes) &&
+      !includesSomeLane(renderLanes, DeferredLane);
     if (shouldDeferValue) {
       // This is an urgent update. Since the value has changed, keep using the
       // previous value and spawn a deferred render to update it later.
@@ -3202,6 +3066,12 @@ function updateDeferredValueImpl<T>(
   }
 }
 
+function releaseAsyncTransition() {
+  if (__DEV__) {
+    ReactSharedInternals.asyncTransitions--;
+  }
+}
+
 function startTransition<S>(
   fiber: Fiber,
   queue: UpdateQueue<S | Thenable<S>, BasicStateAction<S | Thenable<S>>>,
@@ -3216,7 +3086,29 @@ function startTransition<S>(
   );
 
   const prevTransition = ReactSharedInternals.T;
-  const currentTransition: BatchConfigTransition = {};
+  const currentTransition: Transition = ({}: any);
+  if (enableViewTransition) {
+    currentTransition.types =
+      prevTransition !== null
+        ? // If we're a nested transition, we should use the same set as the parent
+          // since we're conceptually always joined into the same entangled transition.
+          // In practice, this only matters if we add transition types in the inner
+          // without setting state. In that case, the inner transition can finish
+          // without waiting for the outer.
+          prevTransition.types
+        : null;
+  }
+  if (enableGestureTransition) {
+    currentTransition.gesture = null;
+  }
+  if (enableTransitionTracing) {
+    currentTransition.name =
+      options !== undefined && options.name !== undefined ? options.name : null;
+    currentTransition.startTime = now();
+  }
+  if (__DEV__) {
+    currentTransition._updatedFibers = new Set();
+  }
 
   // We don't really need to use an optimistic update here, because we
   // schedule a second "revert" update below (which we use to suspend the
@@ -3226,17 +3118,6 @@ function startTransition<S>(
   // share the same lane.
   ReactSharedInternals.T = currentTransition;
   dispatchOptimisticSetState(fiber, false, queue, pendingState);
-
-  if (enableTransitionTracing) {
-    if (options !== undefined && options.name !== undefined) {
-      currentTransition.name = options.name;
-      currentTransition.startTime = now();
-    }
-  }
-
-  if (__DEV__) {
-    currentTransition._updatedFibers = new Set();
-  }
 
   try {
     const returnValue = callback();
@@ -3259,6 +3140,11 @@ function startTransition<S>(
       typeof returnValue.then === 'function'
     ) {
       const thenable = ((returnValue: any): Thenable<mixed>);
+      if (__DEV__) {
+        // Keep track of the number of async transitions still running so we can warn.
+        ReactSharedInternals.asyncTransitions++;
+        thenable.then(releaseAsyncTransition, releaseAsyncTransition);
+      }
       // Create a thenable that resolves to `finishedState` once the async
       // action has completed.
       const thenableForFinishedState = chainThenableValue(
@@ -3297,6 +3183,24 @@ function startTransition<S>(
   } finally {
     setCurrentUpdatePriority(previousPriority);
 
+    if (prevTransition !== null && currentTransition.types !== null) {
+      // If we created a new types set in the inner transition, we transfer it to the parent
+      // since they should share the same set. They're conceptually entangled.
+      if (__DEV__) {
+        if (
+          prevTransition.types !== null &&
+          prevTransition.types !== currentTransition.types
+        ) {
+          // Just assert that assumption holds that we're not overriding anything.
+          console.error(
+            'We expected inner Transitions to have transferred the outer types set and ' +
+              'that you cannot add to the outer Transition while inside the inner.' +
+              'This is a bug in React.',
+          );
+        }
+      }
+      prevTransition.types = currentTransition.types;
+    }
     ReactSharedInternals.T = prevTransition;
 
     if (__DEV__) {
@@ -3429,8 +3333,8 @@ function ensureFormComponentIsStateful(formFiber: Fiber) {
 export function requestFormReset(formFiber: Fiber) {
   const transition = requestCurrentTransition();
 
-  if (__DEV__) {
-    if (transition === null) {
+  if (transition === null) {
+    if (__DEV__) {
       // An optimistic update occurred, but startTransition is not on the stack.
       // The form reset will be scheduled at default (sync) priority, which
       // is probably not what the user intended. Most likely because the
@@ -3445,10 +3349,25 @@ export function requestFormReset(formFiber: Fiber) {
           'fix, move to an action, or wrap with startTransition.',
       );
     }
+  } else if (enableGestureTransition && transition.gesture) {
+    throw new Error(
+      'Cannot requestFormReset() inside a startGestureTransition. ' +
+        'There should be no side-effects associated with starting a ' +
+        'Gesture until its Action is invoked. Move side-effects to the ' +
+        'Action instead.',
+    );
   }
 
-  const stateHook = ensureFormComponentIsStateful(formFiber);
+  let stateHook: Hook = ensureFormComponentIsStateful(formFiber);
   const newResetState = {};
+  if (stateHook.next === null) {
+    // Hack alert. If formFiber is the workInProgress Fiber then
+    // we might get a broken intermediate state. Try the alternate
+    // instead.
+    // TODO: We should really stash the Queue somewhere stateful
+    // just like how setState binds the Queue.
+    stateHook = (formFiber.alternate: any).memoizedState;
+  }
   const resetStateHook: Hook = (stateHook.next: any);
   const resetStateQueue = resetStateHook.queue;
   dispatchSetStateInternal(
@@ -3527,7 +3446,7 @@ function mountId(): string {
     const treeId = getTreeId();
 
     // Use a captial R prefix for server-generated ids.
-    id = ':' + identifierPrefix + 'R' + treeId;
+    id = '\u00AB' + identifierPrefix + 'R' + treeId;
 
     // Unless this is the first id at this level, append a number at the end
     // that represents the position of this useId hook among all the useId
@@ -3537,11 +3456,16 @@ function mountId(): string {
       id += 'H' + localId.toString(32);
     }
 
-    id += ':';
+    id += '\u00BB';
   } else {
     // Use a lowercase r prefix for client-generated ids.
     const globalClientId = globalClientIdCounter++;
-    id = ':' + identifierPrefix + 'r' + globalClientId.toString(32) + ':';
+    id =
+      '\u00AB' +
+      identifierPrefix +
+      'r' +
+      globalClientId.toString(32) +
+      '\u00BB';
   }
 
   hook.memoizedState = id;
@@ -3582,7 +3506,7 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T): void {
         const refreshUpdate = createLegacyQueueUpdate(lane);
         const root = enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         if (root !== null) {
-          startUpdateTimerByLane(lane);
+          startUpdateTimerByLane(lane, 'refresh()');
           scheduleUpdateOnFiber(root, provider, lane);
           entangleLegacyQueueTransitions(root, provider, lane);
         }
@@ -3639,6 +3563,7 @@ function dispatchReducerAction<S, A>(
   const update: Update<S, A> = {
     lane,
     revertLane: NoLane,
+    gesture: null,
     action,
     hasEagerState: false,
     eagerState: null,
@@ -3650,7 +3575,7 @@ function dispatchReducerAction<S, A>(
   } else {
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
-      startUpdateTimerByLane(lane);
+      startUpdateTimerByLane(lane, 'dispatch()');
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitionUpdate(root, queue, lane);
     }
@@ -3684,7 +3609,7 @@ function dispatchSetState<S, A>(
     lane,
   );
   if (didScheduleUpdate) {
-    startUpdateTimerByLane(lane);
+    startUpdateTimerByLane(lane, 'setState()');
   }
   markUpdateInDevTools(fiber, lane, action);
 }
@@ -3698,6 +3623,7 @@ function dispatchSetStateInternal<S, A>(
   const update: Update<S, A> = {
     lane,
     revertLane: NoLane,
+    gesture: null,
     action,
     hasEagerState: false,
     eagerState: null,
@@ -3805,12 +3731,18 @@ function dispatchOptimisticSetState<S, A>(
     }
   }
 
+  // For regular Transitions an optimistic update commits synchronously.
+  // For gesture Transitions an optimistic update commits on the GestureLane.
+  const lane =
+    enableGestureTransition && transition !== null && transition.gesture
+      ? GestureLane
+      : SyncLane;
   const update: Update<S, A> = {
-    // An optimistic update commits synchronously.
-    lane: SyncLane,
+    lane: lane,
     // After committing, the optimistic update is "reverted" using the same
     // lane as the transition it's associated with.
     revertLane: requestTransitionLane(transition),
+    gesture: null,
     action,
     hasEagerState: false,
     eagerState: null,
@@ -3833,20 +3765,28 @@ function dispatchOptimisticSetState<S, A>(
       }
     }
   } else {
-    const root = enqueueConcurrentHookUpdate(fiber, queue, update, SyncLane);
+    const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
       // NOTE: The optimistic update implementation assumes that the transition
       // will never be attempted before the optimistic update. This currently
       // holds because the optimistic update is always synchronous. If we ever
       // change that, we'll need to account for this.
-      startUpdateTimerByLane(SyncLane);
-      scheduleUpdateOnFiber(root, fiber, SyncLane);
+      startUpdateTimerByLane(lane, 'setOptimistic()');
+      scheduleUpdateOnFiber(root, fiber, lane);
       // Optimistic updates are always synchronous, so we don't need to call
       // entangleTransitionUpdate here.
+      if (enableGestureTransition && transition !== null) {
+        const provider = transition.gesture;
+        if (provider !== null) {
+          // If this was a gesture, ensure we have a scheduled gesture and that
+          // we associate this update with this specific gesture instance.
+          update.gesture = scheduleGesture(root, provider);
+        }
+      }
     }
   }
 
-  markUpdateInDevTools(fiber, SyncLane, action);
+  markUpdateInDevTools(fiber, lane, action);
 }
 
 function isRenderPhaseUpdate(fiber: Fiber): boolean {
@@ -3938,9 +3878,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
-if (enableUseResourceEffectHook) {
-  (ContextOnlyDispatcher: Dispatcher).useResourceEffect = throwInvalidHookError;
-}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -3970,9 +3907,6 @@ const HooksDispatcherOnMount: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
-}
-if (enableUseResourceEffectHook) {
-  (HooksDispatcherOnMount: Dispatcher).useResourceEffect = mountResourceEffect;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -4004,10 +3938,6 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
-if (enableUseResourceEffectHook) {
-  (HooksDispatcherOnUpdate: Dispatcher).useResourceEffect =
-    updateResourceEffect;
-}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -4037,10 +3967,6 @@ const HooksDispatcherOnRerender: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
-}
-if (enableUseResourceEffectHook) {
-  (HooksDispatcherOnRerender: Dispatcher).useResourceEffect =
-    updateResourceEffect;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -4242,27 +4168,6 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ): void {
-        currentHookNameInDev = 'useResourceEffect';
-        mountHookTypesDev();
-        checkDepsAreNonEmptyArrayDev(updateDeps);
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      };
-  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4428,26 +4333,6 @@ if (__DEV__) {
         currentHookNameInDev = 'useEffectEvent';
         updateHookTypesDev();
         return mountEvent(callback);
-      };
-  }
-  if (enableUseResourceEffectHook) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ): void {
-        currentHookNameInDev = 'useResourceEffect';
-        updateHookTypesDev();
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
       };
   }
 
@@ -4617,26 +4502,6 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
-        updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      };
-  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4802,26 +4667,6 @@ if (__DEV__) {
         currentHookNameInDev = 'useEffectEvent';
         updateHookTypesDev();
         return updateEvent(callback);
-      };
-  }
-  if (enableUseResourceEffectHook) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
-        updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
       };
   }
 
@@ -5016,27 +4861,6 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ): void {
-        currentHookNameInDev = 'useResourceEffect';
-        warnInvalidHookAccess();
-        mountHookTypesDev();
-        return mountResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      };
-  }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5229,27 +5053,6 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
-      };
-  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5440,27 +5243,6 @@ if (__DEV__) {
         warnInvalidHookAccess();
         updateHookTypesDev();
         return updateEvent(callback);
-      };
-  }
-  if (enableUseResourceEffectHook) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
-      function useResourceEffect(
-        create: () => mixed,
-        createDeps: Array<mixed> | void | null,
-        update: ((resource: mixed) => void) | void,
-        updateDeps: Array<mixed> | void | null,
-        destroy: ((resource: mixed) => void) | void,
-      ) {
-        currentHookNameInDev = 'useResourceEffect';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return updateResourceEffect(
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-        );
       };
   }
 }

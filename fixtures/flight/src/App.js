@@ -15,6 +15,8 @@ import {Client} from './Client.js';
 
 import {Note} from './cjs/Note.js';
 
+import {GenerateImage} from './GenerateImage.js';
+
 import {like, greet, increment} from './actions.js';
 
 import {getServerState} from './ServerState.js';
@@ -41,6 +43,7 @@ export default async function App({prerender}) {
   const todos = await res.json();
 
   const dedupedChild = <ServerComponent />;
+  const message = getServerState();
   return (
     <html lang="en">
       <head>
@@ -55,7 +58,7 @@ export default async function App({prerender}) {
           ) : (
             <meta content="when not prerendering we render this meta tag. When prerendering you will expect to see this tag and the one with data-testid=prerendered because we SSR one and hydrate the other" />
           )}
-          <h1>{getServerState()}</h1>
+          <h1>{message}</h1>
           <React.Suspense fallback={null}>
             <div data-testid="promise-as-a-child-test">
               Promise as a child hydrates without errors: {promisedText}
@@ -78,6 +81,9 @@ export default async function App({prerender}) {
           </div>
           <div>
             loaded statically: <Dynamic />
+          </div>
+          <div>
+            <GenerateImage message={message} />
           </div>
           <Client />
           <Note />

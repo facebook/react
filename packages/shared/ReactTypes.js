@@ -137,12 +137,6 @@ export type Thenable<T> =
   | FulfilledThenable<T>
   | RejectedThenable<T>;
 
-export type OffscreenMode =
-  | 'hidden'
-  | 'unstable-defer-without-hiding'
-  | 'visible'
-  | 'manual';
-
 export type StartTransitionOptions = {
   name?: string,
 };
@@ -167,6 +161,15 @@ export type ReactFormState<S, ReferenceId> = [
   ReferenceId /* Server Reference ID */,
   number /* number of bound arguments */,
 ];
+
+// Intrinsic GestureProvider. This type varies by Environment whether a particular
+// renderer supports it.
+export type GestureProvider = any;
+
+export type GestureOptions = {
+  rangeStart?: number,
+  rangeEnd?: number,
+};
 
 export type Awaited<T> = T extends null | void
   ? T // special case for `null | undefined` when not in `--strictNullChecks` mode
@@ -203,6 +206,20 @@ export type ReactEnvironmentInfo = {
   +env: string,
 };
 
+export type ReactErrorInfoProd = {
+  +digest: string,
+};
+
+export type ReactErrorInfoDev = {
+  +digest?: string,
+  +name: string,
+  +message: string,
+  +stack: ReactStackTrace,
+  +env: string,
+};
+
+export type ReactErrorInfo = ReactErrorInfoProd | ReactErrorInfoDev;
+
 export type ReactAsyncInfo = {
   +type: string,
   // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
@@ -218,3 +235,78 @@ export type ReactTimeInfo = {
 export type ReactDebugInfo = Array<
   ReactComponentInfo | ReactEnvironmentInfo | ReactAsyncInfo | ReactTimeInfo,
 >;
+
+// Intrinsic ViewTransitionInstance. This type varies by Environment whether a particular
+// renderer supports it.
+export type ViewTransitionInstance = any;
+
+export type ViewTransitionClassPerType = {
+  [transitionType: 'default' | string]: 'none' | 'auto' | string,
+};
+
+export type ViewTransitionClass =
+  | 'none'
+  | 'auto'
+  | string
+  | ViewTransitionClassPerType;
+
+export type ViewTransitionProps = {
+  name?: string,
+  children?: ReactNodeList,
+  default?: ViewTransitionClass,
+  enter?: ViewTransitionClass,
+  exit?: ViewTransitionClass,
+  share?: ViewTransitionClass,
+  update?: ViewTransitionClass,
+  onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+};
+
+export type ActivityProps = {
+  mode?: 'hidden' | 'visible' | null | void,
+  children?: ReactNodeList,
+};
+
+export type SuspenseProps = {
+  children?: ReactNodeList,
+  fallback?: ReactNodeList,
+
+  // TODO: Add "unstable_" prefix?
+  suspenseCallback?: (Set<Wakeable> | null) => mixed,
+
+  unstable_avoidThisFallback?: boolean,
+  unstable_expectedLoadTime?: number,
+  name?: string,
+};
+
+export type TracingMarkerProps = {
+  name: string,
+  children?: ReactNodeList,
+};
+
+export type CacheProps = {
+  children?: ReactNodeList,
+};
+
+export type ProfilerPhase = 'mount' | 'update' | 'nested-update';
+
+export type ProfilerProps = {
+  id?: string,
+  onRender?: (
+    id: void | string,
+    phase: ProfilerPhase,
+    actualDuration: number,
+    baseDuration: number,
+    startTime: number,
+    commitTime: number,
+  ) => void,
+  onCommit?: (
+    id: void | string,
+    phase: ProfilerPhase,
+    effectDuration: number,
+    commitTime: number,
+  ) => void,
+  children?: ReactNodeList,
+};

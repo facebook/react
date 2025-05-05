@@ -60,11 +60,13 @@ describe('ReactDeprecationWarnings', () => {
       </div>,
     );
     await waitForAll([]);
-    assertConsoleErrorDev([
-      'FunctionalComponent: Support for defaultProps ' +
-        'will be removed from memo components in a future major ' +
-        'release. Use JavaScript default parameters instead.\n' +
-        '    in div (at **)',
-    ]);
+    assertConsoleErrorDev(
+      [
+        'FunctionalComponent: Support for defaultProps ' +
+          'will be removed from memo components in a future major ' +
+          'release. Use JavaScript default parameters instead.',
+      ],
+      {withoutStack: true},
+    );
   });
 });

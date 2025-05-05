@@ -38,6 +38,9 @@ const run = async ({cwd, packages, tags, ci}) => {
     console.log(
       theme`• {package ${packageName}} {version ${packageJSON.version}}`
     );
+    if (ci) {
+      console.log(packageJSON);
+    }
   }
 
   if (!ci) {

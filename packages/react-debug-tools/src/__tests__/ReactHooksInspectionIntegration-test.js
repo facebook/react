@@ -1553,7 +1553,7 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree[0].id).toEqual(0);
     expect(tree[0].isStateEditable).toEqual(false);
     expect(tree[0].name).toEqual('Id');
-    expect(String(tree[0].value).startsWith(':r')).toBe(true);
+    expect(String(tree[0].value).startsWith('\u00ABr')).toBe(true);
 
     expect(normalizeSourceLoc(tree)[1]).toMatchInlineSnapshot(`
       {
@@ -2347,10 +2347,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
     await act(async () => await LazyFoo);
     assertConsoleErrorDev([
-      'Foo: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? ''
-          : '\n    in Foo (at **)\n' + '   in Suspense (at **)'),
+      'Foo: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
     ]);
 
     const childFiber = renderer.root._currentFiber();

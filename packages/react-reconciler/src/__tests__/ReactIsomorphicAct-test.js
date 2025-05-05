@@ -50,6 +50,18 @@ describe('isomorphic act()', () => {
     return text;
   }
 
+  it('behavior in production', () => {
+    if (!__DEV__) {
+      if (gate('fb')) {
+        expect(() => act(() => {})).toThrow(
+          'act(...) is not supported in production builds of React',
+        );
+      } else {
+        expect(React).not.toHaveProperty('act');
+      }
+    }
+  });
+
   // @gate __DEV__
   it('bypasses queueMicrotask', async () => {
     const root = ReactNoop.createRoot();

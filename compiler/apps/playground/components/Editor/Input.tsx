@@ -6,7 +6,7 @@
  */
 
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import {CompilerErrorDetail} from 'babel-plugin-react-compiler/src';
+import {CompilerErrorDetail} from 'babel-plugin-react-compiler';
 import invariant from 'invariant';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
@@ -89,6 +89,9 @@ export default function Input({errors, language}: Props): JSX.Element {
     _: editor.IStandaloneCodeEditor,
     monaco: Monaco,
   ) => void = (_, monaco) => {
+    if (typeof window !== 'undefined') {
+      window['__MONACO_LOADED__'] = true;
+    }
     setMonaco(monaco);
 
     const tscOptions = {

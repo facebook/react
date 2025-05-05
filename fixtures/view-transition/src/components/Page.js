@@ -1,9 +1,18 @@
 import React, {
+  unstable_addTransitionType as addTransitionType,
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
-  useRef,
   useLayoutEffect,
+  useEffect,
+  useState,
+  useId,
+  useOptimistic,
+  startTransition,
 } from 'react';
+
+import {createPortal} from 'react-dom';
+
+import SwipeRecognizer from './SwipeRecognizer';
 
 import './Page.css';
 
@@ -28,79 +37,168 @@ const b = (
 function Component() {
   return (
     <ViewTransition
-      className={
+      default={
         transitions['enter-slide-right'] + ' ' + transitions['exit-slide-left']
       }>
       <p className="roboto-font">Slide In from Left, Slide Out to Right</p>
+      <p>
+        <img
+          src="https://react.dev/_next/image?url=%2Fimages%2Fteam%2Fsebmarkbage.jpg&w=3840&q=75"
+          width="300"
+        />
+      </p>
     </ViewTransition>
   );
 }
 
+function Id() {
+  // This is just testing that Id inside a ViewTransition can hydrate correctly.
+  return <span id={useId()} />;
+}
+
 export default function Page({url, navigate}) {
-  const ref = useRef();
-  const show = url === '/?b';
+  const [renderedUrl, optimisticNavigate] = useOptimistic(
+    url,
+    (state, direction) => {
+      return direction === 'left' ? '/?a' : '/?b';
+    }
+  );
+  const show = renderedUrl === '/?b';
+  function onTransition(viewTransition, types) {
+    const keyframes = [
+      {rotate: '0deg', transformOrigin: '30px 8px'},
+      {rotate: '360deg', transformOrigin: '30px 8px'},
+    ];
+    viewTransition.old.animate(keyframes, 250);
+    viewTransition.new.animate(keyframes, 250);
+  }
+
+  function swipeAction() {
+    navigate(show ? '/?a' : '/?b');
+  }
+
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCounter(c => c + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   useLayoutEffect(() => {
-    const viewTransition = ref.current;
-    requestAnimationFrame(() => {
-      const keyframes = [
-        {rotate: '0deg', transformOrigin: '30px 8px'},
-        {rotate: '360deg', transformOrigin: '30px 8px'},
-      ];
-      viewTransition.old.animate(keyframes, 300);
-      viewTransition.new.animate(keyframes, 300);
-    });
+    // Calling a default update should not interrupt ViewTransitions but
+    // a flushSync will.
+    // Promise.resolve().then(() => {
+    //   flushSync(() => {
+    setCounter(c => c + 10);
+    //  });
+    // });
   }, [show]);
+
+  const [showModal, setShowModal] = useState(false);
+  const portal = showModal ? (
+    createPortal(
+      <div className="portal">
+        Portal: {!show ? 'A' : 'B'}
+        <ViewTransition>
+          <div>{!show ? 'A' : 'B'}</div>
+        </ViewTransition>
+      </div>,
+      document.body
+    )
+  ) : (
+    <button onClick={() => startTransition(() => setShowModal(true))}>
+      Show Modal
+    </button>
+  );
+
   const exclamation = (
-    <ViewTransition name="exclamation">
-      <span>!</span>
+    <ViewTransition name="exclamation" onShare={onTransition}>
+      <span>
+        <div>!</div>
+      </span>
     </ViewTransition>
   );
   return (
-    <div>
-      <button
-        onClick={() => {
-          navigate(show ? '/?a' : '/?b');
-        }}>
-        {show ? 'A' : 'B'}
-      </button>
-      <ViewTransition>
-        <div>
-          {show ? (
-            <div>
-              {a}
-              {b}
-            </div>
-          ) : (
-            <div>
-              {b}
-              {a}
-            </div>
-          )}
-          <ViewTransition ref={ref}>
-            {show ? <div>hello{exclamation}</div> : <section>Loading</section>}
-          </ViewTransition>
-          <p>scroll me</p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <p></p>
-          {show ? null : (
+    <div className="swipe-recognizer">
+      <SwipeRecognizer
+        action={swipeAction}
+        gesture={direction => {
+          addTransitionType(
+            direction === 'left' ? 'navigation-forward' : 'navigation-back'
+          );
+          optimisticNavigate(direction);
+        }}
+        direction={show ? 'left' : 'right'}>
+        <button
+          className="button"
+          onClick={() => {
+            navigate(url === '/?b' ? '/?a' : '/?b');
+          }}>
+          {url === '/?b' ? 'Goto A' : 'Goto B'}
+        </button>
+        <ViewTransition default="none">
+          <div>
             <ViewTransition>
-              <div>world{exclamation}</div>
+              <div>
+                <ViewTransition default={transitions['slide-on-nav']}>
+                  <h1>{!show ? 'A' : 'B' + counter}</h1>
+                </ViewTransition>
+              </div>
             </ViewTransition>
-          )}
-          <Activity mode={show ? 'visible' : 'hidden'}>
+            <ViewTransition
+              default={{
+                'navigation-back': transitions['slide-right'],
+                'navigation-forward': transitions['slide-left'],
+              }}>
+              <h1>{!show ? 'A' + counter : 'B'}</h1>
+            </ViewTransition>
+            {show ? (
+              <div>
+                {a}
+                {b}
+              </div>
+            ) : (
+              <div>
+                {b}
+                {a}
+              </div>
+            )}
             <ViewTransition>
-              <div>!!</div>
+              {show ? (
+                <div>hello{exclamation}</div>
+              ) : (
+                <section>Loading</section>
+              )}
             </ViewTransition>
-          </Activity>
-          {show ? <Component /> : <p>&nbsp;</p>}
-        </div>
-      </ViewTransition>
+            <p>
+              <Id />
+            </p>
+            {show ? null : (
+              <ViewTransition>
+                <div>world{exclamation}</div>
+              </ViewTransition>
+            )}
+            <Activity mode={show ? 'visible' : 'hidden'}>
+              <ViewTransition>
+                <div>!!</div>
+              </ViewTransition>
+            </Activity>
+            <p>these</p>
+            <p>rows</p>
+            <p>exist</p>
+            <p>to</p>
+            <p>test</p>
+            <p>scrolling</p>
+            <p>content</p>
+            <p>out</p>
+            <p>of</p>
+            {portal}
+            <p>the</p>
+            <p>viewport</p>
+            {show ? <Component /> : null}
+          </div>
+        </ViewTransition>
+      </SwipeRecognizer>
     </div>
   );
 }

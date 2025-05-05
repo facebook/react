@@ -13,12 +13,15 @@ import type {
   StyleQueue,
   Resource,
   HeadersDescriptor,
+  PreambleState,
 } from './ReactFizzConfigDOM';
 
 import {
   createRenderState as createRenderStateImpl,
   pushTextInstance as pushTextInstanceImpl,
   pushSegmentFinale as pushSegmentFinaleImpl,
+  pushStartActivityBoundary as pushStartActivityBoundaryImpl,
+  pushEndActivityBoundary as pushEndActivityBoundaryImpl,
   writeStartCompletedSuspenseBoundary as writeStartCompletedSuspenseBoundaryImpl,
   writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
@@ -43,8 +46,7 @@ export type RenderState = {
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: PrecomputedChunk,
   startInlineScript: PrecomputedChunk,
-  htmlChunks: null | Array<Chunk | PrecomputedChunk>,
-  headChunks: null | Array<Chunk | PrecomputedChunk>,
+  preamble: PreambleState,
   externalRuntimeScript: null | any,
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
   importMapChunks: Array<Chunk | PrecomputedChunk>,
@@ -96,8 +98,7 @@ export function createRenderState(
     segmentPrefix: renderState.segmentPrefix,
     boundaryPrefix: renderState.boundaryPrefix,
     startInlineScript: renderState.startInlineScript,
-    htmlChunks: renderState.htmlChunks,
-    headChunks: renderState.headChunks,
+    preamble: renderState.preamble,
     externalRuntimeScript: renderState.externalRuntimeScript,
     bootstrapChunks: renderState.bootstrapChunks,
     importMapChunks: renderState.importMapChunks,
@@ -134,6 +135,7 @@ export const doctypeChunk: PrecomputedChunk = stringToPrecomputedChunk('');
 export type {
   ResumableState,
   HoistableState,
+  PreambleState,
   FormatContext,
 } from './ReactFizzConfigDOM';
 
@@ -156,8 +158,10 @@ export {
   writeCompletedRoot,
   createRootFormatContext,
   createResumableState,
+  createPreambleState,
   createHoistableState,
-  writePreamble,
+  writePreambleStart,
+  writePreambleEnd,
   writeHoistables,
   writePostamble,
   hoistHoistables,
@@ -165,6 +169,10 @@ export {
   completeResumableState,
   emitEarlyPreloads,
   supportsClientAPIs,
+  canHavePreamble,
+  hoistPreambleState,
+  isPreambleReady,
+  isPreambleContext,
 } from './ReactFizzConfigDOM';
 
 import escapeTextForBrowser from './escapeTextForBrowser';
@@ -199,6 +207,28 @@ export function pushSegmentFinale(
       textEmbedded,
     );
   }
+}
+
+export function pushStartActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  if (renderState.generateStaticMarkup) {
+    // A completed boundary is done and doesn't need a representation in the HTML
+    // if we're not going to be hydrating it.
+    return;
+  }
+  pushStartActivityBoundaryImpl(target, renderState);
+}
+
+export function pushEndActivityBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  if (renderState.generateStaticMarkup) {
+    return;
+  }
+  pushEndActivityBoundaryImpl(target, renderState);
 }
 
 export function writeStartCompletedSuspenseBoundary(

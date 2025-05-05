@@ -33,6 +33,8 @@ export {
   unstable_getCacheForType,
   unstable_SuspenseList,
   unstable_ViewTransition,
+  unstable_startGestureTransition,
+  unstable_addTransitionType,
   unstable_useCacheRefresh,
   useId,
   useCallback,
