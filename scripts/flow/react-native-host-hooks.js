@@ -49,7 +49,6 @@ type RawEventEmitterEvent = $ReadOnly<{
   // and a stateNode of the native element/Fiber the event was emitted to.
   nativeEvent: {[string]: mixed, ...},
 }>;
-opaque type __PublicInstance;
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface' {
   declare export function deepDiffer(
@@ -159,7 +158,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
-  declare export opaque type PublicInstance = __PublicInstance;
+  declare export opaque type PublicInstance;
   declare export opaque type PublicTextInstance;
   declare export opaque type PublicRootInstance;
   declare export type MeasureOnSuccessCallback = __MeasureOnSuccessCallback;
@@ -206,7 +205,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitialize
 }
 
 declare module 'react-native' {
-  declare export opaque type HostInstance = __PublicInstance;
+  declare export opaque type PublicInstance;
   declare export opaque type PublicTextInstance;
   declare export opaque type PublicRootInstance;
   declare export type MeasureOnSuccessCallback = __MeasureOnSuccessCallback;
