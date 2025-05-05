@@ -13,8 +13,8 @@ import {
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
-import type {ReactContext} from 'shared/ReactTypes';
-import {enableRenderableContext} from 'shared/ReactFeatureFlags';
+import type { ReactContext } from 'shared/ReactTypes';
+import { enableRenderableContext } from 'shared/ReactFeatureFlags';
 
 export function createContext<T>(defaultValue: T): ReactContext<T> {
   // TODO: Second argument used to be an optional `calculateChangedBits`
@@ -30,9 +30,9 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
     _currentValue: defaultValue,
     _currentValue2: defaultValue,
     // Used to track how many concurrent renderers this context currently
-    // supports within in a single renderer. Such as parallel server rendering.
+    // supports within a single renderer. Such as parallel server rendering.
     _threadCount: 0,
-    // These are circular
+    // These will be circular references
     Provider: (null: any),
     Consumer: (null: any),
   };
@@ -95,7 +95,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
           get() {
             return context.displayName;
           },
-          set(displayName: void | string) {},
+          set(displayName: void | string) { },
         },
       });
       (context: any).Consumer = Consumer;
