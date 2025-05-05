@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<f9961130cb61925c3f0f46d93c0b7e60>>
+ * @generated SignedSource<<40a04319cda9777bb49ac7840ca620c2>>
  */
 
 'use strict';
@@ -60154,7 +60154,7 @@ const rule = {
         docs: {
             description: 'enforces the Rules of Hooks',
             recommended: true,
-            url: 'https://reactjs.org/docs/hooks-rules.html',
+            url: 'https://react.dev/reference/rules/rules-of-hooks',
         },
     },
     create(context) {

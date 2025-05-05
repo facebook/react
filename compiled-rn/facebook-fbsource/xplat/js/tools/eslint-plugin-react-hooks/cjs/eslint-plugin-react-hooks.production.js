@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<28697f05400832aadf9c7702f319e94b>>
+ * @generated SignedSource<<e5099a6e93a1b798aa2b13cc58378e11>>
  */
 
 'use strict';
@@ -59933,7 +59933,7 @@ const rule = {
         docs: {
             description: 'enforces the Rules of Hooks',
             recommended: true,
-            url: 'https://reactjs.org/docs/hooks-rules.html',
+            url: 'https://react.dev/reference/rules/rules-of-hooks',
         },
     },
     create(context) {
