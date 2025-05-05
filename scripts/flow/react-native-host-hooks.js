@@ -205,7 +205,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitialize
 }
 
 declare module 'react-native' {
-  declare export opaque type PublicInstance;
+  declare export opaque type HostInstance;
   declare export opaque type PublicTextInstance;
   declare export opaque type PublicRootInstance;
   declare export type MeasureOnSuccessCallback = __MeasureOnSuccessCallback;
