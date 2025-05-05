@@ -49,7 +49,6 @@ import {
 } from './ReactDOMTextarea';
 import {setSrcObject} from './ReactDOMSrcObject';
 import {validateTextNesting} from './validateDOMNesting';
-import {track} from './inputValueTracking';
 import setTextContent from './setTextContent';
 import {
   createDangerousStringForStyles,
@@ -1187,7 +1186,6 @@ export function setInitialProperties(
         name,
         false,
       );
-      track((domElement: any));
       return;
     }
     case 'select': {
@@ -1285,7 +1283,6 @@ export function setInitialProperties(
       // up necessary since we never stop tracking anymore.
       validateTextareaProps(domElement, props);
       initTextarea(domElement, value, defaultValue, children);
-      track((domElement: any));
       return;
     }
     case 'option': {
@@ -3110,7 +3107,6 @@ export function hydrateProperties(
         props.name,
         true,
       );
-      track((domElement: any));
       break;
     case 'option':
       validateOptionProps(domElement, props);
@@ -3135,7 +3131,6 @@ export function hydrateProperties(
       // up necessary since we never stop tracking anymore.
       validateTextareaProps(domElement, props);
       initTextarea(domElement, props.value, props.defaultValue, props.children);
-      track((domElement: any));
       break;
   }
 

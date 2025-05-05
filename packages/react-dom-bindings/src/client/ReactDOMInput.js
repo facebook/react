@@ -12,7 +12,7 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
-import {updateValueIfChanged} from './inputValueTracking';
+import {track, updateValueIfChanged} from './inputValueTracking';
 import getActiveElement from './getActiveElement';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
@@ -229,6 +229,8 @@ export function initInput(
     // Avoid setting value attribute on submit/reset inputs as it overrides the
     // default value provided by the browser. See: #12872
     if (isButton && (value === undefined || value === null)) {
+      // We track the value just in case it changes type later on.
+      track((element: any));
       return;
     }
 
@@ -335,6 +337,7 @@ export function initInput(
     }
     node.name = name;
   }
+  track((element: any));
 }
 
 export function restoreControlledInputState(element: Element, props: Object) {

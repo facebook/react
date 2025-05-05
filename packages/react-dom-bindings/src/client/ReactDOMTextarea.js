@@ -13,6 +13,8 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 import {getToStringValue, toString} from './ToStringValue';
 import {disableTextareaChildren} from 'shared/ReactFeatureFlags';
 
+import {track} from './inputValueTracking';
+
 let didWarnValDefaultVal = false;
 
 /**
@@ -140,6 +142,8 @@ export function initTextarea(
       node.value = textContent;
     }
   }
+
+  track((element: any));
 }
 
 export function restoreControlledTextareaState(
