@@ -21,6 +21,7 @@ const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
 const dynamicImports = require('./plugins/dynamic-imports');
+const externalRuntime = require('./plugins/external-runtime-plugin');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
 const codeFrame = require('@babel/code-frame').default;
@@ -441,6 +442,8 @@ function getPlugins(
           __EXPERIMENTAL__,
         },
       }),
+      // For the external runtime we turn global identifiers into local.
+      entry.includes('server-external-runtime') && externalRuntime(),
       {
         name: 'top-level-definitions',
         renderChunk(source) {

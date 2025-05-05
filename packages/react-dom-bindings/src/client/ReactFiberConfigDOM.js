@@ -238,6 +238,7 @@ const ACTIVITY_END_DATA = '/&';
 const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
 const SUSPENSE_PENDING_START_DATA = '$?';
+const SUSPENSE_QUEUED_START_DATA = '$~';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
 const PREAMBLE_CONTRIBUTION_HTML = 'html';
 const PREAMBLE_CONTRIBUTION_BODY = 'body';
@@ -245,7 +246,7 @@ const PREAMBLE_CONTRIBUTION_HEAD = 'head';
 const FORM_STATE_IS_MATCHING = 'F!';
 const FORM_STATE_IS_NOT_MATCHING = 'F';
 
-const DOCUMENT_READY_STATE_COMPLETE = 'complete';
+const DOCUMENT_READY_STATE_LOADING = 'loading';
 
 const STYLE = 'style';
 
@@ -1084,6 +1085,7 @@ function clearHydrationBoundary(
       } else if (
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_QUEUED_START_DATA ||
         data === SUSPENSE_FALLBACK_START_DATA ||
         data === ACTIVITY_START_DATA
       ) {
@@ -1205,6 +1207,7 @@ function hideOrUnhideDehydratedBoundary(
       } else if (
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_QUEUED_START_DATA ||
         data === SUSPENSE_FALLBACK_START_DATA
       ) {
         depth++;
@@ -3140,7 +3143,10 @@ export function canHydrateSuspenseInstance(
 }
 
 export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
-  return instance.data === SUSPENSE_PENDING_START_DATA;
+  return (
+    instance.data === SUSPENSE_PENDING_START_DATA ||
+    instance.data === SUSPENSE_QUEUED_START_DATA
+  );
 }
 
 export function isSuspenseInstanceFallback(
@@ -3149,7 +3155,7 @@ export function isSuspenseInstanceFallback(
   return (
     instance.data === SUSPENSE_FALLBACK_START_DATA ||
     (instance.data === SUSPENSE_PENDING_START_DATA &&
-      instance.ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE)
+      instance.ownerDocument.readyState !== DOCUMENT_READY_STATE_LOADING)
   );
 }
 
@@ -3192,7 +3198,11 @@ export function registerSuspenseInstanceRetry(
   callback: () => void,
 ) {
   const ownerDocument = instance.ownerDocument;
-  if (
+  if (instance.data === SUSPENSE_QUEUED_START_DATA) {
+    // The Fizz runtime has already queued this boundary for reveal. We wait for it
+    // to be revealed and then retries.
+    instance._reactRetry = callback;
+  } else if (
     // The Fizz runtime must have put this boundary into client render or complete
     // state after the render finished but before it committed. We need to call the
     // callback now rather than wait
@@ -3200,7 +3210,7 @@ export function registerSuspenseInstanceRetry(
     // The boundary is still in pending status but the document has finished loading
     // before we could register the event handler that would have scheduled the retry
     // on load so we call teh callback now.
-    ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE
+    ownerDocument.readyState !== DOCUMENT_READY_STATE_LOADING
   ) {
     callback();
   } else {
@@ -3255,18 +3265,19 @@ function getNextHydratable(node: ?Node) {
       break;
     }
     if (nodeType === COMMENT_NODE) {
-      const nodeData = (node: any).data;
+      const data = (node: any).data;
       if (
-        nodeData === SUSPENSE_START_DATA ||
-        nodeData === SUSPENSE_FALLBACK_START_DATA ||
-        nodeData === SUSPENSE_PENDING_START_DATA ||
-        nodeData === ACTIVITY_START_DATA ||
-        nodeData === FORM_STATE_IS_MATCHING ||
-        nodeData === FORM_STATE_IS_NOT_MATCHING
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_QUEUED_START_DATA ||
+        data === ACTIVITY_START_DATA ||
+        data === FORM_STATE_IS_MATCHING ||
+        data === FORM_STATE_IS_NOT_MATCHING
       ) {
         break;
       }
-      if (nodeData === SUSPENSE_END_DATA || nodeData === ACTIVITY_END_DATA) {
+      if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
         return null;
       }
     }
@@ -3494,6 +3505,7 @@ function getNextHydratableInstanceAfterHydrationBoundary(
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_FALLBACK_START_DATA ||
         data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_QUEUED_START_DATA ||
         data === ACTIVITY_START_DATA
       ) {
         depth++;
@@ -3535,6 +3547,7 @@ export function getParentHydrationBoundary(
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_FALLBACK_START_DATA ||
         data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_QUEUED_START_DATA ||
         data === ACTIVITY_START_DATA
       ) {
         if (depth === 0) {

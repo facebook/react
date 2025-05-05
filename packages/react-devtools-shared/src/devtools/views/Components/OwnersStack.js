@@ -20,7 +20,7 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
 import ElementBadges from './ElementBadges';
-import {OwnersListContext} from './OwnersListContext';
+import {OwnersListContext, useChangeOwnerAction} from './OwnersListContext';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {useIsOverflowing} from '../hooks';
 import {StoreContext} from '../context';
@@ -81,6 +81,7 @@ export default function OwnerStack(): React.Node {
   const read = useContext(OwnersListContext);
   const {ownerID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);
+  const changeOwnerAction = useChangeOwnerAction();
 
   const [state, dispatch] = useReducer<State, State, Action>(dialogReducer, {
     ownerID: null,
@@ -116,7 +117,7 @@ export default function OwnerStack(): React.Node {
           type: 'UPDATE_SELECTED_INDEX',
           selectedIndex: index >= 0 ? index : 0,
         });
-        treeDispatch({type: 'SELECT_OWNER', payload: owner.id});
+        changeOwnerAction(owner.id);
       } else {
         dispatch({
           type: 'UPDATE_SELECTED_INDEX',
