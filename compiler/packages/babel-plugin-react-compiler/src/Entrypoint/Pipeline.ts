@@ -60,7 +60,6 @@ import {
   promoteUsedTemporaries,
   propagateEarlyReturns,
   pruneHoistedContexts,
-  pruneNonEscapingScopes,
   pruneNonReactiveDependencies,
   pruneUnusedLValues,
   pruneUnusedLabels,
@@ -99,6 +98,7 @@ import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryState
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
+import {pruneNonEscapingScopesHIR} from '../HIR/PruneNonEscapingScopesHIR';
 import {transformFire} from '../Transform';
 import {validateNoImpureFunctionsInRender} from '../Validation/ValidateNoImpureFunctionsInRender';
 import {CompilerError} from '..';
@@ -399,6 +399,13 @@ function runWithEnvironment(
     });
   }
 
+  pruneNonEscapingScopesHIR(hir);
+  log({
+    kind: 'hir',
+    name: 'PruneNonEscapingScopesHIR',
+    value: hir,
+  });
+
   if (env.config.inlineJsxTransform) {
     inlineJsxTransform(hir, env.config.inlineJsxTransform);
     log({
@@ -424,13 +431,6 @@ function runWithEnvironment(
     value: reactiveFunction,
   });
   assertScopeInstructionsWithinScopes(reactiveFunction);
-
-  pruneNonEscapingScopes(reactiveFunction);
-  log({
-    kind: 'reactive',
-    name: 'PruneNonEscapingScopes',
-    value: reactiveFunction,
-  });
 
   pruneNonReactiveDependencies(reactiveFunction);
   log({
