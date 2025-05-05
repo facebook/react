@@ -128,7 +128,7 @@ const rule = {
     docs: {
       description: 'enforces the Rules of Hooks',
       recommended: true,
-      url: 'https://reactjs.org/docs/hooks-rules.html',
+      url: 'https://react.dev/reference/rules/rules-of-hooks',
     },
   },
   create(context: Rule.RuleContext) {
