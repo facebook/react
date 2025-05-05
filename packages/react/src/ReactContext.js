@@ -13,8 +13,8 @@ import {
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
-import type { ReactContext } from 'shared/ReactTypes';
-import { enableRenderableContext } from 'shared/ReactFeatureFlags';
+import type {ReactContext} from 'shared/ReactTypes';
+import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
 export function createContext<T>(defaultValue: T): ReactContext<T> {
   // TODO: Second argument used to be an optional `calculateChangedBits`
@@ -95,7 +95,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
           get() {
             return context.displayName;
           },
-          set(displayName: void | string) { },
+          set(displayName: void | string) {},
         },
       });
       (context: any).Consumer = Consumer;
