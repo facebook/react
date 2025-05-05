@@ -45843,19 +45843,42 @@ const EMPTY = new Empty();
 function pruneHoistedContexts(fn) {
     visitReactiveFunction(fn, new Visitor$8(), {
         activeScopes: empty(),
+        uninitialized: new Map(),
     });
 }
 let Visitor$8 = class Visitor extends ReactiveFunctionTransform {
     visitScope(scope, state) {
         state.activeScopes = state.activeScopes.push(new Set(scope.scope.declarations.keys()));
+        for (const decl of scope.scope.declarations.values()) {
+            state.uninitialized.set(decl.identifier.id, { kind: 'unknown-kind' });
+        }
         this.traverseScope(scope, state);
         state.activeScopes.pop();
+        for (const decl of scope.scope.declarations.values()) {
+            state.uninitialized.delete(decl.identifier.id);
+        }
+    }
+    visitPlace(_id, place, state) {
+        const maybeHoistedFn = state.uninitialized.get(place.identifier.id);
+        if ((maybeHoistedFn === null || maybeHoistedFn === void 0 ? void 0 : maybeHoistedFn.kind) === 'func' &&
+            maybeHoistedFn.definition !== place) {
+            CompilerError.throwTodo({
+                reason: '[PruneHoistedContexts] Rewrite hoisted function references',
+                loc: place.loc,
+            });
+        }
     }
     transformInstruction(instruction, state) {
-        this.visitInstruction(instruction, state);
         if (instruction.value.kind === 'DeclareContext') {
             const maybeNonHoisted = convertHoistedLValueKind(instruction.value.lvalue.kind);
             if (maybeNonHoisted != null) {
+                if (maybeNonHoisted === InstructionKind.Function &&
+                    state.uninitialized.has(instruction.value.lvalue.place.identifier.id)) {
+                    state.uninitialized.set(instruction.value.lvalue.place.identifier.id, {
+                        kind: 'func',
+                        definition: null,
+                    });
+                }
                 return { kind: 'remove' };
             }
         }
@@ -45864,9 +45887,31 @@ let Visitor$8 = class Visitor extends ReactiveFunctionTransform {
             const lvalueId = instruction.value.lvalue.place.identifier.id;
             const isDeclaredByScope = state.activeScopes.find(scope => scope.has(lvalueId));
             if (isDeclaredByScope) {
-                instruction.value.lvalue.kind = InstructionKind.Reassign;
+                if (instruction.value.lvalue.kind === InstructionKind.Let ||
+                    instruction.value.lvalue.kind === InstructionKind.Const) {
+                    instruction.value.lvalue.kind = InstructionKind.Reassign;
+                }
+                else if (instruction.value.lvalue.kind === InstructionKind.Function) {
+                    const maybeHoistedFn = state.uninitialized.get(lvalueId);
+                    if (maybeHoistedFn != null) {
+                        CompilerError.invariant(maybeHoistedFn.kind === 'func', {
+                            reason: '[PruneHoistedContexts] Unexpected hoisted function',
+                            loc: instruction.loc,
+                        });
+                        maybeHoistedFn.definition = instruction.value.lvalue.place;
+                        state.uninitialized.delete(lvalueId);
+                    }
+                }
+                else {
+                    CompilerError.throwTodo({
+                        reason: '[PruneHoistedContexts] Unexpected kind',
+                        description: `(${instruction.value.lvalue.kind})`,
+                        loc: instruction.loc,
+                    });
+                }
             }
         }
+        this.visitInstruction(instruction, state);
         return { kind: 'keep' };
     }
 };
