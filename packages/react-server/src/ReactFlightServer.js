@@ -3975,6 +3975,8 @@ function retryTask(request: Request, task: Task): void {
   const prevDebugID = debugID;
   task.status = RENDERING;
 
+  // Stash and restore original size e.g. for when we're retrying strings.
+  const parentSerializedSize = serializedSize;
   try {
     // Track the root so we know that we have to emit this object even though it
     // already has an ID. This is needed because we might see this object twice
@@ -4086,6 +4088,7 @@ function retryTask(request: Request, task: Task): void {
     if (__DEV__) {
       debugID = prevDebugID;
     }
+    serializedSize = parentSerializedSize;
   }
 }
 
