@@ -204,6 +204,13 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {
 }
 
+declare module 'react-native' {
+  declare export opaque type PublicInstance;
+  declare export opaque type PublicTextInstance;
+  declare export opaque type PublicRootInstance;
+  declare export type MeasureOnSuccessCallback = __MeasureOnSuccessCallback;
+}
+
 // eslint-disable-next-line no-unused-vars
 declare const RN$enableMicrotasksInReact: boolean;
 
