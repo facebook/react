@@ -936,8 +936,10 @@ function parseModelString(
         // Server Reference
         const ref = value.slice(2);
         // TODO: Just encode this in the reference inline instead of as a model.
-        const metaData: {id: ServerReferenceId, bound: Thenable<Array<any>>} =
-          getOutlinedModel(response, ref, obj, key, createModel);
+        const metaData: {
+          id: ServerReferenceId,
+          bound: null | Thenable<Array<any>>,
+        } = getOutlinedModel(response, ref, obj, key, createModel);
         return loadServerReference(
           response,
           metaData.id,

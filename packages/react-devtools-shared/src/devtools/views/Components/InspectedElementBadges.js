@@ -11,21 +11,25 @@ import * as React from 'react';
 
 import Badge from './Badge';
 import ForgetBadge from './ForgetBadge';
+import NativeTagBadge from './NativeTagBadge';
 
 import styles from './InspectedElementBadges.css';
 
 type Props = {
   hocDisplayNames: null | Array<string>,
   compiledWithForget: boolean,
+  nativeTag: number | null,
 };
 
 export default function InspectedElementBadges({
   hocDisplayNames,
   compiledWithForget,
+  nativeTag,
 }: Props): React.Node {
   if (
     !compiledWithForget &&
-    (hocDisplayNames == null || hocDisplayNames.length === 0)
+    (hocDisplayNames == null || hocDisplayNames.length === 0) &&
+    nativeTag === null
   ) {
     return null;
   }
@@ -33,6 +37,7 @@ export default function InspectedElementBadges({
   return (
     <div className={styles.Root}>
       {compiledWithForget && <ForgetBadge indexable={false} />}
+      {nativeTag !== null && <NativeTagBadge nativeTag={nativeTag} />}
 
       {hocDisplayNames !== null &&
         hocDisplayNames.map(hocDisplayName => (

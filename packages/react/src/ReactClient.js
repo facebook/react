@@ -15,7 +15,7 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
-  REACT_OFFSCREEN_TYPE,
+  REACT_ACTIVITY_TYPE,
   REACT_SCOPE_TYPE,
   REACT_TRACING_MARKER_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
@@ -41,7 +41,6 @@ import {
   useContext,
   useEffect,
   useEffectEvent,
-  useResourceEffect,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
@@ -60,11 +59,11 @@ import {
   useActionState,
 } from './ReactHooks';
 import ReactSharedInternals from './ReactSharedInternalsClient';
-import {startTransition} from './ReactStartTransition';
+import {startTransition, startGestureTransition} from './ReactStartTransition';
+import {addTransitionType} from './ReactTransitionType';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
-import ReactCompilerRuntime from './ReactCompilerRuntime';
-import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
+import * as ReactCompilerRuntime from './ReactCompilerRuntime';
 
 const Children = {
   map,
@@ -116,7 +115,7 @@ export {
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
-  REACT_OFFSCREEN_TYPE as unstable_Activity,
+  REACT_ACTIVITY_TYPE as unstable_Activity,
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
   use,
@@ -126,10 +125,11 @@ export {
   REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
   // enableViewTransition
   REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
+  addTransitionType as unstable_addTransitionType,
+  // enableGestureTransition
+  startGestureTransition as unstable_startGestureTransition,
+  // DEV-only
   useId,
-  act, // DEV-only
-  captureOwnerStack, // DEV-only
+  act,
+  captureOwnerStack,
 };
-
-export const experimental_useResourceEffect: typeof useResourceEffect | void =
-  enableUseResourceEffectHook ? useResourceEffect : undefined;

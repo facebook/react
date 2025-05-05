@@ -391,8 +391,7 @@ describe('ReactDOMForm', () => {
         '> <form action={function outerAction}>\n' +
         '    <input>\n' +
         '>   <form action={function innerAction} ref={{current:null}}>\n' +
-        '\n    in form (at **)' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in form (at **)'),
+        '\n    in form (at **)',
     ]);
 
     await submit(ref.current);
@@ -588,8 +587,7 @@ describe('ReactDOMForm', () => {
       'Cannot specify a "name" prop for a button that specifies a function as a formAction. ' +
         'React needs it to encode which action should be invoked. ' +
         'It will get overridden.\n' +
-        '    in input (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in form (at **)'),
+        '    in input (at **)',
     ]);
 
     await submit(inputRef.current);
@@ -1494,9 +1492,10 @@ describe('ReactDOMForm', () => {
     await act(() => dispatch());
     assertConsoleErrorDev([
       [
-        'An async function was passed to useActionState, but it was dispatched outside of an action context. ' +
-          'This is likely not what you intended. ' +
-          'Either pass the dispatch function to an `action` prop, or dispatch manually inside `startTransition`',
+        'An async function with useActionState was called outside of a transition. ' +
+          'This is likely not what you intended (for example, isPending will not update ' +
+          'correctly). Either call the returned function inside startTransition, or pass it ' +
+          'to an `action` or `formAction` prop.',
         {withoutStack: true},
       ],
     ]);
@@ -1970,7 +1969,6 @@ describe('ReactDOMForm', () => {
         'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
         'For details, see https://react.dev/link/attribute-behavior \n' +
         '    in button (at **)\n' +
-        (gate('enableOwnerStacks') ? '' : '    in form (at **)\n') +
         '    in App (at **)',
     ]);
     await submit(buttonRef.current);

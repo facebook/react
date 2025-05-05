@@ -5,7 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, ErrorSeverity, ValueKind} from '..';
+import {
+  CompilerError,
+  CompilerErrorDetailOptions,
+  ErrorSeverity,
+  ValueKind,
+} from '..';
 import {
   AbstractValue,
   BasicBlock,
@@ -41,11 +46,16 @@ function inferOperandEffect(state: State, place: Place): null | FunctionEffect {
       if (isRefOrRefValue(place.identifier)) {
         break;
       } else if (value.kind === ValueKind.Context) {
+        CompilerError.invariant(value.context.size > 0, {
+          reason:
+            "[InferFunctionEffects] Expected Context-kind value's capture list to be non-empty.",
+          loc: place.loc,
+        });
         return {
           kind: 'ContextMutation',
           loc: place.loc,
           effect: place.effect,
-          places: value.context.size === 0 ? new Set([place]) : value.context,
+          places: value.context,
         };
       } else if (
         value.kind !== ValueKind.Mutable &&
@@ -285,21 +295,21 @@ export function inferTerminalFunctionEffects(
   return functionEffects;
 }
 
-export function raiseFunctionEffectErrors(
+export function transformFunctionEffectErrors(
   functionEffects: Array<FunctionEffect>,
-): void {
-  functionEffects.forEach(eff => {
+): Array<CompilerErrorDetailOptions> {
+  return functionEffects.map(eff => {
     switch (eff.kind) {
       case 'ReactMutation':
       case 'GlobalMutation': {
-        CompilerError.throw(eff.error);
+        return eff.error;
       }
       case 'ContextMutation': {
-        CompilerError.throw({
+        return {
           severity: ErrorSeverity.Invariant,
           reason: `Unexpected ContextMutation in top-level function effects`,
           loc: eff.loc,
-        });
+        };
       }
       default:
         assertExhaustive(

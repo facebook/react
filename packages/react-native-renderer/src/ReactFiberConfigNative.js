@@ -8,12 +8,14 @@
  */
 
 import type {InspectorData, TouchedViewDataAtPoint} from './ReactNativeTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 // Modules provided by RN:
 import {
   ReactNativeViewConfigRegistry,
   UIManager,
   deepFreezeAndThrowOnMutationInDev,
+  type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {create, diff} from './ReactNativeAttributePayload';
@@ -53,7 +55,10 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
 export type Type = string;
 export type Props = Object;
-export type Container = number;
+export type Container = {
+  containerTag: number,
+  publicInstance: PublicRootInstance | null,
+};
 export type Instance = ReactNativeFiberHostComponent;
 export type TextInstance = number;
 export type HydratableInstance = Instance | TextInstance;
@@ -142,7 +147,7 @@ export function createInstance(
   UIManager.createView(
     tag, // reactTag
     viewConfig.uiViewClassName, // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     updatePayload, // props
   );
 
@@ -160,6 +165,13 @@ export function createInstance(
   return ((component: any): Instance);
 }
 
+export function cloneMutableInstance(
+  instance: Instance,
+  keepChildren: boolean,
+): Instance {
+  throw new Error('Not yet implemented.');
+}
+
 export function createTextInstance(
   text: string,
   rootContainerInstance: Container,
@@ -175,13 +187,48 @@ export function createTextInstance(
   UIManager.createView(
     tag, // reactTag
     'RCTRawText', // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     {text: text}, // props
   );
 
   precacheFiberNode(internalInstanceHandle, tag);
 
   return tag;
+}
+
+export function cloneMutableTextInstance(
+  textInstance: TextInstance,
+): TextInstance {
+  throw new Error('Not yet implemented.');
+}
+
+export type FragmentInstanceType = null;
+
+export function createFragmentInstance(
+  fragmentFiber: Fiber,
+): FragmentInstanceType {
+  return null;
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Fiber,
+  instance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function commitNewChildToFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function deleteChildFromFragmentInstance(
+  child: PublicInstance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
 }
 
 export function finalizeInitialChildren(
@@ -348,7 +395,7 @@ export function appendChildToContainer(
 ): void {
   const childTag = typeof child === 'number' ? child : child._nativeTag;
   UIManager.setChildren(
-    parentInstance, // containerTag
+    parentInstance.containerTag, // containerTag
     [childTag], // reactTags
   );
 }
@@ -478,7 +525,7 @@ export function removeChildFromContainer(
 ): void {
   recursivelyUncacheFiberNode(child);
   UIManager.manageChildren(
-    parentInstance, // containerID
+    parentInstance.containerTag, // containerID
     [], // moveFromIndices
     [], // moveToIndices
     [], // addChildReactTags
@@ -553,10 +600,27 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
   // Not yet implemented
 }
 
+export function cloneRootViewTransitionContainer(
+  rootContainer: Container,
+): Instance {
+  throw new Error('Not implemented.');
+}
+
+export function removeRootViewTransitionClone(
+  rootContainer: Container,
+  clone: Instance,
+): void {
+  throw new Error('Not implemented.');
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
   // This heuristic is better implemented at the native layer.
+  return null;
+}
+
+export function measureClonedInstance(instance: Instance): InstanceMeasurement {
   return null;
 }
 
@@ -582,14 +646,40 @@ export function hasInstanceAffectedParent(
 
 export function startViewTransition(
   rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   layoutCallback: () => void,
   afterMutationCallback: () => void,
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
-): boolean {
-  return false;
+  errorCallback: mixed => void,
+): null | RunningViewTransition {
+  mutationCallback();
+  layoutCallback();
+  // Skip afterMutationCallback(). We don't need it since we're not animating.
+  spawnedWorkCallback();
+  // Skip passiveCallback(). Spawned work will schedule a task.
+  return null;
 }
+
+export type RunningViewTransition = null;
+
+export function startGestureTransition(
+  rootContainer: Container,
+  timeline: GestureTimeline,
+  rangeStart: number,
+  rangeEnd: number,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  animateCallback: () => void,
+  errorCallback: mixed => void,
+): null | RunningViewTransition {
+  mutationCallback();
+  animateCallback();
+  return null;
+}
+
+export function stopViewTransition(transition: RunningViewTransition) {}
 
 export type ViewTransitionInstance = null | {name: string, ...};
 
@@ -597,6 +687,14 @@ export function createViewTransitionInstance(
   name: string,
 ): ViewTransitionInstance {
   return null;
+}
+
+export type GestureTimeline = null;
+
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
+  throw new Error(
+    'startGestureTransition is not yet supported in React Native.',
+  );
 }
 
 export function clearContainer(container: Container): void {
@@ -637,14 +735,37 @@ export function maySuspendCommit(type: Type, props: Props): boolean {
   return false;
 }
 
-export function preloadInstance(type: Type, props: Props): boolean {
+export function maySuspendCommitOnUpdate(
+  type: Type,
+  oldProps: Props,
+  newProps: Props,
+): boolean {
+  return false;
+}
+
+export function maySuspendCommitInSyncRender(
+  type: Type,
+  props: Props,
+): boolean {
+  return false;
+}
+
+export function preloadInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): boolean {
   // Return false to indicate it's already loaded
   return true;
 }
 
 export function startSuspendingCommit(): void {}
 
-export function suspendInstance(type: Type, props: Props): void {}
+export function suspendInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): void {}
 
 export function suspendOnActiveViewTransition(container: Container): void {}
 

@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import {CompilerError} from '../CompilerError';
 import {inRange} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {printDependency} from '../ReactiveScopes/PrintReactiveFunction';
@@ -12,14 +19,19 @@ import {
   BasicBlock,
   BlockId,
   DependencyPathEntry,
+  FunctionExpression,
   GeneratedSource,
+  getHookKind,
   HIRFunction,
   Identifier,
   IdentifierId,
   InstructionId,
   InstructionValue,
+  LoweredFunction,
+  PropertyLiteral,
   ReactiveScopeDependency,
   ScopeId,
+  TInstruction,
 } from './HIR';
 
 const DEBUG_PRINT = false;
@@ -111,7 +123,37 @@ export function collectHoistablePropertyLoads(
     hoistableFromOptionals,
     registry,
     nestedFnImmutableContext: null,
+    assumedInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
+      ? new Set()
+      : getAssumedInvokedFunctions(fn),
   });
+}
+
+export function collectHoistablePropertyLoadsInInnerFn(
+  fnInstr: TInstruction<FunctionExpression>,
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+  hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
+): ReadonlyMap<BlockId, BlockInfo> {
+  const fn = fnInstr.value.loweredFunc.func;
+  const initialContext: CollectHoistablePropertyLoadsContext = {
+    temporaries,
+    knownImmutableIdentifiers: new Set(),
+    hoistableFromOptionals,
+    registry: new PropertyPathRegistry(),
+    nestedFnImmutableContext: null,
+    assumedInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
+      ? new Set()
+      : getAssumedInvokedFunctions(fn),
+  };
+  const nestedFnImmutableContext = new Set(
+    fn.context
+      .filter(place =>
+        isImmutableAtInstr(place.identifier, fnInstr.id, initialContext),
+      )
+      .map(place => place.identifier.id),
+  );
+  initialContext.nestedFnImmutableContext = nestedFnImmutableContext;
+  return collectHoistablePropertyLoadsImpl(fn, initialContext);
 }
 
 type CollectHoistablePropertyLoadsContext = {
@@ -126,20 +168,17 @@ type CollectHoistablePropertyLoadsContext = {
    * but are currently kept separate for readability.
    */
   nestedFnImmutableContext: ReadonlySet<IdentifierId> | null;
+  /**
+   * Functions which are assumed to be eventually called (as opposed to ones which might
+   * not be called, e.g. the 0th argument of Array.map)
+   */
+  assumedInvokedFns: ReadonlySet<LoweredFunction>;
 };
 function collectHoistablePropertyLoadsImpl(
   fn: HIRFunction,
   context: CollectHoistablePropertyLoadsContext,
 ): ReadonlyMap<BlockId, BlockInfo> {
-  const functionExpressionLoads = collectFunctionExpressionFakeLoads(fn);
-  const actuallyEvaluatedTemporaries = new Map(
-    [...context.temporaries].filter(([id]) => !functionExpressionLoads.has(id)),
-  );
-
-  const nodes = collectNonNullsInBlocks(fn, {
-    ...context,
-    temporaries: actuallyEvaluatedTemporaries,
-  });
+  const nodes = collectNonNullsInBlocks(fn, context);
   propagateNonNull(fn, nodes, context.registry);
 
   if (DEBUG_PRINT) {
@@ -180,8 +219,8 @@ export type BlockInfo = {
  * and make computing sets intersections simpler.
  */
 type RootNode = {
-  properties: Map<string, PropertyPathNode>;
-  optionalProperties: Map<string, PropertyPathNode>;
+  properties: Map<PropertyLiteral, PropertyPathNode>;
+  optionalProperties: Map<PropertyLiteral, PropertyPathNode>;
   parent: null;
   // Recorded to make later computations simpler
   fullPath: ReactiveScopeDependency;
@@ -191,8 +230,8 @@ type RootNode = {
 
 type PropertyPathNode =
   | {
-      properties: Map<string, PropertyPathNode>;
-      optionalProperties: Map<string, PropertyPathNode>;
+      properties: Map<PropertyLiteral, PropertyPathNode>;
+      optionalProperties: Map<PropertyLiteral, PropertyPathNode>;
       parent: PropertyPathNode;
       fullPath: ReactiveScopeDependency;
       hasOptional: boolean;
@@ -345,7 +384,13 @@ function collectNonNullsInBlocks(
       context.registry.getOrCreateIdentifier(identifier),
     );
   }
-  const nodes = new Map<BlockId, BlockInfo>();
+  const nodes = new Map<
+    BlockId,
+    {
+      block: BasicBlock;
+      assumedNonNullObjects: Set<PropertyPathNode>;
+    }
+  >();
   for (const [_, block] of fn.body.blocks) {
     const assumedNonNullObjects = new Set<PropertyPathNode>(
       knownNonNullIdentifiers,
@@ -365,32 +410,30 @@ function collectNonNullsInBlocks(
       ) {
         assumedNonNullObjects.add(maybeNonNull);
       }
-      if (
-        (instr.value.kind === 'FunctionExpression' ||
-          instr.value.kind === 'ObjectMethod') &&
-        !fn.env.config.enableTreatFunctionDepsAsConditional
-      ) {
+      if (instr.value.kind === 'FunctionExpression') {
         const innerFn = instr.value.loweredFunc;
-        const innerHoistableMap = collectHoistablePropertyLoadsImpl(
-          innerFn.func,
-          {
-            ...context,
-            nestedFnImmutableContext:
-              context.nestedFnImmutableContext ??
-              new Set(
-                innerFn.func.context
-                  .filter(place =>
-                    isImmutableAtInstr(place.identifier, instr.id, context),
-                  )
-                  .map(place => place.identifier.id),
-              ),
-          },
-        );
-        const innerHoistables = assertNonNull(
-          innerHoistableMap.get(innerFn.func.body.entry),
-        );
-        for (const entry of innerHoistables.assumedNonNullObjects) {
-          assumedNonNullObjects.add(entry);
+        if (context.assumedInvokedFns.has(innerFn)) {
+          const innerHoistableMap = collectHoistablePropertyLoadsImpl(
+            innerFn.func,
+            {
+              ...context,
+              nestedFnImmutableContext:
+                context.nestedFnImmutableContext ??
+                new Set(
+                  innerFn.func.context
+                    .filter(place =>
+                      isImmutableAtInstr(place.identifier, instr.id, context),
+                    )
+                    .map(place => place.identifier.id),
+                ),
+            },
+          );
+          const innerHoistables = assertNonNull(
+            innerHoistableMap.get(innerFn.func.body.entry),
+          );
+          for (const entry of innerHoistables.assumedNonNullObjects) {
+            assumedNonNullObjects.add(entry);
+          }
         }
       }
     }
@@ -599,29 +642,129 @@ function reduceMaybeOptionalChains(
   } while (changed);
 }
 
-function collectFunctionExpressionFakeLoads(
+function getAssumedInvokedFunctions(
   fn: HIRFunction,
-): Set<IdentifierId> {
-  const sources = new Map<IdentifierId, IdentifierId>();
-  const functionExpressionReferences = new Set<IdentifierId>();
-
-  for (const [_, block] of fn.body.blocks) {
+  temporaries: Map<
+    IdentifierId,
+    {fn: LoweredFunction; mayInvoke: Set<LoweredFunction>}
+  > = new Map(),
+): ReadonlySet<LoweredFunction> {
+  const hoistableFunctions = new Set<LoweredFunction>();
+  /**
+   * Step 1: Conservatively collect identifier to function expression mappings
+   */
+  for (const block of fn.body.blocks.values()) {
     for (const {lvalue, value} of block.instructions) {
-      if (
-        value.kind === 'FunctionExpression' ||
-        value.kind === 'ObjectMethod'
-      ) {
-        for (const reference of value.loweredFunc.dependencies) {
-          let curr: IdentifierId | undefined = reference.identifier.id;
-          while (curr != null) {
-            functionExpressionReferences.add(curr);
-            curr = sources.get(curr);
-          }
+      /**
+       * Conservatively only match function expressions which can have guaranteed ssa.
+       * ObjectMethods and ObjectProperties do not.
+       */
+      if (value.kind === 'FunctionExpression') {
+        temporaries.set(lvalue.identifier.id, {
+          fn: value.loweredFunc,
+          mayInvoke: new Set(),
+        });
+      } else if (value.kind === 'StoreLocal') {
+        const lvalue = value.lvalue.place.identifier;
+        const maybeLoweredFunc = temporaries.get(value.value.identifier.id);
+        if (maybeLoweredFunc != null) {
+          temporaries.set(lvalue.id, maybeLoweredFunc);
         }
-      } else if (value.kind === 'PropertyLoad') {
-        sources.set(lvalue.identifier.id, value.object.identifier.id);
+      } else if (value.kind === 'LoadLocal') {
+        const maybeLoweredFunc = temporaries.get(value.place.identifier.id);
+        if (maybeLoweredFunc != null) {
+          temporaries.set(lvalue.identifier.id, maybeLoweredFunc);
+        }
       }
     }
   }
-  return functionExpressionReferences;
+  /**
+   * Step 2: Forward pass to do analysis of assumed function calls. Note that
+   * this is conservative and does not count indirect references through
+   * containers (e.g. `return {cb: () => {...}})`).
+   */
+  for (const block of fn.body.blocks.values()) {
+    for (const {lvalue, value} of block.instructions) {
+      if (value.kind === 'CallExpression') {
+        const callee = value.callee;
+        const maybeHook = getHookKind(fn.env, callee.identifier);
+        const maybeLoweredFunc = temporaries.get(callee.identifier.id);
+        if (maybeLoweredFunc != null) {
+          // Direct calls
+          hoistableFunctions.add(maybeLoweredFunc.fn);
+        } else if (maybeHook != null) {
+          /**
+           * Assume arguments to all hooks are safe to invoke
+           */
+          for (const arg of value.args) {
+            if (arg.kind === 'Identifier') {
+              const maybeLoweredFunc = temporaries.get(arg.identifier.id);
+              if (maybeLoweredFunc != null) {
+                hoistableFunctions.add(maybeLoweredFunc.fn);
+              }
+            }
+          }
+        }
+      } else if (value.kind === 'JsxExpression') {
+        /**
+         * Assume JSX attributes and children are safe to invoke
+         */
+        for (const attr of value.props) {
+          if (attr.kind === 'JsxSpreadAttribute') {
+            continue;
+          }
+          const maybeLoweredFunc = temporaries.get(attr.place.identifier.id);
+          if (maybeLoweredFunc != null) {
+            hoistableFunctions.add(maybeLoweredFunc.fn);
+          }
+        }
+        for (const child of value.children ?? []) {
+          const maybeLoweredFunc = temporaries.get(child.identifier.id);
+          if (maybeLoweredFunc != null) {
+            hoistableFunctions.add(maybeLoweredFunc.fn);
+          }
+        }
+      } else if (value.kind === 'FunctionExpression') {
+        /**
+         * Recursively traverse into other function expressions which may invoke
+         * or pass already declared functions to react (e.g. as JSXAttributes).
+         *
+         * If lambda A calls lambda B, we assume lambda B is safe to invoke if
+         * lambda A is -- even if lambda B is conditionally called. (see
+         * `conditional-call-chain` fixture for example).
+         */
+        const loweredFunc = value.loweredFunc.func;
+        const lambdasCalled = getAssumedInvokedFunctions(
+          loweredFunc,
+          temporaries,
+        );
+        const maybeLoweredFunc = temporaries.get(lvalue.identifier.id);
+        if (maybeLoweredFunc != null) {
+          for (const called of lambdasCalled) {
+            maybeLoweredFunc.mayInvoke.add(called);
+          }
+        }
+      }
+    }
+    if (block.terminal.kind === 'return') {
+      /**
+       * Assume directly returned functions are safe to call
+       */
+      const maybeLoweredFunc = temporaries.get(
+        block.terminal.value.identifier.id,
+      );
+      if (maybeLoweredFunc != null) {
+        hoistableFunctions.add(maybeLoweredFunc.fn);
+      }
+    }
+  }
+
+  for (const [_, {fn, mayInvoke}] of temporaries) {
+    if (hoistableFunctions.has(fn)) {
+      for (const called of mayInvoke) {
+        hoistableFunctions.add(called);
+      }
+    }
+  }
+  return hoistableFunctions;
 }

@@ -26,6 +26,7 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {assertExhaustive} from '../Utils/utils';
+import {Result} from '../Utils/Result';
 
 /**
  * Represents the possible kinds of value which may be stored at a given Place during
@@ -87,7 +88,9 @@ function joinKinds(a: Kind, b: Kind): Kind {
  *   may not appear as the callee of a conditional call.
  *   See the note for Kind.PotentialHook for sources of potential hooks
  */
-export function validateHooksUsage(fn: HIRFunction): void {
+export function validateHooksUsage(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const unconditionalBlocks = computeUnconditionalBlocks(fn);
 
   const errors = new CompilerError();
@@ -257,7 +260,9 @@ export function validateHooksUsage(fn: HIRFunction): void {
         }
         case 'PropertyLoad': {
           const objectKind = getKindForPlace(instr.value.object);
-          const isHookProperty = isHookName(instr.value.property);
+          const isHookProperty =
+            typeof instr.value.property === 'string' &&
+            isHookName(instr.value.property);
           let kind: Kind;
           switch (objectKind) {
             case Kind.Error: {
@@ -421,9 +426,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
   for (const [, error] of errorsByPlace) {
     errors.push(error);
   }
-  if (errors.hasErrors()) {
-    throw errors;
-  }
+  return errors.asResult();
 }
 
 function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {

@@ -1396,9 +1396,6 @@ describe('ReactCompositeComponent', () => {
       'Cannot update a component (`A`) while rendering a different component (`B`). ' +
         'To locate the bad setState() call inside `B`, ' +
         'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
-        (gate('enableOwnerStacks')
-          ? ''
-          : '    in B (at **)\n' + '    in div (at **)\n') +
         '    in Parent (at **)',
     ]);
 

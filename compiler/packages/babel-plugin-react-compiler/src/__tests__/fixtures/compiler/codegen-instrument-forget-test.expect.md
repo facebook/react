@@ -23,12 +23,12 @@ function Foo(props) {
 ## Code
 
 ```javascript
-import { useRenderCounter, shouldInstrument } from "react-compiler-runtime";
+import { shouldInstrument, useRenderCounter } from "react-compiler-runtime";
 import { c as _c } from "react/compiler-runtime"; // @enableEmitInstrumentForget @compilationMode(annotation)
 
 function Bar(props) {
   "use forget";
-  if (__DEV__ && shouldInstrument)
+  if (DEV && shouldInstrument)
     useRenderCounter("Bar", "/codegen-instrument-forget-test.ts");
   const $ = _c(2);
   let t0;
@@ -48,7 +48,7 @@ function NoForget(props) {
 
 function Foo(props) {
   "use forget";
-  if (__DEV__ && shouldInstrument)
+  if (DEV && shouldInstrument)
     useRenderCounter("Foo", "/codegen-instrument-forget-test.ts");
   const $ = _c(2);
   let t0;

@@ -70,7 +70,7 @@ const percentFormatter = new Intl.NumberFormat('en', {
 });
 
 function change(decimal) {
-  if (Number === Infinity) {
+  if (decimal === Infinity) {
     return 'New file';
   }
   if (decimal === -1) {

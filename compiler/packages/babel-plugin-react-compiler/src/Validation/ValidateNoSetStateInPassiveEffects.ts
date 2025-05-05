@@ -14,6 +14,7 @@ import {
   Place,
 } from '../HIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
+import {Result} from '../Utils/Result';
 
 /**
  * Validates against calling setState in the body of a *passive* effect (useEffect),
@@ -23,7 +24,9 @@ import {eachInstructionValueOperand} from '../HIR/visitors';
  * often bad for performance and frequently has more efficient and straightforward
  * alternatives. See https://react.dev/learn/you-might-not-need-an-effect for examples.
  */
-export function validateNoSetStateInPassiveEffects(fn: HIRFunction): void {
+export function validateNoSetStateInPassiveEffects(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const setStateFunctions: Map<IdentifierId, Place> = new Map();
   const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
@@ -98,9 +101,7 @@ export function validateNoSetStateInPassiveEffects(fn: HIRFunction): void {
     }
   }
 
-  if (errors.hasErrors()) {
-    throw errors;
-  }
+  return errors.asResult();
 }
 
 function getSetStateCall(

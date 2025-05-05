@@ -5,13 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError} from '../CompilerError';
+import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
 import {Environment} from '../HIR';
 import {
   AbstractValue,
   BasicBlock,
   BlockId,
   CallExpression,
+  NewExpression,
   Effect,
   FunctionEffect,
   GeneratedSource,
@@ -23,12 +24,15 @@ import {
   Phi,
   Place,
   SpreadPattern,
+  TInstruction,
   Type,
   ValueKind,
   ValueReason,
   isArrayType,
+  isMapType,
   isMutableEffect,
   isObjectType,
+  isSetType,
 } from '../HIR/HIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
 import {
@@ -38,7 +42,6 @@ import {
   printSourceLocation,
 } from '../HIR/PrintHIR';
 import {
-  eachCallArgument,
   eachInstructionOperand,
   eachInstructionValueOperand,
   eachPatternOperand,
@@ -49,7 +52,7 @@ import {assertExhaustive} from '../Utils/utils';
 import {
   inferTerminalFunctionEffects,
   inferInstructionFunctionEffects,
-  raiseFunctionEffectErrors,
+  transformFunctionEffectErrors,
 } from './InferFunctionEffects';
 
 const UndefinedValue: InstructionValue = {
@@ -103,12 +106,15 @@ const UndefinedValue: InstructionValue = {
 export default function inferReferenceEffects(
   fn: HIRFunction,
   options: {isFunctionExpression: boolean} = {isFunctionExpression: false},
-): void {
+): Array<CompilerErrorDetailOptions> {
   /*
    * Initial state contains function params
    * TODO: include module declarations here as well
    */
-  const initialState = InferenceState.empty(fn.env);
+  const initialState = InferenceState.empty(
+    fn.env,
+    options.isFunctionExpression,
+  );
   const value: InstructionValue = {
     kind: 'Primitive',
     loc: fn.loc,
@@ -241,8 +247,9 @@ export default function inferReferenceEffects(
 
   if (options.isFunctionExpression) {
     fn.effects = functionEffects;
+    return [];
   } else {
-    raiseFunctionEffectErrors(functionEffects);
+    return transformFunctionEffectErrors(functionEffects);
   }
 }
 
@@ -250,7 +257,8 @@ type FreezeAction = {values: Set<InstructionValue>; reason: Set<ValueReason>};
 
 // Maintains a mapping of top-level variables to the kind of value they hold
 class InferenceState {
-  #env: Environment;
+  env: Environment;
+  #isFunctionExpression: boolean;
 
   // The kind of each value, based on its allocation site
   #values: Map<InstructionValue, AbstractValue>;
@@ -263,16 +271,25 @@ class InferenceState {
 
   constructor(
     env: Environment,
+    isFunctionExpression: boolean,
     values: Map<InstructionValue, AbstractValue>,
     variables: Map<IdentifierId, Set<InstructionValue>>,
   ) {
-    this.#env = env;
+    this.env = env;
+    this.#isFunctionExpression = isFunctionExpression;
     this.#values = values;
     this.#variables = variables;
   }
 
-  static empty(env: Environment): InferenceState {
-    return new InferenceState(env, new Map(), new Map());
+  static empty(
+    env: Environment,
+    isFunctionExpression: boolean,
+  ): InferenceState {
+    return new InferenceState(env, isFunctionExpression, new Map(), new Map());
+  }
+
+  get isFunctionExpression(): boolean {
+    return this.#isFunctionExpression;
   }
 
   // (Re)initializes a @param value with its default @param kind.
@@ -390,29 +407,36 @@ class InferenceState {
 
   freezeValues(values: Set<InstructionValue>, reason: Set<ValueReason>): void {
     for (const value of values) {
+      if (
+        value.kind === 'DeclareContext' ||
+        (value.kind === 'StoreContext' &&
+          (value.lvalue.kind === InstructionKind.Let ||
+            value.lvalue.kind === InstructionKind.Const))
+      ) {
+        /**
+         * Avoid freezing context variable declarations, hoisted or otherwise
+         * function Component() {
+         *   const cb = useBar(() => foo(2)); // produces a hoisted context declaration
+         *   const foo = useFoo();            // reassigns to the context variable
+         *   return <Foo cb={cb} />;
+         * }
+         */
+        continue;
+      }
       this.#values.set(value, {
         kind: ValueKind.Frozen,
         reason,
         context: new Set(),
       });
-      if (value.kind === 'FunctionExpression') {
-        if (
-          this.#env.config.enablePreserveExistingMemoizationGuarantees ||
-          this.#env.config.enableTransitivelyFreezeFunctionExpressions
-        ) {
-          if (value.kind === 'FunctionExpression') {
-            /*
-             * We want to freeze the captured values, not mark the operands
-             * themselves as frozen. There could be mutations that occur
-             * before the freeze we are processing, and it would be invalid
-             * to overwrite those mutations as a freeze.
-             */
-            for (const operand of eachInstructionValueOperand(value)) {
-              const operandValues = this.#variables.get(operand.identifier.id);
-              if (operandValues !== undefined) {
-                this.freezeValues(operandValues, reason);
-              }
-            }
+      if (
+        value.kind === 'FunctionExpression' &&
+        (this.env.config.enablePreserveExistingMemoizationGuarantees ||
+          this.env.config.enableTransitivelyFreezeFunctionExpressions)
+      ) {
+        for (const operand of value.loweredFunc.func.context) {
+          const operandValues = this.#variables.get(operand.identifier.id);
+          if (operandValues !== undefined) {
+            this.freezeValues(operandValues, reason);
           }
         }
       }
@@ -460,6 +484,25 @@ class InferenceState {
           valueKind.kind === ValueKind.Context
         ) {
           effect = Effect.ConditionallyMutate;
+        } else {
+          effect = Effect.Read;
+        }
+        break;
+      }
+      case Effect.ConditionallyMutateIterator: {
+        if (
+          valueKind.kind === ValueKind.Mutable ||
+          valueKind.kind === ValueKind.Context
+        ) {
+          if (
+            isArrayType(place.identifier) ||
+            isSetType(place.identifier) ||
+            isMapType(place.identifier)
+          ) {
+            effect = Effect.Capture;
+          } else {
+            effect = Effect.ConditionallyMutate;
+          }
         } else {
           effect = Effect.Read;
         }
@@ -587,7 +630,8 @@ class InferenceState {
       return null;
     } else {
       return new InferenceState(
-        this.#env,
+        this.env,
+        this.#isFunctionExpression,
         nextValues ?? new Map(this.#values),
         nextVariables ?? new Map(this.#variables),
       );
@@ -601,7 +645,8 @@ class InferenceState {
    */
   clone(): InferenceState {
     return new InferenceState(
-      this.#env,
+      this.env,
+      this.#isFunctionExpression,
       new Map(this.#values),
       new Map(this.#variables),
     );
@@ -857,78 +902,71 @@ function inferBlock(
         break;
       }
       case 'ArrayExpression': {
-        const valueKind: AbstractValue = hasContextRefOperand(state, instrValue)
-          ? {
-              kind: ValueKind.Context,
-              reason: new Set([ValueReason.Other]),
-              context: new Set(),
-            }
-          : {
-              kind: ValueKind.Mutable,
-              reason: new Set([ValueReason.Other]),
-              context: new Set(),
-            };
+        const contextRefOperands = getContextRefOperand(state, instrValue);
+        const valueKind: AbstractValue =
+          contextRefOperands.length > 0
+            ? {
+                kind: ValueKind.Context,
+                reason: new Set([ValueReason.Other]),
+                context: new Set(contextRefOperands),
+              }
+            : {
+                kind: ValueKind.Mutable,
+                reason: new Set([ValueReason.Other]),
+                context: new Set(),
+              };
+
+        for (const element of instrValue.elements) {
+          if (element.kind === 'Spread') {
+            state.referenceAndRecordEffects(
+              freezeActions,
+              element.place,
+              Effect.ConditionallyMutateIterator,
+              ValueReason.Other,
+            );
+          } else if (element.kind === 'Identifier') {
+            state.referenceAndRecordEffects(
+              freezeActions,
+              element,
+              Effect.Capture,
+              ValueReason.Other,
+            );
+          } else {
+            let _: 'Hole' = element.kind;
+          }
+        }
+        state.initialize(instrValue, valueKind);
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.Store;
         continuation = {
-          kind: 'initialize',
-          valueKind,
-          effect: {kind: Effect.Capture, reason: ValueReason.Other},
-          lvalueEffect: Effect.Store,
+          kind: 'funeffects',
         };
         break;
       }
       case 'NewExpression': {
-        /**
-         * For new expressions, we infer a `read` effect on the Class / Function type
-         * to avoid extending mutable ranges of locally created classes, e.g.
-         * ```js
-         * const MyClass = getClass();
-         * const value = new MyClass(val1, val2)
-         *                   ^ (read)   ^ (conditionally mutate)
-         * ```
-         *
-         * Risks:
-         * Classes / functions created during render could technically capture and
-         * mutate their enclosing scope, which we currently do not detect.
-         */
-        const valueKind: AbstractValue = {
-          kind: ValueKind.Mutable,
-          reason: new Set([ValueReason.Other]),
-          context: new Set(),
-        };
-        state.referenceAndRecordEffects(
+        inferCallEffects(
+          state,
+          instr as TInstruction<NewExpression>,
           freezeActions,
-          instrValue.callee,
-          Effect.Read,
-          ValueReason.Other,
+          getFunctionCallSignature(env, instrValue.callee.identifier.type),
         );
-
-        for (const operand of eachCallArgument(instrValue.args)) {
-          state.referenceAndRecordEffects(
-            freezeActions,
-            operand,
-            Effect.ConditionallyMutate,
-            ValueReason.Other,
-          );
-        }
-
-        state.initialize(instrValue, valueKind);
-        state.define(instr.lvalue, instrValue);
-        instr.lvalue.effect = Effect.ConditionallyMutate;
         continuation = {kind: 'funeffects'};
         break;
       }
       case 'ObjectExpression': {
-        const valueKind: AbstractValue = hasContextRefOperand(state, instrValue)
-          ? {
-              kind: ValueKind.Context,
-              reason: new Set([ValueReason.Other]),
-              context: new Set(),
-            }
-          : {
-              kind: ValueKind.Mutable,
-              reason: new Set([ValueReason.Other]),
-              context: new Set(),
-            };
+        const contextRefOperands = getContextRefOperand(state, instrValue);
+        const valueKind: AbstractValue =
+          contextRefOperands.length > 0
+            ? {
+                kind: ValueKind.Context,
+                reason: new Set([ValueReason.Other]),
+                context: new Set(contextRefOperands),
+              }
+            : {
+                kind: ValueKind.Mutable,
+                reason: new Set([ValueReason.Other]),
+                context: new Set(),
+              };
 
         for (const property of instrValue.properties) {
           switch (property.kind) {
@@ -1139,17 +1177,17 @@ function inferBlock(
       case 'ObjectMethod':
       case 'FunctionExpression': {
         let hasMutableOperand = false;
-        const mutableOperands: Array<Place> = [];
         for (const operand of eachInstructionOperand(instr)) {
+          CompilerError.invariant(operand.effect !== Effect.Unknown, {
+            reason: 'Expected fn effects to be populated',
+            loc: operand.loc,
+          });
           state.referenceAndRecordEffects(
             freezeActions,
             operand,
-            operand.effect === Effect.Unknown ? Effect.Read : operand.effect,
+            operand.effect,
             ValueReason.Other,
           );
-          if (isMutableEffect(operand.effect, operand.loc)) {
-            mutableOperands.push(operand);
-          }
           hasMutableOperand ||= isMutableEffect(operand.effect, operand.loc);
         }
         /*
@@ -1209,71 +1247,12 @@ function inferBlock(
         break;
       }
       case 'CallExpression': {
-        const signature = getFunctionCallSignature(
-          env,
-          instrValue.callee.identifier.type,
+        inferCallEffects(
+          state,
+          instr as TInstruction<CallExpression>,
+          freezeActions,
+          getFunctionCallSignature(env, instrValue.callee.identifier.type),
         );
-
-        const effects =
-          signature !== null ? getFunctionEffects(instrValue, signature) : null;
-        const returnValueKind: AbstractValue =
-          signature !== null
-            ? {
-                kind: signature.returnValueKind,
-                reason: new Set([
-                  signature.returnValueReason ??
-                    ValueReason.KnownReturnSignature,
-                ]),
-                context: new Set(),
-              }
-            : {
-                kind: ValueKind.Mutable,
-                reason: new Set([ValueReason.Other]),
-                context: new Set(),
-              };
-        let hasCaptureArgument = false;
-        for (let i = 0; i < instrValue.args.length; i++) {
-          const arg = instrValue.args[i];
-          const place = arg.kind === 'Identifier' ? arg : arg.place;
-          if (effects !== null) {
-            state.referenceAndRecordEffects(
-              freezeActions,
-              place,
-              effects[i],
-              ValueReason.Other,
-            );
-          } else {
-            state.referenceAndRecordEffects(
-              freezeActions,
-              place,
-              Effect.ConditionallyMutate,
-              ValueReason.Other,
-            );
-          }
-          hasCaptureArgument ||= place.effect === Effect.Capture;
-        }
-        if (signature !== null) {
-          state.referenceAndRecordEffects(
-            freezeActions,
-            instrValue.callee,
-            signature.calleeEffect,
-            ValueReason.Other,
-          );
-        } else {
-          state.referenceAndRecordEffects(
-            freezeActions,
-            instrValue.callee,
-            Effect.ConditionallyMutate,
-            ValueReason.Other,
-          );
-        }
-        hasCaptureArgument ||= instrValue.callee.effect === Effect.Capture;
-
-        state.initialize(instrValue, returnValueKind);
-        state.define(instr.lvalue, instrValue);
-        instr.lvalue.effect = hasCaptureArgument
-          ? Effect.Store
-          : Effect.ConditionallyMutate;
         continuation = {kind: 'funeffects'};
         break;
       }
@@ -1291,108 +1270,12 @@ function inferBlock(
           Effect.Read,
           ValueReason.Other,
         );
-
-        const signature = getFunctionCallSignature(
-          env,
-          instrValue.property.identifier.type,
+        inferCallEffects(
+          state,
+          instr as TInstruction<MethodCall>,
+          freezeActions,
+          getFunctionCallSignature(env, instrValue.property.identifier.type),
         );
-
-        const returnValueKind: AbstractValue =
-          signature !== null
-            ? {
-                kind: signature.returnValueKind,
-                reason: new Set([ValueReason.Other]),
-                context: new Set(),
-              }
-            : {
-                kind: ValueKind.Mutable,
-                reason: new Set([ValueReason.Other]),
-                context: new Set(),
-              };
-
-        if (
-          signature !== null &&
-          signature.mutableOnlyIfOperandsAreMutable &&
-          areArgumentsImmutableAndNonMutating(state, instrValue.args)
-        ) {
-          /*
-           * None of the args are mutable or mutate their params, we can downgrade to
-           * treating as all reads (except that the receiver may be captured)
-           */
-          for (const arg of instrValue.args) {
-            const place = arg.kind === 'Identifier' ? arg : arg.place;
-            state.referenceAndRecordEffects(
-              freezeActions,
-              place,
-              Effect.Read,
-              ValueReason.Other,
-            );
-          }
-          state.referenceAndRecordEffects(
-            freezeActions,
-            instrValue.receiver,
-            Effect.Capture,
-            ValueReason.Other,
-          );
-          state.initialize(instrValue, returnValueKind);
-          state.define(instr.lvalue, instrValue);
-          instr.lvalue.effect =
-            instrValue.receiver.effect === Effect.Capture
-              ? Effect.Store
-              : Effect.ConditionallyMutate;
-          continuation = {kind: 'funeffects'};
-          break;
-        }
-
-        const effects =
-          signature !== null ? getFunctionEffects(instrValue, signature) : null;
-        let hasCaptureArgument = false;
-        for (let i = 0; i < instrValue.args.length; i++) {
-          const arg = instrValue.args[i];
-          const place = arg.kind === 'Identifier' ? arg : arg.place;
-          if (effects !== null) {
-            /*
-             * If effects are inferred for an argument, we should fail invalid
-             * mutating effects
-             */
-            state.referenceAndRecordEffects(
-              freezeActions,
-              place,
-              effects[i],
-              ValueReason.Other,
-            );
-          } else {
-            state.referenceAndRecordEffects(
-              freezeActions,
-              place,
-              Effect.ConditionallyMutate,
-              ValueReason.Other,
-            );
-          }
-          hasCaptureArgument ||= place.effect === Effect.Capture;
-        }
-        if (signature !== null) {
-          state.referenceAndRecordEffects(
-            freezeActions,
-            instrValue.receiver,
-            signature.calleeEffect,
-            ValueReason.Other,
-          );
-        } else {
-          state.referenceAndRecordEffects(
-            freezeActions,
-            instrValue.receiver,
-            Effect.ConditionallyMutate,
-            ValueReason.Other,
-          );
-        }
-        hasCaptureArgument ||= instrValue.receiver.effect === Effect.Capture;
-
-        state.initialize(instrValue, returnValueKind);
-        state.define(instr.lvalue, instrValue);
-        instr.lvalue.effect = hasCaptureArgument
-          ? Effect.Store
-          : Effect.ConditionallyMutate;
         continuation = {kind: 'funeffects'};
         break;
       }
@@ -1592,16 +1475,18 @@ function inferBlock(
         break;
       }
       case 'LoadLocal': {
+        /**
+         * Due to backedges in the CFG, we may revisit LoadLocal lvalues
+         * multiple times. Unlike StoreLocal which may reassign to existing
+         * identifiers, LoadLocal always evaluates to store a new temporary.
+         * This means that we should always model LoadLocal as a Capture effect
+         * on the rvalue.
+         */
         const lvalue = instr.lvalue;
-        const effect =
-          state.isDefined(lvalue) &&
-          state.kind(lvalue).kind === ValueKind.Context
-            ? Effect.ConditionallyMutate
-            : Effect.Capture;
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.place,
-          effect,
+          Effect.Capture,
           ValueReason.Other,
         );
         lvalue.effect = Effect.ConditionallyMutate;
@@ -1726,6 +1611,14 @@ function inferBlock(
         );
 
         const lvalue = instr.lvalue;
+        if (instrValue.lvalue.kind !== InstructionKind.Reassign) {
+          state.initialize(instrValue, {
+            kind: ValueKind.Mutable,
+            reason: new Set([ValueReason.Other]),
+            context: new Set(),
+          });
+          state.define(instrValue.lvalue.place, instrValue);
+        }
         state.alias(lvalue, instrValue.value);
         lvalue.effect = Effect.Store;
         continuation = {kind: 'funeffects'};
@@ -1797,7 +1690,13 @@ function inferBlock(
           kind === ValueKind.Mutable || kind === ValueKind.Context;
         let effect;
         let valueKind: AbstractValue;
-        if (!isMutable || isArrayType(instrValue.collection.identifier)) {
+        const iterator = instrValue.collection.identifier;
+        if (
+          !isMutable ||
+          isArrayType(iterator) ||
+          isMapType(iterator) ||
+          isSetType(iterator)
+        ) {
           // Case 1, assume iterator is a separate mutable object
           effect = {
             kind: Effect.Read,
@@ -1838,7 +1737,7 @@ function inferBlock(
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.iterator,
-          Effect.ConditionallyMutate,
+          Effect.ConditionallyMutateIterator,
           ValueReason.Other,
         );
         /**
@@ -1910,8 +1809,15 @@ function inferBlock(
     if (block.terminal.kind === 'return' || block.terminal.kind === 'throw') {
       if (
         state.isDefined(operand) &&
-        state.kind(operand).kind === ValueKind.Context
+        ((operand.identifier.type.kind === 'Function' &&
+          state.isFunctionExpression) ||
+          state.kind(operand).kind === ValueKind.Context)
       ) {
+        /**
+         * Returned values should only be typed as 'frozen' if they are both (1)
+         * local and (2) not a function expression which may capture and mutate
+         * this function's outer context.
+         */
         effect = Effect.ConditionallyMutate;
       } else {
         effect = Effect.Freeze;
@@ -1932,19 +1838,20 @@ function inferBlock(
   );
 }
 
-function hasContextRefOperand(
+function getContextRefOperand(
   state: InferenceState,
   instrValue: InstructionValue,
-): boolean {
+): Array<Place> {
+  const result = [];
   for (const place of eachInstructionValueOperand(instrValue)) {
     if (
       state.isDefined(place) &&
       state.kind(place).kind === ValueKind.Context
     ) {
-      return true;
+      result.push(place);
     }
   }
-  return false;
+  return result;
 }
 
 export function getFunctionCallSignature(
@@ -1966,7 +1873,7 @@ export function getFunctionCallSignature(
  * @returns Inferred effects of function arguments, or null if inference fails.
  */
 export function getFunctionEffects(
-  fn: MethodCall | CallExpression,
+  fn: MethodCall | CallExpression | NewExpression,
   sig: FunctionSignature,
 ): Array<Effect> | null {
   const results = [];
@@ -1995,6 +1902,33 @@ export function getFunctionEffects(
   return results;
 }
 
+export function isKnownMutableEffect(effect: Effect): boolean {
+  switch (effect) {
+    case Effect.Store:
+    case Effect.ConditionallyMutate:
+    case Effect.ConditionallyMutateIterator:
+    case Effect.Mutate: {
+      return true;
+    }
+
+    case Effect.Unknown: {
+      CompilerError.invariant(false, {
+        reason: 'Unexpected unknown effect',
+        description: null,
+        loc: GeneratedSource,
+        suggestions: null,
+      });
+    }
+    case Effect.Read:
+    case Effect.Capture:
+    case Effect.Freeze: {
+      return false;
+    }
+    default: {
+      assertExhaustive(effect, `Unexpected effect \`${effect}\``);
+    }
+  }
+}
 /**
  * Returns true if all of the arguments are both non-mutable (immutable or frozen)
  * _and_ are not functions which might mutate their arguments. Note that function
@@ -2006,10 +1940,20 @@ function areArgumentsImmutableAndNonMutating(
   args: MethodCall['args'],
 ): boolean {
   for (const arg of args) {
+    if (arg.kind === 'Identifier' && arg.identifier.type.kind === 'Function') {
+      const fnShape = state.env.getFunctionSignature(arg.identifier.type);
+      if (fnShape != null) {
+        return (
+          !fnShape.positionalParams.some(isKnownMutableEffect) &&
+          (fnShape.restParam == null ||
+            !isKnownMutableEffect(fnShape.restParam))
+        );
+      }
+    }
     const place = arg.kind === 'Identifier' ? arg : arg.place;
+
     const kind = state.kind(place).kind;
     switch (kind) {
-      case ValueKind.Global:
       case ValueKind.Primitive:
       case ValueKind.Frozen: {
         /*
@@ -2020,6 +1964,10 @@ function areArgumentsImmutableAndNonMutating(
         break;
       }
       default: {
+        /**
+         * Globals, module locals, and other locally defined functions may
+         * mutate their arguments.
+         */
         return false;
       }
     }
@@ -2039,4 +1987,151 @@ function areArgumentsImmutableAndNonMutating(
     }
   }
   return true;
+}
+
+function getArgumentEffect(
+  signatureEffect: Effect | null,
+  arg: Place | SpreadPattern,
+): Effect {
+  if (signatureEffect != null) {
+    if (arg.kind === 'Identifier') {
+      return signatureEffect;
+    } else if (
+      signatureEffect === Effect.Mutate ||
+      signatureEffect === Effect.ConditionallyMutate
+    ) {
+      return signatureEffect;
+    } else {
+      // see call-spread-argument-mutable-iterator test fixture
+      if (signatureEffect === Effect.Freeze) {
+        CompilerError.throwTodo({
+          reason: 'Support spread syntax for hook arguments',
+          loc: arg.place.loc,
+        });
+      }
+      // effects[i] is Effect.Capture | Effect.Read | Effect.Store
+      return Effect.ConditionallyMutateIterator;
+    }
+  } else {
+    return Effect.ConditionallyMutate;
+  }
+}
+
+function inferCallEffects(
+  state: InferenceState,
+  instr:
+    | TInstruction<CallExpression>
+    | TInstruction<MethodCall>
+    | TInstruction<NewExpression>,
+  freezeActions: Array<FreezeAction>,
+  signature: FunctionSignature | null,
+): void {
+  const instrValue = instr.value;
+  const returnValueKind: AbstractValue =
+    signature !== null
+      ? {
+          kind: signature.returnValueKind,
+          reason: new Set([
+            signature.returnValueReason ?? ValueReason.KnownReturnSignature,
+          ]),
+          context: new Set(),
+        }
+      : {
+          kind: ValueKind.Mutable,
+          reason: new Set([ValueReason.Other]),
+          context: new Set(),
+        };
+
+  if (
+    instrValue.kind === 'MethodCall' &&
+    signature !== null &&
+    signature.mutableOnlyIfOperandsAreMutable &&
+    areArgumentsImmutableAndNonMutating(state, instrValue.args)
+  ) {
+    /*
+     * None of the args are mutable or mutate their params, we can downgrade to
+     * treating as all reads (except that the receiver may be captured)
+     */
+    for (const arg of instrValue.args) {
+      const place = arg.kind === 'Identifier' ? arg : arg.place;
+      state.referenceAndRecordEffects(
+        freezeActions,
+        place,
+        Effect.Read,
+        ValueReason.Other,
+      );
+    }
+    state.referenceAndRecordEffects(
+      freezeActions,
+      instrValue.receiver,
+      Effect.Capture,
+      ValueReason.Other,
+    );
+    state.initialize(instrValue, returnValueKind);
+    state.define(instr.lvalue, instrValue);
+    instr.lvalue.effect =
+      instrValue.receiver.effect === Effect.Capture
+        ? Effect.Store
+        : Effect.ConditionallyMutate;
+    return;
+  }
+
+  const effects =
+    signature !== null ? getFunctionEffects(instrValue, signature) : null;
+  let hasCaptureArgument = false;
+  for (let i = 0; i < instrValue.args.length; i++) {
+    const arg = instrValue.args[i];
+    const place = arg.kind === 'Identifier' ? arg : arg.place;
+    /*
+     * If effects are inferred for an argument, we should fail invalid
+     * mutating effects
+     */
+    state.referenceAndRecordEffects(
+      freezeActions,
+      place,
+      getArgumentEffect(effects != null ? effects[i] : null, arg),
+      ValueReason.Other,
+    );
+    hasCaptureArgument ||= place.effect === Effect.Capture;
+  }
+  const callee =
+    instrValue.kind === 'MethodCall' ? instrValue.receiver : instrValue.callee;
+  if (signature !== null) {
+    state.referenceAndRecordEffects(
+      freezeActions,
+      callee,
+      signature.calleeEffect,
+      ValueReason.Other,
+    );
+  } else {
+    /**
+     * For new expressions, we infer a `read` effect on the Class / Function type
+     * to avoid extending mutable ranges of locally created classes, e.g.
+     * ```js
+     * const MyClass = getClass();
+     * const value = new MyClass(val1, val2)
+     *                   ^ (read)   ^ (conditionally mutate)
+     * ```
+     *
+     * Risks:
+     * Classes / functions created during render could technically capture and
+     * mutate their enclosing scope, which we currently do not detect.
+     */
+
+    state.referenceAndRecordEffects(
+      freezeActions,
+      callee,
+      instrValue.kind === 'NewExpression'
+        ? Effect.Read
+        : Effect.ConditionallyMutate,
+      ValueReason.Other,
+    );
+  }
+  hasCaptureArgument ||= callee.effect === Effect.Capture;
+
+  state.initialize(instrValue, returnValueKind);
+  state.define(instr.lvalue, instrValue);
+  instr.lvalue.effect = hasCaptureArgument
+    ? Effect.Store
+    : Effect.ConditionallyMutate;
 }

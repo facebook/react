@@ -16,6 +16,7 @@ import type {
 import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {disableCommentsAsDOMContainers} from 'shared/ReactFeatureFlags';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -46,8 +47,8 @@ export type CreateRootOptions = {
 
 export type HydrateRootOptions = {
   // Hydration options
-  onHydrated?: (suspenseNode: Comment) => void,
-  onDeleted?: (suspenseNode: Comment) => void,
+  onHydrated?: (hydrationBoundary: Comment) => void,
+  onDeleted?: (hydrationBoundary: Comment) => void,
   // Options for all roots
   unstable_strictMode?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
@@ -236,7 +237,7 @@ export function createRoot(
   markContainerAsRoot(root.current, container);
 
   const rootContainerElement: Document | Element | DocumentFragment =
-    container.nodeType === COMMENT_NODE
+    !disableCommentsAsDOMContainers && container.nodeType === COMMENT_NODE
       ? (container.parentNode: any)
       : container;
   listenToAllSupportedEvents(rootContainerElement);

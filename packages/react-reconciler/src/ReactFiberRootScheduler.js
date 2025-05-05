@@ -10,7 +10,7 @@
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lane, Lanes} from './ReactFiberLane';
 import type {PriorityLevel} from 'scheduler/src/SchedulerPriorities';
-import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
 
 import {
   disableLegacyMode,
@@ -20,6 +20,7 @@ import {
   enableComponentPerformanceTrack,
   enableSiblingPrerendering,
   enableYieldingBeforePassive,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   NoLane,
@@ -32,6 +33,7 @@ import {
   claimNextTransitionLane,
   getNextLanesToFlushSync,
   checkIfRootIsPrerendering,
+  isGestureRender,
 } from './ReactFiberLane';
 import {
   CommitContext,
@@ -81,7 +83,7 @@ import {
 // A linked list of all the roots with pending work. In an idiomatic app,
 // there's only a single root, but we do support multi root apps, hence this
 // extra complexity. But this module is optimized for the single root case.
-let firstScheduledRoot: FiberRoot | null = null;
+export let firstScheduledRoot: FiberRoot | null = null;
 let lastScheduledRoot: FiberRoot | null = null;
 
 // Used to prevent redundant mircotasks from being scheduled.
@@ -211,7 +213,8 @@ function flushSyncWorkAcrossRoots_impl(
             rootHasPendingCommit,
           );
           if (
-            includesSyncLane(nextLanes) &&
+            (includesSyncLane(nextLanes) ||
+              (enableGestureTransition && isGestureRender(nextLanes))) &&
             !checkIfRootIsPrerendering(root, nextLanes)
           ) {
             // This root has pending sync work. Flush it now.
@@ -296,7 +299,8 @@ function processRootScheduleInMicrotask() {
         syncTransitionLanes !== NoLanes ||
         // Common case: we're not treating any extra lanes as synchronous, so we
         // can just check if the next lanes are sync.
-        includesSyncLane(nextLanes)
+        includesSyncLane(nextLanes) ||
+        (enableGestureTransition && isGestureRender(nextLanes))
       ) {
         mightHavePendingSyncWork = true;
       }
@@ -306,7 +310,12 @@ function processRootScheduleInMicrotask() {
 
   // At the end of the microtask, flush any pending synchronous work. This has
   // to come at the end, because it does actual rendering work that might throw.
-  flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
+  // If we're in the middle of a View Transition async sequence, we don't want to
+  // interrupt that sequence. Instead, we'll flush any remaining work when it
+  // completes.
+  if (!hasPendingCommitEffects()) {
+    flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
+  }
 }
 
 function scheduleTaskForRootDuringMicrotask(
@@ -626,7 +635,7 @@ export function requestTransitionLane(
   // This argument isn't used, it's only here to encourage the caller to
   // check that it's inside a transition before calling this function.
   // TODO: Make this non-nullable. Requires a tweak to useOptimistic.
-  transition: BatchConfigTransition | null,
+  transition: Transition | null,
 ): Lane {
   // The algorithm for assigning an update to a lane should be stable for all
   // updates at the same priority within the same event. To do this, the

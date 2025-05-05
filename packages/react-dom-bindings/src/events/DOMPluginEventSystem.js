@@ -52,7 +52,8 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableOwnerStacks,
+  disableCommentsAsDOMContainers,
+  enableScrollEndPolyfill,
 } from 'shared/ReactFeatureFlags';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {
@@ -68,6 +69,7 @@ import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
 import * as FormActionEventPlugin from './plugins/FormActionEventPlugin';
+import * as ScrollEndEventPlugin from './plugins/ScrollEndEventPlugin';
 
 import reportGlobalError from 'shared/reportGlobalError';
 
@@ -92,6 +94,9 @@ EnterLeaveEventPlugin.registerEvents();
 ChangeEventPlugin.registerEvents();
 SelectEventPlugin.registerEvents();
 BeforeInputEventPlugin.registerEvents();
+if (enableScrollEndPolyfill) {
+  ScrollEndEventPlugin.registerEvents();
+}
 
 function extractEvents(
   dispatchQueue: DispatchQueue,
@@ -183,6 +188,17 @@ function extractEvents(
       targetContainer,
     );
   }
+  if (enableScrollEndPolyfill) {
+    ScrollEndEventPlugin.extractEvents(
+      dispatchQueue,
+      domEventName,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+      eventSystemFlags,
+      targetContainer,
+    );
+  }
 }
 
 // List of events that need to be individually attached to media elements.
@@ -258,7 +274,7 @@ function processDispatchQueueItemsInOrder(
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }
-      if (__DEV__ && enableOwnerStacks && instance !== null) {
+      if (__DEV__ && instance !== null) {
         runWithFiberInDEV(
           instance,
           executeDispatch,
@@ -277,7 +293,7 @@ function processDispatchQueueItemsInOrder(
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }
-      if (__DEV__ && enableOwnerStacks && instance !== null) {
+      if (__DEV__ && instance !== null) {
         runWithFiberInDEV(
           instance,
           executeDispatch,
@@ -558,7 +574,8 @@ function isMatchingRootContainer(
 ): boolean {
   return (
     grandContainer === targetContainer ||
-    (grandContainer.nodeType === COMMENT_NODE &&
+    (!disableCommentsAsDOMContainers &&
+      grandContainer.nodeType === COMMENT_NODE &&
       grandContainer.parentNode === targetContainer)
   );
 }
@@ -809,6 +826,7 @@ export function accumulateSinglePhaseListeners(
 // - BeforeInputEventPlugin
 // - ChangeEventPlugin
 // - SelectEventPlugin
+// - ScrollEndEventPlugin
 // This is because we only process these plugins
 // in the bubble phase, so we need to accumulate two
 // phase event listeners (via emulation).
@@ -844,9 +862,14 @@ export function accumulateTwoPhaseListeners(
         );
       }
     }
+    if (instance.tag === HostRoot) {
+      return listeners;
+    }
     instance = instance.return;
   }
-  return listeners;
+  // If we didn't reach the root it means we're unmounted and shouldn't
+  // dispatch any events on the target.
+  return [];
 }
 
 function getParent(inst: Fiber | null): Fiber | null {

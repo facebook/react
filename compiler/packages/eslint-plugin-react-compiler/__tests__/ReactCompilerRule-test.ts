@@ -92,36 +92,8 @@ const tests: CompilerTestCases = {
         }
       `,
     },
-    {
-      // Don't report the issue if Flow already has
-      name: '[InvalidInput] Ref access during render',
-      code: normalizeIndent`
-        function Component(props) {
-          const ref = useRef(null);
-          // $FlowFixMe[react-rule-unsafe-ref]
-          const value = ref.current;
-          return value;
-        }
-      `,
-    },
   ],
   invalid: [
-    {
-      name: '[InvalidInput] Ref access during render',
-      code: normalizeIndent`
-        function Component(props) {
-          const ref = useRef(null);
-          const value = ref.current;
-          return value;
-        }
-      `,
-      errors: [
-        {
-          message:
-            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
-        },
-      ],
-    },
     {
       name: 'Reportable levels can be configured',
       options: [{reportableLevels: new Set([ErrorSeverity.Todo])}],
@@ -271,6 +243,38 @@ const tests: CompilerTestCases = {
                 '\nfunction notacomponent() {\n  \n  return 1 + 1;\n}\n',
             },
           ],
+        },
+      ],
+    },
+    {
+      name: 'Pipeline errors are reported',
+      code: normalizeIndent`
+        import useMyEffect from 'useMyEffect';
+        function Component({a}) {
+          'use no memo';
+          useMyEffect(() => console.log(a.b));
+          return <div>Hello world</div>;
+        }
+      `,
+      options: [
+        {
+          environment: {
+            inferEffectDependencies: [
+              {
+                function: {
+                  source: 'useMyEffect',
+                  importSpecifierName: 'default',
+                },
+                numRequiredArgs: 1,
+              },
+            ],
+          },
+        },
+      ],
+      errors: [
+        {
+          message:
+            '[InferEffectDependencies] React Compiler is unable to infer dependencies of this effect. This will break your build! To resolve, either pass your own dependency array or fix reported compiler bailout diagnostics.',
         },
       ],
     },

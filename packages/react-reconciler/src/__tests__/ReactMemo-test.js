@@ -407,12 +407,22 @@ describe('memo', () => {
           );
         });
         assertLog(['Loading...', 15]);
-        assertConsoleErrorDev([
-          'Counter: Support for defaultProps will be removed from memo components in a future major release. ' +
-            'Use JavaScript default parameters instead.\n' +
-            (label === 'lazy' ? '' : '    in Indirection (at **)\n') +
-            '    in Suspense (at **)',
-        ]);
+        if (label === 'lazy') {
+          assertConsoleErrorDev(
+            [
+              'Counter: Support for defaultProps will be removed from memo components in a future major release. ' +
+                'Use JavaScript default parameters instead.',
+            ],
+            {withoutStack: true},
+          );
+        } else {
+          assertConsoleErrorDev([
+            'Counter: Support for defaultProps will be removed from memo components in a future major release. ' +
+              'Use JavaScript default parameters instead.\n' +
+              '    in Indirection (at **)',
+          ]);
+        }
+
         expect(ReactNoop).toMatchRenderedOutput(<span prop={15} />);
 
         // Should bail out because props have not changed
@@ -475,12 +485,14 @@ describe('memo', () => {
             </div>,
           );
         });
-        assertConsoleErrorDev([
-          'Inner: ' +
-            'Support for defaultProps will be removed from memo components in a future major release. ' +
-            'Use JavaScript default parameters instead.\n' +
-            '    in div (at **)',
-        ]);
+        assertConsoleErrorDev(
+          [
+            'Inner: ' +
+              'Support for defaultProps will be removed from memo components in a future major release. ' +
+              'Use JavaScript default parameters instead.',
+          ],
+          {withoutStack: true},
+        );
         expect(root).toMatchRenderedOutput(<div>111</div>);
 
         await act(async () => {
@@ -576,9 +588,7 @@ describe('memo', () => {
         'Each child in a list should have a unique "key" prop. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          (gate('enableOwnerStacks')
-            ? '    in **/ReactMemo-test.js:**:** (at **)'
-            : '    in p (at **)'),
+          '    in **/ReactMemo-test.js:**:** (at **)',
       ]);
     });
 
@@ -597,8 +607,7 @@ describe('memo', () => {
           '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          '    in Inner (at **)' +
-          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
+          '    in Inner (at **)',
       ]);
     });
 
@@ -619,8 +628,7 @@ describe('memo', () => {
           '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          '    in Inner (at **)' +
-          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
+          '    in Inner (at **)',
       ]);
     });
 
@@ -640,8 +648,7 @@ describe('memo', () => {
           '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          '    in Outer (at **)' +
-          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
+          '    in Outer (at **)',
       ]);
     });
 
@@ -663,8 +670,7 @@ describe('memo', () => {
           '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          '    in Inner (at **)' +
-          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
+          '    in Inner (at **)',
       ]);
     });
   }

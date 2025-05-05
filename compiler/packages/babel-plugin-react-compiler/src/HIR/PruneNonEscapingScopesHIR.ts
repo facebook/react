@@ -19,13 +19,15 @@ import {
 import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
 import {assertExhaustive, getOrInsertDefault} from '../Utils/utils';
 import {
-  DeclarationId,
+  BlockId,
   getPlaceScope,
   HIRFunction,
-  IdentifierId,
+  DeclarationId,
   InstructionValue,
+  ReactiveScope,
 } from '../HIR/HIR';
 import {eachInstructionValueOperand} from './visitors';
+import { printPlace } from './PrintHIR';
 /*
  * This pass prunes reactive scopes that are not necessary to bound downstream computation.
  * Specifically, the pass identifies the set of identifiers which may "escape". Values can
@@ -85,7 +87,7 @@ import {eachInstructionValueOperand} from './visitors';
  *
  * ## Algorithm
  *
- * 1. First we build up a graph, a mapping of IdentifierId to a node describing all the
+ * 1. First we build up a graph, a mapping of DeclarationId to a node describing all the
  *     scopes and inputs involved in creating that identifier. Individual nodes are marked
  *     as definitely aliased, conditionally aliased, or unaliased:
  *       a. Arrays, objects, function calls all produce a new value and are always marked as aliased
@@ -107,9 +109,9 @@ export function pruneNonEscapingScopesHIR(fn: HIRFunction): void {
   const state = new State(fn.env);
   for (const param of fn.params) {
     if (param.kind === 'Identifier') {
-      state.declare(param.identifier.id);
+      state.declare(param.identifier.declarationId);
     } else {
-      state.declare(param.place.identifier.id);
+      state.declare(param.place.identifier.declarationId);
     }
   }
   collectDependencies(fn, state);
@@ -186,14 +188,14 @@ function joinAliases(
 type IdentifierNode = {
   level: MemoizationLevel;
   memoized: boolean;
-  dependencies: Set<IdentifierId>;
+  dependencies: Set<DeclarationId>;
   scopes: Set<ScopeId>;
   seen: boolean;
 };
 
 // A scope node describing its dependencies
 type ScopeNode = {
-  dependencies: Array<IdentifierId>;
+  dependencies: Array<DeclarationId>;
   seen: boolean;
 };
 
@@ -204,18 +206,18 @@ class State {
    * Maps lvalues for LoadLocal to the identifier being loaded, to resolve indirections
    * in subsequent lvalues/rvalues.
    */
-  definitions: Map<IdentifierId, IdentifierId> = new Map();
+  definitions: Map<DeclarationId, DeclarationId> = new Map();
 
-  identifiers: Map<IdentifierId, IdentifierNode> = new Map();
+  identifiers: Map<DeclarationId, IdentifierNode> = new Map();
   scopes: Map<ScopeId, ScopeNode> = new Map();
-  escapingValues: Set<IdentifierId> = new Set();
+  escapingValues: Set<DeclarationId> = new Set();
 
   constructor(env: Environment) {
     this.env = env;
   }
 
   // Declare a new identifier, used for function id and params
-  declare(id: IdentifierId): void {
+  declare(id: DeclarationId): void {
     this.identifiers.set(id, {
       level: MemoizationLevel.Never,
       memoized: false,
@@ -238,7 +240,7 @@ class State {
   visitOperand(
     id: InstructionId,
     place: Place,
-    identifier: IdentifierId,
+    identifier: DeclarationId,
   ): boolean {
     let changed = false;
     const scope = getPlaceScope(id, place);
@@ -246,7 +248,7 @@ class State {
       let node = this.scopes.get(scope.id);
       if (node === undefined) {
         node = {
-          dependencies: [...scope.dependencies].map(dep => dep.identifier.id),
+          dependencies: [...scope.dependencies].map(dep => dep.identifier.declarationId),
           seen: false,
         };
         this.scopes.set(scope.id, node);
@@ -255,7 +257,7 @@ class State {
       const identifierNode = this.identifiers.get(identifier);
       CompilerError.invariant(identifierNode !== undefined, {
         reason: 'Expected identifier to be initialized',
-        description: null,
+        description: `[${id}] operand=${printPlace(place)} for identifier declaration ${identifier}`,
         loc: place.loc,
         suggestions: null,
       });
@@ -271,11 +273,11 @@ class State {
  * to determine which other values should be memoized. Returns a set of all identifiers
  * that should be memoized.
  */
-function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
-  const memoized = new Set<IdentifierId>();
+function computeMemoizedIdentifiers(state: State): Set<DeclarationId> {
+  const memoized = new Set<DeclarationId>();
 
   // Visit an identifier, optionally forcing it to be memoized
-  function visit(id: IdentifierId, forceMemoize: boolean = false): boolean {
+  function visit(id: DeclarationId, forceMemoize: boolean = false): boolean {
     const node = state.identifiers.get(id);
     CompilerError.invariant(node !== undefined, {
       reason: `Expected a node for all identifiers, none found for \`${id}\``,
@@ -735,7 +737,11 @@ function collectDependencies(fn: HIRFunction, state: State): void {
   do {
     changed = false;
     undefinedIdentifiers = null;
+    let scopes: Array<[ReactiveScope, BlockId]> = []
     for (const [, block] of fn.body.blocks) {
+      while (scopes.at(-1)?.[1] === block.id) {
+        scopes.pop();
+      }
       for (const phi of block.phis) {
         /*
          * Need to be able to handle phis with undefined identifiers due to backpointers, but they should
@@ -747,7 +753,7 @@ function collectDependencies(fn: HIRFunction, state: State): void {
             !state.inScope(
               block.instructions[0]?.id ?? block.terminal.id,
               place,
-            ) || state.identifiers.has(place.identifier.id),
+            ) || state.identifiers.has(place.identifier.declarationId),
         );
         const aliasing: Aliasing = {
           lvalues: [{place: phi.place, level: MemoizationLevel.Conditional}],
@@ -785,12 +791,12 @@ function collectDependencies(fn: HIRFunction, state: State): void {
 
         if (
           instr.value.kind === 'LoadLocal' &&
-          state.definitions.get(instr.lvalue.identifier.id) !==
-            instr.value.place.identifier.id
+          state.definitions.get(instr.lvalue.identifier.declarationId) !==
+            instr.value.place.identifier.declarationId
         ) {
           state.definitions.set(
-            instr.lvalue.identifier.id,
-            instr.value.place.identifier.id,
+            instr.lvalue.identifier.declarationId,
+            instr.value.place.identifier.declarationId,
           );
           changed = true;
         } else if (
@@ -817,8 +823,8 @@ function collectDependencies(fn: HIRFunction, state: State): void {
             }
             for (const operand of instr.value.args) {
               const place = operand.kind === 'Spread' ? operand.place : operand;
-              changed ||= !state.escapingValues.has(place.identifier.id);
-              state.escapingValues.add(place.identifier.id);
+              changed ||= !state.escapingValues.has(place.identifier.declarationId);
+              state.escapingValues.add(place.identifier.declarationId);
             }
           }
         }
@@ -826,9 +832,55 @@ function collectDependencies(fn: HIRFunction, state: State): void {
 
       if (block.terminal.kind === 'return') {
         changed ||= !state.escapingValues.has(
-          block.terminal.value.identifier.id,
+          block.terminal.value.identifier.declarationId,
         );
-        state.escapingValues.add(block.terminal.value.identifier.id);
+        state.escapingValues.add(block.terminal.value.identifier.declarationId);
+        /*
+        * If the return is within a scope, then those scopes must be evaluated
+        * with the return and should be considered dependencies of the returned
+        * value.
+        *
+        * This ensures that if those scopes have dependencies that those deps
+        * are also memoized.
+        */
+        const identifierNode = state.identifiers.get(
+          block.terminal.value.identifier.declarationId,
+        );
+        CompilerError.invariant(identifierNode !== undefined, {
+          reason: 'Expected identifier to be initialized',
+          description: null,
+          loc: block.terminal.loc,
+          suggestions: null,
+        });
+        for (const [scope, ] of scopes) {
+          changed ||= !identifierNode.scopes.has(scope.id);
+          identifierNode.scopes.add(scope.id);
+        }
+      } else if (block.terminal.kind === 'scope') {
+        /*
+        * If a scope reassigns any variables, set the chain of active scopes as a dependency
+        * of those variables. This ensures that if the variable escapes that we treat the
+        * reassignment scopes — and importantly their dependencies — as needing memoization.
+        */
+        for (const reassignment of block.terminal.scope.reassignments) {
+          const identifierNode = state.identifiers.get(
+            reassignment.declarationId,
+          );
+          CompilerError.invariant(identifierNode !== undefined, {
+            reason: 'Expected identifier to be initialized',
+            description: null,
+            loc: reassignment.loc,
+            suggestions: null,
+          });
+          for (const [scope, ] of scopes) {
+            changed ||= !identifierNode.scopes.has(scope.id);
+            identifierNode.scopes.add(scope.id);
+          }
+          changed ||= !identifierNode.scopes.has(block.terminal.scope.id);
+          identifierNode.scopes.add(block.terminal.scope.id);
+        }
+
+        scopes.push([block.terminal.scope, block.terminal.fallthrough]);
       }
     }
   } while (changed);
@@ -845,14 +897,14 @@ function collectDependencies(fn: HIRFunction, state: State): void {
     // Associate all the rvalues with the instruction's scope if it has one
     for (const operand of aliasing.rvalues) {
       const operandId =
-        state.definitions.get(operand.identifier.id) ?? operand.identifier.id;
+        state.definitions.get(operand.identifier.declarationId) ?? operand.identifier.declarationId;
       changed = state.visitOperand(instrId, operand, operandId) || changed;
     }
 
     // Add the operands as dependencies of all lvalues.
     for (const {place: lvalue, level} of aliasing.lvalues) {
       const lvalueId =
-        state.definitions.get(lvalue.identifier.id) ?? lvalue.identifier.id;
+        state.definitions.get(lvalue.identifier.declarationId) ?? lvalue.identifier.declarationId;
       let node = state.identifiers.get(lvalueId);
       if (node === undefined) {
         node = {
@@ -876,7 +928,7 @@ function collectDependencies(fn: HIRFunction, state: State): void {
        */
       for (const operand of aliasing.rvalues) {
         const operandId =
-          state.definitions.get(operand.identifier.id) ?? operand.identifier.id;
+          state.definitions.get(operand.identifier.declarationId) ?? operand.identifier.declarationId;
         if (operandId === lvalueId) {
           continue;
         }
@@ -891,7 +943,7 @@ function collectDependencies(fn: HIRFunction, state: State): void {
   }
 }
 
-function pruneScopes(fn: HIRFunction, state: Set<IdentifierId>): void {
+function pruneScopes(fn: HIRFunction, state: Set<DeclarationId>): void {
   const prunedScopes = new Set<ScopeId>();
   const reassignments = new Map<DeclarationId, Set<Identifier>>();
 
@@ -940,10 +992,10 @@ function pruneScopes(fn: HIRFunction, state: Set<IdentifierId>): void {
 
       const hasMemoizedOutput =
         Array.from(scope.declarations.values()).some(decl =>
-          state.has(decl.identifier.id),
+          state.has(decl.identifier.declarationId),
         ) ||
         Array.from(scope.reassignments).some(identifier =>
-          state.has(identifier.id),
+          state.has(identifier.declarationId),
         );
       if (!hasMemoizedOutput) {
         prunedScopes.add(scope.id);

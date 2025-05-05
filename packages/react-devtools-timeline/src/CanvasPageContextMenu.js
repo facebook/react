@@ -13,6 +13,7 @@ import {copy} from 'clipboard-js';
 import prettyMilliseconds from 'pretty-ms';
 
 import ContextMenuContainer from 'react-devtools-shared/src/devtools/ContextMenu/ContextMenuContainer';
+import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
 import {getBatchRange} from './utils/getBatchRange';
 import {moveStateToRange} from './view-base/utils/scrollState';
@@ -138,7 +139,9 @@ export default function CanvasPageContextMenu({
           content: 'Zoom to batch',
         },
         {
-          onClick: () => copySummary(timelineData, measure),
+          onClick: withPermissionsCheck({permissions: ['clipboardWrite']}, () =>
+            copySummary(timelineData, measure),
+          ),
           content: 'Copy summary',
         },
       );
@@ -147,16 +150,19 @@ export default function CanvasPageContextMenu({
     if (flamechartStackFrame != null) {
       items.push(
         {
-          onClick: () => copy(flamechartStackFrame.scriptUrl),
+          onClick: withPermissionsCheck({permissions: ['clipboardWrite']}, () =>
+            copy(flamechartStackFrame.scriptUrl),
+          ),
           content: 'Copy file path',
         },
         {
-          onClick: () =>
+          onClick: withPermissionsCheck({permissions: ['clipboardWrite']}, () =>
             copy(
               `line ${flamechartStackFrame.locationLine ?? ''}, column ${
                 flamechartStackFrame.locationColumn ?? ''
               }`,
             ),
+          ),
           content: 'Copy location',
         },
       );
