@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c8bd61dc208369bde55b88bc2943dae7>>
+ * @generated SignedSource<<d9be55da3d79b19434d668336ad2b1cd>>
  */
 
 "use strict";
@@ -9368,15 +9368,12 @@ __DEV__ &&
     function updateHostContainer(current, workInProgress) {
       if (doesRequireClone(current, workInProgress)) {
         current = workInProgress.stateNode;
-        var container = current.containerInfo,
-          newChildSet = passChildrenWhenCloningPersistedNodes
-            ? []
-            : createChildNodeSet();
+        var newChildSet = passChildrenWhenCloningPersistedNodes
+          ? []
+          : createChildNodeSet();
         appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1);
         current.pendingChildren = newChildSet;
         workInProgress.flags |= 4;
-        enableFabricCompleteRootInCommitPhase ||
-          completeRoot(container.containerTag, newChildSet);
       }
     }
     function scheduleRetryEffect(workInProgress, retryQueue) {
@@ -14579,8 +14576,7 @@ __DEV__ &&
       };
     }
     function replaceContainerChildren(container, newChildren) {
-      enableFabricCompleteRootInCommitPhase &&
-        completeRoot(container.containerTag, newChildren);
+      completeRoot(container.containerTag, newChildren);
     }
     function FragmentInstance(fragmentFiber) {
       this._fragmentFiber = fragmentFiber;
@@ -14678,8 +14674,6 @@ __DEV__ &&
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
-      enableFabricCompleteRootInCommitPhase =
-        dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
       enableHiddenSubtreeInsertionEffectCleanup =
         dynamicFlagsUntyped.enableHiddenSubtreeInsertionEffectCleanup,
       enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
@@ -17469,10 +17463,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-b9cfa0d3-20250505",
+        version: "19.2.0-native-fb-edf550b6-20250505",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-b9cfa0d3-20250505"
+        reconcilerVersion: "19.2.0-native-fb-edf550b6-20250505"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
