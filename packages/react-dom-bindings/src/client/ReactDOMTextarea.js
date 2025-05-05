@@ -13,7 +13,7 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 import {getToStringValue, toString} from './ToStringValue';
 import {disableTextareaChildren} from 'shared/ReactFeatureFlags';
 
-import {track} from './inputValueTracking';
+import {track, trackHydrated} from './inputValueTracking';
 
 let didWarnValDefaultVal = false;
 
@@ -144,6 +144,31 @@ export function initTextarea(
   }
 
   track((element: any));
+}
+
+export function hydrateTextarea(
+  element: Element,
+  value: ?string,
+  defaultValue: ?string,
+): void {
+  const node: HTMLTextAreaElement = (element: any);
+  let initialValue = value;
+  if (initialValue == null) {
+    if (defaultValue == null) {
+      defaultValue = '';
+    }
+    initialValue = defaultValue;
+  }
+  // Track the value that we last observed which is the hydrated value so
+  // that any change event that fires will trigger onChange on the actual
+  // current value.
+  const stringValue = toString(getToStringValue(initialValue));
+  const changed = trackHydrated((node: any), stringValue, false);
+  if (changed) {
+    // If the current value is different, that suggests that the user
+    // changed it before hydration.
+    // TODO: Queue replay.
+  }
 }
 
 export function restoreControlledTextareaState(

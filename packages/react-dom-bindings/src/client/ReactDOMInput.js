@@ -12,9 +12,12 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
-import {track, updateValueIfChanged} from './inputValueTracking';
+import {track, trackHydrated, updateValueIfChanged} from './inputValueTracking';
 import getActiveElement from './getActiveElement';
-import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+import {
+  disableInputAttributeSyncing,
+  enableHydrationChangeEvent,
+} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import type {ToStringValue} from './ToStringValue';
@@ -241,7 +244,7 @@ export function initInput(
 
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
-    if (!isHydrating) {
+    if (!isHydrating || enableHydrationChangeEvent) {
       if (disableInputAttributeSyncing) {
         // When not syncing the value attribute, the value property points
         // directly to the React prop. Only assign it if it exists.
@@ -299,7 +302,7 @@ export function initInput(
     typeof checkedOrDefault !== 'symbol' &&
     !!checkedOrDefault;
 
-  if (isHydrating) {
+  if (isHydrating && !enableHydrationChangeEvent) {
     // Detach .checked from .defaultChecked but leave user input alone
     node.checked = node.checked;
   } else {
@@ -338,6 +341,39 @@ export function initInput(
     node.name = name;
   }
   track((element: any));
+}
+
+export function hydrateInput(
+  element: Element,
+  value: ?string,
+  defaultValue: ?string,
+  checked: ?boolean,
+  defaultChecked: ?boolean,
+): void {
+  const node: HTMLInputElement = (element: any);
+
+  const defaultValueStr =
+    defaultValue != null ? toString(getToStringValue(defaultValue)) : '';
+  const initialValue =
+    value != null ? toString(getToStringValue(value)) : defaultValueStr;
+
+  const checkedOrDefault = checked != null ? checked : defaultChecked;
+  // TODO: This 'function' or 'symbol' check isn't replicated in other places
+  // so this semantic is inconsistent.
+  const initialChecked =
+    typeof checkedOrDefault !== 'function' &&
+    typeof checkedOrDefault !== 'symbol' &&
+    !!checkedOrDefault;
+
+  // Detach .checked from .defaultChecked but leave user input alone
+  node.checked = node.checked;
+
+  const changed = trackHydrated((node: any), initialValue, initialChecked);
+  if (changed) {
+    // If the current value is different, that suggests that the user
+    // changed it before hydration.
+    // TODO: Queue replay.
+  }
 }
 
 export function restoreControlledInputState(element: Element, props: Object) {

@@ -66,6 +66,7 @@ import sanitizeURL from '../shared/sanitizeURL';
 import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
 
 import {
+  enableHydrationChangeEvent,
   enableScrollEndPolyfill,
   enableSrcObject,
   enableTrustedTypesIntegration,
@@ -3097,16 +3098,18 @@ export function hydrateProperties(
       // option and select we don't quite do the same thing and select
       // is not resilient to the DOM state changing so we don't do that here.
       // TODO: Consider not doing this for input and textarea.
-      initInput(
-        domElement,
-        props.value,
-        props.defaultValue,
-        props.checked,
-        props.defaultChecked,
-        props.type,
-        props.name,
-        true,
-      );
+      if (!enableHydrationChangeEvent) {
+        initInput(
+          domElement,
+          props.value,
+          props.defaultValue,
+          props.checked,
+          props.defaultChecked,
+          props.type,
+          props.name,
+          true,
+        );
+      }
       break;
     case 'option':
       validateOptionProps(domElement, props);
@@ -3130,7 +3133,14 @@ export function hydrateProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       validateTextareaProps(domElement, props);
-      initTextarea(domElement, props.value, props.defaultValue, props.children);
+      if (!enableHydrationChangeEvent) {
+        initTextarea(
+          domElement,
+          props.value,
+          props.defaultValue,
+          props.children,
+        );
+      }
       break;
   }
 
