@@ -2302,6 +2302,9 @@ function renderModel(
   key: string,
   value: ReactClientValue,
 ): ReactJSONValue {
+  // First time we're serializing the key, we should add it to the size.
+  serializedSize += key.length;
+
   const prevKeyPath = task.keyPath;
   const prevImplicitSlot = task.implicitSlot;
   try {
@@ -2415,8 +2418,6 @@ function renderModelDestructive(
 ): ReactJSONValue {
   // Set the currently rendering model
   task.model = value;
-
-  serializedSize += parentPropertyName.length;
 
   // Special Symbol, that's very common.
   if (value === REACT_ELEMENT_TYPE) {
