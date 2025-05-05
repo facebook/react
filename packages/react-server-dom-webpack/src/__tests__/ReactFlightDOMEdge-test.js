@@ -692,6 +692,44 @@ describe('ReactFlightDOMEdge', () => {
     expect(html).toBe(html2);
   });
 
+  it('regression: should not leak serialized size', async () => {
+    const MAX_ROW_SIZE = 3200;
+    // This test case is a bit convoluted and may no longer trigger the original bug.
+    // Originally, the size of `promisedText` was not cleaned up so the sync portion
+    // ended up being deferred immediately when we called `renderToReadableStream` again
+    // i.e. `result2.syncText` became a Lazy element on the second request.
+    const longText = 'd'.repeat(MAX_ROW_SIZE);
+    const promisedText = Promise.resolve(longText);
+    const model = {syncText: <p>{longText}</p>, promisedText};
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(model),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    const stream2 = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(model),
+    );
+
+    const result2 = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    expect(result2.syncText).toEqual(result.syncText);
+  });
+
   it('should be able to serialize any kind of typed array', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
