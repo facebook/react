@@ -7572,22 +7572,19 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       break;
     case 3:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-      if (
-        flags & 64 &&
-        ((finishedRoot = finishedWork.updateQueue), null !== finishedRoot)
-      ) {
-        current = null;
+      if (flags & 64 && ((flags = finishedWork.updateQueue), null !== flags)) {
+        finishedRoot = null;
         if (null !== finishedWork.child)
           switch (finishedWork.child.tag) {
             case 27:
             case 5:
-              current = finishedWork.child.stateNode;
+              finishedRoot = finishedWork.child.stateNode;
               break;
             case 1:
-              current = finishedWork.child.stateNode;
+              finishedRoot = finishedWork.child.stateNode;
           }
         try {
-          commitCallbacks(finishedRoot, current);
+          commitCallbacks(flags, finishedRoot);
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -7597,6 +7594,16 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     case 26:
     case 5:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+      if (null === current && !(flags & 4) && flags & 64) {
+        finishedRoot = finishedWork.type;
+        current = finishedWork.memoizedProps;
+        prevProps = finishedWork.stateNode;
+        try {
+          shim$2(prevProps, finishedRoot, current, finishedWork);
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
+      }
       flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
       break;
     case 12:
@@ -7608,9 +7615,9 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     case 13:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
       flags & 64 &&
-        ((finishedRoot = finishedWork.memoizedState),
-        null !== finishedRoot &&
-          null !== finishedRoot.dehydrated &&
+        ((flags = finishedWork.memoizedState),
+        null !== flags &&
+          null !== flags.dehydrated &&
           (retryDehydratedSuspenseBoundary.bind(null, finishedWork), shim$2()));
       break;
     case 22:
@@ -11123,24 +11130,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1592 = {
+var internals$jscomp$inline_1598 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-0c1575ce-20250505",
+  version: "19.2.0-www-modern-587cb8f8-20250506",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-0c1575ce-20250505"
+  reconcilerVersion: "19.2.0-www-modern-587cb8f8-20250506"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1593 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1599 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1593.isDisabled &&
-    hook$jscomp$inline_1593.supportsFiber
+    !hook$jscomp$inline_1599.isDisabled &&
+    hook$jscomp$inline_1599.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1593.inject(
-        internals$jscomp$inline_1592
+      (rendererID = hook$jscomp$inline_1599.inject(
+        internals$jscomp$inline_1598
       )),
-        (injectedHook = hook$jscomp$inline_1593);
+        (injectedHook = hook$jscomp$inline_1599);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11154,4 +11161,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-0c1575ce-20250505";
+exports.version = "19.2.0-www-modern-587cb8f8-20250506";

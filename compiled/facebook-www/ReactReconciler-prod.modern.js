@@ -6888,7 +6888,13 @@ module.exports = function ($$$config) {
           }
           nextResource = contextStackCursor.current;
           if (popHydrationState(workInProgress))
-            prepareToHydrateHostInstance(workInProgress, nextResource);
+            prepareToHydrateHostInstance(workInProgress, nextResource),
+              finalizeHydratedChildren(
+                workInProgress.stateNode,
+                type,
+                newProps,
+                nextResource
+              ) && (workInProgress.flags |= 64);
           else {
             var instance$122 = createInstance(
               type,
@@ -8374,20 +8380,20 @@ module.exports = function ($$$config) {
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
         if (
           flags & 64 &&
-          ((finishedRoot = finishedWork.updateQueue), null !== finishedRoot)
+          ((flags = finishedWork.updateQueue), null !== flags)
         ) {
-          current = null;
+          finishedRoot = null;
           if (null !== finishedWork.child)
             switch (finishedWork.child.tag) {
               case 27:
               case 5:
-                current = getPublicInstance(finishedWork.child.stateNode);
+                finishedRoot = getPublicInstance(finishedWork.child.stateNode);
                 break;
               case 1:
-                current = finishedWork.child.stateNode;
+                finishedRoot = finishedWork.child.stateNode;
             }
           try {
-            commitCallbacks(finishedRoot, current);
+            commitCallbacks(flags, finishedRoot);
           } catch (error) {
             captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
@@ -8401,7 +8407,23 @@ module.exports = function ($$$config) {
       case 26:
       case 5:
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-        null === current && flags & 4 && commitHostMount(finishedWork);
+        if (null === current)
+          if (flags & 4) commitHostMount(finishedWork);
+          else if (flags & 64) {
+            finishedRoot = finishedWork.type;
+            current = finishedWork.memoizedProps;
+            prevProps = finishedWork.stateNode;
+            try {
+              commitHydratedInstance(
+                prevProps,
+                finishedRoot,
+                current,
+                finishedWork
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
+            }
+          }
         flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
         break;
       case 12:
@@ -8417,15 +8439,15 @@ module.exports = function ($$$config) {
         flags & 4 &&
           commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
         flags & 64 &&
-          ((finishedRoot = finishedWork.memoizedState),
-          null !== finishedRoot &&
-            ((finishedRoot = finishedRoot.dehydrated),
-            null !== finishedRoot &&
+          ((flags = finishedWork.memoizedState),
+          null !== flags &&
+            ((flags = flags.dehydrated),
+            null !== flags &&
               ((finishedWork = retryDehydratedSuspenseBoundary.bind(
                 null,
                 finishedWork
               )),
-              registerSuspenseInstanceRetry(finishedRoot, finishedWork))));
+              registerSuspenseInstanceRetry(flags, finishedWork))));
         break;
       case 22:
         flags = null !== finishedWork.memoizedState || offscreenSubtreeIsHidden;
@@ -12772,9 +12794,11 @@ module.exports = function ($$$config) {
       $$$config.getNextHydratableInstanceAfterActivityInstance,
     getNextHydratableInstanceAfterSuspenseInstance =
       $$$config.getNextHydratableInstanceAfterSuspenseInstance,
+    commitHydratedInstance = $$$config.commitHydratedInstance,
     commitHydratedContainer = $$$config.commitHydratedContainer,
     commitHydratedActivityInstance = $$$config.commitHydratedActivityInstance,
-    commitHydratedSuspenseInstance = $$$config.commitHydratedSuspenseInstance;
+    commitHydratedSuspenseInstance = $$$config.commitHydratedSuspenseInstance,
+    finalizeHydratedChildren = $$$config.finalizeHydratedChildren;
   $$$config.clearActivityBoundary;
   var clearSuspenseBoundary = $$$config.clearSuspenseBoundary;
   $$$config.clearActivityBoundaryFromContainer;
@@ -13805,7 +13829,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-0c1575ce-20250505"
+      reconcilerVersion: "19.2.0-www-modern-587cb8f8-20250506"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

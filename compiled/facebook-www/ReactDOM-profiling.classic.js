@@ -1266,13 +1266,11 @@ function isCheckable(elem) {
     ("checkbox" === type || "radio" === type)
   );
 }
-function trackValueOnNode(node) {
-  var valueField = isCheckable(node) ? "checked" : "value",
-    descriptor = Object.getOwnPropertyDescriptor(
-      node.constructor.prototype,
-      valueField
-    ),
-    currentValue = "" + node[valueField];
+function trackValueOnNode(node, valueField, currentValue) {
+  var descriptor = Object.getOwnPropertyDescriptor(
+    node.constructor.prototype,
+    valueField
+  );
   if (
     !node.hasOwnProperty(valueField) &&
     "undefined" !== typeof descriptor &&
@@ -1309,7 +1307,14 @@ function trackValueOnNode(node) {
   }
 }
 function track(node) {
-  node._valueTracker || (node._valueTracker = trackValueOnNode(node));
+  if (!node._valueTracker) {
+    var valueField = isCheckable(node) ? "checked" : "value";
+    node._valueTracker = trackValueOnNode(
+      node,
+      valueField,
+      "" + node[valueField]
+    );
+  }
 }
 function updateValueIfChanged(node) {
   if (!node) return !1;
@@ -1409,8 +1414,10 @@ function initInput(
         ("submit" !== type && "reset" !== type) ||
         (void 0 !== value && null !== value)
       )
-    )
+    ) {
+      track(element);
       return;
+    }
     defaultValue =
       null != defaultValue ? "" + getToStringValue(defaultValue) : "";
     value = null != value ? "" + getToStringValue(value) : defaultValue;
@@ -1427,6 +1434,7 @@ function initInput(
     "symbol" !== typeof name &&
     "boolean" !== typeof name &&
     (element.name = name);
+  track(element);
 }
 function setDefaultValue(node, type, value) {
   ("number" === type && getActiveElement(node.ownerDocument) === node) ||
@@ -1491,6 +1499,7 @@ function initTextarea(element, value, defaultValue, children) {
     "" !== children &&
     null !== children &&
     (element.value = children);
+  track(element);
 }
 function setTextContent(node, text) {
   if (text) {
@@ -1986,15 +1995,13 @@ function prepareToHydrateHostInstance(fiber) {
         props.name,
         !0
       );
-      track(instance);
       break;
     case "select":
       listenToNonDelegatedEvent("invalid", instance);
       break;
     case "textarea":
       listenToNonDelegatedEvent("invalid", instance),
-        initTextarea(instance, props.value, props.defaultValue, props.children),
-        track(instance);
+        initTextarea(instance, props.value, props.defaultValue, props.children);
   }
   type = props.children;
   ("string" !== typeof type &&
@@ -17120,20 +17127,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_2029 = 0;
-  i$jscomp$inline_2029 < simpleEventPluginEvents.length;
-  i$jscomp$inline_2029++
+  var i$jscomp$inline_2046 = 0;
+  i$jscomp$inline_2046 < simpleEventPluginEvents.length;
+  i$jscomp$inline_2046++
 ) {
-  var eventName$jscomp$inline_2030 =
-      simpleEventPluginEvents[i$jscomp$inline_2029],
-    domEventName$jscomp$inline_2031 =
-      eventName$jscomp$inline_2030.toLowerCase(),
-    capitalizedEvent$jscomp$inline_2032 =
-      eventName$jscomp$inline_2030[0].toUpperCase() +
-      eventName$jscomp$inline_2030.slice(1);
+  var eventName$jscomp$inline_2047 =
+      simpleEventPluginEvents[i$jscomp$inline_2046],
+    domEventName$jscomp$inline_2048 =
+      eventName$jscomp$inline_2047.toLowerCase(),
+    capitalizedEvent$jscomp$inline_2049 =
+      eventName$jscomp$inline_2047[0].toUpperCase() +
+      eventName$jscomp$inline_2047.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_2031,
-    "on" + capitalizedEvent$jscomp$inline_2032
+    domEventName$jscomp$inline_2048,
+    "on" + capitalizedEvent$jscomp$inline_2049
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -18540,7 +18547,6 @@ function setInitialProperties(domElement, tag, props) {
         hasSrcSet,
         !1
       );
-      track(domElement);
       return;
     case "select":
       listenToNonDelegatedEvent("invalid", domElement);
@@ -18594,7 +18600,6 @@ function setInitialProperties(domElement, tag, props) {
               setProp(domElement, tag, propValue, defaultValue, props, null);
           }
       initTextarea(domElement, hasSrc, hasSrcSet, propKey);
-      track(domElement);
       return;
     case "option":
       for (checked in props)
@@ -21441,16 +21446,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2273 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2290 = React.version;
 if (
-  "19.2.0-www-classic-0c1575ce-20250505" !==
-  isomorphicReactPackageVersion$jscomp$inline_2273
+  "19.2.0-www-classic-587cb8f8-20250506" !==
+  isomorphicReactPackageVersion$jscomp$inline_2290
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2273,
-      "19.2.0-www-classic-0c1575ce-20250505"
+      isomorphicReactPackageVersion$jscomp$inline_2290,
+      "19.2.0-www-classic-587cb8f8-20250506"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -21466,27 +21471,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2275 = {
+var internals$jscomp$inline_2292 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-0c1575ce-20250505",
+  version: "19.2.0-www-classic-587cb8f8-20250506",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-0c1575ce-20250505"
+  reconcilerVersion: "19.2.0-www-classic-587cb8f8-20250506"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2275.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2275.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2292.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2292.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2867 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2888 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2867.isDisabled &&
-    hook$jscomp$inline_2867.supportsFiber
+    !hook$jscomp$inline_2888.isDisabled &&
+    hook$jscomp$inline_2888.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2867.inject(
-        internals$jscomp$inline_2275
+      (rendererID = hook$jscomp$inline_2888.inject(
+        internals$jscomp$inline_2292
       )),
-        (injectedHook = hook$jscomp$inline_2867);
+        (injectedHook = hook$jscomp$inline_2888);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -21838,7 +21843,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-0c1575ce-20250505";
+exports.version = "19.2.0-www-classic-587cb8f8-20250506";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

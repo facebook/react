@@ -11108,7 +11108,29 @@ __DEV__ &&
         case 26:
         case 5:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-          null === current && flags & 4 && commitHostMount(finishedWork);
+          if (null === current)
+            if (flags & 4) commitHostMount(finishedWork);
+            else if (flags & 64) {
+              finishedRoot = finishedWork.type;
+              current = finishedWork.memoizedProps;
+              prevProps = finishedWork.stateNode;
+              try {
+                runWithFiberInDEV(
+                  finishedWork,
+                  commitHydratedInstance,
+                  prevProps,
+                  finishedRoot,
+                  current,
+                  finishedWork
+                );
+              } catch (error) {
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error
+                );
+              }
+            }
           flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
           break;
         case 12:
@@ -16696,6 +16718,7 @@ __DEV__ &&
       isSuspenseInstanceFallback = shim$2,
       getSuspenseInstanceFallbackErrorDetails = shim$2,
       registerSuspenseInstanceRetry = shim$2,
+      commitHydratedInstance = shim$2,
       clearSuspenseBoundary = shim$2,
       clearSuspenseBoundaryFromContainer = shim$2,
       hideDehydratedBoundary = shim$2,
@@ -18786,10 +18809,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-0c1575ce-20250505",
+        version: "19.2.0-www-modern-587cb8f8-20250506",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-0c1575ce-20250505"
+        reconcilerVersion: "19.2.0-www-modern-587cb8f8-20250506"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18823,7 +18846,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-0c1575ce-20250505";
+    exports.version = "19.2.0-www-modern-587cb8f8-20250506";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

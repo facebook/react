@@ -1081,13 +1081,11 @@ function isCheckable(elem) {
     ("checkbox" === type || "radio" === type)
   );
 }
-function trackValueOnNode(node) {
-  var valueField = isCheckable(node) ? "checked" : "value",
-    descriptor = Object.getOwnPropertyDescriptor(
-      node.constructor.prototype,
-      valueField
-    ),
-    currentValue = "" + node[valueField];
+function trackValueOnNode(node, valueField, currentValue) {
+  var descriptor = Object.getOwnPropertyDescriptor(
+    node.constructor.prototype,
+    valueField
+  );
   if (
     !node.hasOwnProperty(valueField) &&
     "undefined" !== typeof descriptor &&
@@ -1124,7 +1122,14 @@ function trackValueOnNode(node) {
   }
 }
 function track(node) {
-  node._valueTracker || (node._valueTracker = trackValueOnNode(node));
+  if (!node._valueTracker) {
+    var valueField = isCheckable(node) ? "checked" : "value";
+    node._valueTracker = trackValueOnNode(
+      node,
+      valueField,
+      "" + node[valueField]
+    );
+  }
 }
 function updateValueIfChanged(node) {
   if (!node) return !1;
@@ -1224,8 +1229,10 @@ function initInput(
         ("submit" !== type && "reset" !== type) ||
         (void 0 !== value && null !== value)
       )
-    )
+    ) {
+      track(element);
       return;
+    }
     defaultValue =
       null != defaultValue ? "" + getToStringValue(defaultValue) : "";
     value = null != value ? "" + getToStringValue(value) : defaultValue;
@@ -1242,6 +1249,7 @@ function initInput(
     "symbol" !== typeof name &&
     "boolean" !== typeof name &&
     (element.name = name);
+  track(element);
 }
 function setDefaultValue(node, type, value) {
   ("number" === type && getActiveElement(node.ownerDocument) === node) ||
@@ -1296,6 +1304,7 @@ function initTextarea(element, value, defaultValue) {
     "" !== value &&
     null !== value &&
     (element.value = value);
+  track(element);
 }
 function setTextContent(node, text) {
   if (text) {
@@ -1717,15 +1726,13 @@ function prepareToHydrateHostInstance(fiber) {
         props.name,
         !0
       );
-      track(instance);
       break;
     case "select":
       listenToNonDelegatedEvent("invalid", instance);
       break;
     case "textarea":
       listenToNonDelegatedEvent("invalid", instance),
-        initTextarea(instance, props.value, props.defaultValue),
-        track(instance);
+        initTextarea(instance, props.value, props.defaultValue);
   }
   type = props.children;
   ("string" !== typeof type &&
@@ -14889,20 +14896,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1775 = 0;
-  i$jscomp$inline_1775 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1775++
+  var i$jscomp$inline_1792 = 0;
+  i$jscomp$inline_1792 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1792++
 ) {
-  var eventName$jscomp$inline_1776 =
-      simpleEventPluginEvents[i$jscomp$inline_1775],
-    domEventName$jscomp$inline_1777 =
-      eventName$jscomp$inline_1776.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1778 =
-      eventName$jscomp$inline_1776[0].toUpperCase() +
-      eventName$jscomp$inline_1776.slice(1);
+  var eventName$jscomp$inline_1793 =
+      simpleEventPluginEvents[i$jscomp$inline_1792],
+    domEventName$jscomp$inline_1794 =
+      eventName$jscomp$inline_1793.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1795 =
+      eventName$jscomp$inline_1793[0].toUpperCase() +
+      eventName$jscomp$inline_1793.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1777,
-    "on" + capitalizedEvent$jscomp$inline_1778
+    domEventName$jscomp$inline_1794,
+    "on" + capitalizedEvent$jscomp$inline_1795
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16305,7 +16312,6 @@ function setInitialProperties(domElement, tag, props) {
         hasSrcSet,
         !1
       );
-      track(domElement);
       return;
     case "select":
       listenToNonDelegatedEvent("invalid", domElement);
@@ -16358,7 +16364,6 @@ function setInitialProperties(domElement, tag, props) {
               setProp(domElement, tag, propValue, propKey, props, null);
           }
       initTextarea(domElement, hasSrc, hasSrcSet);
-      track(domElement);
       return;
     case "option":
       for (checked in props)
@@ -19196,16 +19201,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2019 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2036 = React.version;
 if (
-  "19.2.0-www-modern-0c1575ce-20250505" !==
-  isomorphicReactPackageVersion$jscomp$inline_2019
+  "19.2.0-www-modern-587cb8f8-20250506" !==
+  isomorphicReactPackageVersion$jscomp$inline_2036
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2019,
-      "19.2.0-www-modern-0c1575ce-20250505"
+      isomorphicReactPackageVersion$jscomp$inline_2036,
+      "19.2.0-www-modern-587cb8f8-20250506"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19221,24 +19226,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2617 = {
+var internals$jscomp$inline_2638 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-0c1575ce-20250505",
+  version: "19.2.0-www-modern-587cb8f8-20250506",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-0c1575ce-20250505"
+  reconcilerVersion: "19.2.0-www-modern-587cb8f8-20250506"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2618 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2639 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2618.isDisabled &&
-    hook$jscomp$inline_2618.supportsFiber
+    !hook$jscomp$inline_2639.isDisabled &&
+    hook$jscomp$inline_2639.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2618.inject(
-        internals$jscomp$inline_2617
+      (rendererID = hook$jscomp$inline_2639.inject(
+        internals$jscomp$inline_2638
       )),
-        (injectedHook = hook$jscomp$inline_2618);
+        (injectedHook = hook$jscomp$inline_2639);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -19590,4 +19595,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-0c1575ce-20250505";
+exports.version = "19.2.0-www-modern-587cb8f8-20250506";
