@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<19b44f93e05dcf811c56ca6a1343a658>>
+ * @generated SignedSource<<66483d821a523d6ff5b9a6f1636ce19c>>
  */
 
 /*
@@ -13044,6 +13044,37 @@ function flushSpawnedWork() {
           ? nestedUpdateCount++
           : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)))
       : (nestedUpdateCount = 0);
+    if (hasScheduledReplayAttempt) {
+      hasScheduledReplayAttempt = !1;
+      null !== queuedFocus &&
+        attemptReplayContinuousQueuedEvent(queuedFocus) &&
+        (queuedFocus = null);
+      null !== queuedDrag &&
+        attemptReplayContinuousQueuedEvent(queuedDrag) &&
+        (queuedDrag = null);
+      null !== queuedMouse &&
+        attemptReplayContinuousQueuedEvent(queuedMouse) &&
+        (queuedMouse = null);
+      queuedPointers.forEach(attemptReplayContinuousQueuedEventInMap);
+      queuedPointerCaptures.forEach(attemptReplayContinuousQueuedEventInMap);
+      for (root = 0; root < queuedChangeEventTargets.length; root++)
+        (lanes = queuedChangeEventTargets[root]),
+          "INPUT" === lanes.nodeName
+            ? "checkbox" === lanes.type || "radio" === lanes.type
+              ? (lanes.dispatchEvent(
+                  new ("function" === typeof PointerEvent
+                    ? PointerEvent
+                    : Event)("click", { bubbles: !0 })
+                ),
+                lanes.dispatchEvent(new Event("input", { bubbles: !0 })))
+              : "function" === typeof InputEvent &&
+                lanes.dispatchEvent(new InputEvent("input", { bubbles: !0 }))
+            : "TEXTAREA" === lanes.nodeName &&
+              "function" === typeof InputEvent &&
+              lanes.dispatchEvent(new InputEvent("input", { bubbles: !0 })),
+          lanes.dispatchEvent(new Event("change", { bubbles: !0 }));
+      queuedChangeEventTargets.length = 0;
+    }
     flushSyncWorkAcrossRoots_impl(0, !1);
     markCommitStopped();
   }
@@ -13577,20 +13608,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1718 = 0;
-  i$jscomp$inline_1718 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1718++
+  var i$jscomp$inline_1719 = 0;
+  i$jscomp$inline_1719 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1719++
 ) {
-  var eventName$jscomp$inline_1719 =
-      simpleEventPluginEvents[i$jscomp$inline_1718],
-    domEventName$jscomp$inline_1720 =
-      eventName$jscomp$inline_1719.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1721 =
-      eventName$jscomp$inline_1719[0].toUpperCase() +
-      eventName$jscomp$inline_1719.slice(1);
+  var eventName$jscomp$inline_1720 =
+      simpleEventPluginEvents[i$jscomp$inline_1719],
+    domEventName$jscomp$inline_1721 =
+      eventName$jscomp$inline_1720.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1722 =
+      eventName$jscomp$inline_1720[0].toUpperCase() +
+      eventName$jscomp$inline_1720.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1720,
-    "on" + capitalizedEvent$jscomp$inline_1721
+    domEventName$jscomp$inline_1721,
+    "on" + capitalizedEvent$jscomp$inline_1722
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17405,58 +17436,14 @@ function attemptReplayContinuousQueuedEvent(queuedEvent) {
 function attemptReplayContinuousQueuedEventInMap(queuedEvent, key, map) {
   attemptReplayContinuousQueuedEvent(queuedEvent) && map.delete(key);
 }
-function replayUnblockedEvents() {
-  hasScheduledReplayAttempt = !1;
-  null !== queuedFocus &&
-    attemptReplayContinuousQueuedEvent(queuedFocus) &&
-    (queuedFocus = null);
-  null !== queuedDrag &&
-    attemptReplayContinuousQueuedEvent(queuedDrag) &&
-    (queuedDrag = null);
-  null !== queuedMouse &&
-    attemptReplayContinuousQueuedEvent(queuedMouse) &&
-    (queuedMouse = null);
-  queuedPointers.forEach(attemptReplayContinuousQueuedEventInMap);
-  queuedPointerCaptures.forEach(attemptReplayContinuousQueuedEventInMap);
-  for (var i = 0; i < queuedChangeEventTargets.length; i++) {
-    var target = queuedChangeEventTargets[i],
-      element = target;
-    "INPUT" === element.nodeName
-      ? "checkbox" === element.type || "radio" === element.type
-        ? (target.dispatchEvent(
-            new ("function" === typeof PointerEvent ? PointerEvent : Event)(
-              "click",
-              { bubbles: !0 }
-            )
-          ),
-          target.dispatchEvent(new Event("input", { bubbles: !0 })))
-        : "function" === typeof InputEvent &&
-          target.dispatchEvent(new InputEvent("input", { bubbles: !0 }))
-      : "TEXTAREA" === element.nodeName &&
-        "function" === typeof InputEvent &&
-        target.dispatchEvent(new InputEvent("input", { bubbles: !0 }));
-    target.dispatchEvent(new Event("change", { bubbles: !0 }));
-  }
-  queuedChangeEventTargets.length = 0;
-}
 function queueChangeEvent(target) {
   queuedChangeEventTargets.push(target);
-  hasScheduledReplayAttempt ||
-    ((hasScheduledReplayAttempt = !0),
-    Scheduler.unstable_scheduleCallback(
-      Scheduler.unstable_NormalPriority,
-      replayUnblockedEvents
-    ));
+  hasScheduledReplayAttempt || (hasScheduledReplayAttempt = !0);
 }
 function scheduleCallbackIfUnblocked(queuedEvent, unblocked) {
   queuedEvent.blockedOn === unblocked &&
     ((queuedEvent.blockedOn = null),
-    hasScheduledReplayAttempt ||
-      ((hasScheduledReplayAttempt = !0),
-      Scheduler.unstable_scheduleCallback(
-        Scheduler.unstable_NormalPriority,
-        replayUnblockedEvents
-      )));
+    hasScheduledReplayAttempt || (hasScheduledReplayAttempt = !0));
 }
 var lastScheduledReplayQueue = null;
 function scheduleReplayQueueIfNeeded(formReplayingQueue) {
@@ -17583,16 +17570,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2089 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2088 = React.version;
 if (
-  "19.2.0-native-fb-587cb8f8-20250506" !==
-  isomorphicReactPackageVersion$jscomp$inline_2089
+  "19.2.0-native-fb-54a50729-20250506" !==
+  isomorphicReactPackageVersion$jscomp$inline_2088
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2089,
-      "19.2.0-native-fb-587cb8f8-20250506"
+      isomorphicReactPackageVersion$jscomp$inline_2088,
+      "19.2.0-native-fb-54a50729-20250506"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17612,12 +17599,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2096 = {
+var internals$jscomp$inline_2095 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-587cb8f8-20250506",
+  version: "19.2.0-native-fb-54a50729-20250506",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-587cb8f8-20250506",
+  reconcilerVersion: "19.2.0-native-fb-54a50729-20250506",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$309 = 0;
@@ -17635,16 +17622,16 @@ var internals$jscomp$inline_2096 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2565 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2566 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2565.isDisabled &&
-    hook$jscomp$inline_2565.supportsFiber
+    !hook$jscomp$inline_2566.isDisabled &&
+    hook$jscomp$inline_2566.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2565.inject(
-        internals$jscomp$inline_2096
+      (rendererID = hook$jscomp$inline_2566.inject(
+        internals$jscomp$inline_2095
       )),
-        (injectedHook = hook$jscomp$inline_2565);
+        (injectedHook = hook$jscomp$inline_2566);
     } catch (err) {}
 }
 function noop() {}
@@ -17890,7 +17877,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-587cb8f8-20250506";
+exports.version = "19.2.0-native-fb-54a50729-20250506";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

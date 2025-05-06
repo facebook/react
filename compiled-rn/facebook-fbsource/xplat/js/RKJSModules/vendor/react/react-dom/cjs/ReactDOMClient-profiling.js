@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<61bec1b1520b0bfe380147d3e0d6270d>>
+ * @generated SignedSource<<aeff7289453905813a14eaa5d171b725>>
  */
 
 /*
@@ -13040,6 +13040,37 @@ function flushSpawnedWork() {
           ? nestedUpdateCount++
           : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)))
       : (nestedUpdateCount = 0);
+    if (hasScheduledReplayAttempt) {
+      hasScheduledReplayAttempt = !1;
+      null !== queuedFocus &&
+        attemptReplayContinuousQueuedEvent(queuedFocus) &&
+        (queuedFocus = null);
+      null !== queuedDrag &&
+        attemptReplayContinuousQueuedEvent(queuedDrag) &&
+        (queuedDrag = null);
+      null !== queuedMouse &&
+        attemptReplayContinuousQueuedEvent(queuedMouse) &&
+        (queuedMouse = null);
+      queuedPointers.forEach(attemptReplayContinuousQueuedEventInMap);
+      queuedPointerCaptures.forEach(attemptReplayContinuousQueuedEventInMap);
+      for (root = 0; root < queuedChangeEventTargets.length; root++)
+        (lanes = queuedChangeEventTargets[root]),
+          "INPUT" === lanes.nodeName
+            ? "checkbox" === lanes.type || "radio" === lanes.type
+              ? (lanes.dispatchEvent(
+                  new ("function" === typeof PointerEvent
+                    ? PointerEvent
+                    : Event)("click", { bubbles: !0 })
+                ),
+                lanes.dispatchEvent(new Event("input", { bubbles: !0 })))
+              : "function" === typeof InputEvent &&
+                lanes.dispatchEvent(new InputEvent("input", { bubbles: !0 }))
+            : "TEXTAREA" === lanes.nodeName &&
+              "function" === typeof InputEvent &&
+              lanes.dispatchEvent(new InputEvent("input", { bubbles: !0 })),
+          lanes.dispatchEvent(new Event("change", { bubbles: !0 }));
+      queuedChangeEventTargets.length = 0;
+    }
     flushSyncWorkAcrossRoots_impl(0, !1);
     markCommitStopped();
   }
@@ -13573,20 +13604,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1717 = 0;
-  i$jscomp$inline_1717 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1717++
+  var i$jscomp$inline_1718 = 0;
+  i$jscomp$inline_1718 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1718++
 ) {
-  var eventName$jscomp$inline_1718 =
-      simpleEventPluginEvents[i$jscomp$inline_1717],
-    domEventName$jscomp$inline_1719 =
-      eventName$jscomp$inline_1718.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1720 =
-      eventName$jscomp$inline_1718[0].toUpperCase() +
-      eventName$jscomp$inline_1718.slice(1);
+  var eventName$jscomp$inline_1719 =
+      simpleEventPluginEvents[i$jscomp$inline_1718],
+    domEventName$jscomp$inline_1720 =
+      eventName$jscomp$inline_1719.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1721 =
+      eventName$jscomp$inline_1719[0].toUpperCase() +
+      eventName$jscomp$inline_1719.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1719,
-    "on" + capitalizedEvent$jscomp$inline_1720
+    domEventName$jscomp$inline_1720,
+    "on" + capitalizedEvent$jscomp$inline_1721
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17390,58 +17421,14 @@ function attemptReplayContinuousQueuedEvent(queuedEvent) {
 function attemptReplayContinuousQueuedEventInMap(queuedEvent, key, map) {
   attemptReplayContinuousQueuedEvent(queuedEvent) && map.delete(key);
 }
-function replayUnblockedEvents() {
-  hasScheduledReplayAttempt = !1;
-  null !== queuedFocus &&
-    attemptReplayContinuousQueuedEvent(queuedFocus) &&
-    (queuedFocus = null);
-  null !== queuedDrag &&
-    attemptReplayContinuousQueuedEvent(queuedDrag) &&
-    (queuedDrag = null);
-  null !== queuedMouse &&
-    attemptReplayContinuousQueuedEvent(queuedMouse) &&
-    (queuedMouse = null);
-  queuedPointers.forEach(attemptReplayContinuousQueuedEventInMap);
-  queuedPointerCaptures.forEach(attemptReplayContinuousQueuedEventInMap);
-  for (var i = 0; i < queuedChangeEventTargets.length; i++) {
-    var target = queuedChangeEventTargets[i],
-      element = target;
-    "INPUT" === element.nodeName
-      ? "checkbox" === element.type || "radio" === element.type
-        ? (target.dispatchEvent(
-            new ("function" === typeof PointerEvent ? PointerEvent : Event)(
-              "click",
-              { bubbles: !0 }
-            )
-          ),
-          target.dispatchEvent(new Event("input", { bubbles: !0 })))
-        : "function" === typeof InputEvent &&
-          target.dispatchEvent(new InputEvent("input", { bubbles: !0 }))
-      : "TEXTAREA" === element.nodeName &&
-        "function" === typeof InputEvent &&
-        target.dispatchEvent(new InputEvent("input", { bubbles: !0 }));
-    target.dispatchEvent(new Event("change", { bubbles: !0 }));
-  }
-  queuedChangeEventTargets.length = 0;
-}
 function queueChangeEvent(target) {
   queuedChangeEventTargets.push(target);
-  hasScheduledReplayAttempt ||
-    ((hasScheduledReplayAttempt = !0),
-    Scheduler.unstable_scheduleCallback(
-      Scheduler.unstable_NormalPriority,
-      replayUnblockedEvents
-    ));
+  hasScheduledReplayAttempt || (hasScheduledReplayAttempt = !0);
 }
 function scheduleCallbackIfUnblocked(queuedEvent, unblocked) {
   queuedEvent.blockedOn === unblocked &&
     ((queuedEvent.blockedOn = null),
-    hasScheduledReplayAttempt ||
-      ((hasScheduledReplayAttempt = !0),
-      Scheduler.unstable_scheduleCallback(
-        Scheduler.unstable_NormalPriority,
-        replayUnblockedEvents
-      )));
+    hasScheduledReplayAttempt || (hasScheduledReplayAttempt = !0));
 }
 var lastScheduledReplayQueue = null;
 function scheduleReplayQueueIfNeeded(formReplayingQueue) {
@@ -17568,16 +17555,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2088 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2087 = React.version;
 if (
-  "19.2.0-native-fb-587cb8f8-20250506" !==
-  isomorphicReactPackageVersion$jscomp$inline_2088
+  "19.2.0-native-fb-54a50729-20250506" !==
+  isomorphicReactPackageVersion$jscomp$inline_2087
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2088,
-      "19.2.0-native-fb-587cb8f8-20250506"
+      isomorphicReactPackageVersion$jscomp$inline_2087,
+      "19.2.0-native-fb-54a50729-20250506"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17597,12 +17584,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2095 = {
+var internals$jscomp$inline_2094 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-587cb8f8-20250506",
+  version: "19.2.0-native-fb-54a50729-20250506",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-587cb8f8-20250506",
+  reconcilerVersion: "19.2.0-native-fb-54a50729-20250506",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$309 = 0;
@@ -17620,16 +17607,16 @@ var internals$jscomp$inline_2095 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2562 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2563 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2562.isDisabled &&
-    hook$jscomp$inline_2562.supportsFiber
+    !hook$jscomp$inline_2563.isDisabled &&
+    hook$jscomp$inline_2563.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2562.inject(
-        internals$jscomp$inline_2095
+      (rendererID = hook$jscomp$inline_2563.inject(
+        internals$jscomp$inline_2094
       )),
-        (injectedHook = hook$jscomp$inline_2562);
+        (injectedHook = hook$jscomp$inline_2563);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -17721,4 +17708,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-587cb8f8-20250506";
+exports.version = "19.2.0-native-fb-54a50729-20250506";
