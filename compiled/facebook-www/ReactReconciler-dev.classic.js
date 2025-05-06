@@ -17889,6 +17889,7 @@ __DEV__ &&
           : (nestedUpdateCount = 0);
         enableComponentPerformanceTrack &&
           (completedRenderEndTime || finalizeRender(lanes, commitEndTime));
+        supportsHydration && flushHydrationEvents();
         flushSyncWorkAcrossRoots_impl(0, !1);
         enableSchedulingProfiler && markCommitStopped();
         if (enableTransitionTracing) {
@@ -19337,7 +19338,8 @@ __DEV__ &&
       commitHydratedContainer = $$$config.commitHydratedContainer,
       commitHydratedActivityInstance = $$$config.commitHydratedActivityInstance,
       commitHydratedSuspenseInstance = $$$config.commitHydratedSuspenseInstance,
-      finalizeHydratedChildren = $$$config.finalizeHydratedChildren;
+      finalizeHydratedChildren = $$$config.finalizeHydratedChildren,
+      flushHydrationEvents = $$$config.flushHydrationEvents;
     $$$config.clearActivityBoundary;
     var clearSuspenseBoundary = $$$config.clearSuspenseBoundary;
     $$$config.clearActivityBoundaryFromContainer;
@@ -21875,7 +21877,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-587cb8f8-20250506"
+        reconcilerVersion: "19.2.0-www-classic-54a50729-20250506"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
