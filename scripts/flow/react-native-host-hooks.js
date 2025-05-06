@@ -160,7 +160,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
-  declare export opaque type PublicInstance: __PublicInstance;
+  declare export type PublicInstance: __PublicInstance;
   declare export opaque type PublicTextInstance;
   declare export opaque type PublicRootInstance;
   declare export type MeasureOnSuccessCallback = __MeasureOnSuccessCallback;
@@ -207,7 +207,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitialize
 }
 
 declare module 'react-native' {
-  declare export opaque type HostInstance: __PublicInstance;
+  declare export type HostInstance: __PublicInstance;
   declare export opaque type PublicTextInstance;
   declare export opaque type PublicRootInstance;
   declare export type MeasureOnSuccessCallback = __MeasureOnSuccessCallback;
