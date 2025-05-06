@@ -21,6 +21,7 @@ import {queryAlgolia} from './utils/algolia';
 import assertExhaustive from './utils/assertExhaustive';
 import {convert} from 'html-to-text';
 import {measurePerformance} from './tools/runtimePerf';
+import {parseReactComponentTree} from './tools/componentTree';
 
 const server = new McpServer({
   name: 'React',
@@ -359,6 +360,26 @@ ${results.renderTime / iterations}ms
       };
     }
   },
+);
+
+server.tool(
+  'parse-react-component-tree',
+  `  `,
+  {
+    text: z.string(),
+  },
+  async ({text}) => {
+    const componentTree = await parseReactComponentTree(text);
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: componentTree,
+        },
+      ]
+    }
+  }
 );
 
 server.prompt('review-react-code', () => ({
