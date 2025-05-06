@@ -700,6 +700,10 @@ export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
 }
 
+export function getCommittingRoot(): FiberRoot | null {
+  return pendingEffectsRoot;
+}
+
 export function getWorkInProgressRootRenderLanes(): Lanes {
   return workInProgressRootRenderLanes;
 }
