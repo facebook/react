@@ -1006,6 +1006,414 @@ __DEV__ &&
         "function" === typeof injectedProfilingHooks.markStateUpdateScheduled &&
         injectedProfilingHooks.markStateUpdateScheduled(fiber, lane);
     }
+    function getViewTransitionName(props, instance) {
+      if (null != props.name && "auto" !== props.name) return props.name;
+      if (null !== instance.autoName) return instance.autoName;
+      props = pendingEffectsRoot.identifierPrefix;
+      var globalClientId = globalClientIdCounter$1++;
+      props = "\u00ab" + props + "t" + globalClientId.toString(32) + "\u00bb";
+      return (instance.autoName = props);
+    }
+    function getClassNameByType(classByType) {
+      if (null == classByType || "string" === typeof classByType)
+        return classByType;
+      var className = null,
+        activeTypes = pendingTransitionTypes;
+      if (null !== activeTypes)
+        for (var i = 0; i < activeTypes.length; i++) {
+          var match = classByType[activeTypes[i]];
+          if (null != match) {
+            if ("none" === match) return "none";
+            className = null == className ? match : className + (" " + match);
+          }
+        }
+      return null == className ? classByType.default : className;
+    }
+    function getViewTransitionClassName(defaultClass, eventClass) {
+      defaultClass = getClassNameByType(defaultClass);
+      eventClass = getClassNameByType(eventClass);
+      return null == eventClass
+        ? "auto" === defaultClass
+          ? null
+          : defaultClass
+        : "auto" === eventClass
+          ? null
+          : eventClass;
+    }
+    function is(x, y) {
+      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+    }
+    function setCurrentTrackFromLanes(lanes) {
+      currentTrack =
+        lanes & 127
+          ? "Blocking"
+          : lanes & 4194176
+            ? "Transition"
+            : lanes & 62914560
+              ? "Suspense"
+              : lanes & 2080374784
+                ? "Idle"
+                : "Other";
+    }
+    function logComponentTrigger(fiber, startTime, endTime, trigger) {
+      supportsUserTiming &&
+        ((fiber = fiber._debugTask)
+          ? fiber.run(
+              console.timeStamp.bind(
+                console,
+                trigger,
+                startTime,
+                endTime,
+                "Components \u269b",
+                void 0,
+                "warning"
+              )
+            )
+          : console.timeStamp(
+              trigger,
+              startTime,
+              endTime,
+              "Components \u269b",
+              void 0,
+              "warning"
+            ));
+    }
+    function logComponentReappeared(fiber, startTime, endTime) {
+      logComponentTrigger(fiber, startTime, endTime, "Reconnect");
+    }
+    function logComponentRender(fiber, startTime, endTime, wasHydrated) {
+      var name = getComponentNameFromFiber(fiber);
+      if (null !== name && supportsUserTiming) {
+        var selfTime = fiber.actualDuration;
+        if (null === fiber.alternate || fiber.alternate.child !== fiber.child)
+          for (var child = fiber.child; null !== child; child = child.sibling)
+            selfTime -= child.actualDuration;
+        wasHydrated =
+          0.5 > selfTime
+            ? wasHydrated
+              ? "tertiary-light"
+              : "primary-light"
+            : 10 > selfTime
+              ? wasHydrated
+                ? "tertiary"
+                : "primary"
+              : 100 > selfTime
+                ? wasHydrated
+                  ? "tertiary-dark"
+                  : "primary-dark"
+                : "error";
+        (fiber = fiber._debugTask)
+          ? fiber.run(
+              console.timeStamp.bind(
+                console,
+                name,
+                startTime,
+                endTime,
+                "Components \u269b",
+                void 0,
+                wasHydrated
+              )
+            )
+          : console.timeStamp(
+              name,
+              startTime,
+              endTime,
+              "Components \u269b",
+              void 0,
+              wasHydrated
+            );
+      }
+    }
+    function logComponentErrored(fiber, startTime, endTime, errors) {
+      if (supportsUserTiming) {
+        var name = getComponentNameFromFiber(fiber);
+        if (null !== name)
+          if (
+            "undefined" !== typeof performance &&
+            "function" === typeof performance.measure
+          ) {
+            for (
+              var debugTask = null, properties = [], i = 0;
+              i < errors.length;
+              i++
+            ) {
+              var capturedValue = errors[i];
+              null == debugTask &&
+                null !== capturedValue.source &&
+                (debugTask = capturedValue.source._debugTask);
+              capturedValue = capturedValue.value;
+              properties.push([
+                "Error",
+                "object" === typeof capturedValue &&
+                null !== capturedValue &&
+                "string" === typeof capturedValue.message
+                  ? String(capturedValue.message)
+                  : String(capturedValue)
+              ]);
+            }
+            null == debugTask && (debugTask = fiber._debugTask);
+            fiber = {
+              start: startTime,
+              end: endTime,
+              detail: {
+                devtools: {
+                  color: "error",
+                  track: "Components \u269b",
+                  tooltipText:
+                    13 === fiber.tag
+                      ? "Hydration failed"
+                      : "Error boundary caught an error",
+                  properties: properties
+                }
+              }
+            };
+            debugTask
+              ? debugTask.run(
+                  performance.measure.bind(performance, name, fiber)
+                )
+              : performance.measure(name, fiber);
+          } else
+            console.timeStamp(
+              name,
+              startTime,
+              endTime,
+              "Components \u269b",
+              void 0,
+              "error"
+            );
+      }
+    }
+    function logComponentEffect(fiber, startTime, endTime, selfTime, errors) {
+      if (null !== errors) {
+        if (supportsUserTiming) {
+          var name = getComponentNameFromFiber(fiber);
+          if (null !== name)
+            if (
+              "undefined" !== typeof performance &&
+              "function" === typeof performance.measure
+            ) {
+              selfTime = [];
+              for (var i = 0; i < errors.length; i++) {
+                var error = errors[i].value;
+                selfTime.push([
+                  "Error",
+                  "object" === typeof error &&
+                  null !== error &&
+                  "string" === typeof error.message
+                    ? String(error.message)
+                    : String(error)
+                ]);
+              }
+              startTime = {
+                start: startTime,
+                end: endTime,
+                detail: {
+                  devtools: {
+                    color: "error",
+                    track: "Components \u269b",
+                    tooltipText: "A lifecycle or effect errored",
+                    properties: selfTime
+                  }
+                }
+              };
+              (fiber = fiber._debugTask)
+                ? fiber.run(
+                    performance.measure.bind(performance, name, startTime)
+                  )
+                : performance.measure(name, startTime);
+            } else
+              console.timeStamp(
+                name,
+                startTime,
+                endTime,
+                "Components \u269b",
+                void 0,
+                "error"
+              );
+        }
+      } else
+        (name = getComponentNameFromFiber(fiber)),
+          null !== name &&
+            supportsUserTiming &&
+            ((errors =
+              1 > selfTime
+                ? "secondary-light"
+                : 100 > selfTime
+                  ? "secondary"
+                  : 500 > selfTime
+                    ? "secondary-dark"
+                    : "error"),
+            (fiber = fiber._debugTask)
+              ? fiber.run(
+                  console.timeStamp.bind(
+                    console,
+                    name,
+                    startTime,
+                    endTime,
+                    "Components \u269b",
+                    void 0,
+                    errors
+                  )
+                )
+              : console.timeStamp(
+                  name,
+                  startTime,
+                  endTime,
+                  "Components \u269b",
+                  void 0,
+                  errors
+                ));
+    }
+    function logSuspendedRenderPhase(startTime, endTime, lanes) {
+      supportsUserTiming &&
+        console.timeStamp(
+          "Prewarm",
+          startTime,
+          endTime,
+          currentTrack,
+          "Scheduler \u269b",
+          (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark"
+        );
+    }
+    function logSuspendedWithDelayPhase(startTime, endTime, lanes) {
+      supportsUserTiming &&
+        console.timeStamp(
+          "Suspended",
+          startTime,
+          endTime,
+          currentTrack,
+          "Scheduler \u269b",
+          (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark"
+        );
+    }
+    function logRecoveredRenderPhase(
+      startTime,
+      endTime,
+      lanes,
+      recoverableErrors,
+      hydrationFailed
+    ) {
+      if (supportsUserTiming)
+        if (
+          "undefined" !== typeof performance &&
+          "function" === typeof performance.measure
+        ) {
+          lanes = [];
+          for (var i = 0; i < recoverableErrors.length; i++) {
+            var error = recoverableErrors[i].value;
+            lanes.push([
+              "Recoverable Error",
+              "object" === typeof error &&
+              null !== error &&
+              "string" === typeof error.message
+                ? String(error.message)
+                : String(error)
+            ]);
+          }
+          performance.measure("Recovered", {
+            start: startTime,
+            end: endTime,
+            detail: {
+              devtools: {
+                color: "primary-dark",
+                track: currentTrack,
+                trackGroup: "Scheduler \u269b",
+                tooltipText: hydrationFailed
+                  ? "Hydration Failed"
+                  : "Recovered after Error",
+                properties: lanes
+              }
+            }
+          });
+        } else
+          console.timeStamp(
+            "Recovered",
+            startTime,
+            endTime,
+            currentTrack,
+            "Scheduler \u269b",
+            "error"
+          );
+    }
+    function logErroredRenderPhase(startTime, endTime) {
+      supportsUserTiming &&
+        console.timeStamp(
+          "Errored",
+          startTime,
+          endTime,
+          currentTrack,
+          "Scheduler \u269b",
+          "error"
+        );
+    }
+    function logCommitErrored(startTime, endTime, errors, passive) {
+      if (supportsUserTiming)
+        if (
+          "undefined" !== typeof performance &&
+          "function" === typeof performance.measure
+        ) {
+          for (var properties = [], i = 0; i < errors.length; i++) {
+            var error = errors[i].value;
+            properties.push([
+              "Error",
+              "object" === typeof error &&
+              null !== error &&
+              "string" === typeof error.message
+                ? String(error.message)
+                : String(error)
+            ]);
+          }
+          performance.measure("Errored", {
+            start: startTime,
+            end: endTime,
+            detail: {
+              devtools: {
+                color: "error",
+                track: currentTrack,
+                trackGroup: "Scheduler \u269b",
+                tooltipText: passive
+                  ? "Remaining Effects Errored"
+                  : "Commit Errored",
+                properties: properties
+              }
+            }
+          });
+        } else
+          console.timeStamp(
+            "Errored",
+            startTime,
+            endTime,
+            currentTrack,
+            "Scheduler \u269b",
+            "error"
+          );
+    }
+    function logCommitPhase(startTime, endTime, errors) {
+      null !== errors
+        ? logCommitErrored(startTime, endTime, errors, !1)
+        : supportsUserTiming &&
+          console.timeStamp(
+            "Commit",
+            startTime,
+            endTime,
+            currentTrack,
+            "Scheduler \u269b",
+            "secondary-dark"
+          );
+    }
+    function logPassiveCommitPhase(startTime, endTime, errors) {
+      null !== errors
+        ? logCommitErrored(startTime, endTime, errors, !0)
+        : supportsUserTiming &&
+          console.timeStamp(
+            "Remaining Effects",
+            startTime,
+            endTime,
+            currentTrack,
+            "Scheduler \u269b",
+            "secondary-dark"
+          );
+    }
     function disabledLog() {}
     function disableLogs() {
       if (0 === disabledDepth) {
@@ -1321,15 +1729,6 @@ __DEV__ &&
         source: source,
         stack: getStackByFiberInDevAndProd(source)
       };
-    }
-    function getTreeId() {
-      var overflow = treeContextOverflow,
-        idWithLeadingBit = treeContextId;
-      return (
-        (
-          idWithLeadingBit & ~(1 << (32 - clz32(idWithLeadingBit) - 1))
-        ).toString(32) + overflow
-      );
     }
     function pushTreeFork(workInProgress, totalChildren) {
       warnIfNotHydrating();
@@ -2200,411 +2599,6 @@ __DEV__ &&
           );
         });
       }
-    }
-    function getViewTransitionName(props, instance) {
-      return null != props.name && "auto" !== props.name
-        ? props.name
-        : instance.autoName;
-    }
-    function getClassNameByType(classByType) {
-      if (null == classByType || "string" === typeof classByType)
-        return classByType;
-      var className = null,
-        activeTypes = pendingTransitionTypes;
-      if (null !== activeTypes)
-        for (var i = 0; i < activeTypes.length; i++) {
-          var match = classByType[activeTypes[i]];
-          if (null != match) {
-            if ("none" === match) return "none";
-            className = null == className ? match : className + (" " + match);
-          }
-        }
-      return null == className ? classByType.default : className;
-    }
-    function getViewTransitionClassName(defaultClass, eventClass) {
-      defaultClass = getClassNameByType(defaultClass);
-      eventClass = getClassNameByType(eventClass);
-      return null == eventClass
-        ? "auto" === defaultClass
-          ? null
-          : defaultClass
-        : "auto" === eventClass
-          ? null
-          : eventClass;
-    }
-    function is(x, y) {
-      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-    }
-    function setCurrentTrackFromLanes(lanes) {
-      currentTrack =
-        lanes & 127
-          ? "Blocking"
-          : lanes & 4194176
-            ? "Transition"
-            : lanes & 62914560
-              ? "Suspense"
-              : lanes & 2080374784
-                ? "Idle"
-                : "Other";
-    }
-    function logComponentTrigger(fiber, startTime, endTime, trigger) {
-      supportsUserTiming &&
-        ((fiber = fiber._debugTask)
-          ? fiber.run(
-              console.timeStamp.bind(
-                console,
-                trigger,
-                startTime,
-                endTime,
-                "Components \u269b",
-                void 0,
-                "warning"
-              )
-            )
-          : console.timeStamp(
-              trigger,
-              startTime,
-              endTime,
-              "Components \u269b",
-              void 0,
-              "warning"
-            ));
-    }
-    function logComponentReappeared(fiber, startTime, endTime) {
-      logComponentTrigger(fiber, startTime, endTime, "Reconnect");
-    }
-    function logComponentRender(fiber, startTime, endTime, wasHydrated) {
-      var name = getComponentNameFromFiber(fiber);
-      if (null !== name && supportsUserTiming) {
-        var selfTime = fiber.actualDuration;
-        if (null === fiber.alternate || fiber.alternate.child !== fiber.child)
-          for (var child = fiber.child; null !== child; child = child.sibling)
-            selfTime -= child.actualDuration;
-        wasHydrated =
-          0.5 > selfTime
-            ? wasHydrated
-              ? "tertiary-light"
-              : "primary-light"
-            : 10 > selfTime
-              ? wasHydrated
-                ? "tertiary"
-                : "primary"
-              : 100 > selfTime
-                ? wasHydrated
-                  ? "tertiary-dark"
-                  : "primary-dark"
-                : "error";
-        (fiber = fiber._debugTask)
-          ? fiber.run(
-              console.timeStamp.bind(
-                console,
-                name,
-                startTime,
-                endTime,
-                "Components \u269b",
-                void 0,
-                wasHydrated
-              )
-            )
-          : console.timeStamp(
-              name,
-              startTime,
-              endTime,
-              "Components \u269b",
-              void 0,
-              wasHydrated
-            );
-      }
-    }
-    function logComponentErrored(fiber, startTime, endTime, errors) {
-      if (supportsUserTiming) {
-        var name = getComponentNameFromFiber(fiber);
-        if (null !== name)
-          if (
-            "undefined" !== typeof performance &&
-            "function" === typeof performance.measure
-          ) {
-            for (
-              var debugTask = null, properties = [], i = 0;
-              i < errors.length;
-              i++
-            ) {
-              var capturedValue = errors[i];
-              null == debugTask &&
-                null !== capturedValue.source &&
-                (debugTask = capturedValue.source._debugTask);
-              capturedValue = capturedValue.value;
-              properties.push([
-                "Error",
-                "object" === typeof capturedValue &&
-                null !== capturedValue &&
-                "string" === typeof capturedValue.message
-                  ? String(capturedValue.message)
-                  : String(capturedValue)
-              ]);
-            }
-            null == debugTask && (debugTask = fiber._debugTask);
-            fiber = {
-              start: startTime,
-              end: endTime,
-              detail: {
-                devtools: {
-                  color: "error",
-                  track: "Components \u269b",
-                  tooltipText:
-                    13 === fiber.tag
-                      ? "Hydration failed"
-                      : "Error boundary caught an error",
-                  properties: properties
-                }
-              }
-            };
-            debugTask
-              ? debugTask.run(
-                  performance.measure.bind(performance, name, fiber)
-                )
-              : performance.measure(name, fiber);
-          } else
-            console.timeStamp(
-              name,
-              startTime,
-              endTime,
-              "Components \u269b",
-              void 0,
-              "error"
-            );
-      }
-    }
-    function logComponentEffect(fiber, startTime, endTime, selfTime, errors) {
-      if (null !== errors) {
-        if (supportsUserTiming) {
-          var name = getComponentNameFromFiber(fiber);
-          if (null !== name)
-            if (
-              "undefined" !== typeof performance &&
-              "function" === typeof performance.measure
-            ) {
-              selfTime = [];
-              for (var i = 0; i < errors.length; i++) {
-                var error = errors[i].value;
-                selfTime.push([
-                  "Error",
-                  "object" === typeof error &&
-                  null !== error &&
-                  "string" === typeof error.message
-                    ? String(error.message)
-                    : String(error)
-                ]);
-              }
-              startTime = {
-                start: startTime,
-                end: endTime,
-                detail: {
-                  devtools: {
-                    color: "error",
-                    track: "Components \u269b",
-                    tooltipText: "A lifecycle or effect errored",
-                    properties: selfTime
-                  }
-                }
-              };
-              (fiber = fiber._debugTask)
-                ? fiber.run(
-                    performance.measure.bind(performance, name, startTime)
-                  )
-                : performance.measure(name, startTime);
-            } else
-              console.timeStamp(
-                name,
-                startTime,
-                endTime,
-                "Components \u269b",
-                void 0,
-                "error"
-              );
-        }
-      } else
-        (name = getComponentNameFromFiber(fiber)),
-          null !== name &&
-            supportsUserTiming &&
-            ((errors =
-              1 > selfTime
-                ? "secondary-light"
-                : 100 > selfTime
-                  ? "secondary"
-                  : 500 > selfTime
-                    ? "secondary-dark"
-                    : "error"),
-            (fiber = fiber._debugTask)
-              ? fiber.run(
-                  console.timeStamp.bind(
-                    console,
-                    name,
-                    startTime,
-                    endTime,
-                    "Components \u269b",
-                    void 0,
-                    errors
-                  )
-                )
-              : console.timeStamp(
-                  name,
-                  startTime,
-                  endTime,
-                  "Components \u269b",
-                  void 0,
-                  errors
-                ));
-    }
-    function logSuspendedRenderPhase(startTime, endTime, lanes) {
-      supportsUserTiming &&
-        console.timeStamp(
-          "Prewarm",
-          startTime,
-          endTime,
-          currentTrack,
-          "Scheduler \u269b",
-          (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark"
-        );
-    }
-    function logSuspendedWithDelayPhase(startTime, endTime, lanes) {
-      supportsUserTiming &&
-        console.timeStamp(
-          "Suspended",
-          startTime,
-          endTime,
-          currentTrack,
-          "Scheduler \u269b",
-          (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark"
-        );
-    }
-    function logRecoveredRenderPhase(
-      startTime,
-      endTime,
-      lanes,
-      recoverableErrors,
-      hydrationFailed
-    ) {
-      if (supportsUserTiming)
-        if (
-          "undefined" !== typeof performance &&
-          "function" === typeof performance.measure
-        ) {
-          lanes = [];
-          for (var i = 0; i < recoverableErrors.length; i++) {
-            var error = recoverableErrors[i].value;
-            lanes.push([
-              "Recoverable Error",
-              "object" === typeof error &&
-              null !== error &&
-              "string" === typeof error.message
-                ? String(error.message)
-                : String(error)
-            ]);
-          }
-          performance.measure("Recovered", {
-            start: startTime,
-            end: endTime,
-            detail: {
-              devtools: {
-                color: "primary-dark",
-                track: currentTrack,
-                trackGroup: "Scheduler \u269b",
-                tooltipText: hydrationFailed
-                  ? "Hydration Failed"
-                  : "Recovered after Error",
-                properties: lanes
-              }
-            }
-          });
-        } else
-          console.timeStamp(
-            "Recovered",
-            startTime,
-            endTime,
-            currentTrack,
-            "Scheduler \u269b",
-            "error"
-          );
-    }
-    function logErroredRenderPhase(startTime, endTime) {
-      supportsUserTiming &&
-        console.timeStamp(
-          "Errored",
-          startTime,
-          endTime,
-          currentTrack,
-          "Scheduler \u269b",
-          "error"
-        );
-    }
-    function logCommitErrored(startTime, endTime, errors, passive) {
-      if (supportsUserTiming)
-        if (
-          "undefined" !== typeof performance &&
-          "function" === typeof performance.measure
-        ) {
-          for (var properties = [], i = 0; i < errors.length; i++) {
-            var error = errors[i].value;
-            properties.push([
-              "Error",
-              "object" === typeof error &&
-              null !== error &&
-              "string" === typeof error.message
-                ? String(error.message)
-                : String(error)
-            ]);
-          }
-          performance.measure("Errored", {
-            start: startTime,
-            end: endTime,
-            detail: {
-              devtools: {
-                color: "error",
-                track: currentTrack,
-                trackGroup: "Scheduler \u269b",
-                tooltipText: passive
-                  ? "Remaining Effects Errored"
-                  : "Commit Errored",
-                properties: properties
-              }
-            }
-          });
-        } else
-          console.timeStamp(
-            "Errored",
-            startTime,
-            endTime,
-            currentTrack,
-            "Scheduler \u269b",
-            "error"
-          );
-    }
-    function logCommitPhase(startTime, endTime, errors) {
-      null !== errors
-        ? logCommitErrored(startTime, endTime, errors, !1)
-        : supportsUserTiming &&
-          console.timeStamp(
-            "Commit",
-            startTime,
-            endTime,
-            currentTrack,
-            "Scheduler \u269b",
-            "secondary-dark"
-          );
-    }
-    function logPassiveCommitPhase(startTime, endTime, errors) {
-      null !== errors
-        ? logCommitErrored(startTime, endTime, errors, !0)
-        : supportsUserTiming &&
-          console.timeStamp(
-            "Remaining Effects",
-            startTime,
-            endTime,
-            currentTrack,
-            "Scheduler \u269b",
-            "secondary-dark"
-          );
     }
     function resetContextDependencies() {
       lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -6471,7 +6465,12 @@ __DEV__ &&
       var hook = mountWorkInProgressHook(),
         identifierPrefix = workInProgressRoot.identifierPrefix;
       if (isHydrating) {
-        var treeId = getTreeId();
+        var treeId = treeContextOverflow;
+        var idWithLeadingBit = treeContextId;
+        treeId =
+          (
+            idWithLeadingBit & ~(1 << (32 - clz32(idWithLeadingBit) - 1))
+          ).toString(32) + treeId;
         identifierPrefix = "\u00ab" + identifierPrefix + "R" + treeId;
         treeId = localIdCounter++;
         0 < treeId && (identifierPrefix += "H" + treeId.toString(32));
@@ -10048,30 +10047,10 @@ __DEV__ &&
           break;
         case 30:
           if (enableViewTransition) {
-            var pendingProps = workInProgress.pendingProps,
-              instance$jscomp$2 = workInProgress.stateNode;
-            if (null != pendingProps.name && "auto" !== pendingProps.name)
-              workInProgress.flags |= null === current ? 18882560 : 18874368;
-            else {
-              if (null === instance$jscomp$2.autoName) {
-                var identifierPrefix = workInProgressRoot.identifierPrefix;
-                if (isHydrating) {
-                  var treeId = getTreeId();
-                  var name =
-                    "\u00ab" + identifierPrefix + "T" + treeId + "\u00bb";
-                } else {
-                  var globalClientId = globalClientIdCounter$1++;
-                  name =
-                    "\u00ab" +
-                    identifierPrefix +
-                    "t" +
-                    globalClientId.toString(32) +
-                    "\u00bb";
-                }
-                instance$jscomp$2.autoName = name;
-              }
-              isHydrating && pushMaterializedTreeId(workInProgress);
-            }
+            var pendingProps = workInProgress.pendingProps;
+            null != pendingProps.name &&
+              "auto" !== pendingProps.name &&
+              (workInProgress.flags |= null === current ? 18882560 : 18874368);
             if (void 0 !== pendingProps.className) {
               var example =
                 "string" === typeof pendingProps.className
@@ -19406,6 +19385,27 @@ __DEV__ &&
       injectedProfilingHooks = null,
       hasLoggedError = !1,
       isDevToolsPresent = "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__,
+      globalClientIdCounter$1 = 0,
+      lastResetTime = 0;
+    if (
+      "object" === typeof performance &&
+      "function" === typeof performance.now
+    ) {
+      var localPerformance = performance;
+      var getCurrentTime = function () {
+        return localPerformance.now();
+      };
+    } else {
+      var localDate = Date;
+      getCurrentTime = function () {
+        return localDate.now();
+      };
+    }
+    var objectIs = "function" === typeof Object.is ? Object.is : is,
+      supportsUserTiming =
+        "undefined" !== typeof console &&
+        "function" === typeof console.timeStamp,
+      currentTrack = "Blocking",
       disabledDepth = 0,
       prevLog,
       prevInfo,
@@ -19448,27 +19448,6 @@ __DEV__ &&
       HydrationMismatchException = Error(
         "Hydration Mismatch Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React."
       ),
-      globalClientIdCounter$1 = 0,
-      lastResetTime = 0;
-    if (
-      "object" === typeof performance &&
-      "function" === typeof performance.now
-    ) {
-      var localPerformance = performance;
-      var getCurrentTime = function () {
-        return localPerformance.now();
-      };
-    } else {
-      var localDate = Date;
-      getCurrentTime = function () {
-        return localDate.now();
-      };
-    }
-    var objectIs = "function" === typeof Object.is ? Object.is : is,
-      supportsUserTiming =
-        "undefined" !== typeof console &&
-        "function" === typeof console.timeStamp,
-      currentTrack = "Blocking",
       NoMode = 0,
       valueCursor = createCursor(null);
     var rendererCursorDEV = createCursor(null);
@@ -21877,7 +21856,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-54a50729-20250506"
+        reconcilerVersion: "19.2.0-www-classic-845d9374-20250506"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

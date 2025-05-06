@@ -755,6 +755,45 @@ function push(cursor, value) {
   cursor.current = value;
 }
 var emptyContextObject = {},
+  globalClientIdCounter$1 = 0;
+function getViewTransitionName(props, instance) {
+  if (null != props.name && "auto" !== props.name) return props.name;
+  if (null !== instance.autoName) return instance.autoName;
+  props = pendingEffectsRoot.identifierPrefix;
+  var globalClientId = globalClientIdCounter$1++;
+  props = "\u00ab" + props + "t" + globalClientId.toString(32) + "\u00bb";
+  return (instance.autoName = props);
+}
+function getClassNameByType(classByType) {
+  if (null == classByType || "string" === typeof classByType)
+    return classByType;
+  var className = null,
+    activeTypes = pendingTransitionTypes;
+  if (null !== activeTypes)
+    for (var i = 0; i < activeTypes.length; i++) {
+      var match = classByType[activeTypes[i]];
+      if (null != match) {
+        if ("none" === match) return "none";
+        className = null == className ? match : className + (" " + match);
+      }
+    }
+  return null == className ? classByType.default : className;
+}
+function getViewTransitionClassName(defaultClass, eventClass) {
+  defaultClass = getClassNameByType(defaultClass);
+  eventClass = getClassNameByType(eventClass);
+  return null == eventClass
+    ? "auto" === defaultClass
+      ? null
+      : defaultClass
+    : "auto" === eventClass
+      ? null
+      : eventClass;
+}
+function is(x, y) {
+  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+}
+var objectIs = "function" === typeof Object.is ? Object.is : is,
   prefix,
   suffix;
 function describeBuiltInComponentFrame(name) {
@@ -1009,43 +1048,7 @@ function upgradeHydrationErrorsToRecoverable() {
     (hydrationErrors = null));
   return queuedErrors;
 }
-var globalClientIdCounter$1 = 0;
-function getViewTransitionName(props, instance) {
-  return null != props.name && "auto" !== props.name
-    ? props.name
-    : instance.autoName;
-}
-function getClassNameByType(classByType) {
-  if (null == classByType || "string" === typeof classByType)
-    return classByType;
-  var className = null,
-    activeTypes = pendingTransitionTypes;
-  if (null !== activeTypes)
-    for (var i = 0; i < activeTypes.length; i++) {
-      var match = classByType[activeTypes[i]];
-      if (null != match) {
-        if ("none" === match) return "none";
-        className = null == className ? match : className + (" " + match);
-      }
-    }
-  return null == className ? classByType.default : className;
-}
-function getViewTransitionClassName(defaultClass, eventClass) {
-  defaultClass = getClassNameByType(defaultClass);
-  eventClass = getClassNameByType(eventClass);
-  return null == eventClass
-    ? "auto" === defaultClass
-      ? null
-      : defaultClass
-    : "auto" === eventClass
-      ? null
-      : eventClass;
-}
-function is(x, y) {
-  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-}
-var objectIs = "function" === typeof Object.is ? Object.is : is,
-  valueCursor = createCursor(null),
+var valueCursor = createCursor(null),
   currentlyRenderingFiber$1 = null,
   lastContextDependency = null;
 function pushProvider(providerFiber, context, nextValue) {
@@ -6254,15 +6257,9 @@ function beginWork(current, workInProgress, renderLanes) {
       if (enableViewTransition)
         return (
           (props = workInProgress.pendingProps),
-          (init = workInProgress.stateNode),
-          null != props.name && "auto" !== props.name
-            ? (workInProgress.flags |= null === current ? 18882560 : 18874368)
-            : null === init.autoName &&
-              ((nextProps = workInProgressRoot.identifierPrefix),
-              (nextCache = globalClientIdCounter$1++),
-              (nextProps =
-                "\u00ab" + nextProps + "t" + nextCache.toString(32) + "\u00bb"),
-              (init.autoName = nextProps)),
+          null != props.name &&
+            "auto" !== props.name &&
+            (workInProgress.flags |= null === current ? 18882560 : 18874368),
           null !== current && current.memoizedProps.name !== props.name
             ? (workInProgress.flags |= 4194816)
             : markRef(current, workInProgress),
@@ -9430,9 +9427,11 @@ function requestDeferredLane() {
 }
 function scheduleViewTransitionEvent(fiber, callback) {
   if (enableViewTransition && null != callback) {
-    fiber = fiber.stateNode;
-    var instance = fiber.ref;
-    null === instance && (instance = fiber.ref = null);
+    var state = fiber.stateNode,
+      instance = state.ref;
+    null === instance &&
+      (getViewTransitionName(fiber.memoizedProps, state),
+      (instance = state.ref = null));
     null === pendingViewTransitionEvents && (pendingViewTransitionEvents = []);
     pendingViewTransitionEvents.push(callback.bind(null, instance));
   }
@@ -11130,24 +11129,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1598 = {
+var internals$jscomp$inline_1593 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-54a50729-20250506",
+  version: "19.2.0-www-modern-845d9374-20250506",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-54a50729-20250506"
+  reconcilerVersion: "19.2.0-www-modern-845d9374-20250506"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1599 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1594 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1599.isDisabled &&
-    hook$jscomp$inline_1599.supportsFiber
+    !hook$jscomp$inline_1594.isDisabled &&
+    hook$jscomp$inline_1594.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1599.inject(
-        internals$jscomp$inline_1598
+      (rendererID = hook$jscomp$inline_1594.inject(
+        internals$jscomp$inline_1593
       )),
-        (injectedHook = hook$jscomp$inline_1599);
+        (injectedHook = hook$jscomp$inline_1594);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11161,4 +11160,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-54a50729-20250506";
+exports.version = "19.2.0-www-modern-845d9374-20250506";

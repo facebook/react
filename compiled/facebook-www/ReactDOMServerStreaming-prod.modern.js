@@ -4153,12 +4153,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
         if (enableViewTransition) {
           type = task.keyPath;
           task.keyPath = keyPath;
-          null != props.name && "auto" !== props.name
-            ? renderNodeDestructive(request, task, props.children, -1)
-            : ((keyPath = task.treeContext),
-              (task.treeContext = pushTreeContext(keyPath, 1, 0)),
-              renderNode(request, task, props.children, -1),
-              (task.treeContext = keyPath));
+          renderNodeDestructive(request, task, props.children, -1);
           task.keyPath = type;
           return;
         }

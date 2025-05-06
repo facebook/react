@@ -5314,14 +5314,7 @@ __DEV__ &&
             if (enableViewTransition) {
               var prevKeyPath$jscomp$3 = task.keyPath;
               task.keyPath = keyPath;
-              if (null != props.name && "auto" !== props.name)
-                renderNodeDestructive(request, task, props.children, -1);
-              else {
-                var prevTreeContext = task.treeContext;
-                task.treeContext = pushTreeContext(prevTreeContext, 1, 0);
-                renderNode(request, task, props.children, -1);
-                task.treeContext = prevTreeContext;
-              }
+              renderNodeDestructive(request, task, props.children, -1);
               task.keyPath = prevKeyPath$jscomp$3;
               return;
             }

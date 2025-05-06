@@ -5600,14 +5600,7 @@ __DEV__ &&
             if (enableViewTransition) {
               var prevKeyPath$jscomp$3 = task.keyPath;
               task.keyPath = keyPath;
-              if (null != props.name && "auto" !== props.name)
-                renderNodeDestructive(request, task, props.children, -1);
-              else {
-                var prevTreeContext = task.treeContext;
-                task.treeContext = pushTreeContext(prevTreeContext, 1, 0);
-                renderNode(request, task, props.children, -1);
-                task.treeContext = prevTreeContext;
-              }
+              renderNodeDestructive(request, task, props.children, -1);
               task.keyPath = prevKeyPath$jscomp$3;
               return;
             }
@@ -9472,5 +9465,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-modern-54a50729-20250506";
+    exports.version = "19.2.0-www-modern-845d9374-20250506";
   })();

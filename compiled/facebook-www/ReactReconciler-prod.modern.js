@@ -577,6 +577,43 @@ module.exports = function ($$$config) {
         injectedHook.setStrictMode(rendererID, newIsStrictMode);
       } catch (err) {}
   }
+  function getViewTransitionName(props, instance) {
+    if (null != props.name && "auto" !== props.name) return props.name;
+    if (null !== instance.autoName) return instance.autoName;
+    props = pendingEffectsRoot.identifierPrefix;
+    var globalClientId = globalClientIdCounter$1++;
+    props = "\u00ab" + props + "t" + globalClientId.toString(32) + "\u00bb";
+    return (instance.autoName = props);
+  }
+  function getClassNameByType(classByType) {
+    if (null == classByType || "string" === typeof classByType)
+      return classByType;
+    var className = null,
+      activeTypes = pendingTransitionTypes;
+    if (null !== activeTypes)
+      for (var i = 0; i < activeTypes.length; i++) {
+        var match = classByType[activeTypes[i]];
+        if (null != match) {
+          if ("none" === match) return "none";
+          className = null == className ? match : className + (" " + match);
+        }
+      }
+    return null == className ? classByType.default : className;
+  }
+  function getViewTransitionClassName(defaultClass, eventClass) {
+    defaultClass = getClassNameByType(defaultClass);
+    eventClass = getClassNameByType(eventClass);
+    return null == eventClass
+      ? "auto" === defaultClass
+        ? null
+        : defaultClass
+      : "auto" === eventClass
+        ? null
+        : eventClass;
+  }
+  function is(x, y) {
+    return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+  }
   function describeBuiltInComponentFrame(name) {
     if (void 0 === prefix)
       try {
@@ -786,15 +823,6 @@ module.exports = function ($$$config) {
       stack: getStackByFiberInDevAndProd(source)
     };
   }
-  function getTreeId() {
-    var overflow = treeContextOverflow,
-      idWithLeadingBit = treeContextId;
-    return (
-      (idWithLeadingBit & ~(1 << (32 - clz32(idWithLeadingBit) - 1))).toString(
-        32
-      ) + overflow
-    );
-  }
   function pushTreeFork(workInProgress, totalChildren) {
     forkStack[forkStackIndex++] = treeForkCount;
     forkStack[forkStackIndex++] = treeForkProvider;
@@ -992,40 +1020,6 @@ module.exports = function ($$$config) {
     null === hydrationErrors
       ? (hydrationErrors = [error])
       : hydrationErrors.push(error);
-  }
-  function getViewTransitionName(props, instance) {
-    return null != props.name && "auto" !== props.name
-      ? props.name
-      : instance.autoName;
-  }
-  function getClassNameByType(classByType) {
-    if (null == classByType || "string" === typeof classByType)
-      return classByType;
-    var className = null,
-      activeTypes = pendingTransitionTypes;
-    if (null !== activeTypes)
-      for (var i = 0; i < activeTypes.length; i++) {
-        var match = classByType[activeTypes[i]];
-        if (null != match) {
-          if ("none" === match) return "none";
-          className = null == className ? match : className + (" " + match);
-        }
-      }
-    return null == className ? classByType.default : className;
-  }
-  function getViewTransitionClassName(defaultClass, eventClass) {
-    defaultClass = getClassNameByType(defaultClass);
-    eventClass = getClassNameByType(eventClass);
-    return null == eventClass
-      ? "auto" === defaultClass
-        ? null
-        : defaultClass
-      : "auto" === eventClass
-        ? null
-        : eventClass;
-  }
-  function is(x, y) {
-    return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
   }
   function pushProvider(providerFiber, context, nextValue) {
     isPrimaryRenderer
@@ -6313,24 +6307,9 @@ module.exports = function ($$$config) {
         if (enableViewTransition)
           return (
             (props = workInProgress.pendingProps),
-            (init = workInProgress.stateNode),
-            null != props.name && "auto" !== props.name
-              ? (workInProgress.flags |= null === current ? 18882560 : 18874368)
-              : (null === init.autoName &&
-                  ((nextProps = workInProgressRoot.identifierPrefix),
-                  isHydrating
-                    ? ((nextState = getTreeId()),
-                      (nextProps =
-                        "\u00ab" + nextProps + "T" + nextState + "\u00bb"))
-                    : ((nextState = globalClientIdCounter$1++),
-                      (nextProps =
-                        "\u00ab" +
-                        nextProps +
-                        "t" +
-                        nextState.toString(32) +
-                        "\u00bb")),
-                  (init.autoName = nextProps)),
-                isHydrating && pushMaterializedTreeId(workInProgress)),
+            null != props.name &&
+              "auto" !== props.name &&
+              (workInProgress.flags |= null === current ? 18882560 : 18874368),
             null !== current && current.memoizedProps.name !== props.name
               ? (workInProgress.flags |= 4194816)
               : markRef(current, workInProgress),
@@ -12856,6 +12835,8 @@ module.exports = function ($$$config) {
     unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue,
     rendererID = null,
     injectedHook = null,
+    globalClientIdCounter$1 = 0,
+    objectIs = "function" === typeof Object.is ? Object.is : is,
     prefix,
     suffix,
     reentry = !1,
@@ -12879,8 +12860,6 @@ module.exports = function ($$$config) {
     hydrationErrors = null,
     rootOrSingletonContext = !1,
     HydrationMismatchException = Error(formatProdErrorMessage(519)),
-    globalClientIdCounter$1 = 0,
-    objectIs = "function" === typeof Object.is ? Object.is : is,
     valueCursor = createCursor(null),
     currentlyRenderingFiber$1 = null,
     lastContextDependency = null,
@@ -13158,18 +13137,25 @@ module.exports = function ($$$config) {
         var hook = mountWorkInProgressHook(),
           identifierPrefix = workInProgressRoot.identifierPrefix;
         if (isHydrating) {
-          var treeId = getTreeId();
-          identifierPrefix = "\u00ab" + identifierPrefix + "R" + treeId;
-          treeId = localIdCounter++;
-          0 < treeId && (identifierPrefix += "H" + treeId.toString(32));
+          var JSCompiler_inline_result = treeContextOverflow;
+          var idWithLeadingBit = treeContextId;
+          JSCompiler_inline_result =
+            (
+              idWithLeadingBit & ~(1 << (32 - clz32(idWithLeadingBit) - 1))
+            ).toString(32) + JSCompiler_inline_result;
+          identifierPrefix =
+            "\u00ab" + identifierPrefix + "R" + JSCompiler_inline_result;
+          JSCompiler_inline_result = localIdCounter++;
+          0 < JSCompiler_inline_result &&
+            (identifierPrefix += "H" + JSCompiler_inline_result.toString(32));
           identifierPrefix += "\u00bb";
         } else
-          (treeId = globalClientIdCounter++),
+          (JSCompiler_inline_result = globalClientIdCounter++),
             (identifierPrefix =
               "\u00ab" +
               identifierPrefix +
               "r" +
-              treeId.toString(32) +
+              JSCompiler_inline_result.toString(32) +
               "\u00bb");
         return (hook.memoizedState = identifierPrefix);
       },
@@ -13831,7 +13817,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-54a50729-20250506"
+      reconcilerVersion: "19.2.0-www-modern-845d9374-20250506"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
