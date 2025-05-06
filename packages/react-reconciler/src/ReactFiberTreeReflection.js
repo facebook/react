@@ -422,19 +422,30 @@ export function getInstanceFromHostFiber(fiber: Fiber): Instance {
   }
 }
 
-export function getNextSiblingHostFiber(fiber: Fiber): null | Fiber {
-  const searchState = {next: null};
-  traverseVisibleHostChildren(
-    fiber.sibling,
-    false,
-    findNextSibling,
-    searchState,
-  );
-  return searchState.next;
+let searchTarget = null;
+let searchBoundary = null;
+function pushSearchTarget(target: null | Fiber): void {
+  searchTarget = target;
+}
+function popSearchTarget(): null | Fiber {
+  return searchTarget;
+}
+function pushSearchBoundary(value: null | Fiber): void {
+  searchBoundary = value;
+}
+function popSearchBoundary(): null | Fiber {
+  return searchBoundary;
 }
 
-function findNextSibling(child: Fiber, state: {next: null | Fiber}): boolean {
-  state.next = child;
+export function getNextSiblingHostFiber(fiber: Fiber): null | Fiber {
+  traverseVisibleHostChildren(fiber.sibling, false, findNextSibling);
+  const sibling = popSearchTarget();
+  pushSearchTarget(null);
+  return sibling;
+}
+
+function findNextSibling(child: Fiber): boolean {
+  pushSearchTarget(child);
   return true;
 }
 
@@ -467,29 +478,28 @@ export function isFiberPreceding(fiber: Fiber, otherFiber: Fiber): boolean {
   if (commonAncestor === null) {
     return false;
   }
-  const searchState = {found: false};
   traverseVisibleHostChildren(
     commonAncestor,
     true,
     isFiberPrecedingCheck,
     otherFiber,
     fiber,
-    searchState,
   );
-  return searchState.found;
+  const target = popSearchTarget();
+  pushSearchTarget(null);
+  return target !== null;
 }
 
 function isFiberPrecedingCheck(
   child: Fiber,
   target: Fiber,
   boundary: Fiber,
-  state: {found: boolean},
 ): boolean {
   if (child === boundary) {
     return true;
   }
   if (child === target) {
-    state.found = true;
+    pushSearchTarget(child);
     return true;
   }
   return false;
@@ -504,30 +514,33 @@ export function isFiberFollowing(fiber: Fiber, otherFiber: Fiber): boolean {
   if (commonAncestor === null) {
     return false;
   }
-  const searchState = {foundFiber: false, foundOther: false};
   traverseVisibleHostChildren(
     commonAncestor,
     true,
     isFiberFollowingCheck,
     otherFiber,
     fiber,
-    searchState,
   );
-  return searchState.foundOther;
+  const target = popSearchTarget();
+  pushSearchTarget(null);
+  pushSearchBoundary(null);
+  return target !== null;
 }
 
 function isFiberFollowingCheck(
   child: Fiber,
   target: Fiber,
   boundary: Fiber,
-  state: {foundFiber: boolean, foundOther: boolean},
 ): boolean {
   if (child === boundary) {
-    state.foundFiber = true;
+    pushSearchBoundary(child);
     return false;
   }
   if (child === target) {
-    state.foundOther = state.foundFiber;
+    // The target is only following if we already found the boundary.
+    if (popSearchBoundary() !== null) {
+      pushSearchTarget(child);
+    }
     return true;
   }
   return false;
