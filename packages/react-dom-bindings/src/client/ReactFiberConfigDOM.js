@@ -2703,7 +2703,8 @@ FragmentInstance.prototype.dispatchEvent = function (
   if (parentHostFiber === null) {
     return true;
   }
-  const parentHostInstance = getInstanceFromHostFiber(parentHostFiber);
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
   const eventListeners = this._eventListeners;
   if (
     (eventListeners !== null && eventListeners.length > 0) ||
