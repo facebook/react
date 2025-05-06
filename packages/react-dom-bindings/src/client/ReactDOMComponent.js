@@ -49,7 +49,6 @@ import {
 } from './ReactDOMTextarea';
 import {setSrcObject} from './ReactDOMSrcObject';
 import {validateTextNesting} from './validateDOMNesting';
-import {track} from './inputValueTracking';
 import setTextContent from './setTextContent';
 import {
   createDangerousStringForStyles,
@@ -67,6 +66,7 @@ import sanitizeURL from '../shared/sanitizeURL';
 import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
 
 import {
+  enableHydrationChangeEvent,
   enableScrollEndPolyfill,
   enableSrcObject,
   enableTrustedTypesIntegration,
@@ -1187,7 +1187,6 @@ export function setInitialProperties(
         name,
         false,
       );
-      track((domElement: any));
       return;
     }
     case 'select': {
@@ -1285,7 +1284,6 @@ export function setInitialProperties(
       // up necessary since we never stop tracking anymore.
       validateTextareaProps(domElement, props);
       initTextarea(domElement, value, defaultValue, children);
-      track((domElement: any));
       return;
     }
     case 'option': {
@@ -3100,17 +3098,18 @@ export function hydrateProperties(
       // option and select we don't quite do the same thing and select
       // is not resilient to the DOM state changing so we don't do that here.
       // TODO: Consider not doing this for input and textarea.
-      initInput(
-        domElement,
-        props.value,
-        props.defaultValue,
-        props.checked,
-        props.defaultChecked,
-        props.type,
-        props.name,
-        true,
-      );
-      track((domElement: any));
+      if (!enableHydrationChangeEvent) {
+        initInput(
+          domElement,
+          props.value,
+          props.defaultValue,
+          props.checked,
+          props.defaultChecked,
+          props.type,
+          props.name,
+          true,
+        );
+      }
       break;
     case 'option':
       validateOptionProps(domElement, props);
@@ -3134,8 +3133,14 @@ export function hydrateProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       validateTextareaProps(domElement, props);
-      initTextarea(domElement, props.value, props.defaultValue, props.children);
-      track((domElement: any));
+      if (!enableHydrationChangeEvent) {
+        initTextarea(
+          domElement,
+          props.value,
+          props.defaultValue,
+          props.children,
+        );
+      }
       break;
   }
 

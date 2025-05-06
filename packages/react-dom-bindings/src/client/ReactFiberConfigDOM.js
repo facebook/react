@@ -75,6 +75,9 @@ import {
   diffHydratedText,
   trapClickOnNonInteractiveElement,
 } from './ReactDOMComponent';
+import {hydrateInput} from './ReactDOMInput';
+import {hydrateTextarea} from './ReactDOMTextarea';
+import {hydrateSelect} from './ReactDOMSelect';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
 import {
@@ -108,6 +111,7 @@ import {
   enableSuspenseyImages,
   enableSrcObject,
   enableViewTransition,
+  enableHydrationChangeEvent,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -154,6 +158,10 @@ export type Props = {
   top?: null | number,
   is?: string,
   size?: number,
+  value?: string,
+  defaultValue?: string,
+  checked?: boolean,
+  defaultChecked?: boolean,
   multiple?: boolean,
   src?: string | Blob | MediaSource | MediaStream, // TODO: Response
   srcSet?: string,
@@ -611,6 +619,27 @@ export function finalizeInitialChildren(
   }
 }
 
+export function finalizeHydratedChildren(
+  domElement: Instance,
+  type: string,
+  props: Props,
+  hostContext: HostContext,
+): boolean {
+  // TOOD: Consider unifying this with hydrateInstance.
+  if (!enableHydrationChangeEvent) {
+    return false;
+  }
+  switch (type) {
+    case 'input':
+    case 'select':
+    case 'textarea':
+    case 'img':
+      return true;
+    default:
+      return false;
+  }
+}
+
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return (
     type === 'textarea' ||
@@ -816,6 +845,49 @@ export function commitMount(
       }
       return;
     }
+  }
+}
+
+export function commitHydratedInstance(
+  domElement: Instance,
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+): void {
+  if (!enableHydrationChangeEvent) {
+    return;
+  }
+  // This fires in the commit phase if a hydrated instance needs to do further
+  // work in the commit phase. Similar to commitMount. However, this should not
+  // do things that would've already happened such as set auto focus since that
+  // would steal focus. It's only scheduled if finalizeHydratedChildren returns
+  // true.
+  switch (type) {
+    case 'input': {
+      hydrateInput(
+        domElement,
+        props.value,
+        props.defaultValue,
+        props.checked,
+        props.defaultChecked,
+      );
+      break;
+    }
+    case 'select': {
+      hydrateSelect(
+        domElement,
+        props.value,
+        props.defaultValue,
+        props.multiple,
+      );
+      break;
+    }
+    case 'textarea':
+      hydrateTextarea(domElement, props.value, props.defaultValue);
+      break;
+    case 'img':
+      // TODO: Should we replay onLoad events?
+      break;
   }
 }
 
