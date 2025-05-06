@@ -51,6 +51,8 @@ type RawEventEmitterEvent = $ReadOnly<{
 }>;
 
 declare opaque type __PublicInstance;
+declare opaque type __PublicTextInstance;
+declare opaque type __PublicRootInstance;
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface' {
   declare export function deepDiffer(
@@ -161,8 +163,8 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     ...
   };
   declare export type PublicInstance = __PublicInstance;
-  declare export opaque type PublicTextInstance;
-  declare export opaque type PublicRootInstance;
+  declare export type PublicTextInstance = __PublicTextInstance;
+  declare export type PublicRootInstance = __PublicRootInstance;
   declare export type MeasureOnSuccessCallback = __MeasureOnSuccessCallback;
   declare export type MeasureInWindowOnSuccessCallback =
     __MeasureInWindowOnSuccessCallback;
@@ -208,8 +210,8 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitialize
 
 declare module 'react-native' {
   declare export type HostInstance = __PublicInstance;
-  declare export opaque type PublicTextInstance;
-  declare export opaque type PublicRootInstance;
+  declare export type PublicTextInstance = __PublicTextInstance;
+  declare export type PublicRootInstance = __PublicRootInstance;
   declare export type MeasureOnSuccessCallback = __MeasureOnSuccessCallback;
 }
 
