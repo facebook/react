@@ -2302,6 +2302,9 @@ function renderModel(
   key: string,
   value: ReactClientValue,
 ): ReactJSONValue {
+  // First time we're serializing the key, we should add it to the size.
+  serializedSize += key.length;
+
   const prevKeyPath = task.keyPath;
   const prevImplicitSlot = task.implicitSlot;
   try {
@@ -2415,8 +2418,6 @@ function renderModelDestructive(
 ): ReactJSONValue {
   // Set the currently rendering model
   task.model = value;
-
-  serializedSize += parentPropertyName.length;
 
   // Special Symbol, that's very common.
   if (value === REACT_ELEMENT_TYPE) {
@@ -3926,18 +3927,9 @@ function emitChunk(
     return;
   }
   // For anything else we need to try to serialize it using JSON.
-  // We stash the outer parent size so we can restore it when we exit.
-  const parentSerializedSize = serializedSize;
-  // We don't reset the serialized size counter from reentry because that indicates that we
-  // are outlining a model and we actually want to include that size into the parent since
-  // it will still block the parent row. It only restores to zero at the top of the stack.
-  try {
-    // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
-    const json: string = stringify(value, task.toJSON);
-    emitModelChunk(request, task.id, json);
-  } finally {
-    serializedSize = parentSerializedSize;
-  }
+  // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+  const json: string = stringify(value, task.toJSON);
+  emitModelChunk(request, task.id, json);
 }
 
 function erroredTask(request: Request, task: Task, error: mixed): void {
@@ -3975,6 +3967,11 @@ function retryTask(request: Request, task: Task): void {
   const prevDebugID = debugID;
   task.status = RENDERING;
 
+  // We stash the outer parent size so we can restore it when we exit.
+  const parentSerializedSize = serializedSize;
+  // We don't reset the serialized size counter from reentry because that indicates that we
+  // are outlining a model and we actually want to include that size into the parent since
+  // it will still block the parent row. It only restores to zero at the top of the stack.
   try {
     // Track the root so we know that we have to emit this object even though it
     // already has an ID. This is needed because we might see this object twice
@@ -4086,6 +4083,7 @@ function retryTask(request: Request, task: Task): void {
     if (__DEV__) {
       debugID = prevDebugID;
     }
+    serializedSize = parentSerializedSize;
   }
 }
 
@@ -4098,9 +4096,11 @@ function tryStreamTask(request: Request, task: Task): void {
     // so that we instead outline the row to get a new debugID if needed.
     debugID = null;
   }
+  const parentSerializedSize = serializedSize;
   try {
     emitChunk(request, task, task.model);
   } finally {
+    serializedSize = parentSerializedSize;
     if (__DEV__) {
       debugID = prevDebugID;
     }

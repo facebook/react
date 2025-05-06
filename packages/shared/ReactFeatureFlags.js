@@ -100,10 +100,7 @@ export const enableSuspenseyImages = false;
 
 export const enableSrcObject = __EXPERIMENTAL__;
 
-/**
- * Switches the Fabric API from doing layout in commit work instead of complete work.
- */
-export const enableFabricCompleteRootInCommitPhase = false;
+export const enableHydrationChangeEvent = __EXPERIMENTAL__;
 
 /**
  * Switches Fiber creation to a simple object instead of a constructor.
