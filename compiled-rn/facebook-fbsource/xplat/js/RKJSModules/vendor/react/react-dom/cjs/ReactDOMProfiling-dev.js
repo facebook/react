@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1a9aec9829125056d0bef363442e92c6>>
+ * @generated SignedSource<<824120201b316ac5c055df483ede9f48>>
  */
 
 /*
@@ -3768,24 +3768,6 @@ __DEV__ &&
       topLevelEventsToReactNames.set(domEventName, reactName);
       registerTwoPhaseEvent(reactName, [domEventName]);
     }
-    function createCapturedValueAtFiber(value, source) {
-      if ("object" === typeof value && null !== value) {
-        var existing = CapturedStacks.get(value);
-        if (void 0 !== existing) return existing;
-        source = {
-          value: value,
-          source: source,
-          stack: getStackByFiberInDevAndProd(source)
-        };
-        CapturedStacks.set(value, source);
-        return source;
-      }
-      return {
-        value: value,
-        source: source,
-        stack: getStackByFiberInDevAndProd(source)
-      };
-    }
     function finishQueueingConcurrentUpdates() {
       for (
         var endIndex = concurrentQueuesIndex,
@@ -4456,6 +4438,24 @@ __DEV__ &&
         implementation: portal.implementation
       };
       return mode;
+    }
+    function createCapturedValueAtFiber(value, source) {
+      if ("object" === typeof value && null !== value) {
+        var existing = CapturedStacks.get(value);
+        if (void 0 !== existing) return existing;
+        source = {
+          value: value,
+          source: source,
+          stack: getStackByFiberInDevAndProd(source)
+        };
+        CapturedStacks.set(value, source);
+        return source;
+      }
+      return {
+        value: value,
+        source: source,
+        stack: getStackByFiberInDevAndProd(source)
+      };
     }
     function pushTreeFork(workInProgress, totalChildren) {
       warnIfNotHydrating();
@@ -24324,8 +24324,22 @@ __DEV__ &&
         "abort auxClick beforeToggle cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll toggle touchMove waiting wheel".split(
           " "
         ),
-      CapturedStacks = new WeakMap(),
-      OffscreenVisible = 1,
+      lastResetTime = 0;
+    if (
+      "object" === typeof performance &&
+      "function" === typeof performance.now
+    ) {
+      var localPerformance = performance;
+      var getCurrentTime = function () {
+        return localPerformance.now();
+      };
+    } else {
+      var localDate = Date;
+      getCurrentTime = function () {
+        return localDate.now();
+      };
+    }
+    var OffscreenVisible = 1,
       OffscreenPassiveEffectsConnected = 2,
       concurrentQueues = [],
       concurrentQueuesIndex = 0,
@@ -24356,6 +24370,7 @@ __DEV__ &&
     var createFiber = enableObjectFiber
         ? createFiberImplObject
         : createFiberImplClass,
+      CapturedStacks = new WeakMap(),
       forkStack = [],
       forkStackIndex = 0,
       treeForkProvider = null,
@@ -24375,22 +24390,7 @@ __DEV__ &&
       HydrationMismatchException = Error(
         "Hydration Mismatch Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React."
       ),
-      lastResetTime = 0;
-    if (
-      "object" === typeof performance &&
-      "function" === typeof performance.now
-    ) {
-      var localPerformance = performance;
-      var getCurrentTime = function () {
-        return localPerformance.now();
-      };
-    } else {
-      var localDate = Date;
-      getCurrentTime = function () {
-        return localDate.now();
-      };
-    }
-    var valueCursor = createCursor(null);
+      valueCursor = createCursor(null);
     var rendererCursorDEV = createCursor(null);
     var rendererSigil = {};
     var currentlyRenderingFiber$1 = null,
@@ -26798,11 +26798,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-native-fb-54a50729-20250506" !== isomorphicReactPackageVersion)
+      if ("19.2.0-native-fb-845d9374-20250506" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-native-fb-54a50729-20250506\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-native-fb-845d9374-20250506\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26839,10 +26839,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-native-fb-54a50729-20250506",
+          version: "19.2.0-native-fb-845d9374-20250506",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-native-fb-54a50729-20250506"
+          reconcilerVersion: "19.2.0-native-fb-845d9374-20250506"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27302,7 +27302,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-native-fb-54a50729-20250506";
+    exports.version = "19.2.0-native-fb-845d9374-20250506";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

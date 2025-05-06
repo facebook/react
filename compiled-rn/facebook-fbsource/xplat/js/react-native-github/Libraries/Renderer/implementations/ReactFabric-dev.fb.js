@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4e843d9ecc1cae424e06fa57eb303270>>
+ * @generated SignedSource<<6f2b90fe82779e2f8ee40e8512303e47>>
  */
 
 "use strict";
@@ -2208,6 +2208,9 @@ __DEV__ &&
         : pop(didPerformWorkStackCursor, workInProgress);
       push(didPerformWorkStackCursor, didChange, workInProgress);
     }
+    function is(x, y) {
+      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+    }
     function createCapturedValueAtFiber(value, source) {
       if ("object" === typeof value && null !== value) {
         var existing = CapturedStacks.get(value);
@@ -2751,9 +2754,6 @@ __DEV__ &&
           );
         });
       }
-    }
-    function is(x, y) {
-      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
     }
     function resetContextDependencies() {
       lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -15425,14 +15425,6 @@ __DEV__ &&
     var contextStackCursor$1 = createCursor(emptyContextObject),
       didPerformWorkStackCursor = createCursor(!1),
       previousContext = emptyContextObject,
-      CapturedStacks = new WeakMap(),
-      contextStackCursor = createCursor(null),
-      contextFiberStackCursor = createCursor(null),
-      rootInstanceStackCursor = createCursor(null),
-      hostTransitionProviderCursor = createCursor(null),
-      needsEscaping = /["'&<>\n\t]|^\s|\s$/,
-      hydrationDiffRootDEV = null,
-      hydrationErrors = null,
       lastResetTime = 0;
     if (
       "object" === typeof performance &&
@@ -15449,6 +15441,14 @@ __DEV__ &&
       };
     }
     var objectIs = "function" === typeof Object.is ? Object.is : is,
+      CapturedStacks = new WeakMap(),
+      contextStackCursor = createCursor(null),
+      contextFiberStackCursor = createCursor(null),
+      rootInstanceStackCursor = createCursor(null),
+      hostTransitionProviderCursor = createCursor(null),
+      needsEscaping = /["'&<>\n\t]|^\s|\s$/,
+      hydrationDiffRootDEV = null,
+      hydrationErrors = null,
       valueCursor = createCursor(null);
     var renderer2CursorDEV = createCursor(null);
     var rendererSigil = {};
@@ -17486,10 +17486,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-54a50729-20250506",
+        version: "19.2.0-native-fb-845d9374-20250506",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-54a50729-20250506"
+        reconcilerVersion: "19.2.0-native-fb-845d9374-20250506"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

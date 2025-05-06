@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<581aa203cc9f8840d674a62664e98601>>
+ * @generated SignedSource<<b9b4887323dafb58c57d46819b94d235>>
  */
 
 "use strict";
@@ -2257,7 +2257,11 @@ function invalidateContextProvider(workInProgress, type, didChange) {
     : pop(didPerformWorkStackCursor);
   push(didPerformWorkStackCursor, didChange);
 }
-var CapturedStacks = new WeakMap();
+function is(x, y) {
+  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+}
+var objectIs = "function" === typeof Object.is ? Object.is : is,
+  CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
     var existing = CapturedStacks.get(value);
@@ -2319,11 +2323,7 @@ function upgradeHydrationErrorsToRecoverable() {
     (hydrationErrors = null));
   return queuedErrors;
 }
-function is(x, y) {
-  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-}
-var objectIs = "function" === typeof Object.is ? Object.is : is,
-  valueCursor = createCursor(null),
+var valueCursor = createCursor(null),
   currentlyRenderingFiber$1 = null,
   lastContextDependency = null;
 function pushProvider(providerFiber, context, nextValue) {
@@ -11915,10 +11915,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1355 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-54a50729-20250506",
+    version: "19.2.0-native-fb-845d9374-20250506",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-54a50729-20250506"
+    reconcilerVersion: "19.2.0-native-fb-845d9374-20250506"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1355.rendererConfig = extraDevToolsConfig);

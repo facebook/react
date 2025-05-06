@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8f12626d4bc346cd3c20e73ef2e357e7>>
+ * @generated SignedSource<<4ce5c2020059d73414c90ceb2bffa83d>>
  */
 
 "use strict";
@@ -745,7 +745,12 @@ function invalidateContextProvider(workInProgress, type, didChange) {
     : pop(didPerformWorkStackCursor);
   push(didPerformWorkStackCursor, didChange);
 }
-var prefix, suffix;
+function is(x, y) {
+  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+}
+var objectIs = "function" === typeof Object.is ? Object.is : is,
+  prefix,
+  suffix;
 function describeBuiltInComponentFrame(name) {
   if (void 0 === prefix)
     try {
@@ -994,11 +999,7 @@ function upgradeHydrationErrorsToRecoverable() {
     (hydrationErrors = null));
   return queuedErrors;
 }
-function is(x, y) {
-  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-}
-var objectIs = "function" === typeof Object.is ? Object.is : is,
-  valueCursor = createCursor(null),
+var valueCursor = createCursor(null),
   currentlyRenderingFiber$1 = null,
   lastContextDependency = null;
 function pushProvider(providerFiber, context, nextValue) {
@@ -9892,10 +9893,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1445 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-54a50729-20250506",
+  version: "19.2.0-native-fb-845d9374-20250506",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-54a50729-20250506"
+  reconcilerVersion: "19.2.0-native-fb-845d9374-20250506"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1446 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10031,4 +10032,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-54a50729-20250506";
+exports.version = "19.2.0-native-fb-845d9374-20250506";

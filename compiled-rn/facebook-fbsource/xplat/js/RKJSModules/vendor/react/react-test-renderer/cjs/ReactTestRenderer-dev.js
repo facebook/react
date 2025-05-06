@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c069e060ce15e9a5ead62080699be569>>
+ * @generated SignedSource<<df51ae16908d34237cfc2188fc853259>>
  */
 
 "use strict";
@@ -948,6 +948,9 @@ __DEV__ &&
         : pop(didPerformWorkStackCursor, workInProgress);
       push(didPerformWorkStackCursor, didChange, workInProgress);
     }
+    function is(x, y) {
+      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+    }
     function disabledLog() {}
     function disableLogs() {
       if (0 === disabledDepth) {
@@ -1859,9 +1862,6 @@ __DEV__ &&
           );
         });
       }
-    }
-    function is(x, y) {
-      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
     }
     function resetContextDependencies() {
       lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -13734,6 +13734,22 @@ __DEV__ &&
     var contextStackCursor$1 = createCursor(emptyContextObject),
       didPerformWorkStackCursor = createCursor(!1),
       previousContext = emptyContextObject,
+      lastResetTime = 0;
+    if (
+      "object" === typeof performance &&
+      "function" === typeof performance.now
+    ) {
+      var localPerformance = performance;
+      var getCurrentTime = function () {
+        return localPerformance.now();
+      };
+    } else {
+      var localDate = Date;
+      getCurrentTime = function () {
+        return localDate.now();
+      };
+    }
+    var objectIs = "function" === typeof Object.is ? Object.is : is,
       disabledDepth = 0,
       prevLog,
       prevInfo,
@@ -13759,22 +13775,6 @@ __DEV__ &&
       isRendering = !1,
       hydrationDiffRootDEV = null,
       hydrationErrors = null,
-      lastResetTime = 0;
-    if (
-      "object" === typeof performance &&
-      "function" === typeof performance.now
-    ) {
-      var localPerformance = performance;
-      var getCurrentTime = function () {
-        return localPerformance.now();
-      };
-    } else {
-      var localDate = Date;
-      getCurrentTime = function () {
-        return localDate.now();
-      };
-    }
-    var objectIs = "function" === typeof Object.is ? Object.is : is,
       valueCursor = createCursor(null);
     var renderer2CursorDEV = createCursor(null);
     var rendererSigil = {};
@@ -15653,10 +15653,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-54a50729-20250506",
+        version: "19.2.0-native-fb-845d9374-20250506",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-54a50729-20250506"
+        reconcilerVersion: "19.2.0-native-fb-845d9374-20250506"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15801,5 +15801,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-54a50729-20250506";
+    exports.version = "19.2.0-native-fb-845d9374-20250506";
   })();

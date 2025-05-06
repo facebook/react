@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<801ad9dde29f7517894894823baaf81f>>
+ * @generated SignedSource<<097fe2505dc2dd352bff5076dbb216e4>>
  */
 
 "use strict";
@@ -2411,7 +2411,11 @@ function invalidateContextProvider(workInProgress, type, didChange) {
     : pop(didPerformWorkStackCursor);
   push(didPerformWorkStackCursor, didChange);
 }
-var CapturedStacks = new WeakMap();
+function is(x, y) {
+  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+}
+var objectIs = "function" === typeof Object.is ? Object.is : is,
+  CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
     var existing = CapturedStacks.get(value);
@@ -2484,11 +2488,7 @@ function upgradeHydrationErrorsToRecoverable() {
     (hydrationErrors = null));
   return queuedErrors;
 }
-function is(x, y) {
-  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-}
-var objectIs = "function" === typeof Object.is ? Object.is : is,
-  valueCursor = createCursor(null),
+var valueCursor = createCursor(null),
   currentlyRenderingFiber$1 = null,
   lastContextDependency = null;
 function pushProvider(providerFiber, context, nextValue) {
@@ -11952,11 +11952,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-54a50729-20250506" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-845d9374-20250506" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-54a50729-20250506\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-845d9374-20250506\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -12005,10 +12005,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1406 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-54a50729-20250506",
+    version: "19.2.0-native-fb-845d9374-20250506",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-54a50729-20250506"
+    reconcilerVersion: "19.2.0-native-fb-845d9374-20250506"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1406.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aeff7289453905813a14eaa5d171b725>>
+ * @generated SignedSource<<d5a8e9edc3a9092ecff1170c469b7d3f>>
  */
 
 /*
@@ -2425,25 +2425,6 @@ function registerSimpleEvent(domEventName, reactName) {
   topLevelEventsToReactNames.set(domEventName, reactName);
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
-var CapturedStacks = new WeakMap();
-function createCapturedValueAtFiber(value, source) {
-  if ("object" === typeof value && null !== value) {
-    var existing = CapturedStacks.get(value);
-    if (void 0 !== existing) return existing;
-    source = {
-      value: value,
-      source: source,
-      stack: getStackByFiberInDevAndProd(source)
-    };
-    CapturedStacks.set(value, source);
-    return source;
-  }
-  return {
-    value: value,
-    source: source,
-    stack: getStackByFiberInDevAndProd(source)
-  };
-}
 var concurrentQueues = [],
   concurrentQueuesIndex = 0,
   concurrentlyUpdatedLanes = 0;
@@ -2873,6 +2854,25 @@ function createFiberFromPortal(portal, mode, lanes) {
     implementation: portal.implementation
   };
   return mode;
+}
+var CapturedStacks = new WeakMap();
+function createCapturedValueAtFiber(value, source) {
+  if ("object" === typeof value && null !== value) {
+    var existing = CapturedStacks.get(value);
+    if (void 0 !== existing) return existing;
+    source = {
+      value: value,
+      source: source,
+      stack: getStackByFiberInDevAndProd(source)
+    };
+    CapturedStacks.set(value, source);
+    return source;
+  }
+  return {
+    value: value,
+    source: source,
+    stack: getStackByFiberInDevAndProd(source)
+  };
 }
 var forkStack = [],
   forkStackIndex = 0,
@@ -17557,14 +17557,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2087 = React.version;
 if (
-  "19.2.0-native-fb-54a50729-20250506" !==
+  "19.2.0-native-fb-845d9374-20250506" !==
   isomorphicReactPackageVersion$jscomp$inline_2087
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2087,
-      "19.2.0-native-fb-54a50729-20250506"
+      "19.2.0-native-fb-845d9374-20250506"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17586,10 +17586,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2094 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-54a50729-20250506",
+  version: "19.2.0-native-fb-845d9374-20250506",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-54a50729-20250506",
+  reconcilerVersion: "19.2.0-native-fb-845d9374-20250506",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$309 = 0;
@@ -17708,4 +17708,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-54a50729-20250506";
+exports.version = "19.2.0-native-fb-845d9374-20250506";

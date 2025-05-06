@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<063cbfa111f845cccd82a9c843b1f95b>>
+ * @generated SignedSource<<2e174bf06a1e86e8e07c2b505b71e8ac>>
  */
 
 /*
@@ -2347,25 +2347,6 @@ function registerSimpleEvent(domEventName, reactName) {
   topLevelEventsToReactNames.set(domEventName, reactName);
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
-var CapturedStacks = new WeakMap();
-function createCapturedValueAtFiber(value, source) {
-  if ("object" === typeof value && null !== value) {
-    var existing = CapturedStacks.get(value);
-    if (void 0 !== existing) return existing;
-    source = {
-      value: value,
-      source: source,
-      stack: getStackByFiberInDevAndProd(source)
-    };
-    CapturedStacks.set(value, source);
-    return source;
-  }
-  return {
-    value: value,
-    source: source,
-    stack: getStackByFiberInDevAndProd(source)
-  };
-}
 var concurrentQueues = [],
   concurrentQueuesIndex = 0,
   concurrentlyUpdatedLanes = 0;
@@ -2779,6 +2760,25 @@ function createFiberFromPortal(portal, mode, lanes) {
     implementation: portal.implementation
   };
   return mode;
+}
+var CapturedStacks = new WeakMap();
+function createCapturedValueAtFiber(value, source) {
+  if ("object" === typeof value && null !== value) {
+    var existing = CapturedStacks.get(value);
+    if (void 0 !== existing) return existing;
+    source = {
+      value: value,
+      source: source,
+      stack: getStackByFiberInDevAndProd(source)
+    };
+    CapturedStacks.set(value, source);
+    return source;
+  }
+  return {
+    value: value,
+    source: source,
+    stack: getStackByFiberInDevAndProd(source)
+  };
 }
 var forkStack = [],
   forkStackIndex = 0,
@@ -16858,14 +16858,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1985 = React.version;
 if (
-  "19.2.0-native-fb-54a50729-20250506" !==
+  "19.2.0-native-fb-845d9374-20250506" !==
   isomorphicReactPackageVersion$jscomp$inline_1985
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1985,
-      "19.2.0-native-fb-54a50729-20250506"
+      "19.2.0-native-fb-845d9374-20250506"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16887,10 +16887,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2498 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-54a50729-20250506",
+  version: "19.2.0-native-fb-845d9374-20250506",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-54a50729-20250506"
+  reconcilerVersion: "19.2.0-native-fb-845d9374-20250506"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2499 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17148,4 +17148,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-54a50729-20250506";
+exports.version = "19.2.0-native-fb-845d9374-20250506";
