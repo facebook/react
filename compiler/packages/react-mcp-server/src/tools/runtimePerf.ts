@@ -135,7 +135,13 @@ export async function measurePerformance(
       return window.__INTERACTABLE_SELECTORS__;
     });
 
-    await Promise.all(selectors.map(selector => page.click(selector)));
+    await Promise.all(selectors.map(async (selector: string) => {
+      try {
+        await page.click(selector)
+      } catch (e) {
+        console.log(`warning: Could not click ${selector}: ${e.message}`)
+      }
+    }));
     await delay(500);
 
     // Visit a new page for 1s to background the current page so that WebVitals can finish being calculated
