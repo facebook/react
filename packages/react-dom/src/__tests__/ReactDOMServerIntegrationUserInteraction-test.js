@@ -278,10 +278,9 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
       await testUserInteractionBeforeClientRender(
         <ControlledInput onChange={() => changeCount++} />,
       );
-      // note that there's a strong argument to be made that the DOM revival
-      // algorithm should notice that the user has changed the value and fire
-      // an onChange. however, it does not now, so that's what this tests.
-      expect(changeCount).toBe(0);
+      expect(changeCount).toBe(
+        gate(flags => flags.enableHydrationChangeEvent) ? 1 : 0,
+      );
     });
 
     it('should not blow away user-interaction on successful reconnect to an uncontrolled range input', () =>
@@ -302,7 +301,9 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
         '0.25',
         '1',
       );
-      expect(changeCount).toBe(0);
+      expect(changeCount).toBe(
+        gate(flags => flags.enableHydrationChangeEvent) ? 1 : 0,
+      );
     });
 
     it('should not blow away user-entered text on successful reconnect to an uncontrolled checkbox', () =>
@@ -321,24 +322,22 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
         false,
         'checked',
       );
-      expect(changeCount).toBe(0);
+      expect(changeCount).toBe(
+        gate(flags => flags.enableHydrationChangeEvent) ? 1 : 0,
+      );
     });
 
-    // skipping this test because React 15 does the wrong thing. it blows
-    // away the user's typing in the textarea.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('should not blow away user-entered text on successful reconnect to an uncontrolled textarea', () =>
+    // @gate enableHydrationChangeEvent
+    it('should not blow away user-entered text on successful reconnect to an uncontrolled textarea', () =>
       testUserInteractionBeforeClientRender(<textarea defaultValue="Hello" />));
 
-    // skipping this test because React 15 does the wrong thing. it blows
-    // away the user's typing in the textarea.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('should not blow away user-entered text on successful reconnect to a controlled textarea', async () => {
+    // @gate enableHydrationChangeEvent
+    it('should not blow away user-entered text on successful reconnect to a controlled textarea', async () => {
       let changeCount = 0;
       await testUserInteractionBeforeClientRender(
         <ControlledTextArea onChange={() => changeCount++} />,
       );
-      expect(changeCount).toBe(0);
+      expect(changeCount).toBe(1);
     });
 
     it('should not blow away user-selected value on successful reconnect to an uncontrolled select', () =>
@@ -358,7 +357,9 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
       await testUserInteractionBeforeClientRender(
         <ControlledSelect onChange={() => changeCount++} />,
       );
-      expect(changeCount).toBe(0);
+      expect(changeCount).toBe(
+        gate(flags => flags.enableHydrationChangeEvent) ? 1 : 0,
+      );
     });
   });
 });

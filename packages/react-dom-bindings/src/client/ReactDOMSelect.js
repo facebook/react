@@ -12,6 +12,7 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 
 import {getToStringValue, toString} from './ToStringValue';
 import isArray from 'shared/isArray';
+import {queueChangeEvent} from '../events/ReactDOMEventReplaying';
 
 let didWarnValueDefaultValue;
 
@@ -205,8 +206,8 @@ export function hydrateSelect(
   }
   if (changed) {
     // If the current selection is different than our initial that suggests that the user
-    // changed it before hydration.
-    // TODO: Queue replay.
+    // changed it before hydration. Queue a replay of the change event.
+    queueChangeEvent(node);
   }
 }
 

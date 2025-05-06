@@ -14,6 +14,7 @@ import {getToStringValue, toString} from './ToStringValue';
 import {disableTextareaChildren} from 'shared/ReactFeatureFlags';
 
 import {track, trackHydrated} from './inputValueTracking';
+import {queueChangeEvent} from '../events/ReactDOMEventReplaying';
 
 let didWarnValDefaultVal = false;
 
@@ -166,8 +167,8 @@ export function hydrateTextarea(
   const changed = trackHydrated((node: any), stringValue, false);
   if (changed) {
     // If the current value is different, that suggests that the user
-    // changed it before hydration.
-    // TODO: Queue replay.
+    // changed it before hydration. Queue a replay of the change event.
+    queueChangeEvent(node);
   }
 }
 

@@ -22,6 +22,7 @@ import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import type {ToStringValue} from './ToStringValue';
 import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
+import {queueChangeEvent} from '../events/ReactDOMEventReplaying';
 
 let didWarnValueDefaultValue = false;
 let didWarnCheckedDefaultChecked = false;
@@ -371,8 +372,11 @@ export function hydrateInput(
   const changed = trackHydrated((node: any), initialValue, initialChecked);
   if (changed) {
     // If the current value is different, that suggests that the user
-    // changed it before hydration.
-    // TODO: Queue replay.
+    // changed it before hydration. Queue a replay of the change event.
+    // For radio buttons the change event only fires on the selected one.
+    if (node.type !== 'radio' || node.checked) {
+      queueChangeEvent(node);
+    }
   }
 }
 
