@@ -12,7 +12,6 @@ import type {
   Container,
   ActivityInstance,
   SuspenseInstance,
-  Instance,
 } from './ReactFiberConfig';
 import type {ActivityState} from './ReactFiberActivityComponent';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
@@ -411,7 +410,7 @@ export function getFragmentParentHostFiber(fiber: Fiber): null | Fiber {
   return null;
 }
 
-export function getInstanceFromHostFiber(fiber: Fiber): Instance {
+export function getInstanceFromHostFiber<I>(fiber: Fiber): I {
   switch (fiber.tag) {
     case HostComponent:
       return fiber.stateNode;

@@ -2649,7 +2649,7 @@ function addEventListenerToChild(
   listener: EventListener,
   optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
 ): boolean {
-  const instance = getInstanceFromHostFiber(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
   instance.addEventListener(type, listener, optionsOrUseCapture);
   return false;
 }
@@ -2689,7 +2689,7 @@ function removeEventListenerFromChild(
   listener: EventListener,
   optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
 ): boolean {
-  const instance = getInstanceFromHostFiber(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
   instance.removeEventListener(type, listener, optionsOrUseCapture);
   return false;
 }
@@ -2708,7 +2708,7 @@ function setFocusOnFiberIfFocusable(
   fiber: Fiber,
   focusOptions?: FocusOptions,
 ): boolean {
-  const instance = getInstanceFromHostFiber(fiber);
+  const instance = getInstanceFromHostFiber<Instance>(fiber);
   return setFocusIfFocusable(instance, focusOptions);
 }
 // $FlowFixMe[prop-missing]
@@ -2740,7 +2740,7 @@ FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
 };
 function blurActiveElementWithinFragment(child: Fiber): boolean {
   // TODO: We can get the activeElement from the parent outside of the loop when we have a reference.
-  const instance = getInstanceFromHostFiber(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
   const ownerDocument = instance.ownerDocument;
   if (instance === ownerDocument.activeElement) {
     // $FlowFixMe[prop-missing]
@@ -2764,7 +2764,7 @@ function observeChild(
   child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  const instance = getInstanceFromHostFiber(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
   observer.observe(instance);
   return false;
 }
@@ -2789,7 +2789,7 @@ function unobserveChild(
   child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  const instance = getInstanceFromHostFiber(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
   observer.unobserve(instance);
   return false;
 }
@@ -2802,7 +2802,7 @@ FragmentInstance.prototype.getClientRects = function (
   return rects;
 };
 function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
-  const instance = getInstanceFromHostFiber(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
   // $FlowFixMe[method-unbinding]
   rects.push.apply(rects, instance.getClientRects());
   return false;
@@ -2816,7 +2816,8 @@ FragmentInstance.prototype.getRootNode = function (
   if (parentHostFiber === null) {
     return this;
   }
-  const parentHostInstance = getInstanceFromHostFiber(parentHostFiber);
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
   const rootNode =
     // $FlowFixMe[incompatible-cast] Flow expects Node
     (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
@@ -2838,7 +2839,8 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   if (children.length === 0) {
     // If the fragment has no children, we can use the parent and
     // siblings to determine a position.
-    const parentHostInstance = getInstanceFromHostFiber(parentHostFiber);
+    const parentHostInstance =
+      getInstanceFromHostFiber<Instance>(parentHostFiber);
     const parentResult = parentHostInstance.compareDocumentPosition(otherNode);
     result = parentResult;
     if (parentHostInstance === otherNode) {
@@ -2852,7 +2854,7 @@ FragmentInstance.prototype.compareDocumentPosition = function (
           result = Node.DOCUMENT_POSITION_PRECEDING;
         } else {
           const nextSiblingInstance =
-            getInstanceFromHostFiber(nextSiblingFiber);
+            getInstanceFromHostFiber<Instance>(nextSiblingFiber);
           const nextSiblingResult =
             nextSiblingInstance.compareDocumentPosition(otherNode);
           if (
@@ -2871,8 +2873,10 @@ FragmentInstance.prototype.compareDocumentPosition = function (
     return result;
   }
 
-  const firstElement = getInstanceFromHostFiber(children[0]);
-  const lastElement = getInstanceFromHostFiber(children[children.length - 1]);
+  const firstElement = getInstanceFromHostFiber<Instance>(children[0]);
+  const lastElement = getInstanceFromHostFiber<Instance>(
+    children[children.length - 1],
+  );
   const firstResult = firstElement.compareDocumentPosition(otherNode);
   const lastResult = lastElement.compareDocumentPosition(otherNode);
   if (

@@ -644,7 +644,7 @@ FragmentInstance.prototype.observeUsing = function (
   traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
 };
 function observeChild(child: Fiber, observer: IntersectionObserver) {
-  const instance = getInstanceFromHostFiber(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
   const publicInstance = getPublicInstance(instance);
   if (publicInstance == null) {
     throw new Error('Expected to find a host node. This is a bug in React.');
@@ -671,7 +671,7 @@ FragmentInstance.prototype.unobserveUsing = function (
   }
 };
 function unobserveChild(child: Fiber, observer: IntersectionObserver) {
-  const instance = getInstanceFromHostFiber(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
   const publicInstance = getPublicInstance(instance);
   if (publicInstance == null) {
     throw new Error('Expected to find a host node. This is a bug in React.');
