@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e835befdc279d8da07ba6d8f9db9a7ee>>
+ * @generated SignedSource<<60cbc0d0582e15ed184cbc8a004dd747>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1148() {
+    function JSCompiler_object_inline_createNodeMock_1154() {
       return null;
     }
     function findHook(fiber, id) {
@@ -9747,7 +9747,29 @@ __DEV__ &&
         case 26:
         case 5:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-          null === current && flags & 4 && commitHostMount(finishedWork);
+          if (null === current)
+            if (flags & 4) commitHostMount(finishedWork);
+            else if (flags & 64) {
+              finishedRoot = finishedWork.type;
+              current = finishedWork.memoizedProps;
+              prevProps = finishedWork.stateNode;
+              try {
+                runWithFiberInDEV(
+                  finishedWork,
+                  commitHydratedInstance,
+                  prevProps,
+                  finishedRoot,
+                  current,
+                  finishedWork
+                );
+              } catch (error) {
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error
+                );
+              }
+            }
           flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
           break;
         case 12:
@@ -13678,6 +13700,7 @@ __DEV__ &&
       isSuspenseInstanceFallback = shim$1,
       getSuspenseInstanceFallbackErrorDetails = shim$1,
       registerSuspenseInstanceRetry = shim$1,
+      commitHydratedInstance = shim$1,
       clearSuspenseBoundary = shim$1,
       clearSuspenseBoundaryFromContainer = shim$1,
       hideDehydratedBoundary = shim$1,
@@ -15630,10 +15653,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-79586c7e-20250505",
+        version: "19.2.0-native-fb-587cb8f8-20250506",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-79586c7e-20250505"
+        reconcilerVersion: "19.2.0-native-fb-587cb8f8-20250506"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15655,7 +15678,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1148,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1154,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15778,5 +15801,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-79586c7e-20250505";
+    exports.version = "19.2.0-native-fb-587cb8f8-20250506";
   })();

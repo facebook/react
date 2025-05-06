@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<913fa3034a42c22d136a83e16fee64c3>>
+ * @generated SignedSource<<45d7c4638da6c193de752c4715305f61>>
  */
 
 "use strict";
@@ -10822,7 +10822,29 @@ __DEV__ &&
         case 26:
         case 5:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-          null === current && flags & 4 && commitHostMount(finishedWork);
+          if (null === current)
+            if (flags & 4) commitHostMount(finishedWork);
+            else if (flags & 64) {
+              finishedRoot = finishedWork.type;
+              current = finishedWork.memoizedProps;
+              prevProps = finishedWork.stateNode;
+              try {
+                runWithFiberInDEV(
+                  finishedWork,
+                  commitHydratedInstance,
+                  prevProps,
+                  finishedRoot,
+                  current,
+                  finishedWork
+                );
+              } catch (error) {
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error
+                );
+              }
+            }
           flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
           break;
         case 12:
@@ -15713,6 +15735,7 @@ __DEV__ &&
       isSuspenseInstanceFallback = shim$1,
       getSuspenseInstanceFallbackErrorDetails = shim$1,
       registerSuspenseInstanceRetry = shim$1,
+      commitHydratedInstance = shim$1,
       clearSuspenseBoundary = shim$1,
       clearSuspenseBoundaryFromContainer = shim$1,
       hideDehydratedBoundary = shim$1,
@@ -17622,11 +17645,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-79586c7e-20250505" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-587cb8f8-20250506" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-79586c7e-20250505\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-587cb8f8-20250506\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17652,10 +17675,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-79586c7e-20250505",
+        version: "19.2.0-native-fb-587cb8f8-20250506",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-79586c7e-20250505"
+        reconcilerVersion: "19.2.0-native-fb-587cb8f8-20250506"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

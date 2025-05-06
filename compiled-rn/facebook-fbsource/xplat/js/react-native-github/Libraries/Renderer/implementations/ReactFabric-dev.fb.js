@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ee1472621f1ac6ccbdf3d3b72a1cd837>>
+ * @generated SignedSource<<506a129d1d5aeb317d2abeb2a807fdac>>
  */
 
 "use strict";
@@ -10753,7 +10753,29 @@ __DEV__ &&
         case 26:
         case 5:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-          null === current && flags & 4 && commitHostMount(finishedWork);
+          if (null === current)
+            if (flags & 4) commitHostMount(finishedWork);
+            else if (flags & 64) {
+              finishedRoot = finishedWork.type;
+              current = finishedWork.memoizedProps;
+              prevProps = finishedWork.stateNode;
+              try {
+                runWithFiberInDEV(
+                  finishedWork,
+                  commitHydratedInstance,
+                  prevProps,
+                  finishedRoot,
+                  current,
+                  finishedWork
+                );
+              } catch (error) {
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error
+                );
+              }
+            }
           flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
           break;
         case 12:
@@ -17226,6 +17248,7 @@ __DEV__ &&
       isSuspenseInstanceFallback = shim$1,
       getSuspenseInstanceFallbackErrorDetails = shim$1,
       registerSuspenseInstanceRetry = shim$1,
+      commitHydratedInstance = shim$1,
       preloadResource = shim,
       suspendResource = shim,
       _nativeFabricUIManage = nativeFabricUIManager,
@@ -17463,10 +17486,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-79586c7e-20250505",
+        version: "19.2.0-native-fb-587cb8f8-20250506",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-79586c7e-20250505"
+        reconcilerVersion: "19.2.0-native-fb-587cb8f8-20250506"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

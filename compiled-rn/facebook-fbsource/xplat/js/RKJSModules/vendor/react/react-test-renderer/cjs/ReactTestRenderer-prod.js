@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c9599c2613e75b13071783088c2b31c8>>
+ * @generated SignedSource<<80c4ef4dfe465611dbb845044a6113fb>>
  */
 
 "use strict";
@@ -6871,22 +6871,19 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       break;
     case 3:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-      if (
-        flags & 64 &&
-        ((finishedRoot = finishedWork.updateQueue), null !== finishedRoot)
-      ) {
-        current = null;
+      if (flags & 64 && ((flags = finishedWork.updateQueue), null !== flags)) {
+        finishedRoot = null;
         if (null !== finishedWork.child)
           switch (finishedWork.child.tag) {
             case 27:
             case 5:
-              current = getPublicInstance(finishedWork.child.stateNode);
+              finishedRoot = getPublicInstance(finishedWork.child.stateNode);
               break;
             case 1:
-              current = finishedWork.child.stateNode;
+              finishedRoot = finishedWork.child.stateNode;
           }
         try {
-          commitCallbacks(finishedRoot, current);
+          commitCallbacks(flags, finishedRoot);
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -6896,6 +6893,16 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     case 26:
     case 5:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+      if (null === current && !(flags & 4) && flags & 64) {
+        finishedRoot = finishedWork.type;
+        current = finishedWork.memoizedProps;
+        prevProps = finishedWork.stateNode;
+        try {
+          shim$1(prevProps, finishedRoot, current, finishedWork);
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
+      }
       flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
       break;
     case 12:
@@ -6907,9 +6914,9 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     case 13:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
       flags & 64 &&
-        ((finishedRoot = finishedWork.memoizedState),
-        null !== finishedRoot &&
-          null !== finishedRoot.dehydrated &&
+        ((flags = finishedWork.memoizedState),
+        null !== flags &&
+          null !== flags.dehydrated &&
           (retryDehydratedSuspenseBoundary.bind(null, finishedWork), shim$1()));
       break;
     case 22:
@@ -9883,24 +9890,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1439 = {
+var internals$jscomp$inline_1445 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-79586c7e-20250505",
+  version: "19.2.0-native-fb-587cb8f8-20250506",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-79586c7e-20250505"
+  reconcilerVersion: "19.2.0-native-fb-587cb8f8-20250506"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1440 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1446 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1440.isDisabled &&
-    hook$jscomp$inline_1440.supportsFiber
+    !hook$jscomp$inline_1446.isDisabled &&
+    hook$jscomp$inline_1446.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1440.inject(
-        internals$jscomp$inline_1439
+      (rendererID = hook$jscomp$inline_1446.inject(
+        internals$jscomp$inline_1445
       )),
-        (injectedHook = hook$jscomp$inline_1440);
+        (injectedHook = hook$jscomp$inline_1446);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10024,4 +10031,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-79586c7e-20250505";
+exports.version = "19.2.0-native-fb-587cb8f8-20250506";

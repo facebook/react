@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b70f49030680f2589fdc65c29ecc0a67>>
+ * @generated SignedSource<<1f74dfdef0a5edbd0ccf3163f0133f43>>
  */
 
 "use strict";
@@ -8307,22 +8307,19 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       break;
     case 3:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-      if (
-        flags & 64 &&
-        ((finishedRoot = finishedWork.updateQueue), null !== finishedRoot)
-      ) {
-        current = null;
+      if (flags & 64 && ((flags = finishedWork.updateQueue), null !== flags)) {
+        finishedRoot = null;
         if (null !== finishedWork.child)
           switch (finishedWork.child.tag) {
             case 27:
             case 5:
-              current = getPublicInstance(finishedWork.child.stateNode);
+              finishedRoot = getPublicInstance(finishedWork.child.stateNode);
               break;
             case 1:
-              current = finishedWork.child.stateNode;
+              finishedRoot = finishedWork.child.stateNode;
           }
         try {
-          commitCallbacks(finishedRoot, current);
+          commitCallbacks(flags, finishedRoot);
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -8332,7 +8329,18 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     case 26:
     case 5:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-      null === current && flags & 4 && commitHostMount(finishedWork);
+      if (null === current)
+        if (flags & 4) commitHostMount(finishedWork);
+        else if (flags & 64) {
+          finishedRoot = finishedWork.type;
+          current = finishedWork.memoizedProps;
+          prevProps = finishedWork.stateNode;
+          try {
+            shim$1(prevProps, finishedRoot, current, finishedWork);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
+        }
       flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
       break;
     case 12:
@@ -8344,9 +8352,9 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     case 13:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
       flags & 64 &&
-        ((finishedRoot = finishedWork.memoizedState),
-        null !== finishedRoot &&
-          null !== finishedRoot.dehydrated &&
+        ((flags = finishedWork.memoizedState),
+        null !== flags &&
+          null !== flags.dehydrated &&
           (retryDehydratedSuspenseBoundary.bind(null, finishedWork), shim$1()));
       break;
     case 22:
@@ -11201,26 +11209,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1248 = {
+  internals$jscomp$inline_1254 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-79586c7e-20250505",
+    version: "19.2.0-native-fb-587cb8f8-20250506",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-79586c7e-20250505"
+    reconcilerVersion: "19.2.0-native-fb-587cb8f8-20250506"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1248.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1254.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1570 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1576 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1570.isDisabled &&
-    hook$jscomp$inline_1570.supportsFiber
+    !hook$jscomp$inline_1576.isDisabled &&
+    hook$jscomp$inline_1576.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1570.inject(
-        internals$jscomp$inline_1248
+      (rendererID = hook$jscomp$inline_1576.inject(
+        internals$jscomp$inline_1254
       )),
-        (injectedHook = hook$jscomp$inline_1570);
+        (injectedHook = hook$jscomp$inline_1576);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

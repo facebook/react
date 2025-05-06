@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1cc470a384f02a2cbe6b41072a9d2441>>
+ * @generated SignedSource<<54d989d88297e5d3c0e14cea2b00aa53>>
  */
 
 "use strict";
@@ -8789,7 +8789,18 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     case 26:
     case 5:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-      null === current && flags & 4 && commitHostMount(finishedWork);
+      if (null === current)
+        if (flags & 4) commitHostMount(finishedWork);
+        else if (flags & 64) {
+          finishedRoot = finishedWork.type;
+          current = finishedWork.memoizedProps;
+          prevProps = finishedWork.stateNode;
+          try {
+            shim$1(prevProps, finishedRoot, current, finishedWork);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
+        }
       flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
       break;
     case 12:
@@ -11902,16 +11913,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1349 = {
+  internals$jscomp$inline_1355 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-79586c7e-20250505",
+    version: "19.2.0-native-fb-587cb8f8-20250506",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-79586c7e-20250505"
+    reconcilerVersion: "19.2.0-native-fb-587cb8f8-20250506"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1349.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1349.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1355.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1355.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$162 = 0;
     31 > index$162;
@@ -11923,20 +11934,20 @@ internals$jscomp$inline_1349.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1349.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1355.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1637 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1643 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1637.isDisabled &&
-    hook$jscomp$inline_1637.supportsFiber
+    !hook$jscomp$inline_1643.isDisabled &&
+    hook$jscomp$inline_1643.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1637.inject(
-        internals$jscomp$inline_1349
+      (rendererID = hook$jscomp$inline_1643.inject(
+        internals$jscomp$inline_1355
       )),
-        (injectedHook = hook$jscomp$inline_1637);
+        (injectedHook = hook$jscomp$inline_1643);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
