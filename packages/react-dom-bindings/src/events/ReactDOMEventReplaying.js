@@ -472,12 +472,19 @@ function replayUnblockedEvents() {
   }
 }
 
+export function flushEventReplaying(): void {
+  // Synchronously flush any event replaying so that it gets observed before
+  // any new updates are applied.
+  if (hasScheduledReplayAttempt) {
+    replayUnblockedEvents();
+  }
+}
+
 export function queueChangeEvent(target: EventTarget): void {
   if (enableHydrationChangeEvent) {
     queuedChangeEventTargets.push(target);
     if (!hasScheduledReplayAttempt) {
       hasScheduledReplayAttempt = true;
-      scheduleCallback(NormalPriority, replayUnblockedEvents);
     }
   }
 }
@@ -490,10 +497,12 @@ function scheduleCallbackIfUnblocked(
     queuedEvent.blockedOn = null;
     if (!hasScheduledReplayAttempt) {
       hasScheduledReplayAttempt = true;
-      // Schedule a callback to attempt replaying as many events as are
-      // now unblocked. This first might not actually be unblocked yet.
-      // We could check it early to avoid scheduling an unnecessary callback.
-      scheduleCallback(NormalPriority, replayUnblockedEvents);
+      if (!enableHydrationChangeEvent) {
+        // Schedule a callback to attempt replaying as many events as are
+        // now unblocked. This first might not actually be unblocked yet.
+        // We could check it early to avoid scheduling an unnecessary callback.
+        scheduleCallback(NormalPriority, replayUnblockedEvents);
+      }
     }
   }
 }

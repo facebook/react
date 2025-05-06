@@ -109,6 +109,7 @@ import {
   startGestureTransition,
   stopViewTransition,
   createViewTransitionInstance,
+  flushHydrationEvents,
 } from './ReactFiberConfig';
 
 import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
@@ -3857,6 +3858,12 @@ function flushSpawnedWork(): void {
     if (!rootDidHavePassiveEffects) {
       finalizeRender(lanes, commitEndTime);
     }
+  }
+
+  // Eagerly flush any event replaying that we unblocked within this commit.
+  // This ensures that those are observed before we render any new changes.
+  if (supportsHydration) {
+    flushHydrationEvents();
   }
 
   // If layout work was scheduled, flush it now.

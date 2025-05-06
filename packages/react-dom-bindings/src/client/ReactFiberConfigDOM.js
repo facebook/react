@@ -99,7 +99,10 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from './HTMLNodeType';
 
-import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
+import {
+  flushEventReplaying,
+  retryIfBlockedOn,
+} from '../events/ReactDOMEventReplaying';
 
 import {
   enableCreateEventHandleAPI,
@@ -3653,6 +3656,12 @@ export function commitHydratedSuspenseInstance(
 ): void {
   // Retry if any event replaying was blocked on this.
   retryIfBlockedOn(suspenseInstance);
+}
+
+export function flushHydrationEvents(): void {
+  if (enableHydrationChangeEvent) {
+    flushEventReplaying();
+  }
 }
 
 export function shouldDeleteUnhydratedTailInstances(

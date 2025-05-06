@@ -50,6 +50,7 @@ export const commitHydratedInstance = shim;
 export const commitHydratedContainer = shim;
 export const commitHydratedActivityInstance = shim;
 export const commitHydratedSuspenseInstance = shim;
+export const flushHydrationEvents = shim;
 export const clearActivityBoundary = shim;
 export const clearSuspenseBoundary = shim;
 export const clearActivityBoundaryFromContainer = shim;
