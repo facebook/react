@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f4e60247b7ae6bc1f0256882e5b344f8>>
+ * @generated SignedSource<<e91ecf876a5d825215a227c777791f01>>
  */
 
 /*
@@ -164,15 +164,104 @@ function findCurrentHostFiberImpl(node) {
   }
   return null;
 }
-function traverseFragmentInstanceChildren(child, fn, a, b, c) {
+function traverseVisibleHostChildren(child, searchWithinHosts, fn, a, b, c) {
   for (; null !== child; ) {
     if (5 === child.tag) {
-      if (fn(child.stateNode, a, b, c)) break;
-    } else
-      (22 === child.tag && null !== child.memoizedState) ||
-        traverseFragmentInstanceChildren(child.child, fn, a, b, c);
+      if (
+        fn(child, a, b, c) ||
+        (searchWithinHosts &&
+          traverseVisibleHostChildren(
+            child.child,
+            searchWithinHosts,
+            fn,
+            a,
+            b,
+            c
+          ))
+      )
+        return !0;
+    } else if (
+      (22 !== child.tag || null === child.memoizedState) &&
+      traverseVisibleHostChildren(child.child, searchWithinHosts, fn, a, b, c)
+    )
+      return !0;
     child = child.sibling;
   }
+  return !1;
+}
+function getFragmentParentHostFiber(fiber) {
+  for (fiber = fiber.return; null !== fiber; ) {
+    if (3 === fiber.tag || 5 === fiber.tag) return fiber;
+    fiber = fiber.return;
+  }
+  return null;
+}
+function getInstanceFromHostFiber(fiber) {
+  switch (fiber.tag) {
+    case 5:
+      return fiber.stateNode;
+    case 3:
+      return fiber.stateNode.containerInfo;
+    default:
+      throw Error(formatProdErrorMessage(559));
+  }
+}
+var searchTarget = null,
+  searchBoundary = null;
+function findNextSibling(child) {
+  searchTarget = child;
+  return !0;
+}
+function isFiberContainedBy(maybeChild, maybeParent) {
+  maybeParent = maybeParent.return;
+  if (maybeParent === maybeChild || maybeParent === maybeChild.alternate)
+    return !0;
+  for (; null !== maybeParent && maybeParent !== maybeChild; ) {
+    if (
+      !(
+        (5 !== maybeParent.tag && 3 !== maybeParent.tag) ||
+        (maybeParent.return !== maybeChild &&
+          maybeParent.return !== maybeChild.alternate)
+      )
+    )
+      return !0;
+    maybeParent = maybeParent.return;
+  }
+  return !1;
+}
+function isFiberPrecedingCheck(child, target, boundary) {
+  return child === boundary
+    ? !0
+    : child === target
+      ? ((searchTarget = child), !0)
+      : !1;
+}
+function isFiberFollowingCheck(child, target, boundary) {
+  return child === boundary
+    ? ((searchBoundary = child), !1)
+    : child === target
+      ? (null !== searchBoundary && (searchTarget = child), !0)
+      : !1;
+}
+function getParentForFragmentAncestors(inst) {
+  if (null === inst) return null;
+  do inst = null === inst ? null : inst.return;
+  while (inst && 5 !== inst.tag && 27 !== inst.tag && 3 !== inst.tag);
+  return inst ? inst : null;
+}
+function getLowestCommonAncestor(instA, instB, getParent) {
+  for (var depthA = 0, tempA = instA; tempA; tempA = getParent(tempA)) depthA++;
+  tempA = 0;
+  for (var tempB = instB; tempB; tempB = getParent(tempB)) tempA++;
+  for (; 0 < depthA - tempA; ) (instA = getParent(instA)), depthA--;
+  for (; 0 < tempA - depthA; ) (instB = getParent(instB)), tempA--;
+  for (; depthA--; ) {
+    if (instA === instB || (null !== instB && instA === instB.alternate))
+      return instA;
+    instA = getParent(instA);
+    instB = getParent(instB);
+  }
+  return null;
 }
 var assign = Object.assign,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -13604,20 +13693,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1718 = 0;
-  i$jscomp$inline_1718 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1718++
+  var i$jscomp$inline_1737 = 0;
+  i$jscomp$inline_1737 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1737++
 ) {
-  var eventName$jscomp$inline_1719 =
-      simpleEventPluginEvents[i$jscomp$inline_1718],
-    domEventName$jscomp$inline_1720 =
-      eventName$jscomp$inline_1719.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1721 =
-      eventName$jscomp$inline_1719[0].toUpperCase() +
-      eventName$jscomp$inline_1719.slice(1);
+  var eventName$jscomp$inline_1738 =
+      simpleEventPluginEvents[i$jscomp$inline_1737],
+    domEventName$jscomp$inline_1739 =
+      eventName$jscomp$inline_1738.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1740 =
+      eventName$jscomp$inline_1738[0].toUpperCase() +
+      eventName$jscomp$inline_1738.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1720,
-    "on" + capitalizedEvent$jscomp$inline_1721
+    domEventName$jscomp$inline_1739,
+    "on" + capitalizedEvent$jscomp$inline_1740
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -13972,12 +14061,12 @@ function dispatchEventForPluginEventSystem(
     }
     if (0 === (eventSystemFlags & 7)) {
       a: {
-        reactName =
-          "mouseover" === domEventName || "pointerover" === domEventName;
         SyntheticEventCtor =
+          "mouseover" === domEventName || "pointerover" === domEventName;
+        reactName =
           "mouseout" === domEventName || "pointerout" === domEventName;
         if (
-          reactName &&
+          SyntheticEventCtor &&
           nativeEvent !== currentReplayingEvent &&
           (reactEventType =
             nativeEvent.relatedTarget || nativeEvent.fromElement) &&
@@ -13985,33 +14074,34 @@ function dispatchEventForPluginEventSystem(
             reactEventType[internalContainerInstanceKey])
         )
           break a;
-        if (SyntheticEventCtor || reactName) {
-          reactName =
+        if (reactName || SyntheticEventCtor) {
+          reactEventType =
             nativeEventTarget.window === nativeEventTarget
               ? nativeEventTarget
-              : (reactName = nativeEventTarget.ownerDocument)
-                ? reactName.defaultView || reactName.parentWindow
+              : (SyntheticEventCtor = nativeEventTarget.ownerDocument)
+                ? SyntheticEventCtor.defaultView ||
+                  SyntheticEventCtor.parentWindow
                 : window;
-          if (SyntheticEventCtor) {
+          if (reactName) {
             if (
-              ((reactEventType =
+              ((SyntheticEventCtor =
                 nativeEvent.relatedTarget || nativeEvent.toElement),
-              (SyntheticEventCtor = targetInst),
-              (reactEventType = reactEventType
-                ? getClosestInstanceFromNode(reactEventType)
+              (reactName = targetInst),
+              (SyntheticEventCtor = SyntheticEventCtor
+                ? getClosestInstanceFromNode(SyntheticEventCtor)
                 : null),
-              null !== reactEventType)
+              null !== SyntheticEventCtor)
             ) {
-              inCapturePhase = getNearestMountedFiber(reactEventType);
-              var tag = reactEventType.tag;
+              inCapturePhase = getNearestMountedFiber(SyntheticEventCtor);
+              var tag = SyntheticEventCtor.tag;
               if (
-                reactEventType !== inCapturePhase ||
+                SyntheticEventCtor !== inCapturePhase ||
                 (5 !== tag && 27 !== tag && 6 !== tag)
               )
-                reactEventType = null;
+                SyntheticEventCtor = null;
             }
-          } else (SyntheticEventCtor = null), (reactEventType = targetInst);
-          if (SyntheticEventCtor !== reactEventType) {
+          } else (reactName = null), (SyntheticEventCtor = targetInst);
+          if (reactName !== SyntheticEventCtor) {
             tag = SyntheticMouseEvent;
             var leaveEventType = "onMouseLeave",
               enterEventType = "onMouseEnter",
@@ -14022,28 +14112,28 @@ function dispatchEventForPluginEventSystem(
                 (enterEventType = "onPointerEnter"),
                 (eventTypePrefix = "pointer");
             inCapturePhase =
-              null == SyntheticEventCtor
-                ? reactName
-                : getNodeFromInstance(SyntheticEventCtor);
+              null == reactName
+                ? reactEventType
+                : getNodeFromInstance(reactName);
             var toNode =
-              null == reactEventType
-                ? reactName
-                : getNodeFromInstance(reactEventType);
-            reactName = new tag(
+              null == SyntheticEventCtor
+                ? reactEventType
+                : getNodeFromInstance(SyntheticEventCtor);
+            reactEventType = new tag(
               leaveEventType,
               eventTypePrefix + "leave",
-              SyntheticEventCtor,
+              reactName,
               nativeEvent,
               nativeEventTarget
             );
-            reactName.target = inCapturePhase;
-            reactName.relatedTarget = toNode;
+            reactEventType.target = inCapturePhase;
+            reactEventType.relatedTarget = toNode;
             leaveEventType = null;
             getClosestInstanceFromNode(nativeEventTarget) === targetInst &&
               ((tag = new tag(
                 enterEventType,
                 eventTypePrefix + "enter",
-                reactEventType,
+                SyntheticEventCtor,
                 nativeEvent,
                 nativeEventTarget
               )),
@@ -14051,51 +14141,28 @@ function dispatchEventForPluginEventSystem(
               (tag.relatedTarget = inCapturePhase),
               (leaveEventType = tag));
             inCapturePhase = leaveEventType;
-            if (SyntheticEventCtor && reactEventType)
-              b: {
-                tag = SyntheticEventCtor;
-                enterEventType = reactEventType;
-                eventTypePrefix = 0;
-                for (toNode = tag; toNode; toNode = getParent(toNode))
-                  eventTypePrefix++;
-                toNode = 0;
-                for (
-                  leaveEventType = enterEventType;
-                  leaveEventType;
-                  leaveEventType = getParent(leaveEventType)
-                )
-                  toNode++;
-                for (; 0 < eventTypePrefix - toNode; )
-                  (tag = getParent(tag)), eventTypePrefix--;
-                for (; 0 < toNode - eventTypePrefix; )
-                  (enterEventType = getParent(enterEventType)), toNode--;
-                for (; eventTypePrefix--; ) {
-                  if (
-                    tag === enterEventType ||
-                    (null !== enterEventType &&
-                      tag === enterEventType.alternate)
+            tag =
+              reactName && SyntheticEventCtor
+                ? getLowestCommonAncestor(
+                    reactName,
+                    SyntheticEventCtor,
+                    getParent
                   )
-                    break b;
-                  tag = getParent(tag);
-                  enterEventType = getParent(enterEventType);
-                }
-                tag = null;
-              }
-            else tag = null;
-            null !== SyntheticEventCtor &&
+                : null;
+            null !== reactName &&
               accumulateEnterLeaveListenersForEvent(
                 dispatchQueue,
+                reactEventType,
                 reactName,
-                SyntheticEventCtor,
                 tag,
                 !1
               );
-            null !== reactEventType &&
+            null !== SyntheticEventCtor &&
               null !== inCapturePhase &&
               accumulateEnterLeaveListenersForEvent(
                 dispatchQueue,
                 inCapturePhase,
-                reactEventType,
+                SyntheticEventCtor,
                 tag,
                 !0
               );
@@ -15585,8 +15652,9 @@ FragmentInstance.prototype.addEventListener = function (
       listener: listener,
       optionsOrUseCapture: optionsOrUseCapture
     }),
-    traverseFragmentInstanceChildren(
+    traverseVisibleHostChildren(
       this._fragmentFiber.child,
+      !1,
       addEventListenerToChild,
       type,
       listener,
@@ -15595,7 +15663,11 @@ FragmentInstance.prototype.addEventListener = function (
   this._eventListeners = listeners;
 };
 function addEventListenerToChild(child, type, listener, optionsOrUseCapture) {
-  child.addEventListener(type, listener, optionsOrUseCapture);
+  getInstanceFromHostFiber(child).addEventListener(
+    type,
+    listener,
+    optionsOrUseCapture
+  );
   return !1;
 }
 FragmentInstance.prototype.removeEventListener = function (
@@ -15607,8 +15679,9 @@ FragmentInstance.prototype.removeEventListener = function (
   null !== listeners &&
     "undefined" !== typeof listeners &&
     0 < listeners.length &&
-    (traverseFragmentInstanceChildren(
+    (traverseVisibleHostChildren(
       this._fragmentFiber.child,
+      !1,
       removeEventListenerFromChild,
       type,
       listener,
@@ -15628,22 +15701,32 @@ function removeEventListenerFromChild(
   listener,
   optionsOrUseCapture
 ) {
-  child.removeEventListener(type, listener, optionsOrUseCapture);
+  getInstanceFromHostFiber(child).removeEventListener(
+    type,
+    listener,
+    optionsOrUseCapture
+  );
   return !1;
 }
 FragmentInstance.prototype.focus = function (focusOptions) {
-  traverseFragmentInstanceChildren(
+  traverseVisibleHostChildren(
     this._fragmentFiber.child,
-    setFocusIfFocusable,
+    !1,
+    setFocusOnFiberIfFocusable,
     focusOptions,
     void 0,
     void 0
   );
 };
+function setFocusOnFiberIfFocusable(fiber, focusOptions) {
+  fiber = getInstanceFromHostFiber(fiber);
+  return setFocusIfFocusable(fiber, focusOptions);
+}
 FragmentInstance.prototype.focusLast = function (focusOptions) {
   var children = [];
-  traverseFragmentInstanceChildren(
+  traverseVisibleHostChildren(
     this._fragmentFiber.child,
+    !1,
     collectChildren,
     children,
     void 0,
@@ -15651,7 +15734,7 @@ FragmentInstance.prototype.focusLast = function (focusOptions) {
   );
   for (
     var i = children.length - 1;
-    0 <= i && !setFocusIfFocusable(children[i], focusOptions);
+    0 <= i && !setFocusOnFiberIfFocusable(children[i], focusOptions);
     i--
   );
 };
@@ -15660,8 +15743,9 @@ function collectChildren(child, collection) {
   return !1;
 }
 FragmentInstance.prototype.blur = function () {
-  traverseFragmentInstanceChildren(
+  traverseVisibleHostChildren(
     this._fragmentFiber.child,
+    !1,
     blurActiveElementWithinFragment,
     void 0,
     void 0,
@@ -15669,13 +15753,15 @@ FragmentInstance.prototype.blur = function () {
   );
 };
 function blurActiveElementWithinFragment(child) {
+  child = getInstanceFromHostFiber(child);
   return child === child.ownerDocument.activeElement ? (child.blur(), !0) : !1;
 }
 FragmentInstance.prototype.observeUsing = function (observer) {
   null === this._observers && (this._observers = new Set());
   this._observers.add(observer);
-  traverseFragmentInstanceChildren(
+  traverseVisibleHostChildren(
     this._fragmentFiber.child,
+    !1,
     observeChild,
     observer,
     void 0,
@@ -15683,6 +15769,7 @@ FragmentInstance.prototype.observeUsing = function (observer) {
   );
 };
 function observeChild(child, observer) {
+  child = getInstanceFromHostFiber(child);
   observer.observe(child);
   return !1;
 }
@@ -15690,8 +15777,9 @@ FragmentInstance.prototype.unobserveUsing = function (observer) {
   null !== this._observers &&
     this._observers.has(observer) &&
     (this._observers.delete(observer),
-    traverseFragmentInstanceChildren(
+    traverseVisibleHostChildren(
       this._fragmentFiber.child,
+      !1,
       unobserveChild,
       observer,
       void 0,
@@ -15699,13 +15787,15 @@ FragmentInstance.prototype.unobserveUsing = function (observer) {
     ));
 };
 function unobserveChild(child, observer) {
+  child = getInstanceFromHostFiber(child);
   observer.unobserve(child);
   return !1;
 }
 FragmentInstance.prototype.getClientRects = function () {
   var rects = [];
-  traverseFragmentInstanceChildren(
+  traverseVisibleHostChildren(
     this._fragmentFiber.child,
+    !1,
     collectClientRects,
     rects,
     void 0,
@@ -15714,34 +15804,137 @@ FragmentInstance.prototype.getClientRects = function () {
   return rects;
 };
 function collectClientRects(child, rects) {
+  child = getInstanceFromHostFiber(child);
   rects.push.apply(rects, child.getClientRects());
   return !1;
 }
 FragmentInstance.prototype.getRootNode = function (getRootNodeOptions) {
-  var JSCompiler_inline_result;
-  a: {
-    for (
-      JSCompiler_inline_result = this._fragmentFiber.return;
-      null !== JSCompiler_inline_result;
-
-    ) {
-      if (3 === JSCompiler_inline_result.tag) {
-        JSCompiler_inline_result =
-          JSCompiler_inline_result.stateNode.containerInfo;
-        break a;
-      }
-      if (5 === JSCompiler_inline_result.tag) {
-        JSCompiler_inline_result = JSCompiler_inline_result.stateNode;
-        break a;
-      }
-      JSCompiler_inline_result = JSCompiler_inline_result.return;
-    }
-    JSCompiler_inline_result = null;
-  }
-  return null === JSCompiler_inline_result
+  var parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  return null === parentHostFiber
     ? this
-    : JSCompiler_inline_result.getRootNode(getRootNodeOptions);
+    : getInstanceFromHostFiber(parentHostFiber).getRootNode(getRootNodeOptions);
 };
+FragmentInstance.prototype.compareDocumentPosition = function (otherNode) {
+  var parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (null === parentHostFiber) return Node.DOCUMENT_POSITION_DISCONNECTED;
+  var children = [];
+  traverseVisibleHostChildren(
+    this._fragmentFiber.child,
+    !1,
+    collectChildren,
+    children,
+    void 0,
+    void 0
+  );
+  if (0 === children.length) {
+    children = getInstanceFromHostFiber(parentHostFiber);
+    var parentResult = children.compareDocumentPosition(otherNode);
+    parentHostFiber = parentResult;
+    children === otherNode
+      ? (parentHostFiber = Node.DOCUMENT_POSITION_CONTAINS)
+      : parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY &&
+        (traverseVisibleHostChildren(
+          this._fragmentFiber.sibling,
+          !1,
+          findNextSibling
+        ),
+        (children = searchTarget),
+        (searchTarget = null),
+        null === children
+          ? (parentHostFiber = Node.DOCUMENT_POSITION_PRECEDING)
+          : ((otherNode =
+              getInstanceFromHostFiber(children).compareDocumentPosition(
+                otherNode
+              )),
+            (parentHostFiber =
+              0 === otherNode || otherNode & Node.DOCUMENT_POSITION_FOLLOWING
+                ? Node.DOCUMENT_POSITION_FOLLOWING
+                : Node.DOCUMENT_POSITION_PRECEDING)));
+    return (parentHostFiber |= Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+  }
+  parentHostFiber = getInstanceFromHostFiber(children[0]);
+  parentResult = getInstanceFromHostFiber(children[children.length - 1]);
+  var firstResult = parentHostFiber.compareDocumentPosition(otherNode),
+    lastResult = parentResult.compareDocumentPosition(otherNode);
+  parentHostFiber =
+    (firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
+      lastResult & Node.DOCUMENT_POSITION_PRECEDING) ||
+    otherNode === parentHostFiber ||
+    otherNode === parentResult
+      ? Node.DOCUMENT_POSITION_CONTAINED_BY
+      : firstResult;
+  return parentHostFiber & Node.DOCUMENT_POSITION_DISCONNECTED ||
+    parentHostFiber & Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC ||
+    validateDocumentPositionWithFiberTree(
+      parentHostFiber,
+      this._fragmentFiber,
+      children[0],
+      children[children.length - 1],
+      otherNode
+    )
+    ? parentHostFiber
+    : Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
+};
+function validateDocumentPositionWithFiberTree(
+  documentPosition,
+  fragmentFiber,
+  precedingBoundaryFiber,
+  followingBoundaryFiber,
+  otherNode
+) {
+  var otherFiber = getClosestInstanceFromNode(otherNode);
+  return documentPosition & Node.DOCUMENT_POSITION_CONTAINED_BY
+    ? !!otherFiber && isFiberContainedBy(fragmentFiber, otherFiber)
+    : documentPosition & Node.DOCUMENT_POSITION_CONTAINS
+      ? null === otherFiber
+        ? ((otherFiber = otherNode.ownerDocument),
+          otherNode === otherFiber || otherNode === otherFiber.body)
+        : isFiberContainedBy(otherFiber, fragmentFiber)
+      : documentPosition & Node.DOCUMENT_POSITION_PRECEDING
+        ? ((followingBoundaryFiber = !!otherFiber) &&
+            !(followingBoundaryFiber = otherFiber === precedingBoundaryFiber) &&
+            ((followingBoundaryFiber = getLowestCommonAncestor(
+              precedingBoundaryFiber,
+              otherFiber,
+              getParentForFragmentAncestors
+            )),
+            null === followingBoundaryFiber
+              ? (followingBoundaryFiber = !1)
+              : (traverseVisibleHostChildren(
+                  followingBoundaryFiber,
+                  !0,
+                  isFiberPrecedingCheck,
+                  otherFiber,
+                  precedingBoundaryFiber
+                ),
+                (otherFiber = searchTarget),
+                (searchTarget = null),
+                (followingBoundaryFiber = null !== otherFiber))),
+          followingBoundaryFiber)
+        : documentPosition & Node.DOCUMENT_POSITION_FOLLOWING
+          ? ((precedingBoundaryFiber = !!otherFiber) &&
+              !(precedingBoundaryFiber =
+                otherFiber === followingBoundaryFiber) &&
+              ((precedingBoundaryFiber = getLowestCommonAncestor(
+                followingBoundaryFiber,
+                otherFiber,
+                getParentForFragmentAncestors
+              )),
+              null === precedingBoundaryFiber
+                ? (precedingBoundaryFiber = !1)
+                : (traverseVisibleHostChildren(
+                    precedingBoundaryFiber,
+                    !0,
+                    isFiberFollowingCheck,
+                    otherFiber,
+                    followingBoundaryFiber
+                  ),
+                  (otherFiber = searchTarget),
+                  (searchBoundary = searchTarget = null),
+                  (precedingBoundaryFiber = null !== otherFiber))),
+            precedingBoundaryFiber)
+          : !1;
+}
 function normalizeListenerOptions(opts) {
   return null == opts
     ? "0"
@@ -17555,16 +17748,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2087 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2112 = React.version;
 if (
-  "19.2.0-native-fb-7a2c7045-20250506" !==
-  isomorphicReactPackageVersion$jscomp$inline_2087
+  "19.2.0-native-fb-e5a8de81-20250506" !==
+  isomorphicReactPackageVersion$jscomp$inline_2112
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2087,
-      "19.2.0-native-fb-7a2c7045-20250506"
+      isomorphicReactPackageVersion$jscomp$inline_2112,
+      "19.2.0-native-fb-e5a8de81-20250506"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17584,12 +17777,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2094 = {
+var internals$jscomp$inline_2119 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-7a2c7045-20250506",
+  version: "19.2.0-native-fb-e5a8de81-20250506",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-7a2c7045-20250506",
+  reconcilerVersion: "19.2.0-native-fb-e5a8de81-20250506",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$309 = 0;
@@ -17607,16 +17800,16 @@ var internals$jscomp$inline_2094 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2563 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2596 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2563.isDisabled &&
-    hook$jscomp$inline_2563.supportsFiber
+    !hook$jscomp$inline_2596.isDisabled &&
+    hook$jscomp$inline_2596.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2563.inject(
-        internals$jscomp$inline_2094
+      (rendererID = hook$jscomp$inline_2596.inject(
+        internals$jscomp$inline_2119
       )),
-        (injectedHook = hook$jscomp$inline_2563);
+        (injectedHook = hook$jscomp$inline_2596);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -17708,4 +17901,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-7a2c7045-20250506";
+exports.version = "19.2.0-native-fb-e5a8de81-20250506";

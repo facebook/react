@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9eb29a39f3b320a979fdda8a2d4aa8df>>
+ * @generated SignedSource<<74b1167b8b761324868d481a2f15891f>>
  */
 
 "use strict";
@@ -2068,14 +2068,39 @@ function findCurrentHostFiberImpl(node) {
   }
   return null;
 }
-function traverseFragmentInstanceChildren(child, fn, a, b, c) {
+function traverseVisibleHostChildren(child, searchWithinHosts, fn, a, b, c) {
   for (; null !== child; ) {
     if (5 === child.tag) {
-      if (fn(child.stateNode, a, b, c)) break;
-    } else
-      (22 === child.tag && null !== child.memoizedState) ||
-        traverseFragmentInstanceChildren(child.child, fn, a, b, c);
+      if (
+        fn(child, a, b, c) ||
+        (searchWithinHosts &&
+          traverseVisibleHostChildren(
+            child.child,
+            searchWithinHosts,
+            fn,
+            a,
+            b,
+            c
+          ))
+      )
+        return !0;
+    } else if (
+      (22 !== child.tag || null === child.memoizedState) &&
+      traverseVisibleHostChildren(child.child, searchWithinHosts, fn, a, b, c)
+    )
+      return !0;
     child = child.sibling;
+  }
+  return !1;
+}
+function getInstanceFromHostFiber(fiber) {
+  switch (fiber.tag) {
+    case 5:
+      return fiber.stateNode;
+    case 3:
+      return fiber.stateNode.containerInfo;
+    default:
+      throw Error("Expected to find a host node. This is a bug in React.");
   }
 }
 var valueStack = [],
@@ -11087,38 +11112,42 @@ function FragmentInstance(fragmentFiber) {
 FragmentInstance.prototype.observeUsing = function (observer) {
   null === this._observers && (this._observers = new Set());
   this._observers.add(observer);
-  traverseFragmentInstanceChildren(
+  traverseVisibleHostChildren(
     this._fragmentFiber.child,
+    !1,
     observeChild,
     observer,
     void 0,
     void 0
   );
 };
-function observeChild(instance, observer) {
-  instance = getPublicInstance(instance);
-  if (null == instance)
+function observeChild(child, observer) {
+  child = getInstanceFromHostFiber(child);
+  child = getPublicInstance(child);
+  if (null == child)
     throw Error("Expected to find a host node. This is a bug in React.");
-  observer.observe(instance);
+  observer.observe(child);
   return !1;
 }
 FragmentInstance.prototype.unobserveUsing = function (observer) {
   null !== this._observers &&
     this._observers.has(observer) &&
     (this._observers.delete(observer),
-    traverseFragmentInstanceChildren(
+    traverseVisibleHostChildren(
       this._fragmentFiber.child,
+      !1,
       unobserveChild,
       observer,
       void 0,
       void 0
     ));
 };
-function unobserveChild(instance, observer) {
-  instance = getPublicInstance(instance);
-  if (null == instance)
+function unobserveChild(child, observer) {
+  child = getInstanceFromHostFiber(child);
+  child = getPublicInstance(child);
+  if (null == child)
     throw Error("Expected to find a host node. This is a bug in React.");
-  observer.unobserve(instance);
+  observer.unobserve(child);
   return !1;
 }
 function commitNewChildToFragmentInstance(child, fragmentInstance) {
@@ -11211,10 +11240,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1254 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-7a2c7045-20250506",
+    version: "19.2.0-native-fb-e5a8de81-20250506",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-7a2c7045-20250506"
+    reconcilerVersion: "19.2.0-native-fb-e5a8de81-20250506"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1254.rendererConfig = extraDevToolsConfig);

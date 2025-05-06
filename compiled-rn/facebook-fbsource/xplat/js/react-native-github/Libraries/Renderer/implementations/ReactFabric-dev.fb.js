@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5268a5844492f492f90fba69777104dc>>
+ * @generated SignedSource<<699e1a8b1b3a017e9b915b9aed043d7c>>
  */
 
 "use strict";
@@ -2085,14 +2085,53 @@ __DEV__ &&
       }
       return !1;
     }
-    function traverseFragmentInstanceChildren(child, fn, a, b, c) {
+    function traverseVisibleHostChildren(
+      child,
+      searchWithinHosts,
+      fn,
+      a,
+      b,
+      c
+    ) {
       for (; null !== child; ) {
         if (5 === child.tag) {
-          if (fn(child.stateNode, a, b, c)) break;
-        } else
-          (22 === child.tag && null !== child.memoizedState) ||
-            traverseFragmentInstanceChildren(child.child, fn, a, b, c);
+          if (
+            fn(child, a, b, c) ||
+            (searchWithinHosts &&
+              traverseVisibleHostChildren(
+                child.child,
+                searchWithinHosts,
+                fn,
+                a,
+                b,
+                c
+              ))
+          )
+            return !0;
+        } else if (
+          (22 !== child.tag || null === child.memoizedState) &&
+          traverseVisibleHostChildren(
+            child.child,
+            searchWithinHosts,
+            fn,
+            a,
+            b,
+            c
+          )
+        )
+          return !0;
         child = child.sibling;
+      }
+      return !1;
+    }
+    function getInstanceFromHostFiber(fiber) {
+      switch (fiber.tag) {
+        case 5:
+          return fiber.stateNode;
+        case 3:
+          return fiber.stateNode.containerInfo;
+        default:
+          throw Error("Expected to find a host node. This is a bug in React.");
       }
     }
     function createCursor(defaultValue) {
@@ -14604,18 +14643,20 @@ __DEV__ &&
       this._fragmentFiber = fragmentFiber;
       this._observers = null;
     }
-    function observeChild(instance, observer) {
-      instance = getPublicInstance(instance);
-      if (null == instance)
+    function observeChild(child, observer) {
+      child = getInstanceFromHostFiber(child);
+      child = getPublicInstance(child);
+      if (null == child)
         throw Error("Expected to find a host node. This is a bug in React.");
-      observer.observe(instance);
+      observer.observe(child);
       return !1;
     }
-    function unobserveChild(instance, observer) {
-      instance = getPublicInstance(instance);
-      if (null == instance)
+    function unobserveChild(child, observer) {
+      child = getInstanceFromHostFiber(child);
+      child = getPublicInstance(child);
+      if (null == child)
         throw Error("Expected to find a host node. This is a bug in React.");
-      observer.unobserve(instance);
+      observer.unobserve(child);
       return !1;
     }
     function commitNewChildToFragmentInstance(child, fragmentInstance) {
@@ -17379,8 +17420,9 @@ __DEV__ &&
     FragmentInstance.prototype.observeUsing = function (observer) {
       null === this._observers && (this._observers = new Set());
       this._observers.add(observer);
-      traverseFragmentInstanceChildren(
+      traverseVisibleHostChildren(
         this._fragmentFiber.child,
+        !1,
         observeChild,
         observer,
         void 0,
@@ -17390,8 +17432,9 @@ __DEV__ &&
     FragmentInstance.prototype.unobserveUsing = function (observer) {
       null !== this._observers && this._observers.has(observer)
         ? (this._observers.delete(observer),
-          traverseFragmentInstanceChildren(
+          traverseVisibleHostChildren(
             this._fragmentFiber.child,
+            !1,
             unobserveChild,
             observer,
             void 0,
@@ -17486,10 +17529,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-7a2c7045-20250506",
+        version: "19.2.0-native-fb-e5a8de81-20250506",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-7a2c7045-20250506"
+        reconcilerVersion: "19.2.0-native-fb-e5a8de81-20250506"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
