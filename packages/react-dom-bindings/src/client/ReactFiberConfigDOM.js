@@ -68,6 +68,7 @@ import {
   getFragmentParentHostFiber,
   getNextSiblingHostFiber,
   getInstanceFromHostFiber,
+  traverseFragmentInstanceDeeply,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {detachDeletedInstance};
@@ -2698,7 +2699,7 @@ FragmentInstance.prototype.focus = function (
   this: FragmentInstanceType,
   focusOptions?: FocusOptions,
 ): void {
-  traverseFragmentInstance(
+  traverseFragmentInstanceDeeply(
     this._fragmentFiber,
     setFocusOnFiberIfFocusable,
     focusOptions,
@@ -2717,7 +2718,11 @@ FragmentInstance.prototype.focusLast = function (
   focusOptions?: FocusOptions,
 ): void {
   const children: Array<Fiber> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  traverseFragmentInstanceDeeply(
+    this._fragmentFiber,
+    collectChildren,
+    children,
+  );
   for (let i = children.length - 1; i >= 0; i--) {
     const child = children[i];
     if (setFocusOnFiberIfFocusable(child, focusOptions)) {

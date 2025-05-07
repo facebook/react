@@ -146,6 +146,32 @@ describe('FragmentRefs', () => {
       });
 
       // @gate enableFragmentRefs
+      it('focuses deeply nested focusable children, depth first', async () => {
+        const fragmentRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+
+        function Test() {
+          return (
+            <Fragment ref={fragmentRef}>
+              <div id="child-a">
+                <div tabIndex={0} id="grandchild-a">
+                  <a id="greatgrandchild-a" href="/" />
+                </div>
+              </div>
+              <a id="child-b" href="/" />
+            </Fragment>
+          );
+        }
+        await act(() => {
+          root.render(<Test />);
+        });
+        await act(() => {
+          fragmentRef.current.focus();
+        });
+        expect(document.activeElement.id).toEqual('grandchild-a');
+      });
+
+      // @gate enableFragmentRefs
       it('preserves document order when adding and removing children', async () => {
         const fragmentRef = React.createRef();
         const root = ReactDOMClient.createRoot(container);
@@ -227,6 +253,34 @@ describe('FragmentRefs', () => {
         });
         expect(document.activeElement.id).toEqual('child-c');
         document.activeElement.blur();
+      });
+
+      // @gate enableFragmentRefs
+      it('focuses deeply nested focusable children, depth first', async () => {
+        const fragmentRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+
+        function Test() {
+          return (
+            <Fragment ref={fragmentRef}>
+              <div id="child-a" href="/">
+                <a id="grandchild-a" href="/" />
+                <a id="grandchild-b" href="/" />
+              </div>
+              <div tabIndex={0} id="child-b">
+                <a id="grandchild-a" href="/" />
+                <a id="grandchild-b" href="/" />
+              </div>
+            </Fragment>
+          );
+        }
+        await act(() => {
+          root.render(<Test />);
+        });
+        await act(() => {
+          fragmentRef.current.focusLast();
+        });
+        expect(document.activeElement.id).toEqual('grandchild-b');
       });
     });
 
