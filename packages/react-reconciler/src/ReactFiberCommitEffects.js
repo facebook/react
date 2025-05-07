@@ -7,11 +7,7 @@
  * @flow
  */
 
-import type {
-  ViewTransitionProps,
-  ProfilerProps,
-  ProfilerPhase,
-} from 'shared/ReactTypes';
+import type {ProfilerProps, ProfilerPhase} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
