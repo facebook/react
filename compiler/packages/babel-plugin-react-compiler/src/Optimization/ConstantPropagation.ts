@@ -551,7 +551,7 @@ function evaluateInstruction(
       }
 
       const result: InstructionValue = {
-        kind: "Primitive",
+        kind: 'Primitive',
         value: resultString,
         loc: value.loc,
       };
