@@ -192,6 +192,13 @@ export type ReactCallSite = [
 
 export type ReactStackTrace = Array<ReactCallSite>;
 
+export type ReactFunctionLocation = [
+  string, // function name
+  string, // file name TODO: model nested eval locations as nested arrays
+  number, // enclosing line number
+  number, // enclosing column number
+];
+
 export type ReactComponentInfo = {
   +name: string,
   +env?: string,

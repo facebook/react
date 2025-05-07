@@ -62,7 +62,7 @@ import type {
   ReactAsyncInfo,
   ReactTimeInfo,
   ReactStackTrace,
-  ReactCallSite,
+  ReactFunctionLocation,
   ReactErrorInfo,
   ReactErrorInfoDev,
 } from 'shared/ReactTypes';
@@ -2089,7 +2089,7 @@ function serializeServerReference(
   const bound = boundArgs === null ? null : Promise.resolve(boundArgs);
   const id = getServerReferenceId(request.bundlerConfig, serverReference);
 
-  let location: null | ReactCallSite = null;
+  let location: null | ReactFunctionLocation = null;
   if (__DEV__) {
     const error = getServerReferenceLocation(
       request.bundlerConfig,
@@ -2098,7 +2098,13 @@ function serializeServerReference(
     if (error) {
       const frames = parseStackTrace(error, 1);
       if (frames.length > 0) {
-        location = frames[0];
+        const firstFrame = frames[0];
+        location = [
+          firstFrame[0],
+          firstFrame[1],
+          firstFrame[2], // The line and col of the callsite represents the
+          firstFrame[3], // enclosing line and col of the function.
+        ];
       }
     }
   }
@@ -2108,7 +2114,7 @@ function serializeServerReference(
     bound: null | Promise<Array<any>>,
     name?: string, // DEV-only
     env?: string, // DEV-only
-    location?: ReactCallSite, // DEV-only
+    location?: ReactFunctionLocation, // DEV-only
   } =
     __DEV__ && location !== null
       ? {
