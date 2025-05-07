@@ -555,11 +555,14 @@ function evaluateInstruction(
           return null;
         }
 
-        // Spec states that concat calls ToString(argument) internally on its parameters
-        // -> we don't have to implement ToString(argument) ourselves and just use the engine implementation
-        // Refs: https://tc39.es/ecma262/2024/#sec-tostring
-        //       https://tc39.es/ecma262/2024/#sec-string.prototype.concat
-        //       https://tc39.es/ecma262/2024/#sec-template-literals-runtime-semantics-evaluation
+        /*
+         * Spec states that concat calls ToString(argument) internally on its parameters
+         * -> we don't have to implement ToString(argument) ourselves and just use the engine implementation
+         * Refs:
+         *  - https://tc39.es/ecma262/2024/#sec-tostring
+         *  - https://tc39.es/ecma262/2024/#sec-string.prototype.concat
+         *  - https://tc39.es/ecma262/2024/#sec-template-literals-runtime-semantics-evaluation
+         */
         resultString = resultString.concat(expressionValue as string, suffix);
       }
 
