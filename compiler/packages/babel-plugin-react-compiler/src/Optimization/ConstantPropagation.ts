@@ -513,7 +513,7 @@ function evaluateInstruction(
       if (value.subexprs.length === 0) {
         const result: InstructionValue = {
           kind: 'Primitive',
-          value: value.quasis.map((q) => q.cooked).join(""),
+          value: value.quasis.map(q => q.cooked).join(''),
           loc: value.loc,
         };
         instr.value = result;
@@ -524,11 +524,40 @@ function evaluateInstruction(
         return null;
       }
 
-      if (value.quasis.some((q) => q.cooked === undefined)) {
+      if (value.quasis.some(q => q.cooked === undefined)) {
         return null;
       }
 
-      return null; // TODO
+      let quasiIndex = 0;
+      let resultString = value.quasis[quasiIndex].cooked;
+      ++quasiIndex;
+
+      for (const subExpr of value.subexprs) {
+        const subExprValue = read(constants, subExpr);
+        if (
+          !subExprValue ||
+          subExprValue.kind !== 'Primitive' ||
+          subExprValue.value === null ||
+          subExprValue.value === undefined
+        ) {
+          return null;
+        }
+
+        const suffix = value.quasis[quasiIndex].cooked;
+        ++quasiIndex;
+
+        // TODO: Spec-compliant concat
+        resultString += subExprValue.value.toString() + suffix;
+      }
+
+      const result: InstructionValue = {
+        kind: "Primitive",
+        value: resultString,
+        loc: value.loc,
+      };
+
+      instr.value = result;
+      return result;
     }
     case 'LoadLocal': {
       const placeValue = read(constants, value.place);

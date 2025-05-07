@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
 function foo() {
   return (
@@ -43,12 +43,12 @@ function foo() {
       <Stringify
         value={{
           a: true,
-          b: `a${1}b`,
+          b: "a1b",
           c: " abc A\n\n\u0167",
-          d: `abc${1}def`,
-          e: `abc${1}def${2}`,
-          f: `abc${1}def${2}ghi`,
-          g: `a${4}b${""}c${"d" + `e${6}f`}`,
+          d: "abc1def",
+          e: "abc1def2",
+          f: "abc1def2ghi",
+          g: "a4bcde6f",
           h: `1${2}${Math.sin(0)}`,
         }}
       />
