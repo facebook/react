@@ -99,7 +99,7 @@ function foo() {
           `${[1, 2, 3]}`,
           "true",
           "false",
-          `${null}`,
+          "null",
           `${undefined}`,
           "1234567890",
           "0123456789",

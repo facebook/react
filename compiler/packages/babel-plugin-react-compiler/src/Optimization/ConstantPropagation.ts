@@ -540,7 +540,7 @@ function evaluateInstruction(
 
         const expressionValue = subExprValue.value;
         if (
-          typeof expressionValue === 'object' ||
+          (typeof expressionValue === 'object' && expressionValue !== null) ||
           typeof expressionValue === 'symbol' ||
           typeof expressionValue === 'function'
         ) {
