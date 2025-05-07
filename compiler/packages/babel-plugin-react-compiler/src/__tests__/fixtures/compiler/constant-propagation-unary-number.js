@@ -4,7 +4,16 @@ function foo() {
   const a = -1;
   return (
     <Stringify
-      value={[2 * a, -0, -Infinity, -NaN, a * NaN, a * Infinity, a * -Infinity]}
+      value={[
+        2 * a,
+        -0,
+        0 === -0,
+        -Infinity,
+        -NaN,
+        a * NaN,
+        a * Infinity,
+        a * -Infinity,
+      ]}
     />
   );
 }

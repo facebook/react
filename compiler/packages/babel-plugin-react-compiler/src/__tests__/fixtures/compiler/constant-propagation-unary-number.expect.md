@@ -8,7 +8,16 @@ function foo() {
   const a = -1;
   return (
     <Stringify
-      value={[2 * a, -0, -Infinity, -NaN, a * NaN, a * Infinity, a * -Infinity]}
+      value={[
+        2 * a,
+        -0,
+        0 === -0,
+        -Infinity,
+        -NaN,
+        a * NaN,
+        a * Infinity,
+        a * -Infinity,
+      ]}
     />
   );
 }
@@ -36,8 +45,10 @@ function foo() {
         value={[
           -2,
           0,
+          true,
           -Infinity,
           -NaN,
+
           -1 * NaN,
           -1 * Infinity,
           -1 * -Infinity,
@@ -60,4 +71,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div>{"value":[-2,0,null,null,null,null,null]}</div>
+(kind: ok) <div>{"value":[-2,0,true,null,null,null,null,null]}</div>
