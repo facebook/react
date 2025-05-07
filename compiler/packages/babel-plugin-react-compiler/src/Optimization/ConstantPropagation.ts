@@ -509,6 +509,19 @@ function evaluateInstruction(
       }
       return null;
     }
+    case 'TemplateLiteral': {
+      if (value.subexprs.length === 0) {
+        const result: InstructionValue = {
+          kind: 'Primitive',
+          value: value.quasis.map((q) => q.cooked).join(""),
+          loc: value.loc,
+        };
+        instr.value = result;
+        return result;
+      }
+
+      return null; // TODO
+    }
     case 'LoadLocal': {
       const placeValue = read(constants, value.place);
       if (placeValue !== null) {

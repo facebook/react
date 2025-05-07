@@ -102,7 +102,7 @@ function foo(name) {
   const t0 = `${name}!`;
   let t1;
   if ($[0] !== t0) {
-    t1 = { status: `<status>`, text: t0 };
+    t1 = { status: "<status>", text: t0 };
     $[0] = t0;
     $[1] = t1;
   } else {
