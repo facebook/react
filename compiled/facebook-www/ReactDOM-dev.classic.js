@@ -13657,11 +13657,11 @@ __DEV__ &&
             eventListeners = parent.stateNode._eventListeners;
           if (null !== eventListeners)
             for (var i = 0; i < eventListeners.length; i++) {
-              var _eventListeners$i2 = eventListeners[i];
+              var _eventListeners$i3 = eventListeners[i];
               childElement.removeEventListener(
-                _eventListeners$i2.type,
-                _eventListeners$i2.listener,
-                _eventListeners$i2.optionsOrUseCapture
+                _eventListeners$i3.type,
+                _eventListeners$i3.listener,
+                _eventListeners$i3.optionsOrUseCapture
               );
             }
         }
@@ -25475,11 +25475,11 @@ __DEV__ &&
       var eventListeners = fragmentInstance._eventListeners;
       if (null !== eventListeners)
         for (var i = 0; i < eventListeners.length; i++) {
-          var _eventListeners$i = eventListeners[i];
+          var _eventListeners$i2 = eventListeners[i];
           childElement.addEventListener(
-            _eventListeners$i.type,
-            _eventListeners$i.listener,
-            _eventListeners$i.optionsOrUseCapture
+            _eventListeners$i2.type,
+            _eventListeners$i2.listener,
+            _eventListeners$i2.optionsOrUseCapture
           );
         }
       null !== fragmentInstance._observers &&
@@ -30912,6 +30912,40 @@ __DEV__ &&
         )),
         null !== this._eventListeners && this._eventListeners.splice(type, 1));
     };
+    FragmentInstance.prototype.dispatchEvent = function (event) {
+      var parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+      if (null === parentHostFiber) return !0;
+      parentHostFiber = getInstanceFromHostFiber(parentHostFiber);
+      var eventListeners = this._eventListeners;
+      if (
+        (null !== eventListeners && 0 < eventListeners.length) ||
+        !event.bubbles
+      ) {
+        var temp = document.createTextNode("");
+        if (eventListeners)
+          for (var i = 0; i < eventListeners.length; i++) {
+            var _eventListeners$i = eventListeners[i];
+            temp.addEventListener(
+              _eventListeners$i.type,
+              _eventListeners$i.listener,
+              _eventListeners$i.optionsOrUseCapture
+            );
+          }
+        parentHostFiber.appendChild(temp);
+        event = temp.dispatchEvent(event);
+        if (eventListeners)
+          for (i = 0; i < eventListeners.length; i++)
+            (_eventListeners$i = eventListeners[i]),
+              temp.removeEventListener(
+                _eventListeners$i.type,
+                _eventListeners$i.listener,
+                _eventListeners$i.optionsOrUseCapture
+              );
+        parentHostFiber.removeChild(temp);
+        return event;
+      }
+      return parentHostFiber.dispatchEvent(event);
+    };
     FragmentInstance.prototype.focus = function (focusOptions) {
       traverseVisibleHostChildren(
         this._fragmentFiber.child,
@@ -31348,11 +31382,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-classic-946da518-20250507" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-classic-8a8df5db-20250507" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-classic-946da518-20250507\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-classic-8a8df5db-20250507\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31395,10 +31429,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-classic-946da518-20250507",
+          version: "19.2.0-www-classic-8a8df5db-20250507",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-classic-946da518-20250507"
+          reconcilerVersion: "19.2.0-www-classic-8a8df5db-20250507"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -31996,7 +32030,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-classic-946da518-20250507";
+    exports.version = "19.2.0-www-classic-8a8df5db-20250507";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
