@@ -1,6 +1,14 @@
 import {Stringify, identity} from 'shared-runtime';
 
+function t(quasis, ...subExprs) {
+  return [quasis, subExprs];
+}
+
 function foo() {
+  try {
+    identity(`${Symbol('0')}`); // Uncaught TypeError: Cannot convert a Symbol value to a string (leave as is)
+  } catch {}
+
   return (
     <Stringify
       value={[
@@ -15,15 +23,26 @@ function foo() {
         `${NaN}`,
         `${Infinity}`,
         `${-Infinity}`,
-        `${0}123456789`,
+        `${Number.MAX_SAFE_INTEGER}`,
+        `${Number.MIN_SAFE_INTEGER}`,
+        `${Number.MAX_VALUE}`,
+        `${Number.MIN_VALUE}`,
+        `${{}}`,
+        `${[1, 2, 3]}`,
+        `${true}`,
+        `${false}`,
+        `${null}`,
+        `${undefined}`,
         `123456789${0}`,
+        `${0}123456789`,
         `${0}123456789${0}`,
         `${0}1234${5}6789${0}`,
         `${0}1234${`${0}123456789${`${0}123456789${0}`}`}6789${0}`,
         `${0}1234${`${0}123456789${`${identity(0)}`}`}6789${0}`,
         `${`${`${`${0}`}`}`}`,
-        `${`${`${`${""}`}`}`}`,
-        `${`${`${`${identity("")}`}`}`}`,
+        `${`${`${`${''}`}`}`}`,
+        `${`${`${`${identity('')}`}`}`}`,
+        // TODO: t`1${2}3`,
       ]}
     />
   );

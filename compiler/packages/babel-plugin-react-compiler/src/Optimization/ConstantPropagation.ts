@@ -538,7 +538,8 @@ function evaluateInstruction(
           !subExprValue ||
           subExprValue.kind !== 'Primitive' ||
           subExprValue.value === null ||
-          subExprValue.value === undefined
+          subExprValue.value === undefined ||
+          typeof subExprValue.value === 'symbol'
         ) {
           return null;
         }
@@ -547,6 +548,7 @@ function evaluateInstruction(
         ++quasiIndex;
 
         // TODO: Spec-compliant concat
+        // TODO: https://262.ecma-international.org/6.0/#sec-template-literals-runtime-semantics-evaluation
         resultString += subExprValue.value.toString() + suffix;
       }
 

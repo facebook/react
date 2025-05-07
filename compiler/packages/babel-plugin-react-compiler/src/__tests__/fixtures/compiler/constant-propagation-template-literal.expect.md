@@ -4,7 +4,15 @@
 ```javascript
 import {Stringify, identity} from 'shared-runtime';
 
+function t(quasis, ...subExprs) {
+  return [quasis, subExprs];
+}
+
 function foo() {
+  try {
+    identity(`${Symbol('0')}`); // Uncaught TypeError: Cannot convert a Symbol value to a string (leave as is)
+  } catch {}
+
   return (
     <Stringify
       value={[
@@ -19,15 +27,26 @@ function foo() {
         `${NaN}`,
         `${Infinity}`,
         `${-Infinity}`,
-        `${0}123456789`,
+        `${Number.MAX_SAFE_INTEGER}`,
+        `${Number.MIN_SAFE_INTEGER}`,
+        `${Number.MAX_VALUE}`,
+        `${Number.MIN_VALUE}`,
+        `${{}}`,
+        `${[1, 2, 3]}`,
+        `${true}`,
+        `${false}`,
+        `${null}`,
+        `${undefined}`,
         `123456789${0}`,
+        `${0}123456789`,
         `${0}123456789${0}`,
         `${0}1234${5}6789${0}`,
         `${0}1234${`${0}123456789${`${0}123456789${0}`}`}6789${0}`,
         `${0}1234${`${0}123456789${`${identity(0)}`}`}6789${0}`,
         `${`${`${`${0}`}`}`}`,
-        `${`${`${`${""}`}`}`}`,
-        `${`${`${`${identity("")}`}`}`}`,
+        `${`${`${`${''}`}`}`}`,
+        `${`${`${`${identity('')}`}`}`}`,
+        // TODO: t`1${2}3`,
       ]}
     />
   );
@@ -47,8 +66,26 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 import { Stringify, identity } from "shared-runtime";
 
+function t(quasis, ...t0) {
+  const $ = _c(3);
+  const subExprs = t0;
+  let t1;
+  if ($[0] !== quasis || $[1] !== subExprs) {
+    t1 = [quasis, subExprs];
+    $[0] = quasis;
+    $[1] = subExprs;
+    $[2] = t1;
+  } else {
+    t1 = $[2];
+  }
+  return t1;
+}
+
 function foo() {
   const $ = _c(1);
+  try {
+    identity(`${Symbol("0")}`);
+  } catch {}
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = (
@@ -66,8 +103,18 @@ function foo() {
           `${NaN}`,
           `${Infinity}`,
           `${-Infinity}`,
-          "0123456789",
+          `${Number.MAX_SAFE_INTEGER}`,
+          `${Number.MIN_SAFE_INTEGER}`,
+          `${Number.MAX_VALUE}`,
+          `${Number.MIN_VALUE}`,
+          `${{}}`,
+          `${[1, 2, 3]}`,
+          "true",
+          "false",
+          `${null}`,
+          `${undefined}`,
           "1234567890",
+          "0123456789",
           "01234567890",
           "01234567890",
           "0123401234567890123456789067890",
@@ -94,4 +141,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div>{"value":[true,"a1b"," abc A\n\nŧ","abc1def","abc1def2","abc1def2ghi","a4bcde6f","120","NaN","Infinity","-Infinity","0123456789","1234567890","01234567890","01234567890","0123401234567890123456789067890","012340123456789067890","0","",""]}</div>
+(kind: ok) <div>{"value":[true,"a1b"," abc A\n\nŧ","abc1def","abc1def2","abc1def2ghi","a4bcde6f","120","NaN","Infinity","-Infinity","9007199254740991","-9007199254740991","1.7976931348623157e+308","5e-324","[object Object]","1,2,3","true","false","null","undefined","1234567890","0123456789","01234567890","01234567890","0123401234567890123456789067890","012340123456789067890","0","",""]}</div>
