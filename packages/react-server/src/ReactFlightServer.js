@@ -152,11 +152,27 @@ function defaultFilterStackFrame(
   );
 }
 
+// DEV-only cache of parsed and filtered stack frames.
+const stackTraceCache: WeakMap<Error, ReactStackTrace> = __DEV__
+  ? new WeakMap()
+  : (null: any);
+
 function filterStackTrace(
   request: Request,
   error: Error,
   skipFrames: number,
 ): ReactStackTrace {
+  const existing = stackTraceCache.get(error);
+  if (existing !== undefined) {
+    // Return a clone because the Flight protocol isn't yet resilient to deduping
+    // objects in the debug info. TODO: Support deduping stacks.
+    const clone = existing.slice(0);
+    for (let i = 0; i < clone.length; i++) {
+      // $FlowFixMe[invalid-tuple-arity]
+      clone[i] = clone[i].slice(0);
+    }
+    return clone;
+  }
   // Since stacks can be quite large and we pass a lot of them, we filter them out eagerly
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
@@ -183,6 +199,7 @@ function filterStackTrace(
       i--;
     }
   }
+  stackTraceCache.set(error, stack);
   return stack;
 }
 
