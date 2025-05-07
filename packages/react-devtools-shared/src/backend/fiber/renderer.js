@@ -5806,15 +5806,13 @@ export function attach(
   function getSourceForFiberInstance(
     fiberInstance: FiberInstance,
   ): Source | null {
-    const unresolvedSource = fiberInstance.source;
-    if (
-      unresolvedSource !== null &&
-      typeof unresolvedSource === 'object' &&
-      !isError(unresolvedSource)
-    ) {
-      // $FlowFixMe: isError should have refined it.
-      return unresolvedSource;
+    // Favor the owner source if we have one.
+    const ownerSource = getSourceForInstance(fiberInstance);
+    if (ownerSource !== null) {
+      return ownerSource;
     }
+
+    // Otherwise fallback to the throwing trick.
     const dispatcherRef = getDispatcherRef(renderer);
     const stackFrame =
       dispatcherRef == null
@@ -5825,10 +5823,7 @@ export function attach(
             dispatcherRef,
           );
     if (stackFrame === null) {
-      // If we don't find a source location by throwing, try to get one
-      // from an owned child if possible. This is the same branch as
-      // for virtual instances.
-      return getSourceForInstance(fiberInstance);
+      return null;
     }
     const source = parseSourceFromComponentStack(stackFrame);
     fiberInstance.source = source;
