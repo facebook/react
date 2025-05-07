@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<27f07e15eeb37028edd91a825c302879>>
+ * @generated SignedSource<<bf2a3cfe044d5b450ecff7cc37899393>>
  */
 
 'use strict';
@@ -40266,6 +40266,21 @@ function evaluateInstruction(constants, instr) {
                         const result = {
                             kind: 'Primitive',
                             value: !operand.value,
+                            loc: value.loc,
+                        };
+                        instr.value = result;
+                        return result;
+                    }
+                    return null;
+                }
+                case '-': {
+                    const operand = read(constants, value.value);
+                    if (operand !== null &&
+                        operand.kind === 'Primitive' &&
+                        typeof operand.value === 'number') {
+                        const result = {
+                            kind: 'Primitive',
+                            value: operand.value * -1,
                             loc: value.loc,
                         };
                         instr.value = result;

@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<77454f7e2e3a65b872ba31d1182709f2>>
+ * @generated SignedSource<<5ea520dda276f0aed8050f583b9ccdc4>>
  */
 
 'use strict';
@@ -40045,6 +40045,21 @@ function evaluateInstruction(constants, instr) {
                         const result = {
                             kind: 'Primitive',
                             value: !operand.value,
+                            loc: value.loc,
+                        };
+                        instr.value = result;
+                        return result;
+                    }
+                    return null;
+                }
+                case '-': {
+                    const operand = read(constants, value.value);
+                    if (operand !== null &&
+                        operand.kind === 'Primitive' &&
+                        typeof operand.value === 'number') {
+                        const result = {
+                            kind: 'Primitive',
+                            value: operand.value * -1,
                             loc: value.loc,
                         };
                         instr.value = result;
