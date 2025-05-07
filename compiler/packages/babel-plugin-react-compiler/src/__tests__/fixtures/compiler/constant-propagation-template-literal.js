@@ -30,6 +30,7 @@ function foo() {
         `${Number.MIN_SAFE_INTEGER}`,
         `${Number.MAX_VALUE}`,
         `${Number.MIN_VALUE}`,
+        `${-0}`,
         `${{}}`,
         `${[1, 2, 3]}`,
         `${true}`,
