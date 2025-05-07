@@ -80,6 +80,7 @@ type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   onUncaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
   onCaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
+  onDefaultTransitionIndicator?: () => () => void,
   ...
 };
 type InstanceMeasurement = null;
@@ -1229,7 +1230,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           ? options.onCaughtError
           : NoopRenderer.defaultOnCaughtError,
         onRecoverableError,
-        onDefaultTransitionIndicator,
+        options && options.onDefaultTransitionIndicator
+          ? options.onDefaultTransitionIndicator
+          : onDefaultTransitionIndicator,
         options && options.unstable_transitionCallbacks
           ? options.unstable_transitionCallbacks
           : null,
