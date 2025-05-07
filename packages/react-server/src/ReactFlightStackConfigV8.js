@@ -63,7 +63,7 @@ function collectStackTrace(
       // Skip everything after the bottom frame since it'll be internals.
       break;
     } else if (callSite.isNative()) {
-      result.push([name, '', 0, 0]);
+      result.push([name, '', 0, 0, 0, 0]);
     } else {
       // We encode complex function calls as if they're part of the function
       // name since we cannot simulate the complex ones and they look the same
@@ -88,7 +88,17 @@ function collectStackTrace(
       }
       const line = callSite.getLineNumber() || 0;
       const col = callSite.getColumnNumber() || 0;
-      result.push([name, filename, line, col]);
+      const enclosingLine: number =
+        // $FlowFixMe[prop-missing]
+        typeof callSite.getEnclosingLineNumber === 'function'
+          ? (callSite: any).getEnclosingLineNumber() || 0
+          : 0;
+      const enclosingCol: number =
+        // $FlowFixMe[prop-missing]
+        typeof callSite.getEnclosingColumnNumber === 'function'
+          ? (callSite: any).getEnclosingColumnNumber() || 0
+          : 0;
+      result.push([name, filename, line, col, enclosingLine, enclosingCol]);
     }
   }
   // At the same time we generate a string stack trace just in case someone
@@ -179,7 +189,7 @@ export function parseStackTrace(
     }
     const line = +(parsed[3] || parsed[6]);
     const col = +(parsed[4] || parsed[7]);
-    parsedFrames.push([name, filename, line, col]);
+    parsedFrames.push([name, filename, line, col, 0, 0]);
   }
   return parsedFrames;
 }

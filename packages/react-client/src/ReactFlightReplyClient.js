@@ -1350,10 +1350,11 @@ function parseStackLocation(error: Error): null | ReactCallSite {
   if (filename === '<anonymous>') {
     filename = '';
   }
+  // This is really the enclosingLine/Column.
   const line = +(parsed[3] || parsed[6]);
   const col = +(parsed[4] || parsed[7]);
 
-  return [name, filename, line, col];
+  return [name, filename, line, col, line, col];
 }
 
 export function createServerReference<A: Iterable<any>, T>(
