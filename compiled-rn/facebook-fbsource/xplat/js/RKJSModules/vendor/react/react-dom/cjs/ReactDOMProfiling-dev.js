@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2a1c4de642e83319a810ad1e1f5a2329>>
+ * @generated SignedSource<<61fe143d779bd1d4c74d0109a4ee134a>>
  */
 
 /*
@@ -253,30 +253,18 @@ __DEV__ &&
       c
     ) {
       for (; null !== child; ) {
-        if (5 === child.tag) {
-          if (
-            fn(child, a, b, c) ||
-            (searchWithinHosts &&
-              traverseVisibleHostChildren(
-                child.child,
-                searchWithinHosts,
-                fn,
-                a,
-                b,
-                c
-              ))
-          )
-            return !0;
-        } else if (
-          (22 !== child.tag || null === child.memoizedState) &&
-          traverseVisibleHostChildren(
-            child.child,
-            searchWithinHosts,
-            fn,
-            a,
-            b,
-            c
-          )
+        if (
+          (5 === child.tag && fn(child, a, b, c)) ||
+          ((22 !== child.tag || null === child.memoizedState) &&
+            (searchWithinHosts || 5 !== child.tag) &&
+            traverseVisibleHostChildren(
+              child.child,
+              searchWithinHosts,
+              fn,
+              a,
+              b,
+              c
+            ))
         )
           return !0;
         child = child.sibling;
@@ -26456,7 +26444,7 @@ __DEV__ &&
     FragmentInstance.prototype.focus = function (focusOptions) {
       traverseVisibleHostChildren(
         this._fragmentFiber.child,
-        !1,
+        !0,
         setFocusOnFiberIfFocusable,
         focusOptions,
         void 0,
@@ -26467,7 +26455,7 @@ __DEV__ &&
       var children = [];
       traverseVisibleHostChildren(
         this._fragmentFiber.child,
-        !1,
+        !0,
         collectChildren,
         children,
         void 0,
@@ -27012,11 +27000,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-native-fb-4a702865-20250507" !== isomorphicReactPackageVersion)
+      if ("19.2.0-native-fb-4206fe49-20250507" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-native-fb-4a702865-20250507\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-native-fb-4206fe49-20250507\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27053,10 +27041,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-native-fb-4a702865-20250507",
+          version: "19.2.0-native-fb-4206fe49-20250507",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-native-fb-4a702865-20250507"
+          reconcilerVersion: "19.2.0-native-fb-4206fe49-20250507"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27516,7 +27504,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-native-fb-4a702865-20250507";
+    exports.version = "19.2.0-native-fb-4206fe49-20250507";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

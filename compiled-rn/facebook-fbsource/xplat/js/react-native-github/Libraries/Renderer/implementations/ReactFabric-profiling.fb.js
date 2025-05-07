@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2cde37a2299bda0c01344bc5abbad560>>
+ * @generated SignedSource<<e45fb8071285eb212ab427bbd056af35>>
  */
 
 "use strict";
@@ -2152,23 +2152,18 @@ function findCurrentHostFiberImpl(node) {
 }
 function traverseVisibleHostChildren(child, searchWithinHosts, fn, a, b, c) {
   for (; null !== child; ) {
-    if (5 === child.tag) {
-      if (
-        fn(child, a, b, c) ||
-        (searchWithinHosts &&
-          traverseVisibleHostChildren(
-            child.child,
-            searchWithinHosts,
-            fn,
-            a,
-            b,
-            c
-          ))
-      )
-        return !0;
-    } else if (
-      (22 !== child.tag || null === child.memoizedState) &&
-      traverseVisibleHostChildren(child.child, searchWithinHosts, fn, a, b, c)
+    if (
+      (5 === child.tag && fn(child, a, b, c)) ||
+      ((22 !== child.tag || null === child.memoizedState) &&
+        (searchWithinHosts || 5 !== child.tag) &&
+        traverseVisibleHostChildren(
+          child.child,
+          searchWithinHosts,
+          fn,
+          a,
+          b,
+          c
+        ))
     )
       return !0;
     child = child.sibling;
@@ -11944,10 +11939,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1355 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-4a702865-20250507",
+    version: "19.2.0-native-fb-4206fe49-20250507",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-4a702865-20250507"
+    reconcilerVersion: "19.2.0-native-fb-4206fe49-20250507"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1355.rendererConfig = extraDevToolsConfig);

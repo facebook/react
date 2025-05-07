@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8c07e592447741b1345a345f9bdc0ffe>>
+ * @generated SignedSource<<950f499fb445608f3818fd73537f2e36>>
  */
 
 /*
@@ -166,23 +166,18 @@ function findCurrentHostFiberImpl(node) {
 }
 function traverseVisibleHostChildren(child, searchWithinHosts, fn, a, b, c) {
   for (; null !== child; ) {
-    if (5 === child.tag) {
-      if (
-        fn(child, a, b, c) ||
-        (searchWithinHosts &&
-          traverseVisibleHostChildren(
-            child.child,
-            searchWithinHosts,
-            fn,
-            a,
-            b,
-            c
-          ))
-      )
-        return !0;
-    } else if (
-      (22 !== child.tag || null === child.memoizedState) &&
-      traverseVisibleHostChildren(child.child, searchWithinHosts, fn, a, b, c)
+    if (
+      (5 === child.tag && fn(child, a, b, c)) ||
+      ((22 !== child.tag || null === child.memoizedState) &&
+        (searchWithinHosts || 5 !== child.tag) &&
+        traverseVisibleHostChildren(
+          child.child,
+          searchWithinHosts,
+          fn,
+          a,
+          b,
+          c
+        ))
     )
       return !0;
     child = child.sibling;
@@ -15009,7 +15004,7 @@ function removeEventListenerFromChild(
 FragmentInstance.prototype.focus = function (focusOptions) {
   traverseVisibleHostChildren(
     this._fragmentFiber.child,
-    !1,
+    !0,
     setFocusOnFiberIfFocusable,
     focusOptions,
     void 0,
@@ -15024,7 +15019,7 @@ FragmentInstance.prototype.focusLast = function (focusOptions) {
   var children = [];
   traverseVisibleHostChildren(
     this._fragmentFiber.child,
-    !1,
+    !0,
     collectChildren,
     children,
     void 0,
@@ -17040,14 +17035,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2009 = React.version;
 if (
-  "19.2.0-native-fb-4a702865-20250507" !==
+  "19.2.0-native-fb-4206fe49-20250507" !==
   isomorphicReactPackageVersion$jscomp$inline_2009
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2009,
-      "19.2.0-native-fb-4a702865-20250507"
+      "19.2.0-native-fb-4206fe49-20250507"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17069,10 +17064,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2528 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-4a702865-20250507",
+  version: "19.2.0-native-fb-4206fe49-20250507",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-4a702865-20250507"
+  reconcilerVersion: "19.2.0-native-fb-4206fe49-20250507"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2529 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17176,4 +17171,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-4a702865-20250507";
+exports.version = "19.2.0-native-fb-4206fe49-20250507";
