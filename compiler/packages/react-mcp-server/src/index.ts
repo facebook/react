@@ -377,9 +377,9 @@ server.tool(
           type: 'text' as const,
           text: componentTree,
         },
-      ]
-    }
-  }
+      ],
+    };
+  },
 );
 
 server.prompt('review-react-code', () => ({

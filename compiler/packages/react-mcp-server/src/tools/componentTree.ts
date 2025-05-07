@@ -27,22 +27,49 @@ export async function parseReactComponentTree(code: string): Promise<string> {
   for (const page of pages) {
     const url = await page.url();
 
-    if (url.startsWith('http://localhost:3000')) {
+    if (url.startsWith('https://react.dev')) {
       localhostPage = page;
       break;
     }
   }
 
   if (localhostPage) {
-    const isDevtoolsLoaded = await localhostPage.evaluate(() => {
-      return !!(window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
-    });
+    const devtoolsHook = await localhostPage.evaluate(getReactComponentTree);
+    console.log(devtoolsHook);
 
-    return new Promise(resolve =>
-      resolve(isDevtoolsLoaded === true ? 'YES <3' : 'NO :('),
-    );
+    return new Promise(resolve => resolve(JSON.stringify(devtoolsHook)));
   } else {
     throw new Error('Localhost page not found');
+  }
+}
+
+function getReactComponentTree() {
+  // Check if the React DevTools hook is available
+  const hook: any = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
+  if (!hook) {
+    console.error(
+      'React DevTools hook is not available. Make sure React DevTools extension is installed.',
+    );
+    return null;
+  }
+
+  // Get the first renderer from the DevTools hook
+  const renderers: any = Array.from(hook.renderers.values());
+
+  // return renderers;
+
+  if (renderers.length === 0) {
+    console.error('No React renderers found.');
+    return null;
+  }
+
+  const rootFiber = Array.from(
+    (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__.getFiberRoots(1),
+  )[0];
+
+  //ROOT FIBER
+  if (!rootFiber) {
+    return 'error';
   }
 }
 
