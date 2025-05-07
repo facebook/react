@@ -1141,6 +1141,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     // TODO: Turn this on once tests are fixed
     // console.error(error);
   }
+  function onDefaultTransitionIndicator() {
+    // TODO: Allow this as an option.
+    return function () {};
+  }
 
   let idCounter = 0;
 
@@ -1196,6 +1200,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           NoopRenderer.defaultOnUncaughtError,
           NoopRenderer.defaultOnCaughtError,
           onRecoverableError,
+          onDefaultTransitionIndicator,
           null,
         );
         roots.set(rootID, root);
@@ -1224,6 +1229,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           ? options.onCaughtError
           : NoopRenderer.defaultOnCaughtError,
         onRecoverableError,
+        onDefaultTransitionIndicator,
         options && options.unstable_transitionCallbacks
           ? options.unstable_transitionCallbacks
           : null,
@@ -1262,6 +1268,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         NoopRenderer.defaultOnUncaughtError,
         NoopRenderer.defaultOnCaughtError,
         onRecoverableError,
+        onDefaultTransitionIndicator,
         null,
       );
       return {

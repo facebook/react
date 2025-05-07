@@ -211,6 +211,10 @@ function noopOnRecoverableError() {
   // legacy API.
 }
 
+function noopOnDefaultTransitionIndicator() {
+  return function () {};
+}
+
 function legacyCreateRootFromDOMContainer(
   container: Container,
   initialChildren: ReactNodeList,
@@ -239,6 +243,7 @@ function legacyCreateRootFromDOMContainer(
       wwwOnUncaughtError,
       wwwOnCaughtError,
       noopOnRecoverableError,
+      noopOnDefaultTransitionIndicator,
       // TODO(luna) Support hydration later
       null,
       null,
@@ -277,6 +282,7 @@ function legacyCreateRootFromDOMContainer(
       wwwOnUncaughtError,
       wwwOnCaughtError,
       noopOnRecoverableError,
+      noopOnDefaultTransitionIndicator,
       null, // transitionCallbacks
     );
     container._reactRootContainer = root;

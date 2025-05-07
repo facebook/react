@@ -98,6 +98,10 @@ function nativeOnCaughtError(
 
   defaultOnCaughtError(error, errorInfo);
 }
+function nativeOnDefaultTransitionIndicator() {
+  // Native doesn't have a default indicator.
+  return function () {};
+}
 
 function render(
   element: Element<ElementType>,
@@ -148,6 +152,7 @@ function render(
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      nativeOnDefaultTransitionIndicator,
       null,
     );
 
