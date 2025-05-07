@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {isValidIdentifier} from '@babel/types';
-import {CompilerError} from '../CompilerError';
+import { isValidIdentifier } from '@babel/types';
+import { CompilerError } from '../CompilerError';
 import {
   GotoVariant,
   HIRFunction,
@@ -30,7 +30,7 @@ import {
   removeUnnecessaryTryCatch,
   removeUnreachableForUpdates,
 } from '../HIR/HIRBuilder';
-import {eliminateRedundantPhi} from '../SSA';
+import { eliminateRedundantPhi } from '../SSA';
 
 /*
  * Applies constant propagation/folding to the given function. The approach is
@@ -363,57 +363,57 @@ function evaluateInstruction(
         switch (value.operator) {
           case '+': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs + rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs + rhs, loc: value.loc };
             } else if (typeof lhs === 'string' && typeof rhs === 'string') {
-              result = {kind: 'Primitive', value: lhs + rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs + rhs, loc: value.loc };
             }
             break;
           }
           case '-': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs - rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs - rhs, loc: value.loc };
             }
             break;
           }
           case '*': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs * rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs * rhs, loc: value.loc };
             }
             break;
           }
           case '/': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs / rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs / rhs, loc: value.loc };
             }
             break;
           }
           case '|': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs | rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs | rhs, loc: value.loc };
             }
             break;
           }
           case '&': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs & rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs & rhs, loc: value.loc };
             }
             break;
           }
           case '^': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs ^ rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs ^ rhs, loc: value.loc };
             }
             break;
           }
           case '<<': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs << rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs << rhs, loc: value.loc };
             }
             break;
           }
           case '>>': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs >> rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs >> rhs, loc: value.loc };
             }
             break;
           }
@@ -429,54 +429,54 @@ function evaluateInstruction(
           }
           case '%': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs % rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs % rhs, loc: value.loc };
             }
             break;
           }
           case '**': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs ** rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs ** rhs, loc: value.loc };
             }
             break;
           }
           case '<': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs < rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs < rhs, loc: value.loc };
             }
             break;
           }
           case '<=': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs <= rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs <= rhs, loc: value.loc };
             }
             break;
           }
           case '>': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs > rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs > rhs, loc: value.loc };
             }
             break;
           }
           case '>=': {
             if (typeof lhs === 'number' && typeof rhs === 'number') {
-              result = {kind: 'Primitive', value: lhs >= rhs, loc: value.loc};
+              result = { kind: 'Primitive', value: lhs >= rhs, loc: value.loc };
             }
             break;
           }
           case '==': {
-            result = {kind: 'Primitive', value: lhs == rhs, loc: value.loc};
+            result = { kind: 'Primitive', value: lhs == rhs, loc: value.loc };
             break;
           }
           case '===': {
-            result = {kind: 'Primitive', value: lhs === rhs, loc: value.loc};
+            result = { kind: 'Primitive', value: lhs === rhs, loc: value.loc };
             break;
           }
           case '!=': {
-            result = {kind: 'Primitive', value: lhs != rhs, loc: value.loc};
+            result = { kind: 'Primitive', value: lhs != rhs, loc: value.loc };
             break;
           }
           case '!==': {
-            result = {kind: 'Primitive', value: lhs !== rhs, loc: value.loc};
+            result = { kind: 'Primitive', value: lhs !== rhs, loc: value.loc };
             break;
           }
           default: {
@@ -536,10 +536,17 @@ function evaluateInstruction(
         const subExprValue = read(constants, subExpr);
         if (
           !subExprValue ||
-          subExprValue.kind !== 'Primitive' ||
-          subExprValue.value === null ||
-          subExprValue.value === undefined ||
-          typeof subExprValue.value === 'symbol'
+          subExprValue.kind !== 'Primitive'
+        ) {
+          return null;
+        }
+
+        const expressonValue = subExprValue.value;
+        if (
+          expressonValue === null ||
+          expressonValue === undefined ||
+          typeof expressonValue === 'symbol' ||
+          typeof expressonValue === 'function'
         ) {
           return null;
         }
@@ -549,7 +556,7 @@ function evaluateInstruction(
 
         // TODO: Spec-compliant concat
         // TODO: https://262.ecma-international.org/6.0/#sec-template-literals-runtime-semantics-evaluation
-        resultString += subExprValue.value.toString() + suffix;
+        resultString += expressonValue.toString() + suffix;
       }
 
       const result: InstructionValue = {
