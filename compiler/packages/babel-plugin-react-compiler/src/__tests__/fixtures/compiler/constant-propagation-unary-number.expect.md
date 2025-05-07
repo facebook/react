@@ -6,7 +6,11 @@ import {Stringify} from 'shared-runtime';
 
 function foo() {
   const a = -1;
-  return <Stringify value={[2 * a, -0]} />;
+  return (
+    <Stringify
+      value={[2 * a, -0, -Infinity, -NaN, a * NaN, a * Infinity, a * -Infinity]}
+    />
+  );
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -27,7 +31,19 @@ function foo() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Stringify value={[-2, 0]} />;
+    t0 = (
+      <Stringify
+        value={[
+          -2,
+          0,
+          -Infinity,
+          -NaN,
+          -1 * NaN,
+          -1 * Infinity,
+          -1 * -Infinity,
+        ]}
+      />
+    );
     $[0] = t0;
   } else {
     t0 = $[0];
@@ -44,4 +60,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div>{"value":[-2,0]}</div>
+(kind: ok) <div>{"value":[-2,0,null,null,null,null,null]}</div>
