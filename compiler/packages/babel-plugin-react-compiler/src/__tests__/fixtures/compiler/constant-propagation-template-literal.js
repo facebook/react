@@ -1,9 +1,5 @@
 import {Stringify, identity} from 'shared-runtime';
 
-function t(quasis, ...subExprs) {
-  return [quasis, subExprs];
-}
-
 function foo() {
   try {
     identity(`${Symbol('0')}`); // Uncaught TypeError: Cannot convert a Symbol value to a string (leave as is)
@@ -46,7 +42,6 @@ function foo() {
         `${`${`${`${0}`}`}`}`,
         `${`${`${`${''}`}`}`}`,
         `${`${`${`${identity('')}`}`}`}`,
-        // TODO: t`1${2}3`,
       ]}
     />
   );

@@ -4,10 +4,6 @@
 ```javascript
 import {Stringify, identity} from 'shared-runtime';
 
-function t(quasis, ...subExprs) {
-  return [quasis, subExprs];
-}
-
 function foo() {
   try {
     identity(`${Symbol('0')}`); // Uncaught TypeError: Cannot convert a Symbol value to a string (leave as is)
@@ -50,7 +46,6 @@ function foo() {
         `${`${`${`${0}`}`}`}`,
         `${`${`${`${''}`}`}`}`,
         `${`${`${`${identity('')}`}`}`}`,
-        // TODO: t`1${2}3`,
       ]}
     />
   );
@@ -69,21 +64,6 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 import { Stringify, identity } from "shared-runtime";
-
-function t(quasis, ...t0) {
-  const $ = _c(3);
-  const subExprs = t0;
-  let t1;
-  if ($[0] !== quasis || $[1] !== subExprs) {
-    t1 = [quasis, subExprs];
-    $[0] = quasis;
-    $[1] = subExprs;
-    $[2] = t1;
-  } else {
-    t1 = $[2];
-  }
-  return t1;
-}
 
 function foo() {
   const $ = _c(1);
@@ -114,7 +94,7 @@ function foo() {
           `${Number.MIN_SAFE_INTEGER}`,
           `${Number.MAX_VALUE}`,
           `${Number.MIN_VALUE}`,
-          `${-0}`,
+          "0",
           `${{}}`,
           `${[1, 2, 3]}`,
           "true",
