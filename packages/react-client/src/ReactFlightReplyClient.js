@@ -13,7 +13,7 @@ import type {
   FulfilledThenable,
   RejectedThenable,
   ReactCustomFormAction,
-  ReactCallSite,
+  ReactFunctionLocation,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
@@ -1248,7 +1248,7 @@ export function createBoundServerReference<A: Iterable<any>, T>(
     bound: null | Thenable<Array<any>>,
     name?: string, // DEV-only
     env?: string, // DEV-only
-    location?: ReactCallSite, // DEV-only
+    location?: ReactFunctionLocation, // DEV-only
   },
   callServer: CallServerCallback,
   encodeFormAction?: EncodeFormActionCallback,
@@ -1309,7 +1309,7 @@ const v8FrameRegExp =
 // filename:0:0
 const jscSpiderMonkeyFrameRegExp = /(?:(.*)@)?(.*):(\d+):(\d+)/;
 
-function parseStackLocation(error: Error): null | ReactCallSite {
+function parseStackLocation(error: Error): null | ReactFunctionLocation {
   // This parsing is special in that we know that the calling function will always
   // be a module that initializes the server action. We also need this part to work
   // cross-browser so not worth a Config. It's DEV only so not super code size
@@ -1354,7 +1354,7 @@ function parseStackLocation(error: Error): null | ReactCallSite {
   const line = +(parsed[3] || parsed[6]);
   const col = +(parsed[4] || parsed[7]);
 
-  return [name, filename, line, col, line, col];
+  return [name, filename, line, col];
 }
 
 export function createServerReference<A: Iterable<any>, T>(
