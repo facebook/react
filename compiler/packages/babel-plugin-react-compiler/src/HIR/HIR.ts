@@ -1725,6 +1725,18 @@ export function isRefOrRefValue(id: Identifier): boolean {
   return isUseRefType(id) || isRefValueType(id);
 }
 
+/*
+ * Returns true if the type is a Ref or a custom user type that acts like a ref when it
+ * shouldn't. For now the only other case of this is Reanimated's shared values.
+ */
+export function isRefOrRefLikeMutableType(type: Type): boolean {
+  return (
+    type.kind === 'Object' &&
+    (type.shapeId === 'BuiltInUseRefId' ||
+      type.shapeId == 'ReanimatedSharedValueId')
+  );
+}
+
 export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetState';
 }

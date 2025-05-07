@@ -38,7 +38,7 @@ export const FIXTURE_ENTRYPOINT = {
 > 12 |     Ref.current?.click();
      | ^^^^^^^^^^^^^^^^^^^^^^^^^
 > 13 |   }, []);
-     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected (11:13)
+     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `Ref.current`, but the source dependencies were []. Inferred dependency not present in source (11:13)
   14 |
   15 |   return <button onClick={onClick} />;
   16 | }

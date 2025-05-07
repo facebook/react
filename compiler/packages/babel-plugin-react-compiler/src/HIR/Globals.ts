@@ -25,6 +25,9 @@ import {
   BuiltInUseRefId,
   BuiltInUseStateId,
   BuiltInUseTransitionId,
+  BuiltInWeakMapId,
+  BuiltInWeakSetId,
+  ReanimatedSharedValueId,
   ShapeRegistry,
   addFunction,
   addHook,
@@ -491,6 +494,38 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       true,
     ),
   ],
+  [
+    'WeakMap',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [Effect.ConditionallyMutateIterator],
+        restParam: null,
+        returnType: {kind: 'Object', shapeId: BuiltInWeakMapId},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
+  ],
+  [
+    'WeakSet',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [Effect.ConditionallyMutateIterator],
+        restParam: null,
+        returnType: {kind: 'Object', shapeId: BuiltInWeakSetId},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
+  ],
   // TODO: rest of Global objects
 ];
 
@@ -908,7 +943,7 @@ export function getReanimatedModuleType(registry: ShapeRegistry): ObjectType {
       addHook(registry, {
         positionalParams: [],
         restParam: Effect.Freeze,
-        returnType: {kind: 'Poly'},
+        returnType: {kind: 'Object', shapeId: ReanimatedSharedValueId},
         returnValueKind: ValueKind.Mutable,
         noAlias: true,
         calleeEffect: Effect.Read,
