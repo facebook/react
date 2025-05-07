@@ -364,7 +364,7 @@ ${results.renderTime / iterations}ms
 
 server.tool(
   'parse-react-component-tree',
-  `  `,
+  `This tool gets the component tree of the currently open React app on localhost:3000 url`,
   {
     text: z.string(),
   },
