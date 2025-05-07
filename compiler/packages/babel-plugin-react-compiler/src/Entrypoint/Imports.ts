@@ -19,7 +19,11 @@ import {getOrInsertWith} from '../Utils/utils';
 import {ExternalFunction, isHookName} from '../HIR/Environment';
 import {Err, Ok, Result} from '../Utils/Result';
 import {LoggerEvent, PluginOptions} from './Options';
-import {BabelFn, getReactCompilerRuntimeModule} from './Program';
+import {
+  BabelFn,
+  findDirectiveDisablingMemoization,
+  getReactCompilerRuntimeModule,
+} from './Program';
 import {SuppressionRange} from './Suppression';
 
 export function validateRestrictedImports(
@@ -70,6 +74,7 @@ export class ProgramContext {
   code: string | null;
   reactRuntimeModule: string;
   suppressions: Array<SuppressionRange>;
+  hasModuleScopeOptOut: boolean;
 
   /*
    * This is a hack to work around what seems to be a Babel bug. Babel doesn't
@@ -101,6 +106,8 @@ export class ProgramContext {
     this.code = code;
     this.reactRuntimeModule = getReactCompilerRuntimeModule(opts.target);
     this.suppressions = suppressions;
+    this.hasModuleScopeOptOut =
+      findDirectiveDisablingMemoization(program.node.directives) != null;
   }
 
   isHookName(name: string): boolean {
