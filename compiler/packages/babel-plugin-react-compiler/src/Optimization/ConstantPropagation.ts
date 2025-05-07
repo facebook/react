@@ -520,6 +520,10 @@ function evaluateInstruction(
         return result;
       }
 
+      if (value.quasis.some((q) => q.cooked === undefined)) {
+        return null;
+      }
+
       return null; // TODO
     }
     case 'LoadLocal': {
