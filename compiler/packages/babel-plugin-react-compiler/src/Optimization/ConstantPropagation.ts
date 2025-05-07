@@ -538,8 +538,12 @@ function evaluateInstruction(
           return null;
         }
 
-        const expressionString = tryToStringValue(subExprValue.value);
-        if (expressionString === undefined) {
+        const expressionValue = subExprValue.value;
+        if (
+          typeof expressionValue === 'object' ||
+          typeof expressionValue === 'symbol' ||
+          typeof expressionValue === 'function'
+        ) {
           // value is not supported (function, object) or invalid (symbol)
           return null;
         }
@@ -551,8 +555,12 @@ function evaluateInstruction(
           return null;
         }
 
-        // Ref: https://tc39.es/ecma262/2024/#sec-template-literals-runtime-semantics-evaluation
-        resultString = resultString.concat(expressionString, suffix);
+        // Spec states that concat calls ToString(argument) internally on its parameters
+        // -> we don't have to implement ToString(argument) ourselves and just use the engine implementation
+        // Refs: https://tc39.es/ecma262/2024/#sec-tostring
+        //       https://tc39.es/ecma262/2024/#sec-string.prototype.concat
+        //       https://tc39.es/ecma262/2024/#sec-template-literals-runtime-semantics-evaluation
+        resultString = resultString.concat(expressionValue as string, suffix);
       }
 
       const result: InstructionValue = {
@@ -596,29 +604,6 @@ function evaluateInstruction(
  */
 function read(constants: Constants, place: Place): Constant | null {
   return constants.get(place.identifier.id) ?? null;
-}
-
-/**
- * Implements 7.1.17 ToString(argument) from ES2024 for primitive types only. If `Symbol` is passed, no exception is thrown and `undefined` is returned.
- * @link https://tc39.es/ecma262/2024/#sec-tostring
- */
-function tryToStringValue(argument: unknown): string | undefined {
-  switch (typeof argument) {
-    case 'string':
-      return argument;
-    case 'undefined':
-      return 'undefined';
-    case 'boolean':
-      return argument ? 'true' : 'false';
-    case 'number':
-      return argument.toString(10);
-    case 'bigint':
-      return argument.toString(10);
-    case 'function':
-    case 'object':
-    case 'symbol':
-      return undefined;
-  }
 }
 
 type Constant = Primitive | LoadGlobal;
