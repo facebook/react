@@ -520,6 +520,10 @@ function evaluateInstruction(
         return result;
       }
 
+      if (value.subexprs.length !== value.quasis.length - 1) {
+        return null;
+      }
+
       if (value.quasis.some((q) => q.cooked === undefined)) {
         return null;
       }
