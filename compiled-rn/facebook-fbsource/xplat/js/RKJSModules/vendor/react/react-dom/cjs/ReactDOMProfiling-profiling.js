@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<caaad820ae7d1ecb18ca11e5298598ef>>
+ * @generated SignedSource<<020dbc8d302fe100d1eb71b89b189dfe>>
  */
 
 /*
@@ -9653,11 +9653,11 @@ function commitFragmentInstanceDeletionEffects(fiber) {
         eventListeners = parent.stateNode._eventListeners;
       if (null !== eventListeners)
         for (var i = 0; i < eventListeners.length; i++) {
-          var _eventListeners$i2 = eventListeners[i];
+          var _eventListeners$i4 = eventListeners[i];
           childElement.removeEventListener(
-            _eventListeners$i2.type,
-            _eventListeners$i2.listener,
-            _eventListeners$i2.optionsOrUseCapture
+            _eventListeners$i4.type,
+            _eventListeners$i4.listener,
+            _eventListeners$i4.optionsOrUseCapture
           );
         }
     }
@@ -13692,20 +13692,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1738 = 0;
-  i$jscomp$inline_1738 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1738++
+  var i$jscomp$inline_1742 = 0;
+  i$jscomp$inline_1742 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1742++
 ) {
-  var eventName$jscomp$inline_1739 =
-      simpleEventPluginEvents[i$jscomp$inline_1738],
-    domEventName$jscomp$inline_1740 =
-      eventName$jscomp$inline_1739.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1741 =
-      eventName$jscomp$inline_1739[0].toUpperCase() +
-      eventName$jscomp$inline_1739.slice(1);
+  var eventName$jscomp$inline_1743 =
+      simpleEventPluginEvents[i$jscomp$inline_1742],
+    domEventName$jscomp$inline_1744 =
+      eventName$jscomp$inline_1743.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1745 =
+      eventName$jscomp$inline_1743[0].toUpperCase() +
+      eventName$jscomp$inline_1743.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1740,
-    "on" + capitalizedEvent$jscomp$inline_1741
+    domEventName$jscomp$inline_1744,
+    "on" + capitalizedEvent$jscomp$inline_1745
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -15707,6 +15707,40 @@ function removeEventListenerFromChild(
   );
   return !1;
 }
+FragmentInstance.prototype.dispatchEvent = function (event) {
+  var parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (null === parentHostFiber) return !0;
+  parentHostFiber = getInstanceFromHostFiber(parentHostFiber);
+  var eventListeners = this._eventListeners;
+  if (
+    (null !== eventListeners && 0 < eventListeners.length) ||
+    !event.bubbles
+  ) {
+    var temp = document.createTextNode("");
+    if (eventListeners)
+      for (var i = 0; i < eventListeners.length; i++) {
+        var _eventListeners$i = eventListeners[i];
+        temp.addEventListener(
+          _eventListeners$i.type,
+          _eventListeners$i.listener,
+          _eventListeners$i.optionsOrUseCapture
+        );
+      }
+    parentHostFiber.appendChild(temp);
+    event = temp.dispatchEvent(event);
+    if (eventListeners)
+      for (i = 0; i < eventListeners.length; i++)
+        (_eventListeners$i = eventListeners[i]),
+          temp.removeEventListener(
+            _eventListeners$i.type,
+            _eventListeners$i.listener,
+            _eventListeners$i.optionsOrUseCapture
+          );
+    parentHostFiber.removeChild(temp);
+    return event;
+  }
+  return parentHostFiber.dispatchEvent(event);
+};
 FragmentInstance.prototype.focus = function (focusOptions) {
   traverseVisibleHostChildren(
     this._fragmentFiber.child,
@@ -15968,11 +16002,11 @@ function commitNewChildToFragmentInstance(childElement, fragmentInstance) {
   var eventListeners = fragmentInstance._eventListeners;
   if (null !== eventListeners)
     for (var i = 0; i < eventListeners.length; i++) {
-      var _eventListeners$i = eventListeners[i];
+      var _eventListeners$i3 = eventListeners[i];
       childElement.addEventListener(
-        _eventListeners$i.type,
-        _eventListeners$i.listener,
-        _eventListeners$i.optionsOrUseCapture
+        _eventListeners$i3.type,
+        _eventListeners$i3.listener,
+        _eventListeners$i3.optionsOrUseCapture
       );
     }
   null !== fragmentInstance._observers &&
@@ -16509,26 +16543,26 @@ function getResource(type, currentProps, pendingProps, currentResource) {
         "string" === typeof pendingProps.precedence
       ) {
         type = getStyleKey(pendingProps.href);
-        var styles$286 = getResourcesFromRoot(
+        var styles$290 = getResourcesFromRoot(
             JSCompiler_inline_result
           ).hoistableStyles,
-          resource$287 = styles$286.get(type);
-        resource$287 ||
+          resource$291 = styles$290.get(type);
+        resource$291 ||
           ((JSCompiler_inline_result =
             JSCompiler_inline_result.ownerDocument || JSCompiler_inline_result),
-          (resource$287 = {
+          (resource$291 = {
             type: "stylesheet",
             instance: null,
             count: 0,
             state: { loading: 0, preload: null }
           }),
-          styles$286.set(type, resource$287),
-          (styles$286 = JSCompiler_inline_result.querySelector(
+          styles$290.set(type, resource$291),
+          (styles$290 = JSCompiler_inline_result.querySelector(
             getStylesheetSelectorFromKey(type)
           )) &&
-            !styles$286._p &&
-            ((resource$287.instance = styles$286),
-            (resource$287.state.loading = 5)),
+            !styles$290._p &&
+            ((resource$291.instance = styles$290),
+            (resource$291.state.loading = 5)),
           preloadPropsMap.has(type) ||
             ((pendingProps = {
               rel: "preload",
@@ -16541,16 +16575,16 @@ function getResource(type, currentProps, pendingProps, currentResource) {
               referrerPolicy: pendingProps.referrerPolicy
             }),
             preloadPropsMap.set(type, pendingProps),
-            styles$286 ||
+            styles$290 ||
               preloadStylesheet(
                 JSCompiler_inline_result,
                 type,
                 pendingProps,
-                resource$287.state
+                resource$291.state
               )));
         if (currentProps && null === currentResource)
           throw Error(formatProdErrorMessage(528, ""));
-        return resource$287;
+        return resource$291;
       }
       if (currentProps && null !== currentResource)
         throw Error(formatProdErrorMessage(529, ""));
@@ -16647,37 +16681,37 @@ function acquireResource(hoistableRoot, resource, props) {
         return (resource.instance = instance);
       case "stylesheet":
         styleProps = getStyleKey(props.href);
-        var instance$292 = hoistableRoot.querySelector(
+        var instance$296 = hoistableRoot.querySelector(
           getStylesheetSelectorFromKey(styleProps)
         );
-        if (instance$292)
+        if (instance$296)
           return (
             (resource.state.loading |= 4),
-            (resource.instance = instance$292),
-            markNodeAsHoistable(instance$292),
-            instance$292
+            (resource.instance = instance$296),
+            markNodeAsHoistable(instance$296),
+            instance$296
           );
         instance = stylesheetPropsFromRawProps(props);
         (styleProps = preloadPropsMap.get(styleProps)) &&
           adoptPreloadPropsForStylesheet(instance, styleProps);
-        instance$292 = (
+        instance$296 = (
           hoistableRoot.ownerDocument || hoistableRoot
         ).createElement("link");
-        markNodeAsHoistable(instance$292);
-        var linkInstance = instance$292;
+        markNodeAsHoistable(instance$296);
+        var linkInstance = instance$296;
         linkInstance._p = new Promise(function (resolve, reject) {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
         });
-        setInitialProperties(instance$292, "link", instance);
+        setInitialProperties(instance$296, "link", instance);
         resource.state.loading |= 4;
-        insertStylesheet(instance$292, props.precedence, hoistableRoot);
-        return (resource.instance = instance$292);
+        insertStylesheet(instance$296, props.precedence, hoistableRoot);
+        return (resource.instance = instance$296);
       case "script":
-        instance$292 = getScriptKey(props.src);
+        instance$296 = getScriptKey(props.src);
         if (
           (styleProps = hoistableRoot.querySelector(
-            getScriptSelectorFromKey(instance$292)
+            getScriptSelectorFromKey(instance$296)
           ))
         )
           return (
@@ -16686,7 +16720,7 @@ function acquireResource(hoistableRoot, resource, props) {
             styleProps
           );
         instance = props;
-        if ((styleProps = preloadPropsMap.get(instance$292)))
+        if ((styleProps = preloadPropsMap.get(instance$296)))
           (instance = assign({}, props)),
             adoptPreloadPropsForScript(instance, styleProps);
         hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
@@ -17758,16 +17792,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2113 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2117 = React.version;
 if (
-  "19.2.0-native-fb-946da518-20250507" !==
-  isomorphicReactPackageVersion$jscomp$inline_2113
+  "19.2.0-native-fb-8a8df5db-20250507" !==
+  isomorphicReactPackageVersion$jscomp$inline_2117
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2113,
-      "19.2.0-native-fb-946da518-20250507"
+      isomorphicReactPackageVersion$jscomp$inline_2117,
+      "19.2.0-native-fb-8a8df5db-20250507"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17787,17 +17821,17 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2120 = {
+var internals$jscomp$inline_2124 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-946da518-20250507",
+  version: "19.2.0-native-fb-8a8df5db-20250507",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-946da518-20250507",
+  reconcilerVersion: "19.2.0-native-fb-8a8df5db-20250507",
   getLaneLabelMap: function () {
     for (
-      var map = new Map(), lane = 1, index$309 = 0;
-      31 > index$309;
-      index$309++
+      var map = new Map(), lane = 1, index$313 = 0;
+      31 > index$313;
+      index$313++
     ) {
       var label = getLabelForLane(lane);
       map.set(lane, label);
@@ -17810,16 +17844,16 @@ var internals$jscomp$inline_2120 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2599 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2603 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2599.isDisabled &&
-    hook$jscomp$inline_2599.supportsFiber
+    !hook$jscomp$inline_2603.isDisabled &&
+    hook$jscomp$inline_2603.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2599.inject(
-        internals$jscomp$inline_2120
+      (rendererID = hook$jscomp$inline_2603.inject(
+        internals$jscomp$inline_2124
       )),
-        (injectedHook = hook$jscomp$inline_2599);
+        (injectedHook = hook$jscomp$inline_2603);
     } catch (err) {}
 }
 function noop() {}
@@ -18065,7 +18099,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-946da518-20250507";
+exports.version = "19.2.0-native-fb-8a8df5db-20250507";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
