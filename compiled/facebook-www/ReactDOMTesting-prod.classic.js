@@ -201,23 +201,18 @@ function doesFiberContain(parentFiber, childFiber) {
 }
 function traverseVisibleHostChildren(child, searchWithinHosts, fn, a, b, c) {
   for (; null !== child; ) {
-    if (5 === child.tag) {
-      if (
-        fn(child, a, b, c) ||
-        (searchWithinHosts &&
-          traverseVisibleHostChildren(
-            child.child,
-            searchWithinHosts,
-            fn,
-            a,
-            b,
-            c
-          ))
-      )
-        return !0;
-    } else if (
-      (22 !== child.tag || null === child.memoizedState) &&
-      traverseVisibleHostChildren(child.child, searchWithinHosts, fn, a, b, c)
+    if (
+      (5 === child.tag && fn(child, a, b, c)) ||
+      ((22 !== child.tag || null === child.memoizedState) &&
+        (searchWithinHosts || 5 !== child.tag) &&
+        traverseVisibleHostChildren(
+          child.child,
+          searchWithinHosts,
+          fn,
+          a,
+          b,
+          c
+        ))
     )
       return !0;
     child = child.sibling;
@@ -17792,7 +17787,7 @@ function removeEventListenerFromChild(
 FragmentInstance.prototype.focus = function (focusOptions) {
   traverseVisibleHostChildren(
     this._fragmentFiber.child,
-    !1,
+    !0,
     setFocusOnFiberIfFocusable,
     focusOptions,
     void 0,
@@ -17807,7 +17802,7 @@ FragmentInstance.prototype.focusLast = function (focusOptions) {
   var children = [];
   traverseVisibleHostChildren(
     this._fragmentFiber.child,
-    !1,
+    !0,
     collectChildren,
     children,
     void 0,
@@ -19866,14 +19861,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2104 = React.version;
 if (
-  "19.2.0-www-classic-e5a8de81-20250506" !==
+  "19.2.0-www-classic-4206fe49-20250507" !==
   isomorphicReactPackageVersion$jscomp$inline_2104
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2104,
-      "19.2.0-www-classic-e5a8de81-20250506"
+      "19.2.0-www-classic-4206fe49-20250507"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19891,10 +19886,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2720 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-e5a8de81-20250506",
+  version: "19.2.0-www-classic-4206fe49-20250507",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-e5a8de81-20250506"
+  reconcilerVersion: "19.2.0-www-classic-4206fe49-20250507"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2721 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20409,4 +20404,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-e5a8de81-20250506";
+exports.version = "19.2.0-www-classic-4206fe49-20250507";
