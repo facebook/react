@@ -1279,7 +1279,7 @@ export function createBoundServerReference<A: Iterable<any>, T>(
     const location = metaData.location;
     if (location) {
       const functionName = metaData.name || '';
-      const [, filename, line, col] = location;
+      const [, filename, , , enclosingLine, enclosingCol] = location;
       const env = metaData.env || 'Server';
       const sourceMap =
         findSourceMapURL == null ? null : findSourceMapURL(filename, env);
@@ -1287,8 +1287,8 @@ export function createBoundServerReference<A: Iterable<any>, T>(
         functionName,
         filename,
         sourceMap,
-        line,
-        col,
+        enclosingLine,
+        enclosingCol,
         env,
         action,
       );
@@ -1350,10 +1350,11 @@ function parseStackLocation(error: Error): null | ReactCallSite {
   if (filename === '<anonymous>') {
     filename = '';
   }
+  // This is really the enclosingLine/Column.
   const line = +(parsed[3] || parsed[6]);
   const col = +(parsed[4] || parsed[7]);
 
-  return [name, filename, line, col];
+  return [name, filename, line, col, line, col];
 }
 
 export function createServerReference<A: Iterable<any>, T>(
@@ -1374,7 +1375,7 @@ export function createServerReference<A: Iterable<any>, T>(
     // multiple passes of compilation as long as we can find the final source map.
     const location = parseStackLocation(new Error('react-stack-top-frame'));
     if (location !== null) {
-      const [, filename, line, col] = location;
+      const [, filename, , , line, col] = location;
       // While the environment that the Server Reference points to can be
       // in any environment, what matters here is where the compiled source
       // is from and that's in the currently executing environment. We hard
