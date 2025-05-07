@@ -31,6 +31,8 @@ function foo() {
         `${Number.MAX_VALUE}`,
         `${Number.MIN_VALUE}`,
         `${-0}`,
+        `
+        `,
         `${{}}`,
         `${[1, 2, 3]}`,
         `${true}`,
@@ -95,6 +97,8 @@ function foo() {
           `${Number.MAX_VALUE}`,
           `${Number.MIN_VALUE}`,
           "0",
+          "\n        ",
+
           `${{}}`,
           `${[1, 2, 3]}`,
           "true",
@@ -129,4 +133,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div>{"value":[true,true,"a\nb","\n","a1b"," abc A\n\nŧ","abc1def","abc1def2","abc1def2ghi","a4bcde6f","120","NaN","Infinity","-Infinity","9007199254740991","-9007199254740991","1.7976931348623157e+308","5e-324","0","[object Object]","1,2,3","true","false","null","undefined","1234567890","0123456789","01234567890","01234567890","0123401234567890123456789067890","012340123456789067890","0","",""]}</div>
+(kind: ok) <div>{"value":[true,true,"a\nb","\n","a1b"," abc A\n\nŧ","abc1def","abc1def2","abc1def2ghi","a4bcde6f","120","NaN","Infinity","-Infinity","9007199254740991","-9007199254740991","1.7976931348623157e+308","5e-324","0","\n        ","[object Object]","1,2,3","true","false","null","undefined","1234567890","0123456789","01234567890","01234567890","0123401234567890123456789067890","012340123456789067890","0","",""]}</div>

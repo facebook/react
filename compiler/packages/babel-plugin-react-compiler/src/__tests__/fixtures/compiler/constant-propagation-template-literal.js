@@ -27,6 +27,8 @@ function foo() {
         `${Number.MAX_VALUE}`,
         `${Number.MIN_VALUE}`,
         `${-0}`,
+        `
+        `,
         `${{}}`,
         `${[1, 2, 3]}`,
         `${true}`,
