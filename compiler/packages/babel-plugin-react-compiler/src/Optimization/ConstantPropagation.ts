@@ -327,6 +327,23 @@ function evaluateInstruction(
           }
           return null;
         }
+        case '-': {
+          const operand = read(constants, value.value);
+          if (
+            operand !== null &&
+            operand.kind === 'Primitive' &&
+            typeof operand.value === 'number'
+          ) {
+            const result: Primitive = {
+              kind: 'Primitive',
+              value: operand.value * -1,
+              loc: value.loc,
+            };
+            instr.value = result;
+            return result;
+          }
+          return null;
+        }
         default:
           return null;
       }
