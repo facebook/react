@@ -98,9 +98,8 @@ function nativeOnCaughtError(
 
   defaultOnCaughtError(error, errorInfo);
 }
-function nativeOnDefaultTransitionIndicator() {
+function nativeOnDefaultTransitionIndicator(): void | (() => void) {
   // Native doesn't have a default indicator.
-  return function () {};
 }
 
 function render(

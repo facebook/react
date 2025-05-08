@@ -254,7 +254,7 @@ export function createContainer(
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
-  onDefaultTransitionIndicator: () => () => void,
+  onDefaultTransitionIndicator: () => void | (() => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
   const hydrate = false;
@@ -302,7 +302,7 @@ export function createHydrationContainer(
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
-  onDefaultTransitionIndicator: () => () => void,
+  onDefaultTransitionIndicator: () => void | (() => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
   formState: ReactFormState<any, any> | null,
 ): OpaqueRoot {

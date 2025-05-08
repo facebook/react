@@ -46,7 +46,7 @@ export type CreateRootOptions = {
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
-  onDefaultTransitionIndicator?: () => () => void,
+  onDefaultTransitionIndicator?: () => void | (() => void),
 };
 
 export type HydrateRootOptions = {
@@ -72,7 +72,7 @@ export type HydrateRootOptions = {
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
-  onDefaultTransitionIndicator?: () => () => void,
+  onDefaultTransitionIndicator?: () => void | (() => void),
   formState?: ReactFormState<any, any> | null,
 };
 
@@ -97,7 +97,7 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 
-function defaultOnDefaultTransitionIndicator() {
+function defaultOnDefaultTransitionIndicator(): void | (() => void) {
   // TODO: Implement the default
   return function () {};
 }

@@ -212,7 +212,7 @@ function noopOnRecoverableError() {
 }
 
 function noopOnDefaultTransitionIndicator() {
-  return function () {};
+  // Noop
 }
 
 function legacyCreateRootFromDOMContainer(

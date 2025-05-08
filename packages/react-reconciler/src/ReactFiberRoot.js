@@ -179,7 +179,7 @@ export function createFiberRoot(
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
-  onDefaultTransitionIndicator: () => () => void,
+  onDefaultTransitionIndicator: () => void | (() => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): FiberRoot {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions

@@ -27,7 +27,6 @@ import {TYPES, childrenAsString} from './ReactARTInternals';
 
 function defaultOnDefaultTransitionIndicator() {
   // Noop
-  return function () {};
 }
 
 Mode.setCurrent(

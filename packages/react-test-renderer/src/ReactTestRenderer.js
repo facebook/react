@@ -60,9 +60,8 @@ import {
   disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 
-function defaultOnDefaultTransitionIndicator() {
+function defaultOnDefaultTransitionIndicator(): void | (() => void) {
   // Noop
-  return function () {};
 }
 
 // $FlowFixMe[prop-missing]: This is only in the development export.

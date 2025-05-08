@@ -80,7 +80,7 @@ type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   onUncaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
   onCaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
-  onDefaultTransitionIndicator?: () => () => void,
+  onDefaultTransitionIndicator?: () => void | (() => void),
   ...
 };
 type InstanceMeasurement = null;
@@ -1142,9 +1142,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     // TODO: Turn this on once tests are fixed
     // console.error(error);
   }
-  function onDefaultTransitionIndicator() {
+  function onDefaultTransitionIndicator(): void | (() => void) {
     // TODO: Allow this as an option.
-    return function () {};
   }
 
   let idCounter = 0;
