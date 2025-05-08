@@ -20,9 +20,6 @@ function Foo() {
 function Foo() {
   return <button onClick={() => alert("hello!")}>Click me!</button>;
 }
-function _temp() {
-  return alert("hello!");
-}
 
 ```
       
