@@ -7,25 +7,21 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<2264e9839602043a41f1e13913b43b0f>>
+ * @generated SignedSource<<4216c04f5a8c40a833b0146588fab5fa>>
  */
 
 import type {
-  Component as ReactComponent,
-  ElementRef,
-  ElementType,
-  MixedElement,
-} from 'react';
-import type {
+  // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
+  HostInstance as PublicInstance,
   // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
   MeasureOnSuccessCallback,
-  // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
-  PublicInstance,
   // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
   PublicRootInstance,
   // $FlowFixMe[nonstrict-import] TODO(@rubennorte)
   PublicTextInstance,
-} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+} from 'react-native';
+
+import * as React from 'react';
 
 export type AttributeType<T, V> =
   | true
@@ -97,8 +93,8 @@ type InspectorDataProps = $ReadOnly<{
 }>;
 
 type InspectorDataGetter = (
-  <TElementType: ElementType>(
-    componentOrHandle: ElementRef<TElementType> | number,
+  <TElementType: React.ElementType>(
+    componentOrHandle: React.ElementRef<TElementType> | number,
   ) => ?number,
 ) => $ReadOnly<{
   measure: (callback: MeasureOnSuccessCallback) => void,
@@ -141,7 +137,7 @@ export type RenderRootOptions = {
       +componentStack?: ?string,
       // $FlowFixMe[unclear-type] unknown props and state.
       // $FlowFixMe[value-as-type] Component in react repo is any-typed, but it will be well typed externally.
-      +errorBoundary?: ?ReactComponent<any, any>,
+      +errorBoundary?: ?React.Component<any, any>,
     },
   ) => void,
   onRecoverableError?: (
@@ -155,11 +151,11 @@ export type RenderRootOptions = {
  * Provide minimal Flow typing for the high-level RN API and call it a day.
  */
 export type ReactNativeType = {
-  findHostInstance_DEPRECATED<TElementType: ElementType>(
-    componentOrHandle: ?(ElementRef<TElementType> | number),
+  findHostInstance_DEPRECATED<TElementType: React.ElementType>(
+    componentOrHandle: ?(React.ElementRef<TElementType> | number),
   ): ?PublicInstance,
-  findNodeHandle<TElementType: ElementType>(
-    componentOrHandle: ?(ElementRef<TElementType> | number),
+  findNodeHandle<TElementType: React.ElementType>(
+    componentOrHandle: ?(React.ElementRef<TElementType> | number),
   ): ?number,
   isChildPublicInstance(parent: PublicInstance, child: PublicInstance): boolean,
   dispatchCommand(
@@ -169,11 +165,11 @@ export type ReactNativeType = {
   ): void,
   sendAccessibilityEvent(handle: PublicInstance, eventType: string): void,
   render(
-    element: MixedElement,
+    element: React.MixedElement,
     containerTag: number,
     callback: ?() => void,
     options: ?RenderRootOptions,
-  ): ?ElementRef<ElementType>,
+  ): ?React.ElementRef<React.ElementType>,
   unmountComponentAtNode(containerTag: number): void,
   unmountComponentAtNodeAndRemoveContainer(containerTag: number): void,
   +unstable_batchedUpdates: <T>(fn: (T) => void, bookkeeping: T) => void,
@@ -184,11 +180,11 @@ export opaque type Node = mixed;
 export opaque type InternalInstanceHandle = mixed;
 
 export type ReactFabricType = {
-  findHostInstance_DEPRECATED<TElementType: ElementType>(
-    componentOrHandle: ?(ElementRef<TElementType> | number),
+  findHostInstance_DEPRECATED<TElementType: React.ElementType>(
+    componentOrHandle: ?(React.ElementRef<TElementType> | number),
   ): ?PublicInstance,
-  findNodeHandle<TElementType: ElementType>(
-    componentOrHandle: ?(ElementRef<TElementType> | number),
+  findNodeHandle<TElementType: React.ElementType>(
+    componentOrHandle: ?(React.ElementRef<TElementType> | number),
   ): ?number,
   dispatchCommand(
     handle: PublicInstance,
@@ -198,12 +194,12 @@ export type ReactFabricType = {
   isChildPublicInstance(parent: PublicInstance, child: PublicInstance): boolean,
   sendAccessibilityEvent(handle: PublicInstance, eventType: string): void,
   render(
-    element: MixedElement,
+    element: React.MixedElement,
     containerTag: number,
     callback: ?() => void,
     concurrentRoot: ?boolean,
     options: ?RenderRootOptions,
-  ): ?ElementRef<ElementType>,
+  ): ?React.ElementRef<React.ElementType>,
   unmountComponentAtNode(containerTag: number): void,
   getNodeFromInternalInstanceHandle(
     internalInstanceHandle: InternalInstanceHandle,
