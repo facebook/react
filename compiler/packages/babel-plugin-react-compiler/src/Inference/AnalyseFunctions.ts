@@ -25,9 +25,8 @@ import {
   eachInstructionLValue,
   eachInstructionValueOperand,
 } from '../HIR/visitors';
-import {inferAliasForStores} from './InferAliasForStores';
 import prettyFormat from 'pretty-format';
-import {printIdentifier, printPlace} from '../HIR/PrintHIR';
+import {printIdentifier} from '../HIR/PrintHIR';
 import {Iterable_some} from '../Utils/utils';
 
 export default function analyseFunctions(func: HIRFunction): void {

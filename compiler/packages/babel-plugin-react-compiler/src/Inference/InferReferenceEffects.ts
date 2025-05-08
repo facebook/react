@@ -31,7 +31,6 @@ import {
   isArrayType,
   isMapType,
   isMutableEffect,
-  isObjectType,
   isSetType,
 } from '../HIR/HIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
@@ -521,7 +520,6 @@ class InferenceState {
          *   `expected valueKind to be 'Mutable' but found to be \`${valueKind}\``
          * );
          */
-        // effect = isObjectType(place.identifier) ? Effect.Store : Effect.Mutate;
         effect = Effect.Store;
         break;
       }
