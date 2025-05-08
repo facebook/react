@@ -731,7 +731,7 @@ function isMutable(range: MutableRange): boolean {
 }
 
 const DEBUG_MUTABLE_RANGES = false;
-function printMutableRange(identifier: Identifier): string {
+export function printMutableRange(identifier: Identifier): string {
   if (DEBUG_MUTABLE_RANGES) {
     // if debugging, print both the identifier and scope range if they differ
     const range = identifier.mutableRange;
