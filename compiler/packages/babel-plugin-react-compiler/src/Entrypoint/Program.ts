@@ -325,6 +325,8 @@ export function compileProgram(
     filename: pass.filename,
     code: pass.code,
     suppressions,
+    hasModuleScopeOptOut:
+      findDirectiveDisablingMemoization(program.node.directives) != null,
   });
 
   const queue: Array<CompileSource> = findFunctionsToCompile(
@@ -368,7 +370,19 @@ export function compileProgram(
   }
 
   // Avoid modifying the program if we find a program level opt-out
-  if (findDirectiveDisablingMemoization(program.node.directives) != null) {
+  if (programContext.hasModuleScopeOptOut) {
+    if (compiledFns.length > 0) {
+      const error = new CompilerError();
+      error.pushErrorDetail(
+        new CompilerErrorDetail({
+          reason:
+            'Unexpected compiled functions when module scope opt-out is present',
+          severity: ErrorSeverity.Invariant,
+          loc: null,
+        }),
+      );
+      handleError(error, programContext, null);
+    }
     return null;
   }
 
@@ -521,21 +535,6 @@ function processFn(
   });
 
   /**
-   * Always compile functions with opt in directives.
-   */
-  if (directives.optIn != null) {
-    return compiledFn;
-  } else if (programContext.opts.compilationMode === 'annotation') {
-    /**
-     * If no opt-in directive is found and the compiler is configured in
-     * annotation mode, don't insert the compiled function.
-     */
-    return null;
-  } else if (!programContext.opts.noEmit) {
-    return compiledFn;
-  }
-
-  /**
    * inferEffectDependencies + noEmit is currently only used for linting. In
    * this mode, add source locations for where the compiler *can* infer effect
    * dependencies.
@@ -545,7 +544,20 @@ function processFn(
       programContext.inferredEffectLocations.add(loc);
     }
   }
-  return null;
+
+  if (programContext.hasModuleScopeOptOut || programContext.opts.noEmit) {
+    return null;
+  } else if (directives.optIn != null) {
+    return compiledFn;
+  } else if (programContext.opts.compilationMode === 'annotation') {
+    /**
+     * If no opt-in directive is found and the compiler is configured in
+     * annotation mode, don't insert the compiled function.
+     */
+    return null;
+  } else {
+    return compiledFn;
+  }
 }
 
 function tryCompileFunction(
