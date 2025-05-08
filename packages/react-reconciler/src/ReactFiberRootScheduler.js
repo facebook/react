@@ -20,6 +20,7 @@ import {
   enableComponentPerformanceTrack,
   enableYieldingBeforePassive,
   enableGestureTransition,
+  enableDefaultTransitionIndicator,
 } from 'shared/ReactFeatureFlags';
 import {
   NoLane,
@@ -78,6 +79,9 @@ import {
   resetNestedUpdateFlag,
   syncNestedUpdateFlag,
 } from './ReactProfilerTimer';
+
+import noop from 'shared/noop';
+import reportGlobalError from 'shared/reportGlobalError';
 
 // A linked list of all the roots with pending work. In an idiomatic app,
 // there's only a single root, but we do support multi root apps, hence this
@@ -315,8 +319,33 @@ function processRootScheduleInMicrotask() {
     flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
   }
 
-  // Reset Event Transition Lane so that we allocate a new one next time.
-  currentEventTransitionLane = NoLane;
+  if (currentEventTransitionLane !== NoLane) {
+    // Reset Event Transition Lane so that we allocate a new one next time.
+    currentEventTransitionLane = NoLane;
+    startDefaultTransitionIndicatorIfNeeded();
+  }
+}
+
+function startDefaultTransitionIndicatorIfNeeded() {
+  if (!enableDefaultTransitionIndicator) {
+    return;
+  }
+  // Check all the roots if there are any new indicators needed.
+  let root = firstScheduledRoot;
+  while (root !== null) {
+    if (root.indicatorLanes !== NoLanes && root.pendingIndicator === null) {
+      // We have new indicator lanes that requires a loading state. Start the
+      // default transition indicator.
+      try {
+        const onDefaultTransitionIndicator = root.onDefaultTransitionIndicator;
+        root.pendingIndicator = onDefaultTransitionIndicator() || noop;
+      } catch (x) {
+        root.pendingIndicator = noop;
+        reportGlobalError(x);
+      }
+    }
+    root = root.next;
+  }
 }
 
 function scheduleTaskForRootDuringMicrotask(
@@ -654,4 +683,13 @@ export function requestTransitionLane(
 
 export function didCurrentEventScheduleTransition(): boolean {
   return currentEventTransitionLane !== NoLane;
+}
+
+export function markIndicatorHandled(root: FiberRoot): void {
+  if (enableDefaultTransitionIndicator) {
+    // The current transition event rendered a synchronous loading state.
+    // Clear it from the indicator lanes. We don't need to show a separate
+    // loading state for this lane.
+    root.indicatorLanes &= ~currentEventTransitionLane;
+  }
 }
