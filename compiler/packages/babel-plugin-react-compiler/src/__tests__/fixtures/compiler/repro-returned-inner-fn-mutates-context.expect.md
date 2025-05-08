@@ -54,10 +54,11 @@ import { Stringify } from "shared-runtime";
  */
 function Foo(t0) {
   "use memo";
-  const $ = _c(3);
-  const { a, b } = t0;
+  const $ = _c(2);
   let t1;
-  if ($[0] !== a || $[1] !== b) {
+  if ($[0] !== t0) {
+    const { a, b } = t0;
+
     const obj = {};
     const updaterFactory = () => (newValue) => {
       obj.value = newValue;
@@ -67,11 +68,10 @@ function Foo(t0) {
     const updater = updaterFactory();
     updater(b);
     t1 = <Stringify cb={obj} shouldInvokeFns={true} />;
-    $[0] = a;
-    $[1] = b;
-    $[2] = t1;
+    $[0] = t0;
+    $[1] = t1;
   } else {
-    t1 = $[2];
+    t1 = $[1];
   }
   return t1;
 }

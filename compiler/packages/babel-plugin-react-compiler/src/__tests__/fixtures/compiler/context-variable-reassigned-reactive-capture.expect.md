@@ -29,16 +29,16 @@ import { invoke } from "shared-runtime";
 
 function Component(t0) {
   const $ = _c(2);
-  const { value } = t0;
   let x;
-  if ($[0] !== value) {
+  if ($[0] !== t0) {
+    const { value } = t0;
     x = null;
     const reassign = () => {
       x = value;
     };
 
     invoke(reassign);
-    $[0] = value;
+    $[0] = t0;
     $[1] = x;
   } else {
     x = $[1];

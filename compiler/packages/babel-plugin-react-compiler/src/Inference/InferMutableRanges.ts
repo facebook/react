@@ -6,6 +6,7 @@
  */
 
 import {HIRFunction, Identifier} from '../HIR/HIR';
+import DisjointSet from '../Utils/DisjointSet';
 import {inferAliasForUncalledFunctions} from './InerAliasForUncalledFunctions';
 import {inferAliases} from './InferAlias';
 import {inferAliasForPhis} from './InferAliasForPhis';
@@ -14,7 +15,7 @@ import {inferMutableLifetimes} from './InferMutableLifetimes';
 import {inferMutableRangesForAlias} from './InferMutableRangesForAlias';
 import {inferTryCatchAliases} from './InferTryCatchAliases';
 
-export function inferMutableRanges(ir: HIRFunction): void {
+export function inferMutableRanges(ir: HIRFunction): DisjointSet<Identifier> {
   // Infer mutable ranges for non fields
   inferMutableLifetimes(ir, false);
 
@@ -84,6 +85,8 @@ export function inferMutableRanges(ir: HIRFunction): void {
     }
     prevAliases = nextAliases;
   }
+
+  return aliases;
 }
 
 function areEqualMaps<T>(a: Map<T, T>, b: Map<T, T>): boolean {
