@@ -60,6 +60,10 @@ function inferInstr(
       alias = instrValue.value;
       break;
     }
+    case 'IteratorNext': {
+      alias = instrValue.collection;
+      break;
+    }
     default:
       return;
   }
