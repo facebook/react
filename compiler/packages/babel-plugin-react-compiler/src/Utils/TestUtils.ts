@@ -10,7 +10,6 @@ import {CompilerError} from '../CompilerError';
 import {
   CompilationMode,
   defaultOptions,
-  PanicThresholdOptions,
   parsePluginOptions,
   PluginOptions,
 } from '../Entrypoint';
@@ -19,14 +18,24 @@ import {
   EnvironmentConfigSchema,
   PartialEnvironmentConfig,
 } from '../HIR/Environment';
+import {Err, Ok, Result} from './Result';
+import {hasOwnProperty} from './utils';
 
-/**
- * For test fixtures and playground only.
- *
- * Pragmas are straightforward to parse for boolean options (`:true` and
- * `:false`). These are 'enabled' config values for non-boolean configs (i.e.
- * what is used when parsing `:true`).
- */
+function tryParseTestPragmaValue(val: string): Result<unknown, unknown> {
+  try {
+    let parsedVal: unknown;
+    const stringMatch = /^"([^"]*)"$/.exec(val);
+    if (stringMatch && stringMatch.length > 1) {
+      parsedVal = stringMatch[1];
+    } else {
+      parsedVal = JSON.parse(val);
+    }
+    return Ok(parsedVal);
+  } catch (e) {
+    return Err(e);
+  }
+}
+
 const testComplexConfigDefaults: PartialEnvironmentConfig = {
   validateNoCapitalizedCalls: [],
   enableChangeDetectionForDebugging: {
@@ -84,34 +93,37 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
     },
   ],
 };
-
 /**
  * For snap test fixtures and playground only.
  */
 function parseConfigPragmaEnvironmentForTest(
   pragma: string,
 ): EnvironmentConfig {
-  const maybeConfig: any = {};
-  // Get the defaults to programmatically check for boolean properties
-  const defaultConfig = EnvironmentConfigSchema.parse({});
+  const maybeConfig: Partial<Record<keyof EnvironmentConfig, unknown>> = {};
 
   for (const token of pragma.split(' ')) {
     if (!token.startsWith('@')) {
       continue;
     }
     const keyVal = token.slice(1);
-    let [key, val = undefined] = keyVal.split(':');
+    const valIdx = keyVal.indexOf(':');
+    const key = valIdx === -1 ? keyVal : keyVal.slice(0, valIdx);
+    const val = valIdx === -1 ? undefined : keyVal.slice(valIdx + 1);
     const isSet = val === undefined || val === 'true';
-
-    if (isSet && key in testComplexConfigDefaults) {
-      maybeConfig[key] =
-        testComplexConfigDefaults[key as keyof PartialEnvironmentConfig];
+    if (!hasOwnProperty(EnvironmentConfigSchema.shape, key)) {
       continue;
     }
 
-    if (key === 'customMacros' && val) {
-      const valSplit = val.split('.');
-      if (valSplit.length > 0) {
+    if (isSet && key in testComplexConfigDefaults) {
+      maybeConfig[key] = testComplexConfigDefaults[key];
+    } else if (isSet) {
+      maybeConfig[key] = true;
+    } else if (val === 'false') {
+      maybeConfig[key] = false;
+    } else if (val) {
+      const parsedVal = tryParseTestPragmaValue(val).unwrap();
+      if (key === 'customMacros' && typeof parsedVal === 'string') {
+        const valSplit = parsedVal.split('.');
         const props = [];
         for (const elt of valSplit.slice(1)) {
           if (elt === '*') {
@@ -121,21 +133,9 @@ function parseConfigPragmaEnvironmentForTest(
           }
         }
         maybeConfig[key] = [[valSplit[0], props]];
+        continue;
       }
-      continue;
-    }
-
-    if (
-      key !== 'enableResetCacheOnSourceFileChanges' &&
-      typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean'
-    ) {
-      // skip parsing non-boolean properties
-      continue;
-    }
-    if (val === undefined || val === 'true') {
-      maybeConfig[key] = true;
-    } else {
-      maybeConfig[key] = false;
+      maybeConfig[key] = parsedVal;
     }
   }
   const config = EnvironmentConfigSchema.safeParse(maybeConfig);
@@ -156,6 +156,13 @@ function parseConfigPragmaEnvironmentForTest(
     suggestions: null,
   });
 }
+
+const testComplexPluginOptionDefaults: Partial<PluginOptions> = {
+  gating: {
+    source: 'ReactForgetFeatureFlag',
+    importSpecifierName: 'isForgetEnabled_Fixtures',
+  },
+};
 export function parseConfigPragmaForTests(
   pragma: string,
   defaults: {
@@ -163,44 +170,41 @@ export function parseConfigPragmaForTests(
   },
 ): PluginOptions {
   const environment = parseConfigPragmaEnvironmentForTest(pragma);
-  let compilationMode: CompilationMode = defaults.compilationMode;
-  let panicThreshold: PanicThresholdOptions = 'all_errors';
-  let noEmit: boolean = defaultOptions.noEmit;
+  const options: Record<keyof PluginOptions, unknown> = {
+    ...defaultOptions,
+    panicThreshold: 'all_errors',
+    compilationMode: defaults.compilationMode,
+    environment,
+  };
   for (const token of pragma.split(' ')) {
     if (!token.startsWith('@')) {
       continue;
     }
-    switch (token) {
-      case '@compilationMode(annotation)': {
-        compilationMode = 'annotation';
-        break;
-      }
-      case '@compilationMode(infer)': {
-        compilationMode = 'infer';
-        break;
-      }
-      case '@compilationMode(all)': {
-        compilationMode = 'all';
-        break;
-      }
-      case '@compilationMode(syntax)': {
-        compilationMode = 'syntax';
-        break;
-      }
-      case '@panicThreshold(none)': {
-        panicThreshold = 'none';
-        break;
-      }
-      case '@noEmit': {
-        noEmit = true;
-        break;
+    const keyVal = token.slice(1);
+    const idx = keyVal.indexOf(':');
+    const key = idx === -1 ? keyVal : keyVal.slice(0, idx);
+    const val = idx === -1 ? undefined : keyVal.slice(idx + 1);
+    if (!hasOwnProperty(defaultOptions, key)) {
+      continue;
+    }
+    const isSet = val === undefined || val === 'true';
+    if (isSet && key in testComplexPluginOptionDefaults) {
+      options[key] = testComplexPluginOptionDefaults[key];
+    } else if (isSet) {
+      options[key] = true;
+    } else if (val === 'false') {
+      options[key] = false;
+    } else if (val != null) {
+      const parsedVal = tryParseTestPragmaValue(val).unwrap();
+      if (key === 'target' && parsedVal === 'donotuse_meta_internal') {
+        options[key] = {
+          kind: parsedVal,
+          runtimeModule: 'react',
+        };
+      } else {
+        options[key] = parsedVal;
       }
     }
   }
-  return parsePluginOptions({
-    environment,
-    compilationMode,
-    panicThreshold,
-    noEmit,
-  });
+  return parsePluginOptions(options);
 }

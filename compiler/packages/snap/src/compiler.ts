@@ -20,10 +20,6 @@ import type {
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
 import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/Utils/TestUtils';
-import type {
-  Macro,
-  MacroMethod,
-} from 'babel-plugin-react-compiler/src/HIR/Environment';
 import * as HermesParser from 'hermes-parser';
 import invariant from 'invariant';
 import path from 'path';
@@ -47,51 +43,9 @@ function makePluginOptions(
   EffectEnum: typeof Effect,
   ValueKindEnum: typeof ValueKind,
 ): [PluginOptions, Array<{filename: string | null; event: LoggerEvent}>] {
-  let gating = null;
-  let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
-  let customMacros: null | Array<Macro> = null;
-  let validateBlocklistedImports = null;
   let target: CompilerReactTarget = '19';
-
-  if (firstLine.includes('@gating')) {
-    gating = {
-      source: 'ReactForgetFeatureFlag',
-      importSpecifierName: 'isForgetEnabled_Fixtures',
-    };
-  }
-
-  const targetMatch = /@target="([^"]+)"/.exec(firstLine);
-  if (targetMatch) {
-    if (targetMatch[1] === 'donotuse_meta_internal') {
-      target = {
-        kind: targetMatch[1],
-        runtimeModule: 'react',
-      };
-    } else {
-      // @ts-ignore
-      target = targetMatch[1];
-    }
-  }
-
-  let eslintSuppressionRules: Array<string> | null = null;
-  const eslintSuppressionMatch = /@eslintSuppressionRules\(([^)]+)\)/.exec(
-    firstLine,
-  );
-  if (eslintSuppressionMatch != null) {
-    eslintSuppressionRules = eslintSuppressionMatch[1].split('|');
-  }
-
-  let flowSuppressions: boolean = false;
-  if (firstLine.includes('@enableFlowSuppressions')) {
-    flowSuppressions = true;
-  }
-
-  let ignoreUseNoForget: boolean = false;
-  if (firstLine.includes('@ignoreUseNoForget')) {
-    ignoreUseNoForget = true;
-  }
 
   /**
    * Snap currently runs all fixtures without `validatePreserveExistingMemo` as
@@ -105,64 +59,9 @@ function makePluginOptions(
     validatePreserveExistingMemoizationGuarantees = true;
   }
 
-  const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
-  if (
-    hookPatternMatch &&
-    hookPatternMatch.length > 1 &&
-    hookPatternMatch[1].trim().length > 0
-  ) {
-    hookPattern = hookPatternMatch[1].trim();
-  } else if (firstLine.includes('@hookPattern')) {
-    throw new Error(
-      'Invalid @hookPattern:"..." pragma, must contain the prefix between balanced double quotes eg @hookPattern:"pattern"',
-    );
-  }
-
-  const customMacrosMatch = /@customMacros\(([^)]+)\)/.exec(firstLine);
-  if (
-    customMacrosMatch &&
-    customMacrosMatch.length > 1 &&
-    customMacrosMatch[1].trim().length > 0
-  ) {
-    const customMacrosStrs = customMacrosMatch[1]
-      .split(' ')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-    if (customMacrosStrs.length > 0) {
-      customMacros = [];
-      for (const customMacroStr of customMacrosStrs) {
-        const props: Array<MacroMethod> = [];
-        const customMacroSplit = customMacroStr.split('.');
-        if (customMacroSplit.length > 0) {
-          for (const elt of customMacroSplit.slice(1)) {
-            if (elt === '*') {
-              props.push({type: 'wildcard'});
-            } else if (elt.length > 0) {
-              props.push({type: 'name', name: elt});
-            }
-          }
-          customMacros.push([customMacroSplit[0], props]);
-        }
-      }
-    }
-  }
-
-  const validateBlocklistedImportsMatch =
-    /@validateBlocklistedImports\(([^)]+)\)/.exec(firstLine);
-  if (
-    validateBlocklistedImportsMatch &&
-    validateBlocklistedImportsMatch.length > 1 &&
-    validateBlocklistedImportsMatch[1].trim().length > 0
-  ) {
-    validateBlocklistedImports = validateBlocklistedImportsMatch[1]
-      .split(' ')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-  }
-
   const logs: Array<{filename: string | null; event: LoggerEvent}> = [];
   const logger: Logger = {
-    logEvent: firstLine.includes('@logger')
+    logEvent: firstLine.includes('@loggerTestOnly')
       ? (filename, event) => {
           logs.push({filename, event});
         }
@@ -179,17 +78,10 @@ function makePluginOptions(
         EffectEnum,
         ValueKindEnum,
       }),
-      customMacros,
       assertValidMutableRanges: true,
-      hookPattern,
       validatePreserveExistingMemoizationGuarantees,
-      validateBlocklistedImports,
     },
     logger,
-    gating,
-    eslintSuppressionRules,
-    flowSuppressions,
-    ignoreUseNoForget,
     enableReanimatedCheck: false,
     target,
   };
