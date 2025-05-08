@@ -540,11 +540,12 @@ function evaluateInstruction(
 
         const expressionValue = subExprValue.value;
         if (
-          (typeof expressionValue === 'object' && expressionValue !== null) ||
-          typeof expressionValue === 'symbol' ||
-          typeof expressionValue === 'function'
+          typeof expressionValue !== 'number' &&
+          typeof expressionValue !== 'string' &&
+          typeof expressionValue !== 'boolean' &&
+          !(typeof expressionValue === 'object' && expressionValue === null)
         ) {
-          // value is not supported (function, object) or invalid (symbol)
+          // value is not supported (function, object) or invalid (symbol), or something else
           return null;
         }
 
