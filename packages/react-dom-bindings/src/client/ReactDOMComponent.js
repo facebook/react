@@ -63,6 +63,8 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import sanitizeURL from '../shared/sanitizeURL';
 
+import noop from 'shared/noop';
+
 import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
 
 import {
@@ -318,8 +320,6 @@ function checkForUnmatchedText(
   }
   return false;
 }
-
-function noop() {}
 
 export function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
