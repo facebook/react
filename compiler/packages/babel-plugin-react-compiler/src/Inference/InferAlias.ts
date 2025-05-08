@@ -60,15 +60,9 @@ function inferInstr(
       alias = instrValue.value;
       break;
     }
-    case 'ObjectMethod':
-    case 'FunctionExpression': {
-      for (const effect of instrValue.loweredFunc.func.effects ?? []) {
-        if (effect.kind !== 'CaptureEffect') {
-          continue;
-        }
-        aliases.union([...effect.places].map(place => place.identifier));
-      }
-      return;
+    case 'IteratorNext': {
+      alias = instrValue.collection;
+      break;
     }
     default:
       return;

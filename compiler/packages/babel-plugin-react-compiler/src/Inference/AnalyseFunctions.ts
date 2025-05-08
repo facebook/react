@@ -21,7 +21,14 @@ import {rewriteInstructionKindsBasedOnReassignment} from '../SSA';
 import {inferMutableRanges} from './InferMutableRanges';
 import inferReferenceEffects from './InferReferenceEffects';
 import DisjointSet from '../Utils/DisjointSet';
-import {eachInstructionValueOperand} from '../HIR/visitors';
+import {
+  eachInstructionLValue,
+  eachInstructionValueOperand,
+} from '../HIR/visitors';
+import {inferAliasForStores} from './InferAliasForStores';
+import prettyFormat from 'pretty-format';
+import {printIdentifier, printPlace} from '../HIR/PrintHIR';
+import {Iterable_some} from '../Utils/utils';
 
 export default function analyseFunctions(func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
@@ -63,6 +70,16 @@ function lower(func: HIRFunction): DisjointSet<Identifier> {
   return aliases;
 }
 
+export function debugAliases(aliases: DisjointSet<Identifier>): void {
+  console.log(
+    prettyFormat(
+      aliases
+        .buildSets()
+        .map(set => [...set].map(ident => printIdentifier(ident))),
+    ),
+  );
+}
+
 /**
  * The alias sets returned by InferMutableRanges() accounts only for aliases that
  * are known to mutate together. Notably this skips cases where a value is captured
@@ -80,18 +97,29 @@ function inferAliasesForCapturing(
 ): void {
   for (const block of fn.body.blocks.values()) {
     for (const instr of block.instructions) {
-      let operands: Array<Identifier> | null = null;
+      const {lvalue, value} = instr;
+      const hasStore =
+        lvalue.effect === Effect.Store ||
+        Iterable_some(
+          eachInstructionValueOperand(value),
+          operand => operand.effect === Effect.Store,
+        );
+      if (!hasStore) {
+        continue;
+      }
+      const operands: Array<Identifier> = [];
+      for (const lvalue of eachInstructionLValue(instr)) {
+        operands.push(lvalue.identifier);
+      }
       for (const operand of eachInstructionValueOperand(instr.value)) {
         if (
-          operand.effect === Effect.Mutate ||
           operand.effect === Effect.Store ||
           operand.effect === Effect.Capture
         ) {
-          operands ??= [];
           operands.push(operand.identifier);
         }
       }
-      if (operands != null && operands.length > 1) {
+      if (operands.length > 1) {
         aliases.union(operands);
       }
     }
@@ -137,7 +165,7 @@ function infer(
         .map(identifier => contextIdentifiers.get(identifier))
         .filter(place => place != null) as Array<Place>,
     );
-    if (contextOperands.size > 1) {
+    if (contextOperands.size !== 0) {
       loweredFunc.func.effects ??= [];
       loweredFunc.func.effects?.push({
         kind: 'CaptureEffect',

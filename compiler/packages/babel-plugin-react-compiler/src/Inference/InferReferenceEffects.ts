@@ -521,7 +521,8 @@ class InferenceState {
          *   `expected valueKind to be 'Mutable' but found to be \`${valueKind}\``
          * );
          */
-        effect = isObjectType(place.identifier) ? Effect.Store : Effect.Mutate;
+        // effect = isObjectType(place.identifier) ? Effect.Store : Effect.Mutate;
+        effect = Effect.Store;
         break;
       }
       case Effect.Capture: {
@@ -1289,7 +1290,9 @@ function inferBlock(
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.object,
-          Effect.Store,
+          typeof instrValue.property === 'string'
+            ? Effect.Store
+            : Effect.Mutate,
           ValueReason.Other,
         );
 

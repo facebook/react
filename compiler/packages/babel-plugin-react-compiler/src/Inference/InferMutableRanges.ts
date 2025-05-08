@@ -9,6 +9,7 @@ import {HIRFunction, Identifier} from '../HIR/HIR';
 import DisjointSet from '../Utils/DisjointSet';
 import {inferAliasForUncalledFunctions} from './InerAliasForUncalledFunctions';
 import {inferAliases} from './InferAlias';
+import {inferAliasForFunctionCaptureEffects} from './InferAliasesForFunctionCaptureEffects';
 import {inferAliasForPhis} from './InferAliasForPhis';
 import {inferAliasForStores} from './InferAliasForStores';
 import {inferMutableLifetimes} from './InferMutableLifetimes';
@@ -38,6 +39,8 @@ export function inferMutableRanges(ir: HIRFunction): DisjointSet<Identifier> {
 
     // Update aliasing information of fields
     inferAliasForStores(ir, aliases);
+
+    inferAliasForFunctionCaptureEffects(ir, aliases);
 
     // Update aliasing information of phis
     inferAliasForPhis(ir, aliases);

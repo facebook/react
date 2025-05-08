@@ -37,26 +37,26 @@ import { c as _c } from "react/compiler-runtime";
 import { mutate } from "shared-runtime";
 
 function Component(t0) {
-  const $ = _c(2);
+  const $ = _c(3);
   const { foo, bar } = t0;
-  let t1;
-  if ($[0] !== foo) {
-    t1 = { foo };
-    $[0] = foo;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  const x = t1;
-  const y = { bar };
-  const f0 = function () {
-    const a = [y];
-    const b = x;
-    a.x = b;
-  };
+  let x;
+  if ($[0] !== bar || $[1] !== foo) {
+    x = { foo };
+    const y = { bar };
+    const f0 = function () {
+      const a = [y];
+      const b = x;
+      a.x = b;
+    };
 
-  f0();
-  mutate(y);
+    f0();
+    mutate(y);
+    $[0] = bar;
+    $[1] = foo;
+    $[2] = x;
+  } else {
+    x = $[2];
+  }
   return x;
 }
 
