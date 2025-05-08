@@ -59,6 +59,7 @@ type ProgramContextOptions = {
   opts: PluginOptions;
   filename: string | null;
   code: string | null;
+  hasModuleScopeOptOut: boolean;
 };
 export class ProgramContext {
   /**
@@ -70,6 +71,7 @@ export class ProgramContext {
   code: string | null;
   reactRuntimeModule: string;
   suppressions: Array<SuppressionRange>;
+  hasModuleScopeOptOut: boolean;
 
   /*
    * This is a hack to work around what seems to be a Babel bug. Babel doesn't
@@ -94,6 +96,7 @@ export class ProgramContext {
     opts,
     filename,
     code,
+    hasModuleScopeOptOut,
   }: ProgramContextOptions) {
     this.scope = program.scope;
     this.opts = opts;
@@ -101,6 +104,7 @@ export class ProgramContext {
     this.code = code;
     this.reactRuntimeModule = getReactCompilerRuntimeModule(opts.target);
     this.suppressions = suppressions;
+    this.hasModuleScopeOptOut = hasModuleScopeOptOut;
   }
 
   isHookName(name: string): boolean {
