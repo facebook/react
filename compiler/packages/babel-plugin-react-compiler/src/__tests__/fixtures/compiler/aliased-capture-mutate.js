@@ -1,19 +1,6 @@
 // @flow @enableTransitivelyFreezeFunctionExpressions:false
 import {setPropertyByKey, Stringify} from 'shared-runtime';
 
-/**
- * Variation of bug in `bug-aliased-capture-aliased-mutate`
- * Found differences in evaluator results
- * Non-forget (expected):
- *   (kind: ok)
- *   <div>{"cb":{"kind":"Function","result":2},"shouldInvokeFns":true}</div>
- *   <div>{"cb":{"kind":"Function","result":3},"shouldInvokeFns":true}</div>
- * Forget:
- *   (kind: ok)
- *   <div>{"cb":{"kind":"Function","result":2},"shouldInvokeFns":true}</div>
- *   <div>{"cb":{"kind":"Function","result":2},"shouldInvokeFns":true}</div>
- */
-
 function useFoo({a}: {a: number, b: number}) {
   const arr = [];
   const obj = {value: a};
