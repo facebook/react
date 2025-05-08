@@ -11,6 +11,9 @@ function Component() {
         ...params,
         ...partialParams,
       };
+      // Due to how we previously represented ObjectExpressions in InferReferenceEffects,
+      // this was recorded as a mutation of a context value (`params`) which then made
+      // the function appear ineligible for freezing when passing to useEffect below.
       nextParams.param = 'value';
       console.log(nextParams);
     },
