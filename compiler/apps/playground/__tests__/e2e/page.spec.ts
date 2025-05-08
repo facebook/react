@@ -92,7 +92,7 @@ function useFoo(propVal: {+baz: number}) {
   },
   {
     name: 'compilationMode-infer',
-    input: `// @compilationMode(infer)
+    input: `// @compilationMode:"infer"
 function nonReactFn() {
   return {};
 }
@@ -101,7 +101,7 @@ function nonReactFn() {
   },
   {
     name: 'compilationMode-all',
-    input: `// @compilationMode(all)
+    input: `// @compilationMode:"all"
 function nonReactFn() {
   return {};
 }

@@ -1,4 +1,4 @@
-// @enableEmitInstrumentForget @compilationMode(annotation) @gating
+// @enableEmitInstrumentForget @compilationMode:"annotation" @gating
 
 function Bar(props) {
   'use forget';
