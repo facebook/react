@@ -19,10 +19,10 @@ import type {
   CompilerPipelineValue,
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
+import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/Utils/TestUtils';
 import type {
   Macro,
   MacroMethod,
-  parseConfigPragmaForTests as ParseConfigPragma,
 } from 'babel-plugin-react-compiler/src/HIR/Environment';
 import * as HermesParser from 'hermes-parser';
 import invariant from 'invariant';
