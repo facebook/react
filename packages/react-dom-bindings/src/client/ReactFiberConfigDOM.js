@@ -139,6 +139,9 @@ import {requestFormReset as requestFormResetOnFiber} from 'react-reconciler/src/
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
 export {default as rendererVersion} from 'shared/ReactVersion';
+
+import noop from 'shared/noop';
+
 export const rendererPackageName = 'react-dom';
 export const extraDevToolsConfig = null;
 
@@ -5628,16 +5631,14 @@ type SuspendedState = {
 };
 let suspendedState: null | SuspendedState = null;
 
-// We use a noop function when we begin suspending because if possible we want the
-// waitfor step to finish synchronously. If it doesn't we'll return a function to
-// provide the actual unsuspend function and that will get completed when the count
-// hits zero or it will get cancelled if the root starts new work.
-function noop() {}
-
 export function startSuspendingCommit(): void {
   suspendedState = {
     stylesheets: null,
     count: 0,
+    // We use a noop function when we begin suspending because if possible we want the
+    // waitfor step to finish synchronously. If it doesn't we'll return a function to
+    // provide the actual unsuspend function and that will get completed when the count
+    // hits zero or it will get cancelled if the root starts new work.
     unsuspend: noop,
   };
 }
