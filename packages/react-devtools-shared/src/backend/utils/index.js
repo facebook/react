@@ -18,6 +18,8 @@ import type {DehydratedData} from 'react-devtools-shared/src/frontend/types';
 export {default as formatWithStyles} from './formatWithStyles';
 export {default as formatConsoleArguments} from './formatConsoleArguments';
 
+import {formatOwnerStackString} from '../shared/DevToolsOwnerStack';
+
 // TODO: update this to the first React version that has a corresponding DevTools backend
 const FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER = '999.9.9';
 export function hasAssignedBackend(version?: string): boolean {
@@ -343,6 +345,77 @@ export function parseSourceFromComponentStack(
   }
 
   return parseSourceFromFirefoxStack(componentStack);
+}
+
+let collectedLocation: Source | null = null;
+
+function collectStackTrace(
+  error: Error,
+  structuredStackTrace: CallSite[],
+): string {
+  let result: null | Source = null;
+  // Collect structured stack traces from the callsites.
+  // We mirror how V8 serializes stack frames and how we later parse them.
+  for (let i = 0; i < structuredStackTrace.length; i++) {
+    const callSite = structuredStackTrace[i];
+    if (callSite.getFunctionName() === 'react-stack-bottom-frame') {
+      // We pick the last frame that matches before the bottom frame since
+      // that will be immediately inside the component as opposed to some helper.
+      // If we don't find a bottom frame then we bail to string parsing.
+      collectedLocation = result;
+      // Skip everything after the bottom frame since it'll be internals.
+      break;
+    } else {
+      const sourceURL = callSite.getScriptNameOrSourceURL();
+      const line =
+        // $FlowFixMe[prop-missing]
+        typeof callSite.getEnclosingLineNumber === 'function'
+          ? (callSite: any).getEnclosingLineNumber()
+          : callSite.getLineNumber();
+      const col =
+        // $FlowFixMe[prop-missing]
+        typeof callSite.getEnclosingColumnNumber === 'function'
+          ? (callSite: any).getEnclosingColumnNumber()
+          : callSite.getLineNumber();
+      if (!sourceURL || !line || !col) {
+        // Skip eval etc. without source url. They don't have location.
+        continue;
+      }
+      result = {
+        sourceURL,
+        line: line,
+        column: col,
+      };
+    }
+  }
+  // At the same time we generate a string stack trace just in case someone
+  // else reads it.
+  const name = error.name || 'Error';
+  const message = error.message || '';
+  let stack = name + ': ' + message;
+  for (let i = 0; i < structuredStackTrace.length; i++) {
+    stack += '\n    at ' + structuredStackTrace[i].toString();
+  }
+  return stack;
+}
+
+export function parseSourceFromOwnerStack(error: Error): Source | null {
+  // First attempt to collected the structured data using prepareStackTrace.
+  collectedLocation = null;
+  const previousPrepare = Error.prepareStackTrace;
+  Error.prepareStackTrace = collectStackTrace;
+  let stack;
+  try {
+    stack = error.stack;
+  } finally {
+    Error.prepareStackTrace = previousPrepare;
+  }
+  if (collectedLocation !== null) {
+    return collectedLocation;
+  }
+  // Fallback to parsing the string form.
+  const componentStack = formatOwnerStackString(stack);
+  return parseSourceFromComponentStack(componentStack);
 }
 
 // 0.123456789 => 0.123
