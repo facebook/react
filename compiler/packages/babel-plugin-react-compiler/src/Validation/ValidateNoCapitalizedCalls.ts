@@ -4,11 +4,15 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import {CompilerError, EnvironmentConfig} from '..';
+
+import {CompilerError, EnvironmentConfig, ErrorSeverity} from '..';
 import {HIRFunction, IdentifierId} from '../HIR';
 import {DEFAULT_GLOBALS} from '../HIR/Globals';
+import {Result} from '../Utils/Result';
 
-export function validateNoCapitalizedCalls(fn: HIRFunction): void {
+export function validateNoCapitalizedCalls(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const envConfig: EnvironmentConfig = fn.env.config;
   const ALLOW_LIST = new Set([
     ...DEFAULT_GLOBALS.keys(),
@@ -26,6 +30,7 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
     );
   };
 
+  const errors = new CompilerError();
   const capitalLoadGlobals = new Map<IdentifierId, string>();
   const capitalizedProperties = new Map<IdentifierId, string>();
   const reason =
@@ -61,7 +66,10 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
         }
         case 'PropertyLoad': {
           // Start conservative and disallow all capitalized method calls
-          if (/^[A-Z]/.test(value.property)) {
+          if (
+            typeof value.property === 'string' &&
+            /^[A-Z]/.test(value.property)
+          ) {
             capitalizedProperties.set(lvalue.identifier.id, value.property);
           }
           break;
@@ -70,7 +78,8 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
           const propertyIdentifier = value.property.identifier.id;
           const propertyName = capitalizedProperties.get(propertyIdentifier);
           if (propertyName != null) {
-            CompilerError.throwInvalidReact({
+            errors.push({
+              severity: ErrorSeverity.InvalidReact,
               reason,
               description: `${propertyName} may be a component.`,
               loc: value.loc,
@@ -82,4 +91,5 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
       }
     }
   }
+  return errors.asResult();
 }

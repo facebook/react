@@ -18,6 +18,8 @@ import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
+import noop from 'shared/noop';
+
 opaque type ThenableStateDev = {
   didWarnAboutUncachedPromise: boolean,
   thenables: Array<Thenable<any>>,
@@ -94,8 +96,6 @@ export function isThenableResolved(thenable: Thenable<mixed>): boolean {
   const status = thenable.status;
   return status === 'fulfilled' || status === 'rejected';
 }
-
-function noop(): void {}
 
 export function trackUsedThenable<T>(
   thenableState: ThenableState,
@@ -194,8 +194,9 @@ export function trackUsedThenable<T>(
           // this case include forcing a concurrent render, or putting the whole
           // root into offscreen mode.
           throw new Error(
-            'async/await is not yet supported in Client Components, only ' +
-              'Server Components. This error is often caused by accidentally ' +
+            'An unknown Component is an async Client Component. ' +
+              'Only Server Components can be async at the moment. ' +
+              'This error is often caused by accidentally ' +
               "adding `'use client'` to a module that was originally written " +
               'for the server.',
           );

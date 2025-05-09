@@ -27,7 +27,12 @@ async function getElementCount(page, displayName) {
   }, displayName);
 }
 
-async function selectElement(page, displayName, waitForOwnersText) {
+async function selectElement(
+  page,
+  displayName,
+  waitForOwnersText,
+  waitForSourceLoaded = false
+) {
   await page.evaluate(listItemText => {
     const {createTestNameSelector, createTextSelector, findAllNodes} =
       window.REACT_DOM_DEVTOOLS;
@@ -68,6 +73,20 @@ async function selectElement(page, displayName, waitForOwnersText) {
       },
       {titleText: displayName, ownersListText: waitForOwnersText}
     );
+  }
+
+  if (waitForSourceLoaded) {
+    await page.waitForFunction(() => {
+      const {createTestNameSelector, findAllNodes} = window.REACT_DOM_DEVTOOLS;
+      const container = document.getElementById('devtools');
+
+      const sourceStringBlock = findAllNodes(container, [
+        createTestNameSelector('InspectedElementView-FormattedSourceString'),
+      ])[0];
+
+      // Wait for a new source line to be fetched
+      return sourceStringBlock != null && sourceStringBlock.innerText != null;
+    });
   }
 }
 

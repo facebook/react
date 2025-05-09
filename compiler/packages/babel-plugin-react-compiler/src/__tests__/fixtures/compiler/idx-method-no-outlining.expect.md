@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @customMacros(idx.a)
+// @customMacros:"idx.a"
 
 function Component(props) {
   // outlined
@@ -25,7 +25,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @customMacros(idx.a)
+import { c as _c } from "react/compiler-runtime"; // @customMacros:"idx.a"
 
 function Component(props) {
   const $ = _c(10);

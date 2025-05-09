@@ -6,6 +6,7 @@
  */
 
 import {HIRFunction, Identifier} from '../HIR/HIR';
+import {inferAliasForUncalledFunctions} from './InerAliasForUncalledFunctions';
 import {inferAliases} from './InferAlias';
 import {inferAliasForPhis} from './InferAliasForPhis';
 import {inferAliasForStores} from './InferAliasForStores';
@@ -76,6 +77,7 @@ export function inferMutableRanges(ir: HIRFunction): void {
   while (true) {
     inferMutableRangesForAlias(ir, aliases);
     inferAliasForPhis(ir, aliases);
+    inferAliasForUncalledFunctions(ir, aliases);
     const nextAliases = aliases.canonicalize();
     if (areEqualMaps(prevAliases, nextAliases)) {
       break;

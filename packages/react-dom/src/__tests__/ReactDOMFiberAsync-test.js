@@ -751,7 +751,8 @@ describe('ReactDOMFiberAsync', () => {
       // Because it suspended, it remains on the current path
       expect(div.textContent).toBe('/path/a');
     });
-    assertLog(gate('enableSiblingPrerendering') ? ['Suspend! [/path/b]'] : []);
+    // pre-warming
+    assertLog(['Suspend! [/path/b]']);
 
     await act(async () => {
       resolvePromise();
@@ -774,6 +775,74 @@ describe('ReactDOMFiberAsync', () => {
     await act(() => {
       root.unmount();
     });
+  });
+
+  it('regression: useDeferredValue in popState leads to infinite deferral loop', async () => {
+    // At the time this test was written, it simulated a particular crash that
+    // was happened due to a combination of very subtle implementation details.
+    // Rather than couple this test to those implementation details, I've chosen
+    // to keep it as high-level as possible so that it doesn't break if the
+    // details change. In the future, it might not be trigger the exact set of
+    // internal circumstances anymore, but it could be useful for catching
+    // similar bugs because it represents a realistic real world situation —
+    // namely, switching tabs repeatedly in an app that uses useDeferredValue.
+    //
+    // But don't worry too much about why this test is written the way it is.
+
+    // Represents the browser's current location
+    let browserPathname = '/path/a';
+
+    let setPathname;
+    function App({initialPathname}) {
+      const [pathname, _setPathname] = React.useState('/path/a');
+      setPathname = _setPathname;
+
+      const deferredPathname = React.useDeferredValue(pathname);
+
+      // Attach a popstate listener on mount. Normally this would be in the
+      // in the router implementation.
+      React.useEffect(() => {
+        function onPopstate() {
+          React.startTransition(() => {
+            setPathname(browserPathname);
+          });
+        }
+        window.addEventListener('popstate', onPopstate);
+        return () => window.removeEventListener('popstate', onPopstate);
+      }, []);
+
+      return `Current:  ${pathname}\nDeferred: ${deferredPathname}`;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App initialPathname={browserPathname} />);
+    });
+
+    // Simulate a series of popstate events that toggle back and forth between
+    // two locations. In the original regression case, a certain combination
+    // of transition lanes would cause React to fall into an infinite deferral
+    // loop — specifically, when the spawned by the useDeferredValue hook was
+    // assigned a "higher" bit value than the one assigned to the "popstate".
+
+    // For alignment reasons, call this once to advance the internal variable
+    // that assigns transition lanes. Because this is a no-op update, it will
+    // bump the counter, but it won't trigger the useDeferredValue hook.
+    setPathname(browserPathname);
+
+    // Trigger enough popstate events that the scenario occurs for every
+    // possible transition lane.
+    for (let i = 0; i < 50; i++) {
+      await act(async () => {
+        // Simulate a popstate event
+        browserPathname = browserPathname === '/path/a' ? '/path/b' : '/path/a';
+        const popStateEvent = new Event('popstate');
+        window.event = popStateEvent;
+        window.dispatchEvent(popStateEvent);
+        await waitForMicrotasks();
+        window.event = undefined;
+      });
+    }
   });
 
   it('regression: infinite deferral loop caused by unstable useDeferredValue input', async () => {

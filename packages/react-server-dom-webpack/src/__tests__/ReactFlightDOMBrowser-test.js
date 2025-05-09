@@ -1170,25 +1170,15 @@ describe('ReactFlightDOMBrowser', () => {
     );
     const result = await ReactServerDOMClient.createFromReadableStream(stream);
 
-    if (!gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
-        'Each child in a list should have a unique "key" prop. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in div (at **)',
-      ]);
-    }
-
     await act(() => {
       root.render(result);
     });
-    if (gate(flags => flags.enableOwnerStacks)) {
-      assertConsoleErrorDev([
-        'Each child in a list should have a unique "key" prop.\n\n' +
-          'Check the top-level render call using <ParentClient>. ' +
-          'See https://react.dev/link/warning-keys for more information.\n' +
-          '    in div (at **)',
-      ]);
-    }
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the top-level render call using <ParentClient>. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in div (at **)',
+    ]);
   });
 
   it('basic use(promise)', async () => {
@@ -1909,8 +1899,8 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     expect(content).toEqual(
-      '<!DOCTYPE html><html><head>' +
-        '</head><body><p>hello world</p></body></html>',
+      '<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body><p>hello world</p><template id="«R»"></template></body></html>',
     );
   });
 

@@ -28,14 +28,20 @@ import {
   isUseEffectHookType,
   LoadLocal,
   makeInstructionId,
+  NonLocalImportSpecifier,
   Place,
   promoteTemporary,
 } from '../HIR';
 import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
 import {getOrInsertWith} from '../Utils/utils';
-import {BuiltInFireId, DefaultNonmutatingHook} from '../HIR/ObjectShape';
+import {
+  BuiltInFireFunctionId,
+  BuiltInFireId,
+  DefaultNonmutatingHook,
+} from '../HIR/ObjectShape';
 import {eachInstructionOperand} from '../HIR/visitors';
 import {printSourceLocationLine} from '../HIR/PrintHIR';
+import {USE_FIRE_FUNCTION_NAME} from '../HIR/Environment';
 
 /*
  * TODO(jmbrown):
@@ -56,6 +62,7 @@ export function transformFire(fn: HIRFunction): void {
 }
 
 function replaceFireFunctions(fn: HIRFunction, context: Context): void {
+  let importedUseFire: NonLocalImportSpecifier | null = null;
   let hasRewrite = false;
   for (const [, block] of fn.body.blocks) {
     const rewriteInstrs = new Map<InstructionId, Array<Instruction>>();
@@ -87,7 +94,15 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
           ] of capturedCallees.entries()) {
             if (!context.hasCalleeWithInsertedFire(fireCalleePlace)) {
               context.addCalleeWithInsertedFire(fireCalleePlace);
-              const loadUseFireInstr = makeLoadUseFireInstruction(fn.env);
+
+              importedUseFire ??= fn.env.programContext.addImportSpecifier({
+                source: fn.env.programContext.reactRuntimeModule,
+                importSpecifierName: USE_FIRE_FUNCTION_NAME,
+              });
+              const loadUseFireInstr = makeLoadUseFireInstruction(
+                fn.env,
+                importedUseFire,
+              );
               const loadFireCalleeInstr = makeLoadFireCalleeInstruction(
                 fn.env,
                 fireCalleeInfo.capturedCalleeIdentifier,
@@ -319,51 +334,6 @@ function visitFunctionExpressionAndPropagateFireDependencies(
     replaceFireFunctions(fnExpr.loweredFunc.func, context),
   );
 
-  /*
-   * Make a mapping from each dependency to the corresponding LoadLocal for it so that
-   * we can replace the loaded place with the generated fire function binding
-   */
-  const loadLocalsToDepLoads = new Map<IdentifierId, LoadLocal>();
-  for (const dep of fnExpr.loweredFunc.dependencies) {
-    const loadLocal = context.getLoadLocalInstr(dep.identifier.id);
-    if (loadLocal != null) {
-      loadLocalsToDepLoads.set(loadLocal.place.identifier.id, loadLocal);
-    }
-  }
-
-  const replacedCallees = new Map<IdentifierId, Place>();
-  for (const [
-    calleeIdentifierId,
-    loadedFireFunctionBindingPlace,
-  ] of calleesCapturedByFnExpression.entries()) {
-    /*
-     * Given the ids of captured fire callees, look at the deps for loads of those identifiers
-     * and replace them with the new fire function binding
-     */
-    const loadLocal = loadLocalsToDepLoads.get(calleeIdentifierId);
-    if (loadLocal == null) {
-      context.pushError({
-        loc: fnExpr.loc,
-        description: null,
-        severity: ErrorSeverity.Invariant,
-        reason:
-          '[InsertFire] No loadLocal found for fire call argument for lambda',
-        suggestions: null,
-      });
-      continue;
-    }
-
-    const oldPlaceId = loadLocal.place.identifier.id;
-    loadLocal.place = {
-      ...loadedFireFunctionBindingPlace.fireFunctionBinding,
-    };
-
-    replacedCallees.set(
-      oldPlaceId,
-      loadedFireFunctionBindingPlace.fireFunctionBinding,
-    );
-  }
-
   // For each replaced callee, update the context of the function expression to track it
   for (
     let contextIdx = 0;
@@ -371,9 +341,13 @@ function visitFunctionExpressionAndPropagateFireDependencies(
     contextIdx++
   ) {
     const contextItem = fnExpr.loweredFunc.func.context[contextIdx];
-    const replacedCallee = replacedCallees.get(contextItem.identifier.id);
+    const replacedCallee = calleesCapturedByFnExpression.get(
+      contextItem.identifier.id,
+    );
     if (replacedCallee != null) {
-      fnExpr.loweredFunc.func.context[contextIdx] = replacedCallee;
+      fnExpr.loweredFunc.func.context[contextIdx] = {
+        ...replacedCallee.fireFunctionBinding,
+      };
     }
   }
 
@@ -445,18 +419,16 @@ function ensureNoMoreFireUses(fn: HIRFunction, context: Context): void {
   }
 }
 
-function makeLoadUseFireInstruction(env: Environment): Instruction {
+function makeLoadUseFireInstruction(
+  env: Environment,
+  importedLoadUseFire: NonLocalImportSpecifier,
+): Instruction {
   const useFirePlace = createTemporaryPlace(env, GeneratedSource);
   useFirePlace.effect = Effect.Read;
   useFirePlace.identifier.type = DefaultNonmutatingHook;
   const instrValue: InstructionValue = {
     kind: 'LoadGlobal',
-    binding: {
-      kind: 'ImportSpecifier',
-      name: 'useFire',
-      module: 'react',
-      imported: 'useFire',
-    },
+    binding: {...importedLoadUseFire},
     loc: GeneratedSource,
   };
   return {
@@ -664,6 +636,13 @@ class Context {
       callee.identifier.id,
       () => createTemporaryPlace(this.#env, GeneratedSource),
     );
+
+    fireFunctionBinding.identifier.type = {
+      kind: 'Function',
+      shapeId: BuiltInFireFunctionId,
+      return: {kind: 'Poly'},
+      isConstructor: false,
+    };
 
     this.#capturedCalleeIdentifierIds.set(callee.identifier.id, {
       fireFunctionBinding,

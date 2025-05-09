@@ -1,0 +1,30 @@
+.roboto-font {
+  font-family: "Roboto", serif;
+  font-optical-sizing: auto;
+  font-weight: 100;
+  font-style: normal;
+  font-variation-settings:
+    "wdth" 100;
+}
+
+.swipe-recognizer {
+  width: 300px;
+  background: #eee;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.button {
+  background: #000;
+  color: #fff;
+  border: 0px;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.portal {
+  position: fixed;
+  top: 10px;
+  left: 360px;
+  border: 1px solid #ccc;
+}

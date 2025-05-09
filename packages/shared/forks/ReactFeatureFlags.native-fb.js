@@ -20,15 +20,15 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
-  enableFabricCompleteRootInCommitPhase,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
-  enableUseResourceEffectHook,
   passChildrenWhenCloningPersistedNodes,
-  enableSiblingPrerendering,
-  enableOwnerStacks,
+  enableFastAddPropertiesInDiffing,
+  enableLazyPublicInstanceInFabric,
+  renameElementSymbol,
+  enableFragmentRefs,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -45,11 +45,9 @@ export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;
 export const enableCPUSuspense = true;
 export const enableCreateEventHandleAPI = false;
-export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
-export const enableGetInspectorDataForInstanceInProduction = true;
 export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = false;
 export const enableLegacyCache = false;
@@ -66,7 +64,6 @@ export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
-export const enableServerComponentLogs = true;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseCallback = true;
 export const enableTaint = true;
@@ -75,13 +72,20 @@ export const enableTrustedTypesIntegration = false;
 export const enableUpdaterTracking = __PROFILE__;
 export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
-export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const enableHydrationLaneScheduling = true;
 export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
+export const enableViewTransition = false;
+export const enableGestureTransition = false;
+export const enableScrollEndPolyfill = true;
+export const enableSuspenseyImages = false;
+export const enableSrcObject = false;
+export const enableHydrationChangeEvent = true;
+export const enableDefaultTransitionIndicator = false;
+export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

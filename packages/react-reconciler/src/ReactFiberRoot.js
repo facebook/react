@@ -33,6 +33,9 @@ import {
   enableUpdaterTracking,
   enableTransitionTracing,
   disableLegacyMode,
+  enableViewTransition,
+  enableGestureTransition,
+  enableDefaultTransitionIndicator,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
@@ -54,6 +57,7 @@ function FiberRootNode(
   onUncaughtError: any,
   onCaughtError: any,
   onRecoverableError: any,
+  onDefaultTransitionIndicator: any,
   formState: ReactFormState<any, any> | null,
 ) {
   this.tag = disableLegacyMode ? ConcurrentRoot : tag;
@@ -88,6 +92,10 @@ function FiberRootNode(
   this.onCaughtError = onCaughtError;
   this.onRecoverableError = onRecoverableError;
 
+  if (enableDefaultTransitionIndicator) {
+    this.onDefaultTransitionIndicator = onDefaultTransitionIndicator;
+  }
+
   this.pooledCache = null;
   this.pooledCacheLanes = NoLanes;
 
@@ -97,13 +105,20 @@ function FiberRootNode(
 
   this.formState = formState;
 
+  if (enableViewTransition) {
+    this.transitionTypes = null;
+  }
+
+  if (enableGestureTransition) {
+    this.pendingGestures = null;
+    this.stoppingGestures = null;
+    this.gestureClone = null;
+  }
+
   this.incompleteTransitions = new Map();
   if (enableTransitionTracing) {
     this.transitionCallbacks = null;
-    const transitionLanesMap = (this.transitionLanes = []);
-    for (let i = 0; i < TotalLanes; i++) {
-      transitionLanesMap.push(null);
-    }
+    this.transitionLanes = createLaneMap(null);
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
@@ -148,6 +163,7 @@ export function createFiberRoot(
   // them through the root constructor. Perhaps we should put them all into a
   // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix: string,
+  formState: ReactFormState<any, any> | null,
   onUncaughtError: (
     error: mixed,
     errorInfo: {+componentStack?: ?string},
@@ -163,8 +179,8 @@ export function createFiberRoot(
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator: () => void | (() => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
-  formState: ReactFormState<any, any> | null,
 ): FiberRoot {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   const root: FiberRoot = (new FiberRootNode(
@@ -175,6 +191,7 @@ export function createFiberRoot(
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     formState,
   ): any);
   if (enableSuspenseCallback) {

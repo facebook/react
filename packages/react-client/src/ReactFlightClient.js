@@ -15,7 +15,8 @@ import type {
   ReactAsyncInfo,
   ReactTimeInfo,
   ReactStackTrace,
-  ReactCallSite,
+  ReactFunctionLocation,
+  ReactErrorInfoDev,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -44,8 +45,6 @@ import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
   enablePostpone,
-  enableOwnerStacks,
-  enableServerComponentLogs,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
@@ -65,7 +64,10 @@ import {
   rendererPackageName,
 } from './ReactFlightClientConfig';
 
-import {createBoundServerReference} from './ReactFlightReplyClient';
+import {
+  createBoundServerReference,
+  registerBoundServerReference,
+} from './ReactFlightReplyClient';
 
 import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
@@ -755,7 +757,7 @@ function createElement(
       configurable: false,
       enumerable: false,
       writable: true,
-      value: enableOwnerStacks ? validated : 1, // Whether the element has already been validated on the server.
+      value: validated, // Whether the element has already been validated on the server.
     });
     // debugInfo contains Server Component debug information.
     Object.defineProperty(element, '_debugInfo', {
@@ -765,78 +767,67 @@ function createElement(
       value: null,
     });
     let env = response._rootEnvironmentName;
-    if (enableOwnerStacks) {
-      if (owner !== null && owner.env != null) {
-        // Interestingly we don't actually have the environment name of where
-        // this JSX was created if it doesn't have an owner but if it does
-        // it must be the same environment as the owner. We could send it separately
-        // but it seems a bit unnecessary for this edge case.
-        env = owner.env;
-      }
-      let normalizedStackTrace: null | Error = null;
-      if (owner === null && response._debugRootStack != null) {
-        // We override the stack if we override the owner since the stack where the root JSX
-        // was created on the server isn't very useful but where the request was made is.
-        normalizedStackTrace = response._debugRootStack;
-      } else if (stack !== null) {
-        // We create a fake stack and then create an Error object inside of it.
-        // This means that the stack trace is now normalized into the native format
-        // of the browser and the stack frames will have been registered with
-        // source mapping information.
-        // This can unfortunately happen within a user space callstack which will
-        // remain on the stack.
-        normalizedStackTrace = createFakeJSXCallStackInDEV(
-          response,
-          stack,
-          env,
-        );
-      }
-      Object.defineProperty(element, '_debugStack', {
-        configurable: false,
-        enumerable: false,
-        writable: true,
-        value: normalizedStackTrace,
-      });
+    if (owner !== null && owner.env != null) {
+      // Interestingly we don't actually have the environment name of where
+      // this JSX was created if it doesn't have an owner but if it does
+      // it must be the same environment as the owner. We could send it separately
+      // but it seems a bit unnecessary for this edge case.
+      env = owner.env;
+    }
+    let normalizedStackTrace: null | Error = null;
+    if (owner === null && response._debugRootStack != null) {
+      // We override the stack if we override the owner since the stack where the root JSX
+      // was created on the server isn't very useful but where the request was made is.
+      normalizedStackTrace = response._debugRootStack;
+    } else if (stack !== null) {
+      // We create a fake stack and then create an Error object inside of it.
+      // This means that the stack trace is now normalized into the native format
+      // of the browser and the stack frames will have been registered with
+      // source mapping information.
+      // This can unfortunately happen within a user space callstack which will
+      // remain on the stack.
+      normalizedStackTrace = createFakeJSXCallStackInDEV(response, stack, env);
+    }
+    Object.defineProperty(element, '_debugStack', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: normalizedStackTrace,
+    });
 
-      let task: null | ConsoleTask = null;
-      if (supportsCreateTask && stack !== null) {
-        const createTaskFn = (console: any).createTask.bind(
-          console,
-          getTaskName(type),
-        );
-        const callStack = buildFakeCallStack(
-          response,
-          stack,
-          env,
-          createTaskFn,
-        );
-        // This owner should ideally have already been initialized to avoid getting
-        // user stack frames on the stack.
-        const ownerTask =
-          owner === null ? null : initializeFakeTask(response, owner, env);
-        if (ownerTask === null) {
-          const rootTask = response._debugRootTask;
-          if (rootTask != null) {
-            task = rootTask.run(callStack);
-          } else {
-            task = callStack();
-          }
-        } else {
-          task = ownerTask.run(callStack);
-        }
-      }
-      Object.defineProperty(element, '_debugTask', {
-        configurable: false,
-        enumerable: false,
-        writable: true,
-        value: task,
-      });
-
+    let task: null | ConsoleTask = null;
+    if (supportsCreateTask && stack !== null) {
+      const createTaskFn = (console: any).createTask.bind(
+        console,
+        getTaskName(type),
+      );
+      const callStack = buildFakeCallStack(response, stack, env, createTaskFn);
       // This owner should ideally have already been initialized to avoid getting
       // user stack frames on the stack.
-      if (owner !== null) {
-        initializeFakeStack(response, owner);
+      const ownerTask =
+        owner === null ? null : initializeFakeTask(response, owner, env);
+      if (ownerTask === null) {
+        const rootTask = response._debugRootTask;
+        if (rootTask != null) {
+          task = rootTask.run(callStack);
+        } else {
+          task = callStack();
+        }
+      } else {
+        task = ownerTask.run(callStack);
       }
+    }
+    Object.defineProperty(element, '_debugTask', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: task,
+    });
+
+    // This owner should ideally have already been initialized to avoid getting
+    // user stack frames on the stack.
+    if (owner !== null) {
+      initializeFakeStack(response, owner);
     }
   }
 
@@ -863,13 +854,11 @@ function createElement(
           name: getComponentNameFromType(element.type) || '',
           owner: element._owner,
         };
-        if (enableOwnerStacks) {
+        // $FlowFixMe[cannot-write]
+        erroredComponent.debugStack = element._debugStack;
+        if (supportsCreateTask) {
           // $FlowFixMe[cannot-write]
-          erroredComponent.debugStack = element._debugStack;
-          if (supportsCreateTask) {
-            // $FlowFixMe[cannot-write]
-            erroredComponent.debugTask = element._debugTask;
-          }
+          erroredComponent.debugTask = element._debugTask;
         }
         erroredChunk._debugInfo = [erroredComponent];
       }
@@ -1057,13 +1046,11 @@ function waitForReference<T>(
           name: getComponentNameFromType(element.type) || '',
           owner: element._owner,
         };
-        if (enableOwnerStacks) {
+        // $FlowFixMe[cannot-write]
+        erroredComponent.debugStack = element._debugStack;
+        if (supportsCreateTask) {
           // $FlowFixMe[cannot-write]
-          erroredComponent.debugStack = element._debugStack;
-          if (supportsCreateTask) {
-            // $FlowFixMe[cannot-write]
-            erroredComponent.debugTask = element._debugTask;
-          }
+          erroredComponent.debugTask = element._debugTask;
         }
         const chunkDebugInfo: ReactDebugInfo =
           chunk._debugInfo || (chunk._debugInfo = []);
@@ -1087,7 +1074,7 @@ function loadServerReference<A: Iterable<any>, T>(
     bound: null | Thenable<Array<any>>,
     name?: string, // DEV-only
     env?: string, // DEV-only
-    location?: ReactCallSite, // DEV-only
+    location?: ReactFunctionLocation, // DEV-only
   },
   parentObject: Object,
   key: string,
@@ -1112,7 +1099,14 @@ function loadServerReference<A: Iterable<any>, T>(
   let promise: null | Thenable<any> = preloadModule(serverReference);
   if (!promise) {
     if (!metaData.bound) {
-      return (requireModule(serverReference): any);
+      const resolvedValue = (requireModule(serverReference): any);
+      registerBoundServerReference(
+        resolvedValue,
+        metaData.id,
+        metaData.bound,
+        response._encodeFormAction,
+      );
+      return resolvedValue;
     } else {
       promise = Promise.resolve(metaData.bound);
     }
@@ -1143,6 +1137,13 @@ function loadServerReference<A: Iterable<any>, T>(
       boundArgs.unshift(null); // this
       resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
     }
+
+    registerBoundServerReference(
+      resolvedValue,
+      metaData.id,
+      metaData.bound,
+      response._encodeFormAction,
+    );
 
     parentObject[key] = resolvedValue;
 
@@ -1223,13 +1224,11 @@ function loadServerReference<A: Iterable<any>, T>(
           name: getComponentNameFromType(element.type) || '',
           owner: element._owner,
         };
-        if (enableOwnerStacks) {
+        // $FlowFixMe[cannot-write]
+        erroredComponent.debugStack = element._debugStack;
+        if (supportsCreateTask) {
           // $FlowFixMe[cannot-write]
-          erroredComponent.debugStack = element._debugStack;
-          if (supportsCreateTask) {
-            // $FlowFixMe[cannot-write]
-            erroredComponent.debugTask = element._debugTask;
-          }
+          erroredComponent.debugTask = element._debugTask;
         }
         const chunkDebugInfo: ReactDebugInfo =
           chunk._debugInfo || (chunk._debugInfo = []);
@@ -1609,8 +1608,8 @@ function parseModelTuple(
       tuple[2],
       tuple[3],
       __DEV__ ? (tuple: any)[4] : null,
-      __DEV__ && enableOwnerStacks ? (tuple: any)[5] : null,
-      __DEV__ && enableOwnerStacks ? (tuple: any)[6] : 0,
+      __DEV__ ? (tuple: any)[5] : null,
+      __DEV__ ? (tuple: any)[6] : 0,
     );
   }
   return value;
@@ -2083,27 +2082,6 @@ function stopStream(
   controller.close(row === '' ? '"$undefined"' : row);
 }
 
-function formatV8Stack(
-  errorName: string,
-  errorMessage: string,
-  stack: null | ReactStackTrace,
-): string {
-  let v8StyleStack = errorName + ': ' + errorMessage;
-  if (stack) {
-    for (let i = 0; i < stack.length; i++) {
-      const frame = stack[i];
-      const [name, filename, line, col] = frame;
-      if (!name) {
-        v8StyleStack += '\n    at ' + filename + ':' + line + ':' + col;
-      } else {
-        v8StyleStack +=
-          '\n    at ' + name + ' (' + filename + ':' + line + ':' + col + ')';
-      }
-    }
-  }
-  return v8StyleStack;
-}
-
 type ErrorWithDigest = Error & {digest?: string};
 function resolveErrorProd(response: Response): Error {
   if (__DEV__) {
@@ -2124,11 +2102,12 @@ function resolveErrorProd(response: Response): Error {
 
 function resolveErrorDev(
   response: Response,
-  errorInfo: {message: string, stack: ReactStackTrace, env: string, ...},
+  errorInfo: ReactErrorInfoDev,
 ): Error {
-  const message: string = errorInfo.message;
-  const stack: ReactStackTrace = errorInfo.stack;
-  const env: string = errorInfo.env;
+  const name = errorInfo.name;
+  const message = errorInfo.message;
+  const stack = errorInfo.stack;
+  const env = errorInfo.env;
 
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -2139,36 +2118,25 @@ function resolveErrorDev(
   }
 
   let error;
-  if (!enableOwnerStacks && !enableServerComponentLogs) {
-    // Executing Error within a native stack isn't really limited to owner stacks
-    // but we gate it behind the same flag for now while iterating.
-    // eslint-disable-next-line react-internal/prod-error-codes
-    error = Error(
+  const callStack = buildFakeCallStack(
+    response,
+    stack,
+    env,
+    // $FlowFixMe[incompatible-use]
+    Error.bind(
+      null,
       message ||
         'An error occurred in the Server Components render but no message was provided',
-    );
-    // For backwards compat we use the V8 formatting when the flag is off.
-    error.stack = formatV8Stack(error.name, error.message, stack);
+    ),
+  );
+  const rootTask = getRootTask(response, env);
+  if (rootTask != null) {
+    error = rootTask.run(callStack);
   } else {
-    const callStack = buildFakeCallStack(
-      response,
-      stack,
-      env,
-      // $FlowFixMe[incompatible-use]
-      Error.bind(
-        null,
-        message ||
-          'An error occurred in the Server Components render but no message was provided',
-      ),
-    );
-    const rootTask = getRootTask(response, env);
-    if (rootTask != null) {
-      error = rootTask.run(callStack);
-    } else {
-      error = callStack();
-    }
+    error = callStack();
   }
 
+  (error: any).name = name;
   (error: any).environmentName = env;
   return error;
 }
@@ -2212,34 +2180,20 @@ function resolvePostponeDev(
     );
   }
   let postponeInstance: Postpone;
-  if (!enableOwnerStacks) {
-    // Executing Error within a native stack isn't really limited to owner stacks
-    // but we gate it behind the same flag for now while iterating.
-    // eslint-disable-next-line react-internal/prod-error-codes
-    postponeInstance = (Error(reason || ''): any);
-    postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
-    // For backwards compat we use the V8 formatting when the flag is off.
-    postponeInstance.stack = formatV8Stack(
-      postponeInstance.name,
-      postponeInstance.message,
-      stack,
-    );
+  const callStack = buildFakeCallStack(
+    response,
+    stack,
+    env,
+    // $FlowFixMe[incompatible-use]
+    Error.bind(null, reason || ''),
+  );
+  const rootTask = response._debugRootTask;
+  if (rootTask != null) {
+    postponeInstance = rootTask.run(callStack);
   } else {
-    const callStack = buildFakeCallStack(
-      response,
-      stack,
-      env,
-      // $FlowFixMe[incompatible-use]
-      Error.bind(null, reason || ''),
-    );
-    const rootTask = response._debugRootTask;
-    if (rootTask != null) {
-      postponeInstance = rootTask.run(callStack);
-    } else {
-      postponeInstance = callStack();
-    }
-    postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
+    postponeInstance = callStack();
   }
+  postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
@@ -2258,8 +2212,7 @@ function resolveHint<Code: HintCode>(
   dispatchHint(code, hintModel);
 }
 
-const supportsCreateTask =
-  __DEV__ && enableOwnerStacks && !!(console: any).createTask;
+const supportsCreateTask = __DEV__ && !!(console: any).createTask;
 
 type FakeFunction<T> = (() => T) => T;
 const fakeFunctionCache: Map<string, FakeFunction<any>> = __DEV__
@@ -2273,6 +2226,8 @@ function createFakeFunction<T>(
   sourceMap: null | string,
   line: number,
   col: number,
+  enclosingLine: number,
+  enclosingCol: number,
   environmentName: string,
 ): FakeFunction<T> {
   // This creates a fake copy of a Server Module. It represents a module that has already
@@ -2290,24 +2245,102 @@ function createFakeFunction<T>(
   // This allows us to use the original source map as the source map of this fake file to
   // point to the original source.
   let code;
-  if (line <= 1) {
-    const minSize = encodedName.length + 7;
-    code =
-      '({' +
-      encodedName +
-      ':_=>' +
-      ' '.repeat(col < minSize ? 0 : col - minSize) +
-      '_()})\n' +
-      comment;
+  // Normalize line/col to zero based.
+  if (enclosingLine < 1) {
+    enclosingLine = 0;
   } else {
+    enclosingLine--;
+  }
+  if (enclosingCol < 1) {
+    enclosingCol = 0;
+  } else {
+    enclosingCol--;
+  }
+  if (line < 1) {
+    line = 0;
+  } else {
+    line--;
+  }
+  if (col < 1) {
+    col = 0;
+  } else {
+    col--;
+  }
+  if (line < enclosingLine || (line === enclosingLine && col < enclosingCol)) {
+    // Protection against invalid enclosing information. Should not happen.
+    enclosingLine = 0;
+    enclosingCol = 0;
+  }
+  if (line < 1) {
+    // Fit everything on the first line.
+    const minCol = encodedName.length + 3;
+    let enclosingColDistance = enclosingCol - minCol;
+    if (enclosingColDistance < 0) {
+      enclosingColDistance = 0;
+    }
+    let colDistance = col - enclosingColDistance - minCol - 3;
+    if (colDistance < 0) {
+      colDistance = 0;
+    }
     code =
-      comment +
-      '\n'.repeat(line - 2) +
       '({' +
       encodedName +
-      ':_=>\n' +
-      ' '.repeat(col < 1 ? 0 : col - 1) +
+      ':' +
+      ' '.repeat(enclosingColDistance) +
+      '_=>' +
+      ' '.repeat(colDistance) +
       '_()})';
+  } else if (enclosingLine < 1) {
+    // Fit just the enclosing function on the first line.
+    const minCol = encodedName.length + 3;
+    let enclosingColDistance = enclosingCol - minCol;
+    if (enclosingColDistance < 0) {
+      enclosingColDistance = 0;
+    }
+    code =
+      '({' +
+      encodedName +
+      ':' +
+      ' '.repeat(enclosingColDistance) +
+      '_=>' +
+      '\n'.repeat(line - enclosingLine) +
+      ' '.repeat(col) +
+      '_()})';
+  } else if (enclosingLine === line) {
+    // Fit the enclosing function and callsite on same line.
+    let colDistance = col - enclosingCol - 3;
+    if (colDistance < 0) {
+      colDistance = 0;
+    }
+    code =
+      '\n'.repeat(enclosingLine - 1) +
+      '({' +
+      encodedName +
+      ':\n' +
+      ' '.repeat(enclosingCol) +
+      '_=>' +
+      ' '.repeat(colDistance) +
+      '_()})';
+  } else {
+    // This is the ideal because we can always encode any position.
+    code =
+      '\n'.repeat(enclosingLine - 1) +
+      '({' +
+      encodedName +
+      ':\n' +
+      ' '.repeat(enclosingCol) +
+      '_=>' +
+      '\n'.repeat(line - enclosingLine) +
+      ' '.repeat(col) +
+      '_()})';
+  }
+
+  if (enclosingLine < 1) {
+    // If the function starts at the first line, we append the comment after.
+    code = code + '\n' + comment;
+  } else {
+    // Otherwise we prepend the comment on the first line.
+    code = comment + code;
   }
 
   if (filename.startsWith('/')) {
@@ -2367,7 +2400,7 @@ function buildFakeCallStack<T>(
     const frameKey = frame.join('-') + '-' + environmentName;
     let fn = fakeFunctionCache.get(frameKey);
     if (fn === undefined) {
-      const [name, filename, line, col] = frame;
+      const [name, filename, line, col, enclosingLine, enclosingCol] = frame;
       const findSourceMapURL = response._debugFindSourceMapURL;
       const sourceMap = findSourceMapURL
         ? findSourceMapURL(filename, environmentName)
@@ -2378,6 +2411,8 @@ function buildFakeCallStack<T>(
         sourceMap,
         line,
         col,
+        enclosingLine,
+        enclosingCol,
         environmentName,
       );
       // TODO: This cache should technically live on the response since the _debugFindSourceMapURL
@@ -2600,15 +2635,11 @@ function resolveDebugInfo(
 let currentOwnerInDEV: null | ReactComponentInfo = null;
 function getCurrentStackInDEV(): string {
   if (__DEV__) {
-    if (enableOwnerStacks) {
-      const owner: null | ReactComponentInfo = currentOwnerInDEV;
-      if (owner === null) {
-        return '';
-      }
-      return getOwnerStackByComponentInfoInDev(owner);
+    const owner: null | ReactComponentInfo = currentOwnerInDEV;
+    if (owner === null) {
+      return '';
     }
-    // We don't have Parent Stacks in Flight.
-    return '';
+    return getOwnerStackByComponentInfoInDev(owner);
   }
   return '';
 }
@@ -2698,11 +2729,6 @@ function resolveConsoleEntry(
   const owner = payload[2];
   const env = payload[3];
   const args = payload.slice(4);
-
-  if (!enableOwnerStacks && !enableServerComponentLogs) {
-    bindToConsole(methodName, args, env)();
-    return;
-  }
 
   replayConsoleWithCallStackInDEV(
     response,

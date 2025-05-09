@@ -150,7 +150,10 @@ function getVisibleChildren(element: Element): React$Node {
         node.tagName !== 'TEMPLATE' &&
         node.tagName !== 'template' &&
         !node.hasAttribute('hidden') &&
-        !node.hasAttribute('aria-hidden')
+        !node.hasAttribute('aria-hidden') &&
+        // Ignore the render blocking expect
+        (node.getAttribute('rel') !== 'expect' ||
+          node.getAttribute('blocking') !== 'render')
       ) {
         const props: any = {};
         const attributes = node.attributes;

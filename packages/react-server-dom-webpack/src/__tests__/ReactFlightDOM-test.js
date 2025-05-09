@@ -193,7 +193,10 @@ describe('ReactFlightDOM', () => {
             node.tagName !== 'TEMPLATE' &&
             node.tagName !== 'template' &&
             !node.hasAttribute('hidden') &&
-            !node.hasAttribute('aria-hidden'))
+            !node.hasAttribute('aria-hidden') &&
+            // Ignore the render blocking expect
+            (node.getAttribute('rel') !== 'expect' ||
+              node.getAttribute('blocking') !== 'render'))
         ) {
           const props = {};
           const attributes = node.attributes;
@@ -1917,11 +1920,15 @@ describe('ReactFlightDOM', () => {
 
     expect(content1).toEqual(
       '<!DOCTYPE html><html><head><link rel="preload" href="before1" as="style"/>' +
-        '<link rel="preload" href="after1" as="style"/></head><body><p>hello world</p></body></html>',
+        '<link rel="preload" href="after1" as="style"/>' +
+        '<link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body><p>hello world</p><template id="«R»"></template></body></html>',
     );
     expect(content2).toEqual(
       '<!DOCTYPE html><html><head><link rel="preload" href="before2" as="style"/>' +
-        '<link rel="preload" href="after2" as="style"/></head><body><p>hello world</p></body></html>',
+        '<link rel="preload" href="after2" as="style"/>' +
+        '<link rel="expect" href="#«R»" blocking="render"/></head>' +
+        '<body><p>hello world</p><template id="«R»"></template></body></html>',
     );
   });
 

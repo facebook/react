@@ -47,8 +47,8 @@ import {
   updateTextarea,
   restoreControlledTextareaState,
 } from './ReactDOMTextarea';
+import {setSrcObject} from './ReactDOMSrcObject';
 import {validateTextNesting} from './validateDOMNesting';
-import {track} from './inputValueTracking';
 import setTextContent from './setTextContent';
 import {
   createDangerousStringForStyles,
@@ -63,7 +63,16 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import sanitizeURL from '../shared/sanitizeURL';
 
-import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
+import noop from 'shared/noop';
+
+import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
+
+import {
+  enableHydrationChangeEvent,
+  enableScrollEndPolyfill,
+  enableSrcObject,
+  enableTrustedTypesIntegration,
+} from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
@@ -312,8 +321,6 @@ function checkForUnmatchedText(
   return false;
 }
 
-function noop() {}
-
 export function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
   // non-interactive elements, which means delegated click listeners do not
@@ -342,7 +349,7 @@ function setProp(
     case 'children': {
       if (typeof value === 'string') {
         if (__DEV__) {
-          validateTextNesting(value, tag);
+          validateTextNesting(value, tag, false);
         }
         // Avoid setting initial textContent when the text is empty. In IE11 setting
         // textContent on a <textarea> will cause the placeholder to not
@@ -356,13 +363,15 @@ function setProp(
       } else if (typeof value === 'number' || typeof value === 'bigint') {
         if (__DEV__) {
           // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
-          validateTextNesting('' + value, tag);
+          validateTextNesting('' + value, tag, false);
         }
         const canSetTextContent = tag !== 'body';
         if (canSetTextContent) {
           // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           setTextContent(domElement, '' + value);
         }
+      } else {
+        return;
       }
       break;
     }
@@ -386,7 +395,7 @@ function setProp(
     }
     case 'style': {
       setValueForStyles(domElement, value, prevValue);
-      break;
+      return;
     }
     // These attributes accept URLs. These must not allow javascript: URLS.
     case 'data':
@@ -395,7 +404,40 @@ function setProp(
         break;
       }
     // fallthrough
-    case 'src':
+    case 'src': {
+      if (enableSrcObject && typeof value === 'object' && value !== null) {
+        // Some tags support object sources like Blob, File, MediaSource and MediaStream.
+        if (tag === 'img' || tag === 'video' || tag === 'audio') {
+          try {
+            setSrcObject(domElement, tag, value);
+            break;
+          } catch (x) {
+            // If URL.createObjectURL() errors, it was probably some other object type
+            // that should be toString:ed instead, so we just fall-through to the normal
+            // path.
+          }
+        } else {
+          if (__DEV__) {
+            try {
+              // This should always error.
+              URL.revokeObjectURL(URL.createObjectURL((value: any)));
+              if (tag === 'source') {
+                console.error(
+                  'Passing Blob, MediaSource or MediaStream to <source src> is not supported. ' +
+                    'Pass it directly to <img src>, <video src> or <audio src> instead.',
+                );
+              } else {
+                console.error(
+                  'Passing Blob, MediaSource or MediaStream to <%s src> is not supported.',
+                  tag,
+                );
+              }
+            } catch (x) {}
+          }
+        }
+      }
+      // Fallthrough
+    }
     case 'href': {
       if (
         value === '' &&
@@ -524,7 +566,7 @@ function setProp(
         }
         trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
       }
-      break;
+      return;
     }
     case 'onScroll': {
       if (value != null) {
@@ -533,7 +575,7 @@ function setProp(
         }
         listenToNonDelegatedEvent('scroll', domElement);
       }
-      break;
+      return;
     }
     case 'onScrollEnd': {
       if (value != null) {
@@ -541,8 +583,12 @@ function setProp(
           warnForInvalidEventListener(key, value);
         }
         listenToNonDelegatedEvent('scrollend', domElement);
+        if (enableScrollEndPolyfill) {
+          // For use by the polyfill.
+          listenToNonDelegatedEvent('scroll', domElement);
+        }
       }
-      break;
+      return;
     }
     case 'dangerouslySetInnerHTML': {
       if (value != null) {
@@ -849,7 +895,7 @@ function setProp(
     }
     case 'innerText':
     case 'textContent':
-      break;
+      return;
     case 'popoverTarget':
       if (__DEV__) {
         if (
@@ -879,12 +925,16 @@ function setProp(
         ) {
           warnForInvalidEventListener(key, value);
         }
+        // Updating events doesn't affect the visuals.
+        return;
       } else {
         const attributeName = getAttributeAlias(key);
         setValueForAttribute(domElement, attributeName, value);
       }
     }
   }
+  // To avoid marking things as host mutations we do early returns above.
+  trackHostMutation();
 }
 
 function setPropOnCustomElement(
@@ -898,7 +948,7 @@ function setPropOnCustomElement(
   switch (key) {
     case 'style': {
       setValueForStyles(domElement, value, prevValue);
-      break;
+      return;
     }
     case 'dangerouslySetInnerHTML': {
       if (value != null) {
@@ -927,6 +977,8 @@ function setPropOnCustomElement(
       } else if (typeof value === 'number' || typeof value === 'bigint') {
         // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         setTextContent(domElement, '' + value);
+      } else {
+        return;
       }
       break;
     }
@@ -937,7 +989,7 @@ function setPropOnCustomElement(
         }
         listenToNonDelegatedEvent('scroll', domElement);
       }
-      break;
+      return;
     }
     case 'onScrollEnd': {
       if (value != null) {
@@ -945,8 +997,12 @@ function setPropOnCustomElement(
           warnForInvalidEventListener(key, value);
         }
         listenToNonDelegatedEvent('scrollend', domElement);
+        if (enableScrollEndPolyfill) {
+          // For use by the polyfill.
+          listenToNonDelegatedEvent('scroll', domElement);
+        }
       }
-      break;
+      return;
     }
     case 'onClick': {
       // TODO: This cast may not be sound for SVG, MathML or custom elements.
@@ -956,29 +1012,34 @@ function setPropOnCustomElement(
         }
         trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
       }
-      break;
+      return;
     }
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
     case 'innerHTML':
     case 'ref': {
       // Noop
-      break;
+      return;
     }
     case 'innerText': // Properties
     case 'textContent':
-      break;
+      return;
     // Fall through
     default: {
       if (registrationNameDependencies.hasOwnProperty(key)) {
         if (__DEV__ && value != null && typeof value !== 'function') {
           warnForInvalidEventListener(key, value);
         }
+        return;
       } else {
         setValueForPropertyOnCustomComponent(domElement, key, value);
+        // We track mutations inside this call.
+        return;
       }
     }
   }
+  // To avoid marking things as host mutations we do early returns above.
+  trackHostMutation();
 }
 
 export function setInitialProperties(
@@ -1126,7 +1187,6 @@ export function setInitialProperties(
         name,
         false,
       );
-      track((domElement: any));
       return;
     }
     case 'select': {
@@ -1224,7 +1284,6 @@ export function setInitialProperties(
       // up necessary since we never stop tracking anymore.
       validateTextareaProps(domElement, props);
       initTextarea(domElement, value, defaultValue, children);
-      track((domElement: any));
       return;
     }
     case 'option': {
@@ -1254,6 +1313,8 @@ export function setInitialProperties(
       return;
     }
     case 'dialog': {
+      listenToNonDelegatedEvent('beforetoggle', domElement);
+      listenToNonDelegatedEvent('toggle', domElement);
       listenToNonDelegatedEvent('cancel', domElement);
       listenToNonDelegatedEvent('close', domElement);
       break;
@@ -1430,26 +1491,44 @@ export function updateProperties(
         ) {
           switch (propKey) {
             case 'type': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               type = nextProp;
               break;
             }
             case 'name': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               name = nextProp;
               break;
             }
             case 'checked': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               checked = nextProp;
               break;
             }
             case 'defaultChecked': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               defaultChecked = nextProp;
               break;
             }
             case 'value': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               value = nextProp;
               break;
             }
             case 'defaultValue': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               defaultValue = nextProp;
               break;
             }
@@ -1553,8 +1632,9 @@ export function updateProperties(
             }
             // Fallthrough
             default: {
-              if (!nextProps.hasOwnProperty(propKey))
+              if (!nextProps.hasOwnProperty(propKey)) {
                 setProp(domElement, tag, propKey, null, nextProps, lastProp);
+              }
             }
           }
         }
@@ -1568,15 +1648,24 @@ export function updateProperties(
         ) {
           switch (propKey) {
             case 'value': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               value = nextProp;
               // This is handled by updateSelect below.
               break;
             }
             case 'defaultValue': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               defaultValue = nextProp;
               break;
             }
             case 'multiple': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               multiple = nextProp;
               // TODO: Just move the special case in here from setProp.
             }
@@ -1635,11 +1724,17 @@ export function updateProperties(
         ) {
           switch (propKey) {
             case 'value': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               value = nextProp;
               // This is handled by updateTextarea below.
               break;
             }
             case 'defaultValue': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               defaultValue = nextProp;
               break;
             }
@@ -1703,6 +1798,9 @@ export function updateProperties(
         ) {
           switch (propKey) {
             case 'selected': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               // TODO: Remove support for selected on option.
               (domElement: any).selected =
                 nextProp &&
@@ -2236,6 +2334,39 @@ function hydrateSanitizedAttribute(
   warnForPropDifference(propKey, serverValue, value, serverDifferences);
 }
 
+function hydrateSrcObjectAttribute(
+  domElement: Element,
+  value: Blob,
+  extraAttributes: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
+): void {
+  const attributeName = 'src';
+  extraAttributes.delete(attributeName);
+  const serverValue = domElement.getAttribute(attributeName);
+  if (serverValue != null && value != null) {
+    const size = value.size;
+    const type = value.type;
+    if (typeof size === 'number' && typeof type === 'string') {
+      if (serverValue.indexOf('data:' + type + ';base64,') === 0) {
+        // For Blobs we don't bother reading the actual data but just diff by checking if
+        // the byte length size of the Blob maches the length of the data url.
+        const prefixLength = 5 + type.length + 8;
+        let byteLength = ((serverValue.length - prefixLength) / 4) * 3;
+        if (serverValue[serverValue.length - 1] === '=') {
+          byteLength--;
+        }
+        if (serverValue[serverValue.length - 2] === '=') {
+          byteLength--;
+        }
+        if (byteLength === size) {
+          return;
+        }
+      }
+    }
+  }
+  warnForPropDifference('src', serverValue, value, serverDifferences);
+}
+
 function diffHydratedCustomComponent(
   domElement: Element,
   tag: string,
@@ -2482,7 +2613,45 @@ function diffHydratedGenericElement(
           continue;
         }
       // fallthrough
-      case 'src':
+      case 'src': {
+        if (enableSrcObject && typeof value === 'object' && value !== null) {
+          // Some tags support object sources like Blob, File, MediaSource and MediaStream.
+          if (tag === 'img' || tag === 'video' || tag === 'audio') {
+            try {
+              // Test if this is a compatible object
+              URL.revokeObjectURL(URL.createObjectURL((value: any)));
+              hydrateSrcObjectAttribute(
+                domElement,
+                value,
+                extraAttributes,
+                serverDifferences,
+              );
+              continue;
+            } catch (x) {
+              // If not, just fall through to the normal toString flow.
+            }
+          } else {
+            if (__DEV__) {
+              try {
+                // This should always error.
+                URL.revokeObjectURL(URL.createObjectURL((value: any)));
+                if (tag === 'source') {
+                  console.error(
+                    'Passing Blob, MediaSource or MediaStream to <source src> is not supported. ' +
+                      'Pass it directly to <img src>, <video src> or <audio src> instead.',
+                  );
+                } else {
+                  console.error(
+                    'Passing Blob, MediaSource or MediaStream to <%s src> is not supported.',
+                    tag,
+                  );
+                }
+              } catch (x) {}
+            }
+          }
+        }
+        // Fallthrough
+      }
       case 'href':
         if (
           value === '' &&
@@ -2510,26 +2679,17 @@ function diffHydratedGenericElement(
               );
             }
           }
-          hydrateSanitizedAttribute(
-            domElement,
-            propKey,
-            propKey,
-            null,
-            extraAttributes,
-            serverDifferences,
-          );
-          continue;
-        } else {
-          hydrateSanitizedAttribute(
-            domElement,
-            propKey,
-            propKey,
-            value,
-            extraAttributes,
-            serverDifferences,
-          );
           continue;
         }
+        hydrateSanitizedAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes,
+          serverDifferences,
+        );
+        continue;
       case 'action':
       case 'formAction': {
         const serverValue = domElement.getAttribute(propKey);
@@ -2938,17 +3098,18 @@ export function hydrateProperties(
       // option and select we don't quite do the same thing and select
       // is not resilient to the DOM state changing so we don't do that here.
       // TODO: Consider not doing this for input and textarea.
-      initInput(
-        domElement,
-        props.value,
-        props.defaultValue,
-        props.checked,
-        props.defaultChecked,
-        props.type,
-        props.name,
-        true,
-      );
-      track((domElement: any));
+      if (!enableHydrationChangeEvent) {
+        initInput(
+          domElement,
+          props.value,
+          props.defaultValue,
+          props.checked,
+          props.defaultChecked,
+          props.type,
+          props.name,
+          true,
+        );
+      }
       break;
     case 'option':
       validateOptionProps(domElement, props);
@@ -2972,8 +3133,14 @@ export function hydrateProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       validateTextareaProps(domElement, props);
-      initTextarea(domElement, props.value, props.defaultValue, props.children);
-      track((domElement: any));
+      if (!enableHydrationChangeEvent) {
+        initTextarea(
+          domElement,
+          props.value,
+          props.defaultValue,
+          props.children,
+        );
+      }
       break;
   }
 
@@ -3015,6 +3182,10 @@ export function hydrateProperties(
 
   if (props.onScrollEnd != null) {
     listenToNonDelegatedEvent('scrollend', domElement);
+    if (enableScrollEndPolyfill) {
+      // For use by the polyfill.
+      listenToNonDelegatedEvent('scroll', domElement);
+    }
   }
 
   if (props.onClick != null) {

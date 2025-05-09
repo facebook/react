@@ -30,7 +30,7 @@ function Component({propA}) {
 >  8 |     };
      | ^^^^^^^^^^^^
 >  9 |   }, [propA.x]);
-     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected (5:9)
+     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `propA`, but the source dependencies were [propA.x]. Inferred less specific property than source (5:9)
   10 | }
   11 |
 ```

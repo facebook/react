@@ -859,6 +859,8 @@ export function attach(
       plugins: {
         stylex: null,
       },
+
+      nativeTag: null,
     };
   }
 

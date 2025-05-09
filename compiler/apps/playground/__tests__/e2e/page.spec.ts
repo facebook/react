@@ -9,6 +9,13 @@ import {expect, test} from '@playwright/test';
 import {encodeStore, type Store} from '../../lib/stores';
 import {format} from 'prettier';
 
+function isMonacoLoaded(): boolean {
+  return (
+    typeof window['MonacoEnvironment'] !== 'undefined' &&
+    window['__MONACO_LOADED__'] === true
+  );
+}
+
 function formatPrint(data: Array<string>): Promise<string> {
   return format(data.join(''), {parser: 'babel'});
 }
@@ -83,10 +90,29 @@ function useFoo(propVal: {+baz: number}) {
     `,
     noFormat: true,
   },
+  {
+    name: 'compilationMode-infer',
+    input: `// @compilationMode:"infer"
+function nonReactFn() {
+  return {};
+}
+    `,
+    noFormat: true,
+  },
+  {
+    name: 'compilationMode-all',
+    input: `// @compilationMode:"all"
+function nonReactFn() {
+  return {};
+}
+    `,
+    noFormat: true,
+  },
 ];
 
 test('editor should open successfully', async ({page}) => {
   await page.goto(`/`, {waitUntil: 'networkidle'});
+  await page.waitForFunction(isMonacoLoaded);
   await page.screenshot({
     fullPage: true,
     path: 'test-results/00-fresh-page.png',
@@ -102,6 +128,7 @@ test('editor should compile from hash successfully', async ({page}) => {
   };
   const hash = encodeStore(store);
   await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
+  await page.waitForFunction(isMonacoLoaded);
 
   // User input from hash compiles
   await page.screenshot({
@@ -125,6 +152,7 @@ test('reset button works', async ({page}) => {
   };
   const hash = encodeStore(store);
   await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
+  await page.waitForFunction(isMonacoLoaded);
 
   // Reset button works
   page.on('dialog', dialog => dialog.accept());
@@ -148,6 +176,7 @@ TEST_CASE_INPUTS.forEach((t, idx) =>
     };
     const hash = encodeStore(store);
     await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
+    await page.waitForFunction(isMonacoLoaded);
     await page.screenshot({
       fullPage: true,
       path: `test-results/03-0${idx}-${t.name}.png`,

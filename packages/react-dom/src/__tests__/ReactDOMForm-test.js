@@ -391,8 +391,7 @@ describe('ReactDOMForm', () => {
         '> <form action={function outerAction}>\n' +
         '    <input>\n' +
         '>   <form action={function innerAction} ref={{current:null}}>\n' +
-        '\n    in form (at **)' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in form (at **)'),
+        '\n    in form (at **)',
     ]);
 
     await submit(ref.current);
@@ -588,8 +587,7 @@ describe('ReactDOMForm', () => {
       'Cannot specify a "name" prop for a button that specifies a function as a formAction. ' +
         'React needs it to encode which action should be invoked. ' +
         'It will get overridden.\n' +
-        '    in input (at **)' +
-        (gate('enableOwnerStacks') ? '' : '\n    in form (at **)'),
+        '    in input (at **)',
     ]);
 
     await submit(inputRef.current);
@@ -1439,8 +1437,8 @@ describe('ReactDOMForm', () => {
     assertLog([
       'Suspend! [Count: 0]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
+      // pre-warming
+      'Suspend! [Count: 0]',
     ]);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
@@ -1450,8 +1448,8 @@ describe('ReactDOMForm', () => {
     assertLog([
       'Suspend! [Count: 1]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
+      // pre-warming
+      'Suspend! [Count: 1]',
     ]);
     expect(container.textContent).toBe('Loading...');
 
@@ -1484,8 +1482,8 @@ describe('ReactDOMForm', () => {
     await act(() => root.render(<App />));
     assertLog([
       'Suspend! [Count: 0]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
+      // pre-warming
+      'Suspend! [Count: 0]',
     ]);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
@@ -1494,16 +1492,17 @@ describe('ReactDOMForm', () => {
     await act(() => dispatch());
     assertConsoleErrorDev([
       [
-        'An async function was passed to useActionState, but it was dispatched outside of an action context. ' +
-          'This is likely not what you intended. ' +
-          'Either pass the dispatch function to an `action` prop, or dispatch manually inside `startTransition`',
+        'An async function with useActionState was called outside of a transition. ' +
+          'This is likely not what you intended (for example, isPending will not update ' +
+          'correctly). Either call the returned function inside startTransition, or pass it ' +
+          'to an `action` or `formAction` prop.',
         {withoutStack: true},
       ],
     ]);
     assertLog([
       'Suspend! [Count: 1]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
+      // pre-warming
+      'Suspend! [Count: 1]',
     ]);
     expect(container.textContent).toBe('Count: 0');
   });
@@ -1669,6 +1668,37 @@ describe('ReactDOMForm', () => {
     // The form was reset to the new value from the server.
     expect(inputRef.current.value).toBe('acdlite');
     expect(divRef.current.textContent).toEqual('Current username: acdlite');
+  });
+
+  it('parallel form submissions do not throw', async () => {
+    const formRef = React.createRef();
+    let resolve = null;
+    function App() {
+      async function submitForm() {
+        Scheduler.log('Action');
+        if (!resolve) {
+          await new Promise(res => {
+            resolve = res;
+          });
+        }
+      }
+      return <form ref={formRef} action={submitForm} />;
+    }
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    // Start first form submission
+    await act(async () => {
+      formRef.current.requestSubmit();
+    });
+    assertLog(['Action']);
+
+    // Submit form again while first form action is still pending
+    await act(async () => {
+      formRef.current.requestSubmit();
+      resolve(); // Resolve the promise to allow the first form action to complete
+    });
+    assertLog(['Action']);
   });
 
   it(
@@ -1970,7 +2000,6 @@ describe('ReactDOMForm', () => {
         'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
         'For details, see https://react.dev/link/attribute-behavior \n' +
         '    in button (at **)\n' +
-        (gate('enableOwnerStacks') ? '' : '    in form (at **)\n') +
         '    in App (at **)',
     ]);
     await submit(buttonRef.current);

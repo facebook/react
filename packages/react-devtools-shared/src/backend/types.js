@@ -76,6 +76,8 @@ export type WorkTagMap = {
   TracingMarkerComponent: WorkTag,
   YieldComponent: WorkTag,
   Throw: WorkTag,
+  ViewTransitionComponent: WorkTag,
+  ActivityComponent: WorkTag,
 };
 
 export type HostInstance = Object;
@@ -292,6 +294,9 @@ export type InspectedElement = {
 
   // UI plugins/visualizations for the inspected element.
   plugins: Plugins,
+
+  // React Native only.
+  nativeTag: number | null,
 };
 
 export const InspectElementErrorType = 'error';

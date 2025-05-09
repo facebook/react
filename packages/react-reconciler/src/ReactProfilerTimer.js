@@ -41,6 +41,13 @@ import * as Scheduler from 'scheduler';
 
 const {unstable_now: now} = Scheduler;
 
+const createTask =
+  // eslint-disable-next-line react-internal/no-production-logging
+  __DEV__ && console.createTask
+    ? // eslint-disable-next-line react-internal/no-production-logging
+      console.createTask
+    : (name: string) => null;
+
 export let renderStartTime: number = -0;
 export let commitStartTime: number = -0;
 export let commitEndTime: number = -0;
@@ -54,6 +61,7 @@ export let componentEffectErrors: null | Array<CapturedValue<mixed>> = null;
 
 export let blockingClampTime: number = -0;
 export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
+export let blockingUpdateTask: null | ConsoleTask = null; // First sync setState's stack trace.
 export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
 export let blockingEventType: null | string = null; // Event type of the first setState.
 export let blockingEventIsRepeat: boolean = false;
@@ -63,6 +71,7 @@ export let blockingSuspendedTime: number = -1.1;
 export let transitionClampTime: number = -0;
 export let transitionStartTime: number = -1.1; // First startTransition call before setState.
 export let transitionUpdateTime: number = -1.1; // First transition setState scheduled.
+export let transitionUpdateTask: null | ConsoleTask = null; // First transition setState's stack trace.
 export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
 export let transitionEventType: null | string = null; // Event type of the first transition.
 export let transitionEventIsRepeat: boolean = false;
@@ -79,13 +88,14 @@ export function startYieldTimer(reason: SuspendedReason) {
   yieldReason = reason;
 }
 
-export function startUpdateTimerByLane(lane: Lane): void {
+export function startUpdateTimerByLane(lane: Lane, method: string): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
   if (isSyncLane(lane) || isBlockingLane(lane)) {
     if (blockingUpdateTime < 0) {
       blockingUpdateTime = now();
+      blockingUpdateTask = createTask(method);
       if (isAlreadyRendering()) {
         blockingSpawnedUpdate = true;
       }
@@ -108,6 +118,7 @@ export function startUpdateTimerByLane(lane: Lane): void {
   } else if (isTransitionLane(lane)) {
     if (transitionUpdateTime < 0) {
       transitionUpdateTime = now();
+      transitionUpdateTask = createTask(method);
       if (transitionStartTime < 0) {
         const newEventTime = resolveEventTimeStamp();
         const newEventType = resolveEventType();
@@ -155,6 +166,7 @@ export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
 
 export function clearBlockingTimers(): void {
   blockingUpdateTime = -1.1;
+  blockingUpdateTask = null;
   blockingSuspendedTime = -1.1;
   blockingEventIsRepeat = true;
   blockingSpawnedUpdate = false;
@@ -194,6 +206,7 @@ export function startActionStateUpdate(): void {
   }
   if (transitionUpdateTime < 0) {
     transitionUpdateTime = ACTION_STATE_MARKER;
+    transitionUpdateTask = null;
   }
 }
 
@@ -204,6 +217,7 @@ export function clearAsyncTransitionTimer(): void {
 export function clearTransitionTimers(): void {
   transitionStartTime = -1.1;
   transitionUpdateTime = -1.1;
+  transitionUpdateTask = null;
   transitionSuspendedTime = -1.1;
   transitionEventIsRepeat = true;
 }
@@ -272,7 +286,6 @@ export function pushComponentEffectStart(): number {
   }
   const prevEffectStart = componentEffectStartTime;
   componentEffectStartTime = -1.1; // Track the next start.
-  componentEffectDuration = -0; // Reset component level duration.
   return prevEffectStart;
 }
 
@@ -284,6 +297,26 @@ export function popComponentEffectStart(prevEffectStart: number): void {
   if (prevEffectStart >= 0) {
     // Otherwise, we restore the previous parent's start time.
     componentEffectStartTime = prevEffectStart;
+  }
+}
+
+export function pushComponentEffectDuration(): number {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return 0;
+  }
+  const prevEffectDuration = componentEffectDuration;
+  componentEffectDuration = -0; // Reset component level duration.
+  return prevEffectDuration;
+}
+
+export function popComponentEffectDuration(prevEffectDuration: number): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+  // If the parent component didn't have a start time, we let this current time persist.
+  if (prevEffectDuration >= 0) {
+    // Otherwise, we restore the previous parent's start time.
+    componentEffectDuration = prevEffectDuration;
   }
 }
 

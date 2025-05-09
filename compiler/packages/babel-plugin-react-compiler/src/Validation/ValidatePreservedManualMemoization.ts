@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect, ErrorSeverity} from '..';
+import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {
   DeclarationId,
+  Effect,
   GeneratedSource,
   Identifier,
   IdentifierId,
@@ -30,6 +31,7 @@ import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
 } from '../ReactiveScopes/visitors';
+import {Result} from '../Utils/Result';
 import {getOrInsertDefault} from '../Utils/utils';
 
 /**
@@ -39,15 +41,15 @@ import {getOrInsertDefault} from '../Utils/utils';
  * This can occur if a value's mutable range somehow extended to include a hook and
  * was pruned.
  */
-export function validatePreservedManualMemoization(fn: ReactiveFunction): void {
+export function validatePreservedManualMemoization(
+  fn: ReactiveFunction,
+): Result<void, CompilerError> {
   const state = {
     errors: new CompilerError(),
     manualMemoState: null,
   };
   visitReactiveFunction(fn, new Visitor(), state);
-  if (state.errors.hasErrors()) {
-    throw state.errors;
-  }
+  return state.errors.asResult();
 }
 
 const DEBUG = false;
@@ -139,14 +141,14 @@ function getCompareDependencyResultDescription(
 ): string {
   switch (result) {
     case CompareDependencyResult.Ok:
-      return 'dependencies equal';
+      return 'Dependencies equal';
     case CompareDependencyResult.RootDifference:
     case CompareDependencyResult.PathDifference:
-      return 'inferred different dependency than source';
+      return 'Inferred different dependency than source';
     case CompareDependencyResult.RefAccessDifference:
-      return 'differences in ref.current access';
+      return 'Differences in ref.current access';
     case CompareDependencyResult.Subpath:
-      return 'inferred less specific property than source';
+      return 'Inferred less specific property than source';
   }
 }
 
@@ -277,17 +279,20 @@ function validateInferredDep(
     severity: ErrorSeverity.CannotPreserveMemoization,
     reason:
       'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected',
-    description: DEBUG
-      ? `The inferred dependency was \`${prettyPrintScopeDependency(
-          dep,
-        )}\`, but the source dependencies were [${validDepsInMemoBlock
-          .map(dep => printManualMemoDependency(dep, true))
-          .join(', ')}]. Detail: ${
-          errorDiagnostic
-            ? getCompareDependencyResultDescription(errorDiagnostic)
-            : 'none'
-        }`
-      : null,
+    description:
+      DEBUG ||
+      // If the dependency is a named variable then we can report it. Otherwise only print in debug mode
+      (dep.identifier.name != null && dep.identifier.name.kind === 'named')
+        ? `The inferred dependency was \`${prettyPrintScopeDependency(
+            dep,
+          )}\`, but the source dependencies were [${validDepsInMemoBlock
+            .map(dep => printManualMemoDependency(dep, true))
+            .join(', ')}]. ${
+            errorDiagnostic
+              ? getCompareDependencyResultDescription(errorDiagnostic)
+              : 'Inferred dependency not present in source'
+          }`
+        : null,
     loc: memoLocation,
     suggestions: null,
   });
@@ -326,13 +331,6 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       }
       case 'OptionalExpression': {
         return this.recordDepsInValue(value.value, state);
-      }
-      case 'ReactiveFunctionValue': {
-        CompilerError.throwTodo({
-          reason:
-            'Handle ReactiveFunctionValue in ValidatePreserveManualMemoization',
-          loc: value.loc,
-        });
       }
       case 'ConditionalExpression': {
         this.recordDepsInValue(value.test, state);

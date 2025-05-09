@@ -12,7 +12,6 @@
 let act;
 
 let React;
-let ReactDOM;
 let ReactDOMClient;
 let assertConsoleErrorDev;
 let assertConsoleWarnDev;
@@ -64,24 +63,6 @@ const POST_WILL_UNMOUNT_STATE = {
 };
 
 /**
- * Every React component is in one of these life cycles.
- */
-type ComponentLifeCycle =
-  /**
-   * Mounted components have a DOM node representation and are capable of
-   * receiving new props.
-   */
-  | 'MOUNTED'
-  /**
-   * Unmounted components are inactive and cannot receive new props.
-   */
-  | 'UNMOUNTED';
-
-function getLifeCycleState(instance): ComponentLifeCycle {
-  return instance.updater.isMounted(instance) ? 'MOUNTED' : 'UNMOUNTED';
-}
-
-/**
  * TODO: We should make any setState calls fail in
  * `getInitialState` and `componentWillMount`. They will usually fail
  * anyways because `this._renderedComponent` is empty, however, if a component
@@ -99,7 +80,6 @@ describe('ReactComponentLifeCycle', () => {
     } = require('internal-test-utils'));
 
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
   });
 
@@ -290,137 +270,6 @@ describe('ReactComponentLifeCycle', () => {
     });
   });
 
-  it('should correctly determine if a component is mounted', async () => {
-    class Component extends React.Component {
-      _isMounted() {
-        // No longer a public API, but we can test that it works internally by
-        // reaching into the updater.
-        return this.updater.isMounted(this);
-      }
-      UNSAFE_componentWillMount() {
-        expect(this._isMounted()).toBeFalsy();
-      }
-      componentDidMount() {
-        expect(this._isMounted()).toBeTruthy();
-      }
-      render() {
-        expect(this._isMounted()).toBeFalsy();
-        return <div />;
-      }
-    }
-
-    let instance;
-    const element = <Component ref={current => (instance = current)} />;
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(element);
-    });
-    assertConsoleErrorDev([
-      'Component is accessing isMounted inside its render() function. ' +
-        'render() should be a pure function of props and state. ' +
-        'It should never access something that requires stale data ' +
-        'from the previous render, such as refs. ' +
-        'Move this logic to componentDidMount and componentDidUpdate instead.\n' +
-        '    in Component (at **)',
-    ]);
-    expect(instance._isMounted()).toBeTruthy();
-  });
-
-  it('should correctly determine if a null component is mounted', async () => {
-    class Component extends React.Component {
-      _isMounted() {
-        // No longer a public API, but we can test that it works internally by
-        // reaching into the updater.
-        return this.updater.isMounted(this);
-      }
-      UNSAFE_componentWillMount() {
-        expect(this._isMounted()).toBeFalsy();
-      }
-      componentDidMount() {
-        expect(this._isMounted()).toBeTruthy();
-      }
-      render() {
-        expect(this._isMounted()).toBeFalsy();
-        return null;
-      }
-    }
-
-    let instance;
-    const element = <Component ref={current => (instance = current)} />;
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(element);
-    });
-    assertConsoleErrorDev([
-      'Component is accessing isMounted inside its render() function. ' +
-        'render() should be a pure function of props and state. ' +
-        'It should never access something that requires stale data ' +
-        'from the previous render, such as refs. ' +
-        'Move this logic to componentDidMount and componentDidUpdate instead.\n' +
-        '    in Component (at **)',
-    ]);
-    expect(instance._isMounted()).toBeTruthy();
-  });
-
-  it('isMounted should return false when unmounted', async () => {
-    class Component extends React.Component {
-      render() {
-        return <div />;
-      }
-    }
-
-    const root = ReactDOMClient.createRoot(document.createElement('div'));
-    const instanceRef = React.createRef();
-    await act(() => {
-      root.render(<Component ref={instanceRef} />);
-    });
-    const instance = instanceRef.current;
-
-    // No longer a public API, but we can test that it works internally by
-    // reaching into the updater.
-    expect(instance.updater.isMounted(instance)).toBe(true);
-
-    await act(() => {
-      root.unmount();
-    });
-
-    expect(instance.updater.isMounted(instance)).toBe(false);
-  });
-
-  // @gate www && classic
-  it('warns if legacy findDOMNode is used inside render', async () => {
-    class Component extends React.Component {
-      state = {isMounted: false};
-      componentDidMount() {
-        this.setState({isMounted: true});
-      }
-      render() {
-        if (this.state.isMounted) {
-          expect(ReactDOM.findDOMNode(this).tagName).toBe('DIV');
-        }
-        return <div />;
-      }
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(<Component />);
-    });
-    assertConsoleErrorDev([
-      'Component is accessing findDOMNode inside its render(). ' +
-        'render() should be a pure function of props and state. ' +
-        'It should never access something that requires stale data ' +
-        'from the previous render, such as refs. ' +
-        'Move this logic to componentDidMount and componentDidUpdate instead.\n' +
-        '    in Component (at **)',
-    ]);
-  });
-
   it('should carry through each of the phases of setup', async () => {
     class LifeCycleComponent extends React.Component {
       constructor(props, context) {
@@ -433,20 +282,16 @@ describe('ReactComponentLifeCycle', () => {
           hasWillUnmountCompleted: false,
         };
         this._testJournal.returnedFromGetInitialState = clone(initState);
-        this._testJournal.lifeCycleAtStartOfGetInitialState =
-          getLifeCycleState(this);
         this.state = initState;
       }
 
       UNSAFE_componentWillMount() {
         this._testJournal.stateAtStartOfWillMount = clone(this.state);
-        this._testJournal.lifeCycleAtStartOfWillMount = getLifeCycleState(this);
         this.state.hasWillMountCompleted = true;
       }
 
       componentDidMount() {
         this._testJournal.stateAtStartOfDidMount = clone(this.state);
-        this._testJournal.lifeCycleAtStartOfDidMount = getLifeCycleState(this);
         this.setState({hasDidMountCompleted: true});
       }
 
@@ -454,10 +299,8 @@ describe('ReactComponentLifeCycle', () => {
         const isInitialRender = !this.state.hasRenderCompleted;
         if (isInitialRender) {
           this._testJournal.stateInInitialRender = clone(this.state);
-          this._testJournal.lifeCycleInInitialRender = getLifeCycleState(this);
         } else {
           this._testJournal.stateInLaterRender = clone(this.state);
-          this._testJournal.lifeCycleInLaterRender = getLifeCycleState(this);
         }
         // you would *NEVER* do anything like this in real code!
         this.state.hasRenderCompleted = true;
@@ -466,8 +309,6 @@ describe('ReactComponentLifeCycle', () => {
 
       componentWillUnmount() {
         this._testJournal.stateAtStartOfWillUnmount = clone(this.state);
-        this._testJournal.lifeCycleAtStartOfWillUnmount =
-          getLifeCycleState(this);
         this.state.hasWillUnmountCompleted = true;
       }
     }
@@ -480,52 +321,33 @@ describe('ReactComponentLifeCycle', () => {
     await act(() => {
       root.render(<LifeCycleComponent ref={instanceRef} />);
     });
-    assertConsoleErrorDev([
-      'LifeCycleComponent is accessing isMounted inside its render() function. ' +
-        'render() should be a pure function of props and state. ' +
-        'It should never access something that requires stale data ' +
-        'from the previous render, such as refs. ' +
-        'Move this logic to componentDidMount and componentDidUpdate instead.\n' +
-        '    in LifeCycleComponent (at **)',
-    ]);
     const instance = instanceRef.current;
 
     // getInitialState
     expect(instance._testJournal.returnedFromGetInitialState).toEqual(
       GET_INIT_STATE_RETURN_VAL,
     );
-    expect(instance._testJournal.lifeCycleAtStartOfGetInitialState).toBe(
-      'UNMOUNTED',
-    );
 
     // componentWillMount
     expect(instance._testJournal.stateAtStartOfWillMount).toEqual(
       instance._testJournal.returnedFromGetInitialState,
     );
-    expect(instance._testJournal.lifeCycleAtStartOfWillMount).toBe('UNMOUNTED');
 
     // componentDidMount
     expect(instance._testJournal.stateAtStartOfDidMount).toEqual(
       DID_MOUNT_STATE,
     );
-    expect(instance._testJournal.lifeCycleAtStartOfDidMount).toBe('MOUNTED');
 
     // initial render
     expect(instance._testJournal.stateInInitialRender).toEqual(
       INIT_RENDER_STATE,
     );
-    expect(instance._testJournal.lifeCycleInInitialRender).toBe('UNMOUNTED');
-
-    expect(getLifeCycleState(instance)).toBe('MOUNTED');
 
     // Now *update the component*
     instance.forceUpdate();
 
     // render 2nd time
     expect(instance._testJournal.stateInLaterRender).toEqual(NEXT_RENDER_STATE);
-    expect(instance._testJournal.lifeCycleInLaterRender).toBe('MOUNTED');
-
-    expect(getLifeCycleState(instance)).toBe('MOUNTED');
 
     await act(() => {
       root.unmount();
@@ -535,10 +357,8 @@ describe('ReactComponentLifeCycle', () => {
       WILL_UNMOUNT_STATE,
     );
     // componentWillUnmount called right before unmount.
-    expect(instance._testJournal.lifeCycleAtStartOfWillUnmount).toBe('MOUNTED');
 
     // But the current lifecycle of the component is unmounted.
-    expect(getLifeCycleState(instance)).toBe('UNMOUNTED');
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
   });
 

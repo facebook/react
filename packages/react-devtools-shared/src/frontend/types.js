@@ -49,6 +49,8 @@ export const ElementTypeSuspense = 12;
 export const ElementTypeSuspenseList = 13;
 export const ElementTypeTracingMarker = 14;
 export const ElementTypeVirtual = 15;
+export const ElementTypeViewTransition = 16;
+export const ElementTypeActivity = 17;
 
 // Different types of elements displayed in the Elements tree.
 // These types may be used to visually distinguish types,
@@ -66,7 +68,9 @@ export type ElementType =
   | 12
   | 13
   | 14
-  | 15;
+  | 15
+  | 16
+  | 17;
 
 // WARNING
 // The values below are referenced by ComponentFilters (which are saved via localStorage).
@@ -255,6 +259,9 @@ export type InspectedElement = {
 
   // UI plugins/visualizations for the inspected element.
   plugins: Plugins,
+
+  // React Native only.
+  nativeTag: number | null,
 };
 
 // TODO: Add profiling type

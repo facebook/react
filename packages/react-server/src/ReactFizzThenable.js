@@ -20,6 +20,8 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
+import noop from 'shared/noop';
+
 export opaque type ThenableState = Array<Thenable<any>>;
 
 // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
@@ -39,8 +41,6 @@ export function createThenableState(): ThenableState {
   // suspends again, we'll reuse the same state.
   return [];
 }
-
-function noop(): void {}
 
 export function trackUsedThenable<T>(
   thenableState: ThenableState,

@@ -7,6 +7,7 @@ let useTransition;
 let useState;
 let useOptimistic;
 let textCache;
+let assertConsoleErrorDev;
 
 describe('ReactAsyncActions', () => {
   beforeEach(() => {
@@ -21,6 +22,8 @@ describe('ReactAsyncActions', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     useTransition = React.useTransition;
     useState = React.useState;
     useOptimistic = React.useOptimistic;
@@ -298,10 +301,9 @@ describe('ReactAsyncActions', () => {
       'Async action ended',
       'Pending: false',
       'Suspend! [A1]',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [B1]', 'Suspend! [C1]']
-        : []),
+      // pre-warming
+      'Suspend! [B1]',
+      'Suspend! [C1]',
     ]);
     expect(root).toMatchRenderedOutput(
       <>
@@ -318,8 +320,8 @@ describe('ReactAsyncActions', () => {
       'Pending: false',
       'A1',
       'Suspend! [B1]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [C1]'] : []),
+      // pre-warming
+      'Suspend! [C1]',
     ]);
     expect(root).toMatchRenderedOutput(
       <>
@@ -1231,15 +1233,16 @@ describe('ReactAsyncActions', () => {
     assertLog(['A']);
     expect(root).toMatchRenderedOutput(<div>A</div>);
 
-    await expect(async () => {
-      await act(() => {
-        setLoadingProgress('25%');
-        startTransition(() => setText('B'));
-      });
-    }).toErrorDev(
-      'An optimistic state update occurred outside a transition or ' +
-        'action. To fix, move the update to an action, or wrap ' +
-        'with startTransition.',
+    await act(() => {
+      setLoadingProgress('25%');
+      startTransition(() => setText('B'));
+    });
+    assertConsoleErrorDev(
+      [
+        'An optimistic state update occurred outside a transition or ' +
+          'action. To fix, move the update to an action, or wrap ' +
+          'with startTransition.',
+      ],
       {withoutStack: true},
     );
     assertLog(['Loading... (25%)', 'A', 'B']);

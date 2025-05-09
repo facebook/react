@@ -35,8 +35,7 @@ function bar(a, b) {
   if ($[0] !== a || $[1] !== b) {
     const x = [a, b];
     y = {};
-    let t;
-    t = {};
+    let t = {};
     const f0 = function () {
       y = x[0][1];
       t = x[1][0];
