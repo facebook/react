@@ -32,6 +32,7 @@ import {
   isMapType,
   isMutableEffect,
   isSetType,
+  isObjectType,
 } from '../HIR/HIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
 import {
@@ -1313,7 +1314,7 @@ function inferBlock(
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.object,
-          typeof instrValue.property === 'string'
+          isObjectType(instrValue.object.identifier)
             ? Effect.Store
             : Effect.Mutate,
           ValueReason.Other,
@@ -1342,25 +1343,21 @@ function inferBlock(
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.object,
-          Effect.Read,
+          Effect.Capture,
           ValueReason.Other,
         );
         const lvalue = instr.lvalue;
-        lvalue.effect = Effect.ConditionallyMutate;
+        lvalue.effect = Effect.Store;
         state.initialize(instrValue, state.kind(instrValue.object));
         state.define(lvalue, instrValue);
         continuation = {kind: 'funeffects'};
         break;
       }
       case 'ComputedStore': {
-        const effect =
-          state.kind(instrValue.object).kind === ValueKind.Context
-            ? Effect.ConditionallyMutate
-            : Effect.Capture;
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.value,
-          effect,
+          Effect.Capture,
           ValueReason.Other,
         );
         state.referenceAndRecordEffects(
@@ -1372,7 +1369,9 @@ function inferBlock(
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.object,
-          Effect.Store,
+          isObjectType(instrValue.object.identifier)
+            ? Effect.Store
+            : Effect.Mutate,
           ValueReason.Other,
         );
 
@@ -1409,7 +1408,7 @@ function inferBlock(
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.object,
-          Effect.Read,
+          Effect.Capture,
           ValueReason.Other,
         );
         state.referenceAndRecordEffects(
@@ -1419,7 +1418,7 @@ function inferBlock(
           ValueReason.Other,
         );
         const lvalue = instr.lvalue;
-        lvalue.effect = Effect.ConditionallyMutate;
+        lvalue.effect = Effect.Store;
         state.initialize(instrValue, state.kind(instrValue.object));
         state.define(lvalue, instrValue);
         continuation = {kind: 'funeffects'};
