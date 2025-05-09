@@ -429,3 +429,127 @@ declare const Bun: {
     input: string | $TypedArray | DataView | ArrayBuffer | SharedArrayBuffer,
   ): number,
 };
+
+// Navigation API
+
+declare const navigation: Navigation;
+
+interface NavigationResult {
+  committed: Promise<NavigationHistoryEntry>;
+  finished: Promise<NavigationHistoryEntry>;
+}
+
+declare class Navigation extends EventTarget {
+  entries(): NavigationHistoryEntry[];
+  +currentEntry: NavigationHistoryEntry | null;
+  updateCurrentEntry(options: NavigationUpdateCurrentEntryOptions): void;
+  +transition: NavigationTransition | null;
+
+  +canGoBack: boolean;
+  +canGoForward: boolean;
+
+  navigate(url: string, options?: NavigationNavigateOptions): NavigationResult;
+  reload(options?: NavigationReloadOptions): NavigationResult;
+
+  traverseTo(key: string, options?: NavigationOptions): NavigationResult;
+  back(options?: NavigationOptions): NavigationResult;
+  forward(options?: NavigationOptions): NavigationResult;
+
+  onnavigate: ((this: Navigation, ev: NavigateEvent) => any) | null;
+  onnavigatesuccess: ((this: Navigation, ev: Event) => any) | null;
+  onnavigateerror: ((this: Navigation, ev: ErrorEvent) => any) | null;
+  oncurrententrychange:
+    | ((this: Navigation, ev: NavigationCurrentEntryChangeEvent) => any)
+    | null;
+
+  // TODO: Implement addEventListener overrides. Doesn't seem like Flow supports this.
+}
+
+declare class NavigationTransition {
+  +navigationType: NavigationTypeString;
+  +from: NavigationHistoryEntry;
+  +finished: Promise<void>;
+}
+
+interface NavigationHistoryEntryEventMap {
+  dispose: Event;
+}
+
+interface NavigationHistoryEntry extends EventTarget {
+  +key: string;
+  +id: string;
+  +url: string | null;
+  +index: number;
+  +sameDocument: boolean;
+
+  getState(): mixed;
+
+  ondispose: ((this: NavigationHistoryEntry, ev: Event) => any) | null;
+
+  // TODO: Implement addEventListener overrides. Doesn't seem like Flow supports this.
+}
+
+declare var NavigationHistoryEntry: {
+  prototype: NavigationHistoryEntry,
+  new(): NavigationHistoryEntry,
+};
+
+type NavigationTypeString = 'reload' | 'push' | 'replace' | 'traverse';
+
+interface NavigationUpdateCurrentEntryOptions {
+  state: mixed;
+}
+
+interface NavigationOptions {
+  info?: mixed;
+}
+
+interface NavigationNavigateOptions extends NavigationOptions {
+  state?: mixed;
+  history?: 'auto' | 'push' | 'replace';
+}
+
+interface NavigationReloadOptions extends NavigationOptions {
+  state?: mixed;
+}
+
+declare class NavigationCurrentEntryChangeEvent extends Event {
+  constructor(type: string, eventInit?: any): void;
+
+  +navigationType: NavigationTypeString | null;
+  +from: NavigationHistoryEntry;
+}
+
+declare class NavigateEvent extends Event {
+  constructor(type: string, eventInit?: any): void;
+
+  +navigationType: NavigationTypeString;
+  +canIntercept: boolean;
+  +userInitiated: boolean;
+  +hashChange: boolean;
+  +hasUAVisualTransition: boolean;
+  +destination: NavigationDestination;
+  +signal: AbortSignal;
+  +formData: FormData | null;
+  +downloadRequest: string | null;
+  +info?: mixed;
+
+  intercept(options?: NavigationInterceptOptions): void;
+  scroll(): void;
+}
+
+interface NavigationInterceptOptions {
+  handler?: () => Promise<void>;
+  focusReset?: 'after-transition' | 'manual';
+  scroll?: 'after-transition' | 'manual';
+}
+
+declare class NavigationDestination {
+  +url: string;
+  +key: string | null;
+  +id: string | null;
+  +index: number;
+  +sameDocument: boolean;
+
+  getState(): mixed;
+}
