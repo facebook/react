@@ -1553,11 +1553,11 @@ module.exports = function ($$$config) {
     }
     return !0;
   }
+  function noop$1() {}
   function isThenableResolved(thenable) {
     thenable = thenable.status;
     return "fulfilled" === thenable || "rejected" === thenable;
   }
-  function noop$1() {}
   function trackUsedThenable(thenableState, thenable, index) {
     index = thenableState[index];
     void 0 === index
@@ -13801,7 +13801,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-4ca97e48-20250508"
+      reconcilerVersion: "19.2.0-www-modern-21fdf308-20250508"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

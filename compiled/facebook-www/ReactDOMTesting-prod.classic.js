@@ -647,19 +647,19 @@ function lanesToEventPriority(lanes) {
       : 8
     : 2;
 }
-function noop$4() {}
+function noop$1() {}
 var Internals = {
     Events: null,
     d: {
-      f: noop$4,
-      r: noop$4,
-      D: noop$4,
-      C: noop$4,
-      L: noop$4,
-      m: noop$4,
-      X: noop$4,
-      S: noop$4,
-      M: noop$4
+      f: noop$1,
+      r: noop$1,
+      D: noop$1,
+      C: noop$1,
+      L: noop$1,
+      m: noop$1,
+      X: noop$1,
+      S: noop$1,
+      M: noop$1
     },
     p: 0,
     findDOMNode: null
@@ -2775,12 +2775,11 @@ function isThenableResolved(thenable) {
   thenable = thenable.status;
   return "fulfilled" === thenable || "rejected" === thenable;
 }
-function noop$3() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
     ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop$3, noop$3), (thenable = index));
+    : index !== thenable && (thenable.then(noop$1, noop$1), (thenable = index));
   switch (thenable.status) {
     case "fulfilled":
       return thenable.value;
@@ -2791,7 +2790,7 @@ function trackUsedThenable(thenableState, thenable, index) {
         thenableState)
       );
     default:
-      if ("string" === typeof thenable.status) thenable.then(noop$3, noop$3);
+      if ("string" === typeof thenable.status) thenable.then(noop$1, noop$1);
       else {
         thenableState = workInProgressRoot;
         if (null !== thenableState && 100 < thenableState.shellSuspendCounter)
@@ -4930,7 +4929,7 @@ function startTransition(
       (ReactSharedInternals.T = prevTransition);
   }
 }
-function noop$2() {}
+function noop() {}
 function startHostTransition(formFiber, pendingState, action, formData) {
   if (5 !== formFiber.tag) throw Error(formatProdErrorMessage(476));
   var queue = ensureFormComponentIsStateful(formFiber).queue;
@@ -4940,7 +4939,7 @@ function startHostTransition(formFiber, pendingState, action, formData) {
     pendingState,
     sharedNotPendingObject,
     null === action
-      ? noop$2
+      ? noop
       : function () {
           requestFormReset$1(formFiber);
           return action(formData);
@@ -12802,7 +12801,7 @@ function commitRootWhenReady(
     suspendedCommitReason & 8192 ||
     16785408 === (suspendedCommitReason & 16785408)
   ) {
-    suspendedState = { stylesheets: null, count: 0, unsuspend: noop };
+    suspendedState = { stylesheets: null, count: 0, unsuspend: noop$1 };
     appearingViewTransitions = null;
     accumulateSuspenseyCommitOnFiber(finishedWork, lanes);
     if (isViewTransitionEligible) {
@@ -16289,7 +16288,6 @@ function checkForUnmatchedText(serverText, clientText) {
   clientText = normalizeMarkupForTextOrAttribute(clientText);
   return normalizeMarkupForTextOrAttribute(serverText) === clientText ? !0 : !1;
 }
-function noop$1() {}
 function setProp(domElement, tag, key, value, props, prevValue) {
   switch (key) {
     case "children":
@@ -18989,7 +18987,6 @@ function preloadResource(resource) {
     : !0;
 }
 var suspendedState = null;
-function noop() {}
 function suspendInstance(instance) {
   if (enableViewTransition) {
     if (null === suspendedState) throw Error(formatProdErrorMessage(475));
@@ -19875,14 +19872,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2108 = React.version;
 if (
-  "19.2.0-www-classic-4ca97e48-20250508" !==
+  "19.2.0-www-classic-21fdf308-20250508" !==
   isomorphicReactPackageVersion$jscomp$inline_2108
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2108,
-      "19.2.0-www-classic-4ca97e48-20250508"
+      "19.2.0-www-classic-21fdf308-20250508"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19900,10 +19897,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2726 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-4ca97e48-20250508",
+  version: "19.2.0-www-classic-21fdf308-20250508",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-4ca97e48-20250508"
+  reconcilerVersion: "19.2.0-www-classic-21fdf308-20250508"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2727 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20423,4 +20420,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-4ca97e48-20250508";
+exports.version = "19.2.0-www-classic-21fdf308-20250508";

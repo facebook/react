@@ -1611,6 +1611,7 @@ function shallowEqual(objA, objB) {
   }
   return !0;
 }
+function noop() {}
 var SuspenseException = Error(formatProdErrorMessage(460)),
   SuspenseyCommitException = Error(formatProdErrorMessage(474)),
   SuspenseActionException = Error(formatProdErrorMessage(542)),
@@ -1619,7 +1620,6 @@ function isThenableResolved(thenable) {
   thenable = thenable.status;
   return "fulfilled" === thenable || "rejected" === thenable;
 }
-function noop() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
@@ -11105,10 +11105,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1592 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-4ca97e48-20250508",
+  version: "19.2.0-www-modern-21fdf308-20250508",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-4ca97e48-20250508"
+  reconcilerVersion: "19.2.0-www-modern-21fdf308-20250508"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1593 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11134,4 +11134,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-4ca97e48-20250508";
+exports.version = "19.2.0-www-modern-21fdf308-20250508";

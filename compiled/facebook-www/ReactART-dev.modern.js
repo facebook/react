@@ -3002,6 +3002,7 @@ __DEV__ &&
       }
       return !0;
     }
+    function noop() {}
     function createThenableState() {
       return { didWarnAboutUncachedPromise: !1, thenables: [] };
     }
@@ -3009,7 +3010,6 @@ __DEV__ &&
       thenable = thenable.status;
       return "fulfilled" === thenable || "rejected" === thenable;
     }
-    function noop() {}
     function trackUsedThenable(thenableState, thenable, index) {
       null !== ReactSharedInternals.actQueue &&
         (ReactSharedInternals.didUsePromise = !0);
@@ -18837,10 +18837,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-4ca97e48-20250508",
+        version: "19.2.0-www-modern-21fdf308-20250508",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-4ca97e48-20250508"
+        reconcilerVersion: "19.2.0-www-modern-21fdf308-20250508"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18874,7 +18874,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-4ca97e48-20250508";
+    exports.version = "19.2.0-www-modern-21fdf308-20250508";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

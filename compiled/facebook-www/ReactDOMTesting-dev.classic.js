@@ -106,7 +106,7 @@ __DEV__ &&
         "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
       );
     }
-    function noop$2() {}
+    function noop() {}
     function warnForMissingKey() {}
     function setToSortedString(set) {
       var array = [];
@@ -847,7 +847,7 @@ __DEV__ &&
           : ContinuousEventPriority
         : DiscreteEventPriority;
     }
-    function noop$4() {}
+    function noop$1() {}
     function resolveDispatcher() {
       var dispatcher = ReactSharedInternals.H;
       null === dispatcher &&
@@ -5124,7 +5124,6 @@ __DEV__ &&
       thenable = thenable.status;
       return "fulfilled" === thenable || "rejected" === thenable;
     }
-    function noop$3() {}
     function trackUsedThenable(thenableState, thenable, index) {
       null !== ReactSharedInternals.actQueue &&
         (ReactSharedInternals.didUsePromise = !0);
@@ -5138,7 +5137,7 @@ __DEV__ &&
             console.error(
               "A component was suspended by an uncached promise. Creating promises inside a Client Component or hook is not yet supported, except via a Suspense-compatible library or framework."
             )),
-          thenable.then(noop$3, noop$3),
+          thenable.then(noop$1, noop$1),
           (thenable = index));
       switch (thenable.status) {
         case "fulfilled":
@@ -5151,7 +5150,7 @@ __DEV__ &&
           );
         default:
           if ("string" === typeof thenable.status)
-            thenable.then(noop$3, noop$3);
+            thenable.then(noop$1, noop$1);
           else {
             thenableState = workInProgressRoot;
             if (
@@ -8189,7 +8188,7 @@ __DEV__ &&
         pendingState,
         NotPendingTransition,
         null === action
-          ? noop$2
+          ? noop
           : function () {
               requestFormReset$1(formFiber);
               return action(formData);
@@ -18462,7 +18461,7 @@ __DEV__ &&
         subtreeFlags & 8192 ||
         16785408 === (subtreeFlags & 16785408)
       ) {
-        suspendedState = { stylesheets: null, count: 0, unsuspend: noop };
+        suspendedState = { stylesheets: null, count: 0, unsuspend: noop$1 };
         appearingViewTransitions = null;
         accumulateSuspenseyCommitOnFiber(finishedWork, lanes);
         if (isViewTransitionEligible) {
@@ -22865,7 +22864,6 @@ __DEV__ &&
         ? !0
         : !1;
     }
-    function noop$1() {}
     function setProp(domElement, tag, key, value, props, prevValue) {
       switch (key) {
         case "children":
@@ -26658,7 +26656,6 @@ __DEV__ &&
         ? !1
         : !0;
     }
-    function noop() {}
     function suspendInstance(instance) {
       if (enableViewTransition) {
         if (null === suspendedState)
@@ -27683,15 +27680,15 @@ __DEV__ &&
       Internals = {
         Events: null,
         d: {
-          f: noop$4,
-          r: noop$4,
-          D: noop$4,
-          C: noop$4,
-          L: noop$4,
-          m: noop$4,
-          X: noop$4,
-          S: noop$4,
-          M: noop$4
+          f: noop$1,
+          r: noop$1,
+          D: noop$1,
+          C: noop$1,
+          L: noop$1,
+          m: noop$1,
+          X: noop$1,
+          S: noop$1,
+          M: noop$1
         },
         p: 0,
         findDOMNode: null
@@ -31688,11 +31685,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-classic-4ca97e48-20250508" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-classic-21fdf308-20250508" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-classic-4ca97e48-20250508\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-classic-21fdf308-20250508\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31735,10 +31732,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-classic-4ca97e48-20250508",
+          version: "19.2.0-www-classic-21fdf308-20250508",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-classic-4ca97e48-20250508"
+          reconcilerVersion: "19.2.0-www-classic-21fdf308-20250508"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -32504,5 +32501,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-classic-4ca97e48-20250508";
+    exports.version = "19.2.0-www-classic-21fdf308-20250508";
   })();

@@ -3258,6 +3258,7 @@ __DEV__ &&
       }
       return !0;
     }
+    function noop$1() {}
     function createThenableState() {
       return { didWarnAboutUncachedPromise: !1, thenables: [] };
     }
@@ -3265,7 +3266,6 @@ __DEV__ &&
       thenable = thenable.status;
       return "fulfilled" === thenable || "rejected" === thenable;
     }
-    function noop$1() {}
     function trackUsedThenable(thenableState, thenable, index) {
       null !== ReactSharedInternals.actQueue &&
         (ReactSharedInternals.didUsePromise = !0);
@@ -21623,7 +21623,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-4ca97e48-20250508"
+        reconcilerVersion: "19.2.0-www-modern-21fdf308-20250508"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
