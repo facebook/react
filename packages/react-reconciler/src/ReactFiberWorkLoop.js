@@ -47,7 +47,6 @@ import {
   enableInfiniteRenderLoopDetection,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
-  enableSiblingPrerendering,
   enableComponentPerformanceTrack,
   enableYieldingBeforePassive,
   enableThrottledScheduling,
@@ -1061,7 +1060,7 @@ export function performWorkOnRoot(
     // the main thread.
     // TODO: We should consider doing this whenever a sync lane is suspended,
     // even for regular pings.
-    (enableSiblingPrerendering && checkIfRootIsPrerendering(root, lanes));
+    checkIfRootIsPrerendering(root, lanes);
 
   let exitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
@@ -1072,11 +1071,7 @@ export function performWorkOnRoot(
   do {
     if (exitStatus === RootInProgress) {
       // Render phase is still in progress.
-      if (
-        enableSiblingPrerendering &&
-        workInProgressRootIsPrerendering &&
-        !shouldTimeSlice
-      ) {
+      if (workInProgressRootIsPrerendering && !shouldTimeSlice) {
         // We're in prerendering mode, but time slicing is not enabled. This
         // happens when something suspends during a synchronous update. Exit the
         // the work loop. When we resume, we'll use the concurrent work loop so
@@ -2057,27 +2052,13 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
     // API for suspending. This implementation detail can change later, once we
     // deprecate the old API in favor of `use`.
     thrownValue = getSuspendedThenable();
-    workInProgressSuspendedReason =
-      // TODO: Suspending the work loop during the render phase is
-      // currently not compatible with sibling prerendering. We will add
-      // this optimization back in a later step.
-      !enableSiblingPrerendering &&
-      shouldRemainOnPreviousScreen() &&
-      // Check if there are other pending updates that might possibly unblock this
-      // component from suspending. This mirrors the check in
-      // renderDidSuspendDelayIfPossible. We should attempt to unify them somehow.
-      // TODO: Consider unwinding immediately, using the
-      // SuspendedOnHydration mechanism.
-      !includesNonIdleWork(workInProgressRootSkippedLanes) &&
-      !includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)
-        ? // Suspend work loop until data resolves
-          thrownValue === SuspenseActionException
-          ? SuspendedOnAction
-          : SuspendedOnData
-        : // Don't suspend work loop, except to check if the data has
-          // immediately resolved (i.e. in a microtask). Otherwise, trigger the
-          // nearest Suspense fallback.
-          SuspendedOnImmediate;
+    // TODO: Suspending the work loop during the render phase is
+    // currently not compatible with sibling prerendering. We will add
+    // this optimization back in a later step.
+    // Don't suspend work loop, except to check if the data has
+    // immediately resolved (i.e. in a microtask). Otherwise, trigger the
+    // nearest Suspense fallback.
+    workInProgressSuspendedReason = SuspendedOnImmediate;
   } else if (thrownValue === SuspenseyCommitException) {
     thrownValue = getSuspendedThenable();
     workInProgressSuspendedReason = SuspendedOnInstance;
@@ -2421,7 +2402,6 @@ function renderRootSync(
             workInProgressThrownValue = null;
             throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
             if (
-              enableSiblingPrerendering &&
               shouldYieldForPrerendering &&
               workInProgressRootIsPrerendering
             ) {
@@ -3008,56 +2988,54 @@ function throwAndUnwindWorkLoop(
   if (unitOfWork.flags & Incomplete) {
     // Unwind the stack until we reach the nearest boundary.
     let skipSiblings;
-    if (!enableSiblingPrerendering) {
-      skipSiblings = true;
-    } else {
-      if (
-        // The current algorithm for both hydration and error handling assumes
-        // that the tree is rendered sequentially. So we always skip the siblings.
-        getIsHydrating() ||
-        suspendedReason === SuspendedOnError
-      ) {
-        skipSiblings = true;
-        // We intentionally don't set workInProgressRootDidSkipSuspendedSiblings,
-        // because we don't want to trigger another prerender attempt.
-      } else if (
-        // Check whether this is a prerender
-        !workInProgressRootIsPrerendering &&
-        // Offscreen rendering is also a form of speculative rendering
-        !includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)
-      ) {
-        // This is not a prerender. Skip the siblings during this render. A
-        // separate prerender will be scheduled for later.
-        skipSiblings = true;
-        workInProgressRootDidSkipSuspendedSiblings = true;
 
-        // Because we're skipping the siblings, schedule an immediate retry of
-        // this boundary.
-        //
-        // The reason we do this is because a prerender is only scheduled when
-        // the root is blocked from committing, i.e. RootSuspendedWithDelay.
-        // When the root is not blocked, as in the case when we render a
-        // fallback, the original lane is considered to be finished, and
-        // therefore no longer in need of being prerendered. However, there's
-        // still a pending retry that will happen once the data streams in.
-        // We should start rendering that even before the data streams in so we
-        // can prerender the siblings.
-        if (
-          suspendedReason === SuspendedOnData ||
-          suspendedReason === SuspendedOnAction ||
-          suspendedReason === SuspendedOnImmediate ||
-          suspendedReason === SuspendedOnDeprecatedThrowPromise
-        ) {
-          const boundary = getSuspenseHandler();
-          if (boundary !== null && boundary.tag === SuspenseComponent) {
-            boundary.flags |= ScheduleRetry;
-          }
+    if (
+      // The current algorithm for both hydration and error handling assumes
+      // that the tree is rendered sequentially. So we always skip the siblings.
+      getIsHydrating() ||
+      suspendedReason === SuspendedOnError
+    ) {
+      skipSiblings = true;
+      // We intentionally don't set workInProgressRootDidSkipSuspendedSiblings,
+      // because we don't want to trigger another prerender attempt.
+    } else if (
+      // Check whether this is a prerender
+      !workInProgressRootIsPrerendering &&
+      // Offscreen rendering is also a form of speculative rendering
+      !includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)
+    ) {
+      // This is not a prerender. Skip the siblings during this render. A
+      // separate prerender will be scheduled for later.
+      skipSiblings = true;
+      workInProgressRootDidSkipSuspendedSiblings = true;
+
+      // Because we're skipping the siblings, schedule an immediate retry of
+      // this boundary.
+      //
+      // The reason we do this is because a prerender is only scheduled when
+      // the root is blocked from committing, i.e. RootSuspendedWithDelay.
+      // When the root is not blocked, as in the case when we render a
+      // fallback, the original lane is considered to be finished, and
+      // therefore no longer in need of being prerendered. However, there's
+      // still a pending retry that will happen once the data streams in.
+      // We should start rendering that even before the data streams in so we
+      // can prerender the siblings.
+      if (
+        suspendedReason === SuspendedOnData ||
+        suspendedReason === SuspendedOnAction ||
+        suspendedReason === SuspendedOnImmediate ||
+        suspendedReason === SuspendedOnDeprecatedThrowPromise
+      ) {
+        const boundary = getSuspenseHandler();
+        if (boundary !== null && boundary.tag === SuspenseComponent) {
+          boundary.flags |= ScheduleRetry;
         }
-      } else {
-        // This is a prerender. Don't skip the siblings.
-        skipSiblings = false;
       }
+    } else {
+      // This is a prerender. Don't skip the siblings.
+      skipSiblings = false;
     }
+
     unwindUnitOfWork(unitOfWork, skipSiblings);
   } else {
     // Although the fiber suspended, we're intentionally going to commit it in

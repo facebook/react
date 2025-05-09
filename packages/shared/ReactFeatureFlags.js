@@ -141,8 +141,6 @@ export const enablePersistedModeClonedFlag = false;
 
 export const enableShallowPropDiffing = false;
 
-export const enableSiblingPrerendering = true;
-
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */

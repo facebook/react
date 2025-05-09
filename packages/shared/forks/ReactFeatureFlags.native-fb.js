@@ -25,7 +25,6 @@ export const {
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes,
-  enableSiblingPrerendering,
   enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric,
   renameElementSymbol,

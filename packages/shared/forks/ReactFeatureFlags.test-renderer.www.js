@@ -71,7 +71,6 @@ export const renameElementSymbol = false;
 
 export const enableObjectFiber = false;
 export const enableShallowPropDiffing = false;
-export const enableSiblingPrerendering = true;
 
 export const enableHydrationLaneScheduling = true;
 
