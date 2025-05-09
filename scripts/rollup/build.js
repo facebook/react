@@ -443,7 +443,12 @@ function getPlugins(
         },
       }),
       // For the external runtime we turn global identifiers into local.
-      entry.includes('server-external-runtime') && externalRuntime(),
+      entry.includes('server-external-runtime') &&
+        externalRuntime(
+          bundleType === FB_WWW_DEV ||
+            bundleType === FB_WWW_PROD ||
+            bundleType === FB_WWW_PROFILING
+        ),
       {
         name: 'top-level-definitions',
         renderChunk(source) {

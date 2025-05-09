@@ -6,7 +6,7 @@
  */
 'use strict';
 
-module.exports = function externalRuntime() {
+module.exports = function externalRuntime(isFBBundle) {
   // When generating the source code for the Fizz runtime chunks we use global identifiers to refer
   // to different parts of the implementation. When generating the external runtime we need to
   // replace those with local identifiers instead.
@@ -22,6 +22,10 @@ module.exports = function externalRuntime() {
           return variableName;
         }
       );
+      if (isFBBundle) {
+        // Work around to lower the throttling time.
+        source = source.replace(/\b300\b/g, '0');
+      }
       const startOfFn = 'use strict';
       let index = source.indexOf(startOfFn);
       if (index === -1) {
