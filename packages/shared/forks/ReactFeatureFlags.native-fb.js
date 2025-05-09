@@ -24,6 +24,7 @@ export const {
   enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
+  enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
   enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric,
