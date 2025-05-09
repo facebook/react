@@ -280,6 +280,8 @@ type BaseFiberRootProperties = {
     errorInfo: {+componentStack?: ?string},
   ) => void,
 
+  onDefaultTransitionIndicator: () => void | (() => void),
+
   formState: ReactFormState<any, any> | null,
 
   // enableViewTransition only

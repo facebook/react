@@ -1,4 +1,4 @@
-// @flow @enableEmitHookGuards @panicThreshold(none) @enableFire
+// @flow @enableEmitHookGuards @panicThreshold:"none" @enableFire
 import {useEffect, fire} from 'react';
 
 function Component(props, useDynamicHook) {

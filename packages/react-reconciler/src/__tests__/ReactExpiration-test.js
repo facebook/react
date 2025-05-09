@@ -654,9 +654,10 @@ describe('ReactExpiration', () => {
       });
       await waitForAll([
         'Suspend! [A1]',
-
-        ...(gate('enableSiblingPrerendering') ? ['B', 'C'] : []),
-
+        // pre-warming
+        'B',
+        'C',
+        // end pre-warming
         'Loading...',
       ]);
 

@@ -30,7 +30,6 @@ export {
 export {
   Effect,
   ValueKind,
-  parseConfigPragmaForTests,
   printHIR,
   printFunctionWithOutlined,
   validateEnvironmentConfig,
@@ -43,6 +42,7 @@ export {
   printReactiveFunction,
   printReactiveFunctionWithOutlined,
 } from './ReactiveScopes';
+export {parseConfigPragmaForTests} from './Utils/TestUtils';
 declare global {
   let __DEV__: boolean | null | undefined;
 }

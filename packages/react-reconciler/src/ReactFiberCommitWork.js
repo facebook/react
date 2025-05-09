@@ -93,6 +93,7 @@ import {
   ChildDeletion,
   Snapshot,
   Update,
+  Hydrate,
   Callback,
   Ref,
   Hydrating,
@@ -227,6 +228,7 @@ import {
 } from './ReactFiberCommitEffects';
 import {
   commitHostMount,
+  commitHostHydratedInstance,
   commitHostUpdate,
   commitHostTextUpdate,
   commitHostResetTextContent,
@@ -663,8 +665,12 @@ function commitLayoutEffectOnFiber(
       // (eg DOM renderer may schedule auto-focus for inputs and form controls).
       // These effects should only be committed when components are first mounted,
       // aka when there is no current/alternate.
-      if (current === null && flags & Update) {
-        commitHostMount(finishedWork);
+      if (current === null) {
+        if (flags & Update) {
+          commitHostMount(finishedWork);
+        } else if (flags & Hydrate) {
+          commitHostHydratedInstance(finishedWork);
+        }
       }
 
       if (flags & Ref) {
