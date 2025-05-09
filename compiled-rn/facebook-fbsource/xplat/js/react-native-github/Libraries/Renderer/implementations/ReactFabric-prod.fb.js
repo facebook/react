@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<008e4197ca6133cfdb2372f1fb8fd9cb>>
+ * @generated SignedSource<<8c428bf8551a9fd739a88f425d41dd3d>>
  */
 
 "use strict";
@@ -10874,6 +10874,7 @@ function FiberRootNode(
   onUncaughtError,
   onCaughtError,
   onRecoverableError,
+  onDefaultTransitionIndicator,
   formState
 ) {
   this.tag = tag;
@@ -11220,6 +11221,7 @@ function nativeOnCaughtError(error, errorInfo) {
         null != errorInfo.componentStack ? errorInfo.componentStack : ""
     }) && console.error(error);
 }
+function nativeOnDefaultTransitionIndicator() {}
 batchedUpdatesImpl = function (fn, a) {
   var prevExecutionContext = executionContext;
   executionContext |= 1;
@@ -11233,26 +11235,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1254 = {
+  internals$jscomp$inline_1255 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-ac068292-20250508",
+    version: "19.2.0-native-fb-9b79292a-20250508",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-ac068292-20250508"
+    reconcilerVersion: "19.2.0-native-fb-9b79292a-20250508"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1254.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1255.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1576 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1577 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1576.isDisabled &&
-    hook$jscomp$inline_1576.supportsFiber
+    !hook$jscomp$inline_1577.isDisabled &&
+    hook$jscomp$inline_1577.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1576.inject(
-        internals$jscomp$inline_1254
+      (rendererID = hook$jscomp$inline_1577.inject(
+        internals$jscomp$inline_1255
       )),
-        (injectedHook = hook$jscomp$inline_1576);
+        (injectedHook = hook$jscomp$inline_1577);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
@@ -11375,6 +11377,7 @@ exports.render = function (
       root,
       onCaughtError,
       onRecoverableError,
+      nativeOnDefaultTransitionIndicator,
       null
     );
     root.hydrationCallbacks = null;

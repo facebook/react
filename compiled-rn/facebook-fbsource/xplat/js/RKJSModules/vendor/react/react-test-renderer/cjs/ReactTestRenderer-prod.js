@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1ba432414a4dea396bc2b2c34a8345c0>>
+ * @generated SignedSource<<5e1ae1e930c2859f51962c807dac0f8d>>
  */
 
 "use strict";
@@ -9479,6 +9479,7 @@ function FiberRootNode(
   onUncaughtError,
   onCaughtError,
   onRecoverableError,
+  onDefaultTransitionIndicator,
   formState
 ) {
   this.tag = tag;
@@ -9522,7 +9523,8 @@ function createContainer(
   identifierPrefix,
   onUncaughtError,
   onCaughtError,
-  onRecoverableError
+  onRecoverableError,
+  onDefaultTransitionIndicator
 ) {
   containerInfo = new FiberRootNode(
     containerInfo,
@@ -9532,6 +9534,7 @@ function createContainer(
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     null
   );
   1 === tag ? ((tag = 1), !0 === isStrictMode && (tag |= 24)) : (tag = 0);
@@ -9599,6 +9602,7 @@ function updateContainer(element, container, parentComponent, callback) {
     entangleTransitions(element, current, lane));
   return lane;
 }
+function defaultOnDefaultTransitionIndicator() {}
 var act = React.act,
   defaultTestOptions = {
     createNodeMock: function () {
@@ -9891,24 +9895,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1445 = {
+var internals$jscomp$inline_1446 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-ac068292-20250508",
+  version: "19.2.0-native-fb-9b79292a-20250508",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-ac068292-20250508"
+  reconcilerVersion: "19.2.0-native-fb-9b79292a-20250508"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1446 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1447 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1446.isDisabled &&
-    hook$jscomp$inline_1446.supportsFiber
+    !hook$jscomp$inline_1447.isDisabled &&
+    hook$jscomp$inline_1447.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1446.inject(
-        internals$jscomp$inline_1445
+      (rendererID = hook$jscomp$inline_1447.inject(
+        internals$jscomp$inline_1446
       )),
-        (injectedHook = hook$jscomp$inline_1446);
+        (injectedHook = hook$jscomp$inline_1447);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9938,7 +9942,7 @@ exports.create = function (element, options) {
       defaultOnUncaughtError,
       defaultOnCaughtError,
       defaultOnRecoverableError,
-      null
+      defaultOnDefaultTransitionIndicator
     );
   if (null == root) throw Error("something went wrong");
   updateContainer(element, root, null, null);
@@ -10032,4 +10036,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-ac068292-20250508";
+exports.version = "19.2.0-native-fb-9b79292a-20250508";

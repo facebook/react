@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8d8168b3809cfc422dcecbda37fcc381>>
+ * @generated SignedSource<<038914a395b3125b70bab838e6924d0d>>
  */
 
 "use strict";
@@ -11571,6 +11571,7 @@ function FiberRootNode(
   onUncaughtError,
   onCaughtError,
   onRecoverableError,
+  onDefaultTransitionIndicator,
   formState
 ) {
   this.tag = tag;
@@ -11924,6 +11925,7 @@ function nativeOnCaughtError(error, errorInfo) {
         null != errorInfo.componentStack ? errorInfo.componentStack : ""
     }) && console.error(error);
 }
+function nativeOnDefaultTransitionIndicator() {}
 batchedUpdatesImpl = function (fn, a) {
   var prevExecutionContext = executionContext;
   executionContext |= 1;
@@ -11937,16 +11939,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1355 = {
+  internals$jscomp$inline_1356 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-ac068292-20250508",
+    version: "19.2.0-native-fb-9b79292a-20250508",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-ac068292-20250508"
+    reconcilerVersion: "19.2.0-native-fb-9b79292a-20250508"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1355.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1355.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1356.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1356.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$162 = 0;
     31 > index$162;
@@ -11958,20 +11960,20 @@ internals$jscomp$inline_1355.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1355.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1356.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1643 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1644 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1643.isDisabled &&
-    hook$jscomp$inline_1643.supportsFiber
+    !hook$jscomp$inline_1644.isDisabled &&
+    hook$jscomp$inline_1644.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1643.inject(
-        internals$jscomp$inline_1355
+      (rendererID = hook$jscomp$inline_1644.inject(
+        internals$jscomp$inline_1356
       )),
-        (injectedHook = hook$jscomp$inline_1643);
+        (injectedHook = hook$jscomp$inline_1644);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
@@ -12094,6 +12096,7 @@ exports.render = function (
       root,
       onCaughtError,
       onRecoverableError,
+      nativeOnDefaultTransitionIndicator,
       null
     );
     root.hydrationCallbacks = null;

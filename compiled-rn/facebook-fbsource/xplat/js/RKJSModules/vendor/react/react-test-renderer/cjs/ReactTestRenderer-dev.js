@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fdbcfcf7495df7c50f62cf5900fb08f5>>
+ * @generated SignedSource<<d07f71f0cd68aeab1df3ff05e205f85d>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1154() {
+    function JSCompiler_object_inline_createNodeMock_1155() {
       return null;
     }
     function findHook(fiber, id) {
@@ -13261,6 +13261,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       formState
     ) {
       this.tag = tag;
@@ -13315,7 +13316,8 @@ __DEV__ &&
       identifierPrefix,
       onUncaughtError,
       onCaughtError,
-      onRecoverableError
+      onRecoverableError,
+      onDefaultTransitionIndicator
     ) {
       containerInfo = new FiberRootNode(
         containerInfo,
@@ -13325,6 +13327,7 @@ __DEV__ &&
         onUncaughtError,
         onCaughtError,
         onRecoverableError,
+        onDefaultTransitionIndicator,
         null
       );
       1 === tag ? ((tag = 1), !0 === isStrictMode && (tag |= 24)) : (tag = 0);
@@ -13455,6 +13458,7 @@ __DEV__ &&
       }
       return map;
     }
+    function defaultOnDefaultTransitionIndicator() {}
     function toJSON(inst) {
       if (inst.isHidden) return null;
       switch (inst.tag) {
@@ -15653,10 +15657,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-ac068292-20250508",
+        version: "19.2.0-native-fb-9b79292a-20250508",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-ac068292-20250508"
+        reconcilerVersion: "19.2.0-native-fb-9b79292a-20250508"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15678,7 +15682,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1154,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1155,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15702,7 +15706,7 @@ __DEV__ &&
           defaultOnUncaughtError,
           defaultOnCaughtError,
           defaultOnRecoverableError,
-          null
+          defaultOnDefaultTransitionIndicator
         );
       if (null == root) throw Error("something went wrong");
       updateContainer(element, root, null, null);
@@ -15801,5 +15805,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-ac068292-20250508";
+    exports.version = "19.2.0-native-fb-9b79292a-20250508";
   })();

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1f9b996163be6768b9380267e581a634>>
+ * @generated SignedSource<<cf4001484359e36cbe55a3138d2c988d>>
  */
 
 /*
@@ -17016,6 +17016,7 @@ function FiberRootNode(
   onUncaughtError,
   onCaughtError,
   onRecoverableError,
+  onDefaultTransitionIndicator,
   formState
 ) {
   this.tag = tag;
@@ -17063,11 +17064,11 @@ function createFiberRoot(
   hydrationCallbacks,
   isStrictMode,
   identifierPrefix,
+  formState,
   onUncaughtError,
   onCaughtError,
   onRecoverableError,
-  transitionCallbacks,
-  formState
+  onDefaultTransitionIndicator
 ) {
   containerInfo = new FiberRootNode(
     containerInfo,
@@ -17077,6 +17078,7 @@ function createFiberRoot(
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     formState
   );
   containerInfo.hydrationCallbacks = hydrationCallbacks;
@@ -17736,6 +17738,9 @@ function retryIfBlockedOn(unblocked) {
       }
     }
 }
+function defaultOnDefaultTransitionIndicator() {
+  return function () {};
+}
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
 }
@@ -17777,16 +17782,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2116 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2118 = React.version;
 if (
-  "19.2.0-native-fb-ac068292-20250508" !==
-  isomorphicReactPackageVersion$jscomp$inline_2116
+  "19.2.0-native-fb-9b79292a-20250508" !==
+  isomorphicReactPackageVersion$jscomp$inline_2118
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2116,
-      "19.2.0-native-fb-ac068292-20250508"
+      isomorphicReactPackageVersion$jscomp$inline_2118,
+      "19.2.0-native-fb-9b79292a-20250508"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17806,12 +17811,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2123 = {
+var internals$jscomp$inline_2125 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-ac068292-20250508",
+  version: "19.2.0-native-fb-9b79292a-20250508",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-ac068292-20250508",
+  reconcilerVersion: "19.2.0-native-fb-9b79292a-20250508",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$313 = 0;
@@ -17829,16 +17834,16 @@ var internals$jscomp$inline_2123 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2600 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2602 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2600.isDisabled &&
-    hook$jscomp$inline_2600.supportsFiber
+    !hook$jscomp$inline_2602.isDisabled &&
+    hook$jscomp$inline_2602.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2600.inject(
-        internals$jscomp$inline_2123
+      (rendererID = hook$jscomp$inline_2602.inject(
+        internals$jscomp$inline_2125
       )),
-        (injectedHook = hook$jscomp$inline_2600);
+        (injectedHook = hook$jscomp$inline_2602);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -17847,8 +17852,7 @@ exports.createRoot = function (container, options) {
     identifierPrefix = "",
     onUncaughtError = defaultOnUncaughtError,
     onCaughtError = defaultOnCaughtError,
-    onRecoverableError = defaultOnRecoverableError,
-    transitionCallbacks = null;
+    onRecoverableError = defaultOnRecoverableError;
   null !== options &&
     void 0 !== options &&
     (!0 === options.unstable_strictMode && (isStrictMode = !0),
@@ -17858,9 +17862,7 @@ exports.createRoot = function (container, options) {
       (onUncaughtError = options.onUncaughtError),
     void 0 !== options.onCaughtError && (onCaughtError = options.onCaughtError),
     void 0 !== options.onRecoverableError &&
-      (onRecoverableError = options.onRecoverableError),
-    void 0 !== options.unstable_transitionCallbacks &&
-      (transitionCallbacks = options.unstable_transitionCallbacks));
+      (onRecoverableError = options.onRecoverableError));
   options = createFiberRoot(
     container,
     1,
@@ -17869,11 +17871,11 @@ exports.createRoot = function (container, options) {
     null,
     isStrictMode,
     identifierPrefix,
+    null,
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
-    transitionCallbacks,
-    null
+    defaultOnDefaultTransitionIndicator
   );
   container[internalContainerInstanceKey] = options.current;
   listenToAllSupportedEvents(container);
@@ -17886,7 +17888,6 @@ exports.hydrateRoot = function (container, initialChildren, options) {
     onUncaughtError = defaultOnUncaughtError,
     onCaughtError = defaultOnCaughtError,
     onRecoverableError = defaultOnRecoverableError,
-    transitionCallbacks = null,
     formState = null;
   null !== options &&
     void 0 !== options &&
@@ -17898,8 +17899,6 @@ exports.hydrateRoot = function (container, initialChildren, options) {
     void 0 !== options.onCaughtError && (onCaughtError = options.onCaughtError),
     void 0 !== options.onRecoverableError &&
       (onRecoverableError = options.onRecoverableError),
-    void 0 !== options.unstable_transitionCallbacks &&
-      (transitionCallbacks = options.unstable_transitionCallbacks),
     void 0 !== options.formState && (formState = options.formState));
   initialChildren = createFiberRoot(
     container,
@@ -17909,11 +17908,11 @@ exports.hydrateRoot = function (container, initialChildren, options) {
     null != options ? options : null,
     isStrictMode,
     identifierPrefix,
+    formState,
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
-    transitionCallbacks,
-    formState
+    defaultOnDefaultTransitionIndicator
   );
   initialChildren.context = getContextForSubtree(null);
   options = initialChildren.current;
@@ -17930,4 +17929,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-ac068292-20250508";
+exports.version = "19.2.0-native-fb-9b79292a-20250508";

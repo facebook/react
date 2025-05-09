@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cb28e044821ce83250926ec0bcacff73>>
+ * @generated SignedSource<<6d58d16b35b0e42deaf636716b12e1f6>>
  */
 
 "use strict";
@@ -14515,6 +14515,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       formState
     ) {
       this.tag = tag;
@@ -14796,6 +14797,7 @@ __DEV__ &&
             );
       }
     }
+    function nativeOnDefaultTransitionIndicator() {}
     function unmountComponentAtNode(containerTag) {
       var root = roots.get(containerTag);
       root &&
@@ -17645,11 +17647,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-ac068292-20250508" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-9b79292a-20250508" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-ac068292-20250508\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-9b79292a-20250508\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17675,10 +17677,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-ac068292-20250508",
+        version: "19.2.0-native-fb-9b79292a-20250508",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-ac068292-20250508"
+        reconcilerVersion: "19.2.0-native-fb-9b79292a-20250508"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -17794,6 +17796,7 @@ __DEV__ &&
           root,
           onCaughtError,
           onRecoverableError,
+          nativeOnDefaultTransitionIndicator,
           null
         );
         options.hydrationCallbacks = null;

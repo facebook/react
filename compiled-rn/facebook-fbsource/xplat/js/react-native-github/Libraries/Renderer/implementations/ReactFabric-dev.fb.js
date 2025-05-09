@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7f70495ee005aac73dd152f90fff72da>>
+ * @generated SignedSource<<e7a045f9423f12fb4ec6296513d42f08>>
  */
 
 "use strict";
@@ -14277,6 +14277,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       formState
     ) {
       this.tag = tag;
@@ -14712,6 +14713,7 @@ __DEV__ &&
             );
       }
     }
+    function nativeOnDefaultTransitionIndicator() {}
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
@@ -17517,10 +17519,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-ac068292-20250508",
+        version: "19.2.0-native-fb-9b79292a-20250508",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-ac068292-20250508"
+        reconcilerVersion: "19.2.0-native-fb-9b79292a-20250508"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -17670,6 +17672,7 @@ __DEV__ &&
           root,
           onCaughtError,
           onRecoverableError,
+          nativeOnDefaultTransitionIndicator,
           null
         );
         root.hydrationCallbacks = null;
