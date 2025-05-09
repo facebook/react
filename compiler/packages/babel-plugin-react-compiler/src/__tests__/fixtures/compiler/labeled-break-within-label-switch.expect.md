@@ -40,16 +40,16 @@ function useHook(cond) {
     log = [];
     switch (CONST_STRING0) {
       case CONST_STRING0: {
-        log.push(`@A`);
+        log.push("@A");
         bb0: {
           if (cond) {
             break bb0;
           }
 
-          log.push(`@B`);
+          log.push("@B");
         }
 
-        log.push(`@C`);
+        log.push("@C");
       }
     }
     $[0] = cond;

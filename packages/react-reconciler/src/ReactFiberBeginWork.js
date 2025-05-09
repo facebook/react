@@ -36,8 +36,6 @@ import type {
   OffscreenQueue,
   OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
-import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
-import {assignViewTransitionAutoName} from './ReactFiberViewTransitionComponent';
 import type {
   Cache,
   CacheComponentState,
@@ -3538,7 +3536,6 @@ function updateViewTransition(
   renderLanes: Lanes,
 ) {
   const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
-  const instance: ViewTransitionState = workInProgress.stateNode;
   if (pendingProps.name != null && pendingProps.name !== 'auto') {
     // Explicitly named boundary. We track it so that we can pair it up with another explicit
     // boundary if we get deleted.
@@ -3546,16 +3543,6 @@ function updateViewTransition(
       current === null
         ? ViewTransitionNamedMount | ViewTransitionNamedStatic
         : ViewTransitionNamedStatic;
-  } else {
-    // Assign an auto generated name using the useId algorthim if an explicit one is not provided.
-    // We don't need the name yet but we do it here to allow hydration state to be used.
-    // We might end up needing these to line up if we want to Transition from dehydrated fallback
-    // to client rendered content. If we don't end up using that we could just assign an incremeting
-    // counter in the commit phase instead.
-    assignViewTransitionAutoName(pendingProps, instance);
-    if (getIsHydrating()) {
-      pushMaterializedTreeId(workInProgress);
-    }
   }
   if (__DEV__) {
     // $FlowFixMe[prop-missing]

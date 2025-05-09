@@ -58,7 +58,7 @@ function foo() {
           n0: true,
           n1: false,
           n2: false,
-          n3: !-1,
+          n3: false,
           s0: true,
           s1: false,
           s2: false,
