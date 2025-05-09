@@ -1,4 +1,4 @@
-// @validatePreserveExistingMemoizationGuarantees @enableFire @panicThreshold(none)
+// @validatePreserveExistingMemoizationGuarantees @enableFire @panicThreshold:"none"
 import {fire} from 'react';
 import {sum} from 'shared-runtime';
 

@@ -254,6 +254,7 @@ export function createContainer(
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator: () => void | (() => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
   const hydrate = false;
@@ -266,11 +267,12 @@ export function createContainer(
     hydrationCallbacks,
     isStrictMode,
     identifierPrefix,
+    null,
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     transitionCallbacks,
-    null,
   );
 }
 
@@ -300,6 +302,7 @@ export function createHydrationContainer(
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator: () => void | (() => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
   formState: ReactFormState<any, any> | null,
 ): OpaqueRoot {
@@ -312,11 +315,12 @@ export function createHydrationContainer(
     hydrationCallbacks,
     isStrictMode,
     identifierPrefix,
+    formState,
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     transitionCallbacks,
-    formState,
   );
 
   // TODO: Move this to FiberRoot constructor

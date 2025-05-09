@@ -1,4 +1,4 @@
-// @inferEffectDependencies @panicThreshold(none)
+// @inferEffectDependencies @panicThreshold:"none"
 import React from 'react';
 
 function NonReactiveDepInEffect() {

@@ -80,6 +80,7 @@ type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   onUncaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
   onCaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
+  onDefaultTransitionIndicator?: () => void | (() => void),
   ...
 };
 type InstanceMeasurement = null;
@@ -1141,6 +1142,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     // TODO: Turn this on once tests are fixed
     // console.error(error);
   }
+  function onDefaultTransitionIndicator(): void | (() => void) {
+    // TODO: Allow this as an option.
+  }
 
   let idCounter = 0;
 
@@ -1196,6 +1200,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           NoopRenderer.defaultOnUncaughtError,
           NoopRenderer.defaultOnCaughtError,
           onRecoverableError,
+          onDefaultTransitionIndicator,
           null,
         );
         roots.set(rootID, root);
@@ -1224,6 +1229,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           ? options.onCaughtError
           : NoopRenderer.defaultOnCaughtError,
         onRecoverableError,
+        options && options.onDefaultTransitionIndicator
+          ? options.onDefaultTransitionIndicator
+          : onDefaultTransitionIndicator,
         options && options.unstable_transitionCallbacks
           ? options.unstable_transitionCallbacks
           : null,
@@ -1262,6 +1270,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         NoopRenderer.defaultOnUncaughtError,
         NoopRenderer.defaultOnCaughtError,
         onRecoverableError,
+        onDefaultTransitionIndicator,
         null,
       );
       return {
