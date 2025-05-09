@@ -70,12 +70,14 @@ import {BuiltInArrayId} from './ObjectShape';
 export function lower(
   func: NodePath<t.Function>,
   env: Environment,
+  // Bindings captured from the outer function, in case lower() is called recursively (for lambdas)
   bindings: Bindings | null = null,
   capturedRefs: Array<t.Identifier> = [],
-  // the outermost function being compiled, in case lower() is called recursively (for lambdas)
-  parent: NodePath<t.Function> | null = null,
 ): Result<HIRFunction, CompilerError> {
-  const builder = new HIRBuilder(env, parent ?? func, bindings, capturedRefs);
+  const builder = new HIRBuilder(env, {
+    bindings,
+    context: capturedRefs,
+  });
   const context: HIRFunction['context'] = [];
 
   for (const ref of capturedRefs ?? []) {
@@ -215,7 +217,7 @@ export function lower(
   return Ok({
     id,
     params,
-    fnType: parent == null ? env.fnType : 'Other',
+    fnType: bindings == null ? env.fnType : 'Other',
     returnTypeAnnotation: null, // TODO: extract the actual return type node if present
     returnType: makeType(),
     body: builder.build(),
@@ -3417,7 +3419,7 @@ function lowerFunction(
     | t.ObjectMethod
   >,
 ): LoweredFunction | null {
-  const componentScope: Scope = builder.parentFunction.scope;
+  const componentScope: Scope = builder.environment.parentFunction.scope;
   const capturedContext = gatherCapturedContext(expr, componentScope);
 
   /*
@@ -3428,13 +3430,10 @@ function lowerFunction(
    * This isn't a problem in practice because use Babel's scope analysis to
    * identify the correct references.
    */
-  const lowering = lower(
-    expr,
-    builder.environment,
-    builder.bindings,
-    [...builder.context, ...capturedContext],
-    builder.parentFunction,
-  );
+  const lowering = lower(expr, builder.environment, builder.bindings, [
+    ...builder.context,
+    ...capturedContext,
+  ]);
   let loweredFunc: HIRFunction;
   if (lowering.isErr()) {
     lowering
@@ -3456,7 +3455,7 @@ function lowerExpressionToTemporary(
   return lowerValueToTemporary(builder, value);
 }
 
-function lowerValueToTemporary(
+export function lowerValueToTemporary(
   builder: HIRBuilder,
   value: InstructionValue,
 ): Place {
