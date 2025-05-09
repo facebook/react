@@ -257,7 +257,6 @@ function processRootScheduleInMicrotask() {
       // preserve the scroll position of the previous page.
       syncTransitionLanes = currentEventTransitionLane;
     }
-    currentEventTransitionLane = NoLane;
   }
 
   const currentTime = now();
@@ -315,6 +314,9 @@ function processRootScheduleInMicrotask() {
   if (!hasPendingCommitEffects()) {
     flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
   }
+
+  // Reset Event Transition Lane so that we allocate a new one next time.
+  currentEventTransitionLane = NoLane;
 }
 
 function scheduleTaskForRootDuringMicrotask(
