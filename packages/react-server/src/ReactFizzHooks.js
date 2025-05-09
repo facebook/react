@@ -47,6 +47,8 @@ import {
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFormState} from './ReactFizzServer';
 
+import noop from 'shared/noop';
+
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
@@ -794,8 +796,6 @@ function useMemoCache(size: number): Array<mixed> {
   }
   return data;
 }
-
-function noop(): void {}
 
 function clientHookNotSupported() {
   throw new Error(

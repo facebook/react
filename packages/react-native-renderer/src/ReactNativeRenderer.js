@@ -113,6 +113,9 @@ function nativeOnCaughtError(
 
   defaultOnCaughtError(error, errorInfo);
 }
+function nativeOnDefaultTransitionIndicator(): void | (() => void) {
+  // Native doesn't have a default indicator.
+}
 
 function render(
   element: MixedElement,
@@ -162,6 +165,7 @@ function render(
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      nativeOnDefaultTransitionIndicator,
       null,
     );
     roots.set(containerTag, root);

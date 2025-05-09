@@ -1,4 +1,4 @@
-// @enableEmitInstrumentForget @compilationMode(annotation)
+// @enableEmitInstrumentForget @compilationMode:"annotation"
 
 import {identity} from 'shared-runtime';
 

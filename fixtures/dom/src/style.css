@@ -365,6 +365,10 @@ tbody tr:nth-child(even) {
   background-color: green;
 }
 
+.highlight-focused-children * {
+  margin-left: 10px;
+}
+
 .highlight-focused-children *:focus {
   outline: 2px solid green;
 }
