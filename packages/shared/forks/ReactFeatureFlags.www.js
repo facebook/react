@@ -26,7 +26,6 @@ export const {
   enableObjectFiber,
   enableRenderableContext,
   enableRetryLaneExpiration,
-  enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
   favorSafetyOverHydrationPerf,
@@ -115,6 +114,7 @@ export const enableGestureTransition = false;
 export const enableSuspenseyImages = false;
 export const enableSrcObject = false;
 export const enableHydrationChangeEvent = false;
+export const enableDefaultTransitionIndicator = false;
 
 export const ownerStackLimit = 1e4;
 

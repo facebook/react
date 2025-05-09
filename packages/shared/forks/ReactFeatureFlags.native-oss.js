@@ -61,8 +61,6 @@ export const renameElementSymbol = true;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const enableSiblingPrerendering = true;
-
 export const enableHydrationLaneScheduling = true;
 
 export const enableYieldingBeforePassive = false;
@@ -76,6 +74,7 @@ export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
 export const enableSrcObject = false;
 export const enableHydrationChangeEvent = false;
+export const enableDefaultTransitionIndicator = false;
 export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefs = false;

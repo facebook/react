@@ -62,7 +62,6 @@ export const enableInfiniteRenderLoopDetection = false;
 
 export const renameElementSymbol = true;
 export const enableShallowPropDiffing = false;
-export const enableSiblingPrerendering = true;
 
 export const enableYieldingBeforePassive = true;
 
@@ -75,6 +74,7 @@ export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
 export const enableSrcObject = false;
 export const enableHydrationChangeEvent = false;
+export const enableDefaultTransitionIndicator = false;
 export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefs = false;

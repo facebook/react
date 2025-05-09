@@ -16,6 +16,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import isArray from 'shared/isArray';
+import noop from 'shared/noop';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -81,8 +82,6 @@ function getElementKey(element: any, index: number): string {
   // Implicit key determined by the index in the set
   return index.toString(36);
 }
-
-function noop() {}
 
 function resolveThenable<T>(thenable: Thenable<T>): T {
   switch (thenable.status) {
