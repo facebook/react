@@ -1437,8 +1437,8 @@ describe('ReactDOMForm', () => {
     assertLog([
       'Suspend! [Count: 0]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
+      // pre-warming
+      'Suspend! [Count: 0]',
     ]);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
@@ -1448,8 +1448,8 @@ describe('ReactDOMForm', () => {
     assertLog([
       'Suspend! [Count: 1]',
       'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
+      // pre-warming
+      'Suspend! [Count: 1]',
     ]);
     expect(container.textContent).toBe('Loading...');
 
@@ -1482,8 +1482,8 @@ describe('ReactDOMForm', () => {
     await act(() => root.render(<App />));
     assertLog([
       'Suspend! [Count: 0]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
+      // pre-warming
+      'Suspend! [Count: 0]',
     ]);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
@@ -1501,8 +1501,8 @@ describe('ReactDOMForm', () => {
     ]);
     assertLog([
       'Suspend! [Count: 1]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
+      // pre-warming
+      'Suspend! [Count: 1]',
     ]);
     expect(container.textContent).toBe('Count: 0');
   });
@@ -1668,6 +1668,37 @@ describe('ReactDOMForm', () => {
     // The form was reset to the new value from the server.
     expect(inputRef.current.value).toBe('acdlite');
     expect(divRef.current.textContent).toEqual('Current username: acdlite');
+  });
+
+  it('parallel form submissions do not throw', async () => {
+    const formRef = React.createRef();
+    let resolve = null;
+    function App() {
+      async function submitForm() {
+        Scheduler.log('Action');
+        if (!resolve) {
+          await new Promise(res => {
+            resolve = res;
+          });
+        }
+      }
+      return <form ref={formRef} action={submitForm} />;
+    }
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    // Start first form submission
+    await act(async () => {
+      formRef.current.requestSubmit();
+    });
+    assertLog(['Action']);
+
+    // Submit form again while first form action is still pending
+    await act(async () => {
+      formRef.current.requestSubmit();
+      resolve(); // Resolve the promise to allow the first form action to complete
+    });
+    assertLog(['Action']);
   });
 
   it(

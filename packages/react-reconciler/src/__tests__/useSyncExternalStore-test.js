@@ -333,8 +333,8 @@ describe('useSyncExternalStore', () => {
         // This should a synchronous re-render of A using the updated value. In
         // this test, this causes A to suspend.
         'Suspend A',
-
-        ...(gate('enableSiblingPrerendering') ? ['B: Updated'] : []),
+        // pre-warming
+        'B: Updated',
       ]);
       // Nothing has committed, because A suspended and no fallback
       // was provided.
@@ -419,7 +419,9 @@ describe('useSyncExternalStore', () => {
     await act(async () => {
       root.render(<App />);
     });
-    assertLog([...(gate('enableSiblingPrerendering') ? ['(not set)'] : [])]);
+
+    // pre-warming
+    assertLog(['(not set)']);
 
     expect(root).toMatchRenderedOutput('Loading...');
 
@@ -429,11 +431,12 @@ describe('useSyncExternalStore', () => {
       resolveText('A');
     });
     assertLog([
-      ...(gate('enableSiblingPrerendering')
-        ? ['A', 'B', 'A', 'B', 'B']
-        : gate(flags => flags.alwaysThrottleRetries)
-          ? ['A', '(not set)', 'A', '(not set)', 'B']
-          : ['A', '(not set)', 'A', '(not set)', '(not set)', 'B']),
+      'A',
+      'B',
+      'A',
+      'B',
+      'B',
+      ...(gate('alwaysThrottleRetries') ? [] : ['B']),
     ]);
 
     expect(root).toMatchRenderedOutput('AB');

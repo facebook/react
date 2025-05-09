@@ -24,7 +24,10 @@ import {
 } from 'react-reconciler/src/ReactEventPriorities';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import {HostText} from 'react-reconciler/src/ReactWorkTags';
-import {traverseFragmentInstance} from 'react-reconciler/src/ReactFiberTreeReflection';
+import {
+  getInstanceFromHostFiber,
+  traverseFragmentInstance,
+} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 // Modules provided by RN:
 import {
@@ -63,7 +66,6 @@ import {
 } from './ReactNativeFiberInspector';
 
 import {
-  enableFabricCompleteRootInCommitPhase,
   passChildrenWhenCloningPersistedNodes,
   enableLazyPublicInstanceInFabric,
 } from 'shared/ReactFeatureFlags';
@@ -543,19 +545,14 @@ export function finalizeContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  if (!enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container.containerTag, newChildren);
-  }
+  // Noop - children will be replaced in replaceContainerChildren
 }
 
 export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  // Noop - children will be replaced in finalizeContainerChildren
-  if (enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container.containerTag, newChildren);
-  }
+  completeRoot(container.containerTag, newChildren);
 }
 
 export {getClosestInstanceFromNode as getInstanceFromNode};
@@ -646,7 +643,8 @@ FragmentInstance.prototype.observeUsing = function (
   this._observers.add(observer);
   traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
 };
-function observeChild(instance: Instance, observer: IntersectionObserver) {
+function observeChild(child: Fiber, observer: IntersectionObserver) {
+  const instance = getInstanceFromHostFiber<Instance>(child);
   const publicInstance = getPublicInstance(instance);
   if (publicInstance == null) {
     throw new Error('Expected to find a host node. This is a bug in React.');
@@ -672,7 +670,8 @@ FragmentInstance.prototype.unobserveUsing = function (
     traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
   }
 };
-function unobserveChild(instance: Instance, observer: IntersectionObserver) {
+function unobserveChild(child: Fiber, observer: IntersectionObserver) {
+  const instance = getInstanceFromHostFiber<Instance>(child);
   const publicInstance = getPublicInstance(instance);
   if (publicInstance == null) {
     throw new Error('Expected to find a host node. This is a bug in React.');
@@ -696,7 +695,7 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  child: Instance,
+  child: Fiber,
   fragmentInstance: FragmentInstanceType,
 ): void {
   if (fragmentInstance._observers !== null) {
