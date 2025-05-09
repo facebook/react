@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @inferEffectDependencies @compilationMode(infer) @panicThreshold(none)
+// @inferEffectDependencies @compilationMode:"infer" @panicThreshold:"none"
 import {useEffect} from 'react';
 
 function nonReactFn(arg) {

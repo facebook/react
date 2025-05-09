@@ -1,4 +1,4 @@
-// @panicThreshold(none)
+// @panicThreshold:"none"
 import {useNoAlias} from 'shared-runtime';
 
 const cond = true;
