@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<696b23ded17845c6a44f534bd4b7b6d9>>
+ * @generated SignedSource<<f11f66a86f34cd9a7357cf0404c9b890>>
  */
 
 /*
@@ -1528,6 +1528,7 @@ function sanitizeURL(url) {
     ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
     : url;
 }
+function noop$1() {}
 var currentReplayingEvent = null;
 function getEventTarget(nativeEvent) {
   nativeEvent = nativeEvent.target || nativeEvent.srcElement || window;
@@ -3005,7 +3006,7 @@ function prepareToHydrateHostInstance(fiber) {
       null != props.onScrollEnd &&
         (listenToNonDelegatedEvent("scrollend", instance),
         listenToNonDelegatedEvent("scroll", instance)),
-      null != props.onClick && (instance.onclick = noop$2),
+      null != props.onClick && (instance.onclick = noop$1),
       (instance = !0))
     : (instance = !1);
   instance || throwOnHydrationMismatch(fiber, !0);
@@ -3391,12 +3392,11 @@ function isThenableResolved(thenable) {
   thenable = thenable.status;
   return "fulfilled" === thenable || "rejected" === thenable;
 }
-function noop$4() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
     ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop$4, noop$4), (thenable = index));
+    : index !== thenable && (thenable.then(noop$1, noop$1), (thenable = index));
   switch (thenable.status) {
     case "fulfilled":
       return thenable.value;
@@ -3407,7 +3407,7 @@ function trackUsedThenable(thenableState, thenable, index) {
         thenableState)
       );
     default:
-      if ("string" === typeof thenable.status) thenable.then(noop$4, noop$4);
+      if ("string" === typeof thenable.status) thenable.then(noop$1, noop$1);
       else {
         thenableState = workInProgressRoot;
         if (null !== thenableState && 100 < thenableState.shellSuspendCounter)
@@ -5426,7 +5426,7 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
       (ReactSharedInternals.T = prevTransition);
   }
 }
-function noop$3() {}
+function noop() {}
 function startHostTransition(formFiber, pendingState, action, formData) {
   if (5 !== formFiber.tag) throw Error(formatProdErrorMessage(476));
   var queue = ensureFormComponentIsStateful(formFiber).queue;
@@ -5436,7 +5436,7 @@ function startHostTransition(formFiber, pendingState, action, formData) {
     pendingState,
     sharedNotPendingObject,
     null === action
-      ? noop$3
+      ? noop
       : function () {
           requestFormReset$2(formFiber);
           return action(formData);
@@ -9270,7 +9270,7 @@ function insertOrAppendPlacementNodeIntoContainer(
         (stateNode = before._reactRootContainer),
         (null !== stateNode && void 0 !== stateNode) ||
           null !== parent.onclick ||
-          (parent.onclick = noop$2));
+          (parent.onclick = noop$1));
     enableFragmentRefs &&
       5 === tag &&
       null === node.alternate &&
@@ -13757,7 +13757,6 @@ function checkForUnmatchedText(serverText, clientText) {
   clientText = normalizeMarkupForTextOrAttribute(clientText);
   return normalizeMarkupForTextOrAttribute(serverText) === clientText ? !0 : !1;
 }
-function noop$2() {}
 function setProp(domElement, tag, key, value, props, prevValue) {
   switch (key) {
     case "children":
@@ -13860,7 +13859,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
       domElement.setAttribute(key, value);
       break;
     case "onClick":
-      null != value && (domElement.onclick = noop$2);
+      null != value && (domElement.onclick = noop$1);
       break;
     case "onScroll":
       null != value && listenToNonDelegatedEvent("scroll", domElement);
@@ -14110,7 +14109,7 @@ function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
         listenToNonDelegatedEvent("scroll", domElement));
       break;
     case "onClick":
-      null != value && (domElement.onclick = noop$2);
+      null != value && (domElement.onclick = noop$1);
       break;
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
@@ -16138,7 +16137,6 @@ function preloadResource(resource) {
     : !0;
 }
 var suspendedState = null;
-function noop$1() {}
 function suspendResource(hoistableRoot, resource, props) {
   if (null === suspendedState) throw Error(formatProdErrorMessage(475));
   var state = suspendedState;
@@ -17062,14 +17060,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2016 = React.version;
 if (
-  "19.2.0-native-fb-4ca97e48-20250508" !==
+  "19.2.0-native-fb-21fdf308-20250508" !==
   isomorphicReactPackageVersion$jscomp$inline_2016
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2016,
-      "19.2.0-native-fb-4ca97e48-20250508"
+      "19.2.0-native-fb-21fdf308-20250508"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17091,10 +17089,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2537 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-4ca97e48-20250508",
+  version: "19.2.0-native-fb-21fdf308-20250508",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-4ca97e48-20250508"
+  reconcilerVersion: "19.2.0-native-fb-21fdf308-20250508"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2538 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17109,7 +17107,6 @@ if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
         (injectedHook = hook$jscomp$inline_2538);
     } catch (err) {}
 }
-function noop() {}
 function getCrossOriginStringAs(as, input) {
   if ("font" === as) return "";
   if ("string" === typeof input)
@@ -17117,17 +17114,17 @@ function getCrossOriginStringAs(as, input) {
 }
 exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = {
   d: {
-    f: noop,
+    f: noop$1,
     r: function () {
       throw Error(formatProdErrorMessage(522));
     },
-    D: noop,
-    C: noop,
-    L: noop,
-    m: noop,
-    X: noop,
-    S: noop,
-    M: noop
+    D: noop$1,
+    C: noop$1,
+    L: noop$1,
+    m: noop$1,
+    X: noop$1,
+    S: noop$1,
+    M: noop$1
   },
   p: 0,
   findDOMNode: null
@@ -17346,4 +17343,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-4ca97e48-20250508";
+exports.version = "19.2.0-native-fb-21fdf308-20250508";

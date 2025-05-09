@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b8f0e21d586c0758b7138fa79c1b378c>>
+ * @generated SignedSource<<e7ced30467138bd6b27dd72eec487d82>>
  */
 
 "use strict";
@@ -1627,6 +1627,7 @@ function shallowEqual(objA, objB) {
   }
   return !0;
 }
+function noop() {}
 var SuspenseException = Error(
     "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`."
   ),
@@ -1641,7 +1642,6 @@ function isThenableResolved(thenable) {
   thenable = thenable.status;
   return "fulfilled" === thenable || "rejected" === thenable;
 }
-function noop() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
@@ -10222,7 +10222,6 @@ function updateContainer(element, container, parentComponent, callback) {
     entangleTransitions(element, current, lane));
   return lane;
 }
-function defaultOnDefaultTransitionIndicator() {}
 var act = React.act,
   defaultTestOptions = {
     createNodeMock: function () {
@@ -10517,10 +10516,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1254 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-4ca97e48-20250508",
+  version: "19.2.0-native-fb-21fdf308-20250508",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-4ca97e48-20250508",
+  reconcilerVersion: "19.2.0-native-fb-21fdf308-20250508",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$155 = 0;
@@ -10577,7 +10576,7 @@ exports.create = function (element, options) {
       defaultOnUncaughtError,
       defaultOnCaughtError,
       defaultOnRecoverableError,
-      defaultOnDefaultTransitionIndicator
+      noop
     );
   if (null == root) throw Error("something went wrong");
   updateContainer(element, root, null, null);
@@ -10671,4 +10670,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-4ca97e48-20250508";
+exports.version = "19.2.0-native-fb-21fdf308-20250508";

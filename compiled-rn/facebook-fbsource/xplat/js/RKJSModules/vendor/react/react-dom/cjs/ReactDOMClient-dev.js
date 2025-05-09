@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<43b19660149a48f857a91e01876b46dd>>
+ * @generated SignedSource<<601a133d3a33f7f0b400fa8b4d795409>>
  */
 
 /*
@@ -85,7 +85,7 @@ __DEV__ &&
         "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
       );
     }
-    function noop$2() {}
+    function noop() {}
     function warnForMissingKey() {}
     function setToSortedString(set) {
       var array = [];
@@ -3246,6 +3246,7 @@ __DEV__ &&
         ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
         : url;
     }
+    function noop$1() {}
     function getEventTarget(nativeEvent) {
       nativeEvent = nativeEvent.target || nativeEvent.srcElement || window;
       nativeEvent.correspondingUseElement &&
@@ -5244,7 +5245,6 @@ __DEV__ &&
       thenable = thenable.status;
       return "fulfilled" === thenable || "rejected" === thenable;
     }
-    function noop$3() {}
     function trackUsedThenable(thenableState, thenable, index) {
       null !== ReactSharedInternals.actQueue &&
         (ReactSharedInternals.didUsePromise = !0);
@@ -5258,7 +5258,7 @@ __DEV__ &&
             console.error(
               "A component was suspended by an uncached promise. Creating promises inside a Client Component or hook is not yet supported, except via a Suspense-compatible library or framework."
             )),
-          thenable.then(noop$3, noop$3),
+          thenable.then(noop$1, noop$1),
           (thenable = index));
       switch (thenable.status) {
         case "fulfilled":
@@ -5271,7 +5271,7 @@ __DEV__ &&
           );
         default:
           if ("string" === typeof thenable.status)
-            thenable.then(noop$3, noop$3);
+            thenable.then(noop$1, noop$1);
           else {
             thenableState = workInProgressRoot;
             if (
@@ -8169,7 +8169,7 @@ __DEV__ &&
         pendingState,
         NotPendingTransition,
         null === action
-          ? noop$2
+          ? noop
           : function () {
               requestFormReset$1(formFiber);
               return action(formData);
@@ -15911,7 +15911,11 @@ __DEV__ &&
         16785408 === (suspendedCommitReason & 16785408)
       )
         if (
-          ((suspendedState = { stylesheets: null, count: 0, unsuspend: noop }),
+          ((suspendedState = {
+            stylesheets: null,
+            count: 0,
+            unsuspend: noop$1
+          }),
           accumulateSuspenseyCommitOnFiber(finishedWork),
           (suspendedCommitReason = waitForCommitToBeReady()),
           null !== suspendedCommitReason)
@@ -18663,7 +18667,6 @@ __DEV__ &&
         ? !0
         : !1;
     }
-    function noop$1() {}
     function setProp(domElement, tag, key, value, props, prevValue) {
       switch (key) {
         case "children":
@@ -22140,7 +22143,6 @@ __DEV__ &&
         ? !1
         : !0;
     }
-    function noop() {}
     function suspendResource(hoistableRoot, resource, props) {
       if (null === suspendedState)
         throw Error(
@@ -26956,11 +26958,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-native-fb-4ca97e48-20250508" !== isomorphicReactPackageVersion)
+      if ("19.2.0-native-fb-21fdf308-20250508" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-native-fb-4ca97e48-20250508\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-native-fb-21fdf308-20250508\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26997,10 +26999,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-native-fb-4ca97e48-20250508",
+          version: "19.2.0-native-fb-21fdf308-20250508",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-native-fb-4ca97e48-20250508"
+          reconcilerVersion: "19.2.0-native-fb-21fdf308-20250508"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27138,5 +27140,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.2.0-native-fb-4ca97e48-20250508";
+    exports.version = "19.2.0-native-fb-21fdf308-20250508";
   })();

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0bd5a6a3a37e6a0854848032962925d0>>
+ * @generated SignedSource<<2627092a746359299d7b34450cfc0a5c>>
  */
 
 "use strict";
@@ -3399,6 +3399,7 @@ __DEV__ &&
       }
       return !0;
     }
+    function noop() {}
     function createThenableState() {
       return { didWarnAboutUncachedPromise: !1, thenables: [] };
     }
@@ -3406,7 +3407,6 @@ __DEV__ &&
       thenable = thenable.status;
       return "fulfilled" === thenable || "rejected" === thenable;
     }
-    function noop() {}
     function trackUsedThenable(thenableState, thenable, index) {
       null !== ReactSharedInternals.actQueue &&
         (ReactSharedInternals.didUsePromise = !0);
@@ -17479,10 +17479,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-4ca97e48-20250508",
+        version: "19.2.0-native-fb-21fdf308-20250508",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-4ca97e48-20250508"
+        reconcilerVersion: "19.2.0-native-fb-21fdf308-20250508"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

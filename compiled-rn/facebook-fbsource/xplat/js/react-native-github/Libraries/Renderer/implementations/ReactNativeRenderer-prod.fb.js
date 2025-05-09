@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f7e39e47f6bd3c0f24a299c6b70a56d6>>
+ * @generated SignedSource<<3e97694ed94f097e717c1fef81c72971>>
  */
 
 "use strict";
@@ -2914,6 +2914,7 @@ function shallowEqual(objA, objB) {
   }
   return !0;
 }
+function noop() {}
 var SuspenseException = Error(
     "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`."
   ),
@@ -2928,7 +2929,6 @@ function isThenableResolved(thenable) {
   thenable = thenable.status;
   return "fulfilled" === thenable || "rejected" === thenable;
 }
-function noop() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
@@ -11212,11 +11212,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-4ca97e48-20250508" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-21fdf308-20250508" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-4ca97e48-20250508\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-21fdf308-20250508\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11266,10 +11266,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1306 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-4ca97e48-20250508",
+    version: "19.2.0-native-fb-21fdf308-20250508",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-4ca97e48-20250508"
+    reconcilerVersion: "19.2.0-native-fb-21fdf308-20250508"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1306.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0727698385cd02e03cb17f887f33ff88>>
+ * @generated SignedSource<<a1a53a1272f475eee0c4071e03e24851>>
  */
 
 "use strict";
@@ -2471,6 +2471,7 @@ __DEV__ &&
       }
       return !0;
     }
+    function noop() {}
     function createThenableState() {
       return { didWarnAboutUncachedPromise: !1, thenables: [] };
     }
@@ -2478,7 +2479,6 @@ __DEV__ &&
       thenable = thenable.status;
       return "fulfilled" === thenable || "rejected" === thenable;
     }
-    function noop() {}
     function trackUsedThenable(thenableState, thenable, index) {
       null !== ReactSharedInternals.actQueue &&
         (ReactSharedInternals.didUsePromise = !0);
@@ -13458,7 +13458,6 @@ __DEV__ &&
       }
       return map;
     }
-    function defaultOnDefaultTransitionIndicator() {}
     function toJSON(inst) {
       if (inst.isHidden) return null;
       switch (inst.tag) {
@@ -15527,7 +15526,8 @@ __DEV__ &&
     setSuspenseHandler = function (newShouldSuspendImpl) {
       shouldSuspendImpl = newShouldSuspendImpl;
     };
-    var act = React.act,
+    var defaultOnDefaultTransitionIndicator = noop,
+      act = React.act,
       validWrapperTypes = new Set([0, 1, 5, 11, 14, 15, 3]),
       ReactTestInstance = (function () {
         function ReactTestInstance(fiber) {
@@ -15657,10 +15657,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-4ca97e48-20250508",
+        version: "19.2.0-native-fb-21fdf308-20250508",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-4ca97e48-20250508"
+        reconcilerVersion: "19.2.0-native-fb-21fdf308-20250508"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15805,5 +15805,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-4ca97e48-20250508";
+    exports.version = "19.2.0-native-fb-21fdf308-20250508";
   })();
