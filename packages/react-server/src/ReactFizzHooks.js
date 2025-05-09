@@ -379,7 +379,7 @@ export function useReducer<S, I, A>(
         // $FlowFixMe[incompatible-use] found when upgrading Flow
         renderPhaseUpdates.delete(queue);
         // $FlowFixMe[incompatible-use] found when upgrading Flow
-        let newState = workInProgressHook.memoizedState;
+        let newState = workInProgressHook.memoizedState[0];
         let update: Update<any> = firstRenderPhaseUpdate;
         do {
           // Process this render phase update. We don't have to check the
@@ -398,13 +398,14 @@ export function useReducer<S, I, A>(
         } while (update !== null);
 
         // $FlowFixMe[incompatible-use] found when upgrading Flow
-        workInProgressHook.memoizedState = newState;
-
-        return [newState, dispatch];
+        workInProgressHook.memoizedState = [newState, dispatch];
+        if (__DEV__) {
+          Object.freeze(workInProgressHook.memoizedState);
+        }
       }
     }
     // $FlowFixMe[incompatible-use] found when upgrading Flow
-    return [workInProgressHook.memoizedState, dispatch];
+    return workInProgressHook.memoizedState;
   } else {
     if (__DEV__) {
       isInHookUserCodeInDev = true;
@@ -424,8 +425,6 @@ export function useReducer<S, I, A>(
       isInHookUserCodeInDev = false;
     }
     // $FlowFixMe[incompatible-use] found when upgrading Flow
-    workInProgressHook.memoizedState = initialState;
-    // $FlowFixMe[incompatible-use] found when upgrading Flow
     const queue: UpdateQueue<A> = (workInProgressHook.queue = {
       last: null,
       dispatch: null,
@@ -436,7 +435,12 @@ export function useReducer<S, I, A>(
       queue,
     ): any));
     // $FlowFixMe[incompatible-use] found when upgrading Flow
-    return [workInProgressHook.memoizedState, dispatch];
+    workInProgressHook.memoizedState = [initialState, dispatch];
+    if (__DEV__) {
+      Object.freeze(workInProgressHook.memoizedState);
+    }
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
+    return workInProgressHook.memoizedState;
   }
 }
 
