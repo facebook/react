@@ -137,8 +137,8 @@ jobs:
           cp build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
             ./compiled/eslint-plugin-react-hooks/index.js
 
-          # Move unstable_server-external-runtime.js into facebook-www
-          mv build/oss-experimental/react-dom/unstable_server-external-runtime.js \
+          # Rename ReactDOMServerExternalRuntime-prod.modern.js to unstable_server-external-runtime.js in facebook-www
+          mv ./compiled/facebook-www/ReactDOMServerExternalRuntime-prod.modern.js \
             ./compiled/facebook-www/unstable_server-external-runtime.js
 
           # Move react-refresh-babel.development.js into babel-plugin-react-refresh
