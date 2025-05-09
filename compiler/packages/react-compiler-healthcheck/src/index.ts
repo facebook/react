@@ -40,12 +40,17 @@ async function main() {
   };
 
   for (const path of await glob(src, globOptions)) {
-    const source = await fs.readFile(path, 'utf-8');
-    spinner.text = `Checking ${path}`;
-    reactCompilerCheck.run(source, path);
-    strictModeCheck.run(source, path);
-    libraryCompatCheck.run(source, path);
+    try {
+      const source = await fs.readFile(path, 'utf-8');
+      spinner.text = `Checking ${path}`;
+      reactCompilerCheck.run(source, path);
+      strictModeCheck.run(source, path);
+      libraryCompatCheck.run(source, path);
+    } catch (err) {
+      console.warn(`Failed to read file ${path}: ${err.message}`);
+    }
   }
+  
   spinner.stop();
 
   reactCompilerCheck.report();
