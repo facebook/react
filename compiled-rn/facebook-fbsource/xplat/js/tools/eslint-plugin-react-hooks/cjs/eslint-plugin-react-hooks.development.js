@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<bf2a3cfe044d5b450ecff7cc37899393>>
+ * @generated SignedSource<<180aa86b7a95e51156ea9b23c44e3133>>
  */
 
 'use strict';
@@ -40447,6 +40447,52 @@ function evaluateInstruction(constants, instr) {
             }
             return null;
         }
+        case 'TemplateLiteral': {
+            if (value.subexprs.length === 0) {
+                const result = {
+                    kind: 'Primitive',
+                    value: value.quasis.map(q => q.cooked).join(''),
+                    loc: value.loc,
+                };
+                instr.value = result;
+                return result;
+            }
+            if (value.subexprs.length !== value.quasis.length - 1) {
+                return null;
+            }
+            if (value.quasis.some(q => q.cooked === undefined)) {
+                return null;
+            }
+            let quasiIndex = 0;
+            let resultString = value.quasis[quasiIndex].cooked;
+            ++quasiIndex;
+            for (const subExpr of value.subexprs) {
+                const subExprValue = read(constants, subExpr);
+                if (!subExprValue || subExprValue.kind !== 'Primitive') {
+                    return null;
+                }
+                const expressionValue = subExprValue.value;
+                if (typeof expressionValue !== 'number' &&
+                    typeof expressionValue !== 'string' &&
+                    typeof expressionValue !== 'boolean' &&
+                    !(typeof expressionValue === 'object' && expressionValue === null)) {
+                    return null;
+                }
+                const suffix = value.quasis[quasiIndex].cooked;
+                ++quasiIndex;
+                if (suffix === undefined) {
+                    return null;
+                }
+                resultString = resultString.concat(expressionValue, suffix);
+            }
+            const result = {
+                kind: 'Primitive',
+                value: resultString,
+                loc: value.loc,
+            };
+            instr.value = result;
+            return result;
+        }
         case 'LoadLocal': {
             const placeValue = read(constants, value.place);
             if (placeValue !== null) {
@@ -55874,10 +55920,12 @@ function suppressionsToCompilerError(suppressionRanges) {
 const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
 const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
 function findDirectiveEnablingMemoization(directives) {
-    return directives.filter(directive => OPT_IN_DIRECTIVES.has(directive.value.value));
+    var _a;
+    return ((_a = directives.find(directive => OPT_IN_DIRECTIVES.has(directive.value.value))) !== null && _a !== void 0 ? _a : null);
 }
 function findDirectiveDisablingMemoization(directives) {
-    return directives.filter(directive => OPT_OUT_DIRECTIVES.has(directive.value.value));
+    var _a;
+    return ((_a = directives.find(directive => OPT_OUT_DIRECTIVES.has(directive.value.value))) !== null && _a !== void 0 ? _a : null);
 }
 function isCriticalError(err) {
     return !(err instanceof CompilerError) || err.isCritical();
@@ -55888,12 +55936,12 @@ function isConfigError(err) {
     }
     return false;
 }
-function logError(err, pass, fnLoc) {
+function logError(err, context, fnLoc) {
     var _a, _b;
-    if (pass.opts.logger) {
+    if (context.opts.logger) {
         if (err instanceof CompilerError) {
             for (const detail of err.details) {
-                pass.opts.logger.logEvent(pass.filename, {
+                context.opts.logger.logEvent(context.filename, {
                     kind: 'CompileError',
                     fnLoc,
                     detail: detail.options,
@@ -55908,7 +55956,7 @@ function logError(err, pass, fnLoc) {
             else {
                 stringifiedError = (_b = err === null || err === void 0 ? void 0 : err.toString()) !== null && _b !== void 0 ? _b : '[ null ]';
             }
-            pass.opts.logger.logEvent(pass.filename, {
+            context.opts.logger.logEvent(context.filename, {
                 kind: 'PipelineError',
                 fnLoc,
                 data: stringifiedError,
@@ -55916,10 +55964,11 @@ function logError(err, pass, fnLoc) {
         }
     }
 }
-function handleError(err, pass, fnLoc) {
-    logError(err, pass, fnLoc);
-    if (pass.opts.panicThreshold === 'all_errors' ||
-        (pass.opts.panicThreshold === 'critical_errors' && isCriticalError(err)) ||
+function handleError(err, context, fnLoc) {
+    logError(err, context, fnLoc);
+    if (context.opts.panicThreshold === 'all_errors' ||
+        (context.opts.panicThreshold === 'critical_errors' &&
+            isCriticalError(err)) ||
         isConfigError(err)) {
         throw err;
     }
@@ -55971,7 +56020,6 @@ function createNewFunctionNode(originalFn, compiledFn) {
             assertExhaustive$1(originalFn.node, `Creating unhandled function: ${originalFn.node}`);
         }
     }
-    ALREADY_COMPILED.add(transformedFn);
     return transformedFn;
 }
 function insertNewOutlinedFunctionNode(program, originalFn, compiledFn) {
@@ -56004,7 +56052,6 @@ function insertNewOutlinedFunctionNode(program, originalFn, compiledFn) {
         }
     }
 }
-const ALREADY_COMPILED = new (WeakSet !== null && WeakSet !== void 0 ? WeakSet : Set)();
 const DEFAULT_ESLINT_SUPPRESSIONS = [
     'react-hooks/exhaustive-deps',
     'react-hooks/rules-of-hooks',
@@ -56021,172 +56068,199 @@ function isFilePartOfSources(sources, filename) {
     return false;
 }
 function compileProgram(program, pass) {
-    var _a, _b;
+    var _a;
     if (shouldSkipCompilation(program, pass)) {
         return null;
     }
-    const environment = pass.opts.environment;
-    const restrictedImportsErr = validateRestrictedImports(program, environment);
+    const restrictedImportsErr = validateRestrictedImports(program, pass.opts.environment);
     if (restrictedImportsErr) {
         handleError(restrictedImportsErr, pass, null);
         return null;
     }
-    const programContext = new ProgramContext(program, pass.opts.target, environment.hookPattern);
     const suppressions = findProgramSuppressions(pass.comments, (_a = pass.opts.eslintSuppressionRules) !== null && _a !== void 0 ? _a : DEFAULT_ESLINT_SUPPRESSIONS, pass.opts.flowSuppressions);
-    const queue = [];
+    const programContext = new ProgramContext({
+        program: program,
+        opts: pass.opts,
+        filename: pass.filename,
+        code: pass.code,
+        suppressions,
+    });
+    const queue = findFunctionsToCompile(program, pass, programContext);
     const compiledFns = [];
+    while (queue.length !== 0) {
+        const current = queue.shift();
+        const compiled = processFn(current.fn, current.fnType, programContext);
+        if (compiled != null) {
+            for (const outlined of compiled.outlined) {
+                CompilerError.invariant(outlined.fn.outlined.length === 0, {
+                    reason: 'Unexpected nested outlined functions',
+                    loc: outlined.fn.loc,
+                });
+                const fn = insertNewOutlinedFunctionNode(program, current.fn, outlined.fn);
+                fn.skip();
+                programContext.alreadyCompiled.add(fn.node);
+                if (outlined.type !== null) {
+                    queue.push({
+                        kind: 'outlined',
+                        fn,
+                        fnType: outlined.type,
+                    });
+                }
+            }
+            compiledFns.push({
+                kind: current.kind,
+                originalFn: current.fn,
+                compiledFn: compiled,
+            });
+        }
+    }
+    if (findDirectiveDisablingMemoization(program.node.directives) != null) {
+        return null;
+    }
+    applyCompiledFunctions(program, compiledFns, pass, programContext);
+    return {
+        retryErrors: programContext.retryErrors,
+        inferredEffectLocations: programContext.inferredEffectLocations,
+    };
+}
+function findFunctionsToCompile(program, pass, programContext) {
+    var _a;
+    const queue = [];
     const traverseFunction = (fn, pass) => {
-        const fnType = getReactFunctionType(fn, pass, environment);
-        if (fnType === null || ALREADY_COMPILED.has(fn.node)) {
+        const fnType = getReactFunctionType(fn, pass);
+        if (fnType === null || programContext.alreadyCompiled.has(fn.node)) {
             return;
         }
-        ALREADY_COMPILED.add(fn.node);
+        programContext.alreadyCompiled.add(fn.node);
         fn.skip();
         queue.push({ kind: 'original', fn, fnType });
     };
     program.traverse({
         ClassDeclaration(node) {
             node.skip();
-            return;
         },
         ClassExpression(node) {
             node.skip();
-            return;
         },
         FunctionDeclaration: traverseFunction,
         FunctionExpression: traverseFunction,
         ArrowFunctionExpression: traverseFunction,
-    }, Object.assign(Object.assign({}, pass), { opts: Object.assign(Object.assign({}, pass.opts), pass.opts), filename: (_b = pass.filename) !== null && _b !== void 0 ? _b : null }));
-    const retryErrors = [];
-    const inferredEffectLocations = new Set();
-    const processFn = (fn, fnType) => {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-        let optInDirectives = [];
-        let optOutDirectives = [];
-        if (fn.node.body.type === 'BlockStatement') {
-            optInDirectives = findDirectiveEnablingMemoization(fn.node.body.directives);
-            optOutDirectives = findDirectiveDisablingMemoization(fn.node.body.directives);
-        }
-        const suppressionsInFunction = filterSuppressionsThatAffectFunction(suppressions, fn);
-        let compileResult;
-        if (suppressionsInFunction.length > 0) {
-            compileResult = {
-                kind: 'error',
-                error: suppressionsToCompilerError(suppressionsInFunction),
-            };
+    }, Object.assign(Object.assign({}, pass), { opts: Object.assign(Object.assign({}, pass.opts), pass.opts), filename: (_a = pass.filename) !== null && _a !== void 0 ? _a : null }));
+    return queue;
+}
+function processFn(fn, fnType, programContext) {
+    var _a, _b, _c, _d, _e, _f, _g;
+    let directives;
+    if (fn.node.body.type !== 'BlockStatement') {
+        directives = { optIn: null, optOut: null };
+    }
+    else {
+        directives = {
+            optIn: findDirectiveEnablingMemoization(fn.node.body.directives),
+            optOut: findDirectiveDisablingMemoization(fn.node.body.directives),
+        };
+    }
+    let compiledFn;
+    const compileResult = tryCompileFunction(fn, fnType, programContext);
+    if (compileResult.kind === 'error') {
+        if (directives.optOut != null) {
+            logError(compileResult.error, programContext, (_a = fn.node.loc) !== null && _a !== void 0 ? _a : null);
         }
         else {
-            try {
-                compileResult = {
-                    kind: 'compile',
-                    compiledFn: compileFn(fn, environment, fnType, 'all_features', programContext, pass.opts.logger, pass.filename, pass.code),
-                };
-            }
-            catch (err) {
-                compileResult = { kind: 'error', error: err };
-            }
+            handleError(compileResult.error, programContext, (_b = fn.node.loc) !== null && _b !== void 0 ? _b : null);
         }
-        if (compileResult.kind === 'error') {
-            if (optOutDirectives.length > 0) {
-                logError(compileResult.error, pass, (_a = fn.node.loc) !== null && _a !== void 0 ? _a : null);
-            }
-            else {
-                handleError(compileResult.error, pass, (_b = fn.node.loc) !== null && _b !== void 0 ? _b : null);
-            }
-            if (!(environment.enableFire || environment.inferEffectDependencies != null)) {
-                return null;
-            }
-            try {
-                compileResult = {
-                    kind: 'compile',
-                    compiledFn: compileFn(fn, environment, fnType, 'no_inferred_memo', programContext, pass.opts.logger, pass.filename, pass.code),
-                };
-                if (!compileResult.compiledFn.hasFireRewrite &&
-                    !compileResult.compiledFn.hasInferredEffect) {
-                    return null;
-                }
-            }
-            catch (err) {
-                if (err instanceof CompilerError) {
-                    retryErrors.push({ fn, error: err });
-                }
-                return null;
-            }
-        }
-        if (pass.opts.ignoreUseNoForget === false && optOutDirectives.length > 0) {
-            for (const directive of optOutDirectives) {
-                (_c = pass.opts.logger) === null || _c === void 0 ? void 0 : _c.logEvent(pass.filename, {
-                    kind: 'CompileSkip',
-                    fnLoc: (_d = fn.node.body.loc) !== null && _d !== void 0 ? _d : null,
-                    reason: `Skipped due to '${directive.value.value}' directive.`,
-                    loc: (_e = directive.loc) !== null && _e !== void 0 ? _e : null,
-                });
-            }
+        const retryResult = retryCompileFunction(fn, fnType, programContext);
+        if (retryResult == null) {
             return null;
         }
-        (_f = pass.opts.logger) === null || _f === void 0 ? void 0 : _f.logEvent(pass.filename, {
-            kind: 'CompileSuccess',
-            fnLoc: (_g = fn.node.loc) !== null && _g !== void 0 ? _g : null,
-            fnName: (_j = (_h = compileResult.compiledFn.id) === null || _h === void 0 ? void 0 : _h.name) !== null && _j !== void 0 ? _j : null,
-            memoSlots: compileResult.compiledFn.memoSlotsUsed,
-            memoBlocks: compileResult.compiledFn.memoBlocks,
-            memoValues: compileResult.compiledFn.memoValues,
-            prunedMemoBlocks: compileResult.compiledFn.prunedMemoBlocks,
-            prunedMemoValues: compileResult.compiledFn.prunedMemoValues,
+        compiledFn = retryResult;
+    }
+    else {
+        compiledFn = compileResult.compiledFn;
+    }
+    if (programContext.opts.ignoreUseNoForget === false &&
+        directives.optOut != null) {
+        programContext.logEvent({
+            kind: 'CompileSkip',
+            fnLoc: (_c = fn.node.body.loc) !== null && _c !== void 0 ? _c : null,
+            reason: `Skipped due to '${directives.optOut.value}' directive.`,
+            loc: (_d = directives.optOut.loc) !== null && _d !== void 0 ? _d : null,
         });
-        if (optInDirectives.length > 0) {
-            return compileResult.compiledFn;
-        }
-        else if (pass.opts.compilationMode === 'annotation') {
-            return null;
-        }
-        if (!pass.opts.noEmit) {
-            return compileResult.compiledFn;
-        }
-        for (const loc of compileResult.compiledFn.inferredEffectLocations) {
-            if (loc !== GeneratedSource)
-                inferredEffectLocations.add(loc);
-        }
         return null;
-    };
-    while (queue.length !== 0) {
-        const current = queue.shift();
-        const compiled = processFn(current.fn, current.fnType);
-        if (compiled === null) {
-            continue;
-        }
-        for (const outlined of compiled.outlined) {
-            CompilerError.invariant(outlined.fn.outlined.length === 0, {
-                reason: 'Unexpected nested outlined functions',
-                loc: outlined.fn.loc,
-            });
-            const fn = insertNewOutlinedFunctionNode(program, current.fn, outlined.fn);
-            fn.skip();
-            ALREADY_COMPILED.add(fn.node);
-            if (outlined.type !== null) {
-                queue.push({
-                    kind: 'outlined',
-                    fn,
-                    fnType: outlined.type,
-                });
+    }
+    programContext.logEvent({
+        kind: 'CompileSuccess',
+        fnLoc: (_e = fn.node.loc) !== null && _e !== void 0 ? _e : null,
+        fnName: (_g = (_f = compiledFn.id) === null || _f === void 0 ? void 0 : _f.name) !== null && _g !== void 0 ? _g : null,
+        memoSlots: compiledFn.memoSlotsUsed,
+        memoBlocks: compiledFn.memoBlocks,
+        memoValues: compiledFn.memoValues,
+        prunedMemoBlocks: compiledFn.prunedMemoBlocks,
+        prunedMemoValues: compiledFn.prunedMemoValues,
+    });
+    if (directives.optIn != null) {
+        return compiledFn;
+    }
+    else if (programContext.opts.compilationMode === 'annotation') {
+        return null;
+    }
+    else if (programContext.opts.noEmit) {
+        for (const loc of compiledFn.inferredEffectLocations) {
+            if (loc !== GeneratedSource) {
+                programContext.inferredEffectLocations.add(loc);
             }
         }
-        compiledFns.push({
-            kind: current.kind,
-            compiledFn: compiled,
-            originalFn: current.fn,
-        });
-    }
-    const moduleScopeOptOutDirectives = findDirectiveDisablingMemoization(program.node.directives);
-    if (moduleScopeOptOutDirectives.length > 0) {
         return null;
     }
+    else {
+        return compiledFn;
+    }
+}
+function tryCompileFunction(fn, fnType, programContext) {
+    const suppressionsInFunction = filterSuppressionsThatAffectFunction(programContext.suppressions, fn);
+    if (suppressionsInFunction.length > 0) {
+        return {
+            kind: 'error',
+            error: suppressionsToCompilerError(suppressionsInFunction),
+        };
+    }
+    try {
+        return {
+            kind: 'compile',
+            compiledFn: compileFn(fn, programContext.opts.environment, fnType, 'all_features', programContext, programContext.opts.logger, programContext.filename, programContext.code),
+        };
+    }
+    catch (err) {
+        return { kind: 'error', error: err };
+    }
+}
+function retryCompileFunction(fn, fnType, programContext) {
+    const environment = programContext.opts.environment;
+    if (!(environment.enableFire || environment.inferEffectDependencies != null)) {
+        return null;
+    }
+    try {
+        const retryResult = compileFn(fn, environment, fnType, 'no_inferred_memo', programContext, programContext.opts.logger, programContext.filename, programContext.code);
+        if (!retryResult.hasFireRewrite && !retryResult.hasInferredEffect) {
+            return null;
+        }
+        return retryResult;
+    }
+    catch (err) {
+        if (err instanceof CompilerError) {
+            programContext.retryErrors.push({ fn, error: err });
+        }
+        return null;
+    }
+}
+function applyCompiledFunctions(program, compiledFns, pass, programContext) {
     const referencedBeforeDeclared = pass.opts.gating != null
         ? getFunctionReferencedBeforeDeclarationAtTopLevel(program, compiledFns)
         : null;
     for (const result of compiledFns) {
         const { kind, originalFn, compiledFn } = result;
         const transformedFn = createNewFunctionNode(originalFn, compiledFn);
+        programContext.alreadyCompiled.add(transformedFn);
         if (referencedBeforeDeclared != null && kind === 'original') {
             CompilerError.invariant(pass.opts.gating != null, {
                 reason: "Expected 'gating' import to be present",
@@ -56201,7 +56275,6 @@ function compileProgram(program, pass) {
     if (compiledFns.length > 0) {
         addImportsToProgram(program, programContext);
     }
-    return { retryErrors, inferredEffectLocations };
 }
 function shouldSkipCompilation(program, pass) {
     if (pass.opts.sources) {
@@ -56225,11 +56298,11 @@ function shouldSkipCompilation(program, pass) {
     }
     return false;
 }
-function getReactFunctionType(fn, pass, environment) {
+function getReactFunctionType(fn, pass) {
     var _a, _b;
-    const hookPattern = environment.hookPattern;
+    const hookPattern = pass.opts.environment.hookPattern;
     if (fn.node.body.type === 'BlockStatement') {
-        if (findDirectiveEnablingMemoization(fn.node.body.directives).length > 0)
+        if (findDirectiveEnablingMemoization(fn.node.body.directives) != null)
             return (_a = getComponentOrHookLike(fn, hookPattern)) !== null && _a !== void 0 ? _a : 'Other';
     }
     let componentSyntaxType = null;
@@ -56592,19 +56665,25 @@ function validateRestrictedImports(path, { validateBlocklistedImports }) {
     }
 }
 class ProgramContext {
-    constructor(program, reactRuntimeModule, hookPattern) {
+    constructor({ program, suppressions, opts, filename, code, }) {
+        this.alreadyCompiled = new (WeakSet !== null && WeakSet !== void 0 ? WeakSet : Set)();
         this.knownReferencedNames = new Set();
         this.imports = new Map();
-        this.hookPattern = hookPattern;
+        this.retryErrors = [];
+        this.inferredEffectLocations = new Set();
         this.scope = program.scope;
-        this.reactRuntimeModule = getReactCompilerRuntimeModule(reactRuntimeModule);
+        this.opts = opts;
+        this.filename = filename;
+        this.code = code;
+        this.reactRuntimeModule = getReactCompilerRuntimeModule(opts.target);
+        this.suppressions = suppressions;
     }
     isHookName(name) {
-        if (this.hookPattern == null) {
+        if (this.opts.environment.hookPattern == null) {
             return isHookName$2(name);
         }
         else {
-            const match = new RegExp(this.hookPattern).exec(name);
+            const match = new RegExp(this.opts.environment.hookPattern).exec(name);
             return (match != null && typeof match[1] === 'string' && isHookName$2(match[1]));
         }
     }
@@ -56672,6 +56751,11 @@ class ProgramContext {
             suggestions: null,
         });
         return Err(error);
+    }
+    logEvent(event) {
+        if (this.opts.logger != null) {
+            this.opts.logger.logEvent(this.filename, event);
+        }
     }
 }
 function getExistingImports(program) {

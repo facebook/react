@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ae042f8d2623c16ed3a4a11bd021fa49>>
+ * @generated SignedSource<<ca5cdcc00d24c7ab06f0642be758bf01>>
  */
 
 "use strict";
@@ -32,7 +32,6 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
-  enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
   enableFastAddPropertiesInDiffing =
     dynamicFlagsUntyped.enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric =
@@ -1797,8 +1796,7 @@ function getNextLanes(root, wipLanes, rootHasPendingCommit) {
         : ((pingedLanes &= nonIdlePendingLanes),
           0 !== pingedLanes
             ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-            : enableSiblingPrerendering &&
-              !rootHasPendingCommit &&
+            : rootHasPendingCommit ||
               ((rootHasPendingCommit = nonIdlePendingLanes & ~root),
               0 !== rootHasPendingCommit &&
                 (nextLanes = getHighestPriorityLanes(rootHasPendingCommit)))))
@@ -1807,8 +1805,7 @@ function getNextLanes(root, wipLanes, rootHasPendingCommit) {
         ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
         : 0 !== pingedLanes
           ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-          : enableSiblingPrerendering &&
-            !rootHasPendingCommit &&
+          : rootHasPendingCommit ||
             ((rootHasPendingCommit = pendingLanes & ~root),
             0 !== rootHasPendingCommit &&
               (nextLanes = getHighestPriorityLanes(rootHasPendingCommit))));
@@ -1936,8 +1933,7 @@ function markRootFinished(
     remainingLanes &= ~lane;
   }
   0 !== spawnedLane && markSpawnedDeferredLane(root, spawnedLane, 0);
-  enableSiblingPrerendering &&
-    0 !== suspendedRetryLanes &&
+  0 !== suspendedRetryLanes &&
     0 === updatedLanes &&
     (root.suspendedLanes |=
       suspendedRetryLanes & ~(previouslyPendingLanes & ~finishedLanes));
@@ -2751,8 +2747,7 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
     );
   if (
     0 === (suspendedLanes & 3) ||
-    (enableSiblingPrerendering &&
-      checkIfRootIsPrerendering(root, suspendedLanes))
+    checkIfRootIsPrerendering(root, suspendedLanes)
   ) {
     currentTime = suspendedLanes & -suspendedLanes;
     if (currentTime === root.callbackPriority) return currentTime;
@@ -2935,6 +2930,7 @@ function shallowEqual(objA, objB) {
   }
   return !0;
 }
+function noop() {}
 var SuspenseException = Error(
     "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`."
   ),
@@ -2949,7 +2945,6 @@ function isThenableResolved(thenable) {
   thenable = thenable.status;
   return "fulfilled" === thenable || "rejected" === thenable;
 }
-function noop() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
@@ -7627,8 +7622,7 @@ function scheduleRetryEffect(workInProgress, retryQueue) {
     ((retryQueue =
       22 !== workInProgress.tag ? claimNextRetryLane() : 536870912),
     (workInProgress.lanes |= retryQueue),
-    enableSiblingPrerendering &&
-      (workInProgressSuspendedRetryLanes |= retryQueue));
+    (workInProgressSuspendedRetryLanes |= retryQueue));
 }
 function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
   switch (renderState.tailMode) {
@@ -10097,16 +10091,14 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
       (!forceSync &&
         0 === (lanes & 124) &&
         0 === (lanes & root$jscomp$0.expiredLanes)) ||
-      (enableSiblingPrerendering &&
-        checkIfRootIsPrerendering(root$jscomp$0, lanes)),
+      checkIfRootIsPrerendering(root$jscomp$0, lanes),
     exitStatus = shouldTimeSlice
       ? renderRootConcurrent(root$jscomp$0, lanes)
       : renderRootSync(root$jscomp$0, lanes, !0),
     renderWasConcurrent = shouldTimeSlice;
   do {
     if (0 === exitStatus) {
-      enableSiblingPrerendering &&
-        workInProgressRootIsPrerendering &&
+      workInProgressRootIsPrerendering &&
         !shouldTimeSlice &&
         markRootSuspended(root$jscomp$0, lanes, 0, !1);
       break;
@@ -10320,9 +10312,7 @@ function markRootSuspended(
   suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
-  enableSiblingPrerendering &&
-    didAttemptEntireTree &&
-    (root.warmLanes |= suspendedLanes);
+  didAttemptEntireTree && (root.warmLanes |= suspendedLanes);
   didAttemptEntireTree = root.expirationTimes;
   for (var lanes = suspendedLanes; 0 < lanes; ) {
     var index$10 = 31 - clz32(lanes),
@@ -10396,37 +10386,10 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber = null;
   ReactSharedInternals.H = ContextOnlyDispatcher;
-  if (
-    thrownValue === SuspenseException ||
-    thrownValue === SuspenseActionException
-  ) {
-    thrownValue = getSuspendedThenable();
-    var JSCompiler_temp;
-    if ((JSCompiler_temp = !enableSiblingPrerendering))
-      (JSCompiler_temp = suspenseHandlerStackCursor.current),
-        (JSCompiler_temp =
-          null === JSCompiler_temp
-            ? !0
-            : (workInProgressRootRenderLanes & 4194048) ===
-                workInProgressRootRenderLanes
-              ? null === shellBoundary
-                ? !0
-                : !1
-              : (workInProgressRootRenderLanes & 62914560) ===
-                    workInProgressRootRenderLanes ||
-                  0 !== (workInProgressRootRenderLanes & 536870912)
-                ? JSCompiler_temp === shellBoundary
-                : !1);
-    workInProgressSuspendedReason =
-      JSCompiler_temp &&
-      0 === (workInProgressRootSkippedLanes & 134217727) &&
-      0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
-        ? thrownValue === SuspenseActionException
-          ? 9
-          : 2
-        : 3;
-  } else
-    thrownValue === SuspenseyCommitException
+  thrownValue === SuspenseException || thrownValue === SuspenseActionException
+    ? ((thrownValue = getSuspendedThenable()),
+      (workInProgressSuspendedReason = 3))
+    : thrownValue === SuspenseyCommitException
       ? ((thrownValue = getSuspendedThenable()),
         (workInProgressSuspendedReason = 4))
       : (workInProgressSuspendedReason =
@@ -10438,8 +10401,8 @@ function handleThrow(root, thrownValue) {
               ? 6
               : 1);
   workInProgressThrownValue = thrownValue;
-  JSCompiler_temp = workInProgress;
-  if (null === JSCompiler_temp)
+  var erroredWork = workInProgress;
+  if (null === erroredWork)
     (workInProgressRootExitStatus = 1),
       logUncaughtError(
         root,
@@ -10447,8 +10410,8 @@ function handleThrow(root, thrownValue) {
       );
   else
     switch (
-      (JSCompiler_temp.mode & 2 &&
-        stopProfilerTimerIfRunningAndRecordDuration(JSCompiler_temp),
+      (erroredWork.mode & 2 &&
+        stopProfilerTimerIfRunningAndRecordDuration(erroredWork),
       markComponentRenderStopped(),
       workInProgressSuspendedReason)
     ) {
@@ -10456,7 +10419,7 @@ function handleThrow(root, thrownValue) {
         null !== injectedProfilingHooks &&
           "function" === typeof injectedProfilingHooks.markComponentErrored &&
           injectedProfilingHooks.markComponentErrored(
-            JSCompiler_temp,
+            erroredWork,
             thrownValue,
             workInProgressRootRenderLanes
           );
@@ -10469,7 +10432,7 @@ function handleThrow(root, thrownValue) {
         null !== injectedProfilingHooks &&
           "function" === typeof injectedProfilingHooks.markComponentSuspended &&
           injectedProfilingHooks.markComponentSuspended(
-            JSCompiler_temp,
+            erroredWork,
             thrownValue,
             workInProgressRootRenderLanes
           );
@@ -10541,7 +10504,6 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
             workInProgressThrownValue = null;
             throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
             if (
-              enableSiblingPrerendering &&
               shouldYieldForPrerendering &&
               workInProgressRootIsPrerendering
             ) {
@@ -10806,27 +10768,23 @@ function throwAndUnwindWorkLoop(
     return;
   }
   if (unitOfWork.flags & 32768) {
-    if (enableSiblingPrerendering)
-      if (1 === suspendedReason) root = !0;
-      else if (
-        workInProgressRootIsPrerendering ||
-        0 !== (workInProgressRootRenderLanes & 536870912)
-      )
-        root = !1;
-      else {
-        if (
-          ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
-          2 === suspendedReason ||
-            9 === suspendedReason ||
-            3 === suspendedReason ||
-            6 === suspendedReason)
-        )
-          (suspendedReason = suspenseHandlerStackCursor.current),
-            null !== suspendedReason &&
-              13 === suspendedReason.tag &&
-              (suspendedReason.flags |= 16384);
-      }
-    else root = !0;
+    if (1 === suspendedReason) root = !0;
+    else if (
+      workInProgressRootIsPrerendering ||
+      0 !== (workInProgressRootRenderLanes & 536870912)
+    )
+      root = !1;
+    else if (
+      ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
+      2 === suspendedReason ||
+        9 === suspendedReason ||
+        3 === suspendedReason ||
+        6 === suspendedReason)
+    )
+      (suspendedReason = suspenseHandlerStackCursor.current),
+        null !== suspendedReason &&
+          13 === suspendedReason.tag &&
+          (suspendedReason.flags |= 16384);
     unwindUnitOfWork(unitOfWork, root);
   } else completeUnitOfWork(unitOfWork);
 }
@@ -11571,6 +11529,7 @@ function FiberRootNode(
   onUncaughtError,
   onCaughtError,
   onRecoverableError,
+  onDefaultTransitionIndicator,
   formState
 ) {
   this.tag = tag;
@@ -11924,6 +11883,7 @@ function nativeOnCaughtError(error, errorInfo) {
         null != errorInfo.componentStack ? errorInfo.componentStack : ""
     }) && console.error(error);
 }
+function nativeOnDefaultTransitionIndicator() {}
 batchedUpdatesImpl = function (fn, a) {
   var prevExecutionContext = executionContext;
   executionContext |= 1;
@@ -11937,16 +11897,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1355 = {
+  internals$jscomp$inline_1356 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-9518f118-20250508",
+    version: "19.2.0-native-fb-5069e180-20250509",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-9518f118-20250508"
+    reconcilerVersion: "19.2.0-native-fb-5069e180-20250509"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1355.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1355.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1356.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1356.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$162 = 0;
     31 > index$162;
@@ -11958,20 +11918,20 @@ internals$jscomp$inline_1355.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1355.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1356.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1643 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1641 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1643.isDisabled &&
-    hook$jscomp$inline_1643.supportsFiber
+    !hook$jscomp$inline_1641.isDisabled &&
+    hook$jscomp$inline_1641.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1643.inject(
-        internals$jscomp$inline_1355
+      (rendererID = hook$jscomp$inline_1641.inject(
+        internals$jscomp$inline_1356
       )),
-        (injectedHook = hook$jscomp$inline_1643);
+        (injectedHook = hook$jscomp$inline_1641);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
@@ -12094,6 +12054,7 @@ exports.render = function (
       root,
       onCaughtError,
       onRecoverableError,
+      nativeOnDefaultTransitionIndicator,
       null
     );
     root.hydrationCallbacks = null;

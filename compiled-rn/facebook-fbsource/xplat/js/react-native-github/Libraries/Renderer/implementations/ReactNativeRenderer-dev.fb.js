@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2d7cfc978991fb42b97e68edf50baf1a>>
+ * @generated SignedSource<<9b46044481e898e6e2a18887829cf798>>
  */
 
 "use strict";
@@ -1802,8 +1802,7 @@ __DEV__ &&
             : ((pingedLanes &= nonIdlePendingLanes),
               0 !== pingedLanes
                 ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-                : enableSiblingPrerendering &&
-                  !rootHasPendingCommit &&
+                : rootHasPendingCommit ||
                   ((rootHasPendingCommit = nonIdlePendingLanes & ~root),
                   0 !== rootHasPendingCommit &&
                     (nextLanes =
@@ -1813,8 +1812,7 @@ __DEV__ &&
             ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
             : 0 !== pingedLanes
               ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-              : enableSiblingPrerendering &&
-                !rootHasPendingCommit &&
+              : rootHasPendingCommit ||
                 ((rootHasPendingCommit = pendingLanes & ~root),
                 0 !== rootHasPendingCommit &&
                   (nextLanes = getHighestPriorityLanes(rootHasPendingCommit))));
@@ -1949,8 +1947,7 @@ __DEV__ &&
         remainingLanes &= ~lane;
       }
       0 !== spawnedLane && markSpawnedDeferredLane(root, spawnedLane, 0);
-      enableSiblingPrerendering &&
-        0 !== suspendedRetryLanes &&
+      0 !== suspendedRetryLanes &&
         0 === updatedLanes &&
         (root.suspendedLanes |=
           suspendedRetryLanes & ~(previouslyPendingLanes & ~finishedLanes));
@@ -3301,8 +3298,7 @@ __DEV__ &&
         );
       if (
         0 === (suspendedLanes & 3) ||
-        (enableSiblingPrerendering &&
-          checkIfRootIsPrerendering(root, suspendedLanes))
+        checkIfRootIsPrerendering(root, suspendedLanes)
       ) {
         currentTime = suspendedLanes & -suspendedLanes;
         if (
@@ -3490,6 +3486,7 @@ __DEV__ &&
       }
       return !0;
     }
+    function noop() {}
     function createThenableState() {
       return { didWarnAboutUncachedPromise: !1, thenables: [] };
     }
@@ -3497,7 +3494,6 @@ __DEV__ &&
       thenable = thenable.status;
       return "fulfilled" === thenable || "rejected" === thenable;
     }
-    function noop() {}
     function trackUsedThenable(thenableState, thenable, index) {
       null !== ReactSharedInternals.actQueue &&
         (ReactSharedInternals.didUsePromise = !0);
@@ -9380,8 +9376,7 @@ __DEV__ &&
         ((retryQueue =
           22 !== workInProgress.tag ? claimNextRetryLane() : 536870912),
         (workInProgress.lanes |= retryQueue),
-        enableSiblingPrerendering &&
-          (workInProgressSuspendedRetryLanes |= retryQueue));
+        (workInProgressSuspendedRetryLanes |= retryQueue));
     }
     function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       switch (renderState.tailMode) {
@@ -12480,15 +12475,14 @@ __DEV__ &&
           (!forceSync &&
             0 === (lanes & 124) &&
             0 === (lanes & root.expiredLanes)) ||
-          (enableSiblingPrerendering && checkIfRootIsPrerendering(root, lanes)),
+          checkIfRootIsPrerendering(root, lanes),
         exitStatus = shouldTimeSlice
           ? renderRootConcurrent(root, lanes)
           : renderRootSync(root, lanes, !0),
         renderWasConcurrent = shouldTimeSlice;
       do {
         if (exitStatus === RootInProgress) {
-          enableSiblingPrerendering &&
-            workInProgressRootIsPrerendering &&
+          workInProgressRootIsPrerendering &&
             !shouldTimeSlice &&
             markRootSuspended(root, lanes, 0, !1);
           break;
@@ -12724,9 +12718,7 @@ __DEV__ &&
       suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
       root.suspendedLanes |= suspendedLanes;
       root.pingedLanes &= ~suspendedLanes;
-      enableSiblingPrerendering &&
-        didAttemptEntireTree &&
-        (root.warmLanes |= suspendedLanes);
+      didAttemptEntireTree && (root.warmLanes |= suspendedLanes);
       didAttemptEntireTree = root.expirationTimes;
       for (var lanes = suspendedLanes; 0 < lanes; ) {
         var index = 31 - clz32(lanes),
@@ -12813,37 +12805,11 @@ __DEV__ &&
       ReactSharedInternals.getCurrentStack = null;
       isRendering = !1;
       current = null;
-      if (
-        thrownValue === SuspenseException ||
-        thrownValue === SuspenseActionException
-      ) {
-        thrownValue = getSuspendedThenable();
-        var JSCompiler_temp;
-        if ((JSCompiler_temp = !enableSiblingPrerendering))
-          (JSCompiler_temp = suspenseHandlerStackCursor.current),
-            (JSCompiler_temp =
-              null === JSCompiler_temp
-                ? !0
-                : (workInProgressRootRenderLanes & 4194048) ===
-                    workInProgressRootRenderLanes
-                  ? null === shellBoundary
-                    ? !0
-                    : !1
-                  : (workInProgressRootRenderLanes & 62914560) ===
-                        workInProgressRootRenderLanes ||
-                      0 !== (workInProgressRootRenderLanes & 536870912)
-                    ? JSCompiler_temp === shellBoundary
-                    : !1);
-        workInProgressSuspendedReason =
-          JSCompiler_temp &&
-          0 === (workInProgressRootSkippedLanes & 134217727) &&
-          0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
-            ? thrownValue === SuspenseActionException
-              ? SuspendedOnAction
-              : SuspendedOnData
-            : SuspendedOnImmediate;
-      } else
-        thrownValue === SuspenseyCommitException
+      thrownValue === SuspenseException ||
+      thrownValue === SuspenseActionException
+        ? ((thrownValue = getSuspendedThenable()),
+          (workInProgressSuspendedReason = SuspendedOnImmediate))
+        : thrownValue === SuspenseyCommitException
           ? ((thrownValue = getSuspendedThenable()),
             (workInProgressSuspendedReason = SuspendedOnInstance))
           : (workInProgressSuspendedReason =
@@ -12855,8 +12821,8 @@ __DEV__ &&
                   ? SuspendedOnDeprecatedThrowPromise
                   : SuspendedOnError);
       workInProgressThrownValue = thrownValue;
-      JSCompiler_temp = workInProgress;
-      if (null === JSCompiler_temp)
+      var erroredWork = workInProgress;
+      if (null === erroredWork)
         (workInProgressRootExitStatus = RootFatalErrored),
           logUncaughtError(
             root,
@@ -12864,8 +12830,8 @@ __DEV__ &&
           );
       else
         switch (
-          (JSCompiler_temp.mode & 2 &&
-            stopProfilerTimerIfRunningAndRecordDuration(JSCompiler_temp),
+          (erroredWork.mode & 2 &&
+            stopProfilerTimerIfRunningAndRecordDuration(erroredWork),
           markComponentRenderStopped(),
           workInProgressSuspendedReason)
         ) {
@@ -12874,7 +12840,7 @@ __DEV__ &&
               "function" ===
                 typeof injectedProfilingHooks.markComponentErrored &&
               injectedProfilingHooks.markComponentErrored(
-                JSCompiler_temp,
+                erroredWork,
                 thrownValue,
                 workInProgressRootRenderLanes
               );
@@ -12888,7 +12854,7 @@ __DEV__ &&
               "function" ===
                 typeof injectedProfilingHooks.markComponentSuspended &&
               injectedProfilingHooks.markComponentSuspended(
-                JSCompiler_temp,
+                erroredWork,
                 thrownValue,
                 workInProgressRootRenderLanes
               );
@@ -12966,7 +12932,6 @@ __DEV__ &&
                 workInProgressThrownValue = null;
                 throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
                 if (
-                  enableSiblingPrerendering &&
                   shouldYieldForPrerendering &&
                   workInProgressRootIsPrerendering
                 ) {
@@ -13286,27 +13251,23 @@ __DEV__ &&
         return;
       }
       if (unitOfWork.flags & 32768) {
-        if (enableSiblingPrerendering)
-          if (suspendedReason === SuspendedOnError) root = !0;
-          else if (
-            workInProgressRootIsPrerendering ||
-            0 !== (workInProgressRootRenderLanes & 536870912)
-          )
-            root = !1;
-          else {
-            if (
-              ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
-              suspendedReason === SuspendedOnData ||
-                suspendedReason === SuspendedOnAction ||
-                suspendedReason === SuspendedOnImmediate ||
-                suspendedReason === SuspendedOnDeprecatedThrowPromise)
-            )
-              (suspendedReason = suspenseHandlerStackCursor.current),
-                null !== suspendedReason &&
-                  13 === suspendedReason.tag &&
-                  (suspendedReason.flags |= 16384);
-          }
-        else root = !0;
+        if (suspendedReason === SuspendedOnError) root = !0;
+        else if (
+          workInProgressRootIsPrerendering ||
+          0 !== (workInProgressRootRenderLanes & 536870912)
+        )
+          root = !1;
+        else if (
+          ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
+          suspendedReason === SuspendedOnData ||
+            suspendedReason === SuspendedOnAction ||
+            suspendedReason === SuspendedOnImmediate ||
+            suspendedReason === SuspendedOnDeprecatedThrowPromise)
+        )
+          (suspendedReason = suspenseHandlerStackCursor.current),
+            null !== suspendedReason &&
+              13 === suspendedReason.tag &&
+              (suspendedReason.flags |= 16384);
         unwindUnitOfWork(unitOfWork, root);
       } else completeUnitOfWork(unitOfWork);
     }
@@ -14515,6 +14476,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       formState
     ) {
       this.tag = tag;
@@ -14796,6 +14758,7 @@ __DEV__ &&
             );
       }
     }
+    function nativeOnDefaultTransitionIndicator() {}
     function unmountComponentAtNode(containerTag) {
       var root = roots.get(containerTag);
       root &&
@@ -14821,7 +14784,6 @@ __DEV__ &&
       enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
       enablePersistedModeClonedFlag =
         dynamicFlagsUntyped.enablePersistedModeClonedFlag,
-      enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
       renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
       enableFragmentRefs = dynamicFlagsUntyped.enableFragmentRefs,
       assign = Object.assign,
@@ -17645,11 +17607,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-9518f118-20250508" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-5069e180-20250509" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-9518f118-20250508\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-5069e180-20250509\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17675,10 +17637,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-9518f118-20250508",
+        version: "19.2.0-native-fb-5069e180-20250509",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-9518f118-20250508"
+        reconcilerVersion: "19.2.0-native-fb-5069e180-20250509"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -17794,6 +17756,7 @@ __DEV__ &&
           root,
           onCaughtError,
           onRecoverableError,
+          nativeOnDefaultTransitionIndicator,
           null
         );
         options.hydrationCallbacks = null;

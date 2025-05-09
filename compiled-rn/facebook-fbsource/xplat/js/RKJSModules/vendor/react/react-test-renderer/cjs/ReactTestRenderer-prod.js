@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<74c57d4b4c3c81c47c2978d7c4449bb5>>
+ * @generated SignedSource<<10ea9abaf386b161565ea5cd8ad2cbc4>>
  */
 
 "use strict";
@@ -1511,6 +1511,7 @@ function shallowEqual(objA, objB) {
   }
   return !0;
 }
+function noop() {}
 var SuspenseException = Error(
     "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`."
   ),
@@ -1525,7 +1526,6 @@ function isThenableResolved(thenable) {
   thenable = thenable.status;
   return "fulfilled" === thenable || "rejected" === thenable;
 }
-function noop() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
@@ -9479,6 +9479,7 @@ function FiberRootNode(
   onUncaughtError,
   onCaughtError,
   onRecoverableError,
+  onDefaultTransitionIndicator,
   formState
 ) {
   this.tag = tag;
@@ -9522,7 +9523,8 @@ function createContainer(
   identifierPrefix,
   onUncaughtError,
   onCaughtError,
-  onRecoverableError
+  onRecoverableError,
+  onDefaultTransitionIndicator
 ) {
   containerInfo = new FiberRootNode(
     containerInfo,
@@ -9532,6 +9534,7 @@ function createContainer(
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     null
   );
   1 === tag ? ((tag = 1), !0 === isStrictMode && (tag |= 24)) : (tag = 0);
@@ -9891,24 +9894,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1445 = {
+var internals$jscomp$inline_1446 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-9518f118-20250508",
+  version: "19.2.0-native-fb-5069e180-20250509",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-9518f118-20250508"
+  reconcilerVersion: "19.2.0-native-fb-5069e180-20250509"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1446 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1447 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1446.isDisabled &&
-    hook$jscomp$inline_1446.supportsFiber
+    !hook$jscomp$inline_1447.isDisabled &&
+    hook$jscomp$inline_1447.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1446.inject(
-        internals$jscomp$inline_1445
+      (rendererID = hook$jscomp$inline_1447.inject(
+        internals$jscomp$inline_1446
       )),
-        (injectedHook = hook$jscomp$inline_1446);
+        (injectedHook = hook$jscomp$inline_1447);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9938,7 +9941,7 @@ exports.create = function (element, options) {
       defaultOnUncaughtError,
       defaultOnCaughtError,
       defaultOnRecoverableError,
-      null
+      noop
     );
   if (null == root) throw Error("something went wrong");
   updateContainer(element, root, null, null);
@@ -10032,4 +10035,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-9518f118-20250508";
+exports.version = "19.2.0-native-fb-5069e180-20250509";
