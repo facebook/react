@@ -25,6 +25,7 @@ import {
   SourceLocation,
 } from '../HIR';
 import {printIdentifier, printManualMemoDependency} from '../HIR/PrintHIR';
+import {readScopeDependenciesRHIR} from '../HIR/ScopeDependencyUtils';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {collectMaybeMemoDependencies} from '../Inference/DropManualMemoization';
 import {
@@ -409,7 +410,8 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       state.manualMemoState != null &&
       state.manualMemoState.depsFromSource != null
     ) {
-      for (const dep of scopeBlock.scope.dependencies) {
+      const deps = readScopeDependenciesRHIR(scopeBlock).values();
+      for (const dep of deps) {
         validateInferredDep(
           dep,
           this.temporaries,
