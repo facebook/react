@@ -6336,9 +6336,72 @@ __DEV__ &&
       }
       return baseProps;
     }
+    function defaultOnUncaughtError(error) {
+      reportGlobalError(error);
+      console.warn(
+        "%s\n\n%s\n",
+        componentName
+          ? "An error occurred in the <" + componentName + "> component."
+          : "An error occurred in one of your React components.",
+        "Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+      );
+    }
+    function defaultOnCaughtError(error) {
+      var componentNameMessage = componentName
+          ? "The above error occurred in the <" + componentName + "> component."
+          : "The above error occurred in one of your React components.",
+        recreateMessage =
+          "React will try to recreate this component tree from scratch using the error boundary you provided, " +
+          ((errorBoundaryName || "Anonymous") + ".");
+      if (
+        "object" === typeof error &&
+        null !== error &&
+        "string" === typeof error.environmentName
+      ) {
+        var JSCompiler_inline_result = error.environmentName;
+        error = [
+          "%o\n\n%s\n\n%s\n",
+          error,
+          componentNameMessage,
+          recreateMessage
+        ].slice(0);
+        "string" === typeof error[0]
+          ? error.splice(
+              0,
+              1,
+              "%c%s%c " + error[0],
+              "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
+              " " + JSCompiler_inline_result + " ",
+              ""
+            )
+          : error.splice(
+              0,
+              0,
+              "%c%s%c ",
+              "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
+              " " + JSCompiler_inline_result + " ",
+              ""
+            );
+        error.unshift(console);
+        JSCompiler_inline_result = bind.apply(console.error, error);
+        JSCompiler_inline_result();
+      } else
+        console.error(
+          "%o\n\n%s\n\n%s\n",
+          error,
+          componentNameMessage,
+          recreateMessage
+        );
+    }
+    function defaultOnRecoverableError(error) {
+      reportGlobalError(error);
+    }
     function logUncaughtError(root, errorInfo) {
       try {
-        errorInfo.source && getComponentNameFromFiber(errorInfo.source);
+        componentName = errorInfo.source
+          ? getComponentNameFromFiber(errorInfo.source)
+          : null;
+        errorBoundaryName = null;
         var error = errorInfo.value;
         if (null !== ReactSharedInternals.actQueue)
           ReactSharedInternals.thrownErrors.push(error);
@@ -6354,8 +6417,10 @@ __DEV__ &&
     }
     function logCaughtError(root, boundary, errorInfo) {
       try {
-        errorInfo.source && getComponentNameFromFiber(errorInfo.source);
-        getComponentNameFromFiber(boundary);
+        componentName = errorInfo.source
+          ? getComponentNameFromFiber(errorInfo.source)
+          : null;
+        errorBoundaryName = getComponentNameFromFiber(boundary);
         var onCaughtError = root.onCaughtError;
         onCaughtError(errorInfo.value, {
           componentStack: errorInfo.stack,
@@ -16492,6 +16557,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       formState
     ) {
       this.tag = 1;
@@ -16605,6 +16671,7 @@ __DEV__ &&
       }
       return null;
     }
+    function defaultOnDefaultTransitionIndicator() {}
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
@@ -16736,6 +16803,7 @@ __DEV__ &&
         _currentValue2: null,
         _threadCount: 0
       },
+      bind = Function.prototype.bind,
       valueStack = [];
     var fiberStack = [];
     var index$jscomp$0 = -1,
@@ -18356,87 +18424,90 @@ __DEV__ &&
     var didWarnOnInvalidCallback = new Set();
     Object.freeze(fakeInternalInstance);
     var classComponentUpdater = {
-      enqueueSetState: function (inst, payload, callback) {
-        inst = inst._reactInternals;
-        var lane = requestUpdateLane(inst),
-          update = createUpdate(lane);
-        update.payload = payload;
-        void 0 !== callback &&
+        enqueueSetState: function (inst, payload, callback) {
+          inst = inst._reactInternals;
+          var lane = requestUpdateLane(inst),
+            update = createUpdate(lane);
+          update.payload = payload;
+          void 0 !== callback &&
+            null !== callback &&
+            (warnOnInvalidCallback(callback), (update.callback = callback));
+          payload = enqueueUpdate(inst, update, lane);
+          null !== payload &&
+            (startUpdateTimerByLane(lane, "this.setState()"),
+            scheduleUpdateOnFiber(payload, inst, lane),
+            entangleTransitions(payload, inst, lane));
+          enableSchedulingProfiler && markStateUpdateScheduled(inst, lane);
+        },
+        enqueueReplaceState: function (inst, payload, callback) {
+          inst = inst._reactInternals;
+          var lane = requestUpdateLane(inst),
+            update = createUpdate(lane);
+          update.tag = ReplaceState;
+          update.payload = payload;
+          void 0 !== callback &&
+            null !== callback &&
+            (warnOnInvalidCallback(callback), (update.callback = callback));
+          payload = enqueueUpdate(inst, update, lane);
+          null !== payload &&
+            (startUpdateTimerByLane(lane, "this.replaceState()"),
+            scheduleUpdateOnFiber(payload, inst, lane),
+            entangleTransitions(payload, inst, lane));
+          enableSchedulingProfiler && markStateUpdateScheduled(inst, lane);
+        },
+        enqueueForceUpdate: function (inst, callback) {
+          inst = inst._reactInternals;
+          var lane = requestUpdateLane(inst),
+            update = createUpdate(lane);
+          update.tag = ForceUpdate;
+          void 0 !== callback &&
+            null !== callback &&
+            (warnOnInvalidCallback(callback), (update.callback = callback));
+          callback = enqueueUpdate(inst, update, lane);
           null !== callback &&
-          (warnOnInvalidCallback(callback), (update.callback = callback));
-        payload = enqueueUpdate(inst, update, lane);
-        null !== payload &&
-          (startUpdateTimerByLane(lane, "this.setState()"),
-          scheduleUpdateOnFiber(payload, inst, lane),
-          entangleTransitions(payload, inst, lane));
-        enableSchedulingProfiler && markStateUpdateScheduled(inst, lane);
-      },
-      enqueueReplaceState: function (inst, payload, callback) {
-        inst = inst._reactInternals;
-        var lane = requestUpdateLane(inst),
-          update = createUpdate(lane);
-        update.tag = ReplaceState;
-        update.payload = payload;
-        void 0 !== callback &&
-          null !== callback &&
-          (warnOnInvalidCallback(callback), (update.callback = callback));
-        payload = enqueueUpdate(inst, update, lane);
-        null !== payload &&
-          (startUpdateTimerByLane(lane, "this.replaceState()"),
-          scheduleUpdateOnFiber(payload, inst, lane),
-          entangleTransitions(payload, inst, lane));
-        enableSchedulingProfiler && markStateUpdateScheduled(inst, lane);
-      },
-      enqueueForceUpdate: function (inst, callback) {
-        inst = inst._reactInternals;
-        var lane = requestUpdateLane(inst),
-          update = createUpdate(lane);
-        update.tag = ForceUpdate;
-        void 0 !== callback &&
-          null !== callback &&
-          (warnOnInvalidCallback(callback), (update.callback = callback));
-        callback = enqueueUpdate(inst, update, lane);
-        null !== callback &&
-          (startUpdateTimerByLane(lane, "this.forceUpdate()"),
-          scheduleUpdateOnFiber(callback, inst, lane),
-          entangleTransitions(callback, inst, lane));
-        enableSchedulingProfiler &&
+            (startUpdateTimerByLane(lane, "this.forceUpdate()"),
+            scheduleUpdateOnFiber(callback, inst, lane),
+            entangleTransitions(callback, inst, lane));
           enableSchedulingProfiler &&
-          null !== injectedProfilingHooks &&
-          "function" ===
-            typeof injectedProfilingHooks.markForceUpdateScheduled &&
-          injectedProfilingHooks.markForceUpdateScheduled(inst, lane);
-      }
-    };
-    "function" === typeof reportError
-      ? reportError
-      : function (error) {
-          if (
-            "object" === typeof window &&
-            "function" === typeof window.ErrorEvent
-          ) {
-            var event = new window.ErrorEvent("error", {
-              bubbles: !0,
-              cancelable: !0,
-              message:
-                "object" === typeof error &&
-                null !== error &&
-                "string" === typeof error.message
-                  ? String(error.message)
-                  : String(error),
-              error: error
-            });
-            if (!window.dispatchEvent(event)) return;
-          } else if (
-            "object" === typeof process &&
-            "function" === typeof process.emit
-          ) {
-            process.emit("uncaughtException", error);
-            return;
-          }
-          console.error(error);
-        };
-    var TransitionRoot = 0,
+            enableSchedulingProfiler &&
+            null !== injectedProfilingHooks &&
+            "function" ===
+              typeof injectedProfilingHooks.markForceUpdateScheduled &&
+            injectedProfilingHooks.markForceUpdateScheduled(inst, lane);
+        }
+      },
+      reportGlobalError =
+        "function" === typeof reportError
+          ? reportError
+          : function (error) {
+              if (
+                "object" === typeof window &&
+                "function" === typeof window.ErrorEvent
+              ) {
+                var event = new window.ErrorEvent("error", {
+                  bubbles: !0,
+                  cancelable: !0,
+                  message:
+                    "object" === typeof error &&
+                    null !== error &&
+                    "string" === typeof error.message
+                      ? String(error.message)
+                      : String(error),
+                  error: error
+                });
+                if (!window.dispatchEvent(event)) return;
+              } else if (
+                "object" === typeof process &&
+                "function" === typeof process.emit
+              ) {
+                process.emit("uncaughtException", error);
+                return;
+              }
+              console.error(error);
+            },
+      componentName = null,
+      errorBoundaryName = null,
+      TransitionRoot = 0,
       TransitionTracingMarker = 1,
       markerInstanceStack = createCursor(null),
       SelectiveHydrationException = Error(
@@ -18717,13 +18788,14 @@ __DEV__ &&
             1,
             !1,
             "",
-            void 0,
-            void 0,
-            void 0,
+            defaultOnUncaughtError,
+            defaultOnCaughtError,
+            defaultOnRecoverableError,
+            defaultOnDefaultTransitionIndicator,
             null
           );
           _this$props.hydrationCallbacks = null;
-          enableTransitionTracing && (_this$props.transitionCallbacks = void 0);
+          enableTransitionTracing && (_this$props.transitionCallbacks = null);
           var uninitializedFiber = 1;
           isDevToolsPresent && (uninitializedFiber |= 2);
           uninitializedFiber = createFiber(3, null, null, uninitializedFiber);
@@ -18804,10 +18876,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-ac068292-20250508",
+        version: "19.2.0-www-modern-9b79292a-20250508",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-ac068292-20250508"
+        reconcilerVersion: "19.2.0-www-modern-9b79292a-20250508"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18841,7 +18913,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-ac068292-20250508";
+    exports.version = "19.2.0-www-modern-9b79292a-20250508";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

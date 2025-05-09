@@ -18708,6 +18708,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       formState
     ) {
       this.tag = 1;
@@ -18760,11 +18761,12 @@ __DEV__ &&
       hydrationCallbacks,
       isStrictMode,
       identifierPrefix,
+      formState,
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
-      transitionCallbacks,
-      formState
+      onDefaultTransitionIndicator,
+      transitionCallbacks
     ) {
       containerInfo = new FiberRootNode(
         containerInfo,
@@ -18774,6 +18776,7 @@ __DEV__ &&
         onUncaughtError,
         onCaughtError,
         onRecoverableError,
+        onDefaultTransitionIndicator,
         formState
       );
       containerInfo.hydrationCallbacks = hydrationCallbacks;
@@ -21259,6 +21262,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       transitionCallbacks
     ) {
       return createFiberRoot(
@@ -21269,11 +21273,12 @@ __DEV__ &&
         hydrationCallbacks,
         isStrictMode,
         identifierPrefix,
+        null,
         onUncaughtError,
         onCaughtError,
         onRecoverableError,
-        transitionCallbacks,
-        null
+        onDefaultTransitionIndicator,
+        transitionCallbacks
       );
     };
     exports.createHasPseudoClassSelector = function (selectors) {
@@ -21291,6 +21296,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       transitionCallbacks,
       formState
     ) {
@@ -21302,11 +21308,12 @@ __DEV__ &&
         hydrationCallbacks,
         isStrictMode,
         identifierPrefix,
+        formState,
         onUncaughtError,
         onCaughtError,
         onRecoverableError,
-        transitionCallbacks,
-        formState
+        onDefaultTransitionIndicator,
+        transitionCallbacks
       );
       initialChildren.context = getContextForSubtree(null);
       containerInfo = initialChildren.current;
@@ -21637,7 +21644,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-ac068292-20250508"
+        reconcilerVersion: "19.2.0-www-modern-9b79292a-20250508"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -15783,6 +15783,7 @@ function FiberRootNode(
   onUncaughtError,
   onCaughtError,
   onRecoverableError,
+  onDefaultTransitionIndicator,
   formState
 ) {
   this.tag = 1;
@@ -15834,11 +15835,12 @@ function createFiberRoot(
   hydrationCallbacks,
   isStrictMode,
   identifierPrefix,
+  formState,
   onUncaughtError,
   onCaughtError,
   onRecoverableError,
-  transitionCallbacks,
-  formState
+  onDefaultTransitionIndicator,
+  transitionCallbacks
 ) {
   containerInfo = new FiberRootNode(
     containerInfo,
@@ -15848,6 +15850,7 @@ function createFiberRoot(
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     formState
   );
   containerInfo.hydrationCallbacks = hydrationCallbacks;
@@ -21352,14 +21355,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2313 = React.version;
 if (
-  "19.2.0-www-modern-ac068292-20250508" !==
+  "19.2.0-www-modern-9b79292a-20250508" !==
   isomorphicReactPackageVersion$jscomp$inline_2313
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2313,
-      "19.2.0-www-modern-ac068292-20250508"
+      "19.2.0-www-modern-9b79292a-20250508"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -21377,26 +21380,29 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2315 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-ac068292-20250508",
+  version: "19.2.0-www-modern-9b79292a-20250508",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-ac068292-20250508"
+  reconcilerVersion: "19.2.0-www-modern-9b79292a-20250508"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2315.getLaneLabelMap = getLaneLabelMap),
   (internals$jscomp$inline_2315.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2904 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2906 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2904.isDisabled &&
-    hook$jscomp$inline_2904.supportsFiber
+    !hook$jscomp$inline_2906.isDisabled &&
+    hook$jscomp$inline_2906.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2904.inject(
+      (rendererID = hook$jscomp$inline_2906.inject(
         internals$jscomp$inline_2315
       )),
-        (injectedHook = hook$jscomp$inline_2904);
+        (injectedHook = hook$jscomp$inline_2906);
     } catch (err) {}
+}
+function defaultOnDefaultTransitionIndicator() {
+  return function () {};
 }
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -21506,11 +21512,12 @@ exports.createRoot = function (container, options) {
     null,
     isStrictMode,
     identifierPrefix,
+    null,
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
-    transitionCallbacks,
-    null
+    defaultOnDefaultTransitionIndicator,
+    transitionCallbacks
   );
   container[internalContainerInstanceKey] = options.current;
   listenToAllSupportedEvents(
@@ -21570,11 +21577,12 @@ exports.hydrateRoot = function (container, initialChildren, options) {
     null != options ? options : null,
     isStrictMode,
     identifierPrefix,
+    formState,
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
-    transitionCallbacks,
-    formState
+    defaultOnDefaultTransitionIndicator,
+    transitionCallbacks
   );
   initialChildren.context = emptyContextObject;
   options = initialChildren.current;
@@ -21747,7 +21755,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-ac068292-20250508";
+exports.version = "19.2.0-www-modern-9b79292a-20250508";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

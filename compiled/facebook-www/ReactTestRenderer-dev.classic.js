@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1164() {
+    function JSCompiler_object_inline_createNodeMock_1165() {
       return null;
     }
     function findHook(fiber, id) {
@@ -12992,6 +12992,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       formState
     ) {
       this.tag = 1;
@@ -13041,7 +13042,8 @@ __DEV__ &&
       identifierPrefix,
       onUncaughtError,
       onCaughtError,
-      onRecoverableError
+      onRecoverableError,
+      onDefaultTransitionIndicator
     ) {
       containerInfo = new FiberRootNode(
         containerInfo,
@@ -13051,6 +13053,7 @@ __DEV__ &&
         onUncaughtError,
         onCaughtError,
         onRecoverableError,
+        onDefaultTransitionIndicator,
         null
       );
       containerInfo.hydrationCallbacks = hydrationCallbacks;
@@ -13172,6 +13175,7 @@ __DEV__ &&
     function getCurrentFiberForDevTools() {
       return current;
     }
+    function defaultOnDefaultTransitionIndicator() {}
     function toJSON(inst) {
       if (inst.isHidden) return null;
       switch (inst.tag) {
@@ -15364,10 +15368,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-ac068292-20250508",
+        version: "19.2.0-www-classic-9b79292a-20250508",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-ac068292-20250508"
+        reconcilerVersion: "19.2.0-www-classic-9b79292a-20250508"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15387,7 +15391,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1164,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1165,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15413,7 +15417,7 @@ __DEV__ &&
           defaultOnUncaughtError,
           defaultOnCaughtError,
           defaultOnRecoverableError,
-          null
+          defaultOnDefaultTransitionIndicator
         );
       if (null == root) throw Error("something went wrong");
       updateContainer(element, root, null, null);
@@ -15502,5 +15506,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-classic-ac068292-20250508";
+    exports.version = "19.2.0-www-classic-9b79292a-20250508";
   })();

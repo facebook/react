@@ -4253,34 +4253,44 @@ function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
   }
   return baseProps;
 }
-"function" === typeof reportError
-  ? reportError
-  : function (error) {
-      if (
-        "object" === typeof window &&
-        "function" === typeof window.ErrorEvent
-      ) {
-        var event = new window.ErrorEvent("error", {
-          bubbles: !0,
-          cancelable: !0,
-          message:
-            "object" === typeof error &&
-            null !== error &&
-            "string" === typeof error.message
-              ? String(error.message)
-              : String(error),
-          error: error
-        });
-        if (!window.dispatchEvent(event)) return;
-      } else if (
-        "object" === typeof process &&
-        "function" === typeof process.emit
-      ) {
-        process.emit("uncaughtException", error);
-        return;
-      }
-      console.error(error);
-    };
+var reportGlobalError =
+  "function" === typeof reportError
+    ? reportError
+    : function (error) {
+        if (
+          "object" === typeof window &&
+          "function" === typeof window.ErrorEvent
+        ) {
+          var event = new window.ErrorEvent("error", {
+            bubbles: !0,
+            cancelable: !0,
+            message:
+              "object" === typeof error &&
+              null !== error &&
+              "string" === typeof error.message
+                ? String(error.message)
+                : String(error),
+            error: error
+          });
+          if (!window.dispatchEvent(event)) return;
+        } else if (
+          "object" === typeof process &&
+          "function" === typeof process.emit
+        ) {
+          process.emit("uncaughtException", error);
+          return;
+        }
+        console.error(error);
+      };
+function defaultOnUncaughtError(error) {
+  reportGlobalError(error);
+}
+function defaultOnCaughtError(error) {
+  console.error(error);
+}
+function defaultOnRecoverableError(error) {
+  reportGlobalError(error);
+}
 function logUncaughtError(root, errorInfo) {
   try {
     var onUncaughtError = root.onUncaughtError;
@@ -10947,6 +10957,7 @@ function FiberRootNode(
   onUncaughtError,
   onCaughtError,
   onRecoverableError,
+  onDefaultTransitionIndicator,
   formState
 ) {
   this.tag = 1;
@@ -11001,6 +11012,7 @@ function updateContainerSync(element, container, parentComponent, callback) {
     entangleTransitions(element, parentComponent, 2));
   return 2;
 }
+function defaultOnDefaultTransitionIndicator() {}
 Mode$1.setCurrent(FastNoSideEffects);
 var slice = Array.prototype.slice,
   LinearGradient = (function () {
@@ -11048,13 +11060,14 @@ var slice = Array.prototype.slice,
         1,
         !1,
         "",
-        void 0,
-        void 0,
-        void 0,
+        defaultOnUncaughtError,
+        defaultOnCaughtError,
+        defaultOnRecoverableError,
+        defaultOnDefaultTransitionIndicator,
         null
       );
       _this$props.hydrationCallbacks = null;
-      enableTransitionTracing && (_this$props.transitionCallbacks = void 0);
+      enableTransitionTracing && (_this$props.transitionCallbacks = null);
       var JSCompiler_inline_result = createFiber(3, null, null, 1);
       _this$props.current = JSCompiler_inline_result;
       JSCompiler_inline_result.stateNode = _this$props;
@@ -11129,24 +11142,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1593 = {
+var internals$jscomp$inline_1595 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-ac068292-20250508",
+  version: "19.2.0-www-modern-9b79292a-20250508",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-ac068292-20250508"
+  reconcilerVersion: "19.2.0-www-modern-9b79292a-20250508"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1594 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1596 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1594.isDisabled &&
-    hook$jscomp$inline_1594.supportsFiber
+    !hook$jscomp$inline_1596.isDisabled &&
+    hook$jscomp$inline_1596.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1594.inject(
-        internals$jscomp$inline_1593
+      (rendererID = hook$jscomp$inline_1596.inject(
+        internals$jscomp$inline_1595
       )),
-        (injectedHook = hook$jscomp$inline_1594);
+        (injectedHook = hook$jscomp$inline_1596);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11160,4 +11173,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-ac068292-20250508";
+exports.version = "19.2.0-www-modern-9b79292a-20250508";

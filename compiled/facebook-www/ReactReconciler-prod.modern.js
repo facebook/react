@@ -12449,6 +12449,7 @@ module.exports = function ($$$config) {
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     formState
   ) {
     this.tag = 1;
@@ -12496,11 +12497,12 @@ module.exports = function ($$$config) {
     hydrationCallbacks,
     isStrictMode,
     identifierPrefix,
+    formState,
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
-    transitionCallbacks,
-    formState
+    onDefaultTransitionIndicator,
+    transitionCallbacks
   ) {
     containerInfo = new FiberRootNode(
       containerInfo,
@@ -12510,6 +12512,7 @@ module.exports = function ($$$config) {
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       formState
     );
     containerInfo.hydrationCallbacks = hydrationCallbacks;
@@ -13528,6 +13531,7 @@ module.exports = function ($$$config) {
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     transitionCallbacks
   ) {
     return createFiberRoot(
@@ -13538,11 +13542,12 @@ module.exports = function ($$$config) {
       hydrationCallbacks,
       isStrictMode,
       identifierPrefix,
+      null,
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
-      transitionCallbacks,
-      null
+      onDefaultTransitionIndicator,
+      transitionCallbacks
     );
   };
   exports.createHasPseudoClassSelector = function (selectors) {
@@ -13560,6 +13565,7 @@ module.exports = function ($$$config) {
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     transitionCallbacks,
     formState
   ) {
@@ -13571,11 +13577,12 @@ module.exports = function ($$$config) {
       hydrationCallbacks,
       isStrictMode,
       identifierPrefix,
+      formState,
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
-      transitionCallbacks,
-      formState
+      onDefaultTransitionIndicator,
+      transitionCallbacks
     );
     initialChildren.context = getContextForSubtree(null);
     containerInfo = initialChildren.current;
@@ -13817,7 +13824,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-ac068292-20250508"
+      reconcilerVersion: "19.2.0-www-modern-9b79292a-20250508"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
