@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a1a53a1272f475eee0c4071e03e24851>>
+ * @generated SignedSource<<a62a32b2e428b328e3104d4c0b94cd70>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1155() {
+    function JSCompiler_object_inline_createNodeMock_1154() {
       return null;
     }
     function findHook(fiber, id) {
@@ -2471,7 +2471,6 @@ __DEV__ &&
       }
       return !0;
     }
-    function noop() {}
     function createThenableState() {
       return { didWarnAboutUncachedPromise: !1, thenables: [] };
     }
@@ -2479,6 +2478,7 @@ __DEV__ &&
       thenable = thenable.status;
       return "fulfilled" === thenable || "rejected" === thenable;
     }
+    function noop() {}
     function trackUsedThenable(thenableState, thenable, index) {
       null !== ReactSharedInternals.actQueue &&
         (ReactSharedInternals.didUsePromise = !0);
@@ -13261,7 +13261,6 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
-      onDefaultTransitionIndicator,
       formState
     ) {
       this.tag = tag;
@@ -13316,8 +13315,7 @@ __DEV__ &&
       identifierPrefix,
       onUncaughtError,
       onCaughtError,
-      onRecoverableError,
-      onDefaultTransitionIndicator
+      onRecoverableError
     ) {
       containerInfo = new FiberRootNode(
         containerInfo,
@@ -13327,7 +13325,6 @@ __DEV__ &&
         onUncaughtError,
         onCaughtError,
         onRecoverableError,
-        onDefaultTransitionIndicator,
         null
       );
       1 === tag ? ((tag = 1), !0 === isStrictMode && (tag |= 24)) : (tag = 0);
@@ -15526,8 +15523,7 @@ __DEV__ &&
     setSuspenseHandler = function (newShouldSuspendImpl) {
       shouldSuspendImpl = newShouldSuspendImpl;
     };
-    var defaultOnDefaultTransitionIndicator = noop,
-      act = React.act,
+    var act = React.act,
       validWrapperTypes = new Set([0, 1, 5, 11, 14, 15, 3]),
       ReactTestInstance = (function () {
         function ReactTestInstance(fiber) {
@@ -15657,10 +15653,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-21fdf308-20250508",
+        version: "19.2.0-native-fb-9518f118-20250508",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-21fdf308-20250508"
+        reconcilerVersion: "19.2.0-native-fb-9518f118-20250508"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15682,7 +15678,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1155,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1154,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15706,7 +15702,7 @@ __DEV__ &&
           defaultOnUncaughtError,
           defaultOnCaughtError,
           defaultOnRecoverableError,
-          defaultOnDefaultTransitionIndicator
+          null
         );
       if (null == root) throw Error("something went wrong");
       updateContainer(element, root, null, null);
@@ -15805,5 +15801,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-21fdf308-20250508";
+    exports.version = "19.2.0-native-fb-9518f118-20250508";
   })();

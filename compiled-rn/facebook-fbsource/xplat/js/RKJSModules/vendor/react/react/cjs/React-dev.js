@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f5194ad16c4e4fca85d2ca2940df756a>>
+ * @generated SignedSource<<f155d9570a4af5999f7fbb3408e3a27b>>
  */
 
 "use strict";
@@ -59,7 +59,6 @@ __DEV__ &&
       this.refs = emptyObject;
       this.updater = updater || ReactNoopUpdateQueue;
     }
-    function noop() {}
     function testStringCoercion(value) {
       return "" + value;
     }
@@ -367,6 +366,7 @@ __DEV__ &&
         ? (checkKeyStringCoercion(element.key), escape("" + element.key))
         : index.toString(36);
     }
+    function noop$1() {}
     function resolveThenable(thenable) {
       switch (thenable.status) {
         case "fulfilled":
@@ -376,7 +376,7 @@ __DEV__ &&
         default:
           switch (
             ("string" === typeof thenable.status
-              ? thenable.then(noop, noop)
+              ? thenable.then(noop$1, noop$1)
               : ((thenable.status = "pending"),
                 thenable.then(
                   function (fulfilledValue) {
@@ -584,6 +584,7 @@ __DEV__ &&
     function releaseAsyncTransition() {
       ReactSharedInternals.asyncTransitions--;
     }
+    function noop() {}
     function enqueueTask(task) {
       if (null === enqueueTaskImpl)
         try {
@@ -1411,7 +1412,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-native-fb-21fdf308-20250508";
+    exports.version = "19.2.0-native-fb-9518f118-20250508";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
