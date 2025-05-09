@@ -37,6 +37,11 @@ import {runWithFiberInDEV} from 'react-reconciler/src/ReactCurrentFiber';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import {
+  isFiberContainedBy,
+  isFiberFollowing,
+  isFiberPreceding,
+} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {
   setCurrentUpdatePriority,
@@ -60,7 +65,10 @@ import {
 } from './ReactDOMComponentTree';
 import {
   traverseFragmentInstance,
-  getFragmentParentHostInstance,
+  getFragmentParentHostFiber,
+  getNextSiblingHostFiber,
+  getInstanceFromHostFiber,
+  traverseFragmentInstanceDeeply,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {detachDeletedInstance};
@@ -75,6 +83,9 @@ import {
   diffHydratedText,
   trapClickOnNonInteractiveElement,
 } from './ReactDOMComponent';
+import {hydrateInput} from './ReactDOMInput';
+import {hydrateTextarea} from './ReactDOMTextarea';
+import {hydrateSelect} from './ReactDOMSelect';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
 import {
@@ -96,7 +107,10 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from './HTMLNodeType';
 
-import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
+import {
+  flushEventReplaying,
+  retryIfBlockedOn,
+} from '../events/ReactDOMEventReplaying';
 
 import {
   enableCreateEventHandleAPI,
@@ -108,6 +122,7 @@ import {
   enableSuspenseyImages,
   enableSrcObject,
   enableViewTransition,
+  enableHydrationChangeEvent,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -124,6 +139,9 @@ import {requestFormReset as requestFormResetOnFiber} from 'react-reconciler/src/
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
 export {default as rendererVersion} from 'shared/ReactVersion';
+
+import noop from 'shared/noop';
+
 export const rendererPackageName = 'react-dom';
 export const extraDevToolsConfig = null;
 
@@ -154,6 +172,10 @@ export type Props = {
   top?: null | number,
   is?: string,
   size?: number,
+  value?: string,
+  defaultValue?: string,
+  checked?: boolean,
+  defaultChecked?: boolean,
   multiple?: boolean,
   src?: string | Blob | MediaSource | MediaStream, // TODO: Response
   srcSet?: string,
@@ -611,6 +633,27 @@ export function finalizeInitialChildren(
   }
 }
 
+export function finalizeHydratedChildren(
+  domElement: Instance,
+  type: string,
+  props: Props,
+  hostContext: HostContext,
+): boolean {
+  // TOOD: Consider unifying this with hydrateInstance.
+  if (!enableHydrationChangeEvent) {
+    return false;
+  }
+  switch (type) {
+    case 'input':
+    case 'select':
+    case 'textarea':
+    case 'img':
+      return true;
+    default:
+      return false;
+  }
+}
+
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return (
     type === 'textarea' ||
@@ -816,6 +859,49 @@ export function commitMount(
       }
       return;
     }
+  }
+}
+
+export function commitHydratedInstance(
+  domElement: Instance,
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+): void {
+  if (!enableHydrationChangeEvent) {
+    return;
+  }
+  // This fires in the commit phase if a hydrated instance needs to do further
+  // work in the commit phase. Similar to commitMount. However, this should not
+  // do things that would've already happened such as set auto focus since that
+  // would steal focus. It's only scheduled if finalizeHydratedChildren returns
+  // true.
+  switch (type) {
+    case 'input': {
+      hydrateInput(
+        domElement,
+        props.value,
+        props.defaultValue,
+        props.checked,
+        props.defaultChecked,
+      );
+      break;
+    }
+    case 'select': {
+      hydrateSelect(
+        domElement,
+        props.value,
+        props.defaultValue,
+        props.multiple,
+      );
+      break;
+    }
+    case 'textarea':
+      hydrateTextarea(domElement, props.value, props.defaultValue);
+      break;
+    case 'img':
+      // TODO: Should we replay onLoad events?
+      break;
   }
 }
 
@@ -2515,6 +2601,7 @@ export type FragmentInstanceType = {
     listener: EventListener,
     optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
   ): void,
+  dispatchEvent(event: Event): boolean,
   focus(focusOptions?: FocusOptions): void,
   focusLast(focusOptions?: FocusOptions): void,
   blur(): void,
@@ -2524,6 +2611,7 @@ export type FragmentInstanceType = {
   getRootNode(getRootNodeOptions?: {
     composed: boolean,
   }): Document | ShadowRoot | FragmentInstanceType,
+  compareDocumentPosition(otherNode: Instance): number,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -2561,12 +2649,13 @@ FragmentInstance.prototype.addEventListener = function (
   this._eventListeners = listeners;
 };
 function addEventListenerToChild(
-  child: Instance,
+  child: Fiber,
   type: string,
   listener: EventListener,
   optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
 ): boolean {
-  child.addEventListener(type, listener, optionsOrUseCapture);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  instance.addEventListener(type, listener, optionsOrUseCapture);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -2600,43 +2689,89 @@ FragmentInstance.prototype.removeEventListener = function (
   }
 };
 function removeEventListenerFromChild(
-  child: Instance,
+  child: Fiber,
   type: string,
   listener: EventListener,
   optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
 ): boolean {
-  child.removeEventListener(type, listener, optionsOrUseCapture);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  instance.removeEventListener(type, listener, optionsOrUseCapture);
   return false;
 }
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.dispatchEvent = function (
+  this: FragmentInstanceType,
+  event: Event,
+): boolean {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return true;
+  }
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
+  const eventListeners = this._eventListeners;
+  if (
+    (eventListeners !== null && eventListeners.length > 0) ||
+    !event.bubbles
+  ) {
+    const temp = document.createTextNode('');
+    if (eventListeners) {
+      for (let i = 0; i < eventListeners.length; i++) {
+        const {type, listener, optionsOrUseCapture} = eventListeners[i];
+        temp.addEventListener(type, listener, optionsOrUseCapture);
+      }
+    }
+    parentHostInstance.appendChild(temp);
+    const cancelable = temp.dispatchEvent(event);
+    if (eventListeners) {
+      for (let i = 0; i < eventListeners.length; i++) {
+        const {type, listener, optionsOrUseCapture} = eventListeners[i];
+        temp.removeEventListener(type, listener, optionsOrUseCapture);
+      }
+    }
+    parentHostInstance.removeChild(temp);
+    return cancelable;
+  } else {
+    return parentHostInstance.dispatchEvent(event);
+  }
+};
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.focus = function (
   this: FragmentInstanceType,
   focusOptions?: FocusOptions,
 ): void {
-  traverseFragmentInstance(
+  traverseFragmentInstanceDeeply(
     this._fragmentFiber,
-    setFocusIfFocusable,
+    setFocusOnFiberIfFocusable,
     focusOptions,
   );
 };
+function setFocusOnFiberIfFocusable(
+  fiber: Fiber,
+  focusOptions?: FocusOptions,
+): boolean {
+  const instance = getInstanceFromHostFiber<Instance>(fiber);
+  return setFocusIfFocusable(instance, focusOptions);
+}
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.focusLast = function (
   this: FragmentInstanceType,
   focusOptions?: FocusOptions,
 ): void {
-  const children: Array<Instance> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  const children: Array<Fiber> = [];
+  traverseFragmentInstanceDeeply(
+    this._fragmentFiber,
+    collectChildren,
+    children,
+  );
   for (let i = children.length - 1; i >= 0; i--) {
     const child = children[i];
-    if (setFocusIfFocusable(child, focusOptions)) {
+    if (setFocusOnFiberIfFocusable(child, focusOptions)) {
       break;
     }
   }
 };
-function collectChildren(
-  child: Instance,
-  collection: Array<Instance>,
-): boolean {
+function collectChildren(child: Fiber, collection: Array<Fiber>): boolean {
   collection.push(child);
   return false;
 }
@@ -2649,12 +2784,13 @@ FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
     blurActiveElementWithinFragment,
   );
 };
-function blurActiveElementWithinFragment(child: Instance): boolean {
+function blurActiveElementWithinFragment(child: Fiber): boolean {
   // TODO: We can get the activeElement from the parent outside of the loop when we have a reference.
-  const ownerDocument = child.ownerDocument;
-  if (child === ownerDocument.activeElement) {
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  const ownerDocument = instance.ownerDocument;
+  if (instance === ownerDocument.activeElement) {
     // $FlowFixMe[prop-missing]
-    child.blur();
+    instance.blur();
     return true;
   }
   return false;
@@ -2671,10 +2807,11 @@ FragmentInstance.prototype.observeUsing = function (
   traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
 };
 function observeChild(
-  child: Instance,
+  child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  observer.observe(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  observer.observe(instance);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -2695,10 +2832,11 @@ FragmentInstance.prototype.unobserveUsing = function (
   }
 };
 function unobserveChild(
-  child: Instance,
+  child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  observer.unobserve(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  observer.unobserve(instance);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -2709,9 +2847,10 @@ FragmentInstance.prototype.getClientRects = function (
   traverseFragmentInstance(this._fragmentFiber, collectClientRects, rects);
   return rects;
 };
-function collectClientRects(child: Instance, rects: Array<DOMRect>): boolean {
+function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
+  const instance = getInstanceFromHostFiber<Instance>(child);
   // $FlowFixMe[method-unbinding]
-  rects.push.apply(rects, child.getClientRects());
+  rects.push.apply(rects, instance.getClientRects());
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -2719,15 +2858,144 @@ FragmentInstance.prototype.getRootNode = function (
   this: FragmentInstanceType,
   getRootNodeOptions?: {composed: boolean},
 ): Document | ShadowRoot | FragmentInstanceType {
-  const parentHostInstance = getFragmentParentHostInstance(this._fragmentFiber);
-  if (parentHostInstance === null) {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
     return this;
   }
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
   const rootNode =
     // $FlowFixMe[incompatible-cast] Flow expects Node
     (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
   return rootNode;
 };
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.compareDocumentPosition = function (
+  this: FragmentInstanceType,
+  otherNode: Instance,
+): number {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return Node.DOCUMENT_POSITION_DISCONNECTED;
+  }
+  const children: Array<Fiber> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+
+  let result = Node.DOCUMENT_POSITION_DISCONNECTED;
+  if (children.length === 0) {
+    // If the fragment has no children, we can use the parent and
+    // siblings to determine a position.
+    const parentHostInstance =
+      getInstanceFromHostFiber<Instance>(parentHostFiber);
+    const parentResult = parentHostInstance.compareDocumentPosition(otherNode);
+    result = parentResult;
+    if (parentHostInstance === otherNode) {
+      result = Node.DOCUMENT_POSITION_CONTAINS;
+    } else {
+      if (parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+        // otherNode is one of the fragment's siblings. Use the next
+        // sibling to determine if its preceding or following.
+        const nextSiblingFiber = getNextSiblingHostFiber(this._fragmentFiber);
+        if (nextSiblingFiber === null) {
+          result = Node.DOCUMENT_POSITION_PRECEDING;
+        } else {
+          const nextSiblingInstance =
+            getInstanceFromHostFiber<Instance>(nextSiblingFiber);
+          const nextSiblingResult =
+            nextSiblingInstance.compareDocumentPosition(otherNode);
+          if (
+            nextSiblingResult === 0 ||
+            nextSiblingResult & Node.DOCUMENT_POSITION_FOLLOWING
+          ) {
+            result = Node.DOCUMENT_POSITION_FOLLOWING;
+          } else {
+            result = Node.DOCUMENT_POSITION_PRECEDING;
+          }
+        }
+      }
+    }
+
+    result |= Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
+    return result;
+  }
+
+  const firstElement = getInstanceFromHostFiber<Instance>(children[0]);
+  const lastElement = getInstanceFromHostFiber<Instance>(
+    children[children.length - 1],
+  );
+  const firstResult = firstElement.compareDocumentPosition(otherNode);
+  const lastResult = lastElement.compareDocumentPosition(otherNode);
+  if (
+    (firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
+      lastResult & Node.DOCUMENT_POSITION_PRECEDING) ||
+    otherNode === firstElement ||
+    otherNode === lastElement
+  ) {
+    result = Node.DOCUMENT_POSITION_CONTAINED_BY;
+  } else {
+    result = firstResult;
+  }
+
+  if (
+    result & Node.DOCUMENT_POSITION_DISCONNECTED ||
+    result & Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
+  ) {
+    return result;
+  }
+
+  // Now that we have the result from the DOM API, we double check it matches
+  // the state of the React tree. If it doesn't, we have a case of portaled or
+  // otherwise injected elements and we return DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC.
+  const documentPositionMatchesFiberPosition =
+    validateDocumentPositionWithFiberTree(
+      result,
+      this._fragmentFiber,
+      children[0],
+      children[children.length - 1],
+      otherNode,
+    );
+  if (documentPositionMatchesFiberPosition) {
+    return result;
+  }
+  return Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
+};
+
+function validateDocumentPositionWithFiberTree(
+  documentPosition: number,
+  fragmentFiber: Fiber,
+  precedingBoundaryFiber: Fiber,
+  followingBoundaryFiber: Fiber,
+  otherNode: Instance,
+): boolean {
+  const otherFiber = getClosestInstanceFromNode(otherNode);
+  if (documentPosition & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+    return !!otherFiber && isFiberContainedBy(fragmentFiber, otherFiber);
+  }
+  if (documentPosition & Node.DOCUMENT_POSITION_CONTAINS) {
+    if (otherFiber === null) {
+      // otherFiber could be null if its the document or body element
+      const ownerDocument = otherNode.ownerDocument;
+      return otherNode === ownerDocument || otherNode === ownerDocument.body;
+    }
+    return isFiberContainedBy(otherFiber, fragmentFiber);
+  }
+  if (documentPosition & Node.DOCUMENT_POSITION_PRECEDING) {
+    return (
+      !!otherFiber &&
+      (otherFiber === precedingBoundaryFiber ||
+        isFiberPreceding(precedingBoundaryFiber, otherFiber))
+    );
+  }
+  if (documentPosition & Node.DOCUMENT_POSITION_FOLLOWING) {
+    return (
+      !!otherFiber &&
+      (otherFiber === followingBoundaryFiber ||
+        isFiberFollowing(followingBoundaryFiber, otherFiber))
+    );
+  }
+
+  return false;
+}
 
 function normalizeListenerOptions(
   opts: ?EventListenerOptionsOrUseCapture,
@@ -3581,6 +3849,12 @@ export function commitHydratedSuspenseInstance(
 ): void {
   // Retry if any event replaying was blocked on this.
   retryIfBlockedOn(suspenseInstance);
+}
+
+export function flushHydrationEvents(): void {
+  if (enableHydrationChangeEvent) {
+    flushEventReplaying();
+  }
 }
 
 export function shouldDeleteUnhydratedTailInstances(
@@ -5357,16 +5631,14 @@ type SuspendedState = {
 };
 let suspendedState: null | SuspendedState = null;
 
-// We use a noop function when we begin suspending because if possible we want the
-// waitfor step to finish synchronously. If it doesn't we'll return a function to
-// provide the actual unsuspend function and that will get completed when the count
-// hits zero or it will get cancelled if the root starts new work.
-function noop() {}
-
 export function startSuspendingCommit(): void {
   suspendedState = {
     stylesheets: null,
     count: 0,
+    // We use a noop function when we begin suspending because if possible we want the
+    // waitfor step to finish synchronously. If it doesn't we'll return a function to
+    // provide the actual unsuspend function and that will get completed when the count
+    // hits zero or it will get cancelled if the root starts new work.
     unsuspend: noop,
   };
 }

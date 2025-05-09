@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @inferEffectDependencies @panicThreshold(none)
+// @inferEffectDependencies @panicThreshold:"none"
 import {useRef} from 'react';
 import {useSpecialEffect} from 'shared-runtime';
 
@@ -25,7 +25,7 @@ function useFoo({cond}) {
 ## Code
 
 ```javascript
-// @inferEffectDependencies @panicThreshold(none)
+// @inferEffectDependencies @panicThreshold:"none"
 import { useRef } from "react";
 import { useSpecialEffect } from "shared-runtime";
 

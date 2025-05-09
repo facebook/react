@@ -26,7 +26,6 @@ export const {
   enableObjectFiber,
   enableRenderableContext,
   enableRetryLaneExpiration,
-  enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
   favorSafetyOverHydrationPerf,
@@ -48,7 +47,6 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
-export const enableFabricCompleteRootInCommitPhase = false;
 
 export const enableSuspenseAvoidThisFallback = true;
 
@@ -115,6 +113,8 @@ export const enableGestureTransition = false;
 
 export const enableSuspenseyImages = false;
 export const enableSrcObject = false;
+export const enableHydrationChangeEvent = false;
+export const enableDefaultTransitionIndicator = false;
 
 export const ownerStackLimit = 1e4;
 
