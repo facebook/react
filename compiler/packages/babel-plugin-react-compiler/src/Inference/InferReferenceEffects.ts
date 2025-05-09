@@ -47,7 +47,7 @@ import {
   eachTerminalOperand,
   eachTerminalSuccessor,
 } from '../HIR/visitors';
-import {assertExhaustive} from '../Utils/utils';
+import {assertExhaustive, retainWhere} from '../Utils/utils';
 import {
   inferTerminalFunctionEffects,
   inferInstructionFunctionEffects,
@@ -1185,6 +1185,35 @@ function inferBlock(
           );
           hasMutableOperand ||= isMutableEffect(operand.effect, operand.loc);
         }
+
+        /*
+         * Filter CaptureEffects to remove values that are immutable and don't
+         * need to be tracked for aliasing
+         */
+        const effects = instrValue.loweredFunc.func.effects;
+        if (effects != null && effects.length !== 0) {
+          retainWhere(effects, effect => {
+            if (effect.kind !== 'CaptureEffect') {
+              return true;
+            }
+            const places: Set<Place> = new Set();
+            for (const place of effect.places) {
+              const kind = state.kind(place);
+              if (
+                kind.kind === ValueKind.Context ||
+                kind.kind === ValueKind.MaybeFrozen ||
+                kind.kind === ValueKind.Mutable
+              ) {
+                places.add(place);
+              }
+            }
+            if (places.size === 0) {
+              return false;
+            }
+            effect.places = places;
+            return true;
+          });
+        }
         /*
          * If a closure did not capture any mutable values, then we can consider it to be
          * frozen, which allows it to be independently memoized.
@@ -1275,14 +1304,10 @@ function inferBlock(
         break;
       }
       case 'PropertyStore': {
-        const effect =
-          state.kind(instrValue.object).kind === ValueKind.Context
-            ? Effect.ConditionallyMutate
-            : Effect.Capture;
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.value,
-          effect,
+          Effect.Capture,
           ValueReason.Other,
         );
         state.referenceAndRecordEffects(
