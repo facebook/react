@@ -33,16 +33,15 @@ export const FIXTURE_ENTRYPOINT = {
 import { print } from "shared-runtime";
 import useEffectWrapper from "useEffectWrapper";
 
-function Foo(t0) {
+function Foo({ propVal }) {
   "use memo";
-  const { propVal } = t0;
-
   const arr = [propVal];
-  useEffectWrapper(() => print(arr), [arr]);
+  useEffectWrapper(() => print(arr));
 
   const arr2 = [];
-  useEffectWrapper(() => arr2.push(propVal), [arr2, propVal]);
+  useEffectWrapper(() => arr2.push(propVal));
   arr2.push(2);
+
   return { arr, arr2 };
 }
 
