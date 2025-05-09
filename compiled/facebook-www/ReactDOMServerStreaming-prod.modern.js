@@ -2964,15 +2964,15 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
+function noop() {}
 var SuspenseException = Error(
   "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`."
 );
-function noop$2() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
     ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop$2, noop$2), (thenable = index));
+    : index !== thenable && (thenable.then(noop, noop), (thenable = index));
   switch (thenable.status) {
     case "fulfilled":
       return thenable.value;
@@ -2980,7 +2980,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       throw thenable.reason;
     default:
       "string" === typeof thenable.status
-        ? thenable.then(noop$2, noop$2)
+        ? thenable.then(noop, noop)
         : ((thenableState = thenable),
           (thenableState.status = "pending"),
           thenableState.then(
@@ -3242,7 +3242,6 @@ function unwrapThenable(thenable) {
 function unsupportedRefresh() {
   throw Error("Cache cannot be refreshed during server rendering.");
 }
-function noop$1() {}
 var HooksDispatcher = {
     readContext: function (context) {
       return context._currentValue;
@@ -3272,16 +3271,16 @@ var HooksDispatcher = {
     useState: function (initialState) {
       return useReducer(basicStateReducer, initialState);
     },
-    useInsertionEffect: noop$1,
-    useLayoutEffect: noop$1,
+    useInsertionEffect: noop,
+    useLayoutEffect: noop,
     useCallback: function (callback, deps) {
       return useMemo(function () {
         return callback;
       }, deps);
     },
-    useImperativeHandle: noop$1,
-    useEffect: noop$1,
-    useDebugValue: noop$1,
+    useImperativeHandle: noop,
+    useEffect: noop,
+    useDebugValue: noop,
     useDeferredValue: function (value, initialValue) {
       resolveCurrentlyRenderingComponent();
       return void 0 !== initialValue ? initialValue : value;
@@ -3570,7 +3569,6 @@ function defaultErrorHandler(error) {
   } else console.error(error);
   return null;
 }
-function noop() {}
 function RequestInstance(
   resumableState,
   renderState,

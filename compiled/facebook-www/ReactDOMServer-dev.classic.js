@@ -3829,13 +3829,12 @@ __DEV__ &&
       x >>>= 0;
       return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
     }
-    function noop$2() {}
+    function noop() {}
     function trackUsedThenable(thenableState, thenable, index) {
       index = thenableState[index];
       void 0 === index
         ? thenableState.push(thenable)
-        : index !== thenable &&
-          (thenable.then(noop$2, noop$2), (thenable = index));
+        : index !== thenable && (thenable.then(noop, noop), (thenable = index));
       switch (thenable.status) {
         case "fulfilled":
           return thenable.value;
@@ -3843,7 +3842,7 @@ __DEV__ &&
           throw thenable.reason;
         default:
           "string" === typeof thenable.status
-            ? thenable.then(noop$2, noop$2)
+            ? thenable.then(noop, noop)
             : ((thenableState = thenable),
               (thenableState.status = "pending"),
               thenableState.then(
@@ -4134,7 +4133,6 @@ __DEV__ &&
     function unsupportedRefresh() {
       throw Error("Cache cannot be refreshed during server rendering.");
     }
-    function noop$1() {}
     function disabledLog() {}
     function disableLogs() {
       if (0 === disabledDepth) {
@@ -4439,7 +4437,6 @@ __DEV__ &&
       } else console.error(error);
       return null;
     }
-    function noop() {}
     function RequestInstance(
       resumableState,
       renderState,
@@ -9374,16 +9371,16 @@ __DEV__ &&
           currentHookNameInDev = "useState";
           return useReducer(basicStateReducer, initialState);
         },
-        useInsertionEffect: noop$1,
-        useLayoutEffect: noop$1,
+        useInsertionEffect: noop,
+        useLayoutEffect: noop,
         useCallback: function (callback, deps) {
           return useMemo(function () {
             return callback;
           }, deps);
         },
-        useImperativeHandle: noop$1,
-        useEffect: noop$1,
-        useDebugValue: noop$1,
+        useImperativeHandle: noop,
+        useEffect: noop,
+        useDebugValue: noop,
         useDeferredValue: function (value, initialValue) {
           resolveCurrentlyRenderingComponent();
           return void 0 !== initialValue ? initialValue : value;
@@ -9536,5 +9533,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-9518f118-20250508";
+    exports.version = "19.2.0-www-classic-5069e180-20250509";
   })();

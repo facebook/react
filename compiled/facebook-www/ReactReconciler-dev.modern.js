@@ -521,8 +521,7 @@ __DEV__ &&
             : ((pingedLanes &= nonIdlePendingLanes),
               0 !== pingedLanes
                 ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-                : enableSiblingPrerendering &&
-                  !rootHasPendingCommit &&
+                : rootHasPendingCommit ||
                   ((rootHasPendingCommit = nonIdlePendingLanes & ~root),
                   0 !== rootHasPendingCommit &&
                     (nextLanes =
@@ -532,8 +531,7 @@ __DEV__ &&
             ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
             : 0 !== pingedLanes
               ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-              : enableSiblingPrerendering &&
-                !rootHasPendingCommit &&
+              : rootHasPendingCommit ||
                 ((rootHasPendingCommit = pendingLanes & ~root),
                 0 !== rootHasPendingCommit &&
                   (nextLanes = getHighestPriorityLanes(rootHasPendingCommit))));
@@ -663,8 +661,7 @@ __DEV__ &&
         remainingLanes &= ~lane;
       }
       0 !== spawnedLane && markSpawnedDeferredLane(root, spawnedLane, 0);
-      enableSiblingPrerendering &&
-        0 !== suspendedRetryLanes &&
+      0 !== suspendedRetryLanes &&
         0 === updatedLanes &&
         0 !== root.tag &&
         (root.suspendedLanes |=
@@ -3027,45 +3024,45 @@ __DEV__ &&
           (root.callbackPriority = 0)
         );
       if (
-        0 === (suspendedLanes & 3) ||
-        (enableSiblingPrerendering &&
-          checkIfRootIsPrerendering(root, suspendedLanes))
-      ) {
-        currentTime = suspendedLanes & -suspendedLanes;
-        if (
-          currentTime !== root.callbackPriority ||
-          (null !== ReactSharedInternals.actQueue &&
-            pingedLanes !== fakeActCallbackNode$1)
-        )
-          cancelCallback(pingedLanes);
-        else return currentTime;
-        switch (lanesToEventPriority(suspendedLanes)) {
-          case 2:
-          case 8:
-            suspendedLanes = UserBlockingPriority;
-            break;
-          case 32:
-            suspendedLanes = NormalPriority$1;
-            break;
-          case 268435456:
-            suspendedLanes = IdlePriority;
-            break;
-          default:
-            suspendedLanes = NormalPriority$1;
-        }
-        pingedLanes = performWorkOnRootViaSchedulerTask.bind(null, root);
-        null !== ReactSharedInternals.actQueue
-          ? (ReactSharedInternals.actQueue.push(pingedLanes),
-            (suspendedLanes = fakeActCallbackNode$1))
-          : (suspendedLanes = scheduleCallback$3(suspendedLanes, pingedLanes));
-        root.callbackPriority = currentTime;
-        root.callbackNode = suspendedLanes;
-        return currentTime;
+        0 !== (suspendedLanes & 3) &&
+        !checkIfRootIsPrerendering(root, suspendedLanes)
+      )
+        return (
+          null !== pingedLanes && cancelCallback(pingedLanes),
+          (root.callbackPriority = 2),
+          (root.callbackNode = null),
+          2
+        );
+      currentTime = suspendedLanes & -suspendedLanes;
+      if (
+        currentTime !== root.callbackPriority ||
+        (null !== ReactSharedInternals.actQueue &&
+          pingedLanes !== fakeActCallbackNode$1)
+      )
+        cancelCallback(pingedLanes);
+      else return currentTime;
+      switch (lanesToEventPriority(suspendedLanes)) {
+        case 2:
+        case 8:
+          suspendedLanes = UserBlockingPriority;
+          break;
+        case 32:
+          suspendedLanes = NormalPriority$1;
+          break;
+        case 268435456:
+          suspendedLanes = IdlePriority;
+          break;
+        default:
+          suspendedLanes = NormalPriority$1;
       }
-      null !== pingedLanes && cancelCallback(pingedLanes);
-      root.callbackPriority = 2;
-      root.callbackNode = null;
-      return 2;
+      pingedLanes = performWorkOnRootViaSchedulerTask.bind(null, root);
+      null !== ReactSharedInternals.actQueue
+        ? (ReactSharedInternals.actQueue.push(pingedLanes),
+          (suspendedLanes = fakeActCallbackNode$1))
+        : (suspendedLanes = scheduleCallback$3(suspendedLanes, pingedLanes));
+      root.callbackPriority = currentTime;
+      root.callbackNode = suspendedLanes;
+      return currentTime;
     }
     function performWorkOnRootViaSchedulerTask(root, didTimeout) {
       nestedUpdateScheduled = currentUpdateIsNested = !1;
@@ -3261,6 +3258,7 @@ __DEV__ &&
       }
       return !0;
     }
+    function noop$1() {}
     function createThenableState() {
       return { didWarnAboutUncachedPromise: !1, thenables: [] };
     }
@@ -3268,7 +3266,6 @@ __DEV__ &&
       thenable = thenable.status;
       return "fulfilled" === thenable || "rejected" === thenable;
     }
-    function noop$1() {}
     function trackUsedThenable(thenableState, thenable, index) {
       null !== ReactSharedInternals.actQueue &&
         (ReactSharedInternals.didUsePromise = !0);
@@ -10268,8 +10265,7 @@ __DEV__ &&
         ((retryQueue =
           22 !== workInProgress.tag ? claimNextRetryLane() : 536870912),
         (workInProgress.lanes |= retryQueue),
-        enableSiblingPrerendering &&
-          (workInProgressSuspendedRetryLanes |= retryQueue));
+        (workInProgressSuspendedRetryLanes |= retryQueue));
     }
     function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       if (!isHydrating)
@@ -16001,14 +15997,13 @@ __DEV__ &&
         (!forceSync &&
           0 === (lanes & 124) &&
           0 === (lanes & root.expiredLanes)) ||
-        (enableSiblingPrerendering && checkIfRootIsPrerendering(root, lanes)))
+        checkIfRootIsPrerendering(root, lanes))
         ? renderRootConcurrent(root, lanes)
         : renderRootSync(root, lanes, !0);
       var renderWasConcurrent = yieldedFiber;
       do {
         if (startTime === RootInProgress) {
-          enableSiblingPrerendering &&
-            workInProgressRootIsPrerendering &&
+          workInProgressRootIsPrerendering &&
             !yieldedFiber &&
             markRootSuspended(root, lanes, 0, !1);
           enableComponentPerformanceTrack &&
@@ -16358,9 +16353,7 @@ __DEV__ &&
       suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
       root.suspendedLanes |= suspendedLanes;
       root.pingedLanes &= ~suspendedLanes;
-      enableSiblingPrerendering &&
-        didAttemptEntireTree &&
-        (root.warmLanes |= suspendedLanes);
+      didAttemptEntireTree && (root.warmLanes |= suspendedLanes);
       didAttemptEntireTree = root.expirationTimes;
       for (var lanes = suspendedLanes; 0 < lanes; ) {
         var index = 31 - clz32(lanes),
@@ -16735,15 +16728,7 @@ __DEV__ &&
       thrownValue === SuspenseException ||
       thrownValue === SuspenseActionException
         ? ((thrownValue = getSuspendedThenable()),
-          (workInProgressSuspendedReason =
-            !enableSiblingPrerendering &&
-            shouldRemainOnPreviousScreen() &&
-            0 === (workInProgressRootSkippedLanes & 134217727) &&
-            0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
-              ? thrownValue === SuspenseActionException
-                ? SuspendedOnAction
-                : SuspendedOnData
-              : SuspendedOnImmediate))
+          (workInProgressSuspendedReason = SuspendedOnImmediate))
         : thrownValue === SuspenseyCommitException
           ? ((thrownValue = getSuspendedThenable()),
             (workInProgressSuspendedReason = SuspendedOnInstance))
@@ -16883,7 +16868,6 @@ __DEV__ &&
                 workInProgressThrownValue = null;
                 throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
                 if (
-                  enableSiblingPrerendering &&
                   shouldYieldForPrerendering &&
                   workInProgressRootIsPrerendering
                 ) {
@@ -17225,27 +17209,23 @@ __DEV__ &&
         return;
       }
       if (unitOfWork.flags & 32768) {
-        if (enableSiblingPrerendering)
-          if (isHydrating || suspendedReason === SuspendedOnError) root = !0;
-          else if (
-            workInProgressRootIsPrerendering ||
-            0 !== (workInProgressRootRenderLanes & 536870912)
-          )
-            root = !1;
-          else {
-            if (
-              ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
-              suspendedReason === SuspendedOnData ||
-                suspendedReason === SuspendedOnAction ||
-                suspendedReason === SuspendedOnImmediate ||
-                suspendedReason === SuspendedOnDeprecatedThrowPromise)
-            )
-              (suspendedReason = suspenseHandlerStackCursor.current),
-                null !== suspendedReason &&
-                  13 === suspendedReason.tag &&
-                  (suspendedReason.flags |= 16384);
-          }
-        else root = !0;
+        if (isHydrating || suspendedReason === SuspendedOnError) root = !0;
+        else if (
+          workInProgressRootIsPrerendering ||
+          0 !== (workInProgressRootRenderLanes & 536870912)
+        )
+          root = !1;
+        else if (
+          ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
+          suspendedReason === SuspendedOnData ||
+            suspendedReason === SuspendedOnAction ||
+            suspendedReason === SuspendedOnImmediate ||
+            suspendedReason === SuspendedOnDeprecatedThrowPromise)
+        )
+          (suspendedReason = suspenseHandlerStackCursor.current),
+            null !== suspendedReason &&
+              13 === suspendedReason.tag &&
+              (suspendedReason.flags |= 16384);
         unwindUnitOfWork(unitOfWork, root);
       } else completeUnitOfWork(unitOfWork);
     }
@@ -18708,6 +18688,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       formState
     ) {
       this.tag = 1;
@@ -18760,11 +18741,12 @@ __DEV__ &&
       hydrationCallbacks,
       isStrictMode,
       identifierPrefix,
+      formState,
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
-      transitionCallbacks,
-      formState
+      onDefaultTransitionIndicator,
+      transitionCallbacks
     ) {
       containerInfo = new FiberRootNode(
         containerInfo,
@@ -18774,6 +18756,7 @@ __DEV__ &&
         onUncaughtError,
         onCaughtError,
         onRecoverableError,
+        onDefaultTransitionIndicator,
         formState
       );
       containerInfo.hydrationCallbacks = hydrationCallbacks;
@@ -18922,7 +18905,6 @@ __DEV__ &&
       enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
-      enableSiblingPrerendering = dynamicFeatureFlags.enableSiblingPrerendering,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       favorSafetyOverHydrationPerf =
         dynamicFeatureFlags.favorSafetyOverHydrationPerf,
@@ -21259,6 +21241,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       transitionCallbacks
     ) {
       return createFiberRoot(
@@ -21269,11 +21252,12 @@ __DEV__ &&
         hydrationCallbacks,
         isStrictMode,
         identifierPrefix,
+        null,
         onUncaughtError,
         onCaughtError,
         onRecoverableError,
-        transitionCallbacks,
-        null
+        onDefaultTransitionIndicator,
+        transitionCallbacks
       );
     };
     exports.createHasPseudoClassSelector = function (selectors) {
@@ -21291,6 +21275,7 @@ __DEV__ &&
       onUncaughtError,
       onCaughtError,
       onRecoverableError,
+      onDefaultTransitionIndicator,
       transitionCallbacks,
       formState
     ) {
@@ -21302,11 +21287,12 @@ __DEV__ &&
         hydrationCallbacks,
         isStrictMode,
         identifierPrefix,
+        formState,
         onUncaughtError,
         onCaughtError,
         onRecoverableError,
-        transitionCallbacks,
-        formState
+        onDefaultTransitionIndicator,
+        transitionCallbacks
       );
       initialChildren.context = getContextForSubtree(null);
       containerInfo = initialChildren.current;
@@ -21637,7 +21623,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-9518f118-20250508"
+        reconcilerVersion: "19.2.0-www-modern-5069e180-20250509"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

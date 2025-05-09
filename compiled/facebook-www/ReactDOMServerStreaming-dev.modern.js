@@ -3587,13 +3587,12 @@ __DEV__ &&
       x >>>= 0;
       return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
     }
-    function noop$2() {}
+    function noop() {}
     function trackUsedThenable(thenableState, thenable, index) {
       index = thenableState[index];
       void 0 === index
         ? thenableState.push(thenable)
-        : index !== thenable &&
-          (thenable.then(noop$2, noop$2), (thenable = index));
+        : index !== thenable && (thenable.then(noop, noop), (thenable = index));
       switch (thenable.status) {
         case "fulfilled":
           return thenable.value;
@@ -3601,7 +3600,7 @@ __DEV__ &&
           throw thenable.reason;
         default:
           "string" === typeof thenable.status
-            ? thenable.then(noop$2, noop$2)
+            ? thenable.then(noop, noop)
             : ((thenableState = thenable),
               (thenableState.status = "pending"),
               thenableState.then(
@@ -3892,7 +3891,6 @@ __DEV__ &&
     function unsupportedRefresh() {
       throw Error("Cache cannot be refreshed during server rendering.");
     }
-    function noop$1() {}
     function disabledLog() {}
     function disableLogs() {
       if (0 === disabledDepth) {
@@ -4206,7 +4204,6 @@ __DEV__ &&
       } else console.error(error);
       return null;
     }
-    function noop() {}
     function RequestInstance(
       resumableState,
       renderState,
@@ -8569,16 +8566,16 @@ __DEV__ &&
           currentHookNameInDev = "useState";
           return useReducer(basicStateReducer, initialState);
         },
-        useInsertionEffect: noop$1,
-        useLayoutEffect: noop$1,
+        useInsertionEffect: noop,
+        useLayoutEffect: noop,
         useCallback: function (callback, deps) {
           return useMemo(function () {
             return callback;
           }, deps);
         },
-        useImperativeHandle: noop$1,
-        useEffect: noop$1,
-        useDebugValue: noop$1,
+        useImperativeHandle: noop,
+        useEffect: noop,
+        useDebugValue: noop,
         useDeferredValue: function (value, initialValue) {
           resolveCurrentlyRenderingComponent();
           return void 0 !== initialValue ? initialValue : value;
