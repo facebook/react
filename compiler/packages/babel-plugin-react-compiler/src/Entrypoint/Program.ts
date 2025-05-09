@@ -325,6 +325,8 @@ export function compileProgram(
     filename: pass.filename,
     code: pass.code,
     suppressions,
+    hasModuleScopeOptOut:
+      findDirectiveDisablingMemoization(program.node.directives) != null,
   });
 
   const queue: Array<CompileSource> = findFunctionsToCompile(
@@ -368,7 +370,19 @@ export function compileProgram(
   }
 
   // Avoid modifying the program if we find a program level opt-out
-  if (findDirectiveDisablingMemoization(program.node.directives) != null) {
+  if (programContext.hasModuleScopeOptOut) {
+    if (compiledFns.length > 0) {
+      const error = new CompilerError();
+      error.pushErrorDetail(
+        new CompilerErrorDetail({
+          reason:
+            'Unexpected compiled functions when module scope opt-out is present',
+          severity: ErrorSeverity.Invariant,
+          loc: null,
+        }),
+      );
+      handleError(error, programContext, null);
+    }
     return null;
   }
 
@@ -491,9 +505,10 @@ function processFn(
   }
 
   /**
-   * Otherwise if 'use no forget/memo' is present, we still run the code through the compiler
-   * for validation but we don't mutate the babel AST. This allows us to flag if there is an
-   * unused 'use no forget/memo' directive.
+   * If 'use no forget/memo' is present and we still ran the code through the
+   * compiler for validation, log a skip event and don't mutate the babel AST.
+   * This allows us to flag if there is an unused 'use no forget/memo'
+   * directive.
    */
   if (
     programContext.opts.ignoreUseNoForget === false &&
@@ -518,16 +533,7 @@ function processFn(
     prunedMemoValues: compiledFn.prunedMemoValues,
   });
 
-  /**
-   * Always compile functions with opt in directives.
-   */
-  if (directives.optIn != null) {
-    return compiledFn;
-  } else if (programContext.opts.compilationMode === 'annotation') {
-    /**
-     * If no opt-in directive is found and the compiler is configured in
-     * annotation mode, don't insert the compiled function.
-     */
+  if (programContext.hasModuleScopeOptOut) {
     return null;
   } else if (programContext.opts.noEmit) {
     /**
@@ -540,6 +546,15 @@ function processFn(
         programContext.inferredEffectLocations.add(loc);
       }
     }
+    return null;
+  } else if (
+    programContext.opts.compilationMode === 'annotation' &&
+    directives.optIn == null
+  ) {
+    /**
+     * If no opt-in directive is found and the compiler is configured in
+     * annotation mode, don't insert the compiled function.
+     */
     return null;
   } else {
     return compiledFn;
