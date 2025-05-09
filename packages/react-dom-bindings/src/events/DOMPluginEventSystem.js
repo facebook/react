@@ -36,6 +36,7 @@ import {
   HostText,
   ScopeComponent,
 } from 'react-reconciler/src/ReactWorkTags';
+import {getLowestCommonAncestor} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 import getEventTarget from './getEventTarget';
 import {
@@ -891,46 +892,6 @@ function getParent(inst: Fiber | null): Fiber | null {
   return null;
 }
 
-/**
- * Return the lowest common ancestor of A and B, or null if they are in
- * different trees.
- */
-function getLowestCommonAncestor(instA: Fiber, instB: Fiber): Fiber | null {
-  let nodeA: null | Fiber = instA;
-  let nodeB: null | Fiber = instB;
-  let depthA = 0;
-  for (let tempA: null | Fiber = nodeA; tempA; tempA = getParent(tempA)) {
-    depthA++;
-  }
-  let depthB = 0;
-  for (let tempB: null | Fiber = nodeB; tempB; tempB = getParent(tempB)) {
-    depthB++;
-  }
-
-  // If A is deeper, crawl up.
-  while (depthA - depthB > 0) {
-    nodeA = getParent(nodeA);
-    depthA--;
-  }
-
-  // If B is deeper, crawl up.
-  while (depthB - depthA > 0) {
-    nodeB = getParent(nodeB);
-    depthB--;
-  }
-
-  // Walk in lockstep until we find a match.
-  let depth = depthA;
-  while (depth--) {
-    if (nodeA === nodeB || (nodeB !== null && nodeA === nodeB.alternate)) {
-      return nodeA;
-    }
-    nodeA = getParent(nodeA);
-    nodeB = getParent(nodeB);
-  }
-  return null;
-}
-
 function accumulateEnterLeaveListenersForEvent(
   dispatchQueue: DispatchQueue,
   event: KnownReactSyntheticEvent,
@@ -992,7 +953,8 @@ export function accumulateEnterLeaveTwoPhaseListeners(
   from: Fiber | null,
   to: Fiber | null,
 ): void {
-  const common = from && to ? getLowestCommonAncestor(from, to) : null;
+  const common =
+    from && to ? getLowestCommonAncestor(from, to, getParent) : null;
 
   if (from !== null) {
     accumulateEnterLeaveListenersForEvent(

@@ -18,7 +18,6 @@ import {
   enableProfilerTimer,
   enableProfilerNestedUpdatePhase,
   enableComponentPerformanceTrack,
-  enableSiblingPrerendering,
   enableYieldingBeforePassive,
   enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
@@ -381,7 +380,7 @@ function scheduleTaskForRootDuringMicrotask(
     // If we're prerendering, then we should use the concurrent work loop
     // even if the lanes are synchronous, so that prerendering never blocks
     // the main thread.
-    !(enableSiblingPrerendering && checkIfRootIsPrerendering(root, nextLanes))
+    !checkIfRootIsPrerendering(root, nextLanes)
   ) {
     // Synchronous work is always flushed at the end of the microtask, so we
     // don't need to schedule an additional task.

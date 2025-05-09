@@ -41,7 +41,6 @@ import {
   enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
   disableLegacyMode,
-  enableSiblingPrerendering,
   enableViewTransition,
   enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
@@ -102,6 +101,7 @@ import {
   ShouldSuspendCommit,
   Cloned,
   ViewTransitionStatic,
+  Hydrate,
 } from './ReactFiberFlags';
 
 import {
@@ -110,6 +110,7 @@ import {
   resolveSingletonInstance,
   appendInitialChild,
   finalizeInitialChildren,
+  finalizeHydratedChildren,
   supportsMutation,
   supportsPersistence,
   supportsResources,
@@ -665,9 +666,7 @@ function scheduleRetryEffect(
 
     // Track the lanes that have been scheduled for an immediate retry so that
     // we can mark them as suspended upon committing the root.
-    if (enableSiblingPrerendering) {
-      markSpawnedRetryLane(retryLane);
-    }
+    markSpawnedRetryLane(retryLane);
   }
 }
 
@@ -1391,6 +1390,16 @@ function completeWork(
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
           prepareToHydrateHostInstance(workInProgress, currentHostContext);
+          if (
+            finalizeHydratedChildren(
+              workInProgress.stateNode,
+              type,
+              newProps,
+              currentHostContext,
+            )
+          ) {
+            workInProgress.flags |= Hydrate;
+          }
         } else {
           const rootContainerInstance = getRootHostContainer();
           const instance = createInstance(
