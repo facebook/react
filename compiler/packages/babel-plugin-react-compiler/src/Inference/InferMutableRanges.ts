@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import prettyFormat from 'pretty-format';
 import {HIRFunction, Identifier} from '../HIR/HIR';
 import DisjointSet from '../Utils/DisjointSet';
 import {inferAliasForUncalledFunctions} from './InerAliasForUncalledFunctions';
@@ -16,6 +17,7 @@ import {inferMutableLifetimes} from './InferMutableLifetimes';
 import {inferMutableRangesForAlias} from './InferMutableRangesForAlias';
 import {inferMutableRangesForComutation} from './InferMutableRangesForComutation';
 import {inferTryCatchAliases} from './InferTryCatchAliases';
+import {printIdentifier, printMutableRange} from '../HIR/PrintHIR';
 
 export function inferMutableRanges(ir: HIRFunction): DisjointSet<Identifier> {
   // Infer mutable ranges for non fields
@@ -94,6 +96,20 @@ export function inferMutableRanges(ir: HIRFunction): DisjointSet<Identifier> {
   }
 
   return aliases;
+}
+
+export function debugAliases(aliases: DisjointSet<Identifier>): void {
+  console.log(
+    prettyFormat(
+      aliases
+        .buildSets()
+        .map(set =>
+          [...set].map(
+            ident => printIdentifier(ident) + printMutableRange(ident),
+          ),
+        ),
+    ),
+  );
 }
 
 /**
