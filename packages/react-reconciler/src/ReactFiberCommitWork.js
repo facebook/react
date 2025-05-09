@@ -20,6 +20,7 @@ import type {
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import {
+  includesLoadingIndicatorLanes,
   includesOnlySuspenseyCommitEligibleLanes,
   includesOnlyViewTransitionEligibleLanes,
 } from './ReactFiberLane';
@@ -59,6 +60,7 @@ import {
   enableComponentPerformanceTrack,
   enableViewTransition,
   enableFragmentRefs,
+  enableDefaultTransitionIndicator,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -267,13 +269,16 @@ import {
 } from './ReactFiberCommitViewTransitions';
 import {
   viewTransitionMutationContext,
+  pushRootMutationContext,
   pushMutationContext,
   popMutationContext,
+  rootMutationContext,
 } from './ReactFiberMutationTracking';
 import {
   trackNamedViewTransition,
   untrackNamedViewTransition,
 } from './ReactFiberDuplicateViewTransitions';
+import {markIndicatorHandled} from './ReactFiberRootScheduler';
 
 // Used during the commit phase to track the state of the Offscreen component stack.
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
@@ -2201,6 +2206,7 @@ function commitMutationEffectsOnFiber(
     case HostRoot: {
       const prevProfilerEffectDuration = pushNestedEffectDurations();
 
+      pushRootMutationContext();
       if (supportsResources) {
         prepareToCommitHoistables();
 
@@ -2248,6 +2254,18 @@ function commitMutationEffectsOnFiber(
         root.effectDuration += popNestedEffectDurations(
           prevProfilerEffectDuration,
         );
+      }
+
+      popMutationContext(false);
+
+      if (
+        enableDefaultTransitionIndicator &&
+        rootMutationContext &&
+        includesLoadingIndicatorLanes(lanes)
+      ) {
+        // This root had a mutation. Mark this root as having rendered a manual
+        // loading state.
+        markIndicatorHandled(root);
       }
 
       break;
