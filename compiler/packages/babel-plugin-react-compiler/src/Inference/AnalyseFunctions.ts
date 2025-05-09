@@ -85,13 +85,13 @@ function inferAliasesForCapturing(
   for (const block of fn.body.blocks.values()) {
     for (const instr of block.instructions) {
       const {lvalue, value} = instr;
-      const hasStore =
+      const hasCapture =
         lvalue.effect === Effect.Store ||
         Iterable_some(
           eachInstructionValueOperand(value),
-          operand => operand.effect === Effect.Store,
+          operand => operand.effect === Effect.Capture,
         );
-      if (!hasStore) {
+      if (!hasCapture) {
         continue;
       }
       const operands: Array<Identifier> = [];
@@ -101,6 +101,7 @@ function inferAliasesForCapturing(
       for (const operand of eachInstructionValueOperand(instr.value)) {
         if (
           operand.effect === Effect.Store ||
+          operand.effect === Effect.Mutate ||
           operand.effect === Effect.Capture
         ) {
           operands.push(operand.identifier);
