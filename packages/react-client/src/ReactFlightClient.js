@@ -15,7 +15,7 @@ import type {
   ReactAsyncInfo,
   ReactTimeInfo,
   ReactStackTrace,
-  ReactCallSite,
+  ReactFunctionLocation,
   ReactErrorInfoDev,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
@@ -1074,7 +1074,7 @@ function loadServerReference<A: Iterable<any>, T>(
     bound: null | Thenable<Array<any>>,
     name?: string, // DEV-only
     env?: string, // DEV-only
-    location?: ReactCallSite, // DEV-only
+    location?: ReactFunctionLocation, // DEV-only
   },
   parentObject: Object,
   key: string,
@@ -2226,6 +2226,8 @@ function createFakeFunction<T>(
   sourceMap: null | string,
   line: number,
   col: number,
+  enclosingLine: number,
+  enclosingCol: number,
   environmentName: string,
 ): FakeFunction<T> {
   // This creates a fake copy of a Server Module. It represents a module that has already
@@ -2243,24 +2245,102 @@ function createFakeFunction<T>(
   // This allows us to use the original source map as the source map of this fake file to
   // point to the original source.
   let code;
-  if (line <= 1) {
-    const minSize = encodedName.length + 7;
-    code =
-      '({' +
-      encodedName +
-      ':_=>' +
-      ' '.repeat(col < minSize ? 0 : col - minSize) +
-      '_()})\n' +
-      comment;
+  // Normalize line/col to zero based.
+  if (enclosingLine < 1) {
+    enclosingLine = 0;
   } else {
+    enclosingLine--;
+  }
+  if (enclosingCol < 1) {
+    enclosingCol = 0;
+  } else {
+    enclosingCol--;
+  }
+  if (line < 1) {
+    line = 0;
+  } else {
+    line--;
+  }
+  if (col < 1) {
+    col = 0;
+  } else {
+    col--;
+  }
+  if (line < enclosingLine || (line === enclosingLine && col < enclosingCol)) {
+    // Protection against invalid enclosing information. Should not happen.
+    enclosingLine = 0;
+    enclosingCol = 0;
+  }
+  if (line < 1) {
+    // Fit everything on the first line.
+    const minCol = encodedName.length + 3;
+    let enclosingColDistance = enclosingCol - minCol;
+    if (enclosingColDistance < 0) {
+      enclosingColDistance = 0;
+    }
+    let colDistance = col - enclosingColDistance - minCol - 3;
+    if (colDistance < 0) {
+      colDistance = 0;
+    }
     code =
-      comment +
-      '\n'.repeat(line - 2) +
       '({' +
       encodedName +
-      ':_=>\n' +
-      ' '.repeat(col < 1 ? 0 : col - 1) +
+      ':' +
+      ' '.repeat(enclosingColDistance) +
+      '_=>' +
+      ' '.repeat(colDistance) +
       '_()})';
+  } else if (enclosingLine < 1) {
+    // Fit just the enclosing function on the first line.
+    const minCol = encodedName.length + 3;
+    let enclosingColDistance = enclosingCol - minCol;
+    if (enclosingColDistance < 0) {
+      enclosingColDistance = 0;
+    }
+    code =
+      '({' +
+      encodedName +
+      ':' +
+      ' '.repeat(enclosingColDistance) +
+      '_=>' +
+      '\n'.repeat(line - enclosingLine) +
+      ' '.repeat(col) +
+      '_()})';
+  } else if (enclosingLine === line) {
+    // Fit the enclosing function and callsite on same line.
+    let colDistance = col - enclosingCol - 3;
+    if (colDistance < 0) {
+      colDistance = 0;
+    }
+    code =
+      '\n'.repeat(enclosingLine - 1) +
+      '({' +
+      encodedName +
+      ':\n' +
+      ' '.repeat(enclosingCol) +
+      '_=>' +
+      ' '.repeat(colDistance) +
+      '_()})';
+  } else {
+    // This is the ideal because we can always encode any position.
+    code =
+      '\n'.repeat(enclosingLine - 1) +
+      '({' +
+      encodedName +
+      ':\n' +
+      ' '.repeat(enclosingCol) +
+      '_=>' +
+      '\n'.repeat(line - enclosingLine) +
+      ' '.repeat(col) +
+      '_()})';
+  }
+
+  if (enclosingLine < 1) {
+    // If the function starts at the first line, we append the comment after.
+    code = code + '\n' + comment;
+  } else {
+    // Otherwise we prepend the comment on the first line.
+    code = comment + code;
   }
 
   if (filename.startsWith('/')) {
@@ -2320,7 +2400,7 @@ function buildFakeCallStack<T>(
     const frameKey = frame.join('-') + '-' + environmentName;
     let fn = fakeFunctionCache.get(frameKey);
     if (fn === undefined) {
-      const [name, filename, line, col] = frame;
+      const [name, filename, line, col, enclosingLine, enclosingCol] = frame;
       const findSourceMapURL = response._debugFindSourceMapURL;
       const sourceMap = findSourceMapURL
         ? findSourceMapURL(filename, environmentName)
@@ -2331,6 +2411,8 @@ function buildFakeCallStack<T>(
         sourceMap,
         line,
         col,
+        enclosingLine,
+        enclosingCol,
         environmentName,
       );
       // TODO: This cache should technically live on the response since the _debugFindSourceMapURL

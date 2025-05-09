@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @flow @enableEmitHookGuards @panicThreshold(none) @enableFire
+// @flow @enableEmitHookGuards @panicThreshold:"none" @enableFire
 
 component Foo(useDynamicHook) {
   useDynamicHook();

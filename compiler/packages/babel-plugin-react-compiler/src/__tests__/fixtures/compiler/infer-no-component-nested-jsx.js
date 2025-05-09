@@ -1,4 +1,4 @@
-// @compilationMode(infer)
+// @compilationMode:"infer"
 function Component(props) {
   const result = f(props);
   function helper() {
