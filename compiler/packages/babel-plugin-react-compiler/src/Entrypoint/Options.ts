@@ -98,7 +98,7 @@ export type PluginOptions = {
    * provided rules will skip compilation. To disable this feature (never bailout of compilation
    * even if the default ESLint is suppressed), pass an empty array.
    */
-  eslintSuppressionRules?: Array<string> | null | undefined;
+  eslintSuppressionRules: Array<string> | null | undefined;
 
   flowSuppressions: boolean;
   /*
@@ -106,7 +106,7 @@ export type PluginOptions = {
    */
   ignoreUseNoForget: boolean;
 
-  sources?: Array<string> | ((filename: string) => boolean) | null;
+  sources: Array<string> | ((filename: string) => boolean) | null;
 
   /**
    * The compiler has customized support for react-native-reanimated, intended as a temporary workaround.

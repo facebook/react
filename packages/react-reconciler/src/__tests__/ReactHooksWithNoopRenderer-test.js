@@ -3658,8 +3658,8 @@ describe('ReactHooksWithNoopRenderer', () => {
         'A',
         'Suspend! [A]',
         'Loading',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
+        // pre-warming
+        'Suspend! [A]',
       ]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>

@@ -70,6 +70,8 @@ import {
 
 import assign from 'shared/assign';
 
+import noop from 'shared/noop';
+
 // Provided by www
 const ReactFiberErrorDialogWWW = require('ReactFiberErrorDialog');
 
@@ -206,10 +208,10 @@ function getReactRootElementInContainer(container: any) {
   }
 }
 
-function noopOnRecoverableError() {
-  // This isn't reachable because onRecoverableError isn't called in the
-  // legacy API.
-}
+// This isn't reachable because onRecoverableError isn't called in the
+// legacy API.
+const noopOnRecoverableError = noop;
+const noopOnDefaultTransitionIndicator = noop;
 
 function legacyCreateRootFromDOMContainer(
   container: Container,
@@ -239,6 +241,7 @@ function legacyCreateRootFromDOMContainer(
       wwwOnUncaughtError,
       wwwOnCaughtError,
       noopOnRecoverableError,
+      noopOnDefaultTransitionIndicator,
       // TODO(luna) Support hydration later
       null,
       null,
@@ -277,6 +280,7 @@ function legacyCreateRootFromDOMContainer(
       wwwOnUncaughtError,
       wwwOnCaughtError,
       noopOnRecoverableError,
+      noopOnDefaultTransitionIndicator,
       null, // transitionCallbacks
     );
     container._reactRootContainer = root;

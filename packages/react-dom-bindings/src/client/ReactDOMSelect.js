@@ -12,6 +12,7 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 
 import {getToStringValue, toString} from './ToStringValue';
 import isArray from 'shared/isArray';
+import {queueChangeEvent} from '../events/ReactDOMEventReplaying';
 
 let didWarnValueDefaultValue;
 
@@ -86,7 +87,7 @@ function updateOptions(
   } else {
     // Do not set `select.value` as exact behavior isn't consistent across all
     // browsers for all cases.
-    const selectedValue = toString(getToStringValue((propValue: any)));
+    const selectedValue = toString(getToStringValue(propValue));
     let defaultSelected = null;
     for (let i = 0; i < options.length; i++) {
       if (options[i].value === selectedValue) {
@@ -154,6 +155,59 @@ export function initSelect(
     updateOptions(node, !!multiple, value, false);
   } else if (defaultValue != null) {
     updateOptions(node, !!multiple, defaultValue, true);
+  }
+}
+
+export function hydrateSelect(
+  element: Element,
+  value: ?string,
+  defaultValue: ?string,
+  multiple: ?boolean,
+): void {
+  const node: HTMLSelectElement = (element: any);
+  const options: HTMLOptionsCollection = node.options;
+
+  const propValue: any = value != null ? value : defaultValue;
+
+  let changed = false;
+
+  if (multiple) {
+    const selectedValues = (propValue: ?Array<string>);
+    const selectedValue: {[string]: boolean} = {};
+    if (selectedValues != null) {
+      for (let i = 0; i < selectedValues.length; i++) {
+        // Prefix to avoid chaos with special keys.
+        selectedValue['$' + selectedValues[i]] = true;
+      }
+    }
+    for (let i = 0; i < options.length; i++) {
+      const expectedSelected = selectedValue.hasOwnProperty(
+        '$' + options[i].value,
+      );
+      if (options[i].selected !== expectedSelected) {
+        changed = true;
+        break;
+      }
+    }
+  } else {
+    let selectedValue =
+      propValue == null ? null : toString(getToStringValue(propValue));
+    for (let i = 0; i < options.length; i++) {
+      if (selectedValue == null && !options[i].disabled) {
+        // We expect the first non-disabled option to be selected if the selected is null.
+        selectedValue = options[i].value;
+      }
+      const expectedSelected = options[i].value === selectedValue;
+      if (options[i].selected !== expectedSelected) {
+        changed = true;
+        break;
+      }
+    }
+  }
+  if (changed) {
+    // If the current selection is different than our initial that suggests that the user
+    // changed it before hydration. Queue a replay of the change event.
+    queueChangeEvent(node);
   }
 }
 

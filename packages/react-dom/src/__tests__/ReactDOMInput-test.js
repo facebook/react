@@ -1536,10 +1536,14 @@ describe('ReactDOMInput', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
 
-    // Currently, we don't fire onChange when hydrating
-    assertLog([]);
-    // Strangely, we leave `b` checked even though we rendered A with
-    // checked={true} and B with checked={false}. Arguably this is a bug.
+    if (gate(flags => flags.enableHydrationChangeEvent)) {
+      // We replayed the click since the value changed before hydration.
+      assertLog(['click b']);
+    } else {
+      assertLog([]);
+      // Strangely, we leave `b` checked even though we rendered A with
+      // checked={true} and B with checked={false}. Arguably this is a bug.
+    }
     expect(a.checked).toBe(false);
     expect(b.checked).toBe(true);
     expect(c.checked).toBe(false);
@@ -1554,22 +1558,35 @@ describe('ReactDOMInput', () => {
       dispatchEventOnNode(c, 'click');
     });
 
-    // then since C's onClick doesn't set state, A becomes rechecked.
     assertLog(['click c']);
-    expect(a.checked).toBe(true);
-    expect(b.checked).toBe(false);
-    expect(c.checked).toBe(false);
+    if (gate(flags => flags.enableHydrationChangeEvent)) {
+      // then since C's onClick doesn't set state, B becomes rechecked.
+      expect(a.checked).toBe(false);
+      expect(b.checked).toBe(true);
+      expect(c.checked).toBe(false);
+    } else {
+      // then since C's onClick doesn't set state, A becomes rechecked
+      // since in this branch we didn't replay to select B.
+      expect(a.checked).toBe(true);
+      expect(b.checked).toBe(false);
+      expect(c.checked).toBe(false);
+    }
     expect(isCheckedDirty(a)).toBe(true);
     expect(isCheckedDirty(b)).toBe(true);
     expect(isCheckedDirty(c)).toBe(true);
     assertInputTrackingIsCurrent(container);
 
-    // And we can also change to B properly after hydration.
     await act(async () => {
       setUntrackedChecked.call(b, true);
       dispatchEventOnNode(b, 'click');
     });
-    assertLog(['click b']);
+    if (gate(flags => flags.enableHydrationChangeEvent)) {
+      // Since we already had this selected, this doesn't trigger a change again.
+      assertLog([]);
+    } else {
+      // And we can also change to B properly after hydration.
+      assertLog(['click b']);
+    }
     expect(a.checked).toBe(false);
     expect(b.checked).toBe(true);
     expect(c.checked).toBe(false);
@@ -1628,8 +1645,12 @@ describe('ReactDOMInput', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
 
-    // Currently, we don't fire onChange when hydrating
-    assertLog([]);
+    if (gate(flags => flags.enableHydrationChangeEvent)) {
+      // We replayed the click since the value changed before hydration.
+      assertLog(['click b']);
+    } else {
+      assertLog([]);
+    }
     expect(a.checked).toBe(false);
     expect(b.checked).toBe(true);
     expect(c.checked).toBe(false);
