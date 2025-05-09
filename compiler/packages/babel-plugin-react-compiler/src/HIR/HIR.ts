@@ -300,6 +300,10 @@ export type FunctionEffect =
       places: ReadonlySet<Place>;
       effect: Effect;
       loc: SourceLocation;
+    }
+  | {
+      kind: 'CaptureEffect';
+      places: ReadonlySet<Place>;
     };
 
 /*
