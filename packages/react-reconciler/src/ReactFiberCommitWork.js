@@ -59,6 +59,7 @@ import {
   enableComponentPerformanceTrack,
   enableViewTransition,
   enableFragmentRefs,
+  enableEagerAlternateStateNodeCleanup,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -2169,6 +2170,11 @@ function commitMutationEffectsOnFiber(
               );
             }
           }
+        }
+      }
+      if (enableEagerAlternateStateNodeCleanup) {
+        if (finishedWork.alternate !== null) {
+          finishedWork.alternate.stateNode = finishedWork.stateNode;
         }
       }
       break;

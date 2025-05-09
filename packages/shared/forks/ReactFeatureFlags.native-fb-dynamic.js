@@ -22,6 +22,7 @@ export const enableObjectFiber = __VARIANT__;
 export const enableHiddenSubtreeInsertionEffectCleanup = __VARIANT__;
 export const enablePersistedModeClonedFlag = __VARIANT__;
 export const enableShallowPropDiffing = __VARIANT__;
+export const enableEagerAlternateStateNodeCleanup = __VARIANT__;
 export const passChildrenWhenCloningPersistedNodes = __VARIANT__;
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = __VARIANT__;
