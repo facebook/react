@@ -56083,6 +56083,7 @@ function compileProgram(program, pass) {
         filename: pass.filename,
         code: pass.code,
         suppressions,
+        hasModuleScopeOptOut: findDirectiveDisablingMemoization(program.node.directives) != null,
     });
     const queue = findFunctionsToCompile(program, pass, programContext);
     const compiledFns = [];
@@ -56113,7 +56114,16 @@ function compileProgram(program, pass) {
             });
         }
     }
-    if (findDirectiveDisablingMemoization(program.node.directives) != null) {
+    if (programContext.hasModuleScopeOptOut) {
+        if (compiledFns.length > 0) {
+            const error = new CompilerError();
+            error.pushErrorDetail(new CompilerErrorDetail({
+                reason: 'Unexpected compiled functions when module scope opt-out is present',
+                severity: ErrorSeverity.Invariant,
+                loc: null,
+            }));
+            handleError(error, programContext, null);
+        }
         return null;
     }
     applyCompiledFunctions(program, compiledFns, pass, programContext);
@@ -56197,10 +56207,7 @@ function processFn(fn, fnType, programContext) {
         prunedMemoBlocks: compiledFn.prunedMemoBlocks,
         prunedMemoValues: compiledFn.prunedMemoValues,
     });
-    if (directives.optIn != null) {
-        return compiledFn;
-    }
-    else if (programContext.opts.compilationMode === 'annotation') {
+    if (programContext.hasModuleScopeOptOut) {
         return null;
     }
     else if (programContext.opts.noEmit) {
@@ -56209,6 +56216,10 @@ function processFn(fn, fnType, programContext) {
                 programContext.inferredEffectLocations.add(loc);
             }
         }
+        return null;
+    }
+    else if (programContext.opts.compilationMode === 'annotation' &&
+        directives.optIn == null) {
         return null;
     }
     else {
@@ -56664,7 +56675,7 @@ function validateRestrictedImports(path, { validateBlocklistedImports }) {
     }
 }
 class ProgramContext {
-    constructor({ program, suppressions, opts, filename, code, }) {
+    constructor({ program, suppressions, opts, filename, code, hasModuleScopeOptOut, }) {
         this.alreadyCompiled = new (WeakSet !== null && WeakSet !== void 0 ? WeakSet : Set)();
         this.knownReferencedNames = new Set();
         this.imports = new Map();
@@ -56676,6 +56687,7 @@ class ProgramContext {
         this.code = code;
         this.reactRuntimeModule = getReactCompilerRuntimeModule(opts.target);
         this.suppressions = suppressions;
+        this.hasModuleScopeOptOut = hasModuleScopeOptOut;
     }
     isHookName(name) {
         if (this.opts.environment.hookPattern == null) {
