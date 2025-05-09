@@ -40446,52 +40446,6 @@ function evaluateInstruction(constants, instr) {
             }
             return null;
         }
-        case 'TemplateLiteral': {
-            if (value.subexprs.length === 0) {
-                const result = {
-                    kind: 'Primitive',
-                    value: value.quasis.map(q => q.cooked).join(''),
-                    loc: value.loc,
-                };
-                instr.value = result;
-                return result;
-            }
-            if (value.subexprs.length !== value.quasis.length - 1) {
-                return null;
-            }
-            if (value.quasis.some(q => q.cooked === undefined)) {
-                return null;
-            }
-            let quasiIndex = 0;
-            let resultString = value.quasis[quasiIndex].cooked;
-            ++quasiIndex;
-            for (const subExpr of value.subexprs) {
-                const subExprValue = read(constants, subExpr);
-                if (!subExprValue || subExprValue.kind !== 'Primitive') {
-                    return null;
-                }
-                const expressionValue = subExprValue.value;
-                if (typeof expressionValue !== 'number' &&
-                    typeof expressionValue !== 'string' &&
-                    typeof expressionValue !== 'boolean' &&
-                    !(typeof expressionValue === 'object' && expressionValue === null)) {
-                    return null;
-                }
-                const suffix = value.quasis[quasiIndex].cooked;
-                ++quasiIndex;
-                if (suffix === undefined) {
-                    return null;
-                }
-                resultString = resultString.concat(expressionValue, suffix);
-            }
-            const result = {
-                kind: 'Primitive',
-                value: resultString,
-                loc: value.loc,
-            };
-            instr.value = result;
-            return result;
-        }
         case 'LoadLocal': {
             const placeValue = read(constants, value.place);
             if (placeValue !== null) {

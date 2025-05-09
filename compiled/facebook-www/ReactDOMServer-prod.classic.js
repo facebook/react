@@ -3121,13 +3121,13 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
-function noop() {}
 var SuspenseException = Error(formatProdErrorMessage(460));
+function noop$2() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
     ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop, noop), (thenable = index));
+    : index !== thenable && (thenable.then(noop$2, noop$2), (thenable = index));
   switch (thenable.status) {
     case "fulfilled":
       return thenable.value;
@@ -3135,7 +3135,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       throw thenable.reason;
     default:
       "string" === typeof thenable.status
-        ? thenable.then(noop, noop)
+        ? thenable.then(noop$2, noop$2)
         : ((thenableState = thenable),
           (thenableState.status = "pending"),
           thenableState.then(
@@ -3386,6 +3386,7 @@ function unwrapThenable(thenable) {
 function unsupportedRefresh() {
   throw Error(formatProdErrorMessage(393));
 }
+function noop$1() {}
 var HooksDispatcher = {
     readContext: function (context) {
       return context._currentValue2;
@@ -3416,16 +3417,16 @@ var HooksDispatcher = {
     useState: function (initialState) {
       return useReducer(basicStateReducer, initialState);
     },
-    useInsertionEffect: noop,
-    useLayoutEffect: noop,
+    useInsertionEffect: noop$1,
+    useLayoutEffect: noop$1,
     useCallback: function (callback, deps) {
       return useMemo(function () {
         return callback;
       }, deps);
     },
-    useImperativeHandle: noop,
-    useEffect: noop,
-    useDebugValue: noop,
+    useImperativeHandle: noop$1,
+    useEffect: noop$1,
+    useDebugValue: noop$1,
     useDeferredValue: function (value, initialValue) {
       resolveCurrentlyRenderingComponent();
       return void 0 !== initialValue ? initialValue : value;
@@ -3700,6 +3701,7 @@ function defaultErrorHandler(error) {
   } else console.error(error);
   return null;
 }
+function noop() {}
 function RequestInstance(
   resumableState,
   renderState,
@@ -6285,4 +6287,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-classic-21fdf308-20250508";
+exports.version = "19.2.0-www-classic-9518f118-20250508";

@@ -90,9 +90,8 @@ var pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
 pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
-var isArrayImpl = Array.isArray;
-function noop() {}
-var ReactSharedInternals = { H: null, A: null, T: null, S: null },
+var isArrayImpl = Array.isArray,
+  ReactSharedInternals = { H: null, A: null, T: null, S: null },
   hasOwnProperty = Object.prototype.hasOwnProperty;
 function ReactElement(type, key, self, source, owner, props) {
   self = props.ref;
@@ -153,6 +152,7 @@ function getElementKey(element, index) {
     ? escape("" + element.key)
     : index.toString(36);
 }
+function noop$1() {}
 function resolveThenable(thenable) {
   switch (thenable.status) {
     case "fulfilled":
@@ -162,7 +162,7 @@ function resolveThenable(thenable) {
     default:
       switch (
         ("string" === typeof thenable.status
-          ? thenable.then(noop, noop)
+          ? thenable.then(noop$1, noop$1)
           : ((thenable.status = "pending"),
             thenable.then(
               function (fulfilledValue) {
@@ -383,6 +383,7 @@ function startTransition(scope, options) {
       (ReactSharedInternals.T = prevTransition);
   }
 }
+function noop() {}
 function addTransitionType(type) {
   if (enableViewTransition) {
     var transition = ReactSharedInternals.T;
@@ -635,4 +636,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.2.0-www-classic-21fdf308-20250508";
+exports.version = "19.2.0-www-classic-9518f118-20250508";

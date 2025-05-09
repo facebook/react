@@ -59,7 +59,6 @@ __DEV__ &&
       this.refs = emptyObject;
       this.updater = updater || ReactNoopUpdateQueue;
     }
-    function noop() {}
     function testStringCoercion(value) {
       return "" + value;
     }
@@ -384,6 +383,7 @@ __DEV__ &&
         ? (checkKeyStringCoercion(element.key), escape("" + element.key))
         : index.toString(36);
     }
+    function noop$1() {}
     function resolveThenable(thenable) {
       switch (thenable.status) {
         case "fulfilled":
@@ -393,7 +393,7 @@ __DEV__ &&
         default:
           switch (
             ("string" === typeof thenable.status
-              ? thenable.then(noop, noop)
+              ? thenable.then(noop$1, noop$1)
               : ((thenable.status = "pending"),
                 thenable.then(
                   function (fulfilledValue) {
@@ -646,6 +646,7 @@ __DEV__ &&
           (ReactSharedInternals.T = prevTransition);
       }
     }
+    function noop() {}
     function addTransitionType(type) {
       if (enableViewTransition) {
         var transition = ReactSharedInternals.T;
@@ -1537,7 +1538,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-www-classic-21fdf308-20250508";
+    exports.version = "19.2.0-www-classic-9518f118-20250508";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
