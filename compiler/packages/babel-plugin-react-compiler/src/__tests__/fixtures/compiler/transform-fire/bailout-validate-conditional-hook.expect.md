@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableFire @panicThreshold(none)
+// @enableFire @panicThreshold:"none"
 import {fire, useEffect} from 'react';
 import {Stringify} from 'shared-runtime';
 
@@ -29,7 +29,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime"; // @enableFire @panicThreshold(none)
+import { useFire } from "react/compiler-runtime"; // @enableFire @panicThreshold:"none"
 import { fire, useEffect } from "react";
 import { Stringify } from "shared-runtime";
 

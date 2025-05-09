@@ -176,6 +176,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
+import noop from 'shared/noop';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
 import {SuspenseException, getSuspendedThenable} from './ReactFizzThenable';
@@ -424,8 +425,6 @@ function defaultErrorHandler(error: mixed) {
   }
   return null;
 }
-
-function noop(): void {}
 
 function RequestInstance(
   this: $FlowFixMe,
@@ -2274,23 +2273,7 @@ function renderViewTransition(
 ) {
   const prevKeyPath = task.keyPath;
   task.keyPath = keyPath;
-  if (props.name != null && props.name !== 'auto') {
-    renderNodeDestructive(request, task, props.children, -1);
-  } else {
-    // This will be auto-assigned a name which claims a "useId" slot.
-    // This component materialized an id. We treat this as its own level, with
-    // a single "child" slot.
-    const prevTreeContext = task.treeContext;
-    const totalChildren = 1;
-    const index = 0;
-    // Modify the id context. Because we'll need to reset this if something
-    // suspends or errors, we'll use the non-destructive render path.
-    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
-    renderNode(request, task, props.children, -1);
-    // Like the other contexts, this does not need to be in a finally block
-    // because renderNode takes care of unwinding the stack.
-    task.treeContext = prevTreeContext;
-  }
+  renderNodeDestructive(request, task, props.children, -1);
   task.keyPath = prevKeyPath;
 }
 

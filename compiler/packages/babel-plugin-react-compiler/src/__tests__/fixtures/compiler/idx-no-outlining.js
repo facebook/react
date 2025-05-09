@@ -1,4 +1,4 @@
-// @customMacros(idx)
+// @customMacros:"idx"
 import idx from 'idx';
 
 function Component(props) {

@@ -1,4 +1,4 @@
-// @inferEffectDependencies @panicThreshold(none)
+// @inferEffectDependencies @panicThreshold:"none"
 
 import {useEffect, useRef} from 'react';
 import {print} from 'shared-runtime';
