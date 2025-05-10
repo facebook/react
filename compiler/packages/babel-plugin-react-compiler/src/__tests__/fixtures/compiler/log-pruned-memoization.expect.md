@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @logger
+// @loggerTestOnly
 import {createContext, use, useState} from 'react';
 import {
   Stringify,
@@ -56,7 +56,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @logger
+import { c as _c } from "react/compiler-runtime"; // @loggerTestOnly
 import { createContext, use, useState } from "react";
 import {
   Stringify,
@@ -129,8 +129,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":10,"column":0,"index":159},"end":{"line":33,"column":1,"index":903},"filename":"log-pruned-memoization.ts"},"fnName":"Component","memoSlots":6,"memoBlocks":2,"memoValues":2,"prunedMemoBlocks":2,"prunedMemoValues":3}
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":37,"column":0,"index":939},"end":{"line":43,"column":1,"index":1037},"filename":"log-pruned-memoization.ts"},"fnName":"Wrapper","memoSlots":1,"memoBlocks":1,"memoValues":1,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":10,"column":0,"index":167},"end":{"line":33,"column":1,"index":911},"filename":"log-pruned-memoization.ts"},"fnName":"Component","memoSlots":6,"memoBlocks":2,"memoValues":2,"prunedMemoBlocks":2,"prunedMemoValues":3}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":37,"column":0,"index":947},"end":{"line":43,"column":1,"index":1045},"filename":"log-pruned-memoization.ts"},"fnName":"Wrapper","memoSlots":1,"memoBlocks":1,"memoValues":1,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

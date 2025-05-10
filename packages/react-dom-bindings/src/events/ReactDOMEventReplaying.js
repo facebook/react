@@ -56,9 +56,11 @@ import {
   attemptHydrationAtCurrentPriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
 
+import {enableHydrationChangeEvent} from 'shared/ReactFeatureFlags';
+
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
-type PointerEvent = Event & {
+type PointerEventType = Event & {
   pointerId: number,
   relatedTarget: EventTarget | null,
   ...
@@ -83,6 +85,8 @@ let queuedMouse: null | QueuedReplayableEvent = null;
 const queuedPointers: Map<number, QueuedReplayableEvent> = new Map();
 const queuedPointerCaptures: Map<number, QueuedReplayableEvent> = new Map();
 // We could consider replaying selectionchange and touchmoves too.
+
+const queuedChangeEventTargets: Array<EventTarget> = [];
 
 type QueuedHydrationTarget = {
   blockedOn: null | Container | ActivityInstance | SuspenseInstance,
@@ -164,13 +168,13 @@ export function clearIfContinuousEvent(
       break;
     case 'pointerover':
     case 'pointerout': {
-      const pointerId = ((nativeEvent: any): PointerEvent).pointerId;
+      const pointerId = ((nativeEvent: any): PointerEventType).pointerId;
       queuedPointers.delete(pointerId);
       break;
     }
     case 'gotpointercapture':
     case 'lostpointercapture': {
-      const pointerId = ((nativeEvent: any): PointerEvent).pointerId;
+      const pointerId = ((nativeEvent: any): PointerEventType).pointerId;
       queuedPointerCaptures.delete(pointerId);
       break;
     }
@@ -268,7 +272,7 @@ export function queueIfContinuousEvent(
       return true;
     }
     case 'pointerover': {
-      const pointerEvent = ((nativeEvent: any): PointerEvent);
+      const pointerEvent = ((nativeEvent: any): PointerEventType);
       const pointerId = pointerEvent.pointerId;
       queuedPointers.set(
         pointerId,
@@ -284,7 +288,7 @@ export function queueIfContinuousEvent(
       return true;
     }
     case 'gotpointercapture': {
-      const pointerEvent = ((nativeEvent: any): PointerEvent);
+      const pointerEvent = ((nativeEvent: any): PointerEventType);
       const pointerId = pointerEvent.pointerId;
       queuedPointerCaptures.set(
         pointerId,
@@ -421,6 +425,31 @@ function attemptReplayContinuousQueuedEventInMap(
   }
 }
 
+function replayChangeEvent(target: EventTarget): void {
+  // Dispatch a fake "change" event for the input.
+  const element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement =
+    (target: any);
+  if (element.nodeName === 'INPUT') {
+    if (element.type === 'checkbox' || element.type === 'radio') {
+      // Checkboxes always fire a click event regardless of how the change was made.
+      const EventCtr =
+        typeof PointerEvent === 'function' ? PointerEvent : Event;
+      target.dispatchEvent(new EventCtr('click', {bubbles: true}));
+      // For checkboxes the input event uses the Event constructor instead of InputEvent.
+      target.dispatchEvent(new Event('input', {bubbles: true}));
+    } else {
+      if (typeof InputEvent === 'function') {
+        target.dispatchEvent(new InputEvent('input', {bubbles: true}));
+      }
+    }
+  } else if (element.nodeName === 'TEXTAREA') {
+    if (typeof InputEvent === 'function') {
+      target.dispatchEvent(new InputEvent('input', {bubbles: true}));
+    }
+  }
+  target.dispatchEvent(new Event('change', {bubbles: true}));
+}
+
 function replayUnblockedEvents() {
   hasScheduledReplayAttempt = false;
   // Replay any continuous events.
@@ -435,6 +464,29 @@ function replayUnblockedEvents() {
   }
   queuedPointers.forEach(attemptReplayContinuousQueuedEventInMap);
   queuedPointerCaptures.forEach(attemptReplayContinuousQueuedEventInMap);
+  if (enableHydrationChangeEvent) {
+    for (let i = 0; i < queuedChangeEventTargets.length; i++) {
+      replayChangeEvent(queuedChangeEventTargets[i]);
+    }
+    queuedChangeEventTargets.length = 0;
+  }
+}
+
+export function flushEventReplaying(): void {
+  // Synchronously flush any event replaying so that it gets observed before
+  // any new updates are applied.
+  if (hasScheduledReplayAttempt) {
+    replayUnblockedEvents();
+  }
+}
+
+export function queueChangeEvent(target: EventTarget): void {
+  if (enableHydrationChangeEvent) {
+    queuedChangeEventTargets.push(target);
+    if (!hasScheduledReplayAttempt) {
+      hasScheduledReplayAttempt = true;
+    }
+  }
 }
 
 function scheduleCallbackIfUnblocked(
@@ -445,10 +497,12 @@ function scheduleCallbackIfUnblocked(
     queuedEvent.blockedOn = null;
     if (!hasScheduledReplayAttempt) {
       hasScheduledReplayAttempt = true;
-      // Schedule a callback to attempt replaying as many events as are
-      // now unblocked. This first might not actually be unblocked yet.
-      // We could check it early to avoid scheduling an unnecessary callback.
-      scheduleCallback(NormalPriority, replayUnblockedEvents);
+      if (!enableHydrationChangeEvent) {
+        // Schedule a callback to attempt replaying as many events as are
+        // now unblocked. This first might not actually be unblocked yet.
+        // We could check it early to avoid scheduling an unnecessary callback.
+        scheduleCallback(NormalPriority, replayUnblockedEvents);
+      }
     }
   }
 }

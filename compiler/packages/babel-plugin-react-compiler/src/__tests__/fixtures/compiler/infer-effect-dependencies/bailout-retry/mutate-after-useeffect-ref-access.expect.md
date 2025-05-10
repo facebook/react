@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @inferEffectDependencies @panicThreshold(none)
+// @inferEffectDependencies @panicThreshold:"none"
 
 import {useEffect, useRef} from 'react';
 import {print} from 'shared-runtime';
@@ -19,7 +19,7 @@ function Component({arrRef}) {
 ## Code
 
 ```javascript
-// @inferEffectDependencies @panicThreshold(none)
+// @inferEffectDependencies @panicThreshold:"none"
 
 import { useEffect, useRef } from "react";
 import { print } from "shared-runtime";

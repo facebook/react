@@ -48,6 +48,7 @@ import {
   unhideDehydratedBoundary,
   unhideInstance,
   unhideTextInstance,
+  commitHydratedInstance,
   commitHydratedContainer,
   commitHydratedActivityInstance,
   commitHydratedSuspenseInstance,
@@ -81,6 +82,28 @@ export function commitHostMount(finishedWork: Fiber) {
       );
     } else {
       commitMount(instance, type, props, finishedWork);
+    }
+  } catch (error) {
+    captureCommitPhaseError(finishedWork, finishedWork.return, error);
+  }
+}
+
+export function commitHostHydratedInstance(finishedWork: Fiber) {
+  const type = finishedWork.type;
+  const props = finishedWork.memoizedProps;
+  const instance: Instance = finishedWork.stateNode;
+  try {
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        commitHydratedInstance,
+        instance,
+        type,
+        props,
+        finishedWork,
+      );
+    } else {
+      commitHydratedInstance(instance, type, props, finishedWork);
     }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);

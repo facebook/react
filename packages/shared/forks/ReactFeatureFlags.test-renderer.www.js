@@ -39,7 +39,6 @@ export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableMoveBefore = false;
 export const enableRenderableContext = false;
-export const enableFabricCompleteRootInCommitPhase = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = true;
 
 export const enableRetryLaneExpiration = false;
@@ -72,7 +71,6 @@ export const renameElementSymbol = false;
 
 export const enableObjectFiber = false;
 export const enableShallowPropDiffing = false;
-export const enableSiblingPrerendering = true;
 
 export const enableHydrationLaneScheduling = true;
 
@@ -86,6 +84,8 @@ export const enableLazyPublicInstanceInFabric = false;
 export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
 export const enableSrcObject = false;
+export const enableHydrationChangeEvent = false;
+export const enableDefaultTransitionIndicator = false;
 
 export const enableFragmentRefs = false;
 export const ownerStackLimit = 1e4;
