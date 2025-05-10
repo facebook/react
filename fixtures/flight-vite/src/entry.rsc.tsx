@@ -19,7 +19,7 @@ export default async function handler(request: Request): Promise<Response> {
   function RscRoot() {
     return (
       <>
-        <Resources />
+        <Resources nonce={nonce} />
         <Root url={new URL(request.url)} />
       </>
     );
@@ -90,7 +90,8 @@ async function renderRsc(
   if (options.nonce) {
     headers.set(
       'Content-Security-Policy',
-      // allow eval during dev for `createFakeFunction` eval
+      // allow eval during dev for `createFakeFunction` eval.
+      // TODO: style nonce
       `script-src 'nonce-${options.nonce}' ${import.meta.env.DEV ? `'unsafe-eval'` : ''};`,
     );
   }

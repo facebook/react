@@ -43,7 +43,7 @@ export function prepareDestination(id: string, nonce?: string) {
       });
     }
     for (const href of deps.css) {
-      ReactDOM.preinit(href, {as: 'style'});
+      ReactDOM.preinit(href, {as: 'style', nonce});
     }
   }
 }
