@@ -7,6 +7,8 @@ import {
   type Plugin,
   type ResolvedConfig,
   type ViteDevServer,
+  DevEnvironment,
+  isCSSRequest,
 } from 'vite';
 import {createRequestListener} from '@mjackson/node-fetch-server';
 import path from 'node:path';
@@ -34,8 +36,6 @@ export default function vitePluginRsc(rscOptions: {
     browser: string;
     rsc: string;
     ssr: string;
-    // This plugin supports css as a dedicated entry, but framework normally has a logic to crawl css imports.
-    css?: string;
   };
 }): Plugin[] {
   return [
@@ -158,6 +158,8 @@ export default function vitePluginRsc(rscOptions: {
         };
       },
       async hotUpdate(ctx) {
+        if (isCSSRequest(ctx.file)) return;
+
         const ids = ctx.modules.map(mod => mod.id).filter(v => v !== null);
         if (ids.length === 0) return;
 
@@ -217,10 +219,7 @@ export default function vitePluginRsc(rscOptions: {
     },
     createVirtualPlugin('vite-rsc/browser-entry', function () {
       let code = '';
-      if (rscOptions.entries.css) {
-        // importing css is required for css hmr
-        code += `import ${JSON.stringify(rscOptions.entries.css)};\n`;
-      }
+      code += `import "virtual:vite-rsc/rsc-css-browser";\n`;
       if (this.environment.mode === 'dev') {
         // ensure react hmr globas before running user react code
         code += `
@@ -257,7 +256,7 @@ export default function vitePluginRsc(rscOptions: {
               bootstrapModules: ['/@id/__x00__virtual:vite-rsc/browser-entry'],
               deps: {
                 js: [],
-                css: rscOptions.entries.css ? [rscOptions.entries.css] : [],
+                css: [],
               },
             },
             clientReferenceDeps: {},
@@ -355,6 +354,7 @@ export default function vitePluginRsc(rscOptions: {
     ...vitePluginUseClient({clientReferences}),
     ...vitePluginUseServer({serverReferences}),
     ...vitePluginFindSourceMapURL({endpoint: '/__vite_rsc_source_map'}),
+    ...vitePluginRscCss({entries: rscOptions.entries}),
   ];
 }
 
@@ -658,4 +658,141 @@ async function findSourceMapURL(
     // fix sources to match Vite's module url on browser
     return {...map, sources: [base + mod.url]};
   }
+}
+
+//
+// css support
+// - code split for each client reference
+// - single bundle for rsc environment
+//
+
+export function vitePluginRscCss({
+  entries,
+}: {
+  entries: {rsc: string};
+}): Plugin[] {
+  function collectCss(environment: DevEnvironment, entryId: string) {
+    const visited = new Set<string>();
+    const cssIds = new Set<string>();
+
+    function recurse(id: string) {
+      if (visited.has(id)) {
+        return;
+      }
+      visited.add(id);
+      const mod = environment.moduleGraph.getModuleById(id);
+      for (const next of mod?.importedModules ?? []) {
+        if (next.id) {
+          if (isCSSRequest(next.id)) {
+            cssIds.add(next.id);
+          } else {
+            recurse(next.id);
+          }
+        }
+      }
+    }
+
+    recurse(entryId);
+
+    const hrefs = [...cssIds].map(id =>
+      normalizeViteImportAnalysisUrl(server.environments.client, id),
+    );
+    return {ids: [...cssIds], hrefs};
+  }
+
+  async function collectCssByUrl(
+    environment: DevEnvironment,
+    entryUrl: string,
+  ) {
+    const entryMod = await environment.moduleGraph.getModuleByUrl(entryUrl);
+    return collectCss(environment, entryMod!.id!);
+  }
+
+  function invalidateModule(environment: DevEnvironment, id: string) {
+    const mod = environment.moduleGraph.getModuleById(id);
+    if (mod) {
+      environment.moduleGraph.invalidateModule(mod);
+    }
+  }
+
+  // collect during rsc build and pass it to browser build.
+  const rscCssIdsBuild = new Set<string>();
+
+  return [
+    {
+      name: 'rsc:css',
+      hotUpdate(ctx) {
+        if (this.environment.name === 'rsc' && ctx.modules.length > 0) {
+          // simple virtual invalidation to ensure fresh css list
+          invalidateModule(
+            server.environments.ssr,
+            '\0virtual:vite-rsc/css/rsc',
+          );
+          invalidateModule(
+            server.environments.client,
+            '\0virtual:vite-rsc/rsc-css-browser',
+          );
+        }
+      },
+      transform(_code, id) {
+        if (
+          this.environment.mode === 'build' &&
+          this.environment.name === 'rsc'
+        ) {
+          if (isCSSRequest(id)) {
+            rscCssIdsBuild.add(id);
+          }
+        }
+      },
+    },
+    createVirtualPlugin('vite-rsc/rsc-css', async function () {
+      assert(this.environment.name === 'rsc');
+      if (this.environment.mode === 'build') {
+        // during build, css are injected through AssetsManifest.entry.deps.css
+        return `export default []`;
+      }
+      const {hrefs} = await collectCssByUrl(
+        server.environments.rsc!,
+        entries.rsc,
+      );
+      return `export default ${JSON.stringify(hrefs, null, 2)}`;
+    }),
+    createVirtualPlugin('vite-rsc/rsc-css-browser', async function () {
+      assert(this.environment.name === 'client');
+      let ids: string[];
+      if (this.environment.mode === 'build') {
+        ids = [...rscCssIdsBuild];
+      } else {
+        const collected = await collectCssByUrl(
+          server.environments.rsc!,
+          entries.rsc,
+        );
+        ids = collected.ids;
+      }
+      ids = ids.map(id => id.replace(/^\0/, ''));
+      return ids.map(id => `import ${JSON.stringify(id)};\n`).join('');
+    }),
+    {
+      name: 'rsc:css/dev-ssr-virtual',
+      resolveId(source) {
+        if (source.startsWith('virtual:vite-rsc/css/dev-ssr/')) {
+          return '\0' + source;
+        }
+      },
+      async load(id) {
+        if (id.startsWith('\0virtual:vite-rsc/css/dev-ssr/')) {
+          id = id.slice('\0virtual:vite-rsc/css/dev-ssr/'.length);
+          const mod =
+            await server.environments.ssr.moduleGraph.getModuleByUrl(id);
+          if (!mod?.id || !mod?.file) {
+            return `export default []`;
+          }
+          const {hrefs} = collectCss(server.environments.ssr, mod.id);
+          // invalidate virtual module on file change to reflect added/deleted css import
+          this.addWatchFile(mod.file);
+          return `export default ${JSON.stringify(hrefs)}`;
+        }
+      },
+    },
+  ];
 }

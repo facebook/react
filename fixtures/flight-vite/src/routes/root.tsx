@@ -4,12 +4,13 @@ import {
   resetServerCounter,
   getServerCounter,
 } from './action';
-import {ClientCounter, Hydrated} from './client';
+import {ClientCounter, Hydrated, TestStyleClient} from './client';
 import {
   TestActionFromClient,
   TestTemporaryReference,
   TestUseActionState,
 } from './action-from-client/client';
+import './root.css';
 
 export function Root(props: {url: URL}) {
   return (
@@ -21,8 +22,10 @@ export function Root(props: {url: URL}) {
         <h4>Test</h4>
         <div>
           <Hydrated />
+          <input data-testid="client-state" placeholder="client-state" />
         </div>
-        <div className="test-style">test-style</div>
+        <TestStyleClient />
+        <div className="test-style-server">test-style-server</div>
         <div>
           <a href="./suspense">test-suspense</a>{' '}
           {props.url.pathname === '/suspense' && <TestSuspense />}

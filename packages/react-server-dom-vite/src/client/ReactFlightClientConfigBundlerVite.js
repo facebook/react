@@ -41,8 +41,7 @@ export function prepareDestinationForModule(
   moduleLoading: ModuleLoading,
   nonce: ?string,
   metadata: ClientReferenceMetadata,
-) {
-}
+) {}
 
 export function resolveClientReference<T>(
   bundlerConfig: ServerConsumerModuleMap,

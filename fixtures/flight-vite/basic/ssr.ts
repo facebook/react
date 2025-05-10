@@ -7,9 +7,18 @@ import * as ReactDOM from 'react-dom';
 
 export {assetsManifest};
 
-export function loadModule(id: string) {
+// TODO: how to support style nonce?
+
+export async function loadModule(id: string) {
   if (import.meta.env.DEV) {
-    return import(/* @vite-ignore */ id);
+    const mod = await import(/* @vite-ignore */ id);
+    const modCss = await import(
+      /* @vite-ignore */ '/@id/__x00__virtual:vite-rsc/css/dev-ssr/' + id
+    );
+    for (const href of modCss.default) {
+      ReactDOM.preinit(href, {as: 'style'});
+    }
+    return mod;
   } else {
     return clientReferences[id]();
   }
@@ -22,17 +31,19 @@ export function prepareDestination(id: string, nonce?: string) {
     const deps = assetsManifest.clientReferenceDeps[id];
     for (const href of deps.js) {
       // ReactDOM.preloadModule API doesn't support nonce currnetly so access internal one which works.
-      // cf. https://github.com/facebook/react/pull/33120
+      // https://github.com/facebook/react/pull/33120
       const preloadModule = (ReactDOM as any)
         .__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.d.m;
       preloadModule(href, {
         as: 'script',
-        // vite doesn't allow configuring crossorigin at the moment,
-        // so we can hard code it as well.
+        // vite doesn't allow configuring crossorigin at the moment, so we can hard code it as well.
         // https://github.com/vitejs/vite/issues/6648
         crossOrigin: '',
         nonce,
       });
+    }
+    for (const href of deps.css) {
+      ReactDOM.preinit(href, {as: 'style'});
     }
   }
 }

@@ -3,7 +3,7 @@ import * as ReactServer from 'react-server-dom-vite/server.edge';
 import type React from 'react';
 import type {ReactFormState} from 'react-dom/client';
 import {Root} from './routes/root';
-import {assetsManifest, importSsr, loadModule} from '../basic/rsc';
+import {importSsr, loadModule, Resources} from '../basic/rsc';
 
 ReactServer.setPreloadModule(loadModule);
 
@@ -17,19 +17,9 @@ export default async function handler(request: Request): Promise<Response> {
   const nonce = process.env.DISABLE_NONCE ? undefined : crypto.randomUUID();
 
   function RscRoot() {
-    const js = assetsManifest.entry.deps.js.map((href: string) => (
-      <link key={href} rel="modulepreload" href={href} nonce={nonce} />
-    ));
-    const css = assetsManifest.entry.deps.css.map((href: string) => (
-      <link key={href} rel="stylesheet" href={href} precedence="high" />
-    ));
-    // https://vite.dev/guide/features.html#content-security-policy-csp
-    const viteCsp = nonce && <meta property="csp-nonce" nonce={nonce} />;
     return (
       <>
-        {js}
-        {css}
-        {viteCsp}
+        <Resources />
         <Root url={new URL(request.url)} />
       </>
     );

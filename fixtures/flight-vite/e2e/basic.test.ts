@@ -130,3 +130,61 @@ test('hydrate while streaming @js', async ({page}) => {
   await expect(page.getByTestId('suspense')).toContainText('suspense-fallback');
   await expect(page.getByTestId('suspense')).toContainText('suspense-resolved');
 });
+
+test('css client @js', async ({page}) => {
+  await page.goto('./');
+  await waitForHydration(page);
+  await expect(page.locator('.test-style-client')).toHaveCSS(
+    'color',
+    'rgb(250, 150, 0)',
+  );
+});
+
+testNoJs('css client @nojs', async ({page}) => {
+  await page.goto('./');
+  await expect(page.locator('.test-style-client')).toHaveCSS(
+    'color',
+    'rgb(250, 150, 0)',
+  );
+});
+
+test('css client hmr @dev', async ({page}) => {
+  await page.goto('./');
+  await waitForHydration(page);
+  await using _ = await createReloadChecker(page);
+  using editor = createEditor('src/routes/client.css');
+  editor.edit(s => s.replaceAll('rgb(250, 150, 0)', 'rgb(150, 250, 0)'));
+  await expect(page.locator('.test-style-client')).toHaveCSS(
+    'color',
+    'rgb(150, 250, 0)',
+  );
+});
+
+test('css server @js', async ({page}) => {
+  await page.goto('./');
+  await waitForHydration(page);
+  await expect(page.locator('.test-style-server')).toHaveCSS(
+    'color',
+    'rgb(0, 200, 100)',
+  );
+});
+
+testNoJs('css server @nojs', async ({page}) => {
+  await page.goto('./');
+  await expect(page.locator('.test-style-server')).toHaveCSS(
+    'color',
+    'rgb(0, 200, 100)',
+  );
+});
+
+test('css server hmr @dev', async ({page}) => {
+  await page.goto('./');
+  await waitForHydration(page);
+  await using _ = await createReloadChecker(page);
+  using editor = createEditor('src/routes/root.css');
+  editor.edit(s => s.replaceAll('rgb(0, 200, 100)', 'rgb(0, 100, 200)'));
+  await expect(page.locator('.test-style-server')).toHaveCSS(
+    'color',
+    'rgb(0, 100, 200)',
+  );
+});
