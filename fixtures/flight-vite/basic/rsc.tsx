@@ -32,20 +32,16 @@ export async function Resources({nonce}: {nonce?: string}) {
   }
 
   const cssLinks = css.map(href => (
-    <link
-      key={href}
-      rel="stylesheet"
-      href={href}
-      precedence="high"
-      nonce={nonce}
-    />
+    <link key={href} rel="stylesheet" href={href} precedence="high" />
   ));
 
   const jsLinks = js.map(href => (
-    <link key={href} rel="modulepreload" href={href} nonce={nonce} />
+    <link key={href} rel="modulepreload" href={href} />
   ));
 
   // https://vite.dev/guide/features.html#content-security-policy-csp
+  // this is used by inline style during dev,
+  // but this is essentially meaningless when allowing `style-src 'unsafe-inline'`
   const viteCsp = nonce && <meta property="csp-nonce" nonce={nonce} />;
 
   return (

@@ -90,9 +90,10 @@ async function renderRsc(
   if (options.nonce) {
     headers.set(
       'Content-Security-Policy',
-      // allow eval during dev for `createFakeFunction` eval.
-      // TODO: style nonce
-      `script-src 'nonce-${options.nonce}' ${import.meta.env.DEV ? `'unsafe-eval'` : ''};`,
+      `default-src 'self'; object-src 'none';` +
+        // allow unsafe-eval during dev for `createFakeFunction` eval.
+        `script-src 'self' 'nonce-${options.nonce}' ${import.meta.env.DEV ? `'unsafe-eval'` : ''};` +
+        `style-src 'self' 'unsafe-inline'`,
     );
   }
   return new Response(htmlStream, {headers});

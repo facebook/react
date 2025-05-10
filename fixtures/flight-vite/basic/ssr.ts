@@ -7,8 +7,6 @@ import * as ReactDOM from 'react-dom';
 
 export {assetsManifest};
 
-// TODO: how to support style nonce?
-
 export async function loadModule(id: string) {
   if (import.meta.env.DEV) {
     const mod = await import(/* @vite-ignore */ id);
@@ -24,26 +22,21 @@ export async function loadModule(id: string) {
   }
 }
 
-export function prepareDestination(id: string, nonce?: string) {
+export function prepareDestination(id: string) {
   if (import.meta.env.DEV) {
     // no-op on dev
   } else {
     const deps = assetsManifest.clientReferenceDeps[id];
     for (const href of deps.js) {
-      // ReactDOM.preloadModule API doesn't support nonce currnetly so access internal one which works.
-      // https://github.com/facebook/react/pull/33120
-      const preloadModule = (ReactDOM as any)
-        .__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.d.m;
-      preloadModule(href, {
+      ReactDOM.preloadModule(href, {
         as: 'script',
         // vite doesn't allow configuring crossorigin at the moment, so we can hard code it as well.
         // https://github.com/vitejs/vite/issues/6648
         crossOrigin: '',
-        nonce,
       });
     }
     for (const href of deps.css) {
-      ReactDOM.preinit(href, {as: 'style', nonce});
+      ReactDOM.preinit(href, {as: 'style'});
     }
   }
 }
