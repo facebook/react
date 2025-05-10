@@ -69,7 +69,7 @@ export type Options = {
 
 function createResponseFromOptions(options?: Options) {
   return createResponse(
-    null, // bundlerConfig
+    options && options.nonce ? {nonce: options && options.nonce} : null, // bundlerConfig
     null, // serverReferenceConfig
     options && options.moduleLoading ? options.moduleLoading : null,
     noServerCall,

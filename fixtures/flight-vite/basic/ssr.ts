@@ -3,6 +3,8 @@ import clientReferences from 'virtual:vite-rsc/client-references';
 // @ts-ignore
 import assetsManifest from 'virtual:vite-rsc/assets-manifest';
 
+import * as ReactDOM from 'react-dom';
+
 export {assetsManifest};
 
 export function loadModule(id: string) {
@@ -13,22 +15,26 @@ export function loadModule(id: string) {
   }
 }
 
-export function getModuleLoading() {
-  // ssr modulepreload is build only since unbundled dev waterfall is a known trade off.
-  if (import.meta.env.DEV) return null;
-
-  const prepareDestinationManifest = Object.fromEntries(
-    Object.entries(assetsManifest.clientReferenceDeps).map(
-      ([id, deps]: any) => [id, deps.js],
-    ),
-  );
-  return {
-    prepareDestinationManifest,
-    // vite doesn't allow configuring crossorigin at the moment,
-    // so we can hard code it as well.
-    // https://github.com/vitejs/vite/issues/6648
-    crossOrigin: '',
-  };
+export function prepareDestination(id: string, nonce?: string) {
+  if (import.meta.env.DEV) {
+    // no-op on dev
+  } else {
+    const deps = assetsManifest.clientReferenceDeps[id];
+    for (const href of deps.js) {
+      // ReactDOM.preloadModule API doesn't support nonce currnetly so access internal one which works.
+      // cf. https://github.com/facebook/react/pull/33120
+      const preloadModule = (ReactDOM as any)
+        .__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.d.m;
+      preloadModule(href, {
+        as: 'script',
+        // vite doesn't allow configuring crossorigin at the moment,
+        // so we can hard code it as well.
+        // https://github.com/vitejs/vite/issues/6648
+        crossOrigin: '',
+        nonce,
+      });
+    }
+  }
 }
 
 export const findSourceMapURL = undefined;
