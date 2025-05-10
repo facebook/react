@@ -15,7 +15,7 @@
     "react": "experimental",
     "react-dom": "experimental",
     "react-server-dom-vite": "file:../../build/node_modules/react-server-dom-vite",
-    "rsc-html-stream": "^0.0.5"
+    "rsc-html-stream": "^0.0.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",

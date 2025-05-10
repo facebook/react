@@ -42,26 +42,5 @@ export async function renderHtml({
     formState,
   });
 
-  let finalStream = htmlStream.pipeThrough(injectRSCPayload(stream2));
-  if (nonce) {
-    finalStream = finalStream.pipeThrough(injectNonce(nonce));
-  }
-  return finalStream;
-}
-
-function injectNonce(nonce: string) {
-  // replace rsc-html-stream's inline <script> with <script nonce="...">
-  // TODO: upstream
-  const target = new TextEncoder().encode(`<script>`);
-  const replacement = new TextEncoder().encode(`<script nonce="${nonce}">`);
-  return new TransformStream<Uint8Array, Uint8Array>({
-    transform(chunk, controller) {
-      if (target.every((byte, i) => byte === chunk[i])) {
-        controller.enqueue(replacement);
-        controller.enqueue(chunk.slice(target.length));
-      } else {
-        controller.enqueue(chunk);
-      }
-    },
-  });
+  return htmlStream.pipeThrough(injectRSCPayload(stream2, {nonce}));
 }
