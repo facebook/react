@@ -7,18 +7,10 @@
  * @flow
  */
 
-import {preloadModuleForSSR} from 'react-client/src/ReactFlightClientConfig';
-
 import type {ModuleLoading} from './ReactFlightClientConfigBundlerVite';
 
 export function prepareDestinationWithChunks(
   moduleLoading: ModuleLoading,
   chunks: Array<string>,
   nonce: ?string,
-) {
-  if (moduleLoading !== null) {
-    for (let i = 0; i < chunks.length; i++) {
-      preloadModuleForSSR(chunks[i], nonce, moduleLoading.crossOrigin);
-    }
-  }
-}
+) {}
