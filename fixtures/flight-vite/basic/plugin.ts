@@ -519,7 +519,7 @@ export type AssetsManifest = {
   clientReferenceDeps: Record<string, AssetDeps>;
 };
 
-type AssetDeps = {
+export type AssetDeps = {
   js: string[];
   css: string[];
 };

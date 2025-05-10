@@ -21,10 +21,7 @@ export type ClientManifest = null;
 export type ServerManifest = null;
 export type SSRModuleMap = null;
 export type ModuleLoading = null;
-export type ServerConsumerModuleMap = null | {
-  // sneak in nonce to do ssr preinit/preload during client reference loading
-  nonce?: string,
-};
+export type ServerConsumerModuleMap = null;
 export type ServerReferenceId = string;
 
 export opaque type ClientReferenceMetadata = ImportMetadata;
@@ -34,7 +31,6 @@ export opaque type ClientReference<T> = [
   /* id */ string,
   /* name */ string,
   /* promise */ Thenable<any> | null,
-  /* ssr nonce */ string | null,
 ];
 
 export function prepareDestinationForModule(
@@ -47,9 +43,7 @@ export function resolveClientReference<T>(
   bundlerConfig: ServerConsumerModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  const nonce =
-    bundlerConfig && bundlerConfig.nonce ? bundlerConfig.nonce : null;
-  return [metadata[ID], metadata[NAME], null, nonce];
+  return [metadata[ID], metadata[NAME], null];
 }
 
 export function resolveServerReference<T>(
@@ -59,7 +53,7 @@ export function resolveServerReference<T>(
   const idx = ref.lastIndexOf('#');
   const id = ref.slice(0, idx);
   const name = ref.slice(idx + 1);
-  return [id, name, null, null];
+  return [id, name, null];
 }
 
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();
@@ -67,11 +61,6 @@ const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
-  // prepare destination outside async cache to use nonce from current render
-  if (prepareDestinationFn) {
-    prepareDestinationFn(metadata[ID], metadata[3]);
-  }
-
   // cache same module id for build.
   if (!__DEV__) {
     const existingPromise = asyncModuleCache.get(metadata[ID]);
@@ -117,9 +106,7 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
 }
 
 let preloadModuleFn: any;
-let prepareDestinationFn: any;
 
-export function setPreloadModule(fn: any, fn2: any) {
+export function setPreloadModule(fn: any) {
   preloadModuleFn = fn;
-  prepareDestinationFn = fn2;
 }
