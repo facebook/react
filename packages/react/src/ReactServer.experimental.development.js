@@ -40,6 +40,10 @@ import {startTransition} from './ReactStartTransition';
 import {postpone} from './ReactPostpone';
 import {captureOwnerStack} from './ReactOwnerStack';
 import version from 'shared/ReactVersion';
+import {
+  createServerContext,
+  useServerContext,
+} from './ReactContextServer';
 
 const Children = {
   map,
@@ -82,4 +86,6 @@ export {
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
   REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
   captureOwnerStack, // DEV-only
+  createServerContext,
+  useServerContext,
 };
