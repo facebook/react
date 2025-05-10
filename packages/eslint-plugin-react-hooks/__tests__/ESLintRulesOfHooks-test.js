@@ -248,6 +248,16 @@ const allTests = {
     },
     {
       code: normalizeIndent`
+        // Valid because hooks can be used in named function arguments to
+        // memo.
+        const MemoizedFunction = memo(function _MyComponent(props) {
+          useHook();
+          return <button {...props} />
+        });
+      `,
+    },
+    {
+      code: normalizeIndent`
         // Valid because classes can call functions.
         // We don't consider these to be hooks.
         class C {
