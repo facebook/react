@@ -913,7 +913,7 @@ export function scheduleUpdateOnFiber(
   markRootUpdated(root, lane);
 
   if (
-    (executionContext & RenderContext) !== NoLanes &&
+    (executionContext & RenderContext) !== NoContext &&
     root === workInProgressRoot
   ) {
     // This update was dispatched during the render phase. This is a mistake
