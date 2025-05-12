@@ -25,6 +25,7 @@ export const {
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
   enableUseEffectCRUDOverload,
+  enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering,
   enableFastAddPropertiesInDiffing,

@@ -135,6 +135,8 @@ export const enableShallowPropDiffing = false;
 
 export const enableSiblingPrerendering = true;
 
+export const enableEagerAlternateStateNodeCleanup = true;
+
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */
