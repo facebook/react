@@ -932,18 +932,12 @@ export function commitTextUpdate(
   textInstance.nodeValue = newText;
 }
 
-const supportsMoveBefore =
-  // $FlowFixMe[prop-missing]: We're doing the feature detection here.
-  enableMoveBefore &&
-  typeof window !== 'undefined' &&
-  typeof window.Element.prototype.moveBefore === 'function';
-
 export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  if (supportsMoveBefore && child.parentNode !== null) {
-    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+  if (enableMoveBefore && typeof (parentInstance: any).moveBefore === 'function' && child.parentNode !== null) {
+    // $FlowFixMe[prop-missing]: We've checked this above.
     parentInstance.moveBefore(child, null);
   } else {
     parentInstance.appendChild(child);
@@ -1003,8 +997,8 @@ export function appendChildToContainer(
     container.nodeType === COMMENT_NODE
   ) {
     parentNode = (container.parentNode: any);
-    if (supportsMoveBefore && child.parentNode !== null) {
-      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    if (enableMoveBefore && typeof parentNode.moveBefore === 'function' && child.parentNode !== null) {
+      // $FlowFixMe[prop-missing]: We've checked this above.
       parentNode.moveBefore(child, container);
     } else {
       parentNode.insertBefore(child, container);
@@ -1015,8 +1009,8 @@ export function appendChildToContainer(
   } else {
     parentNode = (container: any);
   }
-  if (supportsMoveBefore && child.parentNode !== null) {
-    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+  if (enableMoveBefore && typeof parentNode.moveBefore === 'function' && child.parentNode !== null) {
+    // $FlowFixMe[prop-missing]: We've checked this above.
     parentNode.moveBefore(child, null);
   } else {
     parentNode.appendChild(child);
@@ -1045,8 +1039,8 @@ export function insertBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance | ActivityInstance,
 ): void {
-  if (supportsMoveBefore && child.parentNode !== null) {
-    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+  if (enableMoveBefore && typeof (parentInstance: any).moveBefore === 'function' && child.parentNode !== null) {
+    // $FlowFixMe[prop-missing]: We've checked this above.
     parentInstance.moveBefore(child, beforeChild);
   } else {
     parentInstance.insertBefore(child, beforeChild);
@@ -1074,8 +1068,8 @@ export function insertInContainerBefore(
   } else {
     parentNode = (container: any);
   }
-  if (supportsMoveBefore && child.parentNode !== null) {
-    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+  if (enableMoveBefore && typeof parentNode.moveBefore === 'function' && child.parentNode !== null) {
+    // $FlowFixMe[prop-missing]: We've checked this above.
     parentNode.moveBefore(child, beforeChild);
   } else {
     parentNode.insertBefore(child, beforeChild);
