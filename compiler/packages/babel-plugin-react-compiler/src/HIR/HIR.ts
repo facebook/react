@@ -1434,6 +1434,46 @@ export const ValueKindSchema = z.enum([
   ValueKind.Context,
 ]);
 
+export type AliasingEffect =
+  /**
+   * Freezes the operand if not already frozen
+   */
+  | {kind: 'Freeze'; place: Place}
+  /**
+   * Known mutation of a value, which may effect that value or values that it contains.
+   * This is rare!
+   */
+  | {kind: 'MutateTransitive'; place: Place}
+  /**
+   * Known mutation of a specific value, targeting only that specific value but not
+   * values that it contains.
+   *
+   * Example: `array.push(item)` mutates the array but does not mutate items stored in the array.
+   */
+  | {kind: 'MutateLocal'; place: Place}
+  /**
+   * Possible mutation of a specific value
+   */
+  | {kind: 'ConditionallyMutate'; place: Place}
+  /**
+   * Direct aliasing of one identifier by another identifier
+   * Examples: `x = y` (from y -> to x) or phis (from operand -> to phi)
+   */
+  | {kind: 'Alias'; from: Place; to: Place}
+  /**
+   * Direct aliasing of an identifier (or a sub-path), or storing a value/sub-path
+   * into a part of another object.
+   *
+   * One of from.path and/or to.path must be non-null (else this is equivalent to Alias)
+   */
+  | {
+      kind: 'Capture';
+      from: {place: Place; path: '*' | null};
+      to: {place: Place; path: '*' | null};
+    }
+  // Known mutation of a global
+  | {kind: 'MutateGlobal'; place: Place};
+
 // The effect with which a value is modified.
 export enum Effect {
   // Default value: not allowed after lifetime inference
