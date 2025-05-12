@@ -5,27 +5,161 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {isFunctionExpression} from '@babel/types';
 import {CompilerError} from '..';
 import {
   AliasingEffect,
+  BasicBlock,
+  BlockId,
+  CallExpression,
+  Environment,
   HIRFunction,
   Instruction,
+  InstructionValue,
   isArrayType,
   isMapType,
   isSetType,
+  MethodCall,
+  NewExpression,
   Place,
+  SpreadPattern,
 } from '../HIR';
 import {
   eachInstructionValueLValue,
   eachInstructionValueOperand,
+  eachTerminalSuccessor,
 } from '../HIR/visitors';
 import {Result} from '../Utils/Result';
+import {getFunctionCallSignature} from './InferReferenceEffects';
+import {
+  AliasingSignature,
+  FunctionSignature,
+  LifetimeId,
+} from '../HIR/ObjectShape';
+import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
 
 export function inferMutationAliasingEffects(
   fn: HIRFunction,
-): Result<Array<AliasingEffect>, CompilerError> {}
+  {isFunctionExpression}: {isFunctionExpression: boolean} = {
+    isFunctionExpression: false,
+  },
+): Result<Array<AliasingEffect>, CompilerError> {
+  const initialState = InferenceState.empty(fn.env, isFunctionExpression);
 
-function computeEffectsForInstruction(
+  // Map of blocks to the last (merged) incoming state that was processed
+  const statesByBlock: Map<BlockId, InferenceState> = new Map();
+
+  /*
+   * Multiple predecessors may be visited prior to reaching a given successor,
+   * so track the list of incoming state for each successor block.
+   * These are merged when reaching that block again.
+   */
+  const queuedStates: Map<BlockId, InferenceState> = new Map();
+  function queue(blockId: BlockId, state: InferenceState): void {
+    let queuedState = queuedStates.get(blockId);
+    if (queuedState != null) {
+      // merge the queued states for this block
+      state = queuedState.merge(state) ?? queuedState;
+      queuedStates.set(blockId, state);
+    } else {
+      /*
+       * this is the first queued state for this block, see whether
+       * there are changed relative to the last time it was processed.
+       */
+      const prevState = statesByBlock.get(blockId);
+      const nextState = prevState != null ? prevState.merge(state) : state;
+      if (nextState != null) {
+        queuedStates.set(blockId, nextState);
+      }
+    }
+  }
+  queue(fn.body.entry, initialState);
+
+  const signatureCache: Map<Instruction, Array<AliasingEffect>> = new Map();
+
+  while (queuedStates.size !== 0) {
+    for (const [blockId, block] of fn.body.blocks) {
+      const incomingState = queuedStates.get(blockId);
+      queuedStates.delete(blockId);
+      if (incomingState == null) {
+        continue;
+      }
+
+      statesByBlock.set(blockId, incomingState);
+      const state = incomingState.clone();
+      inferBlock(state, block, signatureCache);
+
+      for (const nextBlockId of eachTerminalSuccessor(block.terminal)) {
+        queue(nextBlockId, state);
+      }
+    }
+  }
+}
+
+function inferBlock(
+  state: InferenceState,
+  block: BasicBlock,
+  signatureCache: Map<Instruction, Array<AliasingEffect>>,
+): void {
+  for (const instr of block.instructions) {
+    let signature = signatureCache.get(instr);
+    if (signature == null) {
+      signature = computeSignatureForInstruction(state.env, instr);
+      signatureCache.set(instr, signature);
+    }
+    const effects = applySignature(signature, state);
+    instr.effects = effects;
+  }
+}
+
+/**
+ * Applies the signature to the given state to determine the precise set of effects
+ * that will occur in practice. This takes into account the inferred state of each
+ * variable. For example, the signature may have a `ConditionallyMutate x` effect.
+ * Here, we check the abstract type of `x` and either record a `Mutate x` if x is mutable
+ * or no effect if x is a primitive, global, or frozen.
+ *
+ * This phase may also emit errors, for example MutateLocal on a frozen value is invalid.
+ */
+function applySignature(
+  signature: Array<AliasingEffect>,
+  state: InferenceState,
+): Array<AliasingEffect> {}
+
+class InferenceState {
+  env: Environment;
+  isFunctionExpression: boolean;
+
+  constructor(env: Environment, isFunctionExpression: boolean) {
+    this.env = env;
+    this.isFunctionExpression = isFunctionExpression;
+  }
+
+  merge(state: InferenceState): InferenceState | null {}
+
+  clone(): InferenceState {}
+
+  static empty(
+    env: Environment,
+    isFunctionExpression: boolean,
+  ): InferenceState {
+    return new InferenceState(env, isFunctionExpression);
+  }
+}
+
+/**
+ * Computes an effect signature for the instruction _without_ looking at the inference state,
+ * and only using the semantics of the instructions and the inferred types. The idea is to make
+ * it easy to check that the semantics of each instruction are preserved by describing only the
+ * effects and not making decisions based on the inference state.
+ *
+ * Then in applySignature(), above, we refine this signature based on the inference state.
+ *
+ * NOTE: this function is designed to be cached so it's only computed once upon first visiting
+ * an instruction.
+ */
+function computeSignatureForInstruction(
+  env: Environment,
   instr: Instruction,
 ): Array<AliasingEffect> {
   const {lvalue, value} = instr;
@@ -76,10 +210,66 @@ function computeEffectsForInstruction(
       });
       break;
     }
-    case 'MethodCall':
+    case 'TaggedTemplateExpression': {
+      CompilerError.throwTodo({
+        reason: `Handle TaggedTemplateExpression in new inference`,
+        loc: instr.loc,
+      });
+    }
     case 'NewExpression':
-    case 'CallExpression': {
-      // TODO
+    case 'CallExpression':
+    case 'MethodCall': {
+      let callee;
+      let mutatesCallee = false;
+      if (value.kind === 'NewExpression') {
+        callee = value.callee;
+        mutatesCallee = false;
+      } else if (value.kind === 'CallExpression') {
+        callee = value.callee;
+        mutatesCallee = true;
+      } else if (value.kind === 'MethodCall') {
+        callee = value.property;
+        mutatesCallee = false;
+      } else {
+        assertExhaustive(
+          value,
+          `Unexpected value kind '${(value as any).kind}'`,
+        );
+      }
+      const signature = getFunctionCallSignature(env, callee.identifier.type);
+      if (signature != null && signature.aliasing != null) {
+        effects.push(
+          ...computeEffectsForSignature(
+            signature.aliasing,
+            lvalue,
+            callee,
+            value.args,
+          ),
+        );
+      } else {
+        /**
+         * If no signature then by default:
+         * - All operands are conditionally mutated, except some instruction
+         *   variants are assumed to not mutate the callee (such as `new`)
+         * - All operands are captured into (but not directly aliased as)
+         *   every other argument.
+         */
+        for (const operand of eachInstructionValueOperand(value)) {
+          if (operand !== callee || mutatesCallee) {
+            effects.push({kind: 'ConditionallyMutate', place: operand});
+          }
+          for (const other of eachInstructionValueOperand(value)) {
+            if (other === operand) {
+              continue;
+            }
+            effects.push({
+              kind: 'Capture',
+              from: {place: operand, path: null},
+              to: {place: other, path: '*'},
+            });
+          }
+        }
+      }
       break;
     }
     case 'PropertyDelete':
@@ -115,7 +305,10 @@ function computeEffectsForInstruction(
     }
     case 'ObjectMethod':
     case 'FunctionExpression': {
-      // TODO: effects.push(...value.loweredFunc.func.aliasEffects)
+      const functionEffects = value.loweredFunc.func.aliasingEffects;
+      if (functionEffects != null) {
+        effects.push(...functionEffects);
+      }
       break;
     }
     case 'GetIterator': {
@@ -161,7 +354,7 @@ function computeEffectsForInstruction(
       break;
     }
     case 'NextPropertyOf': {
-      // TODO
+      // no effects
       break;
     }
     case 'JsxExpression':
@@ -236,12 +429,127 @@ function computeEffectsForInstruction(
     case 'Primitive':
     case 'RegExpLiteral':
     case 'StartMemoize':
-    case 'TaggedTemplateExpression':
     case 'TemplateLiteral':
     case 'UnaryExpression':
     case 'UnsupportedNode': {
       // no effects
       break;
+    }
+  }
+  return effects;
+}
+
+function computeEffectsForSignature(
+  signature: AliasingSignature,
+  lvalue: Place,
+  receiver: Place,
+  args: Array<Place | SpreadPattern>,
+): Array<AliasingEffect> {
+  // Build substitutions
+  const substitutions: Map<LifetimeId, Array<Place>> = new Map();
+  substitutions.set(signature.receiver, [receiver]);
+  substitutions.set(signature.returns, [lvalue]);
+  const params = signature.params;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (params == null || i >= params.length || arg.kind === 'Spread') {
+      const place = arg.kind === 'Identifier' ? arg : arg.place;
+      getOrInsertWith(substitutions, signature.restParam, () => []).push(place);
+    } else {
+      const param = params[i];
+      substitutions.set(param, [arg]);
+    }
+  }
+  // Apply substitutions
+  const effects: Array<AliasingEffect> = [];
+  for (const effect of signature.effects) {
+    switch (effect.kind) {
+      case 'Alias': {
+        const from = substitutions.get(effect.from);
+        const to = substitutions.get(effect.to);
+        if (from == null || to == null) {
+          continue;
+        }
+        for (const fromPlace of from) {
+          for (const toPlace of to) {
+            effects.push({kind: 'Alias', from: fromPlace, to: toPlace});
+          }
+        }
+        break;
+      }
+      case 'Capture': {
+        const from = substitutions.get(effect.from.place);
+        const to = substitutions.get(effect.to.place);
+        if (from == null || to == null) {
+          continue;
+        }
+        for (const fromPlace of from) {
+          for (const toPlace of to) {
+            effects.push({
+              kind: 'Capture',
+              from: {place: fromPlace, path: effect.from.path},
+              to: {place: toPlace, path: effect.to.path},
+            });
+          }
+        }
+        break;
+      }
+      case 'ConditionallyMutate': {
+        const places = substitutions.get(effect.place);
+        if (places == null) {
+          continue;
+        }
+        for (const place of places) {
+          effects.push({kind: 'ConditionallyMutate', place});
+        }
+        break;
+      }
+      case 'MutateGlobal': {
+        const places = substitutions.get(effect.place);
+        if (places == null) {
+          continue;
+        }
+        for (const place of places) {
+          effects.push({kind: 'MutateGlobal', place});
+        }
+        break;
+      }
+      case 'Freeze': {
+        const places = substitutions.get(effect.place);
+        if (places == null) {
+          continue;
+        }
+        for (const place of places) {
+          effects.push({kind: 'Freeze', place});
+        }
+        break;
+      }
+      case 'MutateLocal': {
+        const places = substitutions.get(effect.place);
+        if (places == null) {
+          continue;
+        }
+        for (const place of places) {
+          effects.push({kind: 'MutateLocal', place});
+        }
+        break;
+      }
+      case 'MutateTransitive': {
+        const places = substitutions.get(effect.place);
+        if (places == null) {
+          continue;
+        }
+        for (const place of places) {
+          effects.push({kind: 'MutateTransitive', place});
+        }
+        break;
+      }
+      default: {
+        assertExhaustive(
+          effect,
+          `Unexpected effect kind '${(effect as any).kind}'`,
+        );
+      }
     }
   }
   return effects;

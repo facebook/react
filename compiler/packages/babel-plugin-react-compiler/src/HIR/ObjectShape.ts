@@ -179,7 +179,58 @@ export type FunctionSignature = {
   impure?: boolean;
 
   canonicalName?: string;
+
+  aliasing?: AliasingSignature;
 };
+
+export type LifetimeId = number;
+export type AliasingSignature = {
+  receiver: LifetimeId;
+  params: Array<LifetimeId> | null;
+  restParam: LifetimeId;
+  returns: LifetimeId;
+  effects: Array<AliasingSignatureEffect>;
+};
+
+export type AliasingSignatureEffect =
+  /**
+   * Freezes the operand if not already frozen
+   */
+  | {kind: 'Freeze'; place: LifetimeId}
+  /**
+   * Known mutation of a value, which may effect that value or values that it contains.
+   * This is rare!
+   */
+  | {kind: 'MutateTransitive'; place: LifetimeId}
+  /**
+   * Known mutation of a specific value, targeting only that specific value but not
+   * values that it contains.
+   *
+   * Example: `array.push(item)` mutates the array but does not mutate items stored in the array.
+   */
+  | {kind: 'MutateLocal'; place: LifetimeId}
+  /**
+   * Possible mutation of a specific value
+   */
+  | {kind: 'ConditionallyMutate'; place: LifetimeId}
+  /**
+   * Direct aliasing of one identifier by another identifier
+   * Examples: `x = y` (from y -> to x) or phis (from operand -> to phi)
+   */
+  | {kind: 'Alias'; from: LifetimeId; to: LifetimeId}
+  /**
+   * Direct aliasing of an identifier (or a sub-path), or storing a value/sub-path
+   * into a part of another object.
+   *
+   * One of from.path and/or to.path must be non-null (else this is equivalent to Alias)
+   */
+  | {
+      kind: 'Capture';
+      from: {place: LifetimeId; path: '*' | null};
+      to: {place: LifetimeId; path: '*' | null};
+    }
+  // Known mutation of a global
+  | {kind: 'MutateGlobal'; place: LifetimeId};
 
 /*
  * Shape of an {@link FunctionType} if {@link ObjectShape.functionType} is present,

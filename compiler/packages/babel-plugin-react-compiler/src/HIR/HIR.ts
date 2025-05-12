@@ -280,6 +280,7 @@ export type HIRFunction = {
   returnType: Type;
   context: Array<Place>;
   effects: Array<FunctionEffect> | null;
+  aliasingEffects: Array<AliasingEffect> | null;
   body: HIR;
   generator: boolean;
   async: boolean;

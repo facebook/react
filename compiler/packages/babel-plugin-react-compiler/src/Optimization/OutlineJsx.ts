@@ -368,6 +368,7 @@ function emitOutlinedFn(
     returnType: makeType(),
     context: [],
     effects: null,
+    aliasingEffects: null,
     body: {
       entry: block.id,
       blocks: new Map([[block.id, block]]),
