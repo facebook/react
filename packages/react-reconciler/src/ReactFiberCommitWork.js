@@ -59,6 +59,7 @@ import {
   enableComponentPerformanceTrack,
   enableViewTransition,
   enableFragmentRefs,
+  enableEagerAlternateStateNodeCleanup,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -2167,6 +2168,20 @@ function commitMutationEffectsOnFiber(
                 'Unexpected host component type. Expected a form. This is a ' +
                   'bug in React.',
               );
+            }
+          }
+        }
+      } else {
+        if (enableEagerAlternateStateNodeCleanup) {
+          if (supportsPersistence) {
+            if (finishedWork.alternate !== null) {
+              // `finishedWork.alternate.stateNode` is pointing to a stale shadow
+              // node at this point, retaining it and its subtree. To reclaim
+              // memory, point `alternate.stateNode` to new shadow node. This
+              // prevents shadow node from staying in memory longer than it
+              // needs to. The correct behaviour of this is checked by test in
+              // React Native: ShadowNodeReferenceCounter-itest.js#L150
+              finishedWork.alternate.stateNode = finishedWork.stateNode;
             }
           }
         }

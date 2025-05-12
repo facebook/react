@@ -62,6 +62,7 @@ export const enableInfiniteRenderLoopDetection = false;
 
 export const renameElementSymbol = true;
 export const enableShallowPropDiffing = false;
+export const enableEagerAlternateStateNodeCleanup = false;
 
 export const enableYieldingBeforePassive = true;
 

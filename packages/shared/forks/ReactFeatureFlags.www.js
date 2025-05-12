@@ -107,6 +107,8 @@ export const disableLegacyMode = true;
 
 export const enableShallowPropDiffing = false;
 
+export const enableEagerAlternateStateNodeCleanup = false;
+
 export const enableLazyPublicInstanceInFabric = false;
 
 export const enableGestureTransition = false;
