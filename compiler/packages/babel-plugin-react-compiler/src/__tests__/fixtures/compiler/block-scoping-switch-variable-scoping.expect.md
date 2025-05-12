@@ -50,8 +50,7 @@ function Component(props) {
       console.log(handlers.value);
       break bb0;
     }
-    default: {
-    }
+    default:
   }
 
   t0 = handlers;
