@@ -6,6 +6,7 @@
  */
 
 import ReactCompilerRule from './rules/ReactCompilerRule';
+import { noSideEffectAfterMemo } from './rules/noSideEffectAfterMemo';
 
 const meta = {
   name: 'eslint-plugin-react-compiler',
@@ -13,6 +14,7 @@ const meta = {
 
 const rules = {
   'react-compiler': ReactCompilerRule,
+  'no-side-effect-after-memo': noSideEffectAfterMemo,
 };
 
 const configs = {
