@@ -98,6 +98,8 @@ export const enableScrollEndPolyfill = __EXPERIMENTAL__;
 
 export const enableSuspenseyImages = false;
 
+export const enableFizzBlockingRender = __EXPERIMENTAL__; // rel="expect"
+
 export const enableSrcObject = __EXPERIMENTAL__;
 
 export const enableHydrationChangeEvent = __EXPERIMENTAL__;

@@ -34,6 +34,7 @@ import {Children} from 'react';
 import {
   enableFizzExternalRuntime,
   enableSrcObject,
+  enableFizzBlockingRender,
 } from 'shared/ReactFeatureFlags';
 
 import type {
@@ -4146,16 +4147,21 @@ export function writeCompletedRoot(
     // we need to track the paint time of the shell so we know how much to throttle the reveal.
     writeShellTimeInstruction(destination, resumableState, renderState);
   }
-  const preamble = renderState.preamble;
-  if (preamble.htmlChunks || preamble.headChunks) {
-    // If we rendered the whole document, then we emitted a rel="expect" that needs a
-    // matching target. Normally we use one of the bootstrap scripts for this but if
-    // there are none, then we need to emit a tag to complete the shell.
-    if ((resumableState.instructions & SentCompletedShellId) === NothingSent) {
-      writeChunk(destination, startChunkForTag('template'));
-      writeCompletedShellIdAttribute(destination, resumableState);
-      writeChunk(destination, endOfStartTag);
-      writeChunk(destination, endChunkForTag('template'));
+  if (enableFizzBlockingRender) {
+    const preamble = renderState.preamble;
+    if (preamble.htmlChunks || preamble.headChunks) {
+      // If we rendered the whole document, then we emitted a rel="expect" that needs a
+      // matching target. Normally we use one of the bootstrap scripts for this but if
+      // there are none, then we need to emit a tag to complete the shell.
+      if (
+        (resumableState.instructions & SentCompletedShellId) ===
+        NothingSent
+      ) {
+        writeChunk(destination, startChunkForTag('template'));
+        writeCompletedShellIdAttribute(destination, resumableState);
+        writeChunk(destination, endOfStartTag);
+        writeChunk(destination, endChunkForTag('template'));
+      }
     }
   }
   return writeBootstrap(destination, renderState);
@@ -5040,11 +5046,13 @@ function writeBlockingRenderInstruction(
   resumableState: ResumableState,
   renderState: RenderState,
 ): void {
-  const idPrefix = resumableState.idPrefix;
-  const shellId = '\u00AB' + idPrefix + 'R\u00BB';
-  writeChunk(destination, blockingRenderChunkStart);
-  writeChunk(destination, stringToChunk(escapeTextForBrowser(shellId)));
-  writeChunk(destination, blockingRenderChunkEnd);
+  if (enableFizzBlockingRender) {
+    const idPrefix = resumableState.idPrefix;
+    const shellId = '\u00AB' + idPrefix + 'R\u00BB';
+    writeChunk(destination, blockingRenderChunkStart);
+    writeChunk(destination, stringToChunk(escapeTextForBrowser(shellId)));
+    writeChunk(destination, blockingRenderChunkEnd);
+  }
 }
 
 const completedShellIdAttributeStart = stringToPrecomputedChunk(' id="');
