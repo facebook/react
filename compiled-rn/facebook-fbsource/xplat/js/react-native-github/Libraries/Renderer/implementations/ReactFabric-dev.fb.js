@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b0a1699aa257ea20879c20c3e139bdf0>>
+ * @generated SignedSource<<26f8bbbf1215fe8cc5b70a12485a2298>>
  */
 
 "use strict";
@@ -11158,6 +11158,9 @@ __DEV__ &&
             (offscreenSubtreeWasHidden ||
               null === current ||
               safelyDetachRef(current, current.return));
+          enableEagerAlternateStateNodeCleanup &&
+            null !== finishedWork.alternate &&
+            (finishedWork.alternate.stateNode = finishedWork.stateNode);
           break;
         case 6:
           recursivelyTraverseMutationEffects(root, finishedWork);
@@ -14694,6 +14697,8 @@ __DEV__ &&
       enablePersistedModeClonedFlag =
         dynamicFlagsUntyped.enablePersistedModeClonedFlag,
       enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
+      enableEagerAlternateStateNodeCleanup =
+        dynamicFlagsUntyped.enableEagerAlternateStateNodeCleanup,
       passChildrenWhenCloningPersistedNodes =
         dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
       enableFastAddPropertiesInDiffing =
@@ -17479,10 +17484,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-3820740a-20250509",
+        version: "19.2.0-native-fb-5d04d732-20250512",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-3820740a-20250509"
+        reconcilerVersion: "19.2.0-native-fb-5d04d732-20250512"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
