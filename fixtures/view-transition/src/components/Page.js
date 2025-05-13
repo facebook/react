@@ -113,8 +113,8 @@ export default function Page({url, navigate}) {
     <button
       onClick={() =>
         startTransition(async () => {
-          setShowModal(true);
           await sleep(2000);
+          setShowModal(true);
         })
       }>
       Show Modal
