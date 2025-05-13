@@ -2323,11 +2323,8 @@ __DEV__ &&
       scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask);
     }
     function requestTransitionLane() {
-      if (0 === currentEventTransitionLane) {
-        var actionScopeLane = currentEntangledLane;
-        currentEventTransitionLane =
-          0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
-      }
+      0 === currentEventTransitionLane &&
+        (currentEventTransitionLane = claimNextTransitionLane());
       return currentEventTransitionLane;
     }
     function entangleAsyncAction(transition, thenable) {
@@ -11060,7 +11057,8 @@ __DEV__ &&
         return (
           transition._updatedFibers || (transition._updatedFibers = new Set()),
           transition._updatedFibers.add(fiber),
-          requestTransitionLane()
+          (fiber = currentEntangledLane),
+          0 !== fiber ? fiber : requestTransitionLane()
         );
       fiber =
         0 !== currentUpdatePriority
@@ -15370,10 +15368,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-0cac32d6-20250513",
+        version: "19.2.0-www-modern-676f0879-20250513",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-0cac32d6-20250513"
+        reconcilerVersion: "19.2.0-www-modern-676f0879-20250513"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15508,5 +15506,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-modern-0cac32d6-20250513";
+    exports.version = "19.2.0-www-modern-676f0879-20250513";
   })();

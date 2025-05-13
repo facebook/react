@@ -3128,11 +3128,8 @@ __DEV__ &&
           );
     }
     function requestTransitionLane() {
-      if (0 === currentEventTransitionLane) {
-        var actionScopeLane = currentEntangledLane;
-        currentEventTransitionLane =
-          0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
-      }
+      0 === currentEventTransitionLane &&
+        (currentEventTransitionLane = claimNextTransitionLane());
       return currentEventTransitionLane;
     }
     function entangleAsyncAction(transition, thenable) {
@@ -15810,7 +15807,8 @@ __DEV__ &&
       return null !== transition
         ? (transition._updatedFibers || (transition._updatedFibers = new Set()),
           transition._updatedFibers.add(fiber),
-          requestTransitionLane())
+          (fiber = currentEntangledLane),
+          0 !== fiber ? fiber : requestTransitionLane())
         : resolveUpdatePriority();
     }
     function requestDeferredLane() {
@@ -21625,7 +21623,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-0cac32d6-20250513"
+        reconcilerVersion: "19.2.0-www-modern-676f0879-20250513"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

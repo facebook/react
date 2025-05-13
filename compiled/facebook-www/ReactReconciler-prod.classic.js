@@ -1573,11 +1573,8 @@ module.exports = function ($$$config) {
         );
   }
   function requestTransitionLane() {
-    if (0 === currentEventTransitionLane) {
-      var actionScopeLane = currentEntangledLane;
-      currentEventTransitionLane =
-        0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
-    }
+    0 === currentEventTransitionLane &&
+      (currentEventTransitionLane = claimNextTransitionLane());
     return currentEventTransitionLane;
   }
   function entangleAsyncAction(transition, thenable) {
@@ -11001,11 +10998,13 @@ module.exports = function ($$$config) {
       ));
   }
   function requestUpdateLane() {
-    return 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
-      ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
-      : null !== ReactSharedInternals.T
-        ? requestTransitionLane()
-        : resolveUpdatePriority();
+    if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
+      return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
+    if (null !== ReactSharedInternals.T) {
+      var actionScopeLane = currentEntangledLane;
+      return 0 !== actionScopeLane ? actionScopeLane : requestTransitionLane();
+    }
+    return resolveUpdatePriority();
   }
   function requestDeferredLane() {
     0 === workInProgressDeferredLane &&
@@ -14085,7 +14084,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-0cac32d6-20250513"
+      reconcilerVersion: "19.2.0-www-classic-676f0879-20250513"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

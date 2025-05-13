@@ -1605,11 +1605,8 @@ function performSyncWorkOnRoot(root, lanes) {
   performWorkOnRoot(root, lanes, !0);
 }
 function requestTransitionLane() {
-  if (0 === currentEventTransitionLane) {
-    var actionScopeLane = currentEntangledLane;
-    currentEventTransitionLane =
-      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
-  }
+  0 === currentEventTransitionLane &&
+    (currentEventTransitionLane = claimNextTransitionLane());
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
@@ -9666,11 +9663,13 @@ var legacyErrorBoundariesThatAlreadyFailed = null,
   nestedUpdateCount = 0,
   rootWithNestedUpdates = null;
 function requestUpdateLane() {
-  return 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
-    ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
-    : null !== ReactSharedInternals.T
-      ? requestTransitionLane()
-      : currentUpdatePriority || 32;
+  if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
+    return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
+  if (null !== ReactSharedInternals.T) {
+    var actionScopeLane = currentEntangledLane;
+    return 0 !== actionScopeLane ? actionScopeLane : requestTransitionLane();
+  }
+  return currentUpdatePriority || 32;
 }
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
@@ -11394,10 +11393,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1619 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-0cac32d6-20250513",
+  version: "19.2.0-www-classic-676f0879-20250513",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-0cac32d6-20250513"
+  reconcilerVersion: "19.2.0-www-classic-676f0879-20250513"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1620 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11423,4 +11422,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-classic-0cac32d6-20250513";
+exports.version = "19.2.0-www-classic-676f0879-20250513";
