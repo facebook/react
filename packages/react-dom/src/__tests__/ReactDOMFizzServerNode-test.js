@@ -78,9 +78,15 @@ describe('ReactDOMFizzServerNode', () => {
       pipe(writable);
     });
     // with Float, we emit empty heads if they are elided when rendering <html>
-    expect(output.result).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
-    );
+    if (gate(flags => flags.enableFizzBlockingRender)) {
+      expect(output.result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
+      );
+    } else {
+      expect(output.result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      );
+    }
   });
 
   it('should emit bootstrap script src at the end', async () => {
