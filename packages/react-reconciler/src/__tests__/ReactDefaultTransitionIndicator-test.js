@@ -317,7 +317,6 @@ describe('ReactDefaultTransitionIndicator', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  // @gate enableDefaultTransitionIndicator
   it('does not triggers isomorphic async action default indicator if there are two different ones', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
@@ -354,6 +353,48 @@ describe('ReactDefaultTransitionIndicator', () => {
     });
 
     assertLog([]);
+
+    await act(async () => {
+      await resolve('Hello');
+    });
+
+    assertLog([]);
+
+    expect(root).toMatchRenderedOutput('Hi');
+  });
+
+  it('does not triggers isomorphic async action default indicator if there is a loading state', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    let update;
+    function App() {
+      const [state, setState] = useState(false);
+      update = setState;
+      return state ? 'Loading' : 'Hi';
+    }
+
+    const root = ReactNoop.createRoot({
+      onDefaultTransitionIndicator() {
+        Scheduler.log('start');
+        return () => {
+          Scheduler.log('stop');
+        };
+      },
+    });
+    await act(() => {
+      root.render(<App />);
+    });
+
+    assertLog([]);
+
+    await act(() => {
+      update(true);
+      React.startTransition(() => promise.then(() => update(false)));
+    });
+
+    assertLog([]);
+
+    expect(root).toMatchRenderedOutput('Loading');
 
     await act(async () => {
       await resolve('Hello');

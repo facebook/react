@@ -66,6 +66,7 @@ let pendingIsomorphicIndicator: null | (() => void) = null;
 // The number of roots that have pending Transitions that depend on the
 // started isomorphic indicator.
 let pendingEntangledRoots: number = 0;
+let needsIsomorphicIndicator: boolean = false;
 
 export function entangleAsyncAction<S>(
   transition: Transition,
@@ -88,6 +89,7 @@ export function entangleAsyncAction<S>(
     };
     currentEntangledActionThenable = entangledThenable;
     if (enableDefaultTransitionIndicator) {
+      needsIsomorphicIndicator = true;
       // We'll check if we need a default indicator in a microtask. Ensure
       // we have this scheduled even if no root is scheduled.
       ensureScheduleIsScheduled();
@@ -127,6 +129,7 @@ function pingEngtangledActionScope() {
       currentEntangledListeners = null;
       currentEntangledLane = NoLane;
       currentEntangledActionThenable = null;
+      needsIsomorphicIndicator = false;
       for (let i = 0; i < listeners.length; i++) {
         const listener = listeners[i];
         listener();
@@ -212,7 +215,7 @@ export function startIsomorphicDefaultIndicatorIfNeeded() {
   if (!enableDefaultTransitionIndicator) {
     return;
   }
-  if (currentEntangledLane === NoLane) {
+  if (!needsIsomorphicIndicator) {
     return;
   }
   if (
@@ -253,4 +256,8 @@ export function hasOngoingIsomorphicIndicator(): boolean {
 export function retainIsomorphicIndicator(): () => void {
   pendingEntangledRoots++;
   return releaseIsomorphicIndicator;
+}
+
+export function markIsomorphicIndicatorHandled(): void {
+  needsIsomorphicIndicator = false;
 }

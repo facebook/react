@@ -89,6 +89,7 @@ import {
   startIsomorphicDefaultIndicatorIfNeeded,
   hasOngoingIsomorphicIndicator,
   retainIsomorphicIndicator,
+  markIsomorphicIndicatorHandled,
 } from './ReactFiberAsyncAction';
 
 // A linked list of all the roots with pending work. In an idiomatic app,
@@ -730,5 +731,6 @@ export function markIndicatorHandled(root: FiberRoot): void {
     // Clear it from the indicator lanes. We don't need to show a separate
     // loading state for this lane.
     root.indicatorLanes &= ~currentEventTransitionLane;
+    markIsomorphicIndicatorHandled();
   }
 }
