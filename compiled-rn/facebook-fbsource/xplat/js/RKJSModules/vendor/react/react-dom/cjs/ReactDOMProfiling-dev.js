@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6d58a90c69b73baba51fdd7d85267ec2>>
+ * @generated SignedSource<<404915df5e4ddb49ce4af2f9d6458bcb>>
  */
 
 /*
@@ -15624,8 +15624,7 @@ __DEV__ &&
       return null !== transition
         ? (transition._updatedFibers || (transition._updatedFibers = new Set()),
           transition._updatedFibers.add(fiber),
-          (fiber = currentEntangledLane),
-          0 !== fiber ? fiber : requestTransitionLane())
+          requestTransitionLane())
         : resolveUpdatePriority();
     }
     function requestDeferredLane() {
@@ -16876,9 +16875,9 @@ __DEV__ &&
         if (0 !== (finishedWork.subtreeFlags & 8772) || rootHasLayoutEffect) {
           rootHasLayoutEffect = ReactSharedInternals.T;
           ReactSharedInternals.T = null;
-          var previousPriority = ReactDOMSharedInternals.p;
+          var _previousPriority = ReactDOMSharedInternals.p;
           ReactDOMSharedInternals.p = DiscreteEventPriority;
-          var prevExecutionContext = executionContext;
+          var _prevExecutionContext = executionContext;
           executionContext |= CommitContext;
           try {
             null !== injectedProfilingHooks &&
@@ -16899,8 +16898,8 @@ __DEV__ &&
                   typeof injectedProfilingHooks.markLayoutEffectsStopped &&
                 injectedProfilingHooks.markLayoutEffectsStopped();
           } finally {
-            (executionContext = prevExecutionContext),
-              (ReactDOMSharedInternals.p = previousPriority),
+            (executionContext = _prevExecutionContext),
+              (ReactDOMSharedInternals.p = _previousPriority),
               (ReactSharedInternals.T = rootHasLayoutEffect);
           }
         }
@@ -17538,7 +17537,7 @@ __DEV__ &&
       (pendingEffectsStatus !== NO_PENDING_EFFECTS &&
         pendingEffectsStatus !== PENDING_PASSIVE_PHASE) ||
         flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
-      currentEventTransitionLane = 0;
+      0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
     }
     function scheduleTaskForRootDuringMicrotask(root, currentTime) {
       for (
@@ -17676,8 +17675,11 @@ __DEV__ &&
       });
     }
     function requestTransitionLane() {
-      0 === currentEventTransitionLane &&
-        (currentEventTransitionLane = claimNextTransitionLane());
+      if (0 === currentEventTransitionLane) {
+        var actionScopeLane = currentEntangledLane;
+        currentEventTransitionLane =
+          0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+      }
       return currentEventTransitionLane;
     }
     function coerceFormActionProp(actionProp) {
@@ -24466,7 +24468,36 @@ __DEV__ &&
         return localDate.now();
       };
     }
-    var OffscreenVisible = 1,
+    var reportGlobalError =
+        "function" === typeof reportError
+          ? reportError
+          : function (error) {
+              if (
+                "object" === typeof window &&
+                "function" === typeof window.ErrorEvent
+              ) {
+                var event = new window.ErrorEvent("error", {
+                  bubbles: !0,
+                  cancelable: !0,
+                  message:
+                    "object" === typeof error &&
+                    null !== error &&
+                    "string" === typeof error.message
+                      ? String(error.message)
+                      : String(error),
+                  error: error
+                });
+                if (!window.dispatchEvent(event)) return;
+              } else if (
+                "object" === typeof process &&
+                "function" === typeof process.emit
+              ) {
+                process.emit("uncaughtException", error);
+                return;
+              }
+              console.error(error);
+            },
+      OffscreenVisible = 1,
       OffscreenPassiveEffectsConnected = 2,
       concurrentQueues = [],
       concurrentQueuesIndex = 0,
@@ -26077,35 +26108,6 @@ __DEV__ &&
             injectedProfilingHooks.markForceUpdateScheduled(inst, lane);
         }
       },
-      reportGlobalError =
-        "function" === typeof reportError
-          ? reportError
-          : function (error) {
-              if (
-                "object" === typeof window &&
-                "function" === typeof window.ErrorEvent
-              ) {
-                var event = new window.ErrorEvent("error", {
-                  bubbles: !0,
-                  cancelable: !0,
-                  message:
-                    "object" === typeof error &&
-                    null !== error &&
-                    "string" === typeof error.message
-                      ? String(error.message)
-                      : String(error),
-                  error: error
-                });
-                if (!window.dispatchEvent(event)) return;
-              } else if (
-                "object" === typeof process &&
-                "function" === typeof process.emit
-              ) {
-                process.emit("uncaughtException", error);
-                return;
-              }
-              console.error(error);
-            },
       componentName = null,
       errorBoundaryName = null,
       SelectiveHydrationException = Error(
@@ -27014,11 +27016,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-native-fb-676f0879-20250513" !== isomorphicReactPackageVersion)
+      if ("19.2.0-native-fb-62d3f36e-20250513" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-native-fb-676f0879-20250513\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-native-fb-62d3f36e-20250513\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27055,10 +27057,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-native-fb-676f0879-20250513",
+          version: "19.2.0-native-fb-62d3f36e-20250513",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-native-fb-676f0879-20250513"
+          reconcilerVersion: "19.2.0-native-fb-62d3f36e-20250513"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27512,7 +27514,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-native-fb-676f0879-20250513";
+    exports.version = "19.2.0-native-fb-62d3f36e-20250513";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

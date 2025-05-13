@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<09f960192ac27382f10d9609dabc3ef0>>
+ * @generated SignedSource<<1710e341b283c6a781914b31991b9778>>
  */
 
 "use strict";
@@ -2279,6 +2279,35 @@ function is(x, y) {
   return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
 }
 var objectIs = "function" === typeof Object.is ? Object.is : is,
+  reportGlobalError =
+    "function" === typeof reportError
+      ? reportError
+      : function (error) {
+          if (
+            "object" === typeof window &&
+            "function" === typeof window.ErrorEvent
+          ) {
+            var event = new window.ErrorEvent("error", {
+              bubbles: !0,
+              cancelable: !0,
+              message:
+                "object" === typeof error &&
+                null !== error &&
+                "string" === typeof error.message
+                  ? String(error.message)
+                  : String(error),
+              error: error
+            });
+            if (!window.dispatchEvent(event)) return;
+          } else if (
+            "object" === typeof process &&
+            "function" === typeof process.emit
+          ) {
+            process.emit("uncaughtException", error);
+            return;
+          }
+          console.error(error);
+        },
   CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
@@ -2623,6 +2652,7 @@ function transferActualDuration(fiber) {
   for (var child = fiber.child; child; )
     (fiber.actualDuration += child.actualDuration), (child = child.sibling);
 }
+function noop() {}
 var firstScheduledRoot = null,
   lastScheduledRoot = null,
   didScheduleMicrotask = !1,
@@ -2705,7 +2735,7 @@ function processRootScheduleInMicrotask() {
   }
   (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
     flushSyncWorkAcrossRoots_impl(0, !1);
-  currentEventTransitionLane = 0;
+  0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   for (
@@ -2818,8 +2848,11 @@ function scheduleImmediateRootScheduleTask() {
     : scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask);
 }
 function requestTransitionLane() {
-  0 === currentEventTransitionLane &&
-    (currentEventTransitionLane = claimNextTransitionLane());
+  if (0 === currentEventTransitionLane) {
+    var actionScopeLane = currentEntangledLane;
+    currentEventTransitionLane =
+      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+  }
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
@@ -2932,7 +2965,6 @@ function shallowEqual(objA, objB) {
   }
   return !0;
 }
-function noop() {}
 var SuspenseException = Error(
     "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`."
   ),
@@ -5617,35 +5649,6 @@ function resolveClassComponentProps(Component, baseProps) {
   }
   return newProps;
 }
-var reportGlobalError =
-  "function" === typeof reportError
-    ? reportError
-    : function (error) {
-        if (
-          "object" === typeof window &&
-          "function" === typeof window.ErrorEvent
-        ) {
-          var event = new window.ErrorEvent("error", {
-            bubbles: !0,
-            cancelable: !0,
-            message:
-              "object" === typeof error &&
-              null !== error &&
-              "string" === typeof error.message
-                ? String(error.message)
-                : String(error),
-            error: error
-          });
-          if (!window.dispatchEvent(event)) return;
-        } else if (
-          "object" === typeof process &&
-          "function" === typeof process.emit
-        ) {
-          process.emit("uncaughtException", error);
-          return;
-        }
-        console.error(error);
-      };
 function defaultOnRecoverableError(error) {
   reportGlobalError(error);
 }
@@ -10041,8 +10044,7 @@ function requestUpdateLane(fiber) {
     : 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
       ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
       : null !== ReactSharedInternals.T
-        ? ((fiber = currentEntangledLane),
-          0 !== fiber ? fiber : requestTransitionLane())
+        ? requestTransitionLane()
         : resolveUpdatePriority();
 }
 function requestDeferredLane() {
@@ -11904,10 +11906,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1356 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-676f0879-20250513",
+    version: "19.2.0-native-fb-62d3f36e-20250513",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-676f0879-20250513"
+    reconcilerVersion: "19.2.0-native-fb-62d3f36e-20250513"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1356.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<451e085e8f8046c1e852a5f4c7b45497>>
+ * @generated SignedSource<<2c8cac8f4c4fce469bfb6abe75513945>>
  */
 
 /*
@@ -2510,7 +2510,36 @@ function registerSimpleEvent(domEventName, reactName) {
   topLevelEventsToReactNames.set(domEventName, reactName);
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
-var concurrentQueues = [],
+var reportGlobalError =
+    "function" === typeof reportError
+      ? reportError
+      : function (error) {
+          if (
+            "object" === typeof window &&
+            "function" === typeof window.ErrorEvent
+          ) {
+            var event = new window.ErrorEvent("error", {
+              bubbles: !0,
+              cancelable: !0,
+              message:
+                "object" === typeof error &&
+                null !== error &&
+                "string" === typeof error.message
+                  ? String(error.message)
+                  : String(error),
+              error: error
+            });
+            if (!window.dispatchEvent(event)) return;
+          } else if (
+            "object" === typeof process &&
+            "function" === typeof process.emit
+          ) {
+            process.emit("uncaughtException", error);
+            return;
+          }
+          console.error(error);
+        },
+  concurrentQueues = [],
   concurrentQueuesIndex = 0,
   concurrentlyUpdatedLanes = 0;
 function finishQueueingConcurrentUpdates() {
@@ -6272,35 +6301,6 @@ function resolveClassComponentProps(Component, baseProps) {
   }
   return newProps;
 }
-var reportGlobalError =
-  "function" === typeof reportError
-    ? reportError
-    : function (error) {
-        if (
-          "object" === typeof window &&
-          "function" === typeof window.ErrorEvent
-        ) {
-          var event = new window.ErrorEvent("error", {
-            bubbles: !0,
-            cancelable: !0,
-            message:
-              "object" === typeof error &&
-              null !== error &&
-              "string" === typeof error.message
-                ? String(error.message)
-                : String(error),
-            error: error
-          });
-          if (!window.dispatchEvent(event)) return;
-        } else if (
-          "object" === typeof process &&
-          "function" === typeof process.emit
-        ) {
-          process.emit("uncaughtException", error);
-          return;
-        }
-        console.error(error);
-      };
 function defaultOnUncaughtError(error) {
   reportGlobalError(error);
 }
@@ -11915,8 +11915,7 @@ function requestUpdateLane(fiber) {
     : 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
       ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
       : null !== ReactSharedInternals.T
-        ? ((fiber = currentEntangledLane),
-          0 !== fiber ? fiber : requestTransitionLane())
+        ? requestTransitionLane()
         : resolveUpdatePriority();
 }
 function requestDeferredLane() {
@@ -13424,7 +13423,7 @@ function processRootScheduleInMicrotask() {
   }
   (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
     flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
-  currentEventTransitionLane = 0;
+  0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   for (
@@ -13535,8 +13534,11 @@ function scheduleImmediateRootScheduleTask() {
   });
 }
 function requestTransitionLane() {
-  0 === currentEventTransitionLane &&
-    (currentEventTransitionLane = claimNextTransitionLane());
+  if (0 === currentEventTransitionLane) {
+    var actionScopeLane = currentEntangledLane;
+    currentEventTransitionLane =
+      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+  }
   return currentEventTransitionLane;
 }
 function coerceFormActionProp(actionProp) {
@@ -17774,14 +17776,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2119 = React.version;
 if (
-  "19.2.0-native-fb-676f0879-20250513" !==
+  "19.2.0-native-fb-62d3f36e-20250513" !==
   isomorphicReactPackageVersion$jscomp$inline_2119
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2119,
-      "19.2.0-native-fb-676f0879-20250513"
+      "19.2.0-native-fb-62d3f36e-20250513"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17803,10 +17805,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2126 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-676f0879-20250513",
+  version: "19.2.0-native-fb-62d3f36e-20250513",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-676f0879-20250513",
+  reconcilerVersion: "19.2.0-native-fb-62d3f36e-20250513",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$313 = 0;
@@ -18072,7 +18074,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-676f0879-20250513";
+exports.version = "19.2.0-native-fb-62d3f36e-20250513";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
