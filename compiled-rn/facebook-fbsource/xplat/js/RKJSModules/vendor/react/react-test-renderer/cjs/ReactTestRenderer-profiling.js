@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6a1f8ce4b87d03fd0933b53b239cf25b>>
+ * @generated SignedSource<<aeb8a49965508307c4fcdb6b660a0cee>>
  */
 
 "use strict";
@@ -10515,10 +10515,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1254 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-59440424-20250513",
+  version: "19.2.0-native-fb-3a5b326d-20250513",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-59440424-20250513",
+  reconcilerVersion: "19.2.0-native-fb-3a5b326d-20250513",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$155 = 0;
@@ -10536,16 +10536,16 @@ var internals$jscomp$inline_1254 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1512 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1513 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1512.isDisabled &&
-    hook$jscomp$inline_1512.supportsFiber
+    !hook$jscomp$inline_1513.isDisabled &&
+    hook$jscomp$inline_1513.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1512.inject(
+      (rendererID = hook$jscomp$inline_1513.inject(
         internals$jscomp$inline_1254
       )),
-        (injectedHook = hook$jscomp$inline_1512);
+        (injectedHook = hook$jscomp$inline_1513);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10669,4 +10669,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-59440424-20250513";
+exports.version = "19.2.0-native-fb-3a5b326d-20250513";
