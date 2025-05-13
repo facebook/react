@@ -35,6 +35,7 @@ import {
   enableFizzExternalRuntime,
   enableSrcObject,
   enableFizzBlockingRender,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 
 import type {
@@ -746,22 +747,34 @@ const NOSCRIPT_SCOPE = /*   */ 0b001;
 const PICTURE_SCOPE = /*    */ 0b010;
 const FALLBACK_SCOPE = /*   */ 0b100;
 
+type ViewTransitionContext = {
+  update: ?string,
+  enter: ?string,
+  exit: ?string,
+  share: ?string,
+  name: ?string,
+  nameIdx: number,
+};
+
 // Lets us keep track of contextual state and pick it back up after suspending.
 export type FormatContext = {
   insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
   tagScope: number,
+  viewTransition: null | ViewTransitionContext, // tracks if we're inside a ViewTransition outside the first DOM node
 };
 
 function createFormatContext(
   insertionMode: InsertionMode,
   selectedValue: null | string | Array<string>,
   tagScope: number,
+  viewTransition: null | ViewTransitionContext,
 ): FormatContext {
   return {
     insertionMode,
     selectedValue,
     tagScope,
+    viewTransition,
   };
 }
 
@@ -776,7 +789,7 @@ export function createRootFormatContext(namespaceURI?: string): FormatContext {
       : namespaceURI === 'http://www.w3.org/1998/Math/MathML'
         ? MATHML_MODE
         : ROOT_HTML_MODE;
-  return createFormatContext(insertionMode, null, NO_SCOPE);
+  return createFormatContext(insertionMode, null, NO_SCOPE, null);
 }
 
 export function getChildFormatContext(
@@ -790,29 +803,42 @@ export function getChildFormatContext(
         HTML_MODE,
         null,
         parentContext.tagScope | NOSCRIPT_SCOPE,
+        null,
       );
     case 'select':
       return createFormatContext(
         HTML_MODE,
         props.value != null ? props.value : props.defaultValue,
         parentContext.tagScope,
+        null,
       );
     case 'svg':
-      return createFormatContext(SVG_MODE, null, parentContext.tagScope);
+      return createFormatContext(SVG_MODE, null, parentContext.tagScope, null);
     case 'picture':
       return createFormatContext(
         HTML_MODE,
         null,
         parentContext.tagScope | PICTURE_SCOPE,
+        null,
       );
     case 'math':
-      return createFormatContext(MATHML_MODE, null, parentContext.tagScope);
+      return createFormatContext(
+        MATHML_MODE,
+        null,
+        parentContext.tagScope,
+        null,
+      );
     case 'foreignObject':
-      return createFormatContext(HTML_MODE, null, parentContext.tagScope);
+      return createFormatContext(HTML_MODE, null, parentContext.tagScope, null);
     // Table parents are special in that their children can only be created at all if they're
     // wrapped in a table parent. So we need to encode that we're entering this mode.
     case 'table':
-      return createFormatContext(HTML_TABLE_MODE, null, parentContext.tagScope);
+      return createFormatContext(
+        HTML_TABLE_MODE,
+        null,
+        parentContext.tagScope,
+        null,
+      );
     case 'thead':
     case 'tbody':
     case 'tfoot':
@@ -820,18 +846,21 @@ export function getChildFormatContext(
         HTML_TABLE_BODY_MODE,
         null,
         parentContext.tagScope,
+        null,
       );
     case 'colgroup':
       return createFormatContext(
         HTML_COLGROUP_MODE,
         null,
         parentContext.tagScope,
+        null,
       );
     case 'tr':
       return createFormatContext(
         HTML_TABLE_ROW_MODE,
         null,
         parentContext.tagScope,
+        null,
       );
     case 'head':
       if (parentContext.insertionMode < HTML_MODE) {
@@ -841,6 +870,7 @@ export function getChildFormatContext(
           HTML_HEAD_MODE,
           null,
           parentContext.tagScope,
+          null,
         );
       }
       break;
@@ -850,6 +880,7 @@ export function getChildFormatContext(
           HTML_HTML_MODE,
           null,
           parentContext.tagScope,
+          null,
         );
       }
       break;
@@ -857,10 +888,22 @@ export function getChildFormatContext(
   if (parentContext.insertionMode >= HTML_TABLE_MODE) {
     // Whatever tag this was, it wasn't a table parent or other special parent, so we must have
     // entered plain HTML again.
-    return createFormatContext(HTML_MODE, null, parentContext.tagScope);
+    return createFormatContext(HTML_MODE, null, parentContext.tagScope, null);
   }
   if (parentContext.insertionMode < HTML_MODE) {
-    return createFormatContext(HTML_MODE, null, parentContext.tagScope);
+    return createFormatContext(HTML_MODE, null, parentContext.tagScope, null);
+  }
+  if (enableViewTransition) {
+    if (parentContext.viewTransition !== null) {
+      // If we're inside a view transition, regardless what element we were in, it consumes
+      // the view transition context.
+      return createFormatContext(
+        parentContext.insertionMode,
+        parentContext.selectedValue,
+        parentContext.tagScope,
+        null,
+      );
+    }
   }
   return parentContext;
 }
@@ -872,6 +915,7 @@ export function getSuspenseFallbackFormatContext(
     parentContext.insertionMode,
     parentContext.selectedValue,
     parentContext.tagScope | FALLBACK_SCOPE,
+    parentContext.viewTransition,
   );
 }
 
@@ -879,6 +923,31 @@ export function getSuspenseContentFormatContext(
   parentContext: FormatContext,
 ): FormatContext {
   return parentContext;
+}
+
+export function getViewTransitionFormatContext(
+  parentContext: FormatContext,
+  update: ?string,
+  enter: ?string,
+  exit: ?string,
+  share: ?string,
+  name: ?string,
+): FormatContext {
+  // We're entering a <ViewTransition>.
+  const viewTransition: ViewTransitionContext = {
+    update,
+    enter,
+    exit,
+    share,
+    name,
+    nameIdx: 0,
+  };
+  return createFormatContext(
+    parentContext.insertionMode,
+    parentContext.selectedValue,
+    parentContext.tagScope,
+    viewTransition,
+  );
 }
 
 export function isPreambleContext(formatContext: FormatContext): boolean {

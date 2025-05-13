@@ -52,6 +52,8 @@ export const getSuspenseFallbackFormatContext =
   $$$config.getSuspenseFallbackFormatContext;
 export const getSuspenseContentFormatContext =
   $$$config.getSuspenseContentFormatContext;
+export const getViewTransitionFormatContext =
+  $$$config.getViewTransitionFormatContext;
 export const makeId = $$$config.makeId;
 export const pushTextInstance = $$$config.pushTextInstance;
 export const pushStartInstance = $$$config.pushStartInstance;

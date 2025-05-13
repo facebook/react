@@ -76,6 +76,7 @@ import {
   getChildFormatContext,
   getSuspenseFallbackFormatContext,
   getSuspenseContentFormatContext,
+  getViewTransitionFormatContext,
   writeHoistables,
   writePreambleStart,
   writePreambleEnd,
@@ -140,6 +141,7 @@ import {
   callComponentInDEV,
   callRenderInDEV,
 } from './ReactFizzCallUserSpace';
+import {getViewTransitionClassName} from './ReactFizzViewTransitionComponent';
 
 import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
 import {
@@ -2270,7 +2272,16 @@ function renderViewTransition(
   keyPath: KeyNode,
   props: ViewTransitionProps,
 ) {
+  const prevContext = task.formatContext;
   const prevKeyPath = task.keyPath;
+  task.formatContext = getViewTransitionFormatContext(
+    prevContext,
+    getViewTransitionClassName(props.default, props.update),
+    getViewTransitionClassName(props.default, props.enter),
+    getViewTransitionClassName(props.default, props.exit),
+    getViewTransitionClassName(props.default, props.share),
+    props.name,
+  );
   task.keyPath = keyPath;
   if (props.name != null && props.name !== 'auto') {
     renderNodeDestructive(request, task, props.children, -1);
@@ -2289,6 +2300,7 @@ function renderViewTransition(
     // because renderNode takes care of unwinding the stack.
     task.treeContext = prevTreeContext;
   }
+  task.formatContext = prevContext;
   task.keyPath = prevKeyPath;
 }
 

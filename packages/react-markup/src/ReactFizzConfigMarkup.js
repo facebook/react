@@ -88,6 +88,18 @@ export {
 
 import escapeTextForBrowser from 'react-dom-bindings/src/server/escapeTextForBrowser';
 
+export function getViewTransitionFormatContext(
+  parentContext: FormatContext,
+  update: void | null | 'none' | 'auto' | string,
+  enter: void | null | 'none' | 'auto' | string,
+  exit: void | null | 'none' | 'auto' | string,
+  share: void | null | 'none' | 'auto' | string,
+  name: void | null | 'auto' | string,
+): FormatContext {
+  // ViewTransition reveals are not supported in markup renders.
+  return parentContext;
+}
+
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
   type: string,
