@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2d7e5d3cdbad86b19acc52ebb15848cb>>
+ * @generated SignedSource<<c42de0e460867d704b947ce149695176>>
  */
 
 "use strict";
@@ -2372,11 +2372,8 @@ __DEV__ &&
       scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask);
     }
     function requestTransitionLane() {
-      if (0 === currentEventTransitionLane) {
-        var actionScopeLane = currentEntangledLane;
-        currentEventTransitionLane =
-          0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
-      }
+      0 === currentEventTransitionLane &&
+        (currentEventTransitionLane = claimNextTransitionLane());
       return currentEventTransitionLane;
     }
     function entangleAsyncAction(transition, thenable) {
@@ -11228,7 +11225,8 @@ __DEV__ &&
         return (
           transition._updatedFibers || (transition._updatedFibers = new Set()),
           transition._updatedFibers.add(fiber),
-          requestTransitionLane()
+          (fiber = currentEntangledLane),
+          0 !== fiber ? fiber : requestTransitionLane()
         );
       fiber =
         0 !== currentUpdatePriority
@@ -15659,10 +15657,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-0cac32d6-20250513",
+        version: "19.2.0-native-fb-676f0879-20250513",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513"
+        reconcilerVersion: "19.2.0-native-fb-676f0879-20250513"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15807,5 +15805,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-0cac32d6-20250513";
+    exports.version = "19.2.0-native-fb-676f0879-20250513";
   })();

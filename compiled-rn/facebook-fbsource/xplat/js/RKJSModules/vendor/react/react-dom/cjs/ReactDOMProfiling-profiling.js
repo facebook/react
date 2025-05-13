@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<54f883bc970061daa75d2beb709436e4>>
+ * @generated SignedSource<<451e085e8f8046c1e852a5f4c7b45497>>
  */
 
 /*
@@ -11915,7 +11915,8 @@ function requestUpdateLane(fiber) {
     : 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
       ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
       : null !== ReactSharedInternals.T
-        ? requestTransitionLane()
+        ? ((fiber = currentEntangledLane),
+          0 !== fiber ? fiber : requestTransitionLane())
         : resolveUpdatePriority();
 }
 function requestDeferredLane() {
@@ -13534,11 +13535,8 @@ function scheduleImmediateRootScheduleTask() {
   });
 }
 function requestTransitionLane() {
-  if (0 === currentEventTransitionLane) {
-    var actionScopeLane = currentEntangledLane;
-    currentEventTransitionLane =
-      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
-  }
+  0 === currentEventTransitionLane &&
+    (currentEventTransitionLane = claimNextTransitionLane());
   return currentEventTransitionLane;
 }
 function coerceFormActionProp(actionProp) {
@@ -17776,14 +17774,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2119 = React.version;
 if (
-  "19.2.0-native-fb-0cac32d6-20250513" !==
+  "19.2.0-native-fb-676f0879-20250513" !==
   isomorphicReactPackageVersion$jscomp$inline_2119
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2119,
-      "19.2.0-native-fb-0cac32d6-20250513"
+      "19.2.0-native-fb-676f0879-20250513"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17805,10 +17803,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2126 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-0cac32d6-20250513",
+  version: "19.2.0-native-fb-676f0879-20250513",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513",
+  reconcilerVersion: "19.2.0-native-fb-676f0879-20250513",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$313 = 0;
@@ -18074,7 +18072,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-0cac32d6-20250513";
+exports.version = "19.2.0-native-fb-676f0879-20250513";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

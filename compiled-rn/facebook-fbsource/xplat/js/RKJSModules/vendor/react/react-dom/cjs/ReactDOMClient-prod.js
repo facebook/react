@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<eb8466fdbf7af6b8a349efb548a03fa0>>
+ * @generated SignedSource<<4efb453f059d3cbb66eb1cbe4cb4da09>>
  */
 
 /*
@@ -11350,7 +11350,8 @@ function requestUpdateLane(fiber) {
     : 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
       ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
       : null !== ReactSharedInternals.T
-        ? requestTransitionLane()
+        ? ((fiber = currentEntangledLane),
+          0 !== fiber ? fiber : requestTransitionLane())
         : resolveUpdatePriority();
 }
 function requestDeferredLane() {
@@ -12828,11 +12829,8 @@ function scheduleImmediateRootScheduleTask() {
   });
 }
 function requestTransitionLane() {
-  if (0 === currentEventTransitionLane) {
-    var actionScopeLane = currentEntangledLane;
-    currentEventTransitionLane =
-      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
-  }
+  0 === currentEventTransitionLane &&
+    (currentEventTransitionLane = claimNextTransitionLane());
   return currentEventTransitionLane;
 }
 function coerceFormActionProp(actionProp) {
@@ -17051,14 +17049,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2015 = React.version;
 if (
-  "19.2.0-native-fb-0cac32d6-20250513" !==
+  "19.2.0-native-fb-676f0879-20250513" !==
   isomorphicReactPackageVersion$jscomp$inline_2015
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2015,
-      "19.2.0-native-fb-0cac32d6-20250513"
+      "19.2.0-native-fb-676f0879-20250513"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17080,10 +17078,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2534 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-0cac32d6-20250513",
+  version: "19.2.0-native-fb-676f0879-20250513",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513"
+  reconcilerVersion: "19.2.0-native-fb-676f0879-20250513"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2535 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17181,4 +17179,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-0cac32d6-20250513";
+exports.version = "19.2.0-native-fb-676f0879-20250513";

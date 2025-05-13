@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b57a7380d27897a55c33cdcdb6387abe>>
+ * @generated SignedSource<<09f960192ac27382f10d9609dabc3ef0>>
  */
 
 "use strict";
@@ -2818,11 +2818,8 @@ function scheduleImmediateRootScheduleTask() {
     : scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask);
 }
 function requestTransitionLane() {
-  if (0 === currentEventTransitionLane) {
-    var actionScopeLane = currentEntangledLane;
-    currentEventTransitionLane =
-      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
-  }
+  0 === currentEventTransitionLane &&
+    (currentEventTransitionLane = claimNextTransitionLane());
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
@@ -10044,7 +10041,8 @@ function requestUpdateLane(fiber) {
     : 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
       ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
       : null !== ReactSharedInternals.T
-        ? requestTransitionLane()
+        ? ((fiber = currentEntangledLane),
+          0 !== fiber ? fiber : requestTransitionLane())
         : resolveUpdatePriority();
 }
 function requestDeferredLane() {
@@ -11906,10 +11904,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1356 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-0cac32d6-20250513",
+    version: "19.2.0-native-fb-676f0879-20250513",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513"
+    reconcilerVersion: "19.2.0-native-fb-676f0879-20250513"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1356.rendererConfig = extraDevToolsConfig);

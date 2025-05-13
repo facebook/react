@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<90d0f5add29bb5a5393ca2c196700ca6>>
+ * @generated SignedSource<<b5c11fdd0cc87a1962777913619e457e>>
  */
 
 "use strict";
@@ -1397,11 +1397,8 @@ function performSyncWorkOnRoot(root, lanes) {
   performWorkOnRoot(root, lanes, !0);
 }
 function requestTransitionLane() {
-  if (0 === currentEventTransitionLane) {
-    var actionScopeLane = currentEntangledLane;
-    currentEventTransitionLane =
-      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
-  }
+  0 === currentEventTransitionLane &&
+    (currentEventTransitionLane = claimNextTransitionLane());
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
@@ -8150,7 +8147,11 @@ function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== ReactSharedInternals.T) return requestTransitionLane();
+  if (null !== ReactSharedInternals.T)
+    return (
+      (fiber = currentEntangledLane),
+      0 !== fiber ? fiber : requestTransitionLane()
+    );
   fiber = 0 !== currentUpdatePriority ? currentUpdatePriority : 32;
   return fiber;
 }
@@ -9895,10 +9896,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1446 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-0cac32d6-20250513",
+  version: "19.2.0-native-fb-676f0879-20250513",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513"
+  reconcilerVersion: "19.2.0-native-fb-676f0879-20250513"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1447 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10034,4 +10035,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-0cac32d6-20250513";
+exports.version = "19.2.0-native-fb-676f0879-20250513";

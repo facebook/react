@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c46d6e416abf6c58151a950e130d6c0d>>
+ * @generated SignedSource<<427b849d8f576562d4090c4cf0b65de4>>
  */
 
 "use strict";
@@ -3300,11 +3300,8 @@ __DEV__ &&
           );
     }
     function requestTransitionLane() {
-      if (0 === currentEventTransitionLane) {
-        var actionScopeLane = currentEntangledLane;
-        currentEventTransitionLane =
-          0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
-      }
+      0 === currentEventTransitionLane &&
+        (currentEventTransitionLane = claimNextTransitionLane());
       return currentEventTransitionLane;
     }
     function entangleAsyncAction(transition, thenable) {
@@ -12144,7 +12141,8 @@ __DEV__ &&
       return null !== transition
         ? (transition._updatedFibers || (transition._updatedFibers = new Set()),
           transition._updatedFibers.add(fiber),
-          requestTransitionLane())
+          (fiber = currentEntangledLane),
+          0 !== fiber ? fiber : requestTransitionLane())
         : resolveUpdatePriority();
     }
     function requestDeferredLane() {
@@ -17486,10 +17484,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-0cac32d6-20250513",
+        version: "19.2.0-native-fb-676f0879-20250513",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513"
+        reconcilerVersion: "19.2.0-native-fb-676f0879-20250513"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
