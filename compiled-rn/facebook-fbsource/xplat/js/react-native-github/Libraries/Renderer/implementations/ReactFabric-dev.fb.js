@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a5cd458bf2ad2388065e19053df25479>>
+ * @generated SignedSource<<c46d6e416abf6c58151a950e130d6c0d>>
  */
 
 "use strict";
@@ -3139,7 +3139,6 @@ __DEV__ &&
         didScheduleMicrotask_act =
         didScheduleMicrotask =
           !1;
-      0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
       for (
         var currentTime = now$1(), prev = null, root = firstScheduledRoot;
         null !== root;
@@ -3158,6 +3157,7 @@ __DEV__ &&
       (pendingEffectsStatus !== NO_PENDING_EFFECTS &&
         pendingEffectsStatus !== PENDING_PASSIVE_PHASE) ||
         flushSyncWorkAcrossRoots_impl(0, !1);
+      currentEventTransitionLane = 0;
     }
     function scheduleTaskForRootDuringMicrotask(root, currentTime) {
       for (
@@ -3300,8 +3300,11 @@ __DEV__ &&
           );
     }
     function requestTransitionLane() {
-      0 === currentEventTransitionLane &&
-        (currentEventTransitionLane = claimNextTransitionLane());
+      if (0 === currentEventTransitionLane) {
+        var actionScopeLane = currentEntangledLane;
+        currentEventTransitionLane =
+          0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+      }
       return currentEventTransitionLane;
     }
     function entangleAsyncAction(transition, thenable) {
@@ -12141,8 +12144,7 @@ __DEV__ &&
       return null !== transition
         ? (transition._updatedFibers || (transition._updatedFibers = new Set()),
           transition._updatedFibers.add(fiber),
-          (fiber = currentEntangledLane),
-          0 !== fiber ? fiber : requestTransitionLane())
+          requestTransitionLane())
         : resolveUpdatePriority();
     }
     function requestDeferredLane() {
@@ -17484,10 +17486,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-997c7bc9-20250513",
+        version: "19.2.0-native-fb-0cac32d6-20250513",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-997c7bc9-20250513"
+        reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

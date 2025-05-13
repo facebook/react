@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ba979e752d3a58282118a403426587ae>>
+ * @generated SignedSource<<8e980c47dcf02e8751b8ab1a3f983015>>
  */
 
 "use strict";
@@ -3238,7 +3238,6 @@ __DEV__ &&
         didScheduleMicrotask_act =
         didScheduleMicrotask =
           !1;
-      0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
       for (
         var currentTime = now$1(), prev = null, root = firstScheduledRoot;
         null !== root;
@@ -3257,6 +3256,7 @@ __DEV__ &&
       (pendingEffectsStatus !== NO_PENDING_EFFECTS &&
         pendingEffectsStatus !== PENDING_PASSIVE_PHASE) ||
         flushSyncWorkAcrossRoots_impl(0, !1);
+      currentEventTransitionLane = 0;
     }
     function scheduleTaskForRootDuringMicrotask(root, currentTime) {
       for (
@@ -3387,8 +3387,11 @@ __DEV__ &&
       scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask);
     }
     function requestTransitionLane() {
-      0 === currentEventTransitionLane &&
-        (currentEventTransitionLane = claimNextTransitionLane());
+      if (0 === currentEventTransitionLane) {
+        var actionScopeLane = currentEntangledLane;
+        currentEventTransitionLane =
+          0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+      }
       return currentEventTransitionLane;
     }
     function entangleAsyncAction(transition, thenable) {
@@ -12381,8 +12384,7 @@ __DEV__ &&
         return (
           transition._updatedFibers || (transition._updatedFibers = new Set()),
           transition._updatedFibers.add(fiber),
-          (fiber = currentEntangledLane),
-          0 !== fiber ? fiber : requestTransitionLane()
+          requestTransitionLane()
         );
       fiber =
         0 !== currentUpdatePriority
@@ -17607,11 +17609,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-997c7bc9-20250513" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-0cac32d6-20250513" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-997c7bc9-20250513\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-0cac32d6-20250513\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17637,10 +17639,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-997c7bc9-20250513",
+        version: "19.2.0-native-fb-0cac32d6-20250513",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-997c7bc9-20250513"
+        reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<499ff3859d629e11e143884579ecd430>>
+ * @generated SignedSource<<f79b8923de8f959bbc769e40cb130a3d>>
  */
 
 "use strict";
@@ -1392,7 +1392,6 @@ function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
 }
 function processRootScheduleInImmediateTask() {
   mightHavePendingSyncWork = didScheduleMicrotask = !1;
-  0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
   for (
     var currentTime = now$1(), prev = null, root = firstScheduledRoot;
     null !== root;
@@ -1410,6 +1409,7 @@ function processRootScheduleInImmediateTask() {
   }
   (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
     flushSyncWorkAcrossRoots_impl(0, !1);
+  currentEventTransitionLane = 0;
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   for (
@@ -1513,8 +1513,11 @@ function performSyncWorkOnRoot(root, lanes) {
   performWorkOnRoot(root, lanes, !0);
 }
 function requestTransitionLane() {
-  0 === currentEventTransitionLane &&
-    (currentEventTransitionLane = claimNextTransitionLane());
+  if (0 === currentEventTransitionLane) {
+    var actionScopeLane = currentEntangledLane;
+    currentEventTransitionLane =
+      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+  }
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
@@ -8643,11 +8646,7 @@ function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== ReactSharedInternals.T)
-    return (
-      (fiber = currentEntangledLane),
-      0 !== fiber ? fiber : requestTransitionLane()
-    );
+  if (null !== ReactSharedInternals.T) return requestTransitionLane();
   fiber = 0 !== currentUpdatePriority ? currentUpdatePriority : 32;
   return fiber;
 }
@@ -10516,10 +10515,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1254 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-997c7bc9-20250513",
+  version: "19.2.0-native-fb-0cac32d6-20250513",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-997c7bc9-20250513",
+  reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$155 = 0;
@@ -10670,4 +10669,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-997c7bc9-20250513";
+exports.version = "19.2.0-native-fb-0cac32d6-20250513";

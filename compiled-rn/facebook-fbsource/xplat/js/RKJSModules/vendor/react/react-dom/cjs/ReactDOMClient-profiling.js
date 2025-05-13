@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3fb4670193e95757eac18d243b3931bc>>
+ * @generated SignedSource<<bad1d41cd1db7e78d4a00b325614c341>>
  */
 
 /*
@@ -11911,8 +11911,7 @@ function requestUpdateLane(fiber) {
     : 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
       ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
       : null !== ReactSharedInternals.T
-        ? ((fiber = currentEntangledLane),
-          0 !== fiber ? fiber : requestTransitionLane())
+        ? requestTransitionLane()
         : resolveUpdatePriority();
 }
 function requestDeferredLane() {
@@ -13399,9 +13398,8 @@ function processRootScheduleInMicrotask() {
   mightHavePendingSyncWork = didScheduleMicrotask = !1;
   var syncTransitionLanes = 0;
   0 !== currentEventTransitionLane &&
-    (shouldAttemptEagerTransition() &&
-      (syncTransitionLanes = currentEventTransitionLane),
-    (currentEventTransitionLane = 0));
+    shouldAttemptEagerTransition() &&
+    (syncTransitionLanes = currentEventTransitionLane);
   for (
     var currentTime = now$1(), prev = null, root = firstScheduledRoot;
     null !== root;
@@ -13421,6 +13419,7 @@ function processRootScheduleInMicrotask() {
   }
   (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
     flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
+  currentEventTransitionLane = 0;
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   for (
@@ -13531,8 +13530,11 @@ function scheduleImmediateRootScheduleTask() {
   });
 }
 function requestTransitionLane() {
-  0 === currentEventTransitionLane &&
-    (currentEventTransitionLane = claimNextTransitionLane());
+  if (0 === currentEventTransitionLane) {
+    var actionScopeLane = currentEntangledLane;
+    currentEventTransitionLane =
+      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+  }
   return currentEventTransitionLane;
 }
 function coerceFormActionProp(actionProp) {
@@ -17759,14 +17761,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2118 = React.version;
 if (
-  "19.2.0-native-fb-997c7bc9-20250513" !==
+  "19.2.0-native-fb-0cac32d6-20250513" !==
   isomorphicReactPackageVersion$jscomp$inline_2118
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2118,
-      "19.2.0-native-fb-997c7bc9-20250513"
+      "19.2.0-native-fb-0cac32d6-20250513"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17788,10 +17790,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2125 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-997c7bc9-20250513",
+  version: "19.2.0-native-fb-0cac32d6-20250513",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-997c7bc9-20250513",
+  reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$313 = 0;
@@ -17904,4 +17906,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-997c7bc9-20250513";
+exports.version = "19.2.0-native-fb-0cac32d6-20250513";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<19343f115fab9ac64a6cc184ee41f06f>>
+ * @generated SignedSource<<a94b35a8e2fa78b58e74d08accfbcea0>>
  */
 
 "use strict";
@@ -2682,7 +2682,6 @@ function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
 }
 function processRootScheduleInImmediateTask() {
   mightHavePendingSyncWork = didScheduleMicrotask = !1;
-  0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
   for (
     var currentTime = now(), prev = null, root = firstScheduledRoot;
     null !== root;
@@ -2700,6 +2699,7 @@ function processRootScheduleInImmediateTask() {
   }
   (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
     flushSyncWorkAcrossRoots_impl(0, !1);
+  currentEventTransitionLane = 0;
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   for (
@@ -2800,8 +2800,11 @@ function performSyncWorkOnRoot(root, lanes) {
   performWorkOnRoot(root, lanes, !0);
 }
 function requestTransitionLane() {
-  0 === currentEventTransitionLane &&
-    (currentEventTransitionLane = claimNextTransitionLane());
+  if (0 === currentEventTransitionLane) {
+    var actionScopeLane = currentEntangledLane;
+    currentEventTransitionLane =
+      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+  }
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
@@ -9754,11 +9757,7 @@ function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== ReactSharedInternals.T)
-    return (
-      (fiber = currentEntangledLane),
-      0 !== fiber ? fiber : requestTransitionLane()
-    );
+  if (null !== ReactSharedInternals.T) return requestTransitionLane();
   fiber = 0 !== currentUpdatePriority ? currentUpdatePriority : 32;
   return fiber;
 }
@@ -11212,11 +11211,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-997c7bc9-20250513" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-0cac32d6-20250513" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-997c7bc9-20250513\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-0cac32d6-20250513\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11266,10 +11265,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1306 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-997c7bc9-20250513",
+    version: "19.2.0-native-fb-0cac32d6-20250513",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-997c7bc9-20250513"
+    reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1306.rendererConfig = extraDevToolsConfig);

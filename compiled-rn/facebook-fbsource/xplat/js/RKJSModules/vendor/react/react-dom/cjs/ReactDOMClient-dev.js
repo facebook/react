@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<540483d236be7d3946d88c26277f3c7f>>
+ * @generated SignedSource<<9a261a3370c9821d3f95679cea3c74c6>>
  */
 
 /*
@@ -15616,8 +15616,7 @@ __DEV__ &&
       return null !== transition
         ? (transition._updatedFibers || (transition._updatedFibers = new Set()),
           transition._updatedFibers.add(fiber),
-          (fiber = currentEntangledLane),
-          0 !== fiber ? fiber : requestTransitionLane())
+          requestTransitionLane())
         : resolveUpdatePriority();
     }
     function requestDeferredLane() {
@@ -17508,9 +17507,8 @@ __DEV__ &&
           !1;
       var syncTransitionLanes = 0;
       0 !== currentEventTransitionLane &&
-        (shouldAttemptEagerTransition() &&
-          (syncTransitionLanes = currentEventTransitionLane),
-        (currentEventTransitionLane = 0));
+        shouldAttemptEagerTransition() &&
+        (syncTransitionLanes = currentEventTransitionLane);
       for (
         var currentTime = now$1(), prev = null, root = firstScheduledRoot;
         null !== root;
@@ -17531,6 +17529,7 @@ __DEV__ &&
       (pendingEffectsStatus !== NO_PENDING_EFFECTS &&
         pendingEffectsStatus !== PENDING_PASSIVE_PHASE) ||
         flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
+      currentEventTransitionLane = 0;
     }
     function scheduleTaskForRootDuringMicrotask(root, currentTime) {
       for (
@@ -17668,8 +17667,11 @@ __DEV__ &&
       });
     }
     function requestTransitionLane() {
-      0 === currentEventTransitionLane &&
-        (currentEventTransitionLane = claimNextTransitionLane());
+      if (0 === currentEventTransitionLane) {
+        var actionScopeLane = currentEntangledLane;
+        currentEventTransitionLane =
+          0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+      }
       return currentEventTransitionLane;
     }
     function coerceFormActionProp(actionProp) {
@@ -26958,11 +26960,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-native-fb-997c7bc9-20250513" !== isomorphicReactPackageVersion)
+      if ("19.2.0-native-fb-0cac32d6-20250513" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-native-fb-997c7bc9-20250513\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-native-fb-0cac32d6-20250513\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26999,10 +27001,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-native-fb-997c7bc9-20250513",
+          version: "19.2.0-native-fb-0cac32d6-20250513",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-native-fb-997c7bc9-20250513"
+          reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27140,5 +27142,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.2.0-native-fb-997c7bc9-20250513";
+    exports.version = "19.2.0-native-fb-0cac32d6-20250513";
   })();

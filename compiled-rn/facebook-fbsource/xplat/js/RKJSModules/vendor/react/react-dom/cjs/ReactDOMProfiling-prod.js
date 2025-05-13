@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<01a26543d8619d796e9f882a52d84b68>>
+ * @generated SignedSource<<e781d7ee97298a84d97b983c0c0e7e3c>>
  */
 
 /*
@@ -11350,8 +11350,7 @@ function requestUpdateLane(fiber) {
     : 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
       ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
       : null !== ReactSharedInternals.T
-        ? ((fiber = currentEntangledLane),
-          0 !== fiber ? fiber : requestTransitionLane())
+        ? requestTransitionLane()
         : resolveUpdatePriority();
 }
 function requestDeferredLane() {
@@ -12700,9 +12699,8 @@ function processRootScheduleInMicrotask() {
   mightHavePendingSyncWork = didScheduleMicrotask = !1;
   var syncTransitionLanes = 0;
   0 !== currentEventTransitionLane &&
-    (shouldAttemptEagerTransition() &&
-      (syncTransitionLanes = currentEventTransitionLane),
-    (currentEventTransitionLane = 0));
+    shouldAttemptEagerTransition() &&
+    (syncTransitionLanes = currentEventTransitionLane);
   for (
     var currentTime = now(), prev = null, root = firstScheduledRoot;
     null !== root;
@@ -12722,6 +12720,7 @@ function processRootScheduleInMicrotask() {
   }
   (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
     flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
+  currentEventTransitionLane = 0;
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   for (
@@ -12829,8 +12828,11 @@ function scheduleImmediateRootScheduleTask() {
   });
 }
 function requestTransitionLane() {
-  0 === currentEventTransitionLane &&
-    (currentEventTransitionLane = claimNextTransitionLane());
+  if (0 === currentEventTransitionLane) {
+    var actionScopeLane = currentEntangledLane;
+    currentEventTransitionLane =
+      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+  }
   return currentEventTransitionLane;
 }
 function coerceFormActionProp(actionProp) {
@@ -17060,14 +17062,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2016 = React.version;
 if (
-  "19.2.0-native-fb-997c7bc9-20250513" !==
+  "19.2.0-native-fb-0cac32d6-20250513" !==
   isomorphicReactPackageVersion$jscomp$inline_2016
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2016,
-      "19.2.0-native-fb-997c7bc9-20250513"
+      "19.2.0-native-fb-0cac32d6-20250513"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17089,10 +17091,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2537 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-997c7bc9-20250513",
+  version: "19.2.0-native-fb-0cac32d6-20250513",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-997c7bc9-20250513"
+  reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2538 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17343,4 +17345,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-997c7bc9-20250513";
+exports.version = "19.2.0-native-fb-0cac32d6-20250513";

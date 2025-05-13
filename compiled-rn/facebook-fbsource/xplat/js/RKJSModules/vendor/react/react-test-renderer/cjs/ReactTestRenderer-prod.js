@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d5a6803d8541a0dd51f2f1469861629c>>
+ * @generated SignedSource<<90d0f5add29bb5a5393ca2c196700ca6>>
  */
 
 "use strict";
@@ -1279,7 +1279,6 @@ function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
 }
 function processRootScheduleInImmediateTask() {
   mightHavePendingSyncWork = didScheduleMicrotask = !1;
-  0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
   for (
     var currentTime = now(), prev = null, root = firstScheduledRoot;
     null !== root;
@@ -1297,6 +1296,7 @@ function processRootScheduleInImmediateTask() {
   }
   (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
     flushSyncWorkAcrossRoots_impl(0, !1);
+  currentEventTransitionLane = 0;
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   for (
@@ -1397,8 +1397,11 @@ function performSyncWorkOnRoot(root, lanes) {
   performWorkOnRoot(root, lanes, !0);
 }
 function requestTransitionLane() {
-  0 === currentEventTransitionLane &&
-    (currentEventTransitionLane = claimNextTransitionLane());
+  if (0 === currentEventTransitionLane) {
+    var actionScopeLane = currentEntangledLane;
+    currentEventTransitionLane =
+      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+  }
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
@@ -8147,11 +8150,7 @@ function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== ReactSharedInternals.T)
-    return (
-      (fiber = currentEntangledLane),
-      0 !== fiber ? fiber : requestTransitionLane()
-    );
+  if (null !== ReactSharedInternals.T) return requestTransitionLane();
   fiber = 0 !== currentUpdatePriority ? currentUpdatePriority : 32;
   return fiber;
 }
@@ -9896,10 +9895,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1446 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-997c7bc9-20250513",
+  version: "19.2.0-native-fb-0cac32d6-20250513",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-997c7bc9-20250513"
+  reconcilerVersion: "19.2.0-native-fb-0cac32d6-20250513"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1447 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10035,4 +10034,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-997c7bc9-20250513";
+exports.version = "19.2.0-native-fb-0cac32d6-20250513";
