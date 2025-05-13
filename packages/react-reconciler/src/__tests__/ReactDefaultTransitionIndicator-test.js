@@ -109,10 +109,7 @@ describe('ReactDefaultTransitionIndicator', () => {
     expect(root).toMatchRenderedOutput(<div>Hi</div>);
 
     await act(() => {
-      // TODO: This should not require a discrete update ideally but work for default too.
-      ReactNoop.discreteUpdates(() => {
-        update('Loading...');
-      });
+      update('Loading...');
       React.startTransition(() => {
         update('');
         root.render(<App>{promiseB}</App>);

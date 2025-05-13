@@ -26,6 +26,7 @@ import {
   NoLane,
   NoLanes,
   SyncLane,
+  DefaultLane,
   getHighestPriorityLane,
   getNextLanes,
   includesSyncLane,
@@ -261,6 +262,13 @@ function processRootScheduleInMicrotask() {
       // render it synchronously anyway. We do this during a popstate event to
       // preserve the scroll position of the previous page.
       syncTransitionLanes = currentEventTransitionLane;
+    } else if (enableDefaultTransitionIndicator) {
+      // If we have a Transition scheduled by this event it might be paired
+      // with Default lane scheduled loading indicators. To unbatch it from
+      // other events later on, flush it early to determine whether it
+      // rendered an indicator. This ensures that setState in default priority
+      // event doesn't trigger onDefaultTransitionIndicator.
+      syncTransitionLanes = DefaultLane;
     }
   }
 
