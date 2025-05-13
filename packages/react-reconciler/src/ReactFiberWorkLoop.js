@@ -356,7 +356,6 @@ import {
   requestTransitionLane,
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
-import {peekEntangledActionLane} from './ReactFiberAsyncAction';
 import {logUncaughtError} from './ReactFiberErrorLogger';
 import {
   deleteScheduledGesture,
@@ -779,14 +778,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
       transition._updatedFibers.add(fiber);
     }
 
-    const actionScopeLane = peekEntangledActionLane();
-    return actionScopeLane !== NoLane
-      ? // We're inside an async action scope. Reuse the same lane.
-        actionScopeLane
-      : // We may or may not be inside an async action scope. If we are, this
-        // is the first update in that scope. Either way, we need to get a
-        // fresh transition lane.
-        requestTransitionLane(transition);
+    return requestTransitionLane(transition);
   }
 
   return eventPriorityToLane(resolveUpdatePriority());
