@@ -85,6 +85,12 @@ import {peekEntangledActionLane} from './ReactFiberAsyncAction';
 import noop from 'shared/noop';
 import reportGlobalError from 'shared/reportGlobalError';
 
+import {
+  startIsomorphicDefaultIndicatorIfNeeded,
+  hasOngoingIsomorphicIndicator,
+  retainIsomorphicIndicator,
+} from './ReactFiberAsyncAction';
+
 // A linked list of all the roots with pending work. In an idiomatic app,
 // there's only a single root, but we do support multi root apps, hence this
 // extra complexity. But this module is optimized for the single root case.
@@ -130,6 +136,20 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
   // without consulting the schedule.
   mightHavePendingSyncWork = true;
 
+  ensureScheduleIsScheduled();
+
+  if (
+    __DEV__ &&
+    !disableLegacyMode &&
+    ReactSharedInternals.isBatchingLegacy &&
+    root.tag === LegacyRoot
+  ) {
+    // Special `act` case: Record whenever a legacy update is scheduled.
+    ReactSharedInternals.didScheduleLegacyUpdate = true;
+  }
+}
+
+export function ensureScheduleIsScheduled(): void {
   // At the end of the current event, go through each of the roots and ensure
   // there's a task scheduled for each one at the correct priority.
   if (__DEV__ && ReactSharedInternals.actQueue !== null) {
@@ -143,16 +163,6 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
       didScheduleMicrotask = true;
       scheduleImmediateRootScheduleTask();
     }
-  }
-
-  if (
-    __DEV__ &&
-    !disableLegacyMode &&
-    ReactSharedInternals.isBatchingLegacy &&
-    root.tag === LegacyRoot
-  ) {
-    // Special `act` case: Record whenever a legacy update is scheduled.
-    ReactSharedInternals.didScheduleLegacyUpdate = true;
   }
 }
 
@@ -339,18 +349,30 @@ function startDefaultTransitionIndicatorIfNeeded() {
   if (!enableDefaultTransitionIndicator) {
     return;
   }
+  // Check if we need to start an isomorphic indicator like if an async action
+  // was started.
+  startIsomorphicDefaultIndicatorIfNeeded();
   // Check all the roots if there are any new indicators needed.
   let root = firstScheduledRoot;
   while (root !== null) {
     if (root.indicatorLanes !== NoLanes && root.pendingIndicator === null) {
       // We have new indicator lanes that requires a loading state. Start the
       // default transition indicator.
-      try {
-        const onDefaultTransitionIndicator = root.onDefaultTransitionIndicator;
-        root.pendingIndicator = onDefaultTransitionIndicator() || noop;
-      } catch (x) {
-        root.pendingIndicator = noop;
-        reportGlobalError(x);
+      if (hasOngoingIsomorphicIndicator()) {
+        // We already have an isomorphic indicator going which means it has to
+        // also apply to this root since it implies all roots have the same one.
+        // We retain this indicator so that it keeps going until we commit this
+        // root.
+        root.pendingIndicator = retainIsomorphicIndicator();
+      } else {
+        try {
+          const onDefaultTransitionIndicator =
+            root.onDefaultTransitionIndicator;
+          root.pendingIndicator = onDefaultTransitionIndicator() || noop;
+        } catch (x) {
+          root.pendingIndicator = noop;
+          reportGlobalError(x);
+        }
       }
     }
     root = root.next;

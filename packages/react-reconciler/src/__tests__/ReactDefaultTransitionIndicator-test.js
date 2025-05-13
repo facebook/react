@@ -265,7 +265,6 @@ describe('ReactDefaultTransitionIndicator', () => {
 
     await act(() => {
       // Start an async action but we haven't called setState yet
-      // TODO: This should ideally work with React.startTransition too but we don't know the root.
       start(() => promise);
     });
 
@@ -276,6 +275,91 @@ describe('ReactDefaultTransitionIndicator', () => {
     });
 
     assertLog(['stop']);
+
+    expect(root).toMatchRenderedOutput('Hi');
+  });
+
+  // @gate enableDefaultTransitionIndicator
+  it('triggers the default indicator while an async transition is ongoing (isomorphic)', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    function App() {
+      return 'Hi';
+    }
+
+    const root = ReactNoop.createRoot({
+      onDefaultTransitionIndicator() {
+        Scheduler.log('start');
+        return () => {
+          Scheduler.log('stop');
+        };
+      },
+    });
+    await act(() => {
+      root.render(<App />);
+    });
+
+    assertLog([]);
+
+    await act(() => {
+      // Start an async action but we haven't called setState yet
+      React.startTransition(() => promise);
+    });
+
+    assertLog(['start']);
+
+    await act(async () => {
+      await resolve('Hello');
+    });
+
+    assertLog(['stop']);
+
+    expect(root).toMatchRenderedOutput('Hi');
+  });
+
+  // @gate enableDefaultTransitionIndicator
+  it('does not triggers isomorphic async action default indicator if there are two different ones', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    function App() {
+      return 'Hi';
+    }
+
+    const root = ReactNoop.createRoot({
+      onDefaultTransitionIndicator() {
+        Scheduler.log('start');
+        return () => {
+          Scheduler.log('stop');
+        };
+      },
+    });
+    // Initialize second root. This is now ambiguous which indicator to use.
+    ReactNoop.createRoot({
+      onDefaultTransitionIndicator() {
+        Scheduler.log('start2');
+        return () => {
+          Scheduler.log('stop2');
+        };
+      },
+    });
+    await act(() => {
+      root.render(<App />);
+    });
+
+    assertLog([]);
+
+    await act(() => {
+      // Start an async action but we haven't called setState yet
+      React.startTransition(() => promise);
+    });
+
+    assertLog([]);
+
+    await act(async () => {
+      await resolve('Hello');
+    });
+
+    assertLog([]);
 
     expect(root).toMatchRenderedOutput('Hi');
   });
