@@ -369,7 +369,7 @@ server.tool(
     text: z.string(),
   },
   async ({text}) => {
-    const componentTree = await parseReactComponentTree(text);
+    const componentTree = await parseReactComponentTree();
 
     return {
       content: [
