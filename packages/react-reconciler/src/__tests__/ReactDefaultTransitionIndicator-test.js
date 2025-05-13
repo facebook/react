@@ -18,7 +18,9 @@ let use;
 let useOptimistic;
 let useState;
 let useTransition;
+let useDeferredValue;
 let assertLog;
+let waitForPaint;
 
 describe('ReactDefaultTransitionIndicator', () => {
   beforeEach(() => {
@@ -27,12 +29,15 @@ describe('ReactDefaultTransitionIndicator', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    act = require('internal-test-utils').act;
-    assertLog = require('internal-test-utils').assertLog;
+    const InternalTestUtils = require('internal-test-utils');
+    act = InternalTestUtils.act;
+    assertLog = InternalTestUtils.assertLog;
+    waitForPaint = InternalTestUtils.waitForPaint;
     use = React.use;
     useOptimistic = React.useOptimistic;
     useState = React.useState;
     useTransition = React.useTransition;
+    useDeferredValue = React.useDeferredValue;
   });
 
   // @gate enableDefaultTransitionIndicator
@@ -276,5 +281,78 @@ describe('ReactDefaultTransitionIndicator', () => {
     assertLog(['stop']);
 
     expect(root).toMatchRenderedOutput('Hi');
+  });
+
+  it('should not trigger for useDeferredValue (sync)', async () => {
+    function Text({text}) {
+      Scheduler.log(text);
+      return text;
+    }
+    function App({value}) {
+      const deferredValue = useDeferredValue(value, 'Hi');
+      return <Text text={deferredValue} />;
+    }
+
+    const root = ReactNoop.createRoot({
+      onDefaultTransitionIndicator() {
+        Scheduler.log('start');
+        return () => {
+          Scheduler.log('stop');
+        };
+      },
+    });
+    await act(async () => {
+      root.render(<App value="Hello" />);
+      await waitForPaint(['Hi']);
+      expect(root).toMatchRenderedOutput('Hi');
+    });
+
+    assertLog(['Hello']);
+
+    expect(root).toMatchRenderedOutput('Hello');
+
+    assertLog([]);
+
+    await act(async () => {
+      root.render(<App value="Bye" />);
+      await waitForPaint(['Hello']);
+      expect(root).toMatchRenderedOutput('Hello');
+    });
+
+    assertLog(['Bye']);
+
+    expect(root).toMatchRenderedOutput('Bye');
+  });
+
+  // @gate enableDefaultTransitionIndicator
+  it('should not trigger for useDeferredValue (transition)', async () => {
+    function Text({text}) {
+      Scheduler.log(text);
+      return text;
+    }
+    function App({value}) {
+      const deferredValue = useDeferredValue(value, 'Hi');
+      return <Text text={deferredValue} />;
+    }
+
+    const root = ReactNoop.createRoot({
+      onDefaultTransitionIndicator() {
+        Scheduler.log('start');
+        return () => {
+          Scheduler.log('stop');
+        };
+      },
+    });
+    await act(async () => {
+      React.startTransition(() => {
+        root.render(<App value="Hello" />);
+      });
+      await waitForPaint(['start', 'Hi', 'stop']);
+      expect(root).toMatchRenderedOutput('Hi');
+    });
+
+    assertLog(['Hello']);
+
+    expect(root).toMatchRenderedOutput('Hello');
   });
 });
