@@ -1429,9 +1429,8 @@ module.exports = function ($$$config) {
     mightHavePendingSyncWork = didScheduleMicrotask = !1;
     var syncTransitionLanes = 0;
     0 !== currentEventTransitionLane &&
-      (shouldAttemptEagerTransition() &&
-        (syncTransitionLanes = currentEventTransitionLane),
-      (currentEventTransitionLane = 0));
+      shouldAttemptEagerTransition() &&
+      (syncTransitionLanes = currentEventTransitionLane);
     for (
       var currentTime = now(), prev = null, root = firstScheduledRoot;
       null !== root;
@@ -1451,6 +1450,7 @@ module.exports = function ($$$config) {
     }
     (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
       flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
+    currentEventTransitionLane = 0;
   }
   function scheduleTaskForRootDuringMicrotask(root, currentTime) {
     var pendingLanes = root.pendingLanes,
@@ -1573,8 +1573,11 @@ module.exports = function ($$$config) {
         );
   }
   function requestTransitionLane() {
-    0 === currentEventTransitionLane &&
-      (currentEventTransitionLane = claimNextTransitionLane());
+    if (0 === currentEventTransitionLane) {
+      var actionScopeLane = currentEntangledLane;
+      currentEventTransitionLane =
+        0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+    }
     return currentEventTransitionLane;
   }
   function entangleAsyncAction(transition, thenable) {
@@ -10998,13 +11001,11 @@ module.exports = function ($$$config) {
       ));
   }
   function requestUpdateLane() {
-    if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
-      return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-    if (null !== ReactSharedInternals.T) {
-      var actionScopeLane = currentEntangledLane;
-      return 0 !== actionScopeLane ? actionScopeLane : requestTransitionLane();
-    }
-    return resolveUpdatePriority();
+    return 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
+      ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
+      : null !== ReactSharedInternals.T
+        ? requestTransitionLane()
+        : resolveUpdatePriority();
   }
   function requestDeferredLane() {
     0 === workInProgressDeferredLane &&
@@ -14084,7 +14085,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-3820740a-20250509"
+      reconcilerVersion: "19.2.0-www-classic-0cac32d6-20250513"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

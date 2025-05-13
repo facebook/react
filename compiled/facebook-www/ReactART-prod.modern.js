@@ -1334,7 +1334,6 @@ function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
 }
 function processRootScheduleInImmediateTask() {
   mightHavePendingSyncWork = didScheduleMicrotask = !1;
-  0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
   for (
     var currentTime = now(), prev = null, root = firstScheduledRoot;
     null !== root;
@@ -1352,6 +1351,7 @@ function processRootScheduleInImmediateTask() {
   }
   (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
     flushSyncWorkAcrossRoots_impl(0, !1);
+  currentEventTransitionLane = 0;
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   var pendingLanes = root.pendingLanes,
@@ -1459,8 +1459,11 @@ function performSyncWorkOnRoot(root, lanes) {
   performWorkOnRoot(root, lanes, !0);
 }
 function requestTransitionLane() {
-  0 === currentEventTransitionLane &&
-    (currentEventTransitionLane = claimNextTransitionLane());
+  if (0 === currentEventTransitionLane) {
+    var actionScopeLane = currentEntangledLane;
+    currentEventTransitionLane =
+      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+  }
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
@@ -9414,13 +9417,11 @@ var legacyErrorBoundariesThatAlreadyFailed = null,
   nestedUpdateCount = 0,
   rootWithNestedUpdates = null;
 function requestUpdateLane() {
-  if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
-    return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== ReactSharedInternals.T) {
-    var actionScopeLane = currentEntangledLane;
-    return 0 !== actionScopeLane ? actionScopeLane : requestTransitionLane();
-  }
-  return currentUpdatePriority || 32;
+  return 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
+    ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
+    : null !== ReactSharedInternals.T
+      ? requestTransitionLane()
+      : currentUpdatePriority || 32;
 }
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
@@ -11105,10 +11106,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1592 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-3820740a-20250509",
+  version: "19.2.0-www-modern-0cac32d6-20250513",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-3820740a-20250509"
+  reconcilerVersion: "19.2.0-www-modern-0cac32d6-20250513"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1593 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11134,4 +11135,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-3820740a-20250509";
+exports.version = "19.2.0-www-modern-0cac32d6-20250513";

@@ -2830,9 +2830,8 @@ function processRootScheduleInMicrotask() {
   mightHavePendingSyncWork = didScheduleMicrotask = !1;
   var syncTransitionLanes = 0;
   0 !== currentEventTransitionLane &&
-    (shouldAttemptEagerTransition() &&
-      (syncTransitionLanes = currentEventTransitionLane),
-    (currentEventTransitionLane = 0));
+    shouldAttemptEagerTransition() &&
+    (syncTransitionLanes = currentEventTransitionLane);
   for (
     var currentTime = now$1(), prev = null, root = firstScheduledRoot;
     null !== root;
@@ -2852,6 +2851,7 @@ function processRootScheduleInMicrotask() {
   }
   (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus) ||
     flushSyncWorkAcrossRoots_impl(syncTransitionLanes, !1);
+  currentEventTransitionLane = 0;
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   var pendingLanes = root.pendingLanes,
@@ -2973,8 +2973,11 @@ function scheduleImmediateRootScheduleTask() {
   });
 }
 function requestTransitionLane() {
-  0 === currentEventTransitionLane &&
-    (currentEventTransitionLane = claimNextTransitionLane());
+  if (0 === currentEventTransitionLane) {
+    var actionScopeLane = currentEntangledLane;
+    currentEventTransitionLane =
+      0 !== actionScopeLane ? actionScopeLane : claimNextTransitionLane();
+  }
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
@@ -13673,13 +13676,11 @@ var legacyErrorBoundariesThatAlreadyFailed = null,
   nestedUpdateCount = 0,
   rootWithNestedUpdates = null;
 function requestUpdateLane() {
-  if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
-    return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== ReactSharedInternals.T) {
-    var actionScopeLane = currentEntangledLane;
-    return 0 !== actionScopeLane ? actionScopeLane : requestTransitionLane();
-  }
-  return resolveUpdatePriority();
+  return 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
+    ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
+    : null !== ReactSharedInternals.T
+      ? requestTransitionLane()
+      : resolveUpdatePriority();
 }
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
@@ -21534,14 +21535,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2323 = React.version;
 if (
-  "19.2.0-www-classic-3820740a-20250509" !==
+  "19.2.0-www-classic-0cac32d6-20250513" !==
   isomorphicReactPackageVersion$jscomp$inline_2323
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2323,
-      "19.2.0-www-classic-3820740a-20250509"
+      "19.2.0-www-classic-0cac32d6-20250513"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -21559,10 +21560,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2325 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-3820740a-20250509",
+  version: "19.2.0-www-classic-0cac32d6-20250513",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-3820740a-20250509"
+  reconcilerVersion: "19.2.0-www-classic-0cac32d6-20250513"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2325.getLaneLabelMap = getLaneLabelMap),
@@ -21934,7 +21935,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-3820740a-20250509";
+exports.version = "19.2.0-www-classic-0cac32d6-20250513";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
