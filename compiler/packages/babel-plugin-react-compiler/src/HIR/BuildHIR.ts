@@ -225,6 +225,7 @@ export function lower(
     loc: func.node.loc ?? GeneratedSource,
     env,
     effects: null,
+    aliasingEffects: null,
     directives,
   });
 }
