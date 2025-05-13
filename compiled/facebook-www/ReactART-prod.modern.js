@@ -11106,24 +11106,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1595 = {
+var internals$jscomp$inline_1597 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-59440424-20250513",
+  version: "19.2.0-www-modern-3a5b326d-20250513",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-59440424-20250513"
+  reconcilerVersion: "19.2.0-www-modern-3a5b326d-20250513"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1596 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1598 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1596.isDisabled &&
-    hook$jscomp$inline_1596.supportsFiber
+    !hook$jscomp$inline_1598.isDisabled &&
+    hook$jscomp$inline_1598.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1596.inject(
-        internals$jscomp$inline_1595
+      (rendererID = hook$jscomp$inline_1598.inject(
+        internals$jscomp$inline_1597
       )),
-        (injectedHook = hook$jscomp$inline_1596);
+        (injectedHook = hook$jscomp$inline_1598);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11137,4 +11137,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-59440424-20250513";
+exports.version = "19.2.0-www-modern-3a5b326d-20250513";
