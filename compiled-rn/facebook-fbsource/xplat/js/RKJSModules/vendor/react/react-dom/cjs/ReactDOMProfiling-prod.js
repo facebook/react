@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6a686fdd5152c2144439e4d73c8dc376>>
+ * @generated SignedSource<<01adbc294113268e3776663698f74862>>
  */
 
 /*
@@ -17017,7 +17017,50 @@ function retryIfBlockedOn(unblocked) {
     }
 }
 function defaultOnDefaultTransitionIndicator() {
-  return function () {};
+  function handleNavigate(event) {
+    event.canIntercept &&
+      "react-transition" === event.info &&
+      event.intercept({
+        handler: function () {
+          return new Promise(function (resolve) {
+            return (pendingResolve = resolve);
+          });
+        },
+        focusReset: "manual",
+        scroll: "manual"
+      });
+  }
+  function handleNavigateComplete() {
+    null !== pendingResolve && (pendingResolve(), (pendingResolve = null));
+    isCancelled || startFakeNavigation();
+  }
+  function startFakeNavigation() {
+    if (!isCancelled && !navigation.transition) {
+      var currentEntry = navigation.currentEntry;
+      currentEntry &&
+        null != currentEntry.url &&
+        navigation.navigate(currentEntry.url, {
+          state: currentEntry.getState(),
+          info: "react-transition",
+          history: "replace"
+        });
+    }
+  }
+  if ("object" === typeof navigation) {
+    var isCancelled = !1,
+      pendingResolve = null;
+    navigation.addEventListener("navigate", handleNavigate);
+    navigation.addEventListener("navigatesuccess", handleNavigateComplete);
+    navigation.addEventListener("navigateerror", handleNavigateComplete);
+    setTimeout(startFakeNavigation, 100);
+    return function () {
+      isCancelled = !0;
+      navigation.removeEventListener("navigate", handleNavigate);
+      navigation.removeEventListener("navigatesuccess", handleNavigateComplete);
+      navigation.removeEventListener("navigateerror", handleNavigateComplete);
+      null !== pendingResolve && (pendingResolve(), (pendingResolve = null));
+    };
+  }
 }
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -17062,14 +17105,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2016 = React.version;
 if (
-  "19.2.0-native-fb-b480865d-20250513" !==
+  "19.2.0-native-fb-59440424-20250513" !==
   isomorphicReactPackageVersion$jscomp$inline_2016
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2016,
-      "19.2.0-native-fb-b480865d-20250513"
+      "19.2.0-native-fb-59440424-20250513"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17091,10 +17134,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2537 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-b480865d-20250513",
+  version: "19.2.0-native-fb-59440424-20250513",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-b480865d-20250513"
+  reconcilerVersion: "19.2.0-native-fb-59440424-20250513"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2538 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17345,4 +17388,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-b480865d-20250513";
+exports.version = "19.2.0-native-fb-59440424-20250513";
