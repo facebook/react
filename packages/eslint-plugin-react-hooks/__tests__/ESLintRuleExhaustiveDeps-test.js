@@ -1468,6 +1468,16 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo?.toString());
+          }, []);
+        }
+      `,
+      options: [{ignoredHooks: 'useEffect'}],
+    }
   ],
   invalid: [
     {
