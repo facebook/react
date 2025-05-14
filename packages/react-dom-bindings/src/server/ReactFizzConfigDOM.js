@@ -754,12 +754,13 @@ const ENTER_SCOPE = /*      */ 0b10000; // A direct Instance below Suspense cont
 const SUBTREE_SCOPE = ~(ENTER_SCOPE | EXIT_SCOPE);
 
 type ViewTransitionContext = {
-  update: ?string,
-  enter: ?string,
-  exit: ?string,
-  share: ?string,
-  name: ?string,
-  nameIdx: number,
+  update: 'none' | 'auto' | string,
+  // null here means that this case can never trigger. Not "auto" like it does in props.
+  enter: null | 'none' | 'auto' | string,
+  exit: null | 'none' | 'auto' | string,
+  share: null | 'none' | 'auto' | string,
+  name: null | string,
+  nameIdx: number, // keeps track of how many duplicates of this name we've emitted.
 };
 
 // Lets us keep track of contextual state and pick it back up after suspending.
@@ -923,7 +924,34 @@ export function getViewTransitionFormatContext(
   share: ?string,
   name: ?string,
 ): FormatContext {
-  // We're entering a <ViewTransition>.
+  // We're entering a <ViewTransition>. Normalize props.
+  if (update == null) {
+    update = 'auto';
+  }
+  if (enter == null) {
+    enter = 'auto';
+  }
+  if (exit == null) {
+    exit = 'auto';
+  }
+  if (name == null) {
+    name = null;
+    share = null; // share is only relevant if there's a name
+  } else if (share === 'none') {
+    // I believe if share is disabled, it means the same thing as if it doesn't
+    // exit because enter/exit will take precedence and if it's deeply nested
+    // it just animates along whatever the parent does when disabled.
+    name = null;
+    share = null;
+  } else if (share == null) {
+    share = 'auto';
+  }
+  if (!(parentContext.tagScope & EXIT_SCOPE)) {
+    exit = null; // exit is only relevant for the first ViewTransition inside fallback
+  }
+  if (!(parentContext.tagScope & ENTER_SCOPE)) {
+    enter = null; // enter is only relevant for the first ViewTransition inside content
+  }
   const viewTransition: ViewTransitionContext = {
     update,
     enter,
@@ -932,10 +960,11 @@ export function getViewTransitionFormatContext(
     name,
     nameIdx: 0,
   };
+  const subtreeScope = (parentContext.tagScope & SUBTREE_SCOPE);
   return createFormatContext(
     parentContext.insertionMode,
     parentContext.selectedValue,
-    parentContext.tagScope,
+    subtreeScope,
     viewTransition,
   );
 }
