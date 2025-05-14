@@ -3543,6 +3543,12 @@ function updateViewTransition(
       current === null
         ? ViewTransitionNamedMount | ViewTransitionNamedStatic
         : ViewTransitionNamedStatic;
+  } else {
+    // The server may have used useId to auto-assign a generated name for this boundary.
+    // We push a materialization to ensure child ids line up with the server.
+    if (getIsHydrating()) {
+      pushMaterializedTreeId(workInProgress);
+    }
   }
   if (__DEV__) {
     // $FlowFixMe[prop-missing]
