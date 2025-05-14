@@ -1069,6 +1069,43 @@ export function pushSegmentFinale(
   }
 }
 
+function pushViewTransitionAttributes(
+  target: Array<Chunk | PrecomputedChunk>,
+  formatContext: FormatContext,
+): void {
+  if (!enableViewTransition) {
+    return;
+  }
+  const viewTransition = formatContext.viewTransition;
+  if (viewTransition === null) {
+    return;
+  }
+  if (viewTransition.name !== 'auto') {
+    pushStringAttribute(
+      target,
+      'vt-name',
+      viewTransition.nameIdx === 0
+        ? viewTransition.name
+        : viewTransition.name + '_' + viewTransition.nameIdx,
+    );
+    // Increment the index in case we have multiple children to the same ViewTransition.
+    // Because this is a side-effect in render, we should ideally call pushViewTransitionAttributes
+    // after we've suspended (like forms do), so that we don't increment each attempt.
+    // TODO: Make this deterministic.
+    viewTransition.nameIdx++;
+  }
+  pushStringAttribute(target, 'vt-update', viewTransition.update);
+  if (viewTransition.enter !== null) {
+    pushStringAttribute(target, 'vt-enter', viewTransition.enter);
+  }
+  if (viewTransition.exit !== null) {
+    pushStringAttribute(target, 'vt-exit', viewTransition.exit);
+  }
+  if (viewTransition.share !== null) {
+    pushStringAttribute(target, 'vt-share', viewTransition.share);
+  }
+}
+
 const styleNameCache: Map<string, PrecomputedChunk> = new Map();
 function processStyleName(styleName: string): PrecomputedChunk {
   const chunk = styleNameCache.get(styleName);
@@ -1808,6 +1845,7 @@ function checkSelectProp(props: any, propName: string) {
 function pushStartAnchor(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag('a'));
 
@@ -1842,6 +1880,8 @@ function pushStartAnchor(
     }
   }
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
   if (typeof children === 'string') {
@@ -1856,6 +1896,7 @@ function pushStartAnchor(
 function pushStartObject(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag('object'));
 
@@ -1907,6 +1948,8 @@ function pushStartObject(
     }
   }
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
   if (typeof children === 'string') {
@@ -1921,6 +1964,7 @@ function pushStartObject(
 function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  formatContext: FormatContext,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('select', props);
@@ -1973,6 +2017,8 @@ function pushStartSelect(
       }
     }
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -2103,6 +2149,7 @@ function pushStartOption(
     target.push(selectedMarkerAttribute);
   }
 
+  // Options never participate as ViewTransitions.
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
   return children;
@@ -2172,6 +2219,7 @@ function pushStartForm(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag('form'));
 
@@ -2281,6 +2329,8 @@ function pushStartForm(
     pushAttribute(target, 'target', formTarget);
   }
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTag);
 
   if (formActionName !== null) {
@@ -2305,6 +2355,7 @@ function pushInput(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  formatContext: FormatContext,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('input', props);
@@ -2434,6 +2485,8 @@ function pushInput(
     pushAttribute(target, 'value', defaultValue);
   }
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTagSelfClosing);
 
   // We place any additional hidden form fields after the input.
@@ -2447,6 +2500,7 @@ function pushStartButton(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag('button'));
 
@@ -2518,6 +2572,8 @@ function pushStartButton(
     name,
   );
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTag);
 
   // We place any additional hidden form fields we need to include inside the button itself.
@@ -2537,6 +2593,7 @@ function pushStartButton(
 function pushStartTextArea(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  formatContext: FormatContext,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('textarea', props);
@@ -2590,6 +2647,8 @@ function pushStartTextArea(
   if (value === null && defaultValue !== null) {
     value = defaultValue;
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
 
@@ -2667,7 +2726,7 @@ function pushMeta(
     noscriptTagInScope ||
     props.itemProp != null
   ) {
-    return pushSelfClosing(target, props, 'meta');
+    return pushSelfClosing(target, props, 'meta', formatContext);
   } else {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
@@ -2686,15 +2745,30 @@ function pushMeta(
       // the only way to embed the tag today we flush it on a special queue on the Request so it
       // can go before everything else. Like viewport this means that the tag will escape it's
       // parent container.
-      return pushSelfClosing(renderState.charsetChunks, props, 'meta');
+      return pushSelfClosing(
+        renderState.charsetChunks,
+        props,
+        'meta',
+        formatContext,
+      );
     } else if (props.name === 'viewport') {
       // "viewport" is flushed on the Request so it can go earlier that Float resources that
       // might be affected by it. This means it can escape the boundary it is rendered within.
       // This is a pragmatic solution to viewport being incredibly sensitive to document order
       // without requiring all hoistables to be flushed too early.
-      return pushSelfClosing(renderState.viewportChunks, props, 'meta');
+      return pushSelfClosing(
+        renderState.viewportChunks,
+        props,
+        'meta',
+        formatContext,
+      );
     } else {
-      return pushSelfClosing(renderState.hoistableChunks, props, 'meta');
+      return pushSelfClosing(
+        renderState.hoistableChunks,
+        props,
+        'meta',
+        formatContext,
+      );
     }
   }
 }
@@ -2901,6 +2975,8 @@ function pushLinkImpl(
     }
   }
 
+  // Link never participate as a ViewTransition
+
   target.push(endOfStartTagSelfClosing);
   return null;
 }
@@ -3066,6 +3142,8 @@ function pushStyleImpl(
       }
     }
   }
+
+  // Style never participate as a ViewTransition.
   target.push(endOfStartTag);
 
   const child = Array.isArray(children)
@@ -3272,13 +3350,14 @@ function pushImg(
       }
     }
   }
-  return pushSelfClosing(target, props, 'img');
+  return pushSelfClosing(target, props, 'img', formatContext);
 }
 
 function pushSelfClosing(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
+  formatContext: FormatContext,
 ): null {
   target.push(startChunkForTag(tag));
 
@@ -3302,6 +3381,8 @@ function pushSelfClosing(
     }
   }
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTagSelfClosing);
   return null;
 }
@@ -3309,6 +3390,7 @@ function pushSelfClosing(
 function pushStartMenuItem(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag('menuitem'));
 
@@ -3330,6 +3412,8 @@ function pushStartMenuItem(
       }
     }
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
   return null;
@@ -3437,6 +3521,7 @@ function pushTitleImpl(
       }
     }
   }
+  // Title never participate as a ViewTransition
   target.push(endOfStartTag);
 
   const child = Array.isArray(children)
@@ -3485,11 +3570,16 @@ function pushStartHead(
     }
 
     preamble.headChunks = [];
-    return pushStartSingletonElement(preamble.headChunks, props, 'head');
+    return pushStartSingletonElement(
+      preamble.headChunks,
+      props,
+      'head',
+      formatContext,
+    );
   } else {
     // This <head> is deep and is likely just an error. we emit it inline though.
     // Validation should warn that this tag is the the wrong spot.
-    return pushStartGenericElement(target, props, 'head');
+    return pushStartGenericElement(target, props, 'head', formatContext);
   }
 }
 
@@ -3514,11 +3604,16 @@ function pushStartBody(
     }
 
     preamble.bodyChunks = [];
-    return pushStartSingletonElement(preamble.bodyChunks, props, 'body');
+    return pushStartSingletonElement(
+      preamble.bodyChunks,
+      props,
+      'body',
+      formatContext,
+    );
   } else {
     // This <head> is deep and is likely just an error. we emit it inline though.
     // Validation should warn that this tag is the the wrong spot.
-    return pushStartGenericElement(target, props, 'body');
+    return pushStartGenericElement(target, props, 'body', formatContext);
   }
 }
 
@@ -3543,11 +3638,16 @@ function pushStartHtml(
     }
 
     preamble.htmlChunks = [DOCTYPE];
-    return pushStartSingletonElement(preamble.htmlChunks, props, 'html');
+    return pushStartSingletonElement(
+      preamble.htmlChunks,
+      props,
+      'html',
+      formatContext,
+    );
   } else {
     // This <html> is deep and is likely just an error. we emit it inline though.
     // Validation should warn that this tag is the the wrong spot.
-    return pushStartGenericElement(target, props, 'html');
+    return pushStartGenericElement(target, props, 'html', formatContext);
   }
 }
 
@@ -3658,6 +3758,7 @@ function pushScriptImpl(
       }
     }
   }
+  // Scripts never participate as a ViewTransition
   target.push(endOfStartTag);
 
   if (__DEV__) {
@@ -3691,6 +3792,7 @@ function pushStartSingletonElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -3715,6 +3817,8 @@ function pushStartSingletonElement(
       }
     }
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -3725,6 +3829,7 @@ function pushStartGenericElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -3749,6 +3854,8 @@ function pushStartGenericElement(
       }
     }
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -3765,6 +3872,7 @@ function pushStartCustomElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -3823,6 +3931,9 @@ function pushStartCustomElement(
     }
   }
 
+  // TODO: ViewTransition attributes gets observed by the Custom Element which is a bit sketchy.
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
   return children;
@@ -3834,6 +3945,7 @@ function pushStartPreformattedElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -3858,6 +3970,8 @@ function pushStartPreformattedElement(
       }
     }
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
 
@@ -3981,7 +4095,7 @@ export function pushStartInstance(
       // Fast track very common tags
       break;
     case 'a':
-      return pushStartAnchor(target, props);
+      return pushStartAnchor(target, props, formatContext);
     case 'g':
     case 'p':
     case 'li':
@@ -3989,21 +4103,39 @@ export function pushStartInstance(
       break;
     // Special tags
     case 'select':
-      return pushStartSelect(target, props);
+      return pushStartSelect(target, props, formatContext);
     case 'option':
       return pushStartOption(target, props, formatContext);
     case 'textarea':
-      return pushStartTextArea(target, props);
+      return pushStartTextArea(target, props, formatContext);
     case 'input':
-      return pushInput(target, props, resumableState, renderState);
+      return pushInput(
+        target,
+        props,
+        resumableState,
+        renderState,
+        formatContext,
+      );
     case 'button':
-      return pushStartButton(target, props, resumableState, renderState);
+      return pushStartButton(
+        target,
+        props,
+        resumableState,
+        renderState,
+        formatContext,
+      );
     case 'form':
-      return pushStartForm(target, props, resumableState, renderState);
+      return pushStartForm(
+        target,
+        props,
+        resumableState,
+        renderState,
+        formatContext,
+      );
     case 'menuitem':
-      return pushStartMenuItem(target, props);
+      return pushStartMenuItem(target, props, formatContext);
     case 'object':
-      return pushStartObject(target, props);
+      return pushStartObject(target, props, formatContext);
     case 'title':
       return pushTitle(target, props, renderState, formatContext);
     case 'link':
@@ -4040,7 +4172,7 @@ export function pushStartInstance(
     // Newline eating tags
     case 'listing':
     case 'pre': {
-      return pushStartPreformattedElement(target, props, type);
+      return pushStartPreformattedElement(target, props, type, formatContext);
     }
     case 'img': {
       return pushImg(target, props, resumableState, renderState, formatContext);
@@ -4057,7 +4189,7 @@ export function pushStartInstance(
     case 'source':
     case 'track':
     case 'wbr': {
-      return pushSelfClosing(target, props, type);
+      return pushSelfClosing(target, props, type, formatContext);
     }
     // These are reserved SVG and MathML elements, that are never custom elements.
     // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-core-concepts
@@ -4100,12 +4232,12 @@ export function pushStartInstance(
     default: {
       if (type.indexOf('-') !== -1) {
         // Custom element
-        return pushStartCustomElement(target, props, type);
+        return pushStartCustomElement(target, props, type, formatContext);
       }
     }
   }
   // Generic element
-  return pushStartGenericElement(target, props, type);
+  return pushStartGenericElement(target, props, type, formatContext);
 }
 
 const endTagCache = new Map<string, PrecomputedChunk>();
