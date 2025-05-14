@@ -8394,9 +8394,9 @@ function beginWork(current, workInProgress, renderLanes) {
       if (enableViewTransition)
         return (
           (props = workInProgress.pendingProps),
-          null != props.name &&
-            "auto" !== props.name &&
-            (workInProgress.flags |= null === current ? 18882560 : 18874368),
+          null != props.name && "auto" !== props.name
+            ? (workInProgress.flags |= null === current ? 18882560 : 18874368)
+            : isHydrating && pushMaterializedTreeId(workInProgress),
           null !== current && current.memoizedProps.name !== props.name
             ? (workInProgress.flags |= 4194816)
             : markRef(current, workInProgress),
@@ -21545,14 +21545,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2327 = React.version;
 if (
-  "19.2.0-www-classic-63d664b2-20250514" !==
+  "19.2.0-www-classic-96eb84e4-20250514" !==
   isomorphicReactPackageVersion$jscomp$inline_2327
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2327,
-      "19.2.0-www-classic-63d664b2-20250514"
+      "19.2.0-www-classic-96eb84e4-20250514"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -21570,10 +21570,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2329 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-63d664b2-20250514",
+  version: "19.2.0-www-classic-96eb84e4-20250514",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-63d664b2-20250514"
+  reconcilerVersion: "19.2.0-www-classic-96eb84e4-20250514"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2329.getLaneLabelMap = getLaneLabelMap),
@@ -21988,7 +21988,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-63d664b2-20250514";
+exports.version = "19.2.0-www-classic-96eb84e4-20250514";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

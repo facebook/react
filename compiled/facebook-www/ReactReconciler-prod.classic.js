@@ -6532,9 +6532,9 @@ module.exports = function ($$$config) {
         if (enableViewTransition)
           return (
             (props = workInProgress.pendingProps),
-            null != props.name &&
-              "auto" !== props.name &&
-              (workInProgress.flags |= null === current ? 18882560 : 18874368),
+            null != props.name && "auto" !== props.name
+              ? (workInProgress.flags |= null === current ? 18882560 : 18874368)
+              : isHydrating && pushMaterializedTreeId(workInProgress),
             null !== current && current.memoizedProps.name !== props.name
               ? (workInProgress.flags |= 4194816)
               : markRef(current, workInProgress),
@@ -14100,7 +14100,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-63d664b2-20250514"
+      reconcilerVersion: "19.2.0-www-classic-96eb84e4-20250514"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

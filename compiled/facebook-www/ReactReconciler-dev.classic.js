@@ -10048,9 +10048,9 @@ __DEV__ &&
         case 30:
           if (enableViewTransition) {
             var pendingProps = workInProgress.pendingProps;
-            null != pendingProps.name &&
-              "auto" !== pendingProps.name &&
-              (workInProgress.flags |= null === current ? 18882560 : 18874368);
+            null != pendingProps.name && "auto" !== pendingProps.name
+              ? (workInProgress.flags |= null === current ? 18882560 : 18874368)
+              : isHydrating && pushMaterializedTreeId(workInProgress);
             if (void 0 !== pendingProps.className) {
               var example =
                 "string" === typeof pendingProps.className
@@ -21857,7 +21857,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-63d664b2-20250514"
+        reconcilerVersion: "19.2.0-www-classic-96eb84e4-20250514"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
