@@ -742,10 +742,16 @@ const HTML_COLGROUP_MODE = 9;
 
 type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-const NO_SCOPE = /*         */ 0b000;
-const NOSCRIPT_SCOPE = /*   */ 0b001;
-const PICTURE_SCOPE = /*    */ 0b010;
-const FALLBACK_SCOPE = /*   */ 0b100;
+const NO_SCOPE = /*         */ 0b00000;
+const NOSCRIPT_SCOPE = /*   */ 0b00001;
+const PICTURE_SCOPE = /*    */ 0b00010;
+const FALLBACK_SCOPE = /*   */ 0b00100;
+const EXIT_SCOPE = /*       */ 0b01000; // A direct Instance below a Suspense fallback is the only thing that can "exit"
+const ENTER_SCOPE = /*      */ 0b10000; // A direct Instance below Suspense content is the only thing that can "enter"
+
+// Everything not listed here are tracked for the whole subtree as opposed to just
+// until the next Instance.
+const SUBTREE_SCOPE = ~(ENTER_SCOPE | EXIT_SCOPE);
 
 type ViewTransitionContext = {
   update: ?string,
@@ -797,101 +803,72 @@ export function getChildFormatContext(
   type: string,
   props: Object,
 ): FormatContext {
+  const subtreeScope = parentContext.tagScope & SUBTREE_SCOPE;
   switch (type) {
     case 'noscript':
       return createFormatContext(
         HTML_MODE,
         null,
-        parentContext.tagScope | NOSCRIPT_SCOPE,
+        subtreeScope | NOSCRIPT_SCOPE,
         null,
       );
     case 'select':
       return createFormatContext(
         HTML_MODE,
         props.value != null ? props.value : props.defaultValue,
-        parentContext.tagScope,
+        subtreeScope,
         null,
       );
     case 'svg':
-      return createFormatContext(SVG_MODE, null, parentContext.tagScope, null);
+      return createFormatContext(SVG_MODE, null, subtreeScope, null);
     case 'picture':
       return createFormatContext(
         HTML_MODE,
         null,
-        parentContext.tagScope | PICTURE_SCOPE,
+        subtreeScope | PICTURE_SCOPE,
         null,
       );
     case 'math':
-      return createFormatContext(
-        MATHML_MODE,
-        null,
-        parentContext.tagScope,
-        null,
-      );
+      return createFormatContext(MATHML_MODE, null, subtreeScope, null);
     case 'foreignObject':
-      return createFormatContext(HTML_MODE, null, parentContext.tagScope, null);
+      return createFormatContext(HTML_MODE, null, subtreeScope, null);
     // Table parents are special in that their children can only be created at all if they're
     // wrapped in a table parent. So we need to encode that we're entering this mode.
     case 'table':
-      return createFormatContext(
-        HTML_TABLE_MODE,
-        null,
-        parentContext.tagScope,
-        null,
-      );
+      return createFormatContext(HTML_TABLE_MODE, null, subtreeScope, null);
     case 'thead':
     case 'tbody':
     case 'tfoot':
       return createFormatContext(
         HTML_TABLE_BODY_MODE,
         null,
-        parentContext.tagScope,
+        subtreeScope,
         null,
       );
     case 'colgroup':
-      return createFormatContext(
-        HTML_COLGROUP_MODE,
-        null,
-        parentContext.tagScope,
-        null,
-      );
+      return createFormatContext(HTML_COLGROUP_MODE, null, subtreeScope, null);
     case 'tr':
-      return createFormatContext(
-        HTML_TABLE_ROW_MODE,
-        null,
-        parentContext.tagScope,
-        null,
-      );
+      return createFormatContext(HTML_TABLE_ROW_MODE, null, subtreeScope, null);
     case 'head':
       if (parentContext.insertionMode < HTML_MODE) {
         // We are either at the root or inside the <html> tag and can enter
         // the <head> scope
-        return createFormatContext(
-          HTML_HEAD_MODE,
-          null,
-          parentContext.tagScope,
-          null,
-        );
+        return createFormatContext(HTML_HEAD_MODE, null, subtreeScope, null);
       }
       break;
     case 'html':
       if (parentContext.insertionMode === ROOT_HTML_MODE) {
-        return createFormatContext(
-          HTML_HTML_MODE,
-          null,
-          parentContext.tagScope,
-          null,
-        );
+        return createFormatContext(HTML_HTML_MODE, null, subtreeScope, null);
       }
       break;
   }
   if (parentContext.insertionMode >= HTML_TABLE_MODE) {
     // Whatever tag this was, it wasn't a table parent or other special parent, so we must have
     // entered plain HTML again.
-    return createFormatContext(HTML_MODE, null, parentContext.tagScope, null);
+    return createFormatContext(HTML_MODE, null, subtreeScope, null);
   }
   if (parentContext.insertionMode < HTML_MODE) {
-    return createFormatContext(HTML_MODE, null, parentContext.tagScope, null);
+    return createFormatContext(HTML_MODE, null, subtreeScope, null);
   }
   if (enableViewTransition) {
     if (parentContext.viewTransition !== null) {
@@ -900,10 +877,18 @@ export function getChildFormatContext(
       return createFormatContext(
         parentContext.insertionMode,
         parentContext.selectedValue,
-        parentContext.tagScope,
+        subtreeScope,
         null,
       );
     }
+  }
+  if (parentContext.tagScope !== subtreeScope) {
+    return createFormatContext(
+      parentContext.insertionMode,
+      parentContext.selectedValue,
+      subtreeScope,
+      null,
+    );
   }
   return parentContext;
 }
@@ -914,7 +899,7 @@ export function getSuspenseFallbackFormatContext(
   return createFormatContext(
     parentContext.insertionMode,
     parentContext.selectedValue,
-    parentContext.tagScope | FALLBACK_SCOPE,
+    parentContext.tagScope | FALLBACK_SCOPE | EXIT_SCOPE,
     parentContext.viewTransition,
   );
 }
@@ -922,7 +907,12 @@ export function getSuspenseFallbackFormatContext(
 export function getSuspenseContentFormatContext(
   parentContext: FormatContext,
 ): FormatContext {
-  return parentContext;
+  return createFormatContext(
+    parentContext.insertionMode,
+    parentContext.selectedValue,
+    parentContext.tagScope | FALLBACK_SCOPE | ENTER_SCOPE,
+    parentContext.viewTransition,
+  );
 }
 
 export function getViewTransitionFormatContext(
