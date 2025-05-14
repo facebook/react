@@ -1593,8 +1593,10 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
     // clone the whole document outside of the React too.
     containerInstance = (rootContainer: any);
   }
-  // $FlowFixMe[prop-missing]
-  if (containerInstance.style.viewTransitionName === 'root') {
+  if (
+    containerInstance.style &&
+    containerInstance.style.viewTransitionName === 'root'
+  ) {
     // If we moved the root view transition name to the container in a gesture
     // we need to restore it now.
     containerInstance.style.viewTransitionName = '';
