@@ -7,7 +7,24 @@
  * @flow
  */
 
-import type {ViewTransitionClass} from 'shared/ReactTypes';
+import type {ViewTransitionProps, ViewTransitionClass} from 'shared/ReactTypes';
+import type {TreeContext} from './ReactFizzTreeContext';
+import type {ResumableState} from './ReactFizzConfig';
+
+import {getTreeId} from './ReactFizzTreeContext';
+import {makeId} from './ReactFizzConfig';
+
+export function getViewTransitionName(
+  props: ViewTransitionProps,
+  treeContext: TreeContext,
+  resumableState: ResumableState,
+): string {
+  if (props.name != null && props.name !== 'auto') {
+    return props.name;
+  }
+  const treeId = getTreeId(treeContext);
+  return makeId(resumableState, treeId, 0);
+}
 
 function getClassNameByType(classByType: ?ViewTransitionClass): ?string {
   if (classByType == null || typeof classByType === 'string') {

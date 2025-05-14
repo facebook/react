@@ -141,7 +141,10 @@ import {
   callComponentInDEV,
   callRenderInDEV,
 } from './ReactFizzCallUserSpace';
-import {getViewTransitionClassName} from './ReactFizzViewTransitionComponent';
+import {
+  getViewTransitionClassName,
+  getViewTransitionName,
+} from './ReactFizzViewTransitionComponent';
 
 import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
 import {
@@ -2274,6 +2277,12 @@ function renderViewTransition(
 ) {
   const prevContext = task.formatContext;
   const prevKeyPath = task.keyPath;
+  // Get the name off props or generate an auto-generated one in case we need it.
+  const autoName = getViewTransitionName(
+    props,
+    task.treeContext,
+    request.resumableState,
+  );
   task.formatContext = getViewTransitionFormatContext(
     prevContext,
     getViewTransitionClassName(props.default, props.update),
@@ -2281,6 +2290,7 @@ function renderViewTransition(
     getViewTransitionClassName(props.default, props.exit),
     getViewTransitionClassName(props.default, props.share),
     props.name,
+    autoName,
   );
   task.keyPath = keyPath;
   if (props.name != null && props.name !== 'auto') {
