@@ -58,6 +58,9 @@ const rule = {
           additionalHooks: {
             type: 'string',
           },
+          ignoredHooks: {
+            type: 'string'
+          },
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
@@ -74,6 +77,14 @@ const rule = {
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
 
+    // Parse the `ignoredHooks` regex.
+    const ignoredHooks =
+      context.options &&
+      context.options[0] &&
+      context.options[0].ignoredHooks
+        ? new RegExp(context.options[0].ignoredHooks)
+        : undefined;
+
     const enableDangerousAutofixThisMayCauseInfiniteLoops: boolean =
       (context.options &&
         context.options[0] &&
@@ -82,6 +93,7 @@ const rule = {
 
     const options = {
       additionalHooks,
+      ignoredHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
     };
 
@@ -1922,6 +1934,7 @@ function getReactiveHookCallbackIndex(
   calleeNode: Expression | Super,
   options?: {
     additionalHooks: RegExp | undefined;
+    ignoredHooks: RegExp | undefined;
     enableDangerousAutofixThisMayCauseInfiniteLoops?: boolean;
   },
 ): 0 | -1 | 1 {
@@ -1929,6 +1942,10 @@ function getReactiveHookCallbackIndex(
   if (node.type !== 'Identifier') {
     return -1;
   }
+
+  // Don't bother checking the hook if its ignored
+  if (options && options.ignoredHooks && options.ignoredHooks.test(node.name)) return -1
+
   switch (node.name) {
     case 'useEffect':
     case 'useLayoutEffect':
