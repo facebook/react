@@ -265,7 +265,6 @@ type RenderTask = {
   treeContext: TreeContext, // the current tree context that this task is executing in
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
-  isFallback: boolean, // whether this task is rendering inside a fallback tree
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   debugTask: null | ConsoleTask, // DEV only
   // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
@@ -296,7 +295,6 @@ type ReplayTask = {
   treeContext: TreeContext, // the current tree context that this task is executing in
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
-  isFallback: boolean, // whether this task is rendering inside a fallback tree
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   debugTask: null | ConsoleTask, // DEV only
   // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
@@ -539,7 +537,6 @@ export function createRequest(
     rootContextSnapshot,
     emptyTreeContext,
     null,
-    false,
     emptyContextObject,
     null,
   );
@@ -645,7 +642,6 @@ export function resumeRequest(
       rootContextSnapshot,
       emptyTreeContext,
       null,
-      false,
       emptyContextObject,
       null,
     );
@@ -673,7 +669,6 @@ export function resumeRequest(
     rootContextSnapshot,
     emptyTreeContext,
     null,
-    false,
     emptyContextObject,
     null,
   );
@@ -783,7 +778,6 @@ function createRenderTask(
   context: ContextSnapshot,
   treeContext: TreeContext,
   componentStack: null | ComponentStackNode,
-  isFallback: boolean,
   legacyContext: LegacyContext,
   debugTask: null | ConsoleTask,
 ): RenderTask {
@@ -809,7 +803,6 @@ function createRenderTask(
     treeContext,
     componentStack,
     thenableState,
-    isFallback,
   }: any);
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
@@ -835,7 +828,6 @@ function createReplayTask(
   context: ContextSnapshot,
   treeContext: TreeContext,
   componentStack: null | ComponentStackNode,
-  isFallback: boolean,
   legacyContext: LegacyContext,
   debugTask: null | ConsoleTask,
 ): ReplayTask {
@@ -862,7 +854,6 @@ function createReplayTask(
     treeContext,
     componentStack,
     thenableState,
-    isFallback,
   }: any);
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
@@ -1286,7 +1277,6 @@ function renderSuspenseBoundary(
       task.context,
       task.treeContext,
       task.componentStack,
-      task.isFallback,
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
     );
@@ -1418,7 +1408,6 @@ function renderSuspenseBoundary(
       task.context,
       task.treeContext,
       task.componentStack,
-      true,
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
     );
@@ -1579,7 +1568,6 @@ function replaySuspenseBoundary(
     task.context,
     task.treeContext,
     task.componentStack,
-    true,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
   );
@@ -1621,7 +1609,6 @@ function renderPreamble(
     task.context,
     task.treeContext,
     task.componentStack,
-    task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
   );
@@ -1666,7 +1653,6 @@ function renderHostElement(
       task.hoistableState,
       task.formatContext,
       segment.lastPushedText,
-      task.isFallback,
     );
     segment.lastPushedText = false;
     const prevContext = task.formatContext;
@@ -3492,7 +3478,6 @@ function spawnNewSuspendedReplayTask(
     task.context,
     task.treeContext,
     task.componentStack,
-    task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
   );
@@ -3534,7 +3519,6 @@ function spawnNewSuspendedRenderTask(
     task.context,
     task.treeContext,
     task.componentStack,
-    task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
   );

@@ -3802,8 +3802,8 @@ export function pushStartInstance(
   hoistableState: null | HoistableState,
   formatContext: FormatContext,
   textEmbedded: boolean,
-  isFallback: boolean,
 ): ReactNodeList {
+  const isFallback = false;
   if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
