@@ -1,3 +1,9 @@
+## 19.1.0-rc.2 (May 14, 2025)
+
+## babel-plugin-react-compiler
+
+* Fix for string attribute values with emoji [#33096](https://github.com/facebook/react/pull/33096) by [@josephsavona](https://github.com/josephsavona)
+
 ## 19.1.0-rc.1 (April 21, 2025)
 
 ## eslint-plugin-react-hooks

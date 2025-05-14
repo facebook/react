@@ -3590,7 +3590,9 @@ describe('ReactDOMFizzServer', () => {
         (gate(flags => flags.shouldUseFizzExternalRuntime)
           ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
           : '') +
-        '<link rel="expect" href="#«R»" blocking="render">',
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render">'
+          : ''),
     );
   });
 
@@ -4523,7 +4525,15 @@ describe('ReactDOMFizzServer', () => {
 
     // the html should be as-is
     expect(document.documentElement.innerHTML).toEqual(
-      '<head><script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script><link rel="expect" href="#«R»" blocking="render"></head><body><p>hello world!</p><template id="«R»"></template></body>',
+      '<head><script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render">'
+          : '') +
+        '</head><body><p>hello world!</p>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '') +
+        '</body>',
     );
   });
 
@@ -6512,7 +6522,14 @@ describe('ReactDOMFizzServer', () => {
         (gate(flags => flags.shouldUseFizzExternalRuntime)
           ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
           : '') +
-        '<link rel="expect" href="#«R»" blocking="render"></head><body><script>try { foo() } catch (e) {} ;</script><template id="«R»"></template></body></html>',
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render">'
+          : '') +
+        '</head><body><script>try { foo() } catch (e) {} ;</script>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '') +
+        '</body></html>',
     );
   });
 

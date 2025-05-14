@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validatePreserveExistingMemoizationGuarantees @enableFire @panicThreshold(none)
+// @validatePreserveExistingMemoizationGuarantees @enableFire @panicThreshold:"none"
 import {fire} from 'react';
 import {sum} from 'shared-runtime';
 
@@ -24,7 +24,7 @@ function Component({prop1, bar}) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableFire @panicThreshold(none)
+import { useFire } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableFire @panicThreshold:"none"
 import { fire } from "react";
 import { sum } from "shared-runtime";
 

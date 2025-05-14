@@ -27,7 +27,7 @@ import {
   transitionLaneExpirationMs,
   retryLaneExpirationMs,
   disableLegacyMode,
-  enableSiblingPrerendering,
+  enableDefaultTransitionIndicator,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {clz32} from './clz32';
@@ -267,13 +267,11 @@ export function getNextLanes(
       if (nonIdlePingedLanes !== NoLanes) {
         nextLanes = getHighestPriorityLanes(nonIdlePingedLanes);
       } else {
-        if (enableSiblingPrerendering) {
-          // Nothing has been pinged. Check for lanes that need to be prewarmed.
-          if (!rootHasPendingCommit) {
-            const lanesToPrewarm = nonIdlePendingLanes & ~warmLanes;
-            if (lanesToPrewarm !== NoLanes) {
-              nextLanes = getHighestPriorityLanes(lanesToPrewarm);
-            }
+        // Nothing has been pinged. Check for lanes that need to be prewarmed.
+        if (!rootHasPendingCommit) {
+          const lanesToPrewarm = nonIdlePendingLanes & ~warmLanes;
+          if (lanesToPrewarm !== NoLanes) {
+            nextLanes = getHighestPriorityLanes(lanesToPrewarm);
           }
         }
       }
@@ -293,13 +291,11 @@ export function getNextLanes(
       if (pingedLanes !== NoLanes) {
         nextLanes = getHighestPriorityLanes(pingedLanes);
       } else {
-        if (enableSiblingPrerendering) {
-          // Nothing has been pinged. Check for lanes that need to be prewarmed.
-          if (!rootHasPendingCommit) {
-            const lanesToPrewarm = pendingLanes & ~warmLanes;
-            if (lanesToPrewarm !== NoLanes) {
-              nextLanes = getHighestPriorityLanes(lanesToPrewarm);
-            }
+        // Nothing has been pinged. Check for lanes that need to be prewarmed.
+        if (!rootHasPendingCommit) {
+          const lanesToPrewarm = pendingLanes & ~warmLanes;
+          if (lanesToPrewarm !== NoLanes) {
+            nextLanes = getHighestPriorityLanes(lanesToPrewarm);
           }
         }
       }
@@ -645,6 +641,10 @@ export function includesOnlySuspenseyCommitEligibleLanes(
   );
 }
 
+export function includesLoadingIndicatorLanes(lanes: Lanes): boolean {
+  return (lanes & (SyncLane | DefaultLane)) !== NoLanes;
+}
+
 export function includesBlockingLane(lanes: Lanes): boolean {
   const SyncDefaultLanes =
     InputContinuousHydrationLane |
@@ -771,6 +771,10 @@ export function createLaneMap<T>(initial: T): LaneMap<T> {
 
 export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
   root.pendingLanes |= updateLane;
+  if (enableDefaultTransitionIndicator) {
+    // Mark that this lane might need a loading indicator to be shown.
+    root.indicatorLanes |= updateLane & TransitionLanes;
+  }
 
   // If there are any suspended transitions, it's possible this new update
   // could unblock them. Clear the suspended lanes so that we can try rendering
@@ -802,7 +806,7 @@ export function markRootSuspended(
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
 
-  if (enableSiblingPrerendering && didAttemptEntireTree) {
+  if (didAttemptEntireTree) {
     // Mark these lanes as warm so we know there's nothing else to work on.
     root.warmLanes |= suspendedLanes;
   } else {
@@ -851,6 +855,10 @@ export function markRootFinished(
   root.suspendedLanes = NoLanes;
   root.pingedLanes = NoLanes;
   root.warmLanes = NoLanes;
+
+  if (enableDefaultTransitionIndicator) {
+    root.indicatorLanes &= remainingLanes;
+  }
 
   root.expiredLanes &= remainingLanes;
 
@@ -913,7 +921,6 @@ export function markRootFinished(
   // suspended) instead of the regular mode (i.e. unwind and skip the siblings
   // as soon as something suspends to unblock the rest of the update).
   if (
-    enableSiblingPrerendering &&
     suspendedRetryLanes !== NoLanes &&
     // Note that we only do this if there were no updates since we started
     // rendering. This mirrors the logic in markRootUpdated — whenever we

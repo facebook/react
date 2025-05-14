@@ -176,6 +176,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
+import noop from 'shared/noop';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
 import {SuspenseException, getSuspendedThenable} from './ReactFizzThenable';
@@ -424,8 +425,6 @@ function defaultErrorHandler(error: mixed) {
   }
   return null;
 }
-
-function noop(): void {}
 
 function RequestInstance(
   this: $FlowFixMe,

@@ -18,6 +18,10 @@ import './Page.css';
 
 import transitions from './Transitions.module.css';
 
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 const a = (
   <div key="a">
     <ViewTransition>
@@ -106,7 +110,13 @@ export default function Page({url, navigate}) {
       document.body
     )
   ) : (
-    <button onClick={() => startTransition(() => setShowModal(true))}>
+    <button
+      onClick={() =>
+        startTransition(async () => {
+          await sleep(2000);
+          setShowModal(true);
+        })
+      }>
       Show Modal
     </button>
   );

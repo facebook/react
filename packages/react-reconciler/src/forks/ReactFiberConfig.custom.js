@@ -221,11 +221,14 @@ export const getNextHydratableInstanceAfterActivityInstance =
   $$$config.getNextHydratableInstanceAfterActivityInstance;
 export const getNextHydratableInstanceAfterSuspenseInstance =
   $$$config.getNextHydratableInstanceAfterSuspenseInstance;
+export const commitHydratedInstance = $$$config.commitHydratedInstance;
 export const commitHydratedContainer = $$$config.commitHydratedContainer;
 export const commitHydratedActivityInstance =
   $$$config.commitHydratedActivityInstance;
 export const commitHydratedSuspenseInstance =
   $$$config.commitHydratedSuspenseInstance;
+export const finalizeHydratedChildren = $$$config.finalizeHydratedChildren;
+export const flushHydrationEvents = $$$config.flushHydrationEvents;
 export const clearActivityBoundary = $$$config.clearActivityBoundary;
 export const clearSuspenseBoundary = $$$config.clearSuspenseBoundary;
 export const clearActivityBoundaryFromContainer =
