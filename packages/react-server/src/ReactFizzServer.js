@@ -74,6 +74,8 @@ import {
   pushEndInstance,
   pushSegmentFinale,
   getChildFormatContext,
+  getSuspenseFallbackFormatContext,
+  getSuspenseContentFormatContext,
   writeHoistables,
   writePreambleStart,
   writePreambleEnd,
@@ -1146,12 +1148,15 @@ function renderSuspenseBoundary(
     // an already completed Suspense boundary. It's too late to do anything about it
     // so we can just render through it.
     const prevKeyPath = someTask.keyPath;
+    const prevContext = someTask.formatContext;
     someTask.keyPath = keyPath;
+    someTask.formatContext = getSuspenseContentFormatContext(prevContext);
     const content: ReactNodeList = props.children;
     try {
       renderNode(request, someTask, content, -1);
     } finally {
       someTask.keyPath = prevKeyPath;
+      someTask.formatContext = prevContext;
     }
     return;
   }
@@ -1159,6 +1164,7 @@ function renderSuspenseBoundary(
   const task: RenderTask = someTask;
 
   const prevKeyPath = task.keyPath;
+  const prevContext = task.formatContext;
   const parentBoundary = task.blockedBoundary;
   const parentPreamble = task.blockedPreamble;
   const parentHoistableState = task.hoistableState;
@@ -1237,6 +1243,7 @@ function renderSuspenseBoundary(
     task.blockedSegment = boundarySegment;
     task.blockedPreamble = newBoundary.fallbackPreamble;
     task.keyPath = fallbackKeyPath;
+    task.formatContext = getSuspenseFallbackFormatContext(prevContext);
     boundarySegment.status = RENDERING;
     try {
       renderNode(request, task, fallback, -1);
@@ -1259,6 +1266,7 @@ function renderSuspenseBoundary(
       task.blockedSegment = parentSegment;
       task.blockedPreamble = parentPreamble;
       task.keyPath = prevKeyPath;
+      task.formatContext = prevContext;
     }
 
     // We create a suspended task for the primary content because we want to allow
@@ -1274,7 +1282,7 @@ function renderSuspenseBoundary(
       newBoundary.contentState,
       task.abortSet,
       keyPath,
-      task.formatContext,
+      getSuspenseContentFormatContext(task.formatContext),
       task.context,
       task.treeContext,
       task.componentStack,
@@ -1302,6 +1310,7 @@ function renderSuspenseBoundary(
     task.hoistableState = newBoundary.contentState;
     task.blockedSegment = contentRootSegment;
     task.keyPath = keyPath;
+    task.formatContext = getSuspenseContentFormatContext(prevContext);
     contentRootSegment.status = RENDERING;
 
     try {
@@ -1388,6 +1397,7 @@ function renderSuspenseBoundary(
       task.hoistableState = parentHoistableState;
       task.blockedSegment = parentSegment;
       task.keyPath = prevKeyPath;
+      task.formatContext = prevContext;
     }
 
     const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
@@ -1404,7 +1414,7 @@ function renderSuspenseBoundary(
       newBoundary.fallbackState,
       fallbackAbortSet,
       fallbackKeyPath,
-      task.formatContext,
+      getSuspenseFallbackFormatContext(task.formatContext),
       task.context,
       task.treeContext,
       task.componentStack,
@@ -1431,6 +1441,7 @@ function replaySuspenseBoundary(
   fallbackSlots: ResumeSlots,
 ): void {
   const prevKeyPath = task.keyPath;
+  const prevContext = task.formatContext;
   const previousReplaySet: ReplaySet = task.replay;
 
   const parentBoundary = task.blockedBoundary;
@@ -1466,6 +1477,7 @@ function replaySuspenseBoundary(
   task.blockedBoundary = resumedBoundary;
   task.hoistableState = resumedBoundary.contentState;
   task.keyPath = keyPath;
+  task.formatContext = getSuspenseContentFormatContext(prevContext);
   task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
 
   try {
@@ -1541,6 +1553,7 @@ function replaySuspenseBoundary(
     task.hoistableState = parentHoistableState;
     task.replay = previousReplaySet;
     task.keyPath = prevKeyPath;
+    task.formatContext = prevContext;
   }
 
   const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
@@ -1562,7 +1575,7 @@ function replaySuspenseBoundary(
     resumedBoundary.fallbackState,
     fallbackAbortSet,
     fallbackKeyPath,
-    task.formatContext,
+    getSuspenseFallbackFormatContext(task.formatContext),
     task.context,
     task.treeContext,
     task.componentStack,

@@ -52,6 +52,8 @@ export type {
 
 export {
   getChildFormatContext,
+  getSuspenseFallbackFormatContext,
+  getSuspenseContentFormatContext,
   makeId,
   pushEndInstance,
   pushFormStateMarkerIsMatching,

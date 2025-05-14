@@ -104,6 +104,12 @@ const ReactNoopServer = ReactFizzServer({
   getChildFormatContext(): null {
     return null;
   },
+  getSuspenseFallbackFormatContext(): null {
+    return null;
+  },
+  getSuspenseContentFormatContext(): null {
+    return null;
+  },
 
   resetResumableState(): void {},
   completeResumableState(): void {},

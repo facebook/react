@@ -48,6 +48,10 @@ export const bindToConsole = $$$config.bindToConsole;
 export const resetResumableState = $$$config.resetResumableState;
 export const completeResumableState = $$$config.completeResumableState;
 export const getChildFormatContext = $$$config.getChildFormatContext;
+export const getSuspenseFallbackFormatContext =
+  $$$config.getSuspenseFallbackFormatContext;
+export const getSuspenseContentFormatContext =
+  $$$config.getSuspenseContentFormatContext;
 export const makeId = $$$config.makeId;
 export const pushTextInstance = $$$config.pushTextInstance;
 export const pushStartInstance = $$$config.pushStartInstance;

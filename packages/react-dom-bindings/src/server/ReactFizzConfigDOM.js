@@ -864,6 +864,18 @@ export function getChildFormatContext(
   return parentContext;
 }
 
+export function getSuspenseFallbackFormatContext(
+  prevContext: FormatContext,
+): FormatContext {
+  return prevContext;
+}
+
+export function getSuspenseContentFormatContext(
+  prevContext: FormatContext,
+): FormatContext {
+  return prevContext;
+}
+
 export function isPreambleContext(formatContext: FormatContext): boolean {
   return formatContext.insertionMode === HTML_HEAD_MODE;
 }
