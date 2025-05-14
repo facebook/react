@@ -210,6 +210,7 @@ import {
   TransitionRoot,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent';
+import {getViewTransitionClassName} from './ReactFiberViewTransitionComponent';
 import {
   commitHookLayoutEffects,
   commitHookLayoutUnmountEffects,
@@ -303,6 +304,7 @@ export let shouldFireAfterActiveInstanceBlur: boolean = false;
 // Used during the commit phase to track whether a parent ViewTransition component
 // might have been affected by any mutations / relayouts below.
 let viewTransitionContextChanged: boolean = false;
+let inUpdateViewTransition: boolean = false;
 let rootViewTransitionAffected: boolean = false;
 
 function isHydratingParent(current: Fiber, finishedWork: Fiber): boolean {
@@ -1937,6 +1939,7 @@ export function commitMutationEffects(
   inProgressRoot = root;
 
   rootViewTransitionAffected = false;
+  inUpdateViewTransition = false;
 
   resetComponentEffectTimers();
 
@@ -2299,7 +2302,7 @@ function commitMutationEffectsOnFiber(
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork, lanes);
       }
-      if (viewTransitionMutationContext) {
+      if (viewTransitionMutationContext && inUpdateViewTransition) {
         // A Portal doesn't necessarily exist within the context of this subtree.
         // Ideally we would track which React ViewTransition component nests the container
         // but that's costly. Instead, we treat each Portal as if it's a new React root.
@@ -2534,11 +2537,16 @@ function commitMutationEffectsOnFiber(
           }
         }
         const prevMutationContext = pushMutationContext();
-        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork, lanes);
+        const prevUpdate = inUpdateViewTransition;
         const isViewTransitionEligible =
           enableViewTransition &&
           includesOnlyViewTransitionEligibleLanes(lanes);
+        const props = finishedWork.memoizedProps;
+        inUpdateViewTransition =
+          isViewTransitionEligible &&
+          getViewTransitionClassName(props.default, props.update) !== 'none';
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes);
         if (isViewTransitionEligible) {
           if (current === null) {
             // This is a new mount. We should have handled this as part of the
@@ -2551,6 +2559,7 @@ function commitMutationEffectsOnFiber(
             finishedWork.flags |= Update;
           }
         }
+        inUpdateViewTransition = prevUpdate;
         popMutationContext(prevMutationContext);
         break;
       }
@@ -2763,6 +2772,8 @@ function commitAfterMutationEffectsOnFiber(
         // Ideally we would track which React ViewTransition component nests the container
         // but that's costly. Instead, we treat each Portal as if it's a new React root.
         // Therefore any leaked resize of a child could affect the root so the root should animate.
+        // We only do this if the Portal is inside a ViewTransition and it is not disabled
+        // with update="none". Otherwise the Portal is considered not animating.
         rootViewTransitionAffected = true;
       }
       viewTransitionContextChanged = prevContextChanged;
