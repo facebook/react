@@ -8116,19 +8116,15 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         (offscreenSubtreeWasHidden ||
           null === current ||
           safelyDetachRef(current, current.return));
-      if (
-        flags & 64 &&
+      flags & 64 &&
         offscreenSubtreeIsHidden &&
         ((finishedWork = finishedWork.updateQueue),
         null !== finishedWork &&
-          ((flags = finishedWork.callbacks), null !== flags))
-      ) {
-        var existingHiddenCallbacks = finishedWork.shared.hiddenCallbacks;
-        finishedWork.shared.hiddenCallbacks =
-          null === existingHiddenCallbacks
-            ? flags
-            : existingHiddenCallbacks.concat(flags);
-      }
+          ((flags = finishedWork.callbacks),
+          null !== flags &&
+            ((current = finishedWork.shared.hiddenCallbacks),
+            (finishedWork.shared.hiddenCallbacks =
+              null === current ? flags : current.concat(flags)))));
       break;
     case 26:
     case 27:
@@ -8147,11 +8143,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         }
       if (flags & 4 && null != finishedWork.stateNode) {
         flags = finishedWork.memoizedProps;
-        existingHiddenCallbacks =
-          null !== current ? current.memoizedProps : flags;
+        current = null !== current ? current.memoizedProps : flags;
         try {
           var instance = finishedWork.stateNode;
-          instance._applyProps(instance, flags, existingHiddenCallbacks);
+          instance._applyProps(instance, flags, current);
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -8199,14 +8194,13 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
       if (finishedWork.child.flags & 8192) {
-        existingHiddenCallbacks = null !== finishedWork.memoizedState;
-        var wasShowingFallback =
-          null !== current && null !== current.memoizedState;
+        var isShowingFallback = null !== finishedWork.memoizedState;
+        current = null !== current && null !== current.memoizedState;
         alwaysThrottleRetries
-          ? existingHiddenCallbacks !== wasShowingFallback &&
+          ? isShowingFallback !== current &&
             (globalMostRecentFallbackTime = now())
-          : existingHiddenCallbacks &&
-            !wasShowingFallback &&
+          : isShowingFallback &&
+            !current &&
             (globalMostRecentFallbackTime = now());
       }
       if (flags & 4) {
@@ -8260,13 +8254,13 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             if (null === current) {
               lanes = current = root;
               try {
-                (existingHiddenCallbacks = lanes.stateNode),
-                  instance
-                    ? existingHiddenCallbacks.hide()
-                    : ((wasShowingFallback = lanes.memoizedProps),
-                      (null == wasShowingFallback.visible ||
-                        wasShowingFallback.visible) &&
-                        lanes.stateNode.show());
+                if (((isShowingFallback = lanes.stateNode), instance))
+                  isShowingFallback.hide();
+                else {
+                  var props = lanes.memoizedProps;
+                  (null == props.visible || props.visible) &&
+                    lanes.stateNode.show();
+                }
               } catch (error) {
                 captureCommitPhaseError(lanes, lanes.return, error);
               }
@@ -8313,13 +8307,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       flags & 4 &&
         ((flags = finishedWork.updateQueue),
         null !== flags &&
-          ((existingHiddenCallbacks = flags.retryQueue),
-          null !== existingHiddenCallbacks &&
+          ((current = flags.retryQueue),
+          null !== current &&
             ((flags.retryQueue = null),
-            attachSuspenseRetryListeners(
-              finishedWork,
-              existingHiddenCallbacks
-            ))));
+            attachSuspenseRetryListeners(finishedWork, current))));
       break;
     case 19:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -8337,10 +8328,14 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             null === current ||
             safelyDetachRef(current, current.return)),
         (flags = pushMutationContext()),
+        (isShowingFallback =
+          enableViewTransition && (lanes & 335544064) === lanes),
+        (props = finishedWork.memoizedProps),
+        isShowingFallback &&
+          "none" !== getViewTransitionClassName(props.default, props.update),
         recursivelyTraverseMutationEffects(root, finishedWork, lanes),
         commitReconciliationEffects(finishedWork),
-        enableViewTransition &&
-          (lanes & 335544064) === lanes &&
+        isShowingFallback &&
           null !== current &&
           viewTransitionMutationContext &&
           (finishedWork.flags |= 4),
@@ -11108,10 +11103,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1597 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-3a5b326d-20250513",
+  version: "19.2.0-www-modern-63d664b2-20250514",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-3a5b326d-20250513"
+  reconcilerVersion: "19.2.0-www-modern-63d664b2-20250514"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1598 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11137,4 +11132,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-3a5b326d-20250513";
+exports.version = "19.2.0-www-modern-63d664b2-20250514";

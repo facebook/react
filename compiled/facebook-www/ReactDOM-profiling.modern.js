@@ -10181,6 +10181,7 @@ var offscreenSubtreeIsHidden = !1,
   focusedInstanceHandle = null,
   shouldFireAfterActiveInstanceBlur = !1,
   viewTransitionContextChanged = !1,
+  inUpdateViewTransition = !1,
   rootViewTransitionAffected = !1;
 function isHydratingParent(current, finishedWork) {
   return 31 === finishedWork.tag
@@ -11271,13 +11272,13 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           safelyDetachRef(current, current.return));
       flags & 64 &&
         offscreenSubtreeIsHidden &&
-        ((flags = finishedWork.updateQueue),
-        null !== flags &&
-          ((current = flags.callbacks),
-          null !== current &&
-            ((root = flags.shared.hiddenCallbacks),
-            (flags.shared.hiddenCallbacks =
-              null === root ? current : root.concat(current)))));
+        ((current = finishedWork.updateQueue),
+        null !== current &&
+          ((flags = current.callbacks),
+          null !== flags &&
+            ((root = current.shared.hiddenCallbacks),
+            (current.shared.hiddenCallbacks =
+              null === root ? flags : root.concat(flags)))));
       break;
     case 26:
       var hoistableRoot = currentHoistableRoot;
@@ -11296,10 +11297,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           if (null === flags)
             if (null === finishedWork.stateNode) {
               a: {
-                flags = finishedWork.type;
-                current = finishedWork.memoizedProps;
+                current = finishedWork.type;
+                flags = finishedWork.memoizedProps;
                 root = hoistableRoot.ownerDocument || hoistableRoot;
-                b: switch (flags) {
+                b: switch (current) {
                   case "title":
                     lanes = root.getElementsByTagName("title")[0];
                     if (
@@ -11309,15 +11310,15 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                       "http://www.w3.org/2000/svg" === lanes.namespaceURI ||
                       lanes.hasAttribute("itemprop")
                     )
-                      (lanes = root.createElement(flags)),
+                      (lanes = root.createElement(current)),
                         root.head.insertBefore(
                           lanes,
                           root.querySelector("head > title")
                         );
-                    setInitialProperties(lanes, flags, current);
+                    setInitialProperties(lanes, current, flags);
                     lanes[internalInstanceKey] = finishedWork;
                     markNodeAsHoistable(lanes);
-                    flags = lanes;
+                    current = lanes;
                     break a;
                   case "link":
                     if (
@@ -11325,29 +11326,29 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                         "link",
                         "href",
                         root
-                      ).get(flags + (current.href || "")))
+                      ).get(current + (flags.href || "")))
                     )
                       for (var i = 0; i < hoistableRoot.length; i++)
                         if (
                           ((lanes = hoistableRoot[i]),
                           lanes.getAttribute("href") ===
-                            (null == current.href || "" === current.href
+                            (null == flags.href || "" === flags.href
                               ? null
-                              : current.href) &&
+                              : flags.href) &&
                             lanes.getAttribute("rel") ===
-                              (null == current.rel ? null : current.rel) &&
+                              (null == flags.rel ? null : flags.rel) &&
                             lanes.getAttribute("title") ===
-                              (null == current.title ? null : current.title) &&
+                              (null == flags.title ? null : flags.title) &&
                             lanes.getAttribute("crossorigin") ===
-                              (null == current.crossOrigin
+                              (null == flags.crossOrigin
                                 ? null
-                                : current.crossOrigin))
+                                : flags.crossOrigin))
                         ) {
                           hoistableRoot.splice(i, 1);
                           break b;
                         }
-                    lanes = root.createElement(flags);
-                    setInitialProperties(lanes, flags, current);
+                    lanes = root.createElement(current);
+                    setInitialProperties(lanes, current, flags);
                     root.head.appendChild(lanes);
                     break;
                   case "meta":
@@ -11356,45 +11357,43 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                         "meta",
                         "content",
                         root
-                      ).get(flags + (current.content || "")))
+                      ).get(current + (flags.content || "")))
                     )
                       for (i = 0; i < hoistableRoot.length; i++)
                         if (
                           ((lanes = hoistableRoot[i]),
                           lanes.getAttribute("content") ===
-                            (null == current.content
+                            (null == flags.content
                               ? null
-                              : "" + current.content) &&
+                              : "" + flags.content) &&
                             lanes.getAttribute("name") ===
-                              (null == current.name ? null : current.name) &&
+                              (null == flags.name ? null : flags.name) &&
                             lanes.getAttribute("property") ===
-                              (null == current.property
+                              (null == flags.property
                                 ? null
-                                : current.property) &&
+                                : flags.property) &&
                             lanes.getAttribute("http-equiv") ===
-                              (null == current.httpEquiv
+                              (null == flags.httpEquiv
                                 ? null
-                                : current.httpEquiv) &&
+                                : flags.httpEquiv) &&
                             lanes.getAttribute("charset") ===
-                              (null == current.charSet
-                                ? null
-                                : current.charSet))
+                              (null == flags.charSet ? null : flags.charSet))
                         ) {
                           hoistableRoot.splice(i, 1);
                           break b;
                         }
-                    lanes = root.createElement(flags);
-                    setInitialProperties(lanes, flags, current);
+                    lanes = root.createElement(current);
+                    setInitialProperties(lanes, current, flags);
                     root.head.appendChild(lanes);
                     break;
                   default:
-                    throw Error(formatProdErrorMessage(468, flags));
+                    throw Error(formatProdErrorMessage(468, current));
                 }
                 lanes[internalInstanceKey] = finishedWork;
                 markNodeAsHoistable(lanes);
-                flags = lanes;
+                current = lanes;
               }
-              finishedWork.stateNode = flags;
+              finishedWork.stateNode = current;
             } else
               mountHoistable(
                 hoistableRoot,
@@ -11479,10 +11478,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       if (flags & 4) {
         if (null === finishedWork.stateNode)
           throw Error(formatProdErrorMessage(162));
-        flags = finishedWork.memoizedProps;
-        current = finishedWork.stateNode;
+        current = finishedWork.memoizedProps;
+        flags = finishedWork.stateNode;
         try {
-          (current.nodeValue = flags), trackHostMutation();
+          (flags.nodeValue = current), trackHostMutation();
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -11509,32 +11508,34 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       enableViewTransition && (viewTransitionMutationContext = !1);
       break;
     case 4:
-      flags = pushMutationContext();
-      current = currentHoistableRoot;
+      current = pushMutationContext();
+      flags = currentHoistableRoot;
       currentHoistableRoot = getHoistableRoot(
         finishedWork.stateNode.containerInfo
       );
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
-      currentHoistableRoot = current;
-      viewTransitionMutationContext && (rootViewTransitionAffected = !0);
-      enableViewTransition && (viewTransitionMutationContext = flags);
+      currentHoistableRoot = flags;
+      viewTransitionMutationContext &&
+        inUpdateViewTransition &&
+        (rootViewTransitionAffected = !0);
+      enableViewTransition && (viewTransitionMutationContext = current);
       break;
     case 12:
-      flags = pushNestedEffectDurations();
+      current = pushNestedEffectDurations();
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
       finishedWork.stateNode.effectDuration +=
-        bubbleNestedEffectDurations(flags);
+        bubbleNestedEffectDurations(current);
       break;
     case 31:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
       flags & 4 &&
-        ((flags = finishedWork.updateQueue),
-        null !== flags &&
+        ((current = finishedWork.updateQueue),
+        null !== current &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, flags)));
+          attachSuspenseRetryListeners(finishedWork, current)));
       break;
     case 13:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -11557,10 +11558,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
-        flags = finishedWork.updateQueue;
-        null !== flags &&
+        current = finishedWork.updateQueue;
+        null !== current &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, flags));
+          attachSuspenseRetryListeners(finishedWork, current));
       }
       break;
     case 22:
@@ -11689,21 +11690,21 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           root = root.sibling;
         }
       flags & 4 &&
-        ((flags = finishedWork.updateQueue),
-        null !== flags &&
-          ((current = flags.retryQueue),
-          null !== current &&
-            ((flags.retryQueue = null),
-            attachSuspenseRetryListeners(finishedWork, current))));
+        ((current = finishedWork.updateQueue),
+        null !== current &&
+          ((flags = current.retryQueue),
+          null !== flags &&
+            ((current.retryQueue = null),
+            attachSuspenseRetryListeners(finishedWork, flags))));
       break;
     case 19:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
       flags & 4 &&
-        ((flags = finishedWork.updateQueue),
-        null !== flags &&
+        ((current = finishedWork.updateQueue),
+        null !== current &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, flags)));
+          attachSuspenseRetryListeners(finishedWork, current)));
       break;
     case 30:
       enableViewTransition &&
@@ -11712,13 +11713,20 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             null === current ||
             safelyDetachRef(current, current.return)),
         (flags = pushMutationContext()),
+        (hoistableRoot = inUpdateViewTransition),
+        (i = enableViewTransition && (lanes & 335544064) === lanes),
+        (instance = finishedWork.memoizedProps),
+        (inUpdateViewTransition =
+          i &&
+          "none" !==
+            getViewTransitionClassName(instance.default, instance.update)),
         recursivelyTraverseMutationEffects(root, finishedWork, lanes),
         commitReconciliationEffects(finishedWork),
-        enableViewTransition &&
-          (lanes & 335544064) === lanes &&
+        i &&
           null !== current &&
           viewTransitionMutationContext &&
           (finishedWork.flags |= 4),
+        (inUpdateViewTransition = hoistableRoot),
         enableViewTransition && (viewTransitionMutationContext = flags));
       break;
     case 21:
@@ -14903,7 +14911,7 @@ function flushMutationEffects() {
       try {
         inProgressLanes = lanes;
         inProgressRoot = root;
-        rootViewTransitionAffected = !1;
+        inUpdateViewTransition = rootViewTransitionAffected = !1;
         resetComponentEffectTimers();
         commitMutationEffectsOnFiber(finishedWork, root, lanes);
         inProgressRoot = inProgressLanes = null;
@@ -21335,14 +21343,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2317 = React.version;
 if (
-  "19.2.0-www-modern-3a5b326d-20250513" !==
+  "19.2.0-www-modern-63d664b2-20250514" !==
   isomorphicReactPackageVersion$jscomp$inline_2317
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2317,
-      "19.2.0-www-modern-3a5b326d-20250513"
+      "19.2.0-www-modern-63d664b2-20250514"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -21360,10 +21368,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2319 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-3a5b326d-20250513",
+  version: "19.2.0-www-modern-63d664b2-20250514",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-3a5b326d-20250513"
+  reconcilerVersion: "19.2.0-www-modern-63d664b2-20250514"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2319.getLaneLabelMap = getLaneLabelMap),
@@ -21778,7 +21786,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-3a5b326d-20250513";
+exports.version = "19.2.0-www-modern-63d664b2-20250514";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -13688,7 +13688,9 @@ __DEV__ &&
               (currentHoistableRoot = hoistableRoot))
             : (recursivelyTraverseMutationEffects(root, finishedWork, lanes),
               commitReconciliationEffects(finishedWork));
-          viewTransitionMutationContext && (rootViewTransitionAffected = !0);
+          viewTransitionMutationContext &&
+            inUpdateViewTransition &&
+            (rootViewTransitionAffected = !0);
           enableViewTransition && (viewTransitionMutationContext = current);
           flags & 4 &&
             supportsPersistence &&
@@ -13906,13 +13908,21 @@ __DEV__ &&
                 null === current ||
                 safelyDetachRef(current, current.return)),
             (flags = pushMutationContext()),
+            (hoistableRoot = inUpdateViewTransition),
+            (previousHoistableRoot =
+              enableViewTransition && (lanes & 335544064) === lanes),
+            (instance = finishedWork.memoizedProps),
+            (inUpdateViewTransition =
+              previousHoistableRoot &&
+              "none" !==
+                getViewTransitionClassName(instance.default, instance.update)),
             recursivelyTraverseMutationEffects(root, finishedWork, lanes),
             commitReconciliationEffects(finishedWork),
-            enableViewTransition &&
-              (lanes & 335544064) === lanes &&
+            previousHoistableRoot &&
               null !== current &&
               viewTransitionMutationContext &&
               (finishedWork.flags |= 4),
+            (inUpdateViewTransition = hoistableRoot),
             enableViewTransition && (viewTransitionMutationContext = flags));
           break;
         case 21:
@@ -17507,7 +17517,7 @@ __DEV__ &&
           try {
             (inProgressLanes = lanes),
               (inProgressRoot = root),
-              (rootViewTransitionAffected = !1),
+              (inUpdateViewTransition = rootViewTransitionAffected = !1),
               resetComponentEffectTimers(),
               commitMutationEffectsOnFiber(finishedWork, root, lanes),
               (inProgressRoot = inProgressLanes = null),
@@ -20977,6 +20987,7 @@ __DEV__ &&
       focusedInstanceHandle = null,
       shouldFireAfterActiveInstanceBlur = !1,
       viewTransitionContextChanged = !1,
+      inUpdateViewTransition = !1,
       rootViewTransitionAffected = !1,
       hostParent = null,
       hostParentIsContainer = !1,
@@ -21627,7 +21638,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-3a5b326d-20250513"
+        reconcilerVersion: "19.2.0-www-modern-63d664b2-20250514"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

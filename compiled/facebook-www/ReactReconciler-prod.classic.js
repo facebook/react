@@ -9467,7 +9467,9 @@ module.exports = function ($$$config) {
             (currentHoistableRoot = hoistableRoot))
           : (recursivelyTraverseMutationEffects(root, finishedWork, lanes),
             commitReconciliationEffects(finishedWork));
-        viewTransitionMutationContext && (rootViewTransitionAffected = !0);
+        viewTransitionMutationContext &&
+          inUpdateViewTransition &&
+          (rootViewTransitionAffected = !0);
         enableViewTransition && (viewTransitionMutationContext = current);
         flags & 4 &&
           supportsPersistence &&
@@ -9628,13 +9630,23 @@ module.exports = function ($$$config) {
               null === current ||
               safelyDetachRef(current, current.return)),
           (flags = pushMutationContext()),
+          (hoistableRoot = inUpdateViewTransition),
+          (instance = enableViewTransition && (lanes & 335544064) === lanes),
+          (instance$jscomp$0 = finishedWork.memoizedProps),
+          (inUpdateViewTransition =
+            instance &&
+            "none" !==
+              getViewTransitionClassName(
+                instance$jscomp$0.default,
+                instance$jscomp$0.update
+              )),
           recursivelyTraverseMutationEffects(root, finishedWork, lanes),
           commitReconciliationEffects(finishedWork),
-          enableViewTransition &&
-            (lanes & 335544064) === lanes &&
+          instance &&
             null !== current &&
             viewTransitionMutationContext &&
             (finishedWork.flags |= 4),
+          (inUpdateViewTransition = hoistableRoot),
           enableViewTransition && (viewTransitionMutationContext = flags));
         break;
       case 21:
@@ -11999,7 +12011,7 @@ module.exports = function ($$$config) {
         var prevExecutionContext = executionContext;
         executionContext |= 4;
         try {
-          (rootViewTransitionAffected = !1),
+          (inUpdateViewTransition = rootViewTransitionAffected = !1),
             commitMutationEffectsOnFiber(finishedWork, root, lanes),
             shouldFireAfterActiveInstanceBlur && afterActiveInstanceBlur(),
             resetAfterCommit(root.containerInfo);
@@ -13661,6 +13673,7 @@ module.exports = function ($$$config) {
     focusedInstanceHandle = null,
     shouldFireAfterActiveInstanceBlur = !1,
     viewTransitionContextChanged = !1,
+    inUpdateViewTransition = !1,
     rootViewTransitionAffected = !1,
     hostParent = null,
     hostParentIsContainer = !1,
@@ -14087,7 +14100,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-3a5b326d-20250513"
+      reconcilerVersion: "19.2.0-www-classic-63d664b2-20250514"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

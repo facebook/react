@@ -11854,18 +11854,15 @@ __DEV__ &&
             (offscreenSubtreeWasHidden ||
               null === current ||
               safelyDetachRef(current, current.return));
-          if (
-            flags & 64 &&
+          flags & 64 &&
             offscreenSubtreeIsHidden &&
             ((flags = finishedWork.updateQueue),
-            null !== flags && ((current = flags.callbacks), null !== current))
-          ) {
-            var existingHiddenCallbacks = flags.shared.hiddenCallbacks;
-            flags.shared.hiddenCallbacks =
-              null === existingHiddenCallbacks
-                ? current
-                : existingHiddenCallbacks.concat(current);
-          }
+            null !== flags &&
+              ((current = flags.callbacks),
+              null !== current &&
+                ((root = flags.shared.hiddenCallbacks),
+                (flags.shared.hiddenCallbacks =
+                  null === root ? current : root.concat(current)))));
           break;
         case 26:
         case 27:
@@ -11877,24 +11874,17 @@ __DEV__ &&
               null === current ||
               safelyDetachRef(current, current.return));
           if (finishedWork.flags & 32) {
-            existingHiddenCallbacks = finishedWork.stateNode;
+            root = finishedWork.stateNode;
             try {
-              runWithFiberInDEV(
-                finishedWork,
-                resetTextContent,
-                existingHiddenCallbacks
-              ),
+              runWithFiberInDEV(finishedWork, resetTextContent, root),
                 trackHostMutation();
             } catch (error) {
               captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
           if (flags & 4 && null != finishedWork.stateNode) {
-            existingHiddenCallbacks = finishedWork.memoizedProps;
-            current =
-              null !== current
-                ? current.memoizedProps
-                : existingHiddenCallbacks;
+            root = finishedWork.memoizedProps;
+            current = null !== current ? current.memoizedProps : root;
             try {
               runWithFiberInDEV(
                 finishedWork,
@@ -11902,7 +11892,7 @@ __DEV__ &&
                 finishedWork.stateNode,
                 finishedWork.type,
                 current,
-                existingHiddenCallbacks,
+                root,
                 finishedWork
               );
             } catch (error) {
@@ -11925,12 +11915,12 @@ __DEV__ &&
               );
             flags = finishedWork.memoizedProps;
             current = null !== current ? current.memoizedProps : flags;
-            existingHiddenCallbacks = finishedWork.stateNode;
+            root = finishedWork.stateNode;
             try {
               runWithFiberInDEV(
                 finishedWork,
                 commitTextUpdate,
-                existingHiddenCallbacks,
+                root,
                 current,
                 flags
               ),
@@ -11974,14 +11964,11 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           finishedWork.child.flags & 8192 &&
-            ((existingHiddenCallbacks = null !== finishedWork.memoizedState),
+            ((root = null !== finishedWork.memoizedState),
             (current = null !== current && null !== current.memoizedState),
             alwaysThrottleRetries
-              ? existingHiddenCallbacks !== current &&
-                (globalMostRecentFallbackTime = now$1())
-              : existingHiddenCallbacks &&
-                !current &&
-                (globalMostRecentFallbackTime = now$1()));
+              ? root !== current && (globalMostRecentFallbackTime = now$1())
+              : root && !current && (globalMostRecentFallbackTime = now$1()));
           if (flags & 4) {
             try {
               if (null !== finishedWork.memoizedState) {
@@ -12062,19 +12049,15 @@ __DEV__ &&
                 if (null === current) {
                   lanes = current = root;
                   try {
-                    (existingHiddenCallbacks = lanes.stateNode),
-                      suspenseCallback
-                        ? runWithFiberInDEV(
-                            lanes,
-                            hideInstance,
-                            existingHiddenCallbacks
-                          )
-                        : runWithFiberInDEV(
-                            lanes,
-                            unhideInstance,
-                            lanes.stateNode,
-                            lanes.memoizedProps
-                          );
+                    var instance = lanes.stateNode;
+                    suspenseCallback
+                      ? runWithFiberInDEV(lanes, hideInstance, instance)
+                      : runWithFiberInDEV(
+                          lanes,
+                          unhideInstance,
+                          lanes.stateNode,
+                          lanes.memoizedProps
+                        );
                   } catch (error) {
                     captureCommitPhaseError(lanes, lanes.return, error);
                   }
@@ -12083,13 +12066,17 @@ __DEV__ &&
                 if (null === current) {
                   lanes = root;
                   try {
-                    var instance = lanes.stateNode;
+                    var instance$jscomp$0 = lanes.stateNode;
                     suspenseCallback
-                      ? runWithFiberInDEV(lanes, hideTextInstance, instance)
+                      ? runWithFiberInDEV(
+                          lanes,
+                          hideTextInstance,
+                          instance$jscomp$0
+                        )
                       : runWithFiberInDEV(
                           lanes,
                           unhideTextInstance,
-                          instance,
+                          instance$jscomp$0,
                           lanes.memoizedProps
                         );
                     trackHostMutation();
@@ -12101,12 +12088,12 @@ __DEV__ &&
                 if (null === current) {
                   lanes = root;
                   try {
-                    var instance$jscomp$0 = lanes.stateNode;
+                    var instance$jscomp$1 = lanes.stateNode;
                     suspenseCallback
                       ? runWithFiberInDEV(
                           lanes,
                           hideDehydratedBoundary,
-                          instance$jscomp$0
+                          instance$jscomp$1
                         )
                       : runWithFiberInDEV(
                           lanes,
@@ -12162,10 +12149,17 @@ __DEV__ &&
                 null === current ||
                 safelyDetachRef(current, current.return)),
             (flags = pushMutationContext()),
+            (instance = enableViewTransition && (lanes & 335544064) === lanes),
+            (instance$jscomp$0 = finishedWork.memoizedProps),
+            instance &&
+              "none" !==
+                getViewTransitionClassName(
+                  instance$jscomp$0.default,
+                  instance$jscomp$0.update
+                ),
             recursivelyTraverseMutationEffects(root, finishedWork, lanes),
             commitReconciliationEffects(finishedWork),
-            enableViewTransition &&
-              (lanes & 335544064) === lanes &&
+            instance &&
               null !== current &&
               viewTransitionMutationContext &&
               (finishedWork.flags |= 4),
@@ -18841,10 +18835,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-3a5b326d-20250513",
+        version: "19.2.0-www-modern-63d664b2-20250514",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-3a5b326d-20250513"
+        reconcilerVersion: "19.2.0-www-modern-63d664b2-20250514"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -18878,7 +18872,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-3a5b326d-20250513";
+    exports.version = "19.2.0-www-modern-63d664b2-20250514";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
