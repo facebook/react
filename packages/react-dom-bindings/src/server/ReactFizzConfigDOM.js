@@ -741,9 +741,10 @@ const HTML_COLGROUP_MODE = 9;
 
 type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-const NO_SCOPE = /*         */ 0b00;
-const NOSCRIPT_SCOPE = /*   */ 0b01;
-const PICTURE_SCOPE = /*    */ 0b10;
+const NO_SCOPE = /*         */ 0b000;
+const NOSCRIPT_SCOPE = /*   */ 0b001;
+const PICTURE_SCOPE = /*    */ 0b010;
+const FALLBACK_SCOPE = /*   */ 0b100;
 
 // Lets us keep track of contextual state and pick it back up after suspending.
 export type FormatContext = {
@@ -754,7 +755,7 @@ export type FormatContext = {
 
 function createFormatContext(
   insertionMode: InsertionMode,
-  selectedValue: null | string,
+  selectedValue: null | string | Array<string>,
   tagScope: number,
 ): FormatContext {
   return {
@@ -865,15 +866,19 @@ export function getChildFormatContext(
 }
 
 export function getSuspenseFallbackFormatContext(
-  prevContext: FormatContext,
+  parentContext: FormatContext,
 ): FormatContext {
-  return prevContext;
+  return createFormatContext(
+    parentContext.insertionMode,
+    parentContext.selectedValue,
+    parentContext.tagScope | FALLBACK_SCOPE,
+  );
 }
 
 export function getSuspenseContentFormatContext(
-  prevContext: FormatContext,
+  parentContext: FormatContext,
 ): FormatContext {
-  return prevContext;
+  return parentContext;
 }
 
 export function isPreambleContext(formatContext: FormatContext): boolean {
@@ -3803,7 +3808,7 @@ export function pushStartInstance(
   formatContext: FormatContext,
   textEmbedded: boolean,
 ): ReactNodeList {
-  const isFallback = false;
+  const isFallback = !!(formatContext.tagScope & FALLBACK_SCOPE);
   if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
