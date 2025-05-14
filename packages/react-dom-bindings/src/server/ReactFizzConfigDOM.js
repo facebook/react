@@ -3810,6 +3810,7 @@ export function pushStartInstance(
   formatContext: FormatContext,
   textEmbedded: boolean,
 ): ReactNodeList {
+  const isFallback = false;
   if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
