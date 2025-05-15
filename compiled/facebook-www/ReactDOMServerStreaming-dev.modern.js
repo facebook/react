@@ -745,65 +745,129 @@ __DEV__ &&
     function createPreambleState() {
       return { htmlChunks: null, headChunks: null, bodyChunks: null };
     }
-    function createFormatContext(insertionMode, selectedValue, tagScope) {
+    function createFormatContext(
+      insertionMode,
+      selectedValue,
+      tagScope,
+      viewTransition
+    ) {
       return {
         insertionMode: insertionMode,
         selectedValue: selectedValue,
-        tagScope: tagScope
+        tagScope: tagScope,
+        viewTransition: viewTransition
       };
     }
     function getChildFormatContext(parentContext, type, props) {
+      var subtreeScope = parentContext.tagScope & -25;
       switch (type) {
         case "noscript":
-          return createFormatContext(2, null, parentContext.tagScope | 1);
+          return createFormatContext(2, null, subtreeScope | 1, null);
         case "select":
           return createFormatContext(
             2,
             null != props.value ? props.value : props.defaultValue,
-            parentContext.tagScope
+            subtreeScope,
+            null
           );
         case "svg":
-          return createFormatContext(4, null, parentContext.tagScope);
+          return createFormatContext(4, null, subtreeScope, null);
         case "picture":
-          return createFormatContext(2, null, parentContext.tagScope | 2);
+          return createFormatContext(2, null, subtreeScope | 2, null);
         case "math":
-          return createFormatContext(5, null, parentContext.tagScope);
+          return createFormatContext(5, null, subtreeScope, null);
         case "foreignObject":
-          return createFormatContext(2, null, parentContext.tagScope);
+          return createFormatContext(2, null, subtreeScope, null);
         case "table":
-          return createFormatContext(6, null, parentContext.tagScope);
+          return createFormatContext(6, null, subtreeScope, null);
         case "thead":
         case "tbody":
         case "tfoot":
-          return createFormatContext(7, null, parentContext.tagScope);
+          return createFormatContext(7, null, subtreeScope, null);
         case "colgroup":
-          return createFormatContext(9, null, parentContext.tagScope);
+          return createFormatContext(9, null, subtreeScope, null);
         case "tr":
-          return createFormatContext(8, null, parentContext.tagScope);
+          return createFormatContext(8, null, subtreeScope, null);
         case "head":
           if (2 > parentContext.insertionMode)
-            return createFormatContext(3, null, parentContext.tagScope);
+            return createFormatContext(3, null, subtreeScope, null);
           break;
         case "html":
           if (0 === parentContext.insertionMode)
-            return createFormatContext(1, null, parentContext.tagScope);
+            return createFormatContext(1, null, subtreeScope, null);
       }
       return 6 <= parentContext.insertionMode || 2 > parentContext.insertionMode
-        ? createFormatContext(2, null, parentContext.tagScope)
-        : parentContext;
+        ? createFormatContext(2, null, subtreeScope, null)
+        : (enableViewTransition && null !== parentContext.viewTransition) ||
+            parentContext.tagScope !== subtreeScope
+          ? createFormatContext(
+              parentContext.insertionMode,
+              parentContext.selectedValue,
+              subtreeScope,
+              null
+            )
+          : parentContext;
+    }
+    function getSuspenseViewTransition(parentViewTransition) {
+      return null === parentViewTransition
+        ? null
+        : {
+            update: parentViewTransition.update,
+            enter: null,
+            exit: null,
+            share: parentViewTransition.update,
+            name: parentViewTransition.autoName,
+            autoName: parentViewTransition.autoName,
+            nameIdx: 0
+          };
     }
     function getSuspenseFallbackFormatContext(parentContext) {
       return createFormatContext(
         parentContext.insertionMode,
         parentContext.selectedValue,
-        parentContext.tagScope | 4
+        parentContext.tagScope | 12,
+        getSuspenseViewTransition(parentContext.viewTransition)
       );
+    }
+    function getSuspenseContentFormatContext(parentContext) {
+      return createFormatContext(
+        parentContext.insertionMode,
+        parentContext.selectedValue,
+        parentContext.tagScope | 16,
+        getSuspenseViewTransition(parentContext.viewTransition)
+      );
+    }
+    function makeId(resumableState, treeId, localId) {
+      resumableState = "\u00ab" + resumableState.idPrefix + "R" + treeId;
+      0 < localId && (resumableState += "H" + localId.toString(32));
+      return resumableState + "\u00bb";
     }
     function pushTextInstance(target, text, renderState, textEmbedded) {
       if ("" === text) return textEmbedded;
       textEmbedded && target.push("\x3c!-- --\x3e");
       target.push(escapeTextForBrowser(text));
       return !0;
+    }
+    function pushViewTransitionAttributes(target, formatContext) {
+      enableViewTransition &&
+        ((formatContext = formatContext.viewTransition),
+        null !== formatContext &&
+          ("auto" !== formatContext.name &&
+            (pushStringAttribute(
+              target,
+              "vt-name",
+              0 === formatContext.nameIdx
+                ? formatContext.name
+                : formatContext.name + "_" + formatContext.nameIdx
+            ),
+            formatContext.nameIdx++),
+          pushStringAttribute(target, "vt-update", formatContext.update),
+          null !== formatContext.enter &&
+            pushStringAttribute(target, "vt-enter", formatContext.enter),
+          null !== formatContext.exit &&
+            pushStringAttribute(target, "vt-exit", formatContext.exit),
+          null !== formatContext.share &&
+            pushStringAttribute(target, "vt-share", formatContext.share)));
     }
     function pushStyleAttribute(target, style) {
       if ("object" !== typeof style)
@@ -1353,7 +1417,7 @@ __DEV__ &&
       checkHtmlStringCoercion(styleText);
       return ("" + styleText).replace(styleRegex, styleReplacer);
     }
-    function pushSelfClosing(target, props, tag) {
+    function pushSelfClosing(target, props, tag, formatContext) {
       target.push(startChunkForTag(tag));
       for (var propKey in props)
         if (hasOwnProperty.call(props, propKey)) {
@@ -1370,6 +1434,7 @@ __DEV__ &&
                 pushAttribute(target, propKey, propValue);
             }
         }
+      pushViewTransitionAttributes(target, formatContext);
       target.push(endOfStartTagSelfClosing);
       return null;
     }
@@ -1447,7 +1512,7 @@ __DEV__ &&
       target.push(endChunkForTag("script"));
       return null;
     }
-    function pushStartSingletonElement(target, props, tag) {
+    function pushStartSingletonElement(target, props, tag, formatContext) {
       target.push(startChunkForTag(tag));
       var innerHTML = (tag = null),
         propKey;
@@ -1466,11 +1531,12 @@ __DEV__ &&
                 pushAttribute(target, propKey, propValue);
             }
         }
+      pushViewTransitionAttributes(target, formatContext);
       target.push(endOfStartTag);
       pushInnerHTML(target, innerHTML, tag);
       return tag;
     }
-    function pushStartGenericElement(target, props, tag) {
+    function pushStartGenericElement(target, props, tag, formatContext) {
       target.push(startChunkForTag(tag));
       var innerHTML = (tag = null),
         propKey;
@@ -1489,6 +1555,7 @@ __DEV__ &&
                 pushAttribute(target, propKey, propValue);
             }
         }
+      pushViewTransitionAttributes(target, formatContext);
       target.push(endOfStartTag);
       pushInnerHTML(target, innerHTML, tag);
       return "string" === typeof tag
@@ -1594,6 +1661,7 @@ __DEV__ &&
                     pushAttribute(target$jscomp$0, propKey, propValue);
                 }
             }
+          pushViewTransitionAttributes(target$jscomp$0, formatContext);
           target$jscomp$0.push(endOfStartTag);
           pushInnerHTML(target$jscomp$0, innerHTML, children);
           if ("string" === typeof children) {
@@ -1642,6 +1710,7 @@ __DEV__ &&
                     );
                 }
             }
+          pushViewTransitionAttributes(target$jscomp$0, formatContext);
           target$jscomp$0.push(endOfStartTag);
           pushInnerHTML(target$jscomp$0, innerHTML$jscomp$0, children$jscomp$0);
           return children$jscomp$0;
@@ -1755,6 +1824,7 @@ __DEV__ &&
           null === value$jscomp$0 &&
             null !== defaultValue &&
             (value$jscomp$0 = defaultValue);
+          pushViewTransitionAttributes(target$jscomp$0, formatContext);
           target$jscomp$0.push(endOfStartTag);
           if (null != children$jscomp$2) {
             console.error(
@@ -1882,6 +1952,7 @@ __DEV__ &&
             ? pushAttribute(target$jscomp$0, "value", value$jscomp$1)
             : null !== defaultValue$jscomp$0 &&
               pushAttribute(target$jscomp$0, "value", defaultValue$jscomp$0);
+          pushViewTransitionAttributes(target$jscomp$0, formatContext);
           target$jscomp$0.push(endOfStartTagSelfClosing);
           null != formData &&
             formData.forEach(pushAdditionalFormField, target$jscomp$0);
@@ -1948,6 +2019,7 @@ __DEV__ &&
             formTarget$jscomp$0,
             name$jscomp$0
           );
+          pushViewTransitionAttributes(target$jscomp$0, formatContext);
           target$jscomp$0.push(endOfStartTag);
           null != formData$jscomp$0 &&
             formData$jscomp$0.forEach(pushAdditionalFormField, target$jscomp$0);
@@ -2045,6 +2117,7 @@ __DEV__ &&
             pushAttribute(target$jscomp$0, "method", formMethod$jscomp$1);
           null != formTarget$jscomp$1 &&
             pushAttribute(target$jscomp$0, "target", formTarget$jscomp$1);
+          pushViewTransitionAttributes(target$jscomp$0, formatContext);
           target$jscomp$0.push(endOfStartTag);
           null !== formActionName &&
             (target$jscomp$0.push('<input type="hidden"'),
@@ -2081,6 +2154,7 @@ __DEV__ &&
                     );
                 }
             }
+          pushViewTransitionAttributes(target$jscomp$0, formatContext);
           target$jscomp$0.push(endOfStartTag);
           return null;
         case "object":
@@ -2126,6 +2200,7 @@ __DEV__ &&
                     );
                 }
             }
+          pushViewTransitionAttributes(target$jscomp$0, formatContext);
           target$jscomp$0.push(endOfStartTag);
           pushInnerHTML(target$jscomp$0, innerHTML$jscomp$4, children$jscomp$5);
           if ("string" === typeof children$jscomp$5) {
@@ -2491,20 +2566,32 @@ __DEV__ &&
             var JSCompiler_inline_result$jscomp$8 = pushSelfClosing(
               target$jscomp$0,
               props,
-              "meta"
+              "meta",
+              formatContext
             );
           else
             textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e"),
               (JSCompiler_inline_result$jscomp$8 = isFallback$jscomp$1
                 ? null
                 : "string" === typeof props.charSet
-                  ? pushSelfClosing(renderState.charsetChunks, props, "meta")
+                  ? pushSelfClosing(
+                      renderState.charsetChunks,
+                      props,
+                      "meta",
+                      formatContext
+                    )
                   : "viewport" === props.name
-                    ? pushSelfClosing(renderState.viewportChunks, props, "meta")
+                    ? pushSelfClosing(
+                        renderState.viewportChunks,
+                        props,
+                        "meta",
+                        formatContext
+                      )
                     : pushSelfClosing(
                         renderState.hoistableChunks,
                         props,
-                        "meta"
+                        "meta",
+                        formatContext
                       ));
           return JSCompiler_inline_result$jscomp$8;
         case "listing":
@@ -2532,6 +2619,7 @@ __DEV__ &&
                     );
                 }
             }
+          pushViewTransitionAttributes(target$jscomp$0, formatContext);
           target$jscomp$0.push(endOfStartTag);
           if (null != innerHTML$jscomp$7) {
             if (null != children$jscomp$10)
@@ -2647,7 +2735,7 @@ __DEV__ &&
                       promotablePreloads.set(key$jscomp$0, resource$jscomp$1)));
             }
           }
-          return pushSelfClosing(target$jscomp$0, props, "img");
+          return pushSelfClosing(target$jscomp$0, props, "img", formatContext);
         case "base":
         case "area":
         case "br":
@@ -2659,7 +2747,7 @@ __DEV__ &&
         case "source":
         case "track":
         case "wbr":
-          return pushSelfClosing(target$jscomp$0, props, type);
+          return pushSelfClosing(target$jscomp$0, props, type, formatContext);
         case "annotation-xml":
         case "color-profile":
         case "font-face":
@@ -2679,13 +2767,15 @@ __DEV__ &&
             var JSCompiler_inline_result$jscomp$9 = pushStartSingletonElement(
               preamble.headChunks,
               props,
-              "head"
+              "head",
+              formatContext
             );
           } else
             JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
               target$jscomp$0,
               props,
-              "head"
+              "head",
+              formatContext
             );
           return JSCompiler_inline_result$jscomp$9;
         case "body":
@@ -2698,13 +2788,15 @@ __DEV__ &&
             var JSCompiler_inline_result$jscomp$10 = pushStartSingletonElement(
               preamble$jscomp$0.bodyChunks,
               props,
-              "body"
+              "body",
+              formatContext
             );
           } else
             JSCompiler_inline_result$jscomp$10 = pushStartGenericElement(
               target$jscomp$0,
               props,
-              "body"
+              "body",
+              formatContext
             );
           return JSCompiler_inline_result$jscomp$10;
         case "html":
@@ -2717,13 +2809,15 @@ __DEV__ &&
             var JSCompiler_inline_result$jscomp$11 = pushStartSingletonElement(
               preamble$jscomp$1.htmlChunks,
               props,
-              "html"
+              "html",
+              formatContext
             );
           } else
             JSCompiler_inline_result$jscomp$11 = pushStartGenericElement(
               target$jscomp$0,
               props,
-              "html"
+              "html",
+              formatContext
             );
           return JSCompiler_inline_result$jscomp$11;
         default:
@@ -2775,6 +2869,7 @@ __DEV__ &&
                   }
                 }
               }
+            pushViewTransitionAttributes(target$jscomp$0, formatContext);
             target$jscomp$0.push(endOfStartTag);
             pushInnerHTML(
               target$jscomp$0,
@@ -2784,7 +2879,12 @@ __DEV__ &&
             return children$jscomp$11;
           }
       }
-      return pushStartGenericElement(target$jscomp$0, props, type);
+      return pushStartGenericElement(
+        target$jscomp$0,
+        props,
+        type,
+        formatContext
+      );
     }
     function endChunkForTag(tag) {
       var chunk = endTagCache.get(tag);
@@ -3566,6 +3666,13 @@ __DEV__ &&
         ),
         (didWarnAboutNoopUpdateForComponent[warningKey] = !0));
     }
+    function getTreeId(context) {
+      var overflow = context.overflow;
+      context = context.id;
+      return (
+        (context & ~(1 << (32 - clz32(context) - 1))).toString(32) + overflow
+      );
+    }
     function pushTreeContext(baseContext, totalChildren, index) {
       var baseIdWithLeadingBit = baseContext.id;
       baseContext = baseContext.overflow;
@@ -4183,6 +4290,23 @@ __DEV__ &&
             return describeBuiltInComponentFrame("ViewTransition");
       }
       return "";
+    }
+    function getViewTransitionClassName(defaultClass, eventClass) {
+      defaultClass =
+        null == defaultClass || "string" === typeof defaultClass
+          ? defaultClass
+          : defaultClass.default;
+      eventClass =
+        null == eventClass || "string" === typeof eventClass
+          ? eventClass
+          : eventClass.default;
+      return null == eventClass
+        ? "auto" === defaultClass
+          ? null
+          : defaultClass
+        : "auto" === eventClass
+          ? null
+          : eventClass;
     }
     function defaultErrorHandler(error) {
       if (
@@ -5314,7 +5438,53 @@ __DEV__ &&
             return;
           case REACT_VIEW_TRANSITION_TYPE:
             if (enableViewTransition) {
-              var prevKeyPath$jscomp$3 = task.keyPath;
+              var prevContext$jscomp$0 = task.formatContext,
+                prevKeyPath$jscomp$3 = task.keyPath;
+              var resumableState$jscomp$0 = request.resumableState;
+              if (null != props.name && "auto" !== props.name)
+                var autoName = props.name;
+              else {
+                var treeId = getTreeId(task.treeContext);
+                autoName = makeId(resumableState$jscomp$0, treeId, 0);
+              }
+              var update = getViewTransitionClassName(
+                  props.default,
+                  props.update
+                ),
+                enter = getViewTransitionClassName(props.default, props.enter),
+                exit = getViewTransitionClassName(props.default, props.exit),
+                share = getViewTransitionClassName(props.default, props.share),
+                name$jscomp$0 = props.name;
+              null == update && (update = "auto");
+              null == enter && (enter = "auto");
+              null == exit && (exit = "auto");
+              if (null == name$jscomp$0) {
+                var parentViewTransition = prevContext$jscomp$0.viewTransition;
+                null !== parentViewTransition
+                  ? ((name$jscomp$0 = parentViewTransition.name),
+                    (share = parentViewTransition.share))
+                  : ((name$jscomp$0 = "auto"), (share = null));
+              } else
+                "none" === share
+                  ? (share = null)
+                  : null == share && (share = "auto");
+              prevContext$jscomp$0.tagScope & 8 || (exit = null);
+              prevContext$jscomp$0.tagScope & 16 || (enter = null);
+              var JSCompiler_inline_result$jscomp$0 = createFormatContext(
+                prevContext$jscomp$0.insertionMode,
+                prevContext$jscomp$0.selectedValue,
+                prevContext$jscomp$0.tagScope & -25,
+                {
+                  update: update,
+                  enter: enter,
+                  exit: exit,
+                  share: share,
+                  name: name$jscomp$0,
+                  autoName: autoName,
+                  nameIdx: 0
+                }
+              );
+              task.formatContext = JSCompiler_inline_result$jscomp$0;
               task.keyPath = keyPath;
               if (null != props.name && "auto" !== props.name)
                 renderNodeDestructive(request, task, props.children, -1);
@@ -5324,6 +5494,7 @@ __DEV__ &&
                 renderNode(request, task, props.children, -1);
                 task.treeContext = prevTreeContext;
               }
+              task.formatContext = prevContext$jscomp$0;
               task.keyPath = prevKeyPath$jscomp$3;
               return;
             }
@@ -5338,7 +5509,8 @@ __DEV__ &&
               var _prevKeyPath = task.keyPath,
                 _prevContext = task.formatContext;
               task.keyPath = keyPath;
-              task.formatContext = _prevContext;
+              task.formatContext =
+                getSuspenseContentFormatContext(_prevContext);
               var _content = props.children;
               try {
                 renderNode(request, task, _content, -1);
@@ -5348,7 +5520,7 @@ __DEV__ &&
               }
             } else {
               var prevKeyPath$jscomp$4 = task.keyPath,
-                prevContext$jscomp$0 = task.formatContext,
+                prevContext$jscomp$1 = task.formatContext,
                 parentBoundary = task.blockedBoundary,
                 parentPreamble = task.blockedPreamble,
                 parentHoistableState = task.hoistableState,
@@ -5412,7 +5584,7 @@ __DEV__ &&
                 task.blockedPreamble = newBoundary.fallbackPreamble;
                 task.keyPath = fallbackKeyPath;
                 task.formatContext =
-                  getSuspenseFallbackFormatContext(prevContext$jscomp$0);
+                  getSuspenseFallbackFormatContext(prevContext$jscomp$1);
                 boundarySegment.status = 6;
                 try {
                   renderNode(request, task, fallback, -1),
@@ -5429,7 +5601,7 @@ __DEV__ &&
                   (task.blockedSegment = parentSegment),
                     (task.blockedPreamble = parentPreamble),
                     (task.keyPath = prevKeyPath$jscomp$4),
-                    (task.formatContext = prevContext$jscomp$0);
+                    (task.formatContext = prevContext$jscomp$1);
                 }
                 var suspendedPrimaryTask = createRenderTask(
                   request,
@@ -5442,7 +5614,7 @@ __DEV__ &&
                   newBoundary.contentState,
                   task.abortSet,
                   keyPath,
-                  task.formatContext,
+                  getSuspenseContentFormatContext(task.formatContext),
                   task.context,
                   task.treeContext,
                   task.componentStack,
@@ -5457,7 +5629,8 @@ __DEV__ &&
                 task.hoistableState = newBoundary.contentState;
                 task.blockedSegment = contentRootSegment;
                 task.keyPath = keyPath;
-                task.formatContext = prevContext$jscomp$0;
+                task.formatContext =
+                  getSuspenseContentFormatContext(prevContext$jscomp$1);
                 contentRootSegment.status = 6;
                 try {
                   if (
@@ -5504,7 +5677,7 @@ __DEV__ &&
                     (task.hoistableState = parentHoistableState),
                     (task.blockedSegment = parentSegment),
                     (task.keyPath = prevKeyPath$jscomp$4),
-                    (task.formatContext = prevContext$jscomp$0);
+                    (task.formatContext = prevContext$jscomp$1);
                 }
                 var suspendedFallbackTask = createRenderTask(
                   request,
@@ -5766,7 +5939,7 @@ __DEV__ &&
               task.blockedBoundary = props;
               task.hoistableState = props.contentState;
               task.keyPath = keyPath;
-              task.formatContext = prevContext;
+              task.formatContext = getSuspenseContentFormatContext(prevContext);
               task.replay = { nodes: type, slots: ref, pendingTasks: 1 };
               try {
                 renderNode(request, task, content, -1);
@@ -8604,20 +8777,14 @@ __DEV__ &&
           return [!1, unsupportedStartTransition];
         },
         useId: function () {
-          var treeId = currentlyRenderingTask.treeContext;
-          var overflow = treeId.overflow;
-          treeId = treeId.id;
-          treeId =
-            (treeId & ~(1 << (32 - clz32(treeId) - 1))).toString(32) + overflow;
-          var resumableState = currentResumableState;
+          var treeId = getTreeId(currentlyRenderingTask.treeContext),
+            resumableState = currentResumableState;
           if (null === resumableState)
             throw Error(
               "Invalid hook call. Hooks can only be called inside of the body of a function component."
             );
-          overflow = localIdCounter++;
-          treeId = "\u00ab" + resumableState.idPrefix + "R" + treeId;
-          0 < overflow && (treeId += "H" + overflow.toString(32));
-          return treeId + "\u00bb";
+          var localId = localIdCounter++;
+          return makeId(resumableState, treeId, localId);
         },
         useSyncExternalStore: function (
           subscribe,
@@ -9186,7 +9353,7 @@ __DEV__ &&
               ),
             pushCompletedShellIdAttribute(streamingFormat, resumableState),
             streamingFormat.push(' async="">\x3c/script>');
-      streamingFormat = createFormatContext(0, null, 0);
+      streamingFormat = createFormatContext(0, null, 0, null);
       bootstrapModules = options ? options.progressiveChunkSize : void 0;
       options = options.onError;
       bootstrapScripts = getCurrentTime();
