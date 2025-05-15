@@ -40,6 +40,7 @@ export const enableViewTransition = __VARIANT__;
 export const enableComponentPerformanceTrack = __VARIANT__;
 export const enableScrollEndPolyfill = __VARIANT__;
 export const enableFragmentRefs = __VARIANT__;
+export const enableStore = __VARIANT__;
 
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these

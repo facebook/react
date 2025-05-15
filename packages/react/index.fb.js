@@ -7,7 +7,11 @@
  * @flow
  */
 
-import {captureOwnerStack as captureOwnerStackImpl} from './src/ReactClient';
+import {
+  captureOwnerStack as captureOwnerStackImpl,
+  unstable_createStore as createStore,
+} from './src/ReactClient';
+import {enableStore} from 'shared/ReactFeatureFlags';
 
 export {
   __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
@@ -76,4 +80,9 @@ if (__DEV__) {
   captureOwnerStack = captureOwnerStackImpl;
 }
 
-export {captureOwnerStack};
+let unstable_createStore: typeof createStore;
+if (enableStore) {
+  unstable_createStore = createStore;
+}
+
+export {captureOwnerStack, unstable_createStore};

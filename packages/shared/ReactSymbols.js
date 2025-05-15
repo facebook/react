@@ -51,6 +51,8 @@ export const REACT_VIEW_TRANSITION_TYPE: symbol = Symbol.for(
   'react.view_transition',
 );
 
+export const REACT_STORE_TYPE: symbol = Symbol.for('react.store');
+
 const MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';
 

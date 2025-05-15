@@ -88,6 +88,7 @@ export const enableSrcObject = false;
 export const enableHydrationChangeEvent = true;
 export const enableDefaultTransitionIndicator = false;
 export const ownerStackLimit = 1e4;
+export const enableStore = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

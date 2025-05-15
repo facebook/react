@@ -14,6 +14,7 @@ import type {
   Thenable,
   RejectedThenable,
   Awaited,
+  ReactStore,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -44,10 +45,12 @@ import {
   enableNoCloningMemoCache,
   enableViewTransition,
   enableGestureTransition,
+  enableStore,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
   REACT_MEMO_CACHE_SENTINEL,
+  REACT_STORE_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -1145,6 +1148,10 @@ function useThenable<T>(thenable: Thenable<T>): T {
   return result;
 }
 
+function useStore<T>(store: ReactStore<T>): T {
+  return store._current;
+}
+
 function use<T>(usable: Usable<T>): T {
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
@@ -1155,6 +1162,12 @@ function use<T>(usable: Usable<T>): T {
     } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
       const context: ReactContext<T> = (usable: any);
       return readContext(context);
+    }
+    if (enableStore) {
+      if (usable.$$typeof === REACT_STORE_TYPE) {
+        const store: ReactStore<T> = (usable: any);
+        return useStore(store);
+      }
     }
   }
 
