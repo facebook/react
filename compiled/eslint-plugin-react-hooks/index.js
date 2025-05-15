@@ -135,7 +135,9 @@ const rule$2 = {
                 let currentScope = scope.upper;
                 while (currentScope) {
                     pureScopes.add(currentScope);
-                    if (currentScope.type === 'function') {
+                    if (currentScope.type === 'function' ||
+                        currentScope.type === 'hook' ||
+                        currentScope.type === 'component') {
                         break;
                     }
                     currentScope = currentScope.upper;
