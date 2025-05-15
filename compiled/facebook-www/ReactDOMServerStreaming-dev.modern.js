@@ -792,6 +792,13 @@ __DEV__ &&
         ? createFormatContext(2, null, parentContext.tagScope)
         : parentContext;
     }
+    function getSuspenseFallbackFormatContext(parentContext) {
+      return createFormatContext(
+        parentContext.insertionMode,
+        parentContext.selectedValue,
+        parentContext.tagScope | 4
+      );
+    }
     function pushTextInstance(target, text, renderState, textEmbedded) {
       if ("" === text) return textEmbedded;
       textEmbedded && target.push("\x3c!-- --\x3e");
@@ -1506,8 +1513,7 @@ __DEV__ &&
       preambleState,
       hoistableState,
       formatContext,
-      textEmbedded,
-      isFallback
+      textEmbedded
     ) {
       validateProperties$2(type, props);
       ("input" !== type && "textarea" !== type && "select" !== type) ||
@@ -2128,8 +2134,8 @@ __DEV__ &&
           } else JSCompiler_inline_result$jscomp$3 = children$jscomp$5;
           return JSCompiler_inline_result$jscomp$3;
         case "title":
-          var insertionMode = formatContext.insertionMode,
-            noscriptTagInScope = !!(formatContext.tagScope & 1);
+          var noscriptTagInScope = formatContext.tagScope & 1,
+            isFallback = formatContext.tagScope & 4;
           if (hasOwnProperty.call(props, "children")) {
             var children$jscomp$6 = props.children,
               child = Array.isArray(children$jscomp$6)
@@ -2158,7 +2164,7 @@ __DEV__ &&
                       ));
           }
           if (
-            4 === insertionMode ||
+            4 === formatContext.insertionMode ||
             noscriptTagInScope ||
             null != props.itemProp
           )
@@ -2173,12 +2179,14 @@ __DEV__ &&
                 (JSCompiler_inline_result$jscomp$4 = void 0));
           return JSCompiler_inline_result$jscomp$4;
         case "link":
-          var rel = props.rel,
+          var noscriptTagInScope$jscomp$0 = formatContext.tagScope & 1,
+            isFallback$jscomp$0 = formatContext.tagScope & 4,
+            rel = props.rel,
             href = props.href,
             precedence = props.precedence;
           if (
             4 === formatContext.insertionMode ||
-            formatContext.tagScope & 1 ||
+            noscriptTagInScope$jscomp$0 ||
             null != props.itemProp ||
             "string" !== typeof rel ||
             "string" !== typeof href ||
@@ -2279,12 +2287,13 @@ __DEV__ &&
                   props
                 ))
               : (textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e"),
-                (JSCompiler_inline_result$jscomp$5 = isFallback
+                (JSCompiler_inline_result$jscomp$5 = isFallback$jscomp$0
                   ? null
                   : pushLinkImpl(renderState.hoistableChunks, props)));
           return JSCompiler_inline_result$jscomp$5;
         case "script":
-          var asyncProp = props.async;
+          var noscriptTagInScope$jscomp$1 = formatContext.tagScope & 1,
+            asyncProp = props.async;
           if (
             "string" !== typeof props.src ||
             !props.src ||
@@ -2294,7 +2303,7 @@ __DEV__ &&
             props.onLoad ||
             props.onError ||
             4 === formatContext.insertionMode ||
-            formatContext.tagScope & 1 ||
+            noscriptTagInScope$jscomp$1 ||
             null != props.itemProp
           )
             var JSCompiler_inline_result$jscomp$6 = pushScriptImpl(
@@ -2332,8 +2341,7 @@ __DEV__ &&
           }
           return JSCompiler_inline_result$jscomp$6;
         case "style":
-          var insertionMode$jscomp$0 = formatContext.insertionMode,
-            noscriptTagInScope$jscomp$0 = !!(formatContext.tagScope & 1);
+          var noscriptTagInScope$jscomp$2 = formatContext.tagScope & 1;
           if (hasOwnProperty.call(props, "children")) {
             var children$jscomp$7 = props.children,
               child$jscomp$0 = Array.isArray(children$jscomp$7)
@@ -2356,8 +2364,8 @@ __DEV__ &&
           var precedence$jscomp$0 = props.precedence,
             href$jscomp$0 = props.href;
           if (
-            4 === insertionMode$jscomp$0 ||
-            noscriptTagInScope$jscomp$0 ||
+            4 === formatContext.insertionMode ||
+            noscriptTagInScope$jscomp$2 ||
             null != props.itemProp ||
             "string" !== typeof precedence$jscomp$0 ||
             "string" !== typeof href$jscomp$0 ||
@@ -2473,9 +2481,11 @@ __DEV__ &&
           }
           return JSCompiler_inline_result$jscomp$7;
         case "meta":
+          var noscriptTagInScope$jscomp$3 = formatContext.tagScope & 1,
+            isFallback$jscomp$1 = formatContext.tagScope & 4;
           if (
             4 === formatContext.insertionMode ||
-            formatContext.tagScope & 1 ||
+            noscriptTagInScope$jscomp$3 ||
             null != props.itemProp
           )
             var JSCompiler_inline_result$jscomp$8 = pushSelfClosing(
@@ -2485,7 +2495,7 @@ __DEV__ &&
             );
           else
             textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e"),
-              (JSCompiler_inline_result$jscomp$8 = isFallback
+              (JSCompiler_inline_result$jscomp$8 = isFallback$jscomp$1
                 ? null
                 : "string" === typeof props.charSet
                   ? pushSelfClosing(renderState.charsetChunks, props, "meta")
@@ -2548,17 +2558,18 @@ __DEV__ &&
             target$jscomp$0.push(leadingNewline);
           return children$jscomp$10;
         case "img":
-          var src = props.src,
+          var pictureOrNoScriptTagInScope = formatContext.tagScope & 3,
+            src = props.src,
             srcSet = props.srcSet;
           if (
             !(
               "lazy" === props.loading ||
               (!src && !srcSet) ||
               ("string" !== typeof src && null != src) ||
-              ("string" !== typeof srcSet && null != srcSet)
+              ("string" !== typeof srcSet && null != srcSet) ||
+              "low" === props.fetchPriority ||
+              pictureOrNoScriptTagInScope
             ) &&
-            "low" !== props.fetchPriority &&
-            !1 === !!(formatContext.tagScope & 3) &&
             ("string" !== typeof src ||
               ":" !== src[4] ||
               ("d" !== src[0] && "D" !== src[0]) ||
@@ -4291,7 +4302,6 @@ __DEV__ &&
       context,
       treeContext,
       componentStack,
-      isFallback,
       legacyContext,
       debugTask
     ) {
@@ -4316,8 +4326,7 @@ __DEV__ &&
         context: context,
         treeContext: treeContext,
         componentStack: componentStack,
-        thenableState: thenableState,
-        isFallback: isFallback
+        thenableState: thenableState
       };
       task.debugTask = debugTask;
       abortSet.add(task);
@@ -4337,7 +4346,6 @@ __DEV__ &&
       context,
       treeContext,
       componentStack,
-      isFallback,
       legacyContext,
       debugTask
     ) {
@@ -4363,8 +4371,7 @@ __DEV__ &&
         context: context,
         treeContext: treeContext,
         componentStack: componentStack,
-        thenableState: thenableState,
-        isFallback: isFallback
+        thenableState: thenableState
       };
       task.debugTask = debugTask;
       abortSet.add(task);
@@ -5180,17 +5187,16 @@ __DEV__ &&
             task.blockedPreamble,
             task.hoistableState,
             task.formatContext,
-            segment.lastPushedText,
-            task.isFallback
+            segment.lastPushedText
           );
           segment.lastPushedText = !1;
-          var _prevContext = task.formatContext,
+          var _prevContext2 = task.formatContext,
             _prevKeyPath2 = task.keyPath;
           task.keyPath = keyPath;
           if (
             3 ===
             (task.formatContext = getChildFormatContext(
-              _prevContext,
+              _prevContext2,
               type,
               props
             )).insertionMode
@@ -5219,14 +5225,13 @@ __DEV__ &&
               task.context,
               task.treeContext,
               task.componentStack,
-              task.isFallback,
               emptyContextObject,
               task.debugTask
             );
             pushComponentStack(preambleTask);
             request.pingedTasks.push(preambleTask);
           } else renderNode(request, task, _children, -1);
-          task.formatContext = _prevContext;
+          task.formatContext = _prevContext2;
           task.keyPath = _prevKeyPath2;
           a: {
             var target = segment.chunks,
@@ -5252,19 +5257,19 @@ __DEV__ &&
               case "wbr":
                 break a;
               case "body":
-                if (1 >= _prevContext.insertionMode) {
+                if (1 >= _prevContext2.insertionMode) {
                   resumableState.hasBody = !0;
                   break a;
                 }
                 break;
               case "html":
-                if (0 === _prevContext.insertionMode) {
+                if (0 === _prevContext2.insertionMode) {
                   resumableState.hasHtml = !0;
                   break a;
                 }
                 break;
               case "head":
-                if (1 >= _prevContext.insertionMode) break a;
+                if (1 >= _prevContext2.insertionMode) break a;
             }
             target.push(endChunkForTag(type));
           }
@@ -5330,16 +5335,20 @@ __DEV__ &&
             return;
           case REACT_SUSPENSE_TYPE:
             a: if (null !== task.replay) {
-              var _prevKeyPath = task.keyPath;
+              var _prevKeyPath = task.keyPath,
+                _prevContext = task.formatContext;
               task.keyPath = keyPath;
+              task.formatContext = _prevContext;
               var _content = props.children;
               try {
                 renderNode(request, task, _content, -1);
               } finally {
-                task.keyPath = _prevKeyPath;
+                (task.keyPath = _prevKeyPath),
+                  (task.formatContext = _prevContext);
               }
             } else {
               var prevKeyPath$jscomp$4 = task.keyPath,
+                prevContext$jscomp$0 = task.formatContext,
                 parentBoundary = task.blockedBoundary,
                 parentPreamble = task.blockedPreamble,
                 parentHoistableState = task.hoistableState,
@@ -5402,6 +5411,8 @@ __DEV__ &&
                 task.blockedSegment = boundarySegment;
                 task.blockedPreamble = newBoundary.fallbackPreamble;
                 task.keyPath = fallbackKeyPath;
+                task.formatContext =
+                  getSuspenseFallbackFormatContext(prevContext$jscomp$0);
                 boundarySegment.status = 6;
                 try {
                   renderNode(request, task, fallback, -1),
@@ -5417,7 +5428,8 @@ __DEV__ &&
                 } finally {
                   (task.blockedSegment = parentSegment),
                     (task.blockedPreamble = parentPreamble),
-                    (task.keyPath = prevKeyPath$jscomp$4);
+                    (task.keyPath = prevKeyPath$jscomp$4),
+                    (task.formatContext = prevContext$jscomp$0);
                 }
                 var suspendedPrimaryTask = createRenderTask(
                   request,
@@ -5434,7 +5446,6 @@ __DEV__ &&
                   task.context,
                   task.treeContext,
                   task.componentStack,
-                  task.isFallback,
                   emptyContextObject,
                   task.debugTask
                 );
@@ -5446,6 +5457,7 @@ __DEV__ &&
                 task.hoistableState = newBoundary.contentState;
                 task.blockedSegment = contentRootSegment;
                 task.keyPath = keyPath;
+                task.formatContext = prevContext$jscomp$0;
                 contentRootSegment.status = 6;
                 try {
                   if (
@@ -5491,7 +5503,8 @@ __DEV__ &&
                     (task.blockedPreamble = parentPreamble),
                     (task.hoistableState = parentHoistableState),
                     (task.blockedSegment = parentSegment),
-                    (task.keyPath = prevKeyPath$jscomp$4);
+                    (task.keyPath = prevKeyPath$jscomp$4),
+                    (task.formatContext = prevContext$jscomp$0);
                 }
                 var suspendedFallbackTask = createRenderTask(
                   request,
@@ -5504,11 +5517,10 @@ __DEV__ &&
                   newBoundary.fallbackState,
                   fallbackAbortSet,
                   [keyPath[0], "Suspense Fallback", keyPath[2]],
-                  task.formatContext,
+                  getSuspenseFallbackFormatContext(task.formatContext),
                   task.context,
                   task.treeContext,
                   task.componentStack,
-                  !0,
                   emptyContextObject,
                   task.debugTask
                 );
@@ -5674,9 +5686,9 @@ __DEV__ &&
                   ">. The tree doesn't match so React will fallback to client rendering."
               );
             var childNodes = node[2];
-            node = node[3];
-            name = task.node;
-            task.replay = { nodes: childNodes, slots: node, pendingTasks: 1 };
+            name = node[3];
+            keyOrIndex = task.node;
+            task.replay = { nodes: childNodes, slots: name, pendingTasks: 1 };
             try {
               renderElement(request, task, keyPath, type, props, ref);
               if (
@@ -5693,21 +5705,21 @@ __DEV__ &&
                 null !== x &&
                 (x === SuspenseException || "function" === typeof x.then)
               )
-                throw (task.node === name && (task.replay = replay), x);
+                throw (task.node === keyOrIndex && (task.replay = replay), x);
               task.replay.pendingTasks--;
               type = getThrownInfo(task.componentStack);
               props = request;
               request = task.blockedBoundary;
               keyPath = x;
-              ref = node;
-              node = logRecoverableError(props, keyPath, type, task.debugTask);
+              ref = name;
+              name = logRecoverableError(props, keyPath, type, task.debugTask);
               abortRemainingReplayNodes(
                 props,
                 request,
                 childNodes,
                 ref,
                 keyPath,
-                node,
+                name,
                 type,
                 !1
               );
@@ -5722,12 +5734,13 @@ __DEV__ &&
               );
             a: {
               replay = void 0;
-              type = node[5];
-              ref = node[2];
-              name = node[3];
+              name = node[5];
+              type = node[2];
+              ref = node[3];
               keyOrIndex = null === node[4] ? [] : node[4][2];
               node = null === node[4] ? null : node[4][3];
               var prevKeyPath = task.keyPath,
+                prevContext = task.formatContext,
                 previousReplaySet = task.replay,
                 parentBoundary = task.blockedBoundary,
                 parentHoistableState = task.hoistableState,
@@ -5749,11 +5762,12 @@ __DEV__ &&
                       null
                     );
               props.parentFlushed = !0;
-              props.rootSegmentID = type;
+              props.rootSegmentID = name;
               task.blockedBoundary = props;
               task.hoistableState = props.contentState;
               task.keyPath = keyPath;
-              task.replay = { nodes: ref, slots: name, pendingTasks: 1 };
+              task.formatContext = prevContext;
+              task.replay = { nodes: type, slots: ref, pendingTasks: 1 };
               try {
                 renderNode(request, task, content, -1);
                 if (
@@ -5785,7 +5799,8 @@ __DEV__ &&
                 (task.blockedBoundary = parentBoundary),
                   (task.hoistableState = parentHoistableState),
                   (task.replay = previousReplaySet),
-                  (task.keyPath = prevKeyPath);
+                  (task.keyPath = prevKeyPath),
+                  (task.formatContext = prevContext);
               }
               props = createReplayTask(
                 request,
@@ -5797,11 +5812,10 @@ __DEV__ &&
                 props.fallbackState,
                 fallbackAbortSet,
                 [keyPath[0], "Suspense Fallback", keyPath[2]],
-                task.formatContext,
+                getSuspenseFallbackFormatContext(task.formatContext),
                 task.context,
                 task.treeContext,
                 task.componentStack,
-                !0,
                 emptyContextObject,
                 task.debugTask
               );
@@ -6186,7 +6200,6 @@ __DEV__ &&
         task.context,
         task.treeContext,
         task.componentStack,
-        task.isFallback,
         emptyContextObject,
         task.debugTask
       );
@@ -6218,7 +6231,6 @@ __DEV__ &&
         task.context,
         task.treeContext,
         task.componentStack,
-        task.isFallback,
         emptyContextObject,
         task.debugTask
       );
@@ -9218,7 +9230,6 @@ __DEV__ &&
         null,
         emptyTreeContext,
         null,
-        !1,
         emptyContextObject,
         null
       );
