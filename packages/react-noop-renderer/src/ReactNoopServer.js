@@ -111,6 +111,10 @@ const ReactNoopServer = ReactFizzServer({
     return null;
   },
 
+  getViewTransitionFormatContext(): null {
+    return null;
+  },
+
   resetResumableState(): void {},
   completeResumableState(): void {},
 

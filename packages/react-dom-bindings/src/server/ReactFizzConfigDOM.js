@@ -35,6 +35,7 @@ import {
   enableFizzExternalRuntime,
   enableSrcObject,
   enableFizzBlockingRender,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 
 import type {
@@ -741,27 +742,47 @@ const HTML_COLGROUP_MODE = 9;
 
 type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-const NO_SCOPE = /*         */ 0b000;
-const NOSCRIPT_SCOPE = /*   */ 0b001;
-const PICTURE_SCOPE = /*    */ 0b010;
-const FALLBACK_SCOPE = /*   */ 0b100;
+const NO_SCOPE = /*         */ 0b00000;
+const NOSCRIPT_SCOPE = /*   */ 0b00001;
+const PICTURE_SCOPE = /*    */ 0b00010;
+const FALLBACK_SCOPE = /*   */ 0b00100;
+const EXIT_SCOPE = /*       */ 0b01000; // A direct Instance below a Suspense fallback is the only thing that can "exit"
+const ENTER_SCOPE = /*      */ 0b10000; // A direct Instance below Suspense content is the only thing that can "enter"
+
+// Everything not listed here are tracked for the whole subtree as opposed to just
+// until the next Instance.
+const SUBTREE_SCOPE = ~(ENTER_SCOPE | EXIT_SCOPE);
+
+type ViewTransitionContext = {
+  update: 'none' | 'auto' | string,
+  // null here means that this case can never trigger. Not "auto" like it does in props.
+  enter: null | 'none' | 'auto' | string,
+  exit: null | 'none' | 'auto' | string,
+  share: null | 'none' | 'auto' | string,
+  name: 'auto' | string,
+  autoName: string, // a name that can be used if an explicit one is not defined.
+  nameIdx: number, // keeps track of how many duplicates of this name we've emitted.
+};
 
 // Lets us keep track of contextual state and pick it back up after suspending.
 export type FormatContext = {
   insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
   tagScope: number,
+  viewTransition: null | ViewTransitionContext, // tracks if we're inside a ViewTransition outside the first DOM node
 };
 
 function createFormatContext(
   insertionMode: InsertionMode,
   selectedValue: null | string | Array<string>,
   tagScope: number,
+  viewTransition: null | ViewTransitionContext,
 ): FormatContext {
   return {
     insertionMode,
     selectedValue,
     tagScope,
+    viewTransition,
   };
 }
 
@@ -776,7 +797,7 @@ export function createRootFormatContext(namespaceURI?: string): FormatContext {
       : namespaceURI === 'http://www.w3.org/1998/Math/MathML'
         ? MATHML_MODE
         : ROOT_HTML_MODE;
-  return createFormatContext(insertionMode, null, NO_SCOPE);
+  return createFormatContext(insertionMode, null, NO_SCOPE, null);
 }
 
 export function getChildFormatContext(
@@ -784,85 +805,124 @@ export function getChildFormatContext(
   type: string,
   props: Object,
 ): FormatContext {
+  const subtreeScope = parentContext.tagScope & SUBTREE_SCOPE;
   switch (type) {
     case 'noscript':
       return createFormatContext(
         HTML_MODE,
         null,
-        parentContext.tagScope | NOSCRIPT_SCOPE,
+        subtreeScope | NOSCRIPT_SCOPE,
+        null,
       );
     case 'select':
       return createFormatContext(
         HTML_MODE,
         props.value != null ? props.value : props.defaultValue,
-        parentContext.tagScope,
+        subtreeScope,
+        null,
       );
     case 'svg':
-      return createFormatContext(SVG_MODE, null, parentContext.tagScope);
+      return createFormatContext(SVG_MODE, null, subtreeScope, null);
     case 'picture':
       return createFormatContext(
         HTML_MODE,
         null,
-        parentContext.tagScope | PICTURE_SCOPE,
+        subtreeScope | PICTURE_SCOPE,
+        null,
       );
     case 'math':
-      return createFormatContext(MATHML_MODE, null, parentContext.tagScope);
+      return createFormatContext(MATHML_MODE, null, subtreeScope, null);
     case 'foreignObject':
-      return createFormatContext(HTML_MODE, null, parentContext.tagScope);
+      return createFormatContext(HTML_MODE, null, subtreeScope, null);
     // Table parents are special in that their children can only be created at all if they're
     // wrapped in a table parent. So we need to encode that we're entering this mode.
     case 'table':
-      return createFormatContext(HTML_TABLE_MODE, null, parentContext.tagScope);
+      return createFormatContext(HTML_TABLE_MODE, null, subtreeScope, null);
     case 'thead':
     case 'tbody':
     case 'tfoot':
       return createFormatContext(
         HTML_TABLE_BODY_MODE,
         null,
-        parentContext.tagScope,
+        subtreeScope,
+        null,
       );
     case 'colgroup':
-      return createFormatContext(
-        HTML_COLGROUP_MODE,
-        null,
-        parentContext.tagScope,
-      );
+      return createFormatContext(HTML_COLGROUP_MODE, null, subtreeScope, null);
     case 'tr':
-      return createFormatContext(
-        HTML_TABLE_ROW_MODE,
-        null,
-        parentContext.tagScope,
-      );
+      return createFormatContext(HTML_TABLE_ROW_MODE, null, subtreeScope, null);
     case 'head':
       if (parentContext.insertionMode < HTML_MODE) {
         // We are either at the root or inside the <html> tag and can enter
         // the <head> scope
-        return createFormatContext(
-          HTML_HEAD_MODE,
-          null,
-          parentContext.tagScope,
-        );
+        return createFormatContext(HTML_HEAD_MODE, null, subtreeScope, null);
       }
       break;
     case 'html':
       if (parentContext.insertionMode === ROOT_HTML_MODE) {
-        return createFormatContext(
-          HTML_HTML_MODE,
-          null,
-          parentContext.tagScope,
-        );
+        return createFormatContext(HTML_HTML_MODE, null, subtreeScope, null);
       }
       break;
   }
   if (parentContext.insertionMode >= HTML_TABLE_MODE) {
     // Whatever tag this was, it wasn't a table parent or other special parent, so we must have
     // entered plain HTML again.
-    return createFormatContext(HTML_MODE, null, parentContext.tagScope);
+    return createFormatContext(HTML_MODE, null, subtreeScope, null);
   }
   if (parentContext.insertionMode < HTML_MODE) {
-    return createFormatContext(HTML_MODE, null, parentContext.tagScope);
+    return createFormatContext(HTML_MODE, null, subtreeScope, null);
+  }
+  if (enableViewTransition) {
+    if (parentContext.viewTransition !== null) {
+      // If we're inside a view transition, regardless what element we were in, it consumes
+      // the view transition context.
+      return createFormatContext(
+        parentContext.insertionMode,
+        parentContext.selectedValue,
+        subtreeScope,
+        null,
+      );
+    }
+  }
+  if (parentContext.tagScope !== subtreeScope) {
+    return createFormatContext(
+      parentContext.insertionMode,
+      parentContext.selectedValue,
+      subtreeScope,
+      null,
+    );
   }
   return parentContext;
+}
+
+function getSuspenseViewTransition(
+  parentViewTransition: null | ViewTransitionContext,
+): null | ViewTransitionContext {
+  if (parentViewTransition === null) {
+    return null;
+  }
+  // If a ViewTransition wraps a Suspense boundary it applies to the children Instances
+  // in both the fallback and the content.
+  // Since we only have a representation of ViewTransitions on the Instances themselves
+  // we cannot model the parent ViewTransition activating "enter", "exit" or "share"
+  // since those would be ambiguous with the Suspense boundary changing states and
+  // affecting the same Instances.
+  // We also can't model an "update" when that update is fallback nodes swapping for
+  // content nodes. However, we can model is as a "share" from the fallback nodes to
+  // the content nodes using the same name. We just have to assign the same name that
+  // we would've used (the parent ViewTransition name or auto-assign one).
+  const viewTransition: ViewTransitionContext = {
+    update: parentViewTransition.update, // For deep updates.
+    enter: null,
+    exit: null,
+    share: parentViewTransition.update, // For exit or enter of reveals.
+    name: parentViewTransition.autoName,
+    autoName: parentViewTransition.autoName,
+    // TOOD: If we have more than just this Suspense boundary as a child of the ViewTransition
+    // then the parent needs to isolate the names so that they don't conflict.
+    nameIdx: 0,
+  };
+  return viewTransition;
 }
 
 export function getSuspenseFallbackFormatContext(
@@ -871,14 +931,83 @@ export function getSuspenseFallbackFormatContext(
   return createFormatContext(
     parentContext.insertionMode,
     parentContext.selectedValue,
-    parentContext.tagScope | FALLBACK_SCOPE,
+    parentContext.tagScope | FALLBACK_SCOPE | EXIT_SCOPE,
+    getSuspenseViewTransition(parentContext.viewTransition),
   );
 }
 
 export function getSuspenseContentFormatContext(
   parentContext: FormatContext,
 ): FormatContext {
-  return parentContext;
+  return createFormatContext(
+    parentContext.insertionMode,
+    parentContext.selectedValue,
+    parentContext.tagScope | ENTER_SCOPE,
+    getSuspenseViewTransition(parentContext.viewTransition),
+  );
+}
+
+export function getViewTransitionFormatContext(
+  parentContext: FormatContext,
+  update: ?string,
+  enter: ?string,
+  exit: ?string,
+  share: ?string,
+  name: ?string,
+  autoName: string, // name or an autogenerated unique name
+): FormatContext {
+  // We're entering a <ViewTransition>. Normalize props.
+  if (update == null) {
+    update = 'auto';
+  }
+  if (enter == null) {
+    enter = 'auto';
+  }
+  if (exit == null) {
+    exit = 'auto';
+  }
+  if (name == null) {
+    const parentViewTransition = parentContext.viewTransition;
+    if (parentViewTransition !== null) {
+      // If we have multiple nested ViewTransition and the parent has a "share"
+      // but the child doesn't, then the parent ViewTransition can still activate
+      // a share scenario so we reuse the name and share from the parent.
+      name = parentViewTransition.name;
+      share = parentViewTransition.share;
+    } else {
+      name = 'auto';
+      share = null; // share is only relevant if there's an explicit name
+    }
+  } else if (share === 'none') {
+    // I believe if share is disabled, it means the same thing as if it doesn't
+    // exit because enter/exit will take precedence and if it's deeply nested
+    // it just animates along whatever the parent does when disabled.
+    share = null;
+  } else if (share == null) {
+    share = 'auto';
+  }
+  if (!(parentContext.tagScope & EXIT_SCOPE)) {
+    exit = null; // exit is only relevant for the first ViewTransition inside fallback
+  }
+  if (!(parentContext.tagScope & ENTER_SCOPE)) {
+    enter = null; // enter is only relevant for the first ViewTransition inside content
+  }
+  const viewTransition: ViewTransitionContext = {
+    update,
+    enter,
+    exit,
+    share,
+    name,
+    autoName,
+    nameIdx: 0,
+  };
+  const subtreeScope = parentContext.tagScope & SUBTREE_SCOPE;
+  return createFormatContext(
+    parentContext.insertionMode,
+    parentContext.selectedValue,
+    subtreeScope,
+    viewTransition,
+  );
 }
 
 export function isPreambleContext(formatContext: FormatContext): boolean {
@@ -937,6 +1066,43 @@ export function pushSegmentFinale(
 ): void {
   if (lastPushedText && textEmbedded) {
     target.push(textSeparator);
+  }
+}
+
+function pushViewTransitionAttributes(
+  target: Array<Chunk | PrecomputedChunk>,
+  formatContext: FormatContext,
+): void {
+  if (!enableViewTransition) {
+    return;
+  }
+  const viewTransition = formatContext.viewTransition;
+  if (viewTransition === null) {
+    return;
+  }
+  if (viewTransition.name !== 'auto') {
+    pushStringAttribute(
+      target,
+      'vt-name',
+      viewTransition.nameIdx === 0
+        ? viewTransition.name
+        : viewTransition.name + '_' + viewTransition.nameIdx,
+    );
+    // Increment the index in case we have multiple children to the same ViewTransition.
+    // Because this is a side-effect in render, we should ideally call pushViewTransitionAttributes
+    // after we've suspended (like forms do), so that we don't increment each attempt.
+    // TODO: Make this deterministic.
+    viewTransition.nameIdx++;
+  }
+  pushStringAttribute(target, 'vt-update', viewTransition.update);
+  if (viewTransition.enter !== null) {
+    pushStringAttribute(target, 'vt-enter', viewTransition.enter);
+  }
+  if (viewTransition.exit !== null) {
+    pushStringAttribute(target, 'vt-exit', viewTransition.exit);
+  }
+  if (viewTransition.share !== null) {
+    pushStringAttribute(target, 'vt-share', viewTransition.share);
   }
 }
 
@@ -1072,6 +1238,7 @@ function pushStringAttribute(
 }
 
 function makeFormFieldPrefix(resumableState: ResumableState): string {
+  // TODO: Make this deterministic.
   const id = resumableState.nextFormID++;
   return resumableState.idPrefix + id;
 }
@@ -1678,6 +1845,7 @@ function checkSelectProp(props: any, propName: string) {
 function pushStartAnchor(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag('a'));
 
@@ -1712,6 +1880,8 @@ function pushStartAnchor(
     }
   }
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
   if (typeof children === 'string') {
@@ -1726,6 +1896,7 @@ function pushStartAnchor(
 function pushStartObject(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag('object'));
 
@@ -1777,6 +1948,8 @@ function pushStartObject(
     }
   }
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
   if (typeof children === 'string') {
@@ -1791,6 +1964,7 @@ function pushStartObject(
 function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  formatContext: FormatContext,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('select', props);
@@ -1843,6 +2017,8 @@ function pushStartSelect(
       }
     }
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -1973,6 +2149,7 @@ function pushStartOption(
     target.push(selectedMarkerAttribute);
   }
 
+  // Options never participate as ViewTransitions.
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
   return children;
@@ -2042,6 +2219,7 @@ function pushStartForm(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag('form'));
 
@@ -2151,6 +2329,8 @@ function pushStartForm(
     pushAttribute(target, 'target', formTarget);
   }
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTag);
 
   if (formActionName !== null) {
@@ -2175,6 +2355,7 @@ function pushInput(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  formatContext: FormatContext,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('input', props);
@@ -2304,6 +2485,8 @@ function pushInput(
     pushAttribute(target, 'value', defaultValue);
   }
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTagSelfClosing);
 
   // We place any additional hidden form fields after the input.
@@ -2317,6 +2500,7 @@ function pushStartButton(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag('button'));
 
@@ -2388,6 +2572,8 @@ function pushStartButton(
     name,
   );
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTag);
 
   // We place any additional hidden form fields we need to include inside the button itself.
@@ -2407,6 +2593,7 @@ function pushStartButton(
 function pushStartTextArea(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  formatContext: FormatContext,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('textarea', props);
@@ -2460,6 +2647,8 @@ function pushStartTextArea(
   if (value === null && defaultValue !== null) {
     value = defaultValue;
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
 
@@ -2537,7 +2726,7 @@ function pushMeta(
     noscriptTagInScope ||
     props.itemProp != null
   ) {
-    return pushSelfClosing(target, props, 'meta');
+    return pushSelfClosing(target, props, 'meta', formatContext);
   } else {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
@@ -2556,15 +2745,30 @@ function pushMeta(
       // the only way to embed the tag today we flush it on a special queue on the Request so it
       // can go before everything else. Like viewport this means that the tag will escape it's
       // parent container.
-      return pushSelfClosing(renderState.charsetChunks, props, 'meta');
+      return pushSelfClosing(
+        renderState.charsetChunks,
+        props,
+        'meta',
+        formatContext,
+      );
     } else if (props.name === 'viewport') {
       // "viewport" is flushed on the Request so it can go earlier that Float resources that
       // might be affected by it. This means it can escape the boundary it is rendered within.
       // This is a pragmatic solution to viewport being incredibly sensitive to document order
       // without requiring all hoistables to be flushed too early.
-      return pushSelfClosing(renderState.viewportChunks, props, 'meta');
+      return pushSelfClosing(
+        renderState.viewportChunks,
+        props,
+        'meta',
+        formatContext,
+      );
     } else {
-      return pushSelfClosing(renderState.hoistableChunks, props, 'meta');
+      return pushSelfClosing(
+        renderState.hoistableChunks,
+        props,
+        'meta',
+        formatContext,
+      );
     }
   }
 }
@@ -2771,6 +2975,8 @@ function pushLinkImpl(
     }
   }
 
+  // Link never participate as a ViewTransition
+
   target.push(endOfStartTagSelfClosing);
   return null;
 }
@@ -2936,6 +3142,8 @@ function pushStyleImpl(
       }
     }
   }
+
+  // Style never participate as a ViewTransition.
   target.push(endOfStartTag);
 
   const child = Array.isArray(children)
@@ -3142,13 +3350,14 @@ function pushImg(
       }
     }
   }
-  return pushSelfClosing(target, props, 'img');
+  return pushSelfClosing(target, props, 'img', formatContext);
 }
 
 function pushSelfClosing(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
+  formatContext: FormatContext,
 ): null {
   target.push(startChunkForTag(tag));
 
@@ -3172,6 +3381,8 @@ function pushSelfClosing(
     }
   }
 
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTagSelfClosing);
   return null;
 }
@@ -3179,6 +3390,7 @@ function pushSelfClosing(
 function pushStartMenuItem(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag('menuitem'));
 
@@ -3200,6 +3412,8 @@ function pushStartMenuItem(
       }
     }
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
   return null;
@@ -3307,6 +3521,7 @@ function pushTitleImpl(
       }
     }
   }
+  // Title never participate as a ViewTransition
   target.push(endOfStartTag);
 
   const child = Array.isArray(children)
@@ -3355,11 +3570,16 @@ function pushStartHead(
     }
 
     preamble.headChunks = [];
-    return pushStartSingletonElement(preamble.headChunks, props, 'head');
+    return pushStartSingletonElement(
+      preamble.headChunks,
+      props,
+      'head',
+      formatContext,
+    );
   } else {
     // This <head> is deep and is likely just an error. we emit it inline though.
     // Validation should warn that this tag is the the wrong spot.
-    return pushStartGenericElement(target, props, 'head');
+    return pushStartGenericElement(target, props, 'head', formatContext);
   }
 }
 
@@ -3384,11 +3604,16 @@ function pushStartBody(
     }
 
     preamble.bodyChunks = [];
-    return pushStartSingletonElement(preamble.bodyChunks, props, 'body');
+    return pushStartSingletonElement(
+      preamble.bodyChunks,
+      props,
+      'body',
+      formatContext,
+    );
   } else {
     // This <head> is deep and is likely just an error. we emit it inline though.
     // Validation should warn that this tag is the the wrong spot.
-    return pushStartGenericElement(target, props, 'body');
+    return pushStartGenericElement(target, props, 'body', formatContext);
   }
 }
 
@@ -3413,11 +3638,16 @@ function pushStartHtml(
     }
 
     preamble.htmlChunks = [DOCTYPE];
-    return pushStartSingletonElement(preamble.htmlChunks, props, 'html');
+    return pushStartSingletonElement(
+      preamble.htmlChunks,
+      props,
+      'html',
+      formatContext,
+    );
   } else {
     // This <html> is deep and is likely just an error. we emit it inline though.
     // Validation should warn that this tag is the the wrong spot.
-    return pushStartGenericElement(target, props, 'html');
+    return pushStartGenericElement(target, props, 'html', formatContext);
   }
 }
 
@@ -3528,6 +3758,7 @@ function pushScriptImpl(
       }
     }
   }
+  // Scripts never participate as a ViewTransition
   target.push(endOfStartTag);
 
   if (__DEV__) {
@@ -3561,6 +3792,7 @@ function pushStartSingletonElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -3585,6 +3817,8 @@ function pushStartSingletonElement(
       }
     }
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -3595,6 +3829,7 @@ function pushStartGenericElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -3619,6 +3854,8 @@ function pushStartGenericElement(
       }
     }
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -3635,6 +3872,7 @@ function pushStartCustomElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -3693,6 +3931,9 @@ function pushStartCustomElement(
     }
   }
 
+  // TODO: ViewTransition attributes gets observed by the Custom Element which is a bit sketchy.
+  pushViewTransitionAttributes(target, formatContext);
+
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
   return children;
@@ -3704,6 +3945,7 @@ function pushStartPreformattedElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
+  formatContext: FormatContext,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -3728,6 +3970,8 @@ function pushStartPreformattedElement(
       }
     }
   }
+
+  pushViewTransitionAttributes(target, formatContext);
 
   target.push(endOfStartTag);
 
@@ -3851,7 +4095,7 @@ export function pushStartInstance(
       // Fast track very common tags
       break;
     case 'a':
-      return pushStartAnchor(target, props);
+      return pushStartAnchor(target, props, formatContext);
     case 'g':
     case 'p':
     case 'li':
@@ -3859,21 +4103,39 @@ export function pushStartInstance(
       break;
     // Special tags
     case 'select':
-      return pushStartSelect(target, props);
+      return pushStartSelect(target, props, formatContext);
     case 'option':
       return pushStartOption(target, props, formatContext);
     case 'textarea':
-      return pushStartTextArea(target, props);
+      return pushStartTextArea(target, props, formatContext);
     case 'input':
-      return pushInput(target, props, resumableState, renderState);
+      return pushInput(
+        target,
+        props,
+        resumableState,
+        renderState,
+        formatContext,
+      );
     case 'button':
-      return pushStartButton(target, props, resumableState, renderState);
+      return pushStartButton(
+        target,
+        props,
+        resumableState,
+        renderState,
+        formatContext,
+      );
     case 'form':
-      return pushStartForm(target, props, resumableState, renderState);
+      return pushStartForm(
+        target,
+        props,
+        resumableState,
+        renderState,
+        formatContext,
+      );
     case 'menuitem':
-      return pushStartMenuItem(target, props);
+      return pushStartMenuItem(target, props, formatContext);
     case 'object':
-      return pushStartObject(target, props);
+      return pushStartObject(target, props, formatContext);
     case 'title':
       return pushTitle(target, props, renderState, formatContext);
     case 'link':
@@ -3910,7 +4172,7 @@ export function pushStartInstance(
     // Newline eating tags
     case 'listing':
     case 'pre': {
-      return pushStartPreformattedElement(target, props, type);
+      return pushStartPreformattedElement(target, props, type, formatContext);
     }
     case 'img': {
       return pushImg(target, props, resumableState, renderState, formatContext);
@@ -3927,7 +4189,7 @@ export function pushStartInstance(
     case 'source':
     case 'track':
     case 'wbr': {
-      return pushSelfClosing(target, props, type);
+      return pushSelfClosing(target, props, type, formatContext);
     }
     // These are reserved SVG and MathML elements, that are never custom elements.
     // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-core-concepts
@@ -3970,12 +4232,12 @@ export function pushStartInstance(
     default: {
       if (type.indexOf('-') !== -1) {
         // Custom element
-        return pushStartCustomElement(target, props, type);
+        return pushStartCustomElement(target, props, type, formatContext);
       }
     }
   }
   // Generic element
-  return pushStartGenericElement(target, props, type);
+  return pushStartGenericElement(target, props, type, formatContext);
 }
 
 const endTagCache = new Map<string, PrecomputedChunk>();
