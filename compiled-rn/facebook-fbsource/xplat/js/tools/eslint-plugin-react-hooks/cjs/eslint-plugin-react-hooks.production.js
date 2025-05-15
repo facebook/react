@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<88aa006bce33aaa8af35ec1c71f5df16>>
+ * @generated SignedSource<<0e428222f076f4cafdd0abe839eb5949>>
  */
 
 'use strict';
@@ -126,7 +126,9 @@ const rule$2 = {
                 let currentScope = scope.upper;
                 while (currentScope) {
                     pureScopes.add(currentScope);
-                    if (currentScope.type === 'function') {
+                    if (currentScope.type === 'function' ||
+                        currentScope.type === 'hook' ||
+                        currentScope.type === 'component') {
                         break;
                     }
                     currentScope = currentScope.upper;

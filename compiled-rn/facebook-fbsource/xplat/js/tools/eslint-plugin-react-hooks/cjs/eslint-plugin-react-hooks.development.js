@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<353804e2787fd0dd316e3c8e015d904d>>
+ * @generated SignedSource<<88d88f1a5bb0b8e91cf80fd5bed90f86>>
  */
 
 'use strict';
@@ -136,7 +136,9 @@ const rule$2 = {
                 let currentScope = scope.upper;
                 while (currentScope) {
                     pureScopes.add(currentScope);
-                    if (currentScope.type === 'function') {
+                    if (currentScope.type === 'function' ||
+                        currentScope.type === 'hook' ||
+                        currentScope.type === 'component') {
                         break;
                     }
                     currentScope = currentScope.upper;
