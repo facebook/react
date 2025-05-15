@@ -15,6 +15,7 @@ jobs:
     outputs:
       is_member_or_collaborator: ${{ steps.check_is_member_or_collaborator.outputs.is_member_or_collaborator }}
     steps:
+      - run: echo ${{ github.event.pull_request.author_association }}
       - name: Check is member or collaborator
         id: check_is_member_or_collaborator
         if: ${{ github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR' }}
