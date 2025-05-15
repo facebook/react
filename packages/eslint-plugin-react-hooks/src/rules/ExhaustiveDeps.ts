@@ -203,7 +203,13 @@ const rule = {
         let currentScope = scope.upper;
         while (currentScope) {
           pureScopes.add(currentScope);
-          if (currentScope.type === 'function') {
+          if (
+            currentScope.type === 'function' ||
+            // @ts-expect-error incorrect TS types
+            currentScope.type === 'hook' ||
+            // @ts-expect-error incorrect TS types
+            currentScope.type === 'component'
+          ) {
             break;
           }
           currentScope = currentScope.upper;
