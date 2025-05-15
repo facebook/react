@@ -741,9 +741,10 @@ const HTML_COLGROUP_MODE = 9;
 
 type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-const NO_SCOPE = /*         */ 0b00;
-const NOSCRIPT_SCOPE = /*   */ 0b01;
-const PICTURE_SCOPE = /*    */ 0b10;
+const NO_SCOPE = /*         */ 0b000;
+const NOSCRIPT_SCOPE = /*   */ 0b001;
+const PICTURE_SCOPE = /*    */ 0b010;
+const FALLBACK_SCOPE = /*   */ 0b100;
 
 // Lets us keep track of contextual state and pick it back up after suspending.
 export type FormatContext = {
@@ -754,7 +755,7 @@ export type FormatContext = {
 
 function createFormatContext(
   insertionMode: InsertionMode,
-  selectedValue: null | string,
+  selectedValue: null | string | Array<string>,
   tagScope: number,
 ): FormatContext {
   return {
@@ -861,6 +862,22 @@ export function getChildFormatContext(
   if (parentContext.insertionMode < HTML_MODE) {
     return createFormatContext(HTML_MODE, null, parentContext.tagScope);
   }
+  return parentContext;
+}
+
+export function getSuspenseFallbackFormatContext(
+  parentContext: FormatContext,
+): FormatContext {
+  return createFormatContext(
+    parentContext.insertionMode,
+    parentContext.selectedValue,
+    parentContext.tagScope | FALLBACK_SCOPE,
+  );
+}
+
+export function getSuspenseContentFormatContext(
+  parentContext: FormatContext,
+): FormatContext {
   return parentContext;
 }
 
@@ -2511,12 +2528,12 @@ function pushMeta(
   props: Object,
   renderState: RenderState,
   textEmbedded: boolean,
-  insertionMode: InsertionMode,
-  noscriptTagInScope: boolean,
-  isFallback: boolean,
+  formatContext: FormatContext,
 ): null {
+  const noscriptTagInScope = formatContext.tagScope & NOSCRIPT_SCOPE;
+  const isFallback = formatContext.tagScope & FALLBACK_SCOPE;
   if (
-    insertionMode === SVG_MODE ||
+    formatContext.insertionMode === SVG_MODE ||
     noscriptTagInScope ||
     props.itemProp != null
   ) {
@@ -2559,15 +2576,15 @@ function pushLink(
   renderState: RenderState,
   hoistableState: null | HoistableState,
   textEmbedded: boolean,
-  insertionMode: InsertionMode,
-  noscriptTagInScope: boolean,
-  isFallback: boolean,
+  formatContext: FormatContext,
 ): null {
+  const noscriptTagInScope = formatContext.tagScope & NOSCRIPT_SCOPE;
+  const isFallback = formatContext.tagScope & FALLBACK_SCOPE;
   const rel = props.rel;
   const href = props.href;
   const precedence = props.precedence;
   if (
-    insertionMode === SVG_MODE ||
+    formatContext.insertionMode === SVG_MODE ||
     noscriptTagInScope ||
     props.itemProp != null ||
     typeof rel !== 'string' ||
@@ -2765,9 +2782,9 @@ function pushStyle(
   renderState: RenderState,
   hoistableState: null | HoistableState,
   textEmbedded: boolean,
-  insertionMode: InsertionMode,
-  noscriptTagInScope: boolean,
+  formatContext: FormatContext,
 ): ReactNodeList {
+  const noscriptTagInScope = formatContext.tagScope & NOSCRIPT_SCOPE;
   if (__DEV__) {
     if (hasOwnProperty.call(props, 'children')) {
       const children = props.children;
@@ -2801,7 +2818,7 @@ function pushStyle(
   const href = props.href;
 
   if (
-    insertionMode === SVG_MODE ||
+    formatContext.insertionMode === SVG_MODE ||
     noscriptTagInScope ||
     props.itemProp != null ||
     typeof precedence !== 'string' ||
@@ -2984,8 +3001,10 @@ function pushImg(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
-  pictureOrNoScriptTagInScope: boolean,
+  formatContext: FormatContext,
 ): null {
+  const pictureOrNoScriptTagInScope =
+    formatContext.tagScope & (PICTURE_SCOPE | NOSCRIPT_SCOPE);
   const {src, srcSet} = props;
   if (
     props.loading !== 'lazy' &&
@@ -2993,7 +3012,7 @@ function pushImg(
     (typeof src === 'string' || src == null) &&
     (typeof srcSet === 'string' || srcSet == null) &&
     props.fetchPriority !== 'low' &&
-    pictureOrNoScriptTagInScope === false &&
+    !pictureOrNoScriptTagInScope &&
     // We exclude data URIs in src and srcSet since these should not be preloaded
     !(
       typeof src === 'string' &&
@@ -3190,10 +3209,10 @@ function pushTitle(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   renderState: RenderState,
-  insertionMode: InsertionMode,
-  noscriptTagInScope: boolean,
-  isFallback: boolean,
+  formatContext: FormatContext,
 ): ReactNodeList {
+  const noscriptTagInScope = formatContext.tagScope & NOSCRIPT_SCOPE;
+  const isFallback = formatContext.tagScope & FALLBACK_SCOPE;
   if (__DEV__) {
     if (hasOwnProperty.call(props, 'children')) {
       const children = props.children;
@@ -3243,7 +3262,7 @@ function pushTitle(
   }
 
   if (
-    insertionMode !== SVG_MODE &&
+    formatContext.insertionMode !== SVG_MODE &&
     !noscriptTagInScope &&
     props.itemProp == null
   ) {
@@ -3320,9 +3339,9 @@ function pushStartHead(
   props: Object,
   renderState: RenderState,
   preambleState: null | PreambleState,
-  insertionMode: InsertionMode,
+  formatContext: FormatContext,
 ): ReactNodeList {
-  if (insertionMode < HTML_MODE) {
+  if (formatContext.insertionMode < HTML_MODE) {
     // This <head> is the Document.head and should be part of the preamble
     const preamble = preambleState || renderState.preamble;
 
@@ -3349,9 +3368,9 @@ function pushStartBody(
   props: Object,
   renderState: RenderState,
   preambleState: null | PreambleState,
-  insertionMode: InsertionMode,
+  formatContext: FormatContext,
 ): ReactNodeList {
-  if (insertionMode < HTML_MODE) {
+  if (formatContext.insertionMode < HTML_MODE) {
     // This <body> is the Document.body
     const preamble = preambleState || renderState.preamble;
 
@@ -3378,9 +3397,9 @@ function pushStartHtml(
   props: Object,
   renderState: RenderState,
   preambleState: null | PreambleState,
-  insertionMode: InsertionMode,
+  formatContext: FormatContext,
 ): ReactNodeList {
-  if (insertionMode === ROOT_HTML_MODE) {
+  if (formatContext.insertionMode === ROOT_HTML_MODE) {
     // This <html> is the Document.documentElement
     const preamble = preambleState || renderState.preamble;
 
@@ -3408,9 +3427,9 @@ function pushScript(
   resumableState: ResumableState,
   renderState: RenderState,
   textEmbedded: boolean,
-  insertionMode: InsertionMode,
-  noscriptTagInScope: boolean,
+  formatContext: FormatContext,
 ): null {
+  const noscriptTagInScope = formatContext.tagScope & NOSCRIPT_SCOPE;
   const asyncProp = props.async;
   if (
     typeof props.src !== 'string' ||
@@ -3422,7 +3441,7 @@ function pushScript(
     ) ||
     props.onLoad ||
     props.onError ||
-    insertionMode === SVG_MODE ||
+    formatContext.insertionMode === SVG_MODE ||
     noscriptTagInScope ||
     props.itemProp != null
   ) {
@@ -3790,7 +3809,6 @@ export function pushStartInstance(
   hoistableState: null | HoistableState,
   formatContext: FormatContext,
   textEmbedded: boolean,
-  isFallback: boolean,
 ): ReactNodeList {
   if (__DEV__) {
     validateARIAProperties(type, props);
@@ -3857,14 +3875,7 @@ export function pushStartInstance(
     case 'object':
       return pushStartObject(target, props);
     case 'title':
-      return pushTitle(
-        target,
-        props,
-        renderState,
-        formatContext.insertionMode,
-        !!(formatContext.tagScope & NOSCRIPT_SCOPE),
-        isFallback,
-      );
+      return pushTitle(target, props, renderState, formatContext);
     case 'link':
       return pushLink(
         target,
@@ -3873,9 +3884,7 @@ export function pushStartInstance(
         renderState,
         hoistableState,
         textEmbedded,
-        formatContext.insertionMode,
-        !!(formatContext.tagScope & NOSCRIPT_SCOPE),
-        isFallback,
+        formatContext,
       );
     case 'script':
       return pushScript(
@@ -3884,8 +3893,7 @@ export function pushStartInstance(
         resumableState,
         renderState,
         textEmbedded,
-        formatContext.insertionMode,
-        !!(formatContext.tagScope & NOSCRIPT_SCOPE),
+        formatContext,
       );
     case 'style':
       return pushStyle(
@@ -3895,32 +3903,17 @@ export function pushStartInstance(
         renderState,
         hoistableState,
         textEmbedded,
-        formatContext.insertionMode,
-        !!(formatContext.tagScope & NOSCRIPT_SCOPE),
+        formatContext,
       );
     case 'meta':
-      return pushMeta(
-        target,
-        props,
-        renderState,
-        textEmbedded,
-        formatContext.insertionMode,
-        !!(formatContext.tagScope & NOSCRIPT_SCOPE),
-        isFallback,
-      );
+      return pushMeta(target, props, renderState, textEmbedded, formatContext);
     // Newline eating tags
     case 'listing':
     case 'pre': {
       return pushStartPreformattedElement(target, props, type);
     }
     case 'img': {
-      return pushImg(
-        target,
-        props,
-        resumableState,
-        renderState,
-        !!(formatContext.tagScope & (PICTURE_SCOPE | NOSCRIPT_SCOPE)),
-      );
+      return pushImg(target, props, resumableState, renderState, formatContext);
     }
     // Omitted close tags
     case 'base':
@@ -3955,7 +3948,7 @@ export function pushStartInstance(
         props,
         renderState,
         preambleState,
-        formatContext.insertionMode,
+        formatContext,
       );
     case 'body':
       return pushStartBody(
@@ -3963,7 +3956,7 @@ export function pushStartInstance(
         props,
         renderState,
         preambleState,
-        formatContext.insertionMode,
+        formatContext,
       );
     case 'html': {
       return pushStartHtml(
@@ -3971,7 +3964,7 @@ export function pushStartInstance(
         props,
         renderState,
         preambleState,
-        formatContext.insertionMode,
+        formatContext,
       );
     }
     default: {

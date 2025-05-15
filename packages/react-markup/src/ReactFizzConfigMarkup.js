@@ -52,6 +52,8 @@ export type {
 
 export {
   getChildFormatContext,
+  getSuspenseFallbackFormatContext,
+  getSuspenseContentFormatContext,
   makeId,
   pushEndInstance,
   pushFormStateMarkerIsMatching,
@@ -96,7 +98,6 @@ export function pushStartInstance(
   hoistableState: null | HoistableState,
   formatContext: FormatContext,
   textEmbedded: boolean,
-  isFallback: boolean,
 ): ReactNodeList {
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
@@ -127,7 +128,6 @@ export function pushStartInstance(
     hoistableState,
     formatContext,
     textEmbedded,
-    isFallback,
   );
 }
 
