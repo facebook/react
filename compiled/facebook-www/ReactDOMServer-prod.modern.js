@@ -5393,6 +5393,7 @@ function queueCompletedSegment(boundary, segment) {
   } else boundary.completedSegments.push(segment);
 }
 function finishedTask(request, boundary, segment) {
+  request.allPendingTasks--;
   if (null === boundary) {
     if (null !== segment && segment.parentFlushed) {
       if (null !== request.completedRootSegment)
@@ -5430,7 +5431,6 @@ function finishedTask(request, boundary, segment) {
             1 === boundary.completedSegments.length &&
               boundary.parentFlushed &&
               request.partialBoundaries.push(boundary)));
-  request.allPendingTasks--;
   0 === request.allPendingTasks && completeAll(request);
 }
 function performWork(request$jscomp$2) {
@@ -6317,4 +6317,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-modern-4448b187-20250515";
+exports.version = "19.2.0-www-modern-c250b7d9-20250516";

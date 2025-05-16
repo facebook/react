@@ -6741,6 +6741,7 @@ __DEV__ &&
       } else boundary.completedSegments.push(segment);
     }
     function finishedTask(request, boundary, segment) {
+      request.allPendingTasks--;
       if (null === boundary) {
         if (null !== segment && segment.parentFlushed) {
           if (null !== request.completedRootSegment)
@@ -6780,7 +6781,6 @@ __DEV__ &&
                 1 === boundary.completedSegments.length &&
                   boundary.parentFlushed &&
                   request.partialBoundaries.push(boundary)));
-      request.allPendingTasks--;
       0 === request.allPendingTasks && completeAll(request);
     }
     function preparePreambleFromSubtree(
