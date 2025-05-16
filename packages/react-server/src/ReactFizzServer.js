@@ -4335,6 +4335,7 @@ function finishedTask(
   boundary: Root | SuspenseBoundary,
   segment: null | Segment,
 ) {
+  request.allPendingTasks--;
   if (boundary === null) {
     if (segment !== null && segment.parentFlushed) {
       if (request.completedRootSegment !== null) {
@@ -4417,7 +4418,6 @@ function finishedTask(
     }
   }
 
-  request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
     completeAll(request);
   }

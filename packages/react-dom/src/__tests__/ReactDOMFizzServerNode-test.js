@@ -67,6 +67,21 @@ describe('ReactDOMFizzServerNode', () => {
     expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
+  it('flush fully if piping in on onShellReady', async () => {
+    const {writable, output} = getTestWritable();
+    await act(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <div>hello world</div>,
+        {
+          onShellReady() {
+            pipe(writable);
+          },
+        },
+      );
+    });
+    expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
+  });
+
   it('should emit DOCTYPE at the root of the document', async () => {
     const {writable, output} = getTestWritable();
     await act(() => {
