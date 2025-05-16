@@ -8340,7 +8340,7 @@ background-color: green;
         </html>,
       );
 
-      // Client inserted style tags are not grouped together but can hydrate against a grouped set
+      // Client inserted style tags are grouped and can also hydrate against an existing grouped set
       ReactDOMClient.hydrateRoot(
         document,
         <html>
@@ -8373,11 +8373,8 @@ background-color: green;
             <style data-href="11 13 14" data-precedence="default">
               111314
             </style>
-            <style data-href="16" data-precedence="default">
-              16
-            </style>
-            <style data-href="17" data-precedence="default">
-              17
+            <style data-href="16 17" data-precedence="default">
+              1617
             </style>
             <style data-href="2 5" data-precedence="foo">
               foo2foo5
