@@ -89,6 +89,7 @@ export {
 import escapeTextForBrowser from 'react-dom-bindings/src/server/escapeTextForBrowser';
 
 export function getViewTransitionFormatContext(
+  resumableState: ResumableState,
   parentContext: FormatContext,
   update: void | null | 'none' | 'auto' | string,
   enter: void | null | 'none' | 'auto' | string,

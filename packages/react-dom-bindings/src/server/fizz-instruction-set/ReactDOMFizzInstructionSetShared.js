@@ -18,6 +18,100 @@ const SUSPENSE_FALLBACK_START_DATA = '$!';
 // working. Closure converts it to a dot access anyway, though, so it's not an
 // urgent issue.
 
+export function revealCompletedBoundaries() {
+  window['$RT'] = performance.now();
+  const batch = window['$RB'];
+  window['$RB'] = [];
+  for (let i = 0; i < batch.length; i += 2) {
+    const suspenseIdNode = batch[i];
+    const contentNode = batch[i + 1];
+
+    // Clear all the existing children. This is complicated because
+    // there can be embedded Suspense boundaries in the fallback.
+    // This is similar to clearSuspenseBoundary in ReactFiberConfigDOM.
+    // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
+    // They never hydrate anyway. However, currently we support incrementally loading the fallback.
+    const parentInstance = suspenseIdNode.parentNode;
+    if (!parentInstance) {
+      // We may have client-rendered this boundary already. Skip it.
+      continue;
+    }
+
+    // Find the boundary around the fallback. This is always the previous node.
+    const suspenseNode = suspenseIdNode.previousSibling;
+
+    let node = suspenseIdNode;
+    let depth = 0;
+    do {
+      if (node && node.nodeType === COMMENT_NODE) {
+        const data = node.data;
+        if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
+          if (depth === 0) {
+            break;
+          } else {
+            depth--;
+          }
+        } else if (
+          data === SUSPENSE_START_DATA ||
+          data === SUSPENSE_PENDING_START_DATA ||
+          data === SUSPENSE_QUEUED_START_DATA ||
+          data === SUSPENSE_FALLBACK_START_DATA ||
+          data === ACTIVITY_START_DATA
+        ) {
+          depth++;
+        }
+      }
+
+      const nextNode = node.nextSibling;
+      parentInstance.removeChild(node);
+      node = nextNode;
+    } while (node);
+
+    const endOfBoundary = node;
+
+    // Insert all the children from the contentNode between the start and end of suspense boundary.
+    while (contentNode.firstChild) {
+      parentInstance.insertBefore(contentNode.firstChild, endOfBoundary);
+    }
+
+    suspenseNode.data = SUSPENSE_START_DATA;
+    if (suspenseNode['_reactRetry']) {
+      suspenseNode['_reactRetry']();
+    }
+  }
+}
+
+export function revealCompletedBoundariesWithViewTransitions(revealBoundaries) {
+  try {
+    const existingTransition = document['__reactViewTransition'];
+    if (existingTransition) {
+      // Retry after the previous ViewTransition finishes.
+      existingTransition.finished.then(window['$RV'], window['$RV']);
+      return;
+    }
+    const shouldStartViewTransition = window['_useVT']; // TODO: Detect.
+    if (shouldStartViewTransition) {
+      const transition = (document['__reactViewTransition'] = document[
+        'startViewTransition'
+      ]({
+        update: revealBoundaries,
+        types: [], // TODO: Add a hard coded type for Suspense reveals.
+      }));
+      transition.finished.finally(() => {
+        if (document['__reactViewTransition'] === transition) {
+          document['__reactViewTransition'] = null;
+        }
+      });
+      return;
+    }
+    // Fall through to reveal.
+  } catch (x) {
+    // Fall through to reveal.
+  }
+  // ViewTransitions v2 not supported or no ViewTransitions found. Reveal immediately.
+  revealBoundaries();
+}
+
 export function clientRenderBoundary(
   suspenseBoundaryID,
   errorDigest,
@@ -71,69 +165,6 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
     return;
   }
 
-  function revealCompletedBoundaries() {
-    window['$RT'] = performance.now();
-    const batch = window['$RB'];
-    window['$RB'] = [];
-    for (let i = 0; i < batch.length; i += 2) {
-      const suspenseIdNode = batch[i];
-      const contentNode = batch[i + 1];
-
-      // Clear all the existing children. This is complicated because
-      // there can be embedded Suspense boundaries in the fallback.
-      // This is similar to clearSuspenseBoundary in ReactFiberConfigDOM.
-      // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
-      // They never hydrate anyway. However, currently we support incrementally loading the fallback.
-      const parentInstance = suspenseIdNode.parentNode;
-      if (!parentInstance) {
-        // We may have client-rendered this boundary already. Skip it.
-        continue;
-      }
-
-      // Find the boundary around the fallback. This is always the previous node.
-      const suspenseNode = suspenseIdNode.previousSibling;
-
-      let node = suspenseIdNode;
-      let depth = 0;
-      do {
-        if (node && node.nodeType === COMMENT_NODE) {
-          const data = node.data;
-          if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
-            if (depth === 0) {
-              break;
-            } else {
-              depth--;
-            }
-          } else if (
-            data === SUSPENSE_START_DATA ||
-            data === SUSPENSE_PENDING_START_DATA ||
-            data === SUSPENSE_QUEUED_START_DATA ||
-            data === SUSPENSE_FALLBACK_START_DATA ||
-            data === ACTIVITY_START_DATA
-          ) {
-            depth++;
-          }
-        }
-
-        const nextNode = node.nextSibling;
-        parentInstance.removeChild(node);
-        node = nextNode;
-      } while (node);
-
-      const endOfBoundary = node;
-
-      // Insert all the children from the contentNode between the start and end of suspense boundary.
-      while (contentNode.firstChild) {
-        parentInstance.insertBefore(contentNode.firstChild, endOfBoundary);
-      }
-
-      suspenseNode.data = SUSPENSE_START_DATA;
-      if (suspenseNode['_reactRetry']) {
-        suspenseNode['_reactRetry']();
-      }
-    }
-  }
-
   // Mark this Suspense boundary as queued so we know not to client render it
   // at the end of document load.
   const suspenseNodeOuter = suspenseIdNodeOuter.previousSibling;
@@ -151,7 +182,7 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
     // We always schedule the flush in a timer even if it's very low or negative to allow
     // for multiple completeBoundary calls that are already queued to have a chance to
     // make the batch.
-    setTimeout(revealCompletedBoundaries, msUntilTimeout);
+    setTimeout(window['$RV'], msUntilTimeout);
   }
 }
 
