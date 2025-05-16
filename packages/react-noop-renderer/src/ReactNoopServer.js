@@ -364,6 +364,7 @@ function render(children: React$Element<any>, options?: Options): Destination {
     children,
     null,
     null,
+    null,
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
     options ? options.onAllReady : undefined,
