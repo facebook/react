@@ -34,7 +34,6 @@ import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {cache} from './ReactCacheClient';
-import {postpone} from './ReactPostpone';
 import {
   getCacheForType,
   useCallback,
@@ -83,7 +82,6 @@ export {
   lazy,
   memo,
   cache,
-  postpone as unstable_postpone,
   useCallback,
   useContext,
   useEffect,
