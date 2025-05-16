@@ -1549,6 +1549,19 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
     rootContainer.nodeType === DOCUMENT_NODE
       ? (rootContainer: any).documentElement
       : rootContainer.ownerDocument.documentElement;
+
+  if (
+    !disableCommentsAsDOMContainers &&
+    rootContainer.nodeType === COMMENT_NODE
+  ) {
+    if (__DEV__) {
+      console.warn(
+        'Cannot cancel root view transition on a comment node. All view transitions will be globally scoped.',
+      );
+    }
+    return;
+  }
+
   if (
     documentElement !== null &&
     // $FlowFixMe[prop-missing]
@@ -1594,7 +1607,13 @@ export function restoreRootViewTransitionName(rootContainer: Container): void {
     containerInstance = (rootContainer: any);
   }
   if (
-    containerInstance.style &&
+    !disableCommentsAsDOMContainers &&
+    containerInstance.nodeType === COMMENT_NODE
+  ) {
+    return;
+  }
+  if (
+    // $FlowFixMe[prop-missing]
     containerInstance.style.viewTransitionName === 'root'
   ) {
     // If we moved the root view transition name to the container in a gesture
@@ -1710,6 +1729,13 @@ export function cloneRootViewTransitionContainer(
     containerInstance = (rootContainer: any).body;
   } else if (rootContainer.nodeName === 'HTML') {
     containerInstance = (rootContainer.ownerDocument.body: any);
+  } else if (
+    !disableCommentsAsDOMContainers &&
+    rootContainer.nodeType === COMMENT_NODE
+  ) {
+    throw new Error(
+      'Cannot use a startGestureTransition() with a comment node root.',
+    );
   } else {
     // If the container is not the whole document, then we ideally should probably
     // clone the whole document outside of the React too.
