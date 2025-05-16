@@ -80,6 +80,7 @@ import isArray from 'shared/isArray';
 import {
   clientRenderBoundary as clientRenderFunction,
   completeBoundary as completeBoundaryFunction,
+  completeBoundaryUpgradeToViewTransitions as upgradeToViewTransitionsInstruction,
   completeBoundaryWithStyles as styleInsertionFunction,
   completeSegment as completeSegmentFunction,
   formReplaying as formReplayingRuntime,
@@ -123,14 +124,15 @@ const ScriptStreamingFormat: StreamingFormat = 0;
 const DataStreamingFormat: StreamingFormat = 1;
 
 export type InstructionState = number;
-const NothingSent /*                      */ = 0b0000000;
-const SentCompleteSegmentFunction /*      */ = 0b0000001;
-const SentCompleteBoundaryFunction /*     */ = 0b0000010;
-const SentClientRenderFunction /*         */ = 0b0000100;
-const SentStyleInsertionFunction /*       */ = 0b0001000;
-const SentFormReplayingRuntime /*         */ = 0b0010000;
-const SentCompletedShellId /*             */ = 0b0100000;
-const SentMarkShellTime /*                */ = 0b1000000;
+const NothingSent /*                      */ = 0b00000000;
+const SentCompleteSegmentFunction /*      */ = 0b00000001;
+const SentCompleteBoundaryFunction /*     */ = 0b00000010;
+const SentClientRenderFunction /*         */ = 0b00000100;
+const SentStyleInsertionFunction /*       */ = 0b00001000;
+const SentFormReplayingRuntime /*         */ = 0b00010000;
+const SentCompletedShellId /*             */ = 0b00100000;
+const SentMarkShellTime /*                */ = 0b01000000;
+const SentUpgradeToViewTransitions /*     */ = 0b10000000;
 
 // Per request, global state that is not contextual to the rendering subtree.
 // This cannot be resumed and therefore should only contain things that are
@@ -4780,9 +4782,8 @@ export function writeCompletedSegmentInstruction(
 const completeBoundaryScriptFunctionOnly = stringToPrecomputedChunk(
   completeBoundaryFunction,
 );
-const completeBoundaryScript1Full = stringToPrecomputedChunk(
-  completeBoundaryFunction + '$RC("',
-);
+const completeBoundaryUpgradeToViewTransitionsInstruction =
+  stringToPrecomputedChunk(upgradeToViewTransitionsInstruction);
 const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
 
 const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
@@ -4814,6 +4815,7 @@ export function writeCompletedBoundaryInstruction(
   hoistableState: HoistableState,
 ): boolean {
   const requiresStyleInsertion = renderState.stylesToHoist;
+  const requiresViewTransitions = enableViewTransition;
   // If necessary stylesheets will be flushed with this instruction.
   // Any style tags not yet hoisted in the Document will also be hoisted.
   // We reset this state since after this instruction executes all styles
@@ -4843,6 +4845,17 @@ export function writeCompletedBoundaryInstruction(
         writeChunk(destination, completeBoundaryScriptFunctionOnly);
       }
       if (
+        requiresViewTransitions &&
+        (resumableState.instructions & SentUpgradeToViewTransitions) ===
+          NothingSent
+      ) {
+        resumableState.instructions |= SentUpgradeToViewTransitions;
+        writeChunk(
+          destination,
+          completeBoundaryUpgradeToViewTransitionsInstruction,
+        );
+      }
+      if (
         (resumableState.instructions & SentStyleInsertionFunction) ===
         NothingSent
       ) {
@@ -4857,10 +4870,20 @@ export function writeCompletedBoundaryInstruction(
         NothingSent
       ) {
         resumableState.instructions |= SentCompleteBoundaryFunction;
-        writeChunk(destination, completeBoundaryScript1Full);
-      } else {
-        writeChunk(destination, completeBoundaryScript1Partial);
+        writeChunk(destination, completeBoundaryScriptFunctionOnly);
       }
+      if (
+        requiresViewTransitions &&
+        (resumableState.instructions & SentUpgradeToViewTransitions) ===
+          NothingSent
+      ) {
+        resumableState.instructions |= SentUpgradeToViewTransitions;
+        writeChunk(
+          destination,
+          completeBoundaryUpgradeToViewTransitionsInstruction,
+        );
+      }
+      writeChunk(destination, completeBoundaryScript1Partial);
     }
   } else {
     if (requiresStyleInsertion) {
