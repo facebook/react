@@ -89,14 +89,15 @@ export function revealCompletedBoundariesWithViewTransitions(revealBoundaries) {
       existingTransition.finished.then(window['$RV'], window['$RV']);
       return;
     }
-    const shouldStartViewTransition = window._useVT; // TODO: Detect.
+    const shouldStartViewTransition = window['_useVT']; // TODO: Detect.
     if (shouldStartViewTransition) {
-      const transition = (document['__reactViewTransition'] =
-        document.startViewTransition({
-          update: revealBoundaries,
-          types: [], // TODO: Add a hard coded type for Suspense reveals.
-        }));
-      transition.finally(() => {
+      const transition = (document['__reactViewTransition'] = document[
+        'startViewTransition'
+      ]({
+        update: revealBoundaries,
+        types: [], // TODO: Add a hard coded type for Suspense reveals.
+      }));
+      transition.finished.finally(() => {
         if (document['__reactViewTransition'] === transition) {
           document['__reactViewTransition'] = null;
         }

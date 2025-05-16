@@ -934,7 +934,7 @@ export function getSuspenseFallbackFormatContext(
   resumableState: ResumableState,
   parentContext: FormatContext,
 ): FormatContext {
-  if (parentContext & UPDATE_SCOPE) {
+  if (parentContext.tagScope & UPDATE_SCOPE) {
     // If we're rendering a Suspense in fallback mode and that is inside a ViewTransition,
     // which hasn't disabled updates, then revealing it might animate the parent so we need
     // the ViewTransition instructions.
