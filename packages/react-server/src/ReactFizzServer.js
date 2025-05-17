@@ -1146,7 +1146,10 @@ function renderSuspenseBoundary(
     const prevKeyPath = someTask.keyPath;
     const prevContext = someTask.formatContext;
     someTask.keyPath = keyPath;
-    someTask.formatContext = getSuspenseContentFormatContext(prevContext);
+    someTask.formatContext = getSuspenseContentFormatContext(
+      request.resumableState,
+      prevContext,
+    );
     const content: ReactNodeList = props.children;
     try {
       renderNode(request, someTask, content, -1);
@@ -1239,7 +1242,10 @@ function renderSuspenseBoundary(
     task.blockedSegment = boundarySegment;
     task.blockedPreamble = newBoundary.fallbackPreamble;
     task.keyPath = fallbackKeyPath;
-    task.formatContext = getSuspenseFallbackFormatContext(prevContext);
+    task.formatContext = getSuspenseFallbackFormatContext(
+      request.resumableState,
+      prevContext,
+    );
     boundarySegment.status = RENDERING;
     try {
       renderNode(request, task, fallback, -1);
@@ -1278,7 +1284,10 @@ function renderSuspenseBoundary(
       newBoundary.contentState,
       task.abortSet,
       keyPath,
-      getSuspenseContentFormatContext(task.formatContext),
+      getSuspenseContentFormatContext(
+        request.resumableState,
+        task.formatContext,
+      ),
       task.context,
       task.treeContext,
       task.componentStack,
@@ -1305,7 +1314,10 @@ function renderSuspenseBoundary(
     task.hoistableState = newBoundary.contentState;
     task.blockedSegment = contentRootSegment;
     task.keyPath = keyPath;
-    task.formatContext = getSuspenseContentFormatContext(prevContext);
+    task.formatContext = getSuspenseContentFormatContext(
+      request.resumableState,
+      prevContext,
+    );
     contentRootSegment.status = RENDERING;
 
     try {
@@ -1409,7 +1421,10 @@ function renderSuspenseBoundary(
       newBoundary.fallbackState,
       fallbackAbortSet,
       fallbackKeyPath,
-      getSuspenseFallbackFormatContext(task.formatContext),
+      getSuspenseFallbackFormatContext(
+        request.resumableState,
+        task.formatContext,
+      ),
       task.context,
       task.treeContext,
       task.componentStack,
@@ -1471,7 +1486,10 @@ function replaySuspenseBoundary(
   task.blockedBoundary = resumedBoundary;
   task.hoistableState = resumedBoundary.contentState;
   task.keyPath = keyPath;
-  task.formatContext = getSuspenseContentFormatContext(prevContext);
+  task.formatContext = getSuspenseContentFormatContext(
+    request.resumableState,
+    prevContext,
+  );
   task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
 
   try {
@@ -1569,7 +1587,10 @@ function replaySuspenseBoundary(
     resumedBoundary.fallbackState,
     fallbackAbortSet,
     fallbackKeyPath,
-    getSuspenseFallbackFormatContext(task.formatContext),
+    getSuspenseFallbackFormatContext(
+      request.resumableState,
+      task.formatContext,
+    ),
     task.context,
     task.treeContext,
     task.componentStack,
@@ -2284,6 +2305,7 @@ function renderViewTransition(
     request.resumableState,
   );
   task.formatContext = getViewTransitionFormatContext(
+    request.resumableState,
     prevContext,
     getViewTransitionClassName(props.default, props.update),
     getViewTransitionClassName(props.default, props.enter),
