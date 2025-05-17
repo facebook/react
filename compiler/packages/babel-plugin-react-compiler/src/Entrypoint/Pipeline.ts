@@ -130,6 +130,7 @@ function run(
     mode,
     config,
     contextIdentifiers,
+    func,
     logger,
     filename,
     code,

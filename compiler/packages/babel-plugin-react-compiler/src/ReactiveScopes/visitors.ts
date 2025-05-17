@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {CompilerError} from '..';
 import {
   HIRFunction,
   InstructionId,
@@ -185,6 +186,20 @@ export class ReactiveFunctionVisitor<TState = void> {
     this.traverseScope(scope, state);
   }
   traverseScope(scope: ReactiveScopeBlock, state: TState): void {
+    this.visitBlock(scope.dependencyInstructions, state);
+    const lastDependencyInstruction = scope.dependencyInstructions.at(-1);
+    let lastInstructionId: InstructionId | null = null;
+    if (lastDependencyInstruction !== undefined) {
+      lastInstructionId = lastDependencyInstruction.instruction.id;
+    }
+    for (const dep of scope.scope.dependencies) {
+      CompilerError.invariant(lastInstructionId !== null, {
+        reason:
+          '[ReactiveFunction] Expected at least one dependency instruction.',
+        loc: scope.scope.loc,
+      });
+      this.visitPlace(lastInstructionId, dep, state);
+    }
     this.visitBlock(scope.instructions, state);
   }
 

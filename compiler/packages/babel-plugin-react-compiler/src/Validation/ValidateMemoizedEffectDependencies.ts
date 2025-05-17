@@ -17,6 +17,7 @@ import {
   isUseInsertionEffectHookType,
   isUseLayoutEffectHookType,
 } from '../HIR';
+import {readScopeDependenciesRHIR} from '../HIR/ScopeDependencyUtils';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {
   ReactiveFunctionVisitor,
@@ -73,7 +74,7 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
      * memoized, allowing a transitive memoization check.
      */
     let areDependenciesMemoized = true;
-    for (const dep of scopeBlock.scope.dependencies) {
+    for (const [, dep] of readScopeDependenciesRHIR(scopeBlock)) {
       if (isUnmemoized(dep.identifier, this.scopes)) {
         areDependenciesMemoized = false;
         break;

@@ -44,6 +44,7 @@ import {
   DependencyCollectionContext,
   handleInstruction,
 } from '../HIR/PropagateScopeDependenciesHIR';
+import {readScopeDependencies} from '../HIR/ScopeDependencyUtils';
 import {eachInstructionOperand, eachTerminalOperand} from '../HIR/visitors';
 import {empty} from '../Utils/Stack';
 import {getOrInsertWith} from '../Utils/utils';
@@ -97,7 +98,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
       ) {
         scopeInfos.set(
           block.terminal.scope.id,
-          block.terminal.scope.dependencies,
+          readScopeDependencies(fn, block.terminal.scope.id),
         );
       }
     }
@@ -485,7 +486,7 @@ function inferDependencies(
       start: fnInstr.id,
       end: makeInstructionId(fnInstr.id + 1),
     },
-    dependencies: new Set(),
+    dependencies: [],
     reassignments: new Set(),
     declarations: new Map(),
     earlyReturnValue: null,
