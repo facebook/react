@@ -900,7 +900,6 @@ export function getChildFormatContext(
 }
 
 function getSuspenseViewTransition(
-  resumableState: ResumableState,
   parentViewTransition: null | ViewTransitionContext,
 ): null | ViewTransitionContext {
   if (parentViewTransition === null) {
@@ -944,7 +943,7 @@ export function getSuspenseFallbackFormatContext(
     parentContext.insertionMode,
     parentContext.selectedValue,
     parentContext.tagScope | FALLBACK_SCOPE | EXIT_SCOPE,
-    getSuspenseViewTransition(resumableState, parentContext.viewTransition),
+    getSuspenseViewTransition(parentContext.viewTransition),
   );
 }
 
@@ -956,7 +955,7 @@ export function getSuspenseContentFormatContext(
     parentContext.insertionMode,
     parentContext.selectedValue,
     parentContext.tagScope | ENTER_SCOPE,
-    getSuspenseViewTransition(resumableState, parentContext.viewTransition),
+    getSuspenseViewTransition(parentContext.viewTransition),
   );
 }
 
