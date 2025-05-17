@@ -62,43 +62,64 @@
       errorComponentStack && (suspenseIdNode.cstck = errorComponentStack),
       suspenseBoundaryID._reactRetry && suspenseBoundaryID._reactRetry());
   };
-  var $RC = function (suspenseBoundaryID, contentID) {
-    function revealCompletedBoundaries() {
-      $RT = performance.now();
-      var batch = $RB;
-      $RB = [];
-      for (var i = 0; i < batch.length; i += 2) {
-        var suspenseIdNode = batch[i],
-          contentNode = batch[i + 1],
-          parentInstance = suspenseIdNode.parentNode;
-        if (parentInstance) {
-          var suspenseNode = suspenseIdNode.previousSibling,
-            depth = 0;
-          do {
-            if (suspenseIdNode && 8 === suspenseIdNode.nodeType) {
-              var data = suspenseIdNode.data;
-              if ("/$" === data || "/&" === data)
-                if (0 === depth) break;
-                else depth--;
-              else
-                ("$" !== data &&
-                  "$?" !== data &&
-                  "$~" !== data &&
-                  "$!" !== data &&
-                  "&" !== data) ||
-                  depth++;
-            }
-            data = suspenseIdNode.nextSibling;
-            parentInstance.removeChild(suspenseIdNode);
-            suspenseIdNode = data;
-          } while (suspenseIdNode);
-          for (; contentNode.firstChild; )
-            parentInstance.insertBefore(contentNode.firstChild, suspenseIdNode);
-          suspenseNode.data = "$";
-          suspenseNode._reactRetry && suspenseNode._reactRetry();
-        }
+  var $RV = function (revealBoundaries) {
+    try {
+      var existingTransition = document.__reactViewTransition;
+      if (existingTransition) {
+        existingTransition.finished.then($RV, $RV);
+        return;
+      }
+      if (window._useVT) {
+        var transition = (document.__reactViewTransition =
+          document.startViewTransition({
+            update: revealBoundaries,
+            types: []
+          }));
+        transition.finished.finally(function () {
+          document.__reactViewTransition === transition &&
+            (document.__reactViewTransition = null);
+        });
+        return;
+      }
+    } catch (x) {}
+    revealBoundaries();
+  }.bind(null, function () {
+    $RT = performance.now();
+    var batch = $RB;
+    $RB = [];
+    for (var i = 0; i < batch.length; i += 2) {
+      var suspenseIdNode = batch[i],
+        contentNode = batch[i + 1],
+        parentInstance = suspenseIdNode.parentNode;
+      if (parentInstance) {
+        var suspenseNode = suspenseIdNode.previousSibling,
+          depth = 0;
+        do {
+          if (suspenseIdNode && 8 === suspenseIdNode.nodeType) {
+            var data = suspenseIdNode.data;
+            if ("/$" === data || "/&" === data)
+              if (0 === depth) break;
+              else depth--;
+            else
+              ("$" !== data &&
+                "$?" !== data &&
+                "$~" !== data &&
+                "$!" !== data &&
+                "&" !== data) ||
+                depth++;
+          }
+          data = suspenseIdNode.nextSibling;
+          parentInstance.removeChild(suspenseIdNode);
+          suspenseIdNode = data;
+        } while (suspenseIdNode);
+        for (; contentNode.firstChild; )
+          parentInstance.insertBefore(contentNode.firstChild, suspenseIdNode);
+        suspenseNode.data = "$";
+        suspenseNode._reactRetry && suspenseNode._reactRetry();
       }
     }
+  });
+  var $RC = function (suspenseBoundaryID, contentID) {
     if ((contentID = document.getElementById(contentID)))
       if (
         (contentID.parentNode.removeChild(contentID),
@@ -109,7 +130,7 @@
           2 === $RB.length &&
             ((suspenseBoundaryID =
               ("number" !== typeof $RT ? 0 : $RT) + 300 - performance.now()),
-            setTimeout(revealCompletedBoundaries, suspenseBoundaryID));
+            setTimeout($RV, suspenseBoundaryID));
   };
   var $RR = function (suspenseBoundaryID, contentID, stylesheetDescriptors) {
     function cleanupWith(cb) {

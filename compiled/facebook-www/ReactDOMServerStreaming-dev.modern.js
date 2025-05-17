@@ -821,7 +821,8 @@ __DEV__ &&
             nameIdx: 0
           };
     }
-    function getSuspenseFallbackFormatContext(parentContext) {
+    function getSuspenseFallbackFormatContext(resumableState, parentContext) {
+      parentContext.tagScope & 32 && (resumableState.instructions |= 128);
       return createFormatContext(
         parentContext.insertionMode,
         parentContext.selectedValue,
@@ -829,7 +830,7 @@ __DEV__ &&
         getSuspenseViewTransition(parentContext.viewTransition)
       );
     }
-    function getSuspenseContentFormatContext(parentContext) {
+    function getSuspenseContentFormatContext(resumableState, parentContext) {
       return createFormatContext(
         parentContext.insertionMode,
         parentContext.selectedValue,
@@ -5447,14 +5448,16 @@ __DEV__ &&
                 var treeId = getTreeId(task.treeContext);
                 autoName = makeId(resumableState$jscomp$0, treeId, 0);
               }
-              var update = getViewTransitionClassName(
+              var resumableState$jscomp$1 = request.resumableState,
+                update = getViewTransitionClassName(
                   props.default,
                   props.update
                 ),
                 enter = getViewTransitionClassName(props.default, props.enter),
                 exit = getViewTransitionClassName(props.default, props.exit),
                 share = getViewTransitionClassName(props.default, props.share),
-                name$jscomp$0 = props.name;
+                name$jscomp$0 = props.name,
+                autoName$jscomp$0 = autoName;
               null == update && (update = "auto");
               null == enter && (enter = "auto");
               null == exit && (exit = "auto");
@@ -5467,22 +5470,32 @@ __DEV__ &&
               } else
                 "none" === share
                   ? (share = null)
-                  : null == share && (share = "auto");
-              prevContext$jscomp$0.tagScope & 8 || (exit = null);
-              prevContext$jscomp$0.tagScope & 16 || (enter = null);
-              var JSCompiler_inline_result$jscomp$0 = createFormatContext(
-                prevContext$jscomp$0.insertionMode,
-                prevContext$jscomp$0.selectedValue,
-                prevContext$jscomp$0.tagScope & -25,
-                {
+                  : (null == share && (share = "auto"),
+                    prevContext$jscomp$0.tagScope & 4 &&
+                      (resumableState$jscomp$1.instructions |= 128));
+              prevContext$jscomp$0.tagScope & 8
+                ? (resumableState$jscomp$1.instructions |= 128)
+                : (exit = null);
+              prevContext$jscomp$0.tagScope & 16
+                ? (resumableState$jscomp$1.instructions |= 128)
+                : (enter = null);
+              var viewTransition = {
                   update: update,
                   enter: enter,
                   exit: exit,
                   share: share,
                   name: name$jscomp$0,
-                  autoName: autoName,
+                  autoName: autoName$jscomp$0,
                   nameIdx: 0
-                }
+                },
+                subtreeScope = prevContext$jscomp$0.tagScope & -25;
+              subtreeScope =
+                "none" !== update ? subtreeScope | 32 : subtreeScope & -33;
+              var JSCompiler_inline_result$jscomp$0 = createFormatContext(
+                prevContext$jscomp$0.insertionMode,
+                prevContext$jscomp$0.selectedValue,
+                subtreeScope,
+                viewTransition
               );
               task.formatContext = JSCompiler_inline_result$jscomp$0;
               task.keyPath = keyPath;
@@ -5509,8 +5522,10 @@ __DEV__ &&
               var _prevKeyPath = task.keyPath,
                 _prevContext = task.formatContext;
               task.keyPath = keyPath;
-              task.formatContext =
-                getSuspenseContentFormatContext(_prevContext);
+              task.formatContext = getSuspenseContentFormatContext(
+                request.resumableState,
+                _prevContext
+              );
               var _content = props.children;
               try {
                 renderNode(request, task, _content, -1);
@@ -5583,8 +5598,10 @@ __DEV__ &&
                 task.blockedSegment = boundarySegment;
                 task.blockedPreamble = newBoundary.fallbackPreamble;
                 task.keyPath = fallbackKeyPath;
-                task.formatContext =
-                  getSuspenseFallbackFormatContext(prevContext$jscomp$1);
+                task.formatContext = getSuspenseFallbackFormatContext(
+                  request.resumableState,
+                  prevContext$jscomp$1
+                );
                 boundarySegment.status = 6;
                 try {
                   renderNode(request, task, fallback, -1),
@@ -5614,7 +5631,10 @@ __DEV__ &&
                   newBoundary.contentState,
                   task.abortSet,
                   keyPath,
-                  getSuspenseContentFormatContext(task.formatContext),
+                  getSuspenseContentFormatContext(
+                    request.resumableState,
+                    task.formatContext
+                  ),
                   task.context,
                   task.treeContext,
                   task.componentStack,
@@ -5629,8 +5649,10 @@ __DEV__ &&
                 task.hoistableState = newBoundary.contentState;
                 task.blockedSegment = contentRootSegment;
                 task.keyPath = keyPath;
-                task.formatContext =
-                  getSuspenseContentFormatContext(prevContext$jscomp$1);
+                task.formatContext = getSuspenseContentFormatContext(
+                  request.resumableState,
+                  prevContext$jscomp$1
+                );
                 contentRootSegment.status = 6;
                 try {
                   if (
@@ -5690,7 +5712,10 @@ __DEV__ &&
                   newBoundary.fallbackState,
                   fallbackAbortSet,
                   [keyPath[0], "Suspense Fallback", keyPath[2]],
-                  getSuspenseFallbackFormatContext(task.formatContext),
+                  getSuspenseFallbackFormatContext(
+                    request.resumableState,
+                    task.formatContext
+                  ),
                   task.context,
                   task.treeContext,
                   task.componentStack,
@@ -5939,7 +5964,10 @@ __DEV__ &&
               task.blockedBoundary = props;
               task.hoistableState = props.contentState;
               task.keyPath = keyPath;
-              task.formatContext = getSuspenseContentFormatContext(prevContext);
+              task.formatContext = getSuspenseContentFormatContext(
+                request.resumableState,
+                prevContext
+              );
               task.replay = { nodes: type, slots: ref, pendingTasks: 1 };
               try {
                 renderNode(request, task, content, -1);
@@ -5985,7 +6013,10 @@ __DEV__ &&
                 props.fallbackState,
                 fallbackAbortSet,
                 [keyPath[0], "Suspense Fallback", keyPath[2]],
-                getSuspenseFallbackFormatContext(task.formatContext),
+                getSuspenseFallbackFormatContext(
+                  request.resumableState,
+                  task.formatContext
+                ),
                 task.context,
                 task.treeContext,
                 task.componentStack,
@@ -7018,7 +7049,9 @@ __DEV__ &&
       request = request.renderState;
       i = boundary.rootSegmentID;
       boundary = boundary.contentState;
-      var requiresStyleInsertion = request.stylesToHoist;
+      var requiresStyleInsertion = request.stylesToHoist,
+        requiresViewTransitions =
+          enableViewTransition && 0 !== (completedSegments.instructions & 128);
       request.stylesToHoist = !1;
       var scriptFormat = 0 === completedSegments.streamingFormat;
       scriptFormat
@@ -7032,7 +7065,14 @@ __DEV__ &&
                 ((completedSegments.instructions |= 2),
                 writeChunk(
                   destination,
-                  '$RB=[];$RC=function(d,c){function m(){$RT=performance.now();var f=$RB;$RB=[];for(var e=0;e<f.length;e+=2){var a=f[e],l=f[e+1],g=a.parentNode;if(g){var h=a.previousSibling,k=0;do{if(a&&8===a.nodeType){var b=a.data;if("/$"===b||"/&"===b)if(0===k)break;else k--;else"$"!==b&&"$?"!==b&&"$~"!==b&&"$!"!==b&&"&"!==b||k++}b=a.nextSibling;g.removeChild(a);a=b}while(a);for(;l.firstChild;)g.insertBefore(l.firstChild,a);h.data="$";h._reactRetry&&h._reactRetry()}}}if(c=document.getElementById(c))if(c.parentNode.removeChild(c),d=\ndocument.getElementById(d))d.previousSibling.data="$~",$RB.push(d,c),2===$RB.length&&setTimeout(m,("number"!==typeof $RT?0:$RT)+300-performance.now())};'
+                  '$RB=[];$RV=function(){$RT=performance.now();var d=$RB;$RB=[];for(var a=0;a<d.length;a+=2){var b=d[a],h=d[a+1],e=b.parentNode;if(e){var f=b.previousSibling,g=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===g)break;else g--;else"$"!==c&&"$?"!==c&&"$~"!==c&&"$!"!==c&&"&"!==c||g++}c=b.nextSibling;e.removeChild(b);b=c}while(b);for(;h.firstChild;)e.insertBefore(h.firstChild,b);f.data="$";f._reactRetry&&f._reactRetry()}}};$RC=function(d,a){if(a=document.getElementById(a))if(a.parentNode.removeChild(a),d=document.getElementById(d))d.previousSibling.data="$~",$RB.push(d,a),2===$RB.length&&setTimeout($RV,("number"!==typeof $RT?0:$RT)+300-performance.now())};'
+                )),
+              requiresViewTransitions &&
+                0 === (completedSegments.instructions & 256) &&
+                ((completedSegments.instructions |= 256),
+                writeChunk(
+                  destination,
+                  "$RV=function(a){try{var b=document.__reactViewTransition;if(b){b.finished.then($RV,$RV);return}if(window._useVT){var c=document.__reactViewTransition=document.startViewTransition({update:a,types:[]});c.finished.finally(function(){document.__reactViewTransition===c&&(document.__reactViewTransition=null)});return}}catch(d){}a()}.bind(null,$RV);"
                 )),
               0 === (completedSegments.instructions & 8)
                 ? ((completedSegments.instructions |= 8),
@@ -7041,13 +7081,20 @@ __DEV__ &&
                     '$RM=new Map;$RR=function(n,w,p){function u(q){this._p=null;q()}for(var r=new Map,t=document,h,b,e=t.querySelectorAll("link[data-precedence],style[data-precedence]"),v=[],k=0;b=e[k++];)"not all"===b.getAttribute("media")?v.push(b):("LINK"===b.tagName&&$RM.set(b.getAttribute("href"),b),r.set(b.dataset.precedence,h=b));e=0;b=[];var l,a;for(k=!0;;){if(k){var f=p[e++];if(!f){k=!1;e=0;continue}var c=!1,m=0;var d=f[m++];if(a=$RM.get(d)){var g=a._p;c=!0}else{a=t.createElement("link");a.href=d;a.rel=\n"stylesheet";for(a.dataset.precedence=l=f[m++];g=f[m++];)a.setAttribute(g,f[m++]);g=a._p=new Promise(function(q,x){a.onload=u.bind(a,q);a.onerror=u.bind(a,x)});$RM.set(d,a)}d=a.getAttribute("media");!g||d&&!matchMedia(d).matches||b.push(g);if(c)continue}else{a=v[e++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=r.get(l)||h;c===h&&(h=a);r.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=t.head,c.insertBefore(a,c.firstChild))}if(p=document.getElementById(n))p.previousSibling.data=\n"$~";Promise.all(b).then($RC.bind(null,n,w),$RX.bind(null,n,"CSS failed to load"))};$RR("'
                   ))
                 : writeChunk(destination, '$RR("'))
-            : 0 === (completedSegments.instructions & 2)
-              ? ((completedSegments.instructions |= 2),
+            : (0 === (completedSegments.instructions & 2) &&
+                ((completedSegments.instructions |= 2),
                 writeChunk(
                   destination,
-                  '$RB=[];$RC=function(d,c){function m(){$RT=performance.now();var f=$RB;$RB=[];for(var e=0;e<f.length;e+=2){var a=f[e],l=f[e+1],g=a.parentNode;if(g){var h=a.previousSibling,k=0;do{if(a&&8===a.nodeType){var b=a.data;if("/$"===b||"/&"===b)if(0===k)break;else k--;else"$"!==b&&"$?"!==b&&"$~"!==b&&"$!"!==b&&"&"!==b||k++}b=a.nextSibling;g.removeChild(a);a=b}while(a);for(;l.firstChild;)g.insertBefore(l.firstChild,a);h.data="$";h._reactRetry&&h._reactRetry()}}}if(c=document.getElementById(c))if(c.parentNode.removeChild(c),d=\ndocument.getElementById(d))d.previousSibling.data="$~",$RB.push(d,c),2===$RB.length&&setTimeout(m,("number"!==typeof $RT?0:$RT)+300-performance.now())};$RC("'
-                ))
-              : writeChunk(destination, '$RC("'))
+                  '$RB=[];$RV=function(){$RT=performance.now();var d=$RB;$RB=[];for(var a=0;a<d.length;a+=2){var b=d[a],h=d[a+1],e=b.parentNode;if(e){var f=b.previousSibling,g=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===g)break;else g--;else"$"!==c&&"$?"!==c&&"$~"!==c&&"$!"!==c&&"&"!==c||g++}c=b.nextSibling;e.removeChild(b);b=c}while(b);for(;h.firstChild;)e.insertBefore(h.firstChild,b);f.data="$";f._reactRetry&&f._reactRetry()}}};$RC=function(d,a){if(a=document.getElementById(a))if(a.parentNode.removeChild(a),d=document.getElementById(d))d.previousSibling.data="$~",$RB.push(d,a),2===$RB.length&&setTimeout($RV,("number"!==typeof $RT?0:$RT)+300-performance.now())};'
+                )),
+              requiresViewTransitions &&
+                0 === (completedSegments.instructions & 256) &&
+                ((completedSegments.instructions |= 256),
+                writeChunk(
+                  destination,
+                  "$RV=function(a){try{var b=document.__reactViewTransition;if(b){b.finished.then($RV,$RV);return}if(window._useVT){var c=document.__reactViewTransition=document.startViewTransition({update:a,types:[]});c.finished.finally(function(){document.__reactViewTransition===c&&(document.__reactViewTransition=null)});return}}catch(d){}a()}.bind(null,$RV);"
+                )),
+              writeChunk(destination, '$RC("')))
         : requiresStyleInsertion
           ? writeChunk(destination, '<template data-rri="" data-bid="')
           : writeChunk(destination, '<template data-rci="" data-bid="');

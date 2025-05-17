@@ -425,7 +425,8 @@ function getSuspenseViewTransition(parentViewTransition) {
         nameIdx: 0
       };
 }
-function getSuspenseFallbackFormatContext(parentContext) {
+function getSuspenseFallbackFormatContext(resumableState, parentContext) {
+  parentContext.tagScope & 32 && (resumableState.instructions |= 128);
   return createFormatContext(
     parentContext.insertionMode,
     parentContext.selectedValue,
@@ -433,7 +434,7 @@ function getSuspenseFallbackFormatContext(parentContext) {
     getSuspenseViewTransition(parentContext.viewTransition)
   );
 }
-function getSuspenseContentFormatContext(parentContext) {
+function getSuspenseContentFormatContext(resumableState, parentContext) {
   return createFormatContext(
     parentContext.insertionMode,
     parentContext.selectedValue,
@@ -2897,17 +2898,17 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     ));
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1791 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1804 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preamble_1794 = createPreambleState(),
-    JSCompiler_object_inline_preconnects_1804 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1805 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1806 = new Set(),
-    JSCompiler_object_inline_styles_1807 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1808 = new Set(),
-    JSCompiler_object_inline_scripts_1809 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1810 = new Set(),
-    JSCompiler_object_inline_preloads_1811 = {
+  var JSCompiler_object_inline_preamble_1807 = createPreambleState(),
+    JSCompiler_object_inline_preconnects_1817 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1818 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1819 = new Set(),
+    JSCompiler_object_inline_styles_1820 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1821 = new Set(),
+    JSCompiler_object_inline_scripts_1822 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1823 = new Set(),
+    JSCompiler_object_inline_preloads_1824 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2944,7 +2945,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1808.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1821.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src), '"');
       "string" === typeof integrity &&
         bootstrapChunks.push(
@@ -2991,7 +2992,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1808.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1821.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i),
@@ -3013,10 +3014,10 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push(' async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1791,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1804,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script",
-    preamble: JSCompiler_object_inline_preamble_1794,
+    preamble: JSCompiler_object_inline_preamble_1807,
     externalRuntimeScript: null,
     bootstrapChunks: bootstrapChunks,
     importMapChunks: [],
@@ -3032,14 +3033,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1804,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1805,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1806,
-    styles: JSCompiler_object_inline_styles_1807,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1808,
-    scripts: JSCompiler_object_inline_scripts_1809,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1810,
-    preloads: JSCompiler_object_inline_preloads_1811,
+    preconnects: JSCompiler_object_inline_preconnects_1817,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1818,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1819,
+    styles: JSCompiler_object_inline_styles_1820,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1821,
+    scripts: JSCompiler_object_inline_scripts_1822,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1823,
+    preloads: JSCompiler_object_inline_preloads_1824,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
   };
@@ -4521,7 +4522,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
           type = task.keyPath;
           contextKey = task.formatContext;
           task.keyPath = keyPath;
-          task.formatContext = getSuspenseContentFormatContext(contextKey);
+          task.formatContext = getSuspenseContentFormatContext(
+            request.resumableState,
+            contextKey
+          );
           keyPath = props.children;
           try {
             renderNode(request, task, keyPath, -1);
@@ -4588,7 +4592,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
             task.blockedSegment = legacyContext;
             task.blockedPreamble = partial.fallbackPreamble;
             task.keyPath = JSCompiler_inline_result;
-            task.formatContext = getSuspenseFallbackFormatContext(contextKey);
+            task.formatContext = getSuspenseFallbackFormatContext(
+              request.resumableState,
+              contextKey
+            );
             legacyContext.status = 6;
             try {
               renderNode(request, task, propName, -1),
@@ -4621,7 +4628,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
               partial.contentState,
               task.abortSet,
               keyPath,
-              getSuspenseContentFormatContext(task.formatContext),
+              getSuspenseContentFormatContext(
+                request.resumableState,
+                task.formatContext
+              ),
               task.context,
               task.treeContext,
               task.componentStack,
@@ -4635,7 +4645,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
             task.hoistableState = partial.contentState;
             task.blockedSegment = contentRootSegment;
             task.keyPath = keyPath;
-            task.formatContext = getSuspenseContentFormatContext(contextKey);
+            task.formatContext = getSuspenseContentFormatContext(
+              request.resumableState,
+              contextKey
+            );
             contentRootSegment.status = 6;
             try {
               if (
@@ -4691,7 +4704,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
               partial.fallbackState,
               fallbackAbortSet,
               [keyPath[0], "Suspense Fallback", keyPath[2]],
-              getSuspenseFallbackFormatContext(task.formatContext),
+              getSuspenseFallbackFormatContext(
+                request.resumableState,
+                task.formatContext
+              ),
               task.context,
               task.treeContext,
               task.componentStack,
@@ -4914,8 +4930,10 @@ function retryNode(request, task) {
                       task.blockedBoundary = props;
                       task.hoistableState = props.contentState;
                       task.keyPath = key;
-                      task.formatContext =
-                        getSuspenseContentFormatContext(prevContext);
+                      task.formatContext = getSuspenseContentFormatContext(
+                        request.resumableState,
+                        prevContext
+                      );
                       task.replay = {
                         nodes: ref,
                         slots: name,
@@ -4966,7 +4984,10 @@ function retryNode(request, task) {
                         props.fallbackState,
                         fallbackAbortSet,
                         [key[0], "Suspense Fallback", key[2]],
-                        getSuspenseFallbackFormatContext(task.formatContext),
+                        getSuspenseFallbackFormatContext(
+                          request.resumableState,
+                          task.formatContext
+                        ),
                         task.context,
                         task.treeContext,
                         task.componentStack,
@@ -5917,7 +5938,9 @@ function flushCompletedBoundary(request, destination, boundary) {
   request = request.renderState;
   i = boundary.rootSegmentID;
   boundary = boundary.contentState;
-  var requiresStyleInsertion = request.stylesToHoist;
+  var requiresStyleInsertion = request.stylesToHoist,
+    requiresViewTransitions =
+      enableViewTransition && 0 !== (completedSegments.instructions & 128);
   request.stylesToHoist = !1;
   var scriptFormat = 0 === completedSegments.streamingFormat;
   scriptFormat
@@ -5932,7 +5955,13 @@ function flushCompletedBoundary(request, destination, boundary) {
           0 === (completedSegments.instructions & 2) &&
             ((completedSegments.instructions |= 2),
             destination.push(
-              '$RB=[];$RC=function(d,c){function m(){$RT=performance.now();var f=$RB;$RB=[];for(var e=0;e<f.length;e+=2){var a=f[e],l=f[e+1],g=a.parentNode;if(g){var h=a.previousSibling,k=0;do{if(a&&8===a.nodeType){var b=a.data;if("/$"===b||"/&"===b)if(0===k)break;else k--;else"$"!==b&&"$?"!==b&&"$~"!==b&&"$!"!==b&&"&"!==b||k++}b=a.nextSibling;g.removeChild(a);a=b}while(a);for(;l.firstChild;)g.insertBefore(l.firstChild,a);h.data="$";h._reactRetry&&h._reactRetry()}}}if(c=document.getElementById(c))if(c.parentNode.removeChild(c),d=\ndocument.getElementById(d))d.previousSibling.data="$~",$RB.push(d,c),2===$RB.length&&setTimeout(m,("number"!==typeof $RT?0:$RT)+300-performance.now())};'
+              '$RB=[];$RV=function(){$RT=performance.now();var d=$RB;$RB=[];for(var a=0;a<d.length;a+=2){var b=d[a],h=d[a+1],e=b.parentNode;if(e){var f=b.previousSibling,g=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===g)break;else g--;else"$"!==c&&"$?"!==c&&"$~"!==c&&"$!"!==c&&"&"!==c||g++}c=b.nextSibling;e.removeChild(b);b=c}while(b);for(;h.firstChild;)e.insertBefore(h.firstChild,b);f.data="$";f._reactRetry&&f._reactRetry()}}};$RC=function(d,a){if(a=document.getElementById(a))if(a.parentNode.removeChild(a),d=document.getElementById(d))d.previousSibling.data="$~",$RB.push(d,a),2===$RB.length&&setTimeout($RV,("number"!==typeof $RT?0:$RT)+300-performance.now())};'
+            )),
+          requiresViewTransitions &&
+            0 === (completedSegments.instructions & 256) &&
+            ((completedSegments.instructions |= 256),
+            destination.push(
+              "$RV=function(a){try{var b=document.__reactViewTransition;if(b){b.finished.then($RV,$RV);return}if(window._useVT){var c=document.__reactViewTransition=document.startViewTransition({update:a,types:[]});c.finished.finally(function(){document.__reactViewTransition===c&&(document.__reactViewTransition=null)});return}}catch(d){}a()}.bind(null,$RV);"
             )),
           0 === (completedSegments.instructions & 8)
             ? ((completedSegments.instructions |= 8),
@@ -5940,12 +5969,18 @@ function flushCompletedBoundary(request, destination, boundary) {
                 '$RM=new Map;$RR=function(n,w,p){function u(q){this._p=null;q()}for(var r=new Map,t=document,h,b,e=t.querySelectorAll("link[data-precedence],style[data-precedence]"),v=[],k=0;b=e[k++];)"not all"===b.getAttribute("media")?v.push(b):("LINK"===b.tagName&&$RM.set(b.getAttribute("href"),b),r.set(b.dataset.precedence,h=b));e=0;b=[];var l,a;for(k=!0;;){if(k){var f=p[e++];if(!f){k=!1;e=0;continue}var c=!1,m=0;var d=f[m++];if(a=$RM.get(d)){var g=a._p;c=!0}else{a=t.createElement("link");a.href=d;a.rel=\n"stylesheet";for(a.dataset.precedence=l=f[m++];g=f[m++];)a.setAttribute(g,f[m++]);g=a._p=new Promise(function(q,x){a.onload=u.bind(a,q);a.onerror=u.bind(a,x)});$RM.set(d,a)}d=a.getAttribute("media");!g||d&&!matchMedia(d).matches||b.push(g);if(c)continue}else{a=v[e++];if(!a)break;l=a.getAttribute("data-precedence");a.removeAttribute("media")}c=r.get(l)||h;c===h&&(h=a);r.set(l,a);c?c.parentNode.insertBefore(a,c.nextSibling):(c=t.head,c.insertBefore(a,c.firstChild))}if(p=document.getElementById(n))p.previousSibling.data=\n"$~";Promise.all(b).then($RC.bind(null,n,w),$RX.bind(null,n,"CSS failed to load"))};$RR("'
               ))
             : destination.push('$RR("'))
-        : 0 === (completedSegments.instructions & 2)
-          ? ((completedSegments.instructions |= 2),
+        : (0 === (completedSegments.instructions & 2) &&
+            ((completedSegments.instructions |= 2),
             destination.push(
-              '$RB=[];$RC=function(d,c){function m(){$RT=performance.now();var f=$RB;$RB=[];for(var e=0;e<f.length;e+=2){var a=f[e],l=f[e+1],g=a.parentNode;if(g){var h=a.previousSibling,k=0;do{if(a&&8===a.nodeType){var b=a.data;if("/$"===b||"/&"===b)if(0===k)break;else k--;else"$"!==b&&"$?"!==b&&"$~"!==b&&"$!"!==b&&"&"!==b||k++}b=a.nextSibling;g.removeChild(a);a=b}while(a);for(;l.firstChild;)g.insertBefore(l.firstChild,a);h.data="$";h._reactRetry&&h._reactRetry()}}}if(c=document.getElementById(c))if(c.parentNode.removeChild(c),d=\ndocument.getElementById(d))d.previousSibling.data="$~",$RB.push(d,c),2===$RB.length&&setTimeout(m,("number"!==typeof $RT?0:$RT)+300-performance.now())};$RC("'
-            ))
-          : destination.push('$RC("'))
+              '$RB=[];$RV=function(){$RT=performance.now();var d=$RB;$RB=[];for(var a=0;a<d.length;a+=2){var b=d[a],h=d[a+1],e=b.parentNode;if(e){var f=b.previousSibling,g=0;do{if(b&&8===b.nodeType){var c=b.data;if("/$"===c||"/&"===c)if(0===g)break;else g--;else"$"!==c&&"$?"!==c&&"$~"!==c&&"$!"!==c&&"&"!==c||g++}c=b.nextSibling;e.removeChild(b);b=c}while(b);for(;h.firstChild;)e.insertBefore(h.firstChild,b);f.data="$";f._reactRetry&&f._reactRetry()}}};$RC=function(d,a){if(a=document.getElementById(a))if(a.parentNode.removeChild(a),d=document.getElementById(d))d.previousSibling.data="$~",$RB.push(d,a),2===$RB.length&&setTimeout($RV,("number"!==typeof $RT?0:$RT)+300-performance.now())};'
+            )),
+          requiresViewTransitions &&
+            0 === (completedSegments.instructions & 256) &&
+            ((completedSegments.instructions |= 256),
+            destination.push(
+              "$RV=function(a){try{var b=document.__reactViewTransition;if(b){b.finished.then($RV,$RV);return}if(window._useVT){var c=document.__reactViewTransition=document.startViewTransition({update:a,types:[]});c.finished.finally(function(){document.__reactViewTransition===c&&(document.__reactViewTransition=null)});return}}catch(d){}a()}.bind(null,$RV);"
+            )),
+          destination.push('$RC("')))
     : requiresStyleInsertion
       ? destination.push('<template data-rri="" data-bid="')
       : destination.push('<template data-rci="" data-bid="');
@@ -6407,4 +6442,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-classic-c250b7d9-20250516";
+exports.version = "19.2.0-www-classic-6060367e-20250517";
