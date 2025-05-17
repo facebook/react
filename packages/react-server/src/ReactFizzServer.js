@@ -24,6 +24,8 @@ import type {
   ViewTransitionProps,
   ActivityProps,
   SuspenseProps,
+  SuspenseListProps,
+  SuspenseListRevealOrder,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -231,6 +233,12 @@ type LegacyContext = {
   [key: string]: any,
 };
 
+type SuspenseListRow = {
+  pendingTasks: number, // The number of tasks, previous rows and inner suspense boundaries blocking this row.
+  boundaries: Array<SuspenseBoundary>, // The boundaries in this row waiting to be unblocked by the previous row.
+  next: null | SuspenseListRow, // The next row blocked by this one.
+};
+
 const CLIENT_RENDERED = 4; // if it errors or infinitely suspends
 
 type SuspenseBoundary = {
@@ -268,11 +276,12 @@ type RenderTask = {
   formatContext: FormatContext, // the format's specific context (e.g. HTML/SVG/MathML)
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
+  row: null | SuspenseListRow, // the current SuspenseList row that this is rendering inside
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   debugTask: null | ConsoleTask, // DEV only
-  // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
+  // DON'T ANY MORE FIELDS. We at 16 in prod already which otherwise requires converting to a constructor.
   // Consider splitting into multiple objects or consolidating some fields.
 };
 
@@ -298,12 +307,11 @@ type ReplayTask = {
   formatContext: FormatContext, // the format's specific context (e.g. HTML/SVG/MathML)
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
+  row: null | SuspenseListRow, // the current SuspenseList row that this is rendering inside
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   debugTask: null | ConsoleTask, // DEV only
-  // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
-  // Consider splitting into multiple objects or consolidating some fields.
 };
 
 export type Task = RenderTask | ReplayTask;
@@ -542,6 +550,7 @@ export function createRequest(
     rootContextSnapshot,
     emptyTreeContext,
     null,
+    null,
     emptyContextObject,
     null,
   );
@@ -647,6 +656,7 @@ export function resumeRequest(
       rootContextSnapshot,
       emptyTreeContext,
       null,
+      null,
       emptyContextObject,
       null,
     );
@@ -673,6 +683,7 @@ export function resumeRequest(
     postponedState.rootFormatContext,
     rootContextSnapshot,
     emptyTreeContext,
+    null,
     null,
     emptyContextObject,
     null,
@@ -782,6 +793,7 @@ function createRenderTask(
   formatContext: FormatContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
+  row: null | SuspenseListRow,
   componentStack: null | ComponentStackNode,
   legacyContext: LegacyContext,
   debugTask: null | ConsoleTask,
@@ -806,6 +818,7 @@ function createRenderTask(
     formatContext,
     context,
     treeContext,
+    row,
     componentStack,
     thenableState,
   }: any);
@@ -832,6 +845,7 @@ function createReplayTask(
   formatContext: FormatContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
+  row: null | SuspenseListRow,
   componentStack: null | ComponentStackNode,
   legacyContext: LegacyContext,
   debugTask: null | ConsoleTask,
@@ -857,6 +871,7 @@ function createReplayTask(
     formatContext,
     context,
     treeContext,
+    row,
     componentStack,
     thenableState,
   }: any);
@@ -1145,17 +1160,20 @@ function renderSuspenseBoundary(
     // so we can just render through it.
     const prevKeyPath = someTask.keyPath;
     const prevContext = someTask.formatContext;
+    const prevRow = someTask.row;
     someTask.keyPath = keyPath;
     someTask.formatContext = getSuspenseContentFormatContext(
       request.resumableState,
       prevContext,
     );
+    someTask.row = null;
     const content: ReactNodeList = props.children;
     try {
       renderNode(request, someTask, content, -1);
     } finally {
       someTask.keyPath = prevKeyPath;
       someTask.formatContext = prevContext;
+      someTask.row = prevRow;
     }
     return;
   }
@@ -1164,6 +1182,7 @@ function renderSuspenseBoundary(
 
   const prevKeyPath = task.keyPath;
   const prevContext = task.formatContext;
+  const prevRow = task.row;
   const parentBoundary = task.blockedBoundary;
   const parentPreamble = task.blockedPreamble;
   const parentHoistableState = task.hoistableState;
@@ -1290,6 +1309,7 @@ function renderSuspenseBoundary(
       ),
       task.context,
       task.treeContext,
+      null, // The row gets reset inside the Suspense boundary.
       task.componentStack,
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
@@ -1318,6 +1338,7 @@ function renderSuspenseBoundary(
       request.resumableState,
       prevContext,
     );
+    task.row = null;
     contentRootSegment.status = RENDERING;
 
     try {
@@ -1405,6 +1426,7 @@ function renderSuspenseBoundary(
       task.blockedSegment = parentSegment;
       task.keyPath = prevKeyPath;
       task.formatContext = prevContext;
+      task.row = prevRow;
     }
 
     const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
@@ -1427,6 +1449,7 @@ function renderSuspenseBoundary(
       ),
       task.context,
       task.treeContext,
+      task.row,
       task.componentStack,
       !disableLegacyContext ? task.legacyContext : emptyContextObject,
       __DEV__ ? task.debugTask : null,
@@ -1451,6 +1474,7 @@ function replaySuspenseBoundary(
 ): void {
   const prevKeyPath = task.keyPath;
   const prevContext = task.formatContext;
+  const prevRow = task.row;
   const previousReplaySet: ReplaySet = task.replay;
 
   const parentBoundary = task.blockedBoundary;
@@ -1490,6 +1514,7 @@ function replaySuspenseBoundary(
     request.resumableState,
     prevContext,
   );
+  task.row = null;
   task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
 
   try {
@@ -1566,6 +1591,7 @@ function replaySuspenseBoundary(
     task.replay = previousReplaySet;
     task.keyPath = prevKeyPath;
     task.formatContext = prevContext;
+    task.row = prevRow;
   }
 
   const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
@@ -1593,6 +1619,7 @@ function replaySuspenseBoundary(
     ),
     task.context,
     task.treeContext,
+    task.row,
     task.componentStack,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
@@ -1602,6 +1629,130 @@ function replaySuspenseBoundary(
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
   request.pingedTasks.push(suspendedFallbackTask);
+}
+
+function renderSuspenseListRows(
+  request: Request,
+  task: Task,
+  keyPath: KeyNode,
+  rows: Array<ReactNodeList>,
+  revealOrder: 'forwards' | 'backwards',
+): void {
+  const prevKeyPath = task.keyPath;
+  task.keyPath = keyPath;
+  renderChildrenArray(request, task, rows, -1);
+  task.keyPath = prevKeyPath;
+}
+
+function renderSuspenseList(
+  request: Request,
+  task: Task,
+  keyPath: KeyNode,
+  props: SuspenseListProps,
+): void {
+  const children: any = props.children;
+  const revealOrder: SuspenseListRevealOrder = props.revealOrder;
+  // TODO: Support tail hidden/collapsed modes.
+  // const tailMode: SuspenseListTailMode = props.tail;
+  if (revealOrder === 'forwards' || revealOrder === 'backwards') {
+    // For ordered reveal, we need to produce rows from the children.
+    if (isArray(children)) {
+      renderSuspenseListRows(request, task, keyPath, children, revealOrder);
+      return;
+    }
+    const iteratorFn = getIteratorFn(children);
+    if (iteratorFn) {
+      const iterator = iteratorFn.call(children);
+      if (iterator) {
+        if (__DEV__) {
+          validateIterable(task, children, -1, iterator, iteratorFn);
+        }
+        // TODO: We currently use the same id algorithm as regular nodes
+        // but we need a new algorithm for SuspenseList that doesn't require
+        // a full set to be loaded up front to support Async Iterable.
+        // When we have that, we shouldn't buffer anymore.
+        let step = iterator.next();
+        if (!step.done) {
+          const rows = [];
+          do {
+            rows.push(step.value);
+            step = iterator.next();
+          } while (!step.done);
+          renderSuspenseListRows(request, task, keyPath, children, revealOrder);
+        }
+        return;
+      }
+    }
+    if (
+      enableAsyncIterableChildren &&
+      typeof (children: any)[ASYNC_ITERATOR] === 'function'
+    ) {
+      const iterator: AsyncIterator<ReactNodeList> = (children: any)[
+        ASYNC_ITERATOR
+      ]();
+      if (iterator) {
+        if (__DEV__) {
+          validateAsyncIterable(task, (children: any), -1, iterator);
+        }
+        // TODO: Update the task.children to be the iterator to avoid asking
+        // for new iterators, but we currently warn for rendering these
+        // so needs some refactoring to deal with the warning.
+
+        // Restore the thenable state before resuming.
+        const prevThenableState = task.thenableState;
+        task.thenableState = null;
+        prepareToUseThenableState(prevThenableState);
+
+        // We need to know how many total rows are in this set, so that we
+        // can allocate enough id slots to acommodate them. So we must exhaust
+        // the iterator before we start recursively rendering the rows.
+        // TODO: This is not great but I think it's inherent to the id
+        // generation algorithm.
+
+        const rows = [];
+
+        let done = false;
+
+        if (iterator === children) {
+          // If it's an iterator we need to continue reading where we left
+          // off. We can do that by reading the first few rows from the previous
+          // thenable state.
+          // $FlowFixMe
+          let step = readPreviousThenableFromState();
+          while (step !== undefined) {
+            if (step.done) {
+              done = true;
+              break;
+            }
+            rows.push(step.value);
+            step = readPreviousThenableFromState();
+          }
+        }
+
+        if (!done) {
+          let step = unwrapThenable(iterator.next());
+          while (!step.done) {
+            rows.push(step.value);
+            step = unwrapThenable(iterator.next());
+          }
+        }
+        renderSuspenseListRows(request, task, keyPath, rows, revealOrder);
+        return;
+      }
+    }
+    // This case will warn on the client.
+    renderSuspenseListRows(request, task, keyPath, [children], revealOrder);
+    return;
+  }
+
+  if (revealOrder === 'together') {
+    // TODO
+  }
+  // For other reveal order modes, we just render it as a fragment.
+  const prevKeyPath = task.keyPath;
+  task.keyPath = keyPath;
+  renderNodeDestructive(request, task, children, -1);
+  task.keyPath = prevKeyPath;
 }
 
 function renderPreamble(
@@ -1634,6 +1785,7 @@ function renderPreamble(
     task.formatContext,
     task.context,
     task.treeContext,
+    task.row,
     task.componentStack,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
@@ -2383,11 +2535,7 @@ function renderElement(
       return;
     }
     case REACT_SUSPENSE_LIST_TYPE: {
-      // TODO: SuspenseList should control the boundaries.
-      const prevKeyPath = task.keyPath;
-      task.keyPath = keyPath;
-      renderNodeDestructive(request, task, props.children, -1);
-      task.keyPath = prevKeyPath;
+      renderSuspenseList(request, task, keyPath, props);
       return;
     }
     case REACT_VIEW_TRANSITION_TYPE: {
@@ -3537,6 +3685,7 @@ function spawnNewSuspendedReplayTask(
     task.formatContext,
     task.context,
     task.treeContext,
+    task.row,
     task.componentStack,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
@@ -3578,6 +3727,7 @@ function spawnNewSuspendedRenderTask(
     task.formatContext,
     task.context,
     task.treeContext,
+    task.row,
     task.componentStack,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ ? task.debugTask : null,
