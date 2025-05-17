@@ -40,6 +40,12 @@ import {cache} from './ReactCacheServer';
 import {startTransition} from './ReactStartTransition';
 import {postpone} from './ReactPostpone';
 import version from 'shared/ReactVersion';
+// Explicitly import and re-export the server context functionality
+import {
+  createServerContext,
+  useServerContext,
+  setServerContext,
+} from './ReactContextServer';
 
 const Children = {
   map,
@@ -82,4 +88,8 @@ export {
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
   REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
   REACT_ACTIVITY_TYPE as unstable_Activity,
+  createServerContext,
+  useServerContext,
+  // Also export the internal setServerContext function to ensure it's available
+  setServerContext,
 };
