@@ -188,12 +188,12 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
 
 function trackEnterViewTransitions(deletion: Fiber): void {
   if (deletion.tag === ViewTransitionComponent) {
-    const props: ViewTransitionProps = deletion.memoizedProps;
-    const name = getViewTransitionName(props, deletion.stateNode);
+    const name = getViewTransitionName(deletion);
     const pair =
       appearingViewTransitions !== null
         ? appearingViewTransitions.get(name)
         : undefined;
+    const props: ViewTransitionProps = deletion.memoizedProps;
     const className: ?string = getViewTransitionClassName(
       props.default,
       pair !== undefined ? props.share : props.enter,
@@ -277,9 +277,9 @@ function applyExitViewTransition(placement: Fiber): void {
   // Normally these helpers do recursive calls but since insertion/offscreen is forked
   // we call this helper from those loops instead. This must be called only on
   // ViewTransitionComponent that has already had their clones filled.
+  const name = getViewTransitionName(placement);
   const state: ViewTransitionState = placement.stateNode;
   const props: ViewTransitionProps = placement.memoizedProps;
-  const name = getViewTransitionName(props, state);
   const className: ?string = getViewTransitionClassName(
     props.default,
     // Note that just because we don't have a pair yet doesn't mean we won't find one
@@ -302,9 +302,9 @@ function applyExitViewTransition(placement: Fiber): void {
 }
 
 function applyNestedViewTransition(child: Fiber): void {
+  const name = getViewTransitionName(child);
   const state: ViewTransitionState = child.stateNode;
   const props: ViewTransitionProps = child.memoizedProps;
-  const name = getViewTransitionName(props, state);
   const className: ?string = getViewTransitionClassName(
     props.default,
     props.update,
@@ -324,9 +324,7 @@ function applyUpdateViewTransition(current: Fiber, finishedWork: Fiber): void {
   // Updates can have conflicting names and classNames.
   // Since we're doing a reverse animation the "new" state is actually the current
   // and the "old" state is the finishedWork.
-  const newProps: ViewTransitionProps = current.memoizedProps;
-  const oldProps: ViewTransitionProps = finishedWork.memoizedProps;
-  const oldName = getViewTransitionName(oldProps, state);
+  const oldName = getViewTransitionName(finishedWork);
   // This className applies only if there are fewer child DOM nodes than
   // before or if this update should've been cancelled but we ended up with
   // a parent animating so we need to animate the child too. Otherwise
@@ -334,6 +332,7 @@ function applyUpdateViewTransition(current: Fiber, finishedWork: Fiber): void {
   // we would use. However, since this animation is going in reverse we actually
   // want the props from "current" since that's the class that would've won if
   // it was the normal direction. To preserve the same effect in either direction.
+  const newProps: ViewTransitionProps = current.memoizedProps;
   const className: ?string = getViewTransitionClassName(
     newProps.default,
     newProps.update,
