@@ -69,7 +69,6 @@ export const disableDefaultPropsExceptForClasses = true;
 
 export const renameElementSymbol = false;
 
-export const enableObjectFiber = false;
 export const enableShallowPropDiffing = false;
 export const enableEagerAlternateStateNodeCleanup = false;
 
