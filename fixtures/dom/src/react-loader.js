@@ -39,27 +39,39 @@ function loadScript(src) {
 function loadModules(SymbolSrcPairs) {
   let firstScript = document.getElementsByTagName('script')[0];
 
-  let imports = '';
-  SymbolSrcPairs.map(([symbol, src]) => {
-    imports += `import ${symbol} from "${src}";\n`;
-    imports += `window.${symbol} = ${symbol};\n`;
-  });
-
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(
       () => reject(new Error('Timed out loading react modules over esm')),
       5000
     );
-    window.__loaded = () => {
-      clearTimeout(timeout);
-      resolve();
-    };
 
-    const moduleScript = document.createElement('script');
-    moduleScript.type = 'module';
-    moduleScript.textContent = imports + 'window.__loaded();';
+    let loadedCount = 0;
+    const totalModules = SymbolSrcPairs.length;
 
-    firstScript.parentNode.insertBefore(moduleScript, firstScript);
+    SymbolSrcPairs.forEach(([symbol, src]) => {
+      if (typeof symbol !== 'string' || typeof src !== 'string' || !/^https?:\/\//.test(src)) {
+        reject(new Error(`Invalid module specification: ${symbol}, ${src}`));
+        return;
+      }
+
+      const scriptNode = document.createElement('script');
+      scriptNode.type = 'module';
+      scriptNode.src = src;
+      scriptNode.onload = () => {
+        window[symbol] = window[symbol] || {}; // Ensure the symbol is available globally
+        loadedCount++;
+        if (loadedCount === totalModules) {
+          clearTimeout(timeout);
+          resolve();
+        }
+      };
+      scriptNode.onerror = () => {
+        clearTimeout(timeout);
+        reject(new Error(`Failed to load module: ${src}`));
+      };
+
+      firstScript.parentNode.insertBefore(scriptNode, firstScript);
+    });
   });
 }
 
