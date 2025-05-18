@@ -13,6 +13,7 @@ import type {
   Thenable,
   ReactContext,
   ReactDebugInfo,
+  SuspenseListRevealOrder,
 } from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
@@ -2055,5 +2056,88 @@ export function resetChildFibers(workInProgress: Fiber, lanes: Lanes): void {
   while (child !== null) {
     resetWorkInProgress(child, lanes);
     child = child.sibling;
+  }
+}
+
+function validateSuspenseListNestedChild(childSlot: mixed, index: number) {
+  if (__DEV__) {
+    const isAnArray = isArray(childSlot);
+    const isIterable =
+      !isAnArray && typeof getIteratorFn(childSlot) === 'function';
+    const isAsyncIterable =
+      enableAsyncIterableChildren &&
+      typeof childSlot === 'object' &&
+      childSlot !== null &&
+      typeof (childSlot: any)[ASYNC_ITERATOR] === 'function';
+    if (isAnArray || isIterable || isAsyncIterable) {
+      const type = isAnArray
+        ? 'array'
+        : isAsyncIterable
+          ? 'async iterable'
+          : 'iterable';
+      console.error(
+        'A nested %s was passed to row #%s in <SuspenseList />. Wrap it in ' +
+          'an additional SuspenseList to configure its revealOrder: ' +
+          '<SuspenseList revealOrder=...> ... ' +
+          '<SuspenseList revealOrder=...>{%s}</SuspenseList> ... ' +
+          '</SuspenseList>',
+        type,
+        index,
+        type,
+      );
+      return false;
+    }
+  }
+  return true;
+}
+
+export function validateSuspenseListChildren(
+  children: mixed,
+  revealOrder: SuspenseListRevealOrder,
+) {
+  if (__DEV__) {
+    if (
+      (revealOrder === 'forwards' || revealOrder === 'backwards') &&
+      children !== undefined &&
+      children !== null &&
+      children !== false
+    ) {
+      if (isArray(children)) {
+        for (let i = 0; i < children.length; i++) {
+          if (!validateSuspenseListNestedChild(children[i], i)) {
+            return;
+          }
+        }
+      } else {
+        const iteratorFn = getIteratorFn(children);
+        if (typeof iteratorFn === 'function') {
+          const childrenIterator = iteratorFn.call(children);
+          if (childrenIterator) {
+            let step = childrenIterator.next();
+            let i = 0;
+            for (; !step.done; step = childrenIterator.next()) {
+              if (!validateSuspenseListNestedChild(step.value, i)) {
+                return;
+              }
+              i++;
+            }
+          }
+        } else if (
+          enableAsyncIterableChildren &&
+          typeof (children: any)[ASYNC_ITERATOR] === 'function'
+        ) {
+          // TODO: Technically we should warn for nested arrays inside the
+          // async iterable but it would require unwrapping the array.
+          // However, this mistake is not as easy to make so it's ok not to warn.
+        } else {
+          console.error(
+            'A single row was passed to a <SuspenseList revealOrder="%s" />. ' +
+              'This is not useful since it needs multiple rows. ' +
+              'Did you mean to pass multiple children or an array?',
+            revealOrder,
+          );
+        }
+      }
+    }
   }
 }
