@@ -2129,6 +2129,23 @@ export function validateSuspenseListChildren(
           // TODO: Technically we should warn for nested arrays inside the
           // async iterable but it would require unwrapping the array.
           // However, this mistake is not as easy to make so it's ok not to warn.
+        } else if (
+          enableAsyncIterableChildren &&
+          children.$$typeof === REACT_ELEMENT_TYPE &&
+          typeof children.type === 'function' &&
+          // $FlowFixMe
+          (Object.prototype.toString.call(children.type) ===
+            '[object GeneratorFunction]' ||
+            // $FlowFixMe
+            Object.prototype.toString.call(children.type) ===
+              '[object AsyncGeneratorFunction]')
+        ) {
+          console.error(
+            'A generator Component was passed to a <SuspenseList revealOrder="%s" />. ' +
+              'This is not supported as a way to generate lists. Instead, pass an ' +
+              'iterable as the children.',
+            revealOrder,
+          );
         } else {
           console.error(
             'A single row was passed to a <SuspenseList revealOrder="%s" />. ' +
