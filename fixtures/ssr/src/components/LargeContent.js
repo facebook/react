@@ -1,8 +1,12 @@
-import React, {Fragment, Suspense} from 'react';
+import React, {
+  Fragment,
+  Suspense,
+  unstable_SuspenseList as SuspenseList,
+} from 'react';
 
 export default function LargeContent() {
   return (
-    <Fragment>
+    <SuspenseList revealOrder="forwards">
       <Suspense fallback={null}>
         <p>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris
@@ -286,6 +290,6 @@ export default function LargeContent() {
           interdum a. Proin nec odio in nulla vestibulum.
         </p>
       </Suspense>
-    </Fragment>
+    </SuspenseList>
   );
 }
