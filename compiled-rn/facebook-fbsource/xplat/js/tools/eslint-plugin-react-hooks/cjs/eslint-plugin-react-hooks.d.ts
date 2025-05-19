@@ -23,6 +23,12 @@ declare const rules: {
                     enableDangerousAutofixThisMayCauseInfiniteLoops: {
                         type: "boolean";
                     };
+                    experimental_autoDependenciesHooks: {
+                        type: "array";
+                        items: {
+                            type: "string";
+                        };
+                    };
                 };
             }[];
         };

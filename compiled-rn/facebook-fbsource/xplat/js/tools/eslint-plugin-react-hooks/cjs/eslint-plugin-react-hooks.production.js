@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<0e428222f076f4cafdd0abe839eb5949>>
+ * @generated SignedSource<<4c0b264b1118012f42787d5abd5f3247>>
  */
 
 'use strict';
@@ -41,22 +41,30 @@ const rule$2 = {
                     enableDangerousAutofixThisMayCauseInfiniteLoops: {
                         type: 'boolean',
                     },
+                    experimental_autoDependenciesHooks: {
+                        type: 'array',
+                        items: {
+                            type: 'string',
+                        },
+                    },
                 },
             },
         ],
     },
     create(context) {
-        const additionalHooks = context.options &&
-            context.options[0] &&
-            context.options[0].additionalHooks
-            ? new RegExp(context.options[0].additionalHooks)
+        const rawOptions = context.options && context.options[0];
+        const additionalHooks = rawOptions && rawOptions.additionalHooks
+            ? new RegExp(rawOptions.additionalHooks)
             : undefined;
-        const enableDangerousAutofixThisMayCauseInfiniteLoops = (context.options &&
-            context.options[0] &&
-            context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
+        const enableDangerousAutofixThisMayCauseInfiniteLoops = (rawOptions &&
+            rawOptions.enableDangerousAutofixThisMayCauseInfiniteLoops) ||
             false;
+        const experimental_autoDependenciesHooks = rawOptions && Array.isArray(rawOptions.experimental_autoDependenciesHooks)
+            ? rawOptions.experimental_autoDependenciesHooks
+            : [];
         const options = {
             additionalHooks,
+            experimental_autoDependenciesHooks,
             enableDangerousAutofixThisMayCauseInfiniteLoops,
         };
         function reportProblem(problem) {
@@ -99,7 +107,7 @@ const rule$2 = {
                 return result;
             };
         }
-        function visitFunctionWithDependencies(node, declaredDependenciesNode, reactiveHook, reactiveHookName, isEffect) {
+        function visitFunctionWithDependencies(node, declaredDependenciesNode, reactiveHook, reactiveHookName, isEffect, isAutoDepsHook) {
             if (isEffect && node.async) {
                 reportProblem({
                     node: node,
@@ -425,6 +433,9 @@ const rule$2 = {
                 return;
             }
             if (!declaredDependenciesNode) {
+                if (isAutoDepsHook) {
+                    return;
+                }
                 let setStateInsideEffectWithoutDeps = null;
                 dependencies.forEach(({ references }, key) => {
                     if (setStateInsideEffectWithoutDeps) {
@@ -474,6 +485,11 @@ const rule$2 = {
                         ],
                     });
                 }
+                return;
+            }
+            if (isAutoDepsHook &&
+                declaredDependenciesNode.type === 'Literal' &&
+                declaredDependenciesNode.value === null) {
                 return;
             }
             const declaredDependencies = [];
@@ -909,7 +925,12 @@ const rule$2 = {
                 });
                 return;
             }
-            if (!declaredDependenciesNode && !isEffect) {
+            const isAutoDepsHook = options.experimental_autoDependenciesHooks.includes(reactiveHookName);
+            if ((!declaredDependenciesNode ||
+                (isAutoDepsHook &&
+                    declaredDependenciesNode.type === 'Literal' &&
+                    declaredDependenciesNode.value === null)) &&
+                !isEffect) {
                 if (reactiveHookName === 'useMemo' ||
                     reactiveHookName === 'useCallback') {
                     reportProblem({
@@ -928,10 +949,13 @@ const rule$2 = {
             switch (callback.type) {
                 case 'FunctionExpression':
                 case 'ArrowFunctionExpression':
-                    visitFunctionWithDependencies(callback, declaredDependenciesNode, reactiveHook, reactiveHookName, isEffect);
+                    visitFunctionWithDependencies(callback, declaredDependenciesNode, reactiveHook, reactiveHookName, isEffect, isAutoDepsHook);
                     return;
                 case 'Identifier':
-                    if (!declaredDependenciesNode) {
+                    if (!declaredDependenciesNode ||
+                        (isAutoDepsHook &&
+                            declaredDependenciesNode.type === 'Literal' &&
+                            declaredDependenciesNode.value === null)) {
                         return;
                     }
                     if ('elements' in declaredDependenciesNode &&
@@ -959,7 +983,7 @@ const rule$2 = {
                     }
                     switch (def.node.type) {
                         case 'FunctionDeclaration':
-                            visitFunctionWithDependencies(def.node, declaredDependenciesNode, reactiveHook, reactiveHookName, isEffect);
+                            visitFunctionWithDependencies(def.node, declaredDependenciesNode, reactiveHook, reactiveHookName, isEffect, isAutoDepsHook);
                             return;
                         case 'VariableDeclarator':
                             const init = def.node.init;
@@ -969,7 +993,7 @@ const rule$2 = {
                             switch (init.type) {
                                 case 'ArrowFunctionExpression':
                                 case 'FunctionExpression':
-                                    visitFunctionWithDependencies(init, declaredDependenciesNode, reactiveHook, reactiveHookName, isEffect);
+                                    visitFunctionWithDependencies(init, declaredDependenciesNode, reactiveHook, reactiveHookName, isEffect, isAutoDepsHook);
                                     return;
                             }
                             break;
