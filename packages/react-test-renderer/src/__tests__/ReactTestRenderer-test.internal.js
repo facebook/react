@@ -98,6 +98,7 @@ describe('ReactTestRenderer', () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
+        expect.anything(),
         null,
       );
     }

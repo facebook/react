@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(all)
+// @compilationMode:"all"
 'use no memo';
 
 function TestComponent({x}) {
@@ -15,7 +15,7 @@ function TestComponent({x}) {
 ## Code
 
 ```javascript
-// @compilationMode(all)
+// @compilationMode:"all"
 "use no memo";
 
 function TestComponent({ x }) {

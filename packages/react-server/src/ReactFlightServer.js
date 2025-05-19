@@ -62,7 +62,7 @@ import type {
   ReactAsyncInfo,
   ReactTimeInfo,
   ReactStackTrace,
-  ReactCallSite,
+  ReactFunctionLocation,
   ReactErrorInfo,
   ReactErrorInfoDev,
 } from 'shared/ReactTypes';
@@ -104,6 +104,8 @@ import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
 import {getOwnerStackByComponentInfoInDev} from 'shared/ReactComponentInfoStack';
 import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
+
+import noop from 'shared/noop';
 
 import {
   callComponentInDEV,
@@ -152,11 +154,27 @@ function defaultFilterStackFrame(
   );
 }
 
+// DEV-only cache of parsed and filtered stack frames.
+const stackTraceCache: WeakMap<Error, ReactStackTrace> = __DEV__
+  ? new WeakMap()
+  : (null: any);
+
 function filterStackTrace(
   request: Request,
   error: Error,
   skipFrames: number,
 ): ReactStackTrace {
+  const existing = stackTraceCache.get(error);
+  if (existing !== undefined) {
+    // Return a clone because the Flight protocol isn't yet resilient to deduping
+    // objects in the debug info. TODO: Support deduping stacks.
+    const clone = existing.slice(0);
+    for (let i = 0; i < clone.length; i++) {
+      // $FlowFixMe[invalid-tuple-arity]
+      clone[i] = clone[i].slice(0);
+    }
+    return clone;
+  }
   // Since stacks can be quite large and we pass a lot of them, we filter them out eagerly
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
@@ -183,6 +201,7 @@ function filterStackTrace(
       i--;
     }
   }
+  stackTraceCache.set(error, stack);
   return stack;
 }
 
@@ -426,9 +445,7 @@ function defaultErrorHandler(error: mixed) {
   // Don't transform to our wrapper
 }
 
-function defaultPostponeHandler(reason: string) {
-  // Noop
-}
+const defaultPostponeHandler: (reason: string) => void = noop;
 
 function RequestInstance(
   this: $FlowFixMe,
@@ -540,8 +557,6 @@ function RequestInstance(
   );
   pingedTasks.push(rootTask);
 }
-
-function noop() {}
 
 export function createRequest(
   model: ReactClientValue,
@@ -2072,7 +2087,7 @@ function serializeServerReference(
   const bound = boundArgs === null ? null : Promise.resolve(boundArgs);
   const id = getServerReferenceId(request.bundlerConfig, serverReference);
 
-  let location: null | ReactCallSite = null;
+  let location: null | ReactFunctionLocation = null;
   if (__DEV__) {
     const error = getServerReferenceLocation(
       request.bundlerConfig,
@@ -2081,7 +2096,13 @@ function serializeServerReference(
     if (error) {
       const frames = parseStackTrace(error, 1);
       if (frames.length > 0) {
-        location = frames[0];
+        const firstFrame = frames[0];
+        location = [
+          firstFrame[0],
+          firstFrame[1],
+          firstFrame[2], // The line and col of the callsite represents the
+          firstFrame[3], // enclosing line and col of the function.
+        ];
       }
     }
   }
@@ -2091,7 +2112,7 @@ function serializeServerReference(
     bound: null | Promise<Array<any>>,
     name?: string, // DEV-only
     env?: string, // DEV-only
-    location?: ReactCallSite, // DEV-only
+    location?: ReactFunctionLocation, // DEV-only
   } =
     __DEV__ && location !== null
       ? {

@@ -23,6 +23,12 @@ import {convert} from 'html-to-text';
 import {measurePerformance} from './tools/runtimePerf';
 import {parseReactComponentTree} from './tools/componentTree';
 
+function calculateMean(values: number[]): string {
+  return values.length > 0
+    ? values.reduce((acc, curr) => acc + curr, 0) / values.length + 'ms'
+    : 'could not collect';
+}
+
 const server = new McpServer({
   name: 'React',
   version: '0.0.0',
@@ -327,17 +333,16 @@ server.tool(
 # React Component Performance Results
 
 ## Mean Render Time
-${results.renderTime / iterations}ms
+${calculateMean(results.renderTime)}
 
 ## Mean Web Vitals
-- Cumulative Layout Shift (CLS): ${results.webVitals.cls / iterations}ms
-- Largest Contentful Paint (LCP): ${results.webVitals.lcp / iterations}ms
-- Interaction to Next Paint (INP): ${results.webVitals.inp / iterations}ms
-- First Input Delay (FID): ${results.webVitals.fid / iterations}ms
+- Cumulative Layout Shift (CLS): ${calculateMean(results.webVitals.cls)}
+- Largest Contentful Paint (LCP): ${calculateMean(results.webVitals.lcp)}
+- Interaction to Next Paint (INP): ${calculateMean(results.webVitals.inp)}
 
 ## Mean React Profiler
-- Actual Duration: ${results.reactProfiler.actualDuration / iterations}ms
-- Base Duration: ${results.reactProfiler.baseDuration / iterations}ms
+- Actual Duration: ${calculateMean(results.reactProfiler.actualDuration)}
+- Base Duration: ${calculateMean(results.reactProfiler.baseDuration)}
 `;
 
       return {

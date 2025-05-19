@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableEmitInstrumentForget @compilationMode(annotation)
+// @enableEmitInstrumentForget @compilationMode:"annotation"
 
 import {identity} from 'shared-runtime';
 
@@ -35,7 +35,7 @@ import {
   shouldInstrument as _shouldInstrument3,
   useRenderCounter,
 } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableEmitInstrumentForget @compilationMode(annotation)
+import { c as _c } from "react/compiler-runtime"; // @enableEmitInstrumentForget @compilationMode:"annotation"
 
 import { identity } from "shared-runtime";
 

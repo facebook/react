@@ -233,8 +233,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Inner contents suspended, so we continue showing a fallback.
     assertLog([
       'Suspend! [Inner]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Inner]'] : []),
+      // pre-warming
+      'Suspend! [Inner]',
     ]);
     expect(root).toMatchRenderedOutput(
       <>

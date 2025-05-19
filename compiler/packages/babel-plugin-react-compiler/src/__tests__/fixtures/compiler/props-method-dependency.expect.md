@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(infer)
+// @compilationMode:"infer"
 import {useMemo} from 'react';
 import {ValidateMemoization} from 'shared-runtime';
 
@@ -24,7 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer)
+import { c as _c } from "react/compiler-runtime"; // @compilationMode:"infer"
 import { useMemo } from "react";
 import { ValidateMemoization } from "shared-runtime";
 

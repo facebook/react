@@ -16,7 +16,10 @@ import type {
 import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import {disableCommentsAsDOMContainers} from 'shared/ReactFeatureFlags';
+import {
+  disableCommentsAsDOMContainers,
+  enableDefaultTransitionIndicator,
+} from 'shared/ReactFeatureFlags';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -43,6 +46,7 @@ export type CreateRootOptions = {
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator?: () => void | (() => void),
 };
 
 export type HydrateRootOptions = {
@@ -68,6 +72,7 @@ export type HydrateRootOptions = {
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator?: () => void | (() => void),
   formState?: ReactFormState<any, any> | null,
 };
 
@@ -90,6 +95,7 @@ import {
   defaultOnCaughtError,
   defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
+import {defaultOnDefaultTransitionIndicator} from './ReactDOMDefaultTransitionIndicator';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 
 // $FlowFixMe[missing-this-annot]
@@ -178,6 +184,7 @@ export function createRoot(
   let onUncaughtError = defaultOnUncaughtError;
   let onCaughtError = defaultOnCaughtError;
   let onRecoverableError = defaultOnRecoverableError;
+  let onDefaultTransitionIndicator = defaultOnDefaultTransitionIndicator;
   let transitionCallbacks = null;
 
   if (options !== null && options !== undefined) {
@@ -217,6 +224,11 @@ export function createRoot(
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
+    if (enableDefaultTransitionIndicator) {
+      if (options.onDefaultTransitionIndicator !== undefined) {
+        onDefaultTransitionIndicator = options.onDefaultTransitionIndicator;
+      }
+    }
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
@@ -232,6 +244,7 @@ export function createRoot(
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     transitionCallbacks,
   );
   markContainerAsRoot(root.current, container);
@@ -288,6 +301,7 @@ export function hydrateRoot(
   let onUncaughtError = defaultOnUncaughtError;
   let onCaughtError = defaultOnCaughtError;
   let onRecoverableError = defaultOnRecoverableError;
+  let onDefaultTransitionIndicator = defaultOnDefaultTransitionIndicator;
   let transitionCallbacks = null;
   let formState = null;
   if (options !== null && options !== undefined) {
@@ -305,6 +319,11 @@ export function hydrateRoot(
     }
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
+    }
+    if (enableDefaultTransitionIndicator) {
+      if (options.onDefaultTransitionIndicator !== undefined) {
+        onDefaultTransitionIndicator = options.onDefaultTransitionIndicator;
+      }
     }
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
@@ -326,6 +345,7 @@ export function hydrateRoot(
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     transitionCallbacks,
     formState,
   );

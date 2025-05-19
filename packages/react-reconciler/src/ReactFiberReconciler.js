@@ -125,6 +125,7 @@ export {
   defaultOnRecoverableError,
 } from './ReactFiberErrorLogger';
 import {getLabelForLane, TotalLanes} from 'react-reconciler/src/ReactFiberLane';
+import {registerDefaultIndicator} from './ReactFiberAsyncAction';
 
 type OpaqueRoot = FiberRoot;
 
@@ -254,11 +255,12 @@ export function createContainer(
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator: () => void | (() => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
   const hydrate = false;
   const initialChildren = null;
-  return createFiberRoot(
+  const root = createFiberRoot(
     containerInfo,
     tag,
     hydrate,
@@ -266,12 +268,15 @@ export function createContainer(
     hydrationCallbacks,
     isStrictMode,
     identifierPrefix,
+    null,
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     transitionCallbacks,
-    null,
   );
+  registerDefaultIndicator(onDefaultTransitionIndicator);
+  return root;
 }
 
 export function createHydrationContainer(
@@ -300,6 +305,7 @@ export function createHydrationContainer(
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator: () => void | (() => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
   formState: ReactFormState<any, any> | null,
 ): OpaqueRoot {
@@ -312,12 +318,15 @@ export function createHydrationContainer(
     hydrationCallbacks,
     isStrictMode,
     identifierPrefix,
+    formState,
     onUncaughtError,
     onCaughtError,
     onRecoverableError,
+    onDefaultTransitionIndicator,
     transitionCallbacks,
-    formState,
   );
+
+  registerDefaultIndicator(onDefaultTransitionIndicator);
 
   // TODO: Move this to FiberRoot constructor
   root.context = getContextForSubtree(null);
