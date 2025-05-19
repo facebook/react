@@ -62,7 +62,7 @@ export function createFromNodeStream<T>(
   options?: Options,
 ): Thenable<T> {
   const response: Response = createResponse(
-    options && options.nonce ? {nonce: options && options.nonce} : null, // bundlerConfig
+    null, // bundlerConfig
     null, // serverReferenceConfig
     options && options.moduleLoading ? options.moduleLoading : null,
     noServerCall,

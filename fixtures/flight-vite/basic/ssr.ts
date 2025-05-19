@@ -21,7 +21,7 @@ export async function loadModule(id: string) {
   }
 }
 
-// trigger ssr preload/preinit on module getter access (i.e. requireModule) instead async module loading (i.e. preloadModule)
+// trigger ssr preload/preinit on module getter access (i.e. requireModule) instead of async module loading (i.e. preloadModule)
 // since async module loading is cached on production.
 function wrapResourceProxy(mod: any, deps: AssetDeps) {
   return new Proxy(mod, {
