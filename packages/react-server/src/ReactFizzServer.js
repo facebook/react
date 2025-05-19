@@ -1631,6 +1631,41 @@ function replaySuspenseBoundary(
   request.pingedTasks.push(suspendedFallbackTask);
 }
 
+function finishSuspenseListRow(request: Request, row: SuspenseListRow): void {
+  // This row finished. Now we have to unblock all the next rows that were blocked on this.
+  // We do this in a loop to avoid stash overflow for very long lists that get unblocked.
+  let unblockedRow = row.next;
+  while (unblockedRow !== null) {
+    unblockedRow.pendingTasks--;
+    if (unblockedRow.pendingTasks > 0) {
+      // Still blocked.
+      break;
+    }
+    const unblockedBoundaries = unblockedRow.boundaries;
+    for (let i = 0; i < unblockedBoundaries.length; i++) {
+      finishedTask(request, unblockedBoundaries[i], null);
+    }
+    unblockedRow = unblockedRow.next;
+  }
+}
+
+function createSuspenseListRow(
+  previousRow: null | SuspenseListRow,
+): SuspenseListRow {
+  const newRow: SuspenseListRow = {
+    pendingTasks: 1, // At first the row is blocked on attempting rendering itself.
+    boundaries: [],
+    next: null,
+  };
+  if (previousRow !== null && previousRow.pendingTasks > 0) {
+    // If the previous row is not done yet, we add ourselves to be blocked on it.
+    // When it finishes, we'll decrement our pending tasks.
+    newRow.pendingTasks++;
+    previousRow.next = newRow;
+  }
+  return newRow;
+}
+
 function renderSuspenseListRows(
   request: Request,
   task: Task,
@@ -1638,10 +1673,157 @@ function renderSuspenseListRows(
   rows: Array<ReactNodeList>,
   revealOrder: 'forwards' | 'backwards',
 ): void {
+  // This is a fork of renderChildrenArray that's aware of tracking rows.
   const prevKeyPath = task.keyPath;
-  task.keyPath = keyPath;
-  renderChildrenArray(request, task, rows, -1);
+  const previousComponentStack = task.componentStack;
+  let previousDebugTask = null;
+  if (__DEV__) {
+    previousDebugTask = task.debugTask;
+    // We read debugInfo from task.node.props.children instead of rows because it
+    // might have been an unwrapped iterable so we read from the original node.
+    pushServerComponentStack(task, (task.node: any).props.children._debugInfo);
+  }
+
+  const prevTreeContext = task.treeContext;
+  const prevRow = task.row;
+  const totalChildren = rows.length;
+
+  if (task.replay !== null) {
+    // Replay
+    // First we need to check if we have any resume slots at this level.
+    const resumeSlots = task.replay.slots;
+    if (resumeSlots !== null && typeof resumeSlots === 'object') {
+      let previousSuspenseListRow: null | SuspenseListRow = null;
+      for (let n = 0; n < totalChildren; n++) {
+        // Since we are going to resume into a slot whose order was already
+        // determined by the prerender, we can safely resume it even in reverse
+        // render order.
+        const i = revealOrder !== 'backwards' ? n : totalChildren - 1 - n;
+        const node = rows[i];
+        task.row = previousSuspenseListRow = createSuspenseListRow(
+          previousSuspenseListRow,
+        );
+        task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+        const resumeSegmentID = resumeSlots[i];
+        // TODO: If this errors we should still continue with the next sibling.
+        if (typeof resumeSegmentID === 'number') {
+          resumeNode(request, task, resumeSegmentID, node, i);
+          // We finished rendering this node, so now we can consume this
+          // slot. This must happen after in case we rerender this task.
+          delete resumeSlots[i];
+        } else {
+          renderNode(request, task, node, i);
+        }
+        if (--previousSuspenseListRow.pendingTasks === 0) {
+          finishSuspenseListRow(request, previousSuspenseListRow);
+        }
+      }
+    } else {
+      let previousSuspenseListRow: null | SuspenseListRow = null;
+      for (let n = 0; n < totalChildren; n++) {
+        // Since we are going to resume into a slot whose order was already
+        // determined by the prerender, we can safely resume it even in reverse
+        // render order.
+        const i = revealOrder !== 'backwards' ? n : totalChildren - 1 - n;
+        const node = rows[i];
+        if (__DEV__) {
+          warnForMissingKey(request, task, node);
+        }
+        task.row = previousSuspenseListRow = createSuspenseListRow(
+          previousSuspenseListRow,
+        );
+        task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+        renderNode(request, task, node, i);
+        if (--previousSuspenseListRow.pendingTasks === 0) {
+          finishSuspenseListRow(request, previousSuspenseListRow);
+        }
+      }
+    }
+  } else {
+    task = ((task: any): RenderTask); // Refined
+    if (revealOrder !== 'backwards') {
+      // Forwards direction
+      let previousSuspenseListRow: null | SuspenseListRow = null;
+      for (let i = 0; i < totalChildren; i++) {
+        const node = rows[i];
+        if (__DEV__) {
+          warnForMissingKey(request, task, node);
+        }
+        task.row = previousSuspenseListRow = createSuspenseListRow(
+          previousSuspenseListRow,
+        );
+        task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+        renderNode(request, task, node, i);
+        if (--previousSuspenseListRow.pendingTasks === 0) {
+          finishSuspenseListRow(request, previousSuspenseListRow);
+        }
+      }
+    } else {
+      // For backwards direction we need to do things a bit differently.
+      // We give each row its own segment so that we can render the content in
+      // reverse order but still emit it in the right order when we flush.
+      const parentSegment = task.blockedSegment;
+      const childIndex = parentSegment.children.length;
+      const insertionIndex = parentSegment.chunks.length;
+      let previousSuspenseListRow: null | SuspenseListRow = null;
+      for (let i = totalChildren - 1; i >= 0; i--) {
+        const node = rows[i];
+        task.row = previousSuspenseListRow = createSuspenseListRow(
+          previousSuspenseListRow,
+        );
+        task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+        const newSegment = createPendingSegment(
+          request,
+          insertionIndex,
+          null,
+          task.formatContext,
+          // Assume we are text embedded at the trailing edges
+          i === 0 ? parentSegment.lastPushedText : true,
+          true,
+        );
+        // Insert in the beginning of the sequence, which will insert before any previous rows.
+        parentSegment.children.splice(childIndex, 0, newSegment);
+        task.blockedSegment = newSegment;
+        if (__DEV__) {
+          warnForMissingKey(request, task, node);
+        }
+        try {
+          renderNode(request, task, node, i);
+          pushSegmentFinale(
+            newSegment.chunks,
+            request.renderState,
+            newSegment.lastPushedText,
+            newSegment.textEmbedded,
+          );
+          newSegment.status = COMPLETED;
+          finishedSegment(request, task.blockedBoundary, newSegment);
+          if (--previousSuspenseListRow.pendingTasks === 0) {
+            finishSuspenseListRow(request, previousSuspenseListRow);
+          }
+        } catch (thrownValue: mixed) {
+          if (request.status === ABORTING) {
+            newSegment.status = ABORTED;
+          } else {
+            newSegment.status = ERRORED;
+          }
+          throw thrownValue;
+        }
+      }
+      task.blockedSegment = parentSegment;
+      // Reset lastPushedText for current Segment since the new Segments "consumed" it
+      parentSegment.lastPushedText = false;
+    }
+  }
+
+  // Because this context is always set right before rendering every child, we
+  // only need to reset it to the previous value at the very end.
+  task.treeContext = prevTreeContext;
+  task.row = prevRow;
   task.keyPath = prevKeyPath;
+  if (__DEV__) {
+    task.componentStack = previousComponentStack;
+    task.debugTask = previousDebugTask;
+  }
 }
 
 function renderSuspenseList(
@@ -1740,9 +1922,7 @@ function renderSuspenseList(
         return;
       }
     }
-    // This case will warn on the client.
-    renderSuspenseListRows(request, task, keyPath, [children], revealOrder);
-    return;
+    // This case will warn on the client. It's the same as independent revealOrder.
   }
 
   if (revealOrder === 'together') {
