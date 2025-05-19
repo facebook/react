@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Платежная система Интернет-магазина Chrome"
+   },
+   "app_name": {
+      "message": "Платежная система Интернет-магазина Chrome"
+   },
+   "craw_app_unavailable": {
+      "message": "Приложение недоступно."
+   },
+   "craw_connect_to_network": {
+      "message": "Подключитесь к сети."
+   },
+   "iap_unavailable": {
+      "message": "Платежи через приложения недоступны."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Войдите в Chrome."
+   }
+}

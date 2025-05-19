@@ -11,9 +11,9 @@ export async function parseReactComponentTree(url: string): Promise<string> {
 
     let localhostPage = null;
     for (const page of pages) {
-      const url = await page.url();
+      const pageUrl = await page.url();
 
-      if (url.startsWith(url)) {
+      if (pageUrl.startsWith(url)) {
         localhostPage = page;
         break;
       }
@@ -31,8 +31,6 @@ export async function parseReactComponentTree(url: string): Promise<string> {
       throw new Error('Localhost page not found');
     }
   } catch (error) {
-    throw new Error(
-      'Failed to connect to browser, are you running chrome with --remote-debugging-port=9222?',
-    );
+    throw new Error('Failed to parse React component tree: ' + error);
   }
 }

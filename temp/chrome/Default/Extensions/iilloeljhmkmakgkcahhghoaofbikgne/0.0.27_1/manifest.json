@@ -1,0 +1,39 @@
+{
+   "background": {
+      "service_worker": "background.js",
+      "type": "module"
+   },
+   "content_scripts": [ {
+      "all_frames": true,
+      "js": [ "content_sharing.js" ],
+      "matches": [ "https://docs.google.com/drivesharing/*", "https://drive.google.com/drivesharing/*" ],
+      "run_at": "document_end"
+   }, {
+      "all_frames": false,
+      "js": [ "content_google.js" ],
+      "matches": [ "https://docs.google.com/*", "https://drive.google.com/*" ],
+      "run_at": "document_end"
+   }, {
+      "all_frames": true,
+      "js": [ "content_create_drive.js" ],
+      "matches": [ "https://drive.google.com/drive/*" ],
+      "run_at": "document_end"
+   } ],
+   "content_security_policy": {
+      "extension_pages": "default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://graph.facebook.com https://www.internalfb.com"
+   },
+   "description": "Data protection extension for activities potentially resulting in exfiltration of company data. Made and supported by XDR Insider Trust team (https://fburl.com/blackbird-data-protection).",
+   "host_permissions": [ "*://*.facebook.com/", "*://*.internalfb.com/", "https://drive.google.com/drivesharing" ],
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqJ2aL7tvFD4luKoOfPw4u/qcHW+ZytLJwrMs9f7RP5tT8nskcgmsjMQdmIW2zgoTnmfCEsO/qDZ0anLf2QpwZkvAIxQSCs0g+XP5kSuWhvqj9IiDTjTr8hX9wFPd3tehkfTN+p6QOb8VquRDAk0blDERrbt2U+pKtKZDXx3BNkBLIOpKi1jrIAdFtZ11k3W5szvlQ9DSVbsVG5CCanDyzCJjA/bJQDu3Bn28xbm6zbZLpxUBIM25KgsHMkZrC2eAfxdKHaSFwy6BEFX81NV2qDbFin/Q75vizd+ou5GPblU6SXLKyBC6+hVe352P5VDbIEZs0cQNYxmQPs6oFDDd1wIDAQAB",
+   "manifest_version": 3,
+   "minimum_chrome_version": "102",
+   "name": "Blackbird Data Protection",
+   "permissions": [ "tabs", "activeTab", "storage", "alarms", "webRequest" ],
+   "short_name": "Blackbird Data Protection",
+   "update_url": "https://www.internalfb.com/intern/browser_extensions/chrome/update.xml/",
+   "version": "0.0.27",
+   "web_accessible_resources": [ {
+      "matches": [ "https://docs.google.com/*", "https://drive.google.com/*" ],
+      "resources": [ "icons/warning.png", "interstitial.html", "interstitial_create_drive.html" ]
+   } ]
+}

@@ -1,0 +1,4 @@
+This is the model for the Browsing Topics Privacy Sandbox feature.
+
+Model Version: 5
+Taxonomy Version: v2

@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Mga Pagbabayad sa Chrome Web Store"
+   },
+   "app_name": {
+      "message": "Mga Pagbabayad sa Chrome Web Store"
+   },
+   "craw_app_unavailable": {
+      "message": "Kasalukuyang hindi available ang app."
+   },
+   "craw_connect_to_network": {
+      "message": "Mangyaring kumonekta sa isang network."
+   },
+   "iap_unavailable": {
+      "message": "Kasalukuyang hindi available ang Mga Pagbabayad na In-App."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Mangyaring mag-sign in sa Chrome."
+   }
+}

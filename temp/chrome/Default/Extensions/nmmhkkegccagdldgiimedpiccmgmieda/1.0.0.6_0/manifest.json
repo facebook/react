@@ -1,0 +1,27 @@
+{
+   "app": {
+      "background": {
+         "scripts": [ "craw_background.js" ]
+      }
+   },
+   "default_locale": "en",
+   "description": "__MSG_APP_DESCRIPTION__",
+   "display_in_launcher": false,
+   "display_in_new_tab_page": false,
+   "icons": {
+      "128": "images/icon_128.png",
+      "16": "images/icon_16.png"
+   },
+   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrKfMnLqViEyokd1wk57FxJtW2XXpGXzIHBzv9vQI/01UsuP0IV5/lj0wx7zJ/xcibUgDeIxobvv9XD+zO1MdjMWuqJFcKuSS4Suqkje6u+pMrTSGOSHq1bmBVh0kpToN8YoJs/P/yrRd7FEtAXTaFTGxQL4C385MeXSjaQfiRiQIDAQAB",
+   "manifest_version": 2,
+   "minimum_chrome_version": "29",
+   "name": "__MSG_APP_NAME__",
+   "oauth2": {
+      "auto_approve": true,
+      "client_id": "203784468217.apps.googleusercontent.com",
+      "scopes": [ "https://www.googleapis.com/auth/sierra", "https://www.googleapis.com/auth/sierrasandbox", "https://www.googleapis.com/auth/chromewebstore", "https://www.googleapis.com/auth/chromewebstore.readonly" ]
+   },
+   "permissions": [ "identity", "webview", "https://www.google.com/", "https://www.googleapis.com/*", "https://payments.google.com/payments/v4/js/integrator.js", "https://sandbox.google.com/payments/v4/js/integrator.js" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "1.0.0.6"
+}

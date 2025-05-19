@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Paiements via le Chrome Web Store"
+   },
+   "app_name": {
+      "message": "Paiements via le Chrome Web Store"
+   },
+   "craw_app_unavailable": {
+      "message": "Application indisponible pour le moment."
+   },
+   "craw_connect_to_network": {
+      "message": "Veuillez vous connecter à un réseau."
+   },
+   "iap_unavailable": {
+      "message": "Les paiements via l'application ne sont pas disponibles pour le moment."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Veuillez vous connecter à Chrome."
+   }
+}

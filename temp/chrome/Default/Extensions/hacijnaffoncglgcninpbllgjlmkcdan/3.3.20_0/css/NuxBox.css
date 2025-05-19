@@ -1,0 +1,73 @@
+.facehubNuxBox {
+  position: absolute;
+  background: #ffffff;
+  border: 1px solid #f79c2d;
+  border-radius: 3px;
+
+  color: #000000;
+  padding: 4px;
+  z-index: 10;
+  white-space: nowrap;
+  box-shadow: 0px 0px 15px #ccc;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: default;
+
+  margin-right: 6px;
+  transform: translateY(-50%);
+}
+
+.facehubNuxBox img {
+  vertical-align: middle;
+}
+.facehubNuxBox .facehubNuxText {
+  margin: 5px;
+}
+
+.facehubNuxBox:after,
+.facehubNuxBox:before {
+  left: 100%;
+  top: 50%;
+  border: solid transparent;
+  content: ' ';
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.facehubNuxBox:after {
+  border-color: rgba(255, 255, 255, 0);
+  border-left-color: #ffffff;
+  border-width: 5px;
+  margin-top: -5px;
+}
+
+.facehubNuxBox:before {
+  border-color: rgba(247, 156, 45, 0);
+  border-left-color: #f79c2d;
+  border-width: 6px;
+  margin-top: -6px;
+}
+
+.facehubNuxBoxHidden {
+  display: none;
+}
+
+.facehubNuxHideLinks {
+  display: block;
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  text-align: center;
+  color: #999;
+  bottom: 0px;
+  font-size: 8pt;
+  font-style: italic;
+}
+
+.facehubNuxHideLinks a {
+  color: #999;
+  cursor: pointer;
+}

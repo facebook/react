@@ -1,0 +1,19 @@
+{
+   "background": {
+      "service_worker": "background.js"
+   },
+   "externally_connectable": {
+      "matches": [ "https://*.internalfb.com/*" ]
+   },
+   "host_permissions": [ "https://*.internalfb.com/" ],
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuMgtXSAJfZ5DxIzFSGAauFEe7nV0xWZQBSrDzqPrqZV5bjVACGLLq1bPalxMkQrT8kXHPv/xjj2ZxvNqTiX4G0txDqR3UxFjMmBMVlVfp3jmhyBiwQLBY26+qFVzFkJufz/Q5bMq+tIKWlq0shQ/PYzvkA//RTRC+8ueFtl7H5bzQ1lhJ47QTxYG2350ldL2u94UEpguYcTXZtmGDBYN7JKJUzygEcE89HHsPXZMg09HMRuQbV7zqKQq5OhgLnxKoyW5D64Ea/Jx3aMvwxiKMiA6RDqNVYSlFYeb8ttqXAjiot0YVYe9At9kmm1iZlKE3ynXIvTwU5ODGJLt+ZsSVwIDAQAB",
+   "manifest_version": 3,
+   "name": "airLock Helper",
+   "permissions": [ "nativeMessaging", "alarms" ],
+   "update_url": "https://www.internalfb.com/intern/browser_extensions/chrome/update.xml",
+   "version": "0.0.6",
+   "web_accessible_resources": [ {
+      "matches": [ "https://*.internalfb.com/*" ],
+      "resources": [ "include_airlockhelper.js" ]
+   } ]
+}

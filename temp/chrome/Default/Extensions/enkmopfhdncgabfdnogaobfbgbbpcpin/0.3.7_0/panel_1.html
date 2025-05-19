@@ -1,0 +1,75 @@
+<!DOCTYPE html><html><head><style nonce="QS5paiml">
+      html {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        opacity: 0;
+      }
+
+      iframe.loaded {
+        opacity: 1;
+      }
+
+      body {
+        display: flex;
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: #A5A5A5;
+        }
+      }
+
+      #loader {
+        position: absolute;
+        margin-top: 20px;
+        width: 100%;
+        height: 6px;
+        background-color: #EC6F5A;
+        text-align: center;
+      }
+
+      #loader > div {
+        display: inline;
+        position: absolute;
+        width: 0;
+        height: 100%;
+        left: 50%;
+        text-align: center;
+      }
+
+      #loader > p {
+        padding-top: 12px;
+        font-family: sans-serif;
+      }
+
+      #loader > div:nth-child(1) {
+        background-color: #7F4FEA;
+        animation: loading 3.01s linear infinite;
+      }
+      #loader > div:nth-child(2) {
+        background-color: #4DA4F4;
+        animation: loading 3s linear 1s infinite;
+      }
+      #loader > div:nth-child(3) {
+        background-color: #EC6F5A;
+        animation: loading 3s linear 2s infinite;
+      }
+      @keyframes loading {
+          from {left: 50%; width: 0;z-index:100;}
+          33.3333% {left: 0; width: 100%;z-index: 10;}
+          to {left: 0; width: 100%;}
+      }
+      </style><meta name="extension_version" content="0.3.7" /></head><body><div id="loader"><div></div><div></div><div></div><p> Loading Slog... </p></div><script src="SlogDevToolsMainRoot.js" nonce="QS5paiml"></script></body></html>

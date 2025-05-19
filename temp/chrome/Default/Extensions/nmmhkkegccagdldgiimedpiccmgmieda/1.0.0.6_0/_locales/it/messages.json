@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Pagamenti Chrome Web Store"
+   },
+   "app_name": {
+      "message": "Pagamenti Chrome Web Store"
+   },
+   "craw_app_unavailable": {
+      "message": "App al momento non disponibile."
+   },
+   "craw_connect_to_network": {
+      "message": "Collegati a una rete."
+   },
+   "iap_unavailable": {
+      "message": "La funzione Pagamenti In-App non è al momento disponibile."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Accedi a Chrome."
+   }
+}

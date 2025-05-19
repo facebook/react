@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Betalning via Chrome Web Store"
+   },
+   "app_name": {
+      "message": "Betalning via Chrome Web Store"
+   },
+   "craw_app_unavailable": {
+      "message": "Appen är inte tillgänglig för tillfället."
+   },
+   "craw_connect_to_network": {
+      "message": "Anslut till ett nätverk."
+   },
+   "iap_unavailable": {
+      "message": "Betalning i appen är inte tillgängligt för närvarande."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Logga in i Chrome."
+   }
+}

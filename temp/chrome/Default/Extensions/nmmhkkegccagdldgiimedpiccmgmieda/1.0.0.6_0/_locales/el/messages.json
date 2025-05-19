@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Πληρωμές στο Chrome Web Store"
+   },
+   "app_name": {
+      "message": "Πληρωμές στο Chrome Web Store"
+   },
+   "craw_app_unavailable": {
+      "message": "Η εφαρμογή προς το παρόν δεν είναι διαθέσιμη."
+   },
+   "craw_connect_to_network": {
+      "message": "Συνδεθείτε σε ένα δίκτυο."
+   },
+   "iap_unavailable": {
+      "message": "Οι πληρωμές εντός εφαρμογών δεν είναι αυτήν τη στιγμή διαθέσιμες."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Συνδεθείτε στο Chrome."
+   }
+}

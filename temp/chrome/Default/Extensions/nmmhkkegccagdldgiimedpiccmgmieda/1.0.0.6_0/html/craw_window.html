@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="/css/craw_window.css" rel="stylesheet">
+    <script src="/craw_window.js"></script>
+  </head>
+  <body>
+    <webview></webview>
+    <div class="craw_overlay" id="loading_overlay">
+      <img src="/images/icon_128.png" />
+      <img src="/images/flapper.gif" />
+    </div>
+    <div class="craw_overlay" id="offline_overlay">
+      <img src="/images/icon_128.png" />
+      <span id="app_unavailable"></span>
+      <span id="connect_to_network"></span>
+    </div>
+    <div id="drag_overlay"></div>
+    <div id="top_bar">
+      <div id='close_button'>
+        <img src='/images/topbar_floating_button_close.png'/>
+      </div>
+      <div id='maximize_button'>
+        <img src='/images/topbar_floating_button_maximize.png'/>
+      </div>
+    </div>
+  </body>
+</html>

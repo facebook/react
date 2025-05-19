@@ -1,0 +1,1 @@
+chrome.devtools.panels.create("\ud83d\udee0 Meta","","panel_0.html");chrome.devtools.panels.create("Slog","","panel_1.html");

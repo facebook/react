@@ -1,0 +1,43 @@
+/*
+ * Copyright 2004-present Facebook. All Rights Reserved.
+ */
+
+.center {
+    text-align: center;
+}
+
+.error {
+  color: red;
+  display: none;
+}
+
+.warning {
+  border-color: red !important;
+}
+.site-name, .url {
+    background: #eeeeee;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+.button-negative {
+    background: #b00000;
+    border-color: darkred;
+    color: white;
+}
+
+.button-negative:hover,
+.button-negative:focus {
+    background: darkred;
+    border-color: darkred;
+    color: white;
+}
+
+.logo {
+  height: 250px;
+  width: 250px;
+}
+
+#ignore-always:visited {
+    color: #1eaedb;
+}

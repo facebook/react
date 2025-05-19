@@ -1,0 +1,21 @@
+{
+   "background": {
+      "service_worker": "serviceWorker.js",
+      "type": "module"
+   },
+   "content_scripts": [ {
+      "all_frames": true,
+      "js": [ "contentScript.js" ],
+      "match_about_blank": true,
+      "matches": [ "\u003Call_urls>" ]
+   } ],
+   "description": "Logs usage of allowlisted work apps",
+   "host_permissions": [ "\u003Call_urls>" ],
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzjK2QCunDhBLiB1ycQPqoMAyyMf9bpSRYx1lqt0SoeJu85HQbrQ0+KaZ2wUnyOOjs+pzO5eglWq/MbiC/dUs9uikrYzI6S4x6JvpZ1oU+u6ymSVy5CN4vQm4Gh5o4vYa+RZvKuOWyBRrlv77c7Avdu+NXQItU5eZ/HqObozaXNE0+iHCdO0YyB0lW2cCLDOQg0jNawtZ/kUjgLhPJ4XXmFOCQEeS/2Y7bkwD1WzhP82AAwnOY75hLYHlobBB8guoddsP7o+wlao8LgCGifSok4i9IKBWek9g06HuF95hergAkWRS+Pz+ndVUG6r9s3SyJ/rPlNKoCTEvnZYyIiynqQIDAQAB",
+   "manifest_version": 3,
+   "minimum_chrome_version": "92",
+   "name": "Meta Work App Usage",
+   "permissions": [ "storage", "background", "tabs", "scripting", "gcm", "alarms" ],
+   "update_url": "https://our.intern.facebook.com/intern/browser_extensions/chrome/update.xml/",
+   "version": "1.2.12"
+}

@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Płatności w sklepie Chrome Web Store"
+   },
+   "app_name": {
+      "message": "Płatności w sklepie Chrome Web Store"
+   },
+   "craw_app_unavailable": {
+      "message": "Aplikacja jest obecnie niedostępna."
+   },
+   "craw_connect_to_network": {
+      "message": "Połącz się z siecią."
+   },
+   "iap_unavailable": {
+      "message": "Płatności w ramach aplikacji są teraz niedostępne."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Zaloguj się w Chrome."
+   }
+}

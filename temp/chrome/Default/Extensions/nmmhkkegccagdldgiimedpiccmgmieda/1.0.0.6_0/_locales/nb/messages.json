@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Chrome Nettmarked-betalinger"
+   },
+   "app_name": {
+      "message": "Chrome Nettmarked-betalinger"
+   },
+   "craw_app_unavailable": {
+      "message": "Appen er utilgjengelig for øyeblikket."
+   },
+   "craw_connect_to_network": {
+      "message": "Du må koble til et nettverk."
+   },
+   "iap_unavailable": {
+      "message": "Betaling i app er ikke tilgjengelig for øyeblikket."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Du må logge på Chrome."
+   }
+}

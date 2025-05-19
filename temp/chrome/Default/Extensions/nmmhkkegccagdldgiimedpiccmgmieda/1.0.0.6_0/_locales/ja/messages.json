@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Chrome ウェブストア決済"
+   },
+   "app_name": {
+      "message": "Chrome ウェブストア決済"
+   },
+   "craw_app_unavailable": {
+      "message": "アプリは現在ご利用いただけません。"
+   },
+   "craw_connect_to_network": {
+      "message": "ネットワークに接続してください。"
+   },
+   "iap_unavailable": {
+      "message": "アプリ内ペイメントは現在ご利用いただけません。"
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Chrome にログインしてください。"
+   }
+}

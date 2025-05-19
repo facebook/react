@@ -1,0 +1,30 @@
+0:00:05 Tab1 StartNav6 #auto_toplevel
+0:00:05 Browser1 Insert active Tab1 at 0
+0:00:05 Widget Closed: ProfilePickerView
+0:00:07 Tab1 FinishNav6
+0:00:11 Tab1 StartNav9 #renderer-script #link
+0:00:11 Tab1 FinishNav9
+0:00:11 Tab1 PageLoad
+0:00:14 TextSelectionChanged
+0:00:14 TextSelectionChanged
+0:00:14 TextSelectionChanged
+0:00:14 TextSelectionChanged
+0:00:14 TextSelectionChanged
+0:00:15 TextSelectionChanged
+0:00:19 TextSelectionChanged
+0:00:19 TextSelectionChanged
+0:00:21 TextSelectionChanged
+0:00:22 Extensions.Toolbar.MenuOpened
+0:00:25 Widget Closed: ExtensionsMenuView
+0:01:06 Extensions.Toolbar.MenuOpened
+0:01:07 ShowExtensions
+0:01:07 Tab2 StartNav13 #auto_bookmark
+0:01:07 Browser1 Insert active Tab2 at 1
+0:01:07 Widget Closed: ExtensionsMenuView
+0:01:08 Tab2 FinishNav13
+0:01:08 Tab2 PageLoad
+0:01:10 TextSelectionChanged
+0:04:25 Tab2 RenderProcessGone
+0:04:25 Browser1 Closed 2 tabs
+0:04:25 Widget Closed: BrowserFrame
+0:07:15 Shutdown

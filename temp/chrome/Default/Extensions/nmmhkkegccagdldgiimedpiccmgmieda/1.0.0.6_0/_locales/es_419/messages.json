@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Sistema de pagos de Chrome Web Store"
+   },
+   "app_name": {
+      "message": "Sistema de pagos de Chrome Web Store"
+   },
+   "craw_app_unavailable": {
+      "message": "Esta aplicación no está disponible en este momento."
+   },
+   "craw_connect_to_network": {
+      "message": "Conéctate a una red."
+   },
+   "iap_unavailable": {
+      "message": "En este momento, Pagos En-Apps no está disponible."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Accede a Chrome."
+   }
+}

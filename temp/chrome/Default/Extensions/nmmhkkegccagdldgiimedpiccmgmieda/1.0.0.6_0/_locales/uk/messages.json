@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Платежі Веб-магазину Chrome"
+   },
+   "app_name": {
+      "message": "Платежі Веб-магазину Chrome"
+   },
+   "craw_app_unavailable": {
+      "message": "Програма тимчасово недоступна."
+   },
+   "craw_connect_to_network": {
+      "message": "Під’єднайтеся до мережі."
+   },
+   "iap_unavailable": {
+      "message": "Платежі через програму зараз не доступні."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Увійдіть у Chrome."
+   }
+}

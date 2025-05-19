@@ -1,0 +1,21 @@
+{
+   "background": {
+      "service_worker": "service_worker.js",
+      "type": "module"
+   },
+   "description": "Customizes the search bar experience providing autocomplete service for Intern Search (type `s` on the search bar).",
+   "host_permissions": [ "*://*.internalfb.com/", "*://fburl.com/" ],
+   "icons": {
+      "16": "search16x16.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnDXfCeV8Sr3SMY+VIj85s0KZhzHge81dO8vLw/Qua+GWDl0UlAlHl9WO/ZB4gY/EjuS19juh3IgJZp17TPnBcG+uXchwynnpLkYMZns+K0T3qAn8z5Q3twC6diriXxVIzFuuIGGi7blVCmm62XDZtEuUWkmA5BC5SkwICjSVRvDPxhEOOi2yO0GkeSMBAmexPBiSsOyGMkCPNsxg/auaRsfR+RbdK+NyllFybEzOS9Jfox9qjzre3rKHoW/D0lS7gCoej3xAr7GtGLI4TDR/GS+f0vwDpEd5IZygt3GsCBkC1onM1K2KKrQ+WDWYTxcBwP1wnpAaU0MDh1U1qMAxKQIDAQAB",
+   "manifest_version": 3,
+   "minimum_chrome_version": "43",
+   "name": "Intern Search",
+   "omnibox": {
+      "keyword": "s"
+   },
+   "permissions": [ "storage", "bookmarks", "contextMenus", "clipboardWrite", "notifications", "tabs", "webRequest" ],
+   "update_url": "https://www.internalfb.com/intern/browser_extensions/chrome/update.xml/",
+   "version": "0.0.16"
+}

@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Platby Internetového obchodu Chrome"
+   },
+   "app_name": {
+      "message": "Platby Internetového obchodu Chrome"
+   },
+   "craw_app_unavailable": {
+      "message": "Aplikace v současné době není dostupná."
+   },
+   "craw_connect_to_network": {
+      "message": "Připojte se prosím k síti."
+   },
+   "iap_unavailable": {
+      "message": "Platby v aplikaci aktuálně nejsou k dispozici."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Přihlaste se do Chromu."
+   }
+}

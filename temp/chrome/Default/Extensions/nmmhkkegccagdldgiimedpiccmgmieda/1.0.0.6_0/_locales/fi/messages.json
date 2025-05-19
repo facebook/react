@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Chrome Web Storen maksut"
+   },
+   "app_name": {
+      "message": "Chrome Web Storen maksut"
+   },
+   "craw_app_unavailable": {
+      "message": "Sovellus ei ole tällä hetkellä käytettävissä."
+   },
+   "craw_connect_to_network": {
+      "message": "Muodosta verkkoyhteys."
+   },
+   "iap_unavailable": {
+      "message": "Sovelluksen sisäiset maksut eivät ole tällä hetkellä käytettävissä."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Kirjaudu sisään Chromeen."
+   }
+}

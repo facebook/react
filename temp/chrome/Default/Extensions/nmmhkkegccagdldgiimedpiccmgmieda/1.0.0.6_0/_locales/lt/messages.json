@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "„Chrome“ internetinės parduotuvės mokėjimo sistema"
+   },
+   "app_name": {
+      "message": "„Chrome“ internetinės parduotuvės mokėjimo sistema"
+   },
+   "craw_app_unavailable": {
+      "message": "Programa šiuo metu negalima."
+   },
+   "craw_connect_to_network": {
+      "message": "Prisijunkite prie tinklo."
+   },
+   "iap_unavailable": {
+      "message": "Mokėjimai programoje šiuo metu negalimi."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Prisijunkite prie „Chrome“."
+   }
+}

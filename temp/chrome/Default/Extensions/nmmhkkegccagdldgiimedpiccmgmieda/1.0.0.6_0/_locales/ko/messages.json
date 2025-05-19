@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Chrome 웹 스토어 결제"
+   },
+   "app_name": {
+      "message": "Chrome 웹 스토어 결제"
+   },
+   "craw_app_unavailable": {
+      "message": "현재 앱을 사용할 수 없습니다."
+   },
+   "craw_connect_to_network": {
+      "message": "네트워크에 연결하세요."
+   },
+   "iap_unavailable": {
+      "message": "현재 인앱 결제를 사용할 수 없습니다."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Chrome에 로그인하세요."
+   }
+}

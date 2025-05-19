@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Thanh toán trên cửa hàng Chrome trực tuyến"
+   },
+   "app_name": {
+      "message": "Thanh toán trên cửa hàng Chrome trực tuyến"
+   },
+   "craw_app_unavailable": {
+      "message": "Ứng dụng hiện không khả dụng."
+   },
+   "craw_connect_to_network": {
+      "message": "Vui lòng kết nối với mạng."
+   },
+   "iap_unavailable": {
+      "message": "Thanh toán trong ứng dụng hiện không khả dụng."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Vui lòng đăng nhập vào Chrome."
+   }
+}

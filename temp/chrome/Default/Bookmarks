@@ -1,0 +1,173 @@
+{
+   "checksum": "2427b10634d4367fe60f3139b4321213",
+   "roots": {
+      "bookmark_bar": {
+         "children": [ {
+            "children": [ {
+               "date_added": "13008119088000000",
+               "date_last_used": "0",
+               "guid": "0ea4f6ec-55bc-4bd8-a074-8dcf6519f5e9",
+               "id": "19",
+               "name": "Internal FB",
+               "type": "url",
+               "url": "https://www.internalfb.com/confirm"
+            }, {
+               "date_added": "13008118175000000",
+               "date_last_used": "0",
+               "guid": "b76077cc-5916-474e-a20f-4e085a87cfb6",
+               "id": "20",
+               "name": "Webmail",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/webmail"
+            }, {
+               "date_added": "13243530495000000",
+               "date_last_used": "0",
+               "guid": "e3a73af0-2474-4ddb-b9f0-ae5654038bf5",
+               "id": "21",
+               "name": "Me@",
+               "type": "url",
+               "url": "https://www.internalfb.com/me"
+            }, {
+               "date_added": "13238116680000000",
+               "date_last_used": "0",
+               "guid": "d9c3c250-b7c4-45a9-a128-f2b92c5f7fc7",
+               "id": "22",
+               "name": "Onboarding Plan",
+               "type": "url",
+               "url": "https://www.internalfb.com/me/career/onboarding"
+            }, {
+               "date_added": "13014757399000000",
+               "date_last_used": "0",
+               "guid": "82cadfd8-d277-40d8-ae2f-de1edeeefdf2",
+               "id": "23",
+               "name": "Tasks",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/tasks"
+            }, {
+               "date_added": "13008118094000000",
+               "date_last_used": "0",
+               "guid": "4c98ac91-e997-440a-9688-d58bb3cb6e30",
+               "id": "24",
+               "name": "Company Wiki",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/wiki"
+            }, {
+               "date_added": "13272792002000000",
+               "date_last_used": "0",
+               "guid": "1b7d1597-e68c-407c-97c7-479929503421",
+               "id": "25",
+               "name": "Helpdesk Online",
+               "type": "url",
+               "url": "https://www.internalfb.com/helpdesk"
+            }, {
+               "date_added": "13008118319000000",
+               "date_last_used": "0",
+               "guid": "3eca582b-1813-44e5-804c-de273660eab1",
+               "id": "26",
+               "name": "Workplace",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/workplacebookmark"
+            }, {
+               "date_added": "13035093005000000",
+               "date_last_used": "0",
+               "guid": "3d5536f0-e468-4307-a7bb-4fa31ba935ad",
+               "id": "27",
+               "name": "MBG Hub",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/gmshub"
+            }, {
+               "date_added": "13008119088000000",
+               "date_last_used": "0",
+               "guid": "b8fff5c1-a6c1-41c3-a84b-7b5253ebb5b9",
+               "id": "28",
+               "name": "Calendar Tool",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/MeetingToolBookmark"
+            }, {
+               "date_added": "13008119126000000",
+               "date_last_used": "0",
+               "guid": "f3977584-f786-47b4-8788-c514140e4c80",
+               "id": "29",
+               "name": "Workday.com",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/WorkdayBookmark"
+            }, {
+               "date_added": "13008118718000000",
+               "date_last_used": "0",
+               "guid": "226deaf0-de39-4ea8-9e18-8ec9d85aee8c",
+               "id": "30",
+               "name": "Printers",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/PrintersBookmark"
+            }, {
+               "date_added": "13038526717000000",
+               "date_last_used": "0",
+               "guid": "e1af60bb-d7c3-4170-bf67-d980df6c6ef4",
+               "id": "31",
+               "name": "People Portal",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/LifeBookmark"
+            }, {
+               "date_added": "13081534187000000",
+               "date_last_used": "0",
+               "guid": "591bf2d3-3e98-4454-b223-733f1f66e3b3",
+               "id": "32",
+               "name": "Shuttle Timetable",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/shuttletimetable"
+            }, {
+               "date_added": "13118284025000000",
+               "date_last_used": "0",
+               "guid": "89d021b3-3f62-463b-b6f3-abc15db60cd5",
+               "id": "33",
+               "name": "Concur",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/concur"
+            }, {
+               "date_added": "13348702555000000",
+               "date_last_used": "0",
+               "guid": "6a1baf1e-8f2a-4f58-ad75-bb4815e884a9",
+               "id": "34",
+               "name": "CSOD",
+               "type": "url",
+               "url": "https://www.internalfb.com/u/csod"
+            } ],
+            "date_added": "13392147623876998",
+            "date_last_used": "0",
+            "date_modified": "0",
+            "guid": "251a9d6e-0cb5-4181-95a5-86821aacb477",
+            "id": "18",
+            "name": "Meta",
+            "type": "folder"
+         } ],
+         "date_added": "13392147623653823",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+         "id": "1",
+         "name": "Bookmarks Bar",
+         "type": "folder"
+      },
+      "other": {
+         "children": [  ],
+         "date_added": "13392147623653826",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+         "id": "2",
+         "name": "Other Bookmarks",
+         "type": "folder"
+      },
+      "synced": {
+         "children": [  ],
+         "date_added": "13392147623653826",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+         "id": "3",
+         "name": "Mobile Bookmarks",
+         "type": "folder"
+      }
+   },
+   "version": 1
+}

@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Chrome Web Store-Zahlungen"
+   },
+   "app_name": {
+      "message": "Chrome Web Store-Zahlungen"
+   },
+   "craw_app_unavailable": {
+      "message": "Die App ist momentan nicht verfügbar."
+   },
+   "craw_connect_to_network": {
+      "message": "Bitte stellen Sie eine Verbindung zu einem Netzwerk her."
+   },
+   "iap_unavailable": {
+      "message": "In-App-Zahlungen sind momentan nicht möglich."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Bitte melden Sie sich in Chrome an."
+   }
+}

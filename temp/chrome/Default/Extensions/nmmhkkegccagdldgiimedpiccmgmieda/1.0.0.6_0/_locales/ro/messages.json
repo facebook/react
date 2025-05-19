@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Plăți prin Magazinul web Chrome"
+   },
+   "app_name": {
+      "message": "Plăți prin Magazinul web Chrome"
+   },
+   "craw_app_unavailable": {
+      "message": "În prezent, aplicația nu este disponibilă."
+   },
+   "craw_connect_to_network": {
+      "message": "Conectează-te la o rețea."
+   },
+   "iap_unavailable": {
+      "message": "Plățile în aplicație nu sunt disponibile momentan."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Conectează-te la Chrome."
+   }
+}

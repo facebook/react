@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Chrome'i veebipoe maksed"
+   },
+   "app_name": {
+      "message": "Chrome'i veebipoe maksed"
+   },
+   "craw_app_unavailable": {
+      "message": "Rakendus pole praegu saadaval."
+   },
+   "craw_connect_to_network": {
+      "message": "Looge ühendus võrguga."
+   },
+   "iap_unavailable": {
+      "message": "Rakendusesisesed maksed ei ole praegu saadaval."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Logige Chrome'i sisse."
+   }
+}

@@ -1,0 +1,23 @@
+{
+   "app_description": {
+      "message": "Chrome Web Mağazası Ödemeleri"
+   },
+   "app_name": {
+      "message": "Chrome Web Mağazası Ödemeleri"
+   },
+   "craw_app_unavailable": {
+      "message": "Uygulama şu anda kullanılamıyor."
+   },
+   "craw_connect_to_network": {
+      "message": "Lütfen bir ağa bağlanın."
+   },
+   "iap_unavailable": {
+      "message": "Uygulama İçi Ödemeler şu anda kullanılamaz."
+   },
+   "jwt_retrieve_failed": {
+      "message": "The transaction could not be completed."
+   },
+   "please_sign_in": {
+      "message": "Lütfen Chrome'da oturum açın."
+   }
+}
