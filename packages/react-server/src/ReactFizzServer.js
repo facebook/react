@@ -1670,7 +1670,7 @@ function replaySuspenseBoundary(
 
 function finishSuspenseListRow(request: Request, row: SuspenseListRow): void {
   // This row finished. Now we have to unblock all the next rows that were blocked on this.
-  // We do this in a loop to avoid stash overflow for very long lists that get unblocked.
+  // We do this in a loop to avoid stack overflow for very long lists that get unblocked.
   let unblockedRow = row.next;
   while (unblockedRow !== null) {
     // Unblocking the boundaries will decrement the count of this row but we keep it above
