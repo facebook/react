@@ -235,7 +235,7 @@ type LegacyContext = {
 
 type SuspenseListRow = {
   pendingTasks: number, // The number of tasks, previous rows and inner suspense boundaries blocking this row.
-  boundaries: Array<SuspenseBoundary>, // The boundaries in this row waiting to be unblocked by the previous row.
+  boundaries: null | Array<SuspenseBoundary>, // The boundaries in this row waiting to be unblocked by the previous row. (null means this row is not blocked)
   next: null | SuspenseListRow, // The next row blocked by this one.
 };
 
@@ -804,6 +804,9 @@ function createRenderTask(
   } else {
     blockedBoundary.pendingTasks++;
   }
+  if (row !== null) {
+    row.pendingTasks++;
+  }
   const task: RenderTask = ({
     replay: null,
     node,
@@ -855,6 +858,9 @@ function createReplayTask(
     request.pendingRootTasks++;
   } else {
     blockedBoundary.pendingTasks++;
+  }
+  if (row !== null) {
+    row.pendingTasks++;
   }
   replay.pendingTasks++;
   const task: ReplayTask = ({
@@ -1636,14 +1642,20 @@ function finishSuspenseListRow(request: Request, row: SuspenseListRow): void {
   // We do this in a loop to avoid stash overflow for very long lists that get unblocked.
   let unblockedRow = row.next;
   while (unblockedRow !== null) {
+    // Unblocking the boundaries will decrement the count of this row but we keep it above
+    // zero so they never finish this row recursively.
+    const unblockedBoundaries = unblockedRow.boundaries;
+    if (unblockedBoundaries !== null) {
+      unblockedRow.boundaries = null;
+      for (let i = 0; i < unblockedBoundaries.length; i++) {
+        finishedTask(request, unblockedBoundaries[i], null, null);
+      }
+    }
+    // Instead we decrement at the end to keep it all in this loop.
     unblockedRow.pendingTasks--;
     if (unblockedRow.pendingTasks > 0) {
       // Still blocked.
       break;
-    }
-    const unblockedBoundaries = unblockedRow.boundaries;
-    for (let i = 0; i < unblockedBoundaries.length; i++) {
-      finishedTask(request, unblockedBoundaries[i], null);
     }
     unblockedRow = unblockedRow.next;
   }
@@ -1654,13 +1666,14 @@ function createSuspenseListRow(
 ): SuspenseListRow {
   const newRow: SuspenseListRow = {
     pendingTasks: 1, // At first the row is blocked on attempting rendering itself.
-    boundaries: [],
+    boundaries: null,
     next: null,
   };
   if (previousRow !== null && previousRow.pendingTasks > 0) {
     // If the previous row is not done yet, we add ourselves to be blocked on it.
     // When it finishes, we'll decrement our pending tasks.
     newRow.pendingTasks++;
+    newRow.boundaries = [];
     previousRow.next = newRow;
   }
   return newRow;
@@ -4216,10 +4229,19 @@ function erroredReplay(
 function erroredTask(
   request: Request,
   boundary: Root | SuspenseBoundary,
+  row: null | SuspenseListRow,
   error: mixed,
   errorInfo: ThrownInfo,
   debugTask: null | ConsoleTask,
 ) {
+  if (row !== null) {
+    if (--row.pendingTasks === 0) {
+      finishSuspenseListRow(request, row);
+    }
+  }
+
+  request.allPendingTasks--;
+
   // Report the error to a global handler.
   let errorDigest;
   // We don't handle halts here because we only halt when prerendering and
@@ -4271,7 +4293,6 @@ function erroredTask(
     }
   }
 
-  request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
     completeAll(request);
   }
@@ -4286,7 +4307,7 @@ function abortTaskSoft(this: Request, task: Task): void {
   const segment = task.blockedSegment;
   if (segment !== null) {
     segment.status = ABORTED;
-    finishedTask(request, boundary, segment);
+    finishedTask(request, boundary, task.row, segment);
   }
 }
 
@@ -4399,6 +4420,13 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     segment.status = ABORTED;
   }
 
+  const row = task.row;
+  if (row !== null) {
+    if (--row.pendingTasks === 0) {
+      finishSuspenseListRow(request, row);
+    }
+  }
+
   const errorInfo = getThrownInfo(task.componentStack);
 
   if (boundary === null) {
@@ -4421,7 +4449,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             // we just need to mark it as postponed.
             logPostpone(request, postponeInstance.message, errorInfo, null);
             trackPostpone(request, trackedPostpones, task, segment);
-            finishedTask(request, null, segment);
+            finishedTask(request, null, row, segment);
           } else {
             const fatal = new Error(
               'The render was aborted with postpone when the shell is incomplete. Reason: ' +
@@ -4440,7 +4468,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
           // We log the error but we still resolve the prerender
           logRecoverableError(request, error, errorInfo, null);
           trackPostpone(request, trackedPostpones, task, segment);
-          finishedTask(request, null, segment);
+          finishedTask(request, null, row, segment);
         } else {
           logRecoverableError(request, error, errorInfo, null);
           fatalError(request, error, errorInfo, null);
@@ -4512,7 +4540,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             abortTask(fallbackTask, request, error),
           );
           boundary.fallbackAbortableTasks.clear();
-          return finishedTask(request, boundary, segment);
+          return finishedTask(request, boundary, row, segment);
         }
       }
       boundary.status = CLIENT_RENDERED;
@@ -4529,7 +4557,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         logPostpone(request, postponeInstance.message, errorInfo, null);
         if (request.trackedPostpones !== null && segment !== null) {
           trackPostpone(request, request.trackedPostpones, task, segment);
-          finishedTask(request, task.blockedBoundary, segment);
+          finishedTask(request, task.blockedBoundary, row, segment);
 
           // If this boundary was still pending then we haven't already cancelled its fallbacks.
           // We'll need to abort the fallbacks, which will also error that parent boundary.
@@ -4685,8 +4713,14 @@ function finishedSegment(
 function finishedTask(
   request: Request,
   boundary: Root | SuspenseBoundary,
+  row: null | SuspenseListRow,
   segment: null | Segment,
 ) {
+  if (row !== null) {
+    if (--row.pendingTasks === 0) {
+      finishSuspenseListRow(request, row);
+    }
+  }
   request.allPendingTasks--;
   if (boundary === null) {
     if (segment !== null && segment.parentFlushed) {
@@ -4833,7 +4867,7 @@ function retryRenderTask(
     task.abortSet.delete(task);
     segment.status = COMPLETED;
     finishedSegment(request, task.blockedBoundary, segment);
-    finishedTask(request, task.blockedBoundary, segment);
+    finishedTask(request, task.blockedBoundary, task.row, segment);
   } catch (thrownValue: mixed) {
     resetHooksState();
 
@@ -4886,7 +4920,7 @@ function retryRenderTask(
       }
 
       trackPostpone(request, trackedPostpones, task, segment);
-      finishedTask(request, task.blockedBoundary, segment);
+      finishedTask(request, task.blockedBoundary, task.row, segment);
       return;
     }
 
@@ -4920,7 +4954,7 @@ function retryRenderTask(
           __DEV__ ? task.debugTask : null,
         );
         trackPostpone(request, trackedPostpones, task, segment);
-        finishedTask(request, task.blockedBoundary, segment);
+        finishedTask(request, task.blockedBoundary, task.row, segment);
         return;
       }
     }
@@ -4932,6 +4966,7 @@ function retryRenderTask(
     erroredTask(
       request,
       task.blockedBoundary,
+      task.row,
       x,
       errorInfo,
       __DEV__ ? task.debugTask : null,
@@ -4979,7 +5014,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     task.replay.pendingTasks--;
 
     task.abortSet.delete(task);
-    finishedTask(request, task.blockedBoundary, null);
+    finishedTask(request, task.blockedBoundary, task.row, null);
   } catch (thrownValue) {
     resetHooksState();
 
