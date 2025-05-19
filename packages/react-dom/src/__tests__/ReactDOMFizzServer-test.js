@@ -1318,10 +1318,8 @@ describe('ReactDOMFizzServer', () => {
     expect(ref.current).toBe(null);
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        Loading A
-        {/* // TODO: This is incorrect. It should be "Loading B" but Fizz SuspenseList
-            // isn't implemented fully yet. */}
-        <span>B</span>
+        {'Loading A'}
+        {'Loading B'}
       </div>,
     );
 
@@ -1335,11 +1333,9 @@ describe('ReactDOMFizzServer', () => {
     // We haven't resolved yet.
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        Loading A
-        {/* // TODO: This is incorrect. It should be "Loading B" but Fizz SuspenseList
-            // isn't implemented fully yet. */}
-        <span>B</span>
-        Loading C
+        {'Loading A'}
+        {'Loading B'}
+        {'Loading C'}
       </div>,
     );
 
