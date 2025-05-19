@@ -80,6 +80,7 @@ import isArray from 'shared/isArray';
 import {
   clientRenderBoundary as clientRenderFunction,
   completeBoundary as completeBoundaryFunction,
+  completeBoundaryUpgradeToViewTransitions as upgradeToViewTransitionsInstruction,
   completeBoundaryWithStyles as styleInsertionFunction,
   completeSegment as completeSegmentFunction,
   formReplaying as formReplayingRuntime,
@@ -123,14 +124,16 @@ const ScriptStreamingFormat: StreamingFormat = 0;
 const DataStreamingFormat: StreamingFormat = 1;
 
 export type InstructionState = number;
-const NothingSent /*                      */ = 0b0000000;
-const SentCompleteSegmentFunction /*      */ = 0b0000001;
-const SentCompleteBoundaryFunction /*     */ = 0b0000010;
-const SentClientRenderFunction /*         */ = 0b0000100;
-const SentStyleInsertionFunction /*       */ = 0b0001000;
-const SentFormReplayingRuntime /*         */ = 0b0010000;
-const SentCompletedShellId /*             */ = 0b0100000;
-const SentMarkShellTime /*                */ = 0b1000000;
+const NothingSent /*                      */ = 0b000000000;
+const SentCompleteSegmentFunction /*      */ = 0b000000001;
+const SentCompleteBoundaryFunction /*     */ = 0b000000010;
+const SentClientRenderFunction /*         */ = 0b000000100;
+const SentStyleInsertionFunction /*       */ = 0b000001000;
+const SentFormReplayingRuntime /*         */ = 0b000010000;
+const SentCompletedShellId /*             */ = 0b000100000;
+const SentMarkShellTime /*                */ = 0b001000000;
+const NeedUpgradeToViewTransitions /*     */ = 0b010000000;
+const SentUpgradeToViewTransitions /*     */ = 0b100000000;
 
 // Per request, global state that is not contextual to the rendering subtree.
 // This cannot be resumed and therefore should only contain things that are
@@ -742,12 +745,13 @@ const HTML_COLGROUP_MODE = 9;
 
 type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-const NO_SCOPE = /*         */ 0b00000;
-const NOSCRIPT_SCOPE = /*   */ 0b00001;
-const PICTURE_SCOPE = /*    */ 0b00010;
-const FALLBACK_SCOPE = /*   */ 0b00100;
-const EXIT_SCOPE = /*       */ 0b01000; // A direct Instance below a Suspense fallback is the only thing that can "exit"
-const ENTER_SCOPE = /*      */ 0b10000; // A direct Instance below Suspense content is the only thing that can "enter"
+const NO_SCOPE = /*         */ 0b000000;
+const NOSCRIPT_SCOPE = /*   */ 0b000001;
+const PICTURE_SCOPE = /*    */ 0b000010;
+const FALLBACK_SCOPE = /*   */ 0b000100;
+const EXIT_SCOPE = /*       */ 0b001000; // A direct Instance below a Suspense fallback is the only thing that can "exit"
+const ENTER_SCOPE = /*      */ 0b010000; // A direct Instance below Suspense content is the only thing that can "enter"
+const UPDATE_SCOPE = /*     */ 0b100000; // Inside a scope that applies "update" ViewTransitions if anything mutates here.
 
 // Everything not listed here are tracked for the whole subtree as opposed to just
 // until the next Instance.
@@ -926,8 +930,15 @@ function getSuspenseViewTransition(
 }
 
 export function getSuspenseFallbackFormatContext(
+  resumableState: ResumableState,
   parentContext: FormatContext,
 ): FormatContext {
+  if (parentContext.tagScope & UPDATE_SCOPE) {
+    // If we're rendering a Suspense in fallback mode and that is inside a ViewTransition,
+    // which hasn't disabled updates, then revealing it might animate the parent so we need
+    // the ViewTransition instructions.
+    resumableState.instructions |= NeedUpgradeToViewTransitions;
+  }
   return createFormatContext(
     parentContext.insertionMode,
     parentContext.selectedValue,
@@ -937,6 +948,7 @@ export function getSuspenseFallbackFormatContext(
 }
 
 export function getSuspenseContentFormatContext(
+  resumableState: ResumableState,
   parentContext: FormatContext,
 ): FormatContext {
   return createFormatContext(
@@ -948,6 +960,7 @@ export function getSuspenseContentFormatContext(
 }
 
 export function getViewTransitionFormatContext(
+  resumableState: ResumableState,
   parentContext: FormatContext,
   update: ?string,
   enter: ?string,
@@ -983,14 +996,26 @@ export function getViewTransitionFormatContext(
     // exit because enter/exit will take precedence and if it's deeply nested
     // it just animates along whatever the parent does when disabled.
     share = null;
-  } else if (share == null) {
-    share = 'auto';
+  } else {
+    if (share == null) {
+      share = 'auto';
+    }
+    if (parentContext.tagScope & FALLBACK_SCOPE) {
+      // If we have an explicit name and share is not disabled, and we're inside
+      // a fallback, then that fallback might pair with content and so we might need
+      // the ViewTransition instructions to animate between them.
+      resumableState.instructions |= NeedUpgradeToViewTransitions;
+    }
   }
   if (!(parentContext.tagScope & EXIT_SCOPE)) {
     exit = null; // exit is only relevant for the first ViewTransition inside fallback
+  } else {
+    resumableState.instructions |= NeedUpgradeToViewTransitions;
   }
   if (!(parentContext.tagScope & ENTER_SCOPE)) {
     enter = null; // enter is only relevant for the first ViewTransition inside content
+  } else {
+    resumableState.instructions |= NeedUpgradeToViewTransitions;
   }
   const viewTransition: ViewTransitionContext = {
     update,
@@ -1001,7 +1026,12 @@ export function getViewTransitionFormatContext(
     autoName,
     nameIdx: 0,
   };
-  const subtreeScope = parentContext.tagScope & SUBTREE_SCOPE;
+  let subtreeScope = parentContext.tagScope & SUBTREE_SCOPE;
+  if (update !== 'none') {
+    subtreeScope |= UPDATE_SCOPE;
+  } else {
+    subtreeScope &= ~UPDATE_SCOPE;
+  }
   return createFormatContext(
     parentContext.insertionMode,
     parentContext.selectedValue,
@@ -4780,9 +4810,8 @@ export function writeCompletedSegmentInstruction(
 const completeBoundaryScriptFunctionOnly = stringToPrecomputedChunk(
   completeBoundaryFunction,
 );
-const completeBoundaryScript1Full = stringToPrecomputedChunk(
-  completeBoundaryFunction + '$RC("',
-);
+const completeBoundaryUpgradeToViewTransitionsInstruction =
+  stringToPrecomputedChunk(upgradeToViewTransitionsInstruction);
 const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
 
 const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
@@ -4814,6 +4843,10 @@ export function writeCompletedBoundaryInstruction(
   hoistableState: HoistableState,
 ): boolean {
   const requiresStyleInsertion = renderState.stylesToHoist;
+  const requiresViewTransitions =
+    enableViewTransition &&
+    (resumableState.instructions & NeedUpgradeToViewTransitions) !==
+      NothingSent;
   // If necessary stylesheets will be flushed with this instruction.
   // Any style tags not yet hoisted in the Document will also be hoisted.
   // We reset this state since after this instruction executes all styles
@@ -4843,6 +4876,17 @@ export function writeCompletedBoundaryInstruction(
         writeChunk(destination, completeBoundaryScriptFunctionOnly);
       }
       if (
+        requiresViewTransitions &&
+        (resumableState.instructions & SentUpgradeToViewTransitions) ===
+          NothingSent
+      ) {
+        resumableState.instructions |= SentUpgradeToViewTransitions;
+        writeChunk(
+          destination,
+          completeBoundaryUpgradeToViewTransitionsInstruction,
+        );
+      }
+      if (
         (resumableState.instructions & SentStyleInsertionFunction) ===
         NothingSent
       ) {
@@ -4857,10 +4901,20 @@ export function writeCompletedBoundaryInstruction(
         NothingSent
       ) {
         resumableState.instructions |= SentCompleteBoundaryFunction;
-        writeChunk(destination, completeBoundaryScript1Full);
-      } else {
-        writeChunk(destination, completeBoundaryScript1Partial);
+        writeChunk(destination, completeBoundaryScriptFunctionOnly);
       }
+      if (
+        requiresViewTransitions &&
+        (resumableState.instructions & SentUpgradeToViewTransitions) ===
+          NothingSent
+      ) {
+        resumableState.instructions |= SentUpgradeToViewTransitions;
+        writeChunk(
+          destination,
+          completeBoundaryUpgradeToViewTransitionsInstruction,
+        );
+      }
+      writeChunk(destination, completeBoundaryScript1Partial);
     }
   } else {
     if (requiresStyleInsertion) {
