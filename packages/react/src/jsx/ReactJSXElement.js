@@ -688,18 +688,18 @@ export function createElement(type, config, children) {
       key = '' + config.key;
     }
 
+    // Skip over reserved prop names
+    // Even though we don't use these anymore in the runtime, we don't want
+    // them to appear as props, so in createElement we filter them out.
+    // We don't have to do this in the jsx() runtime because the jsx()
+    // transform never passed these as props; it used separate arguments.
+    const reservedPropNames = new Set(["key", "__self", "__source"])
+
     // Remaining properties are added to a new props object
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
-        // Skip over reserved prop names
-        propName !== 'key' &&
-        // Even though we don't use these anymore in the runtime, we don't want
-        // them to appear as props, so in createElement we filter them out.
-        // We don't have to do this in the jsx() runtime because the jsx()
-        // transform never passed these as props; it used separate arguments.
-        propName !== '__self' &&
-        propName !== '__source'
+        !reservedPropNames.has(propName)
       ) {
         props[propName] = config[propName];
       }
