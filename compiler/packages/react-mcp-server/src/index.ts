@@ -364,12 +364,24 @@ ${results.renderTime / iterations}ms
 
 server.tool(
   'parse-react-component-tree',
-  `This tool gets the component tree of the currently open React app on localhost:3000 url`,
+  `
+  This tool gets the component tree of a React App.
+  passing in a url will attempt to connect to the browser and get the current state of the component tree. If no url is passed in,
+  the default url will be used (http://localhost:3000).
+
+  <requirements>
+  - The url should be a full url with the protocol (http:// or https://) and the domain name (e.g. localhost:3000).
+  - Also the user should be running a Chrome browser running on debug mode on port 9222. If you receive an error message, advise the user to run
+  the following comand in the terminal:
+  MacOS: "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome"
+  Windows: "chrome.exe --remote-debugging-port=9222 --user-data-dir=C:\temp\chrome"
+  </requirements>
+  `,
   {
-    text: z.string(),
+    url: z.string().optional().default('http://localhost:3000'),
   },
-  async ({text}) => {
-    const componentTree = await parseReactComponentTree();
+  async ({url}) => {
+    const componentTree = await parseReactComponentTree(url);
 
     return {
       content: [

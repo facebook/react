@@ -1,0 +1,42 @@
+{
+   "background": {
+      "scripts": [ "CometDevToolsBackgroundScript.js" ]
+   },
+   "browser_action": {
+      "default_icon": {
+         "128": "comet_dev_tools128.png",
+         "16": "comet_dev_tools16.png",
+         "32": "comet_dev_tools32.png",
+         "48": "comet_dev_tools48.png"
+      },
+      "default_popup": "browser_action_popup.html"
+   },
+   "browser_specific_settings": {
+      "gecko": {
+         "id": "comet_dev_tools@extension_id.facebook"
+      }
+   },
+   "content_scripts": [ {
+      "js": [ "CometDevToolsAutoloadedContentScript.js" ],
+      "matches": [ "*://*/*" ],
+      "run_at": "document_start"
+   }, {
+      "js": [ "CometDevToolsDevelopmentContentScript.js" ],
+      "matches": [ "https://*/intern/comet_dev_tools/main*" ],
+      "run_at": "document_start"
+   } ],
+   "description": "Developer tools for Meta's web apps",
+   "devtools_page": "devtools_page.html",
+   "icons": {
+      "128": "comet_dev_tools128.png",
+      "16": "comet_dev_tools16.png",
+      "32": "comet_dev_tools32.png",
+      "48": "comet_dev_tools48.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArbamshFC9kDNqugLU/9gYoTlt5cFWK13Y51hhg46w9uIOrpFM05xM57QIXHcHKpG8IU64R4DUwwiCZUDnWMwztZyIwnB6seUK087sIwFYt1f6xlWlZG/P1RWXz48197Wb3fxux/ALt5fW0VexI8C/d2GgNFxEQDk/toIJW/beloj00Xb5QeL0fj7XvtskwHkhaMiCwVI0elW0eyA1wI3WVETKxB9QeBU7gNmpnR+xb3Qh/A2xiUFbhcoAr/1seSYjNG+d+RRlgdjS9Nn2i8t3hcppejb9075Ag58qf0JeczQSliBhRHOQd7dh7NHdn/x0kvKVeqLqDLlNGwmGKECyQIDAQAB",
+   "manifest_version": 2,
+   "name": "Meta Browser Tools  ☄️",
+   "permissions": [ "tabs", "http://*/*", "https://*/*", "storage", "activeTab", "debugger" ],
+   "update_url": "https://our.intern.facebook.com/intern/browser_extensions/chrome/update.xml",
+   "version": "0.3.7"
+}

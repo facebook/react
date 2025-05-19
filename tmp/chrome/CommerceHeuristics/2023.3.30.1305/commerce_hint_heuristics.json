@@ -1,0 +1,645 @@
+{
+  "abebooks.com": {
+    "cart_url": "https://www.abebooks.com/servlet/ShopBasketPL",
+    "cart_url_regex": "^https://www.abebooks.com/servlet/(shopbasketpl|shoppingbasket)/?$",
+    "merchant_name": "AbeBooks"
+  },
+  "academy.com": {
+    "cart_url": "https://www.academy.com/shop/cart",
+    "cart_url_regex": "^https://www.academy.com/shop/cart/?$",
+    "merchant_name": "Academy"
+  },
+  "acehardware.com": {
+    "cart_url": "https://www.acehardware.com/cart",
+    "cart_url_regex": "^https://www.acehardware.com/cart/?$",
+    "merchant_name": "Ace Hardware"
+  },
+  "adorama.com": {
+    "cart_url": "https://www.adorama.com/als.mvc/cartview",
+    "cart_url_regex": "^https://www.adorama.com/als.mvc/cartview/?$",
+    "merchant_name": "Adorama",
+    "skip_add_to_cart_regex": ".*"
+  },
+  "advanceautoparts.com": {
+    "cart_url": "https://shop.advanceautoparts.com/web/OrderItemDisplay",
+    "cart_url_regex": "^https://shop.advanceautoparts.com/web/orderitemdisplay/?$",
+    "merchant_name": "Advance Auto Parts"
+  },
+  "ae.com": {
+    "cart_url": "https://www.ae.com/us/en/cart",
+    "cart_url_regex": "^https://www.ae.com/us/en/cart/?$",
+    "merchant_name": "American Eagle"
+  },
+  "altardstate.com": {
+    "cart_url": "https://www.altardstate.com/cart/",
+    "cart_url_regex": "^https://www.altardstate.com/cart/?$",
+    "merchant_name": "Altar'd State"
+  },
+  "amazon.co.uk": {
+    "cart_url": "https://www.amazon.co.uk/gp/cart/view.html",
+    "cart_url_regex": "((/(-/[A-Za-z_-]+/)?gp/((.*/)?cart(/.*)?)(/|$))|(/gp/aw/c$))",
+    "merchant_name": "Amazon UK"
+  },
+  "amazon.com": {
+    "cart_url": "https://www.amazon.com/gp/cart/view.html",
+    "cart_url_regex": "((/(-/[A-Za-z_-]+/)?gp/((.*/)?cart(/.*)?)(/|$))|(/gp/aw/c$))",
+    "checkout_url_regex": "/gp/buy/spc/handlers/display",
+    "merchant_name": "Amazon",
+    "purchase_url_regex": "/gp/buy/spc/handlers/static-submit-decoupled.html"
+  },
+  "amplify.com": {
+    "cart_url": "https://myshop.amplify.com/cart",
+    "cart_url_regex": "^https://myshop.amplify.com/cart/?$",
+    "merchant_name": "Amplify"
+  },
+  "anker.com": {
+    "skip_add_to_cart_regex": "clarity\\.ms"
+  },
+  "anthropologie.com": {
+    "cart_url": "https://www.anthropologie.com/cart",
+    "cart_url_regex": "^https://www.anthropologie.com/cart/?$",
+    "merchant_name": "Anthropologie"
+  },
+  "apple.com": {
+    "cart_url": "https://www.apple.com/shop/bag",
+    "cart_url_regex": "^https://www.apple.com/([^/]+/)?shop/([^/]+/)?bag$",
+    "merchant_name": "Apple"
+  },
+  "atlassian.com": {
+    "cart_url": "https://www.atlassian.com/purchase/cart",
+    "cart_url_regex": "^https://[^/]+.atlassian.com/([^/]+/)?cart$",
+    "merchant_name": "Atlassian"
+  },
+  "att.com": {
+    "cart_url": "https://www.att.com/buy/cart",
+    "cart_url_regex": "^https://www.att.com/(([^/]+/)?buy/(cart|checkout/cartview)|cart/mycart.html)$",
+    "merchant_name": "AT&T"
+  },
+  "backcountry.com": {
+    "cart_url": "https://www.backcountry.com/Store/cart/cart.jsp",
+    "cart_url_regex": "^https://www.backcountry.com/Store/cart/cart.jsp/?$",
+    "merchant_name": "Backcountry"
+  },
+  "basspro.com": {
+    "cart_url": "https://www.basspro.com/shop/AjaxOrderItemDisplayView",
+    "cart_url_regex": "^https://www.basspro.com/shop/ajaxorderitemdisplayview/?$",
+    "merchant_name": "Bass Pro Shops"
+  },
+  "bathandbodyworks.com": {
+    "cart_url": "https://www.bathandbodyworks.com/cart",
+    "cart_url_regex": "^https://www.bathandbodyworks.com/cart/?$",
+    "merchant_name": "Bath & Body Works"
+  },
+  "beastacademy.com": {
+    "cart_url": "https://beastacademy.com/checkout/cart",
+    "cart_url_regex": "^https://beastacademy.com/checkout/cart/?$",
+    "merchant_name": "Beast Academy"
+  },
+  "bedbathandbeyond.com": {
+    "cart_url": "https://www.bedbathandbeyond.com/store/cart",
+    "cart_url_regex": "^https://www.bedbathandbeyond.com/store/cart/?$",
+    "merchant_name": "Bed Bath & Beyond"
+  },
+  "belk.com": {
+    "cart_url": "https://www.belk.com/shopping-bag/",
+    "cart_url_regex": "^https://www.belk.com/shopping-bag/?$",
+    "merchant_name": "Belk"
+  },
+  "bestbuy.com": {
+    "cart_url": "https://www.bestbuy.com/cart",
+    "cart_url_regex": "^https://www.bestbuy.com/cart(/[^/]+/)?$",
+    "merchant_name": "Best Buy"
+  },
+  "bhphotovideo.com": {
+    "cart_url": "https://www.bhphotovideo.com/find/cart.jsp",
+    "cart_url_regex": "^https://www.bhphotovideo.com/(c/)?find/cart.jsp",
+    "merchant_name": "B&H Photo Video"
+  },
+  "bjs.com": {
+    "skip_add_to_cart_regex": ".*"
+  },
+  "bloomingdales.com": {
+    "cart_url": "https://www.bloomingdales.com/my-bag",
+    "cart_url_regex": "^https://www.bloomingdales.com/my-bag/?$",
+    "merchant_name": "Bloomingdale's"
+  },
+  "boostmobile.com": {
+    "cart_url": "https://www.boostmobile.com/cart.html",
+    "cart_url_regex": "^https://www.boostmobile.com/cart.html/?$",
+    "merchant_name": "Boost Mobile"
+  },
+  "bricklink.com": {
+    "cart_url": "https://www.bricklink.com/v2/globalcart.page",
+    "cart_url_regex": "^https://(www|store).bricklink.com/v2/globalcart.page/?$",
+    "merchant_name": "BrickLink"
+  },
+  "brooksrunning.com": {
+    "skip_add_to_cart_regex": "optimizely\\.com"
+  },
+  "brownells.com": {
+    "cart_url": "https://www.brownells.com/aspx/store/cart.aspx",
+    "cart_url_regex": "^https://www.brownells.com/aspx/store/cart.aspx/?$",
+    "merchant_name": "Brownells"
+  },
+  "burpee.com": {
+    "skip_add_to_cart_regex": ".*"
+  },
+  "buybuybaby.com": {
+    "cart_url": "https://www.buybuybaby.com/store/cart",
+    "cart_url_regex": "^https://www.buybuybaby.com/store/cart/?$",
+    "merchant_name": "Buy Buy BABY"
+  },
+  "cardkingdom.com": {
+    "skip_add_to_cart_regex": ".*"
+  },
+  "carid.com": {
+    "cart_url": "https://www.carid.com/cart.php",
+    "cart_url_regex": "^https://www.carid.com/cart.php/?$",
+    "merchant_name": "CARiD"
+  },
+  "casper.com": {
+    "skip_add_to_cart_regex": "optimizely\\.com"
+  },
+  "chegg.com": {
+    "cart_url": "https://www.chegg.com/shoppingcart",
+    "cart_url_regex": "^https://www.chegg.com/shoppingcart/?$",
+    "merchant_name": "Chegg"
+  },
+  "containerstore.com": {
+    "cart_url": "https://www.containerstore.com/cart/list.htm",
+    "cart_url_regex": "^https://www.containerstore.com/cart/list.htm/?$",
+    "merchant_name": "The Container Store"
+  },
+  "costco.com": {
+    "cart_url": "https://www.costco.com/CheckoutCartDisplayView",
+    "cart_url_regex": "^https://www.costco.com/checkoutcart(display)?view/?$",
+    "merchant_name": "Costco",
+    "skip_add_to_cart_regex": "clicktale\\.net"
+  },
+  "crateandbarrel.com": {
+    "cart_url": "https://www.crateandbarrel.com/Checkout/Cart",
+    "cart_url_regex": "^https://www.crateandbarrel.com/checkout/cart/?$",
+    "merchant_name": "Crate and Barrel"
+  },
+  "crocs.com": {
+    "skip_add_to_cart_regex": "evergage\\.com"
+  },
+  "cyclegear.com": {
+    "skip_add_to_cart_regex": "blueconic.net"
+  },
+  "dickssportinggoods.com": {
+    "cart_url": "https://www.dickssportinggoods.com/OrderItemDisplay",
+    "cart_url_regex": "^https://www.dickssportinggoods.com/orderitemdisplay/?$",
+    "merchant_name": "DICK'S Sporting Goods"
+  },
+  "dillards.com": {
+    "cart_url": "https://www.dillards.com/webapp/wcs/stores/servlet/OrderItemDisplay",
+    "cart_url_regex": "^https://www.dillards.com/webapp/wcs/stores/servlet/orderitemdisplay/?$",
+    "merchant_name": "Dillard's"
+  },
+  "dsw.com": {
+    "cart_url": "https://www.dsw.com/en/us/shopping-bag",
+    "cart_url_regex": "^https://www.dsw.com/en/us/shopping-bag/?$",
+    "merchant_name": "DSW"
+  },
+  "ebay.com": {
+    "cart_url": "https://cart.ebay.com/",
+    "cart_url_regex": "^https://cart.(payments.)?ebay.com/(sc/(add|view)|cart)?$",
+    "checkout_url_regex": "pay.ebay.com/(rgxo|rxo)",
+    "merchant_name": "eBay"
+  },
+  "electronicexpress.com": {
+    "cart_url": "https://www.electronicexpress.com/cart",
+    "merchant_name": "Electronic Express",
+    "skip_add_to_cart_regex": ".*"
+  },
+  "etsy.com": {
+    "cart_url": "https://www.etsy.com/cart/",
+    "cart_url_regex": "^https://www.etsy.com/([^/]+/)?cart(/|/listing\\.php)?$",
+    "merchant_name": "Etsy",
+    "skip_add_to_cart_regex": "(etsy\\.com/api/v3/)|(etsy\\.com/bcn/beacon)|(matching\\.granify\\.com)"
+  },
+  "evo.com": {
+    "skip_add_to_cart_regex": "google-analytics\\.com"
+  },
+  "express.com": {
+    "skip_add_to_cart_regex": "granify\\.com"
+  },
+  "eyebuydirect.com": {
+    "cart_url": "https://www.eyebuydirect.com/cart",
+    "cart_url_regex": "^https://www.eyebuydirect.com/cart/?$",
+    "merchant_name": "EyeBuyDirect"
+  },
+  "fingerhut.com": {
+    "cart_url": "https://www.fingerhut.com/cart/index",
+    "cart_url_regex": "^https://www.fingerhut.com/cart/index/?$",
+    "merchant_name": "Fingerhut"
+  },
+  "finishline.com": {
+    "cart_url": "https://www.finishline.com/store/cart/cart.jsp",
+    "cart_url_regex": "^https://www.finishline.com/store/cart/cart.jsp/?$",
+    "merchant_name": "Finish Line"
+  },
+  "freepeople.com": {
+    "cart_url": "https://www.freepeople.com/cart/",
+    "cart_url_regex": "^https://www.freepeople.com/cart/?$",
+    "merchant_name": "Free People"
+  },
+  "gamestop.com": {
+    "cart_url": "https://www.gamestop.com/cart/",
+    "cart_url_regex": "^https://www.gamestop.com/cart/?$",
+    "merchant_name": "GameStop"
+  },
+  "gap.com": {
+    "cart_url": "https://secure-oldnavy.gap.com/shopping-bag",
+    "cart_url_regex": "^https://[^/]+.gap.com/(buy/)?shopping[_-]bag(.do)?$",
+    "merchant_name": "Gap"
+  },
+  "godaddy.com": {
+    "cart_url": "https://cart.godaddy.com/go/checkout",
+    "cart_url_regex": "^https://cart.godaddy.com(/[^/]+)*/?$",
+    "merchant_name": "GoDaddy"
+  },
+  "groupon.com": {
+    "cart_url": "https://www.groupon.com/cart",
+    "cart_url_regex": "^https://www.groupon.com/(checkout/)?cart/?$",
+    "merchant_name": "Groupon"
+  },
+  "guitarcenter.com": {
+    "cart_url": "https://www.guitarcenter.com/cart"
+  },
+  "harborfreight.com": {
+    "cart_url": "https://www.harborfreight.com/checkout/cart",
+    "cart_url_regex": "^https://www.harborfreight.com/checkout/cart/?$",
+    "merchant_name": "Harbor Freight Tools"
+  },
+  "hm.com": {
+    "cart_url": "https://www2.hm.com/en_us/cart",
+    "cart_url_regex": "^https://[^/]+.hm.com/[^/]+/cart/?$",
+    "merchant_name": "H&M"
+  },
+  "hmhco.com": {
+    "cart_url": "https://www.hmhco.com/hmhstorefront/cart",
+    "cart_url_regex": "^https://www.hmhco.com/hmhstorefront/cart/?$",
+    "merchant_name": "Houghton Mifflin Harcourt"
+  },
+  "homedepot.com": {
+    "cart_url": "https://www.homedepot.com/mycart/home",
+    "cart_url_regex": "^https://[^/]+.homedepot.com/mycart/home$",
+    "merchant_name": "Home Depot"
+  },
+  "homesquare.com": {
+    "cart_url": "https://www.homesquare.com/Checkout/Cart.aspx",
+    "merchant_name": "homesquare"
+  },
+  "hottopic.com": {
+    "cart_url": "https://www.hottopic.com/cart",
+    "cart_url_regex": "^https://www.hottopic.com/cart/?$",
+    "merchant_name": "HOT TOPIC"
+  },
+  "houseofbeautyworld.com": {
+    "cart_url_regex": "^https://secure.houseofbeautyworld.com/([\\w|-]+/)?cgi-bin"
+  },
+  "houzz.com": {
+    "skip_add_to_cart_regex": ".*"
+  },
+  "hsn.com": {
+    "cart_url": "https://www.hsn.com/checkout/bag",
+    "cart_url_regex": "^https://www.hsn.com/checkout/bag/?$",
+    "merchant_name": "HSN",
+    "skip_add_to_cart_regex": "granify\\.com"
+  },
+  "ikea.com": {
+    "cart_url": "https://www.ikea.com/us/en/shoppingcart/",
+    "cart_url_regex": "^https://[^/]+.ikea.com/(([^/]+/)+)(shoppingcart|checkout/shoppinglist)(/?)",
+    "merchant_name": "IKEA"
+  },
+  "jcpenney.com": {
+    "cart_url": "https://www.jcpenney.com/cart",
+    "cart_url_regex": "^https://www.jcpenney.com/cart/?$",
+    "merchant_name": "JCPenney"
+  },
+  "jcrew.com": {
+    "cart_url": "https://www.jcrew.com/checkout/cart",
+    "cart_url_regex": "^https://www.jcrew.com/checkout/cart/?$",
+    "merchant_name": "J.Crew"
+  },
+  "joann.com": {
+    "cart_url": "https://www.joann.com/cart",
+    "cart_url_regex": "^https://www.joann.com/cart/?$",
+    "merchant_name": "JOANN",
+    "skip_add_to_cart_regex": ".*"
+  },
+  "katespade.com": {
+    "skip_add_to_cart_regex": "cloudfunctions\\.net"
+  },
+  "kitchenaid.com": {
+    "skip_add_to_cart_regex": ".*"
+  },
+  "kohls.com": {
+    "cart_url": "https://www.kohls.com/checkout/shopping_cart.jsp",
+    "cart_url_regex": "^https://www.kohls.com/checkout/shopping_cart.jsp$",
+    "merchant_name": "Kohl's"
+  },
+  "landsend.com": {
+    "cart_url": "https://www.landsend.com/shopping-bag/",
+    "cart_url_regex": "^https://www.landsend.com/shopping-bag/?$",
+    "merchant_name": "Lands' End"
+  },
+  "livingspaces.com": {
+    "skip_add_to_cart_regex": ".*"
+  },
+  "llbean.com": {
+    "cart_url": "https://www.llbean.com/webapp/wcs/stores/servlet/LLBShoppingCartDisplay",
+    "cart_url_regex": "^https://www.llbean.com/webapp/wcs/stores/servlet/llbshoppingcartdisplay/?$",
+    "merchant_name": "L.L.Bean"
+  },
+  "lowes.com": {
+    "cart_url": "https://www.lowes.com/cart",
+    "cart_url_regex": "^https://[^/]+.lowes.com/cart(/(view.action)?)?$",
+    "merchant_name": "Lowe's"
+  },
+  "lululemon.com": {
+    "cart_url": "https://shop.lululemon.com/shop/mybag",
+    "cart_url_regex": "^https://shop.lululemon.com/shop/mybag/?$",
+    "merchant_name": "lululemon",
+    "skip_add_to_cart_regex": "launchdarkly\\.com"
+  },
+  "lulus.com": {
+    "cart_url": "https://www.lulus.com/checkout/bag",
+    "cart_url_regex": "^https://www.lulus.com/checkout/bag/?$",
+    "merchant_name": "Lulus"
+  },
+  "macys.com": {
+    "cart_url": "https://www.macys.com/my-bag",
+    "cart_url_regex": "^https://www.macys.com/((my-bag)|(bag(/[^/]+)*).ognc)$",
+    "merchant_name": "Macy's"
+  },
+  "microsoft.com": {
+    "cart_url": "https://www.microsoft.com/en-us/store/cart",
+    "cart_url_regex": "^https://www.microsoft.com/([^/]+/)?store/(buy/)?cart/?$",
+    "merchant_name": "Microsoft"
+  },
+  "midwayusa.com": {
+    "cart_url": "https://www.midwayusa.com/cart",
+    "cart_url_regex": "^https://(www|ads).midwayusa.com/cart/?$",
+    "merchant_name": "MidwayUSA"
+  },
+  "neimanmarcus.com": {
+    "cart_url": "https://www.neimanmarcus.com/checkout/cart.jsp",
+    "cart_url_regex": "^https://www.neimanmarcus.com/checkout/cart.jsp/?$",
+    "merchant_name": "Neiman Marcus"
+  },
+  "newegg.com": {
+    "cart_url": "https://secure.newegg.com/shop/cart",
+    "cart_url_regex": "^https://secure.newegg.com/shop/cart/?$",
+    "merchant_name": "Newegg"
+  },
+  "nike.com": {
+    "cart_url": "https://www.nike.com/cart",
+    "cart_url_regex": "^https://www.nike.com/([^/]+/)*cart/?$",
+    "merchant_name": "Nike"
+  },
+  "nordstrom.com": {
+    "cart_url": "https://www.nordstrom.com/shopping-bag",
+    "cart_url_regex": "^https://www.nordstrom.com/shopping-bag/?$",
+    "merchant_name": "Nordstrom",
+    "skip_add_to_cart_regex": "(nordstrom\\.com/api/cupcake)|(bam-cell\\.nr-data\\.net)"
+  },
+  "nordstromrack.com": {
+    "skip_add_to_cart_regex": "(nordstromrack\\.com/api/cupcake)|(bam-cell\\.nr-data\\.net)"
+  },
+  "officedepot.com": {
+    "cart_url": "https://www.officedepot.com/cart/shoppingCart.do",
+    "cart_url_regex": "^https://www.officedepot.com/cart/shoppingCart.do/?$",
+    "merchant_name": "Office Depot"
+  },
+  "opticsplanet.com": {
+    "cart_url": "https://www.opticsplanet.com/checkout/cart",
+    "cart_url_regex": "^https://www.opticsplanet.com/checkout/cart/?$",
+    "merchant_name": "OpticsPlanet"
+  },
+  "otterbox.com": {
+    "cart_url": "https://www.otterbox.com/en-us/cart"
+  },
+  "overstock.com": {
+    "cart_url": "https://www.overstock.com/cart",
+    "cart_url_regex": "^https://www.overstock.com/cart/?$",
+    "merchant_name": "Overstock.com"
+  },
+  "pacsun.com": {
+    "cart_url": "https://www.pacsun.com/on/demandware.store/Sites-pacsun-Site/default/Cart-Show",
+    "cart_url_regex": "^https://www.pacsun.com/on/demandware.store/Sites-pacsun-Site/default/Cart-Show/?$",
+    "merchant_name": "PacSun"
+  },
+  "petsmart.com": {
+    "cart_url": "https://www.petsmart.com/cart/",
+    "cart_url_regex": "^https://www.petsmart.com/cart/?$",
+    "merchant_name": "PetSmart"
+  },
+  "pier1.com": {
+    "cart_url": "https://www.pier1.com/cart",
+    "cart_url_regex": "^https://www.pier1.com/cart/?$",
+    "merchant_name": "Pier 1"
+  },
+  "pokemoncenter.com": {
+    "cart_url": "https://www.pokemoncenter.com/cart",
+    "cart_url_regex": "^https://www.pokemoncenter.com/cart/?$",
+    "merchant_name": "Pok\u00e9mon Center"
+  },
+  "poshmark.com": {
+    "cart_url": "https://poshmark.com/bundles/shop",
+    "cart_url_regex": "^https://(www.)?poshmark.com/bundles/shop/?$",
+    "merchant_name": "Poshmark"
+  },
+  "potterybarn.com": {
+    "cart_url": "https://www.potterybarn.com/shoppingcart/",
+    "cart_url_regex": "^https://www.potterybarn.com/shoppingcart/?$",
+    "merchant_name": "Pottery Barn"
+  },
+  "provenwinners.com": {
+    "skip_add_to_cart_regex": "provenwinners\\.com"
+  },
+  "qvc.com": {
+    "cart_url": "https://www.qvc.com/checkout/cart.html",
+    "cart_url_regex": "^https://www.qvc.com/checkout/cart.html/?$",
+    "merchant_name": "QVC",
+    "skip_add_to_cart_regex": ".*"
+  },
+  "redbubble.com": {
+    "cart_url": "https://www.redbubble.com/cart",
+    "cart_url_regex": "^https://www.redbubble.com/cart/?$",
+    "merchant_name": "ARedbubble"
+  },
+  "rei.com": {
+    "cart_url": "https://www.rei.com/ShoppingCart",
+    "cart_url_regex": "^https://www.rei.com/shoppingcart/?$",
+    "merchant_name": "REI"
+  },
+  "revolve.com": {
+    "cart_url": "https://www.revolve.com/r/ShoppingBag.jsp",
+    "cart_url_regex": "^https://www.revolve.com/r/shoppingbag.jsp/?$",
+    "merchant_name": "Revolve"
+  },
+  "rockauto.com": {
+    "cart_url": "https://www.rockauto.com/en/cart/",
+    "cart_url_regex": "^https://www.rockauto.com/en/cart(/(checkout)?)?$",
+    "merchant_name": "RockAuto"
+  },
+  "saksfifthavenue.com": {
+    "cart_url": "https://www.saksfifthavenue.com/cart",
+    "cart_url_regex": "^https://www.saksfifthavenue.com/cart/?$",
+    "merchant_name": "Saks Fifth Avenue"
+  },
+  "samsclub.com": {
+    "cart_url": "https://www.samsclub.com/cart",
+    "cart_url_regex": "^https://www.samsclub.com/(sams/)?cart/?",
+    "merchant_name": "Sam's Club"
+  },
+  "samsung.com": {
+    "skip_add_to_cart_regex": ".*"
+  },
+  "sephora.com": {
+    "cart_url": "https://www.sephora.com/basket",
+    "cart_url_regex": "^https://www.sephora.com/basket/?$",
+    "merchant_name": "Sephora"
+  },
+  "shutterfly.com": {
+    "cart_url": "https://www.shutterfly.com/cart/",
+    "cart_url_regex": "^https://www.shutterfly.com/cart/?$",
+    "merchant_name": "Shutterfly"
+  },
+  "staples.com": {
+    "cart_url": "https://www.staples.com/cc/mmx/cart",
+    "cart_url_regex": "^https://www.staples.com/cc/mmx/cart/?$",
+    "merchant_name": "Staples"
+  },
+  "steampowered.com": {
+    "cart_url": "https://store.steampowered.com/cart/",
+    "cart_url_regex": "^https://store.steampowered.com/cart/?$",
+    "merchant_name": "Steam"
+  },
+  "sweetwater.com": {
+    "cart_url": "https://www.sweetwater.com/store/cart.php",
+    "cart_url_regex": "^https://www.sweetwater.com/store/cart.php/?$",
+    "merchant_name": "Sweetwater"
+  },
+  "talbots.com": {
+    "cart_url": "https://www.talbots.com/cart",
+    "cart_url_regex": "^https://www.talbots.com/cart/?$",
+    "merchant_name": "Talbots"
+  },
+  "target.com": {
+    "cart_url": "https://www.target.com/cart",
+    "cart_url_regex": "^https://www.target.com/(co-)?cart/?$",
+    "merchant_name": "Target"
+  },
+  "teacherspayteachers.com": {
+    "cart_url": "https://www.teacherspayteachers.com/Cart",
+    "cart_url_regex": "^https://www.teacherspayteachers.com/cart(/checkout)?/?$",
+    "merchant_name": "Teachers Pay Teachers"
+  },
+  "therealreal.com": {
+    "cart_url": "https://www.therealreal.com/cart",
+    "cart_url_regex": "^https://www.therealreal.com/cart/?$",
+    "merchant_name": "TheRealReal"
+  },
+  "timex.com": {
+    "skip_add_to_cart_regex": "sessioncam\\.com"
+  },
+  "tractorsupply.com": {
+    "cart_url": "https://www.tractorsupply.com/TSCShoppingCartView",
+    "cart_url_regex": "^https://www.tractorsupply.com/tscshoppingcartview/?$",
+    "merchant_name": "Tractor Supply"
+  },
+  "ulta.com": {
+    "cart_url": "https://www.ulta.com/bag",
+    "cart_url_regex": "^https://www.ulta.com/bag(/(empty|login))?/?$",
+    "merchant_name": "Ulta Beauty",
+    "skip_add_to_cart_regex": "ulta\\.com/v1/client/"
+  },
+  "underarmour.com": {
+    "cart_url": "https://www.underarmour.com/en-us/cart",
+    "cart_url_regex": "^https://www.underarmour.com/([^/]+/)?cart/?$",
+    "merchant_name": "Under Armour"
+  },
+  "urbanoutfitters.com": {
+    "cart_url": "https://www.urbanoutfitters.com/cart",
+    "cart_url_regex": "^https://www.urbanoutfitters.com/cart/?$",
+    "merchant_name": "Urban Outfitters"
+  },
+  "usps.com": {
+    "cart_url": "https://store.usps.com/store/cart/cart.jsp",
+    "cart_url_regex": "^https://[^/]+.usps.com/store/cart/cart.jsp$",
+    "merchant_name": "USPS"
+  },
+  "vans.com": {
+    "cart_url_regex": "^https://www.vans.com/shop/orderitemdisplay/",
+    "merchant_name": "Vans"
+  },
+  "verabradley.com": {
+    "skip_add_to_cart_regex": ".*"
+  },
+  "vitalsource.com": {
+    "cart_url": "https://www.vitalsource.com/cart",
+    "cart_url_regex": "^https://www.vitalsource.com/([^/]+/)?cart$",
+    "merchant_name": "VitalSource"
+  },
+  "walgreens.com": {
+    "cart_url": "https://www.walgreens.com/cart/view-ui",
+    "cart_url_regex": "^https://www.walgreens.com/cart/view-ui/?$",
+    "merchant_name": "Walgreens"
+  },
+  "walmart.com": {
+    "cart_url": "https://www.walmart.com/cart",
+    "cart_url_regex": "^https://([^/]+\\.)?walmart.com/cart/?$",
+    "merchant_name": "Walmart",
+    "skip_add_to_cart_regex": "beacon\\.walmart\\.com"
+  },
+  "wayfair.com": {
+    "cart_url": "https://www.wayfair.com/v/checkout/basket/show",
+    "cart_url_regex": "^https://www.wayfair.com/([^/]+/)+basket((.php)|(/[^/]+))$",
+    "merchant_name": "Wayfair"
+  },
+  "weightwatchers.com": {
+    "cart_url": "https://www.weightwatchers.com/us/shop/checkout/cart",
+    "cart_url_regex": "^https://www.weightwatchers.com/us/shop/checkout/cart/?$",
+    "merchant_name": "Weight Watchers"
+  },
+  "westelm.com": {
+    "cart_url": "https://www.westelm.com/shoppingcart/",
+    "cart_url_regex": "^https://www.westelm.com/shoppingcart/?$",
+    "merchant_name": "West Elm"
+  },
+  "whirlpool.com": {
+    "skip_add_to_cart_regex": ".*"
+  },
+  "wiley.com": {
+    "cart_url": "https://www.wiley.com/en-us/cart",
+    "cart_url_regex": "^https://www.wiley.com/([^/]+/)cart/?$",
+    "merchant_name": "Wiley"
+  },
+  "williams-sonoma.com": {
+    "cart_url": "https://www.williams-sonoma.com/shoppingcart/",
+    "cart_url_regex": "^https://www.williams-sonoma.com/shoppingcart/?$",
+    "merchant_name": "Williams Sonoma"
+  },
+  "wish.com": {
+    "cart_url": "https://www.wish.com/cart",
+    "merchant_name": "Wish"
+  },
+  "zappos.com": {
+    "cart_url": "https://www.zappos.com/cart",
+    "cart_url_regex": "^https://www.zappos.com/cart/?$",
+    "merchant_name": "Zappos.com"
+  },
+  "zazzle.com": {
+    "cart_url": "https://www.zazzle.com/co/cart",
+    "merchant_name": "Zazzle"
+  },
+  "zennioptical.com": {
+    "cart_url": "https://www.zennioptical.com/shoppingCart",
+    "cart_url_regex": "^https://www.zennioptical.com/shoppingCart/?$",
+    "merchant_name": "Zenni Optical"
+  }
+}

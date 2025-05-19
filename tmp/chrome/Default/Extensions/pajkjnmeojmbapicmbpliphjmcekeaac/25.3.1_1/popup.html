@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cyberhaven security extension</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500" />
+    <style>
+      html {
+        --bg-color: #fff;
+        --bg-image: url("assets/bg_w.svg");
+        --logo: url("assets/logo_w.svg");
+        --status-h3-color: #545454;
+        --status-p-color: #8a8a8a;
+      }
+      @media (prefers-color-scheme: dark) {
+        html {
+          --bg-color: #1b1b1b;
+          --bg-image: url("assets/bg_b.svg");
+          --logo: url("assets/logo_b.svg");
+          --status-h3-color: #fff;
+          --status-p-color: #c2c2c2;
+        }
+      }
+      * {
+        font-family: "Roboto", sans-serif;
+        padding: 0;
+        margin: 0;
+      }
+      body {
+        border-radius: 10px;
+        background-image: var(--bg-image);
+        background-repeat: no-repeat;
+        background-size: 310px 256px;
+        background-position: 33px 46px;
+        background-color: var(--bg-color);
+      }
+      #container {
+        width: 307px;
+        height: 350px;
+        padding: 0 24px;
+      }
+
+
+      .logo {
+        padding: 24px 22px 0;
+      }
+      .logo img {
+        content: var(--logo);
+      }
+      .logo img {
+        width: 183px;
+      }
+      .status {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .status h3 {
+        margin-top: 20px;
+        font-weight: 400;
+        font-size: 18px;
+        line-height: 27px;
+        text-align: center;
+        color: var(--status-h3-color);
+      }
+      .status p {
+        margin-top: 9px;
+        font-style: normal;
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 19px;
+        /* identical to box height, or 193% */
+        text-align: center;
+        color: var(--status-p-color);
+      }
+      button {
+        background: linear-gradient(90deg, #50bfed 0%, #51bfec 45.2%, #7ae0bd 98.03%);
+        border: none;
+        border-radius: 24px;
+        padding: 12px 28px;
+        cursor: pointer;
+
+        font-weight: 500;
+        font-size: 16px;
+        color: #fff;
+      }
+
+      .container-center {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .container-horizontal {
+        display: flex;
+        justify-content: space-between;
+        flex-direction: row;
+        align-items: center;
+
+        /* // specify space between childs */
+        gap: 10px;
+
+        /* align elements in center vertically */
+      }
+
+      /* // new separator class from div */
+      .separator {
+        margin-top: 15px;
+        margin-bottom: 1px;
+        width: 100%;
+        height: 1px;
+        background-color: #50bfed;
+      }
+      
+
+      a {
+        color: #50bfed;
+        text-decoration: none;
+        margin-top: 20px;
+        cursor: pointer;
+      }
+
+      .highlight {
+        color: #ff0000 !important;
+      }
+
+      .checkbox {
+        margin-top: 10px;
+        /* // make it stylish */
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 1px solid #50bfed;
+        border-radius: 3px;
+        display: inline-block;
+        position: relative;
+        cursor: pointer;
+      }
+
+      /* // show checkmark */
+
+      .checkbox::before {
+        content: "";
+        position: absolute;
+        display: none;
+        width: 9px;
+        height: 5px;
+        border: 2px solid #fff;
+        border-top: none;
+        border-right: none;
+        top: 3px;
+        left: 4px;
+        transform: rotate(-45deg);
+      }
+
+      @media (prefers-color-scheme: light) {
+        .checkbox:checked {
+          border: 2px solid #50bfed;
+          background-color: #50bfed;
+        }
+      }
+
+      .checkbox:checked::before {
+        display: block;
+      }
+
+      .status button {
+        margin-top: 20px;
+      }
+
+      #policyagree.disabled {
+        background-color: #cccccc;
+        color: #666666;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="logo"><img alt="Cyberhaven extension" /></div>
+    <div id="container"></div>
+    <template id="online">
+      <div class="status">
+        <img src="assets/online.svg" alt="Cyberhaven extension" />
+        <h3>You're all set!</h3>
+        <p>The Cyberhaven extension is connected to the sensor.</p>
+        <a id="privacy-settings">Privacy Settings</a>
+      </div>
+    </template>
+    <template id="offline">
+      <div class="status">
+        <img src="assets/offline.svg" alt="Cyberhaven security extension" />
+        <h3>The extension is not connected to the Cyberhaven sensor.</h3>
+        <p>
+          The extension is managed by your enterprise. Please contact your system administration team if you have any
+          questions.
+        </p>
+        <button id="report">Report a problem</button>
+        <a id="privacy-settings">Privacy Settings</a>
+      </div>
+    </template>
+    <template id="disabled">
+      <div class="status">
+        <img src="assets/offline.svg" alt="Cyberhaven security extension" />
+        <h3>Disabled</h3>
+        <p>
+          The extension is disabled by your system administration team.
+        </p>
+        <button id="report">Report a problem</button>
+        <a id="privacy-settings">Privacy Settings</a>
+      </div>
+    </template>
+    <template id="privacypolicy">
+      <div class="status" style="height: 600px !important">
+        <h3>Privacy Policy</h3>
+        <p>
+          We would like to collect the following data that personally indentifies you:
+      </p>
+        <p>
+          - Email which we collect to link files changes and their movement.
+        </p>
+        <p class="highlight">
+          If you choose to decline, the extension will be uninstalled from your browser.
+        </p>
+        <!-- // checkbox -->
+        <div class="container-horizontal">
+          <input type="checkbox" class="checkbox" id="personalpolicycheckbox" name="personalpolicyagree" value="agree">
+          <p>Agree to personal data collection</p>
+        </div>
+        <div class="separator"></div>
+        <p>
+          We would also like to collect anonymous data but not limited to:
+        </p>
+        <p>
+          - File sharing, rename, delete, move, copy, and other file operations.
+        </p>
+       
+        <div class="container-horizontal">
+          <input type="checkbox" class="checkbox" id="nonpersonalpolicycheckbox" name="nonpersonalpolicyagree" value="agree">
+          <p>Agree to non-personal data collection</p>
+        </div>
+        <div class="separator"></div>
+        <p>
+          Read our <a href="https://www.cyberhaven.com/privacy-policy-for-cyberhaven-extension" target="_blank">Privacy Policy</a> for more information.
+        </p>
+         <div class="container-center">
+          <button id="policyagree">Agree to data collection</button>
+          <button id="policydisagree">Decline and uninstall</button>
+        </div>
+        <!--  -->
+
+        
+      </div>
+    </template>
+    <script src="./js/browser-polyfill.min.js"></script>
+    <script src="./js/popup.js"></script>
+  </body>
+</html>

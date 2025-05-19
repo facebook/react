@@ -275,7 +275,11 @@ export function extractAndPrintComponentTree(
  * @param options Options for formatting
  * @returns An object containing the tree and its formatted string representation, or null if extraction fails
  */
-export default function extractComponentTreeFromDevTools(hook: any) {
+export default function extractComponentTreeFromDevTools(
+  hook: any,
+  renderers: Map<number, any>,
+  fiberRoots: Map<number, any>,
+) {
   if (!hook) {
     console.error(
       'React DevTools hook is not available. Make sure React DevTools extension is installed.',
@@ -283,28 +287,32 @@ export default function extractComponentTreeFromDevTools(hook: any) {
     return null;
   }
 
-  const renderers: any = Array.from(hook.renderers.values());
-  if (renderers.length === 0) {
+  console.log('test');
+  console.log(renderers.size);
+
+  if (renderers.size === 0) {
     console.error('No React renderers found.');
     return null;
   }
 
-  const fiberRoots: any = Array.from(
-    hook.getFiberRoots(renderers[0].rendererID),
-  );
-  if (fiberRoots.length === 0) {
-    console.error('No fiber roots found.');
-    return null;
+  for (const [rendererID, renderer] of renderers) {
+    const fiberRoots: any = Array.from(hook.getFiberRoots(rendererID));
+    if (fiberRoots.length === 0) {
+      console.error('No fiber roots found.');
+      return null;
+    }
+
+    const currentFiber = fiberRoots[0].current;
+
+    const options: any = {
+      maxDepth: 3,
+      showIds: true,
+      showProps: true,
+      showState: true,
+    };
+
+    return extractAndFormatComponentTree(renderer, currentFiber, options);
   }
 
-  const currentFiber = fiberRoots[0].current;
-
-  const options: any = {
-    maxDepth: 3,
-    showIds: true,
-    showProps: true,
-    showState: true,
-  };
-
-  return extractAndFormatComponentTree(renderers[0], currentFiber, options);
+  return null;
 }

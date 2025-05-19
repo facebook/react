@@ -1,0 +1,41 @@
+{
+   "$schema": "https://json.schemastore.org/chrome-manifest",
+   "action": {
+      "default_title": "Open Metamate"
+   },
+   "background": {
+      "service_worker": "service_worker.js"
+   },
+   "commands": {
+      "new-conversation": {
+         "description": "Start new conversation"
+      }
+   },
+   "description": "Metamate for Chrome",
+   "host_permissions": [ "\u003Call_urls>" ],
+   "icons": {
+      "16": "/icons/icon16.png",
+      "192": "/icons/icon192.png",
+      "32": "/icons/icon32.png",
+      "48": "/icons/icon48.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvk0k4pEWF3qcjL8Iiw14nzMYvaAbPqKsZxxsYsFkTNpUKbSHzl2JJu7ybboxtivQqvkVyVpgarWDevId6XPlfqi/y2jTBUXwg+2FXf+2AllDcGBVIrbrz7u7swj3/0j+tTIyRXIH5ZmTypETkYb5QLVxa/VSIxe8OHMnerXZ2b5CKPqiHI2EY/e2tvd+aqpby6MPPPOePLzQoP2GG3lX9Tkq3dX6sgX6RopAbe/Mt4JmtZ4GWMVg5OvZ15xD3iGv56KeR1IzONq9a25hP6JcqjOXZIU4fBmK4lDtxDXRS0mus8/4WRaqaf8u6eoNH9bvTLBmaP2LdgE33lKV8zwqQQIDAQAB",
+   "manifest_version": 3,
+   "minimum_chrome_version": "96",
+   "name": "Metamate",
+   "options_ui": {
+      "open_in_tab": false,
+      "page": "options_page.html"
+   },
+   "permissions": [ "sidePanel", "activeTab", "storage" ],
+   "short_name": "Metamate",
+   "side_panel": {
+      "default_path": "sidebar.html"
+   },
+   "version": "2023.11.16.1204",
+   "version_name": "b238c2",
+   "web_accessible_resources": [ {
+      "matches": [ "\u003Call_urls>" ],
+      "resources": [ "sidebar.html" ]
+   } ]
+}

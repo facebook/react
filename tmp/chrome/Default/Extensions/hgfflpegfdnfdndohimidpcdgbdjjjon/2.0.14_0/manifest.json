@@ -1,0 +1,31 @@
+{
+   "background": {
+      "persistent": true,
+      "scripts": [ "background/mocks-for-chrome.js", "background/utils.js", "background/common.js", "background/crypto/bcrypt.js", "background/crypto/crypto.js", "background/download-policies-helpers.js", "background/download-policies.js", "background/listeners.js", "background/background-helpers.js", "background/background.js", "background/context-menus.js", "background/xerox.js" ]
+   },
+   "browser_action": {
+      "default_title": "Protego"
+   },
+   "content_scripts": [ {
+      "all_frames": true,
+      "js": [ "background/mocks-for-chrome.js", "background/utils.js", "background/common.js", "content/content.js", "content/jquery-3.5.1.min.js", "content/settings/settings.js", "content/pages/options.js", "content/pages/pastebin.js", "content/pages/downloads.js" ],
+      "matches": [ "\u003Call_urls>" ],
+      "run_at": "document_start"
+   } ],
+   "content_security_policy": "default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://our.internmc.facebook.com https://www.internalfb.com",
+   "description": "Password reuse and phishing protection for Facebook employees",
+   "homepage_url": "https://fb.facebook.com/groups/270085186956816/",
+   "icons": {
+      "128": "icon.png",
+      "16": "icon.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAypJ6jT2EcBzN4w1qDxOVU6TIRFPCJXY1uHJSqgs9u+e4/jHspAbEdPDYBWw5XgBDbVPSCKjIcBRptV/sRv8o/ZS572n4rQFUw4uvwYWQ1n44oTnDfBJ5obL3B5pQeWIlqE3LhmL90zGoo9Yp6i0j0co4l4ySMqH9YX9ebdcOQXpKA04py1weJRPkEGngUtvIVsU6t/f24jC3u51vuj33Wi/PekzURpiaVkl6lcVKAk05Fo8qo3hZr5f5TkjEsRklhN61nC7Ulkj08CSvW2n6Ssiyz6F0civqi6cU5kX4eErF/xOHiT910N4CBb8CFT0U0vqfIJ0+ICH+CvYeQ/PJRQIDAQAB",
+   "manifest_version": 2,
+   "minimum_chrome_version": "43",
+   "name": "Protego",
+   "options_page": "/content/settings/index.html",
+   "permissions": [ "nativeMessaging", "cookies", "notifications", "management", "storage", "tabs", "contextMenus", "webRequest", "webRequestBlocking", "downloads", "\u003Call_urls>" ],
+   "update_url": "https://www.internalfb.com/intern/browser_extensions/chrome/update.xml/",
+   "version": "2.0.14",
+   "version_name": "2.0.14"
+}

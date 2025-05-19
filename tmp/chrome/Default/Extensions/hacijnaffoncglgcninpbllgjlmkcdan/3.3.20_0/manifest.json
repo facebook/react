@@ -1,0 +1,33 @@
+{
+   "action": {
+      "default_title": "Report FaceHub (Meta's additions to GitHub) Bug"
+   },
+   "background": {
+      "service_worker": "lib/backgroundscript.js"
+   },
+   "content_scripts": [ {
+      "css": [ "css/NuxBox.css", "css/ProTip.css" ],
+      "js": [ "lib/contentscript.js" ],
+      "matches": [ "https://github.com/*" ],
+      "run_at": "document_start"
+   } ],
+   "description": "This extends GitHub.com for Meta Projects",
+   "host_permissions": [ "https://github.com/*", "https://raw.githubusercontent.com/*", "https://www.internalfb.com/" ],
+   "icons": {
+      "128": "images/icon.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkovfSYvaOWwoAw79/RHuR87aQJFLbygchHcLIcNWcoEDxbts2DJHnjOxf3Lqk73rLcTxQ/Q5FNmSXL3L5RIAiAqj45s+l5lMeMZacZpGDvb3g68HH5Za9pkueHiFqt5z8+9ardySPnaFgCDJk/AuRzMw/gbhtdmfTtmIT208y/SRuIeNWfQVBkPQkE5enNM7UmoJfS3M+gfBOLr6tmvKV14Ot7Mivi7d51YhiFVcCMsYFnweAMtCgdfjHEEi4uStAHfLjxZr1tnxT/ccu8wu+zsl1fz95sNE6sVv8F0YtPxihN7ujyy/zPAZsLi32GDrr+dvZcd8M4136oFEPwRX5QIDAQAB",
+   "manifest_version": 3,
+   "minimum_chrome_version": "60.0",
+   "name": "FaceHub",
+   "options_ui": {
+      "page": "static/chrome_options.html"
+   },
+   "permissions": [ "tabs", "webRequest", "webRequestBlocking", "storage", "contextMenus" ],
+   "update_url": "https://www.internalfb.com/intern/browser_extensions/chrome/update.xml",
+   "version": "3.3.20",
+   "web_accessible_resources": [ {
+      "matches": [ "https://github.com/*" ],
+      "resources": [ "images/*" ]
+   } ]
+}
