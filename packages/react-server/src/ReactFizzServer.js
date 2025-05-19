@@ -246,6 +246,7 @@ type SuspenseBoundary = {
   rootSegmentID: number,
   parentFlushed: boolean,
   pendingTasks: number, // when it reaches zero we can show this boundary's content
+  row: null | SuspenseListRow, // the row that this boundary blocks from completing.
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
   byteSize: number, // used to determine whether to inline children boundaries.
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
@@ -750,6 +751,7 @@ function pingTask(request: Request, task: Task): void {
 
 function createSuspenseBoundary(
   request: Request,
+  row: null | SuspenseListRow,
   fallbackAbortableTasks: Set<Task>,
   contentPreamble: null | Preamble,
   fallbackPreamble: null | Preamble,
@@ -759,6 +761,7 @@ function createSuspenseBoundary(
     rootSegmentID: -1,
     parentFlushed: false,
     pendingTasks: 0,
+    row: row,
     completedSegments: [],
     byteSize: 0,
     fallbackAbortableTasks,
@@ -775,6 +778,17 @@ function createSuspenseBoundary(
     boundary.errorMessage = null;
     boundary.errorStack = null;
     boundary.errorComponentStack = null;
+  }
+  if (row !== null) {
+    // This boundary will block this row from completing.
+    row.pendingTasks++;
+    const blockedBoundaries = row.boundaries;
+    if (blockedBoundaries !== null) {
+      // Previous rows will block this boundary itself from completing.
+      request.allPendingTasks++;
+      boundary.pendingTasks++;
+      blockedBoundaries.push(boundary);
+    }
   }
   return boundary;
 }
@@ -1206,12 +1220,19 @@ function renderSuspenseBoundary(
   if (canHavePreamble(task.formatContext)) {
     newBoundary = createSuspenseBoundary(
       request,
+      task.row,
       fallbackAbortSet,
       createPreambleState(),
       createPreambleState(),
     );
   } else {
-    newBoundary = createSuspenseBoundary(request, fallbackAbortSet, null, null);
+    newBoundary = createSuspenseBoundary(
+      request,
+      task.row,
+      fallbackAbortSet,
+      null,
+      null,
+    );
   }
   if (request.trackedPostpones !== null) {
     newBoundary.trackedContentKeyPath = keyPath;
@@ -1366,6 +1387,14 @@ function renderSuspenseBoundary(
         // the fallback. However, if this boundary ended up big enough to be eligible for outlining
         // we can't do that because we might still need the fallback if we outline it.
         if (!isEligibleForOutlining(request, newBoundary)) {
+          if (prevRow !== null) {
+            // If we have synchronously completed the boundary and it's not eligible for outlining
+            // then we don't have to wait for it to be flushed before we unblock future rows.
+            // This lets us inline small rows in order.
+            if (--prevRow.pendingTasks === 0) {
+              finishSuspenseListRow(request, prevRow);
+            }
+          }
           if (request.pendingRootTasks === 0 && task.blockedPreamble) {
             // The root is complete and this boundary may contribute part of the preamble.
             // We eagerly attempt to prepare the preamble here because we expect most requests
@@ -1494,6 +1523,7 @@ function replaySuspenseBoundary(
   if (canHavePreamble(task.formatContext)) {
     resumedBoundary = createSuspenseBoundary(
       request,
+      task.row,
       fallbackAbortSet,
       createPreambleState(),
       createPreambleState(),
@@ -1501,6 +1531,7 @@ function replaySuspenseBoundary(
   } else {
     resumedBoundary = createSuspenseBoundary(
       request,
+      task.row,
       fallbackAbortSet,
       null,
       null,
@@ -4321,6 +4352,7 @@ function abortRemainingSuspenseBoundary(
 ): void {
   const resumedBoundary = createSuspenseBoundary(
     request,
+    null,
     new Set(),
     null,
     null,
@@ -4769,6 +4801,13 @@ function finishedTask(
         if (!isEligibleForOutlining(request, boundary)) {
           boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
           boundary.fallbackAbortableTasks.clear();
+          const boundaryRow = boundary.row;
+          if (boundaryRow !== null) {
+            // If we aren't eligible for outlining, we don't have to wait until we flush it.
+            if (--boundaryRow.pendingTasks === 0) {
+              finishSuspenseListRow(request, boundaryRow);
+            }
+          }
         }
 
         if (
@@ -5326,6 +5365,16 @@ function flushSegment(
     // Emit a client rendered suspense boundary wrapper.
     // We never queue the inner boundary so we'll never emit its content or partial segments.
 
+    const row = boundary.row;
+    if (row !== null) {
+      // Since this boundary end up client rendered, we can unblock future suspense list rows.
+      // This means that they may appear out of order if the future rows succeed but this is
+      // a client rendered row.
+      if (--row.pendingTasks === 0) {
+        finishSuspenseListRow(request, row);
+      }
+    }
+
     if (__DEV__) {
       writeStartClientRenderedSuspenseBoundary(
         destination,
@@ -5414,6 +5463,16 @@ function flushSegment(
     if (hoistableState) {
       hoistHoistables(hoistableState, boundary.contentState);
     }
+
+    const row = boundary.row;
+    if (row !== null && isEligibleForOutlining(request, boundary)) {
+      // Once we have written the boundary, we can unblock the row and let future
+      // rows be written. This may schedule new completed boundaries.
+      if (--row.pendingTasks === 0) {
+        finishSuspenseListRow(request, row);
+      }
+    }
+
     // We can inline this boundary's content as a complete boundary.
     writeStartCompletedSuspenseBoundary(destination, request.renderState);
 
@@ -5491,6 +5550,15 @@ function flushCompletedBoundary(
     flushPartiallyCompletedSegment(request, destination, boundary, segment);
   }
   completedSegments.length = 0;
+
+  const row = boundary.row;
+  if (row !== null && isEligibleForOutlining(request, boundary)) {
+    // Once we have written the boundary, we can unblock the row and let future
+    // rows be written. This may schedule new completed boundaries.
+    if (--row.pendingTasks === 0) {
+      finishSuspenseListRow(request, row);
+    }
+  }
 
   writeHoistablesForBoundary(
     destination,
@@ -5684,6 +5752,7 @@ function flushCompletedQueues(
 
     // Next we check the completed boundaries again. This may have had
     // boundaries added to it in case they were too larged to be inlined.
+    // SuspenseListRows might have been unblocked as well.
     // New ones might be added in this loop.
     const largeBoundaries = request.completedBoundaries;
     for (i = 0; i < largeBoundaries.length; i++) {
