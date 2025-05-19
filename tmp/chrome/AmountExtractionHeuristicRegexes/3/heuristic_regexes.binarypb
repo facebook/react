@@ -1,3 +1,0 @@
-
-¾
-•(?:US\$|USD|\$)\s*\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?(?:\s*)(?:USD|US\$|\$)?|(?:USD|US\$|\$)?\s*\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?\s*(?:USD|US\$|\$)¡^(?:\s*)(Due now \(USD\)|(Estimated )?(?:Order Total|Total:?)|TOTAL CHARGED TODAY \*|Final Total Price:|Flight total|grand total:?|Order Total(?: \(USD\))?:?|Price|Total(?:(?: \(USD\))?| Due| for Stay| Price| to be paid:| to pay|:)?|(Your )?(?:Payment Today|total(\s)price|Total:))(?:\s*)$

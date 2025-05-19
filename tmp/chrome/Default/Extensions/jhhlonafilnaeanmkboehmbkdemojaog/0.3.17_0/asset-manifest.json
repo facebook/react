@@ -1,9 +1,0 @@
-{
-  "popup.css": "/Users/alexzhang/fbsource/fbcode/extensions/chrome/one_one/public/static/css/popup.css",
-  "popup.js": "/Users/alexzhang/fbsource/fbcode/extensions/chrome/one_one/public/static/js/popup.js",
-  "background.js": "/Users/alexzhang/fbsource/fbcode/extensions/chrome/one_one/public/static/js/background.js",
-  "popup.html": "/Users/alexzhang/fbsource/fbcode/extensions/chrome/one_one/public/popup.html",
-  "popup.css.map": "/Users/alexzhang/fbsource/fbcode/extensions/chrome/one_one/public/static/css/popup.css.map",
-  "popup.js.map": "/Users/alexzhang/fbsource/fbcode/extensions/chrome/one_one/public/static/js/popup.js.map",
-  "background.js.map": "/Users/alexzhang/fbsource/fbcode/extensions/chrome/one_one/public/static/js/background.js.map"
-}
