@@ -31,6 +31,6 @@ export async function parseReactComponentTree(url: string): Promise<string> {
       throw new Error('Localhost page not found');
     }
   } catch (error) {
-    throw new Error('Failed to parse React component tree: ' + error);
+    throw new Error('Failed extract component tree' + error);
   }
 }
