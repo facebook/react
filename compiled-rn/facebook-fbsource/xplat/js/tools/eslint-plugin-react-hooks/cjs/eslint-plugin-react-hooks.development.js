@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<482a9d0f7a91a38912f9260022eda396>>
+ * @generated SignedSource<<2a67bfe7090199050e60f8887093044e>>
  */
 
 'use strict';
@@ -52872,7 +52872,7 @@ function visitFunctionExpression(errors, fn) {
                             severity: ErrorSeverity.InvalidReact,
                             reason: 'Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)',
                             loc: callee.loc,
-                            description: `Cannot call ${hookKind} within a function component`,
+                            description: `Cannot call ${hookKind === 'Custom' ? 'hook' : hookKind} within a function expression`,
                             suggestions: null,
                         }));
                     }
