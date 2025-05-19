@@ -8,6 +8,7 @@ import React, {
   useId,
   useOptimistic,
   startTransition,
+  Suspense,
 } from 'react';
 
 import {createPortal} from 'react-dom';
@@ -60,6 +61,12 @@ function Id() {
   return <span id={useId()} />;
 }
 
+let wait;
+function Suspend() {
+  if (!wait) wait = sleep(500);
+  return React.use(wait);
+}
+
 export default function Page({url, navigate}) {
   const [renderedUrl, optimisticNavigate] = useOptimistic(
     url,
@@ -93,7 +100,7 @@ export default function Page({url, navigate}) {
     // a flushSync will.
     // Promise.resolve().then(() => {
     //   flushSync(() => {
-    setCounter(c => c + 10);
+    // setCounter(c => c + 10);
     //  });
     // });
   }, [show]);
@@ -193,18 +200,23 @@ export default function Page({url, navigate}) {
                 <div>!!</div>
               </ViewTransition>
             </Activity>
-            <p>these</p>
-            <p>rows</p>
-            <p>exist</p>
-            <p>to</p>
-            <p>test</p>
-            <p>scrolling</p>
-            <p>content</p>
-            <p>out</p>
-            <p>of</p>
-            {portal}
-            <p>the</p>
-            <p>viewport</p>
+            <Suspense fallback="Loading">
+              <ViewTransition>
+                <p>these</p>
+                <p>rows</p>
+                <p>exist</p>
+                <p>to</p>
+                <p>test</p>
+                <p>scrolling</p>
+                <p>content</p>
+                <p>out</p>
+                <p>of</p>
+                {portal}
+                <p>the</p>
+                <p>viewport</p>
+                <Suspend />
+              </ViewTransition>
+            </Suspense>
             {show ? <Component /> : null}
           </div>
         </ViewTransition>
