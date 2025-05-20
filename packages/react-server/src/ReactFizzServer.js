@@ -1732,12 +1732,12 @@ function renderSuspenseListRows(
   const prevRow = task.row;
   const totalChildren = rows.length;
 
+  let previousSuspenseListRow: null | SuspenseListRow = null;
   if (task.replay !== null) {
     // Replay
     // First we need to check if we have any resume slots at this level.
     const resumeSlots = task.replay.slots;
     if (resumeSlots !== null && typeof resumeSlots === 'object') {
-      let previousSuspenseListRow: null | SuspenseListRow = null;
       for (let n = 0; n < totalChildren; n++) {
         // Since we are going to resume into a slot whose order was already
         // determined by the prerender, we can safely resume it even in reverse
@@ -1763,7 +1763,6 @@ function renderSuspenseListRows(
         }
       }
     } else {
-      let previousSuspenseListRow: null | SuspenseListRow = null;
       for (let n = 0; n < totalChildren; n++) {
         // Since we are going to resume into a slot whose order was already
         // determined by the prerender, we can safely resume it even in reverse
@@ -1787,7 +1786,6 @@ function renderSuspenseListRows(
     task = ((task: any): RenderTask); // Refined
     if (revealOrder !== 'backwards') {
       // Forwards direction
-      let previousSuspenseListRow: null | SuspenseListRow = null;
       for (let i = 0; i < totalChildren; i++) {
         const node = rows[i];
         if (__DEV__) {
@@ -1809,7 +1807,6 @@ function renderSuspenseListRows(
       const parentSegment = task.blockedSegment;
       const childIndex = parentSegment.children.length;
       const insertionIndex = parentSegment.chunks.length;
-      let previousSuspenseListRow: null | SuspenseListRow = null;
       for (let i = totalChildren - 1; i >= 0; i--) {
         const node = rows[i];
         task.row = previousSuspenseListRow = createSuspenseListRow(
@@ -1857,6 +1854,17 @@ function renderSuspenseListRows(
       // Reset lastPushedText for current Segment since the new Segments "consumed" it
       parentSegment.lastPushedText = false;
     }
+  }
+
+  if (
+    prevRow !== null &&
+    previousSuspenseListRow !== null &&
+    previousSuspenseListRow.pendingTasks > 0
+  ) {
+    // If we are part of an outer SuspenseList and our last row is still pending, then that blocks
+    // the parent row from completing. We can continue the chain.
+    prevRow.pendingTasks++;
+    previousSuspenseListRow.next = prevRow;
   }
 
   // Because this context is always set right before rendering every child, we
