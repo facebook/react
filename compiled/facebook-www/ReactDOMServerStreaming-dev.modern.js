@@ -4745,15 +4745,12 @@ __DEV__ &&
       pushServerComponentStack(task, task.node.props.children._debugInfo);
       var prevTreeContext = task.treeContext,
         prevRow = task.row,
-        totalChildren = rows.length;
+        totalChildren = rows.length,
+        previousSuspenseListRow = null;
       if (null !== task.replay) {
         var resumeSlots = task.replay.slots;
         if (null !== resumeSlots && "object" === typeof resumeSlots)
-          for (
-            var previousSuspenseListRow = null, n = 0;
-            n < totalChildren;
-            n++
-          ) {
+          for (var n = 0; n < totalChildren; n++) {
             var i = "backwards" !== revealOrder ? n : totalChildren - 1 - n,
               node = rows[i];
             task.row = previousSuspenseListRow = createSuspenseListRow(
@@ -4773,55 +4770,50 @@ __DEV__ &&
               finishSuspenseListRow(request, previousSuspenseListRow);
           }
         else
-          for (
-            resumeSlots = null, previousSuspenseListRow = 0;
-            previousSuspenseListRow < totalChildren;
-            previousSuspenseListRow++
-          )
+          for (resumeSlots = 0; resumeSlots < totalChildren; resumeSlots++)
             (n =
               "backwards" !== revealOrder
-                ? previousSuspenseListRow
-                : totalChildren - 1 - previousSuspenseListRow),
+                ? resumeSlots
+                : totalChildren - 1 - resumeSlots),
               (i = rows[n]),
               warnForMissingKey(request, task, i),
-              (task.row = resumeSlots = createSuspenseListRow(resumeSlots)),
+              (task.row = previousSuspenseListRow =
+                createSuspenseListRow(previousSuspenseListRow)),
               (task.treeContext = pushTreeContext(
                 prevTreeContext,
                 totalChildren,
                 n
               )),
               renderNode(request, task, i, n),
-              0 === --resumeSlots.pendingTasks &&
-                finishSuspenseListRow(request, resumeSlots);
+              0 === --previousSuspenseListRow.pendingTasks &&
+                finishSuspenseListRow(request, previousSuspenseListRow);
       } else if ("backwards" !== revealOrder)
-        for (
-          revealOrder = null, resumeSlots = 0;
-          resumeSlots < totalChildren;
-          resumeSlots++
-        )
-          (previousSuspenseListRow = rows[resumeSlots]),
-            warnForMissingKey(request, task, previousSuspenseListRow),
-            (task.row = revealOrder = createSuspenseListRow(revealOrder)),
+        for (revealOrder = 0; revealOrder < totalChildren; revealOrder++)
+          (resumeSlots = rows[revealOrder]),
+            warnForMissingKey(request, task, resumeSlots),
+            (task.row = previousSuspenseListRow =
+              createSuspenseListRow(previousSuspenseListRow)),
             (task.treeContext = pushTreeContext(
               prevTreeContext,
               totalChildren,
-              resumeSlots
+              revealOrder
             )),
-            renderNode(request, task, previousSuspenseListRow, resumeSlots),
-            0 === --revealOrder.pendingTasks &&
-              finishSuspenseListRow(request, revealOrder);
+            renderNode(request, task, resumeSlots, revealOrder),
+            0 === --previousSuspenseListRow.pendingTasks &&
+              finishSuspenseListRow(request, previousSuspenseListRow);
       else {
         revealOrder = task.blockedSegment;
         resumeSlots = revealOrder.children.length;
-        previousSuspenseListRow = revealOrder.chunks.length;
-        n = null;
+        n = revealOrder.chunks.length;
         for (i = totalChildren - 1; 0 <= i; i--) {
           node = rows[i];
-          task.row = n = createSuspenseListRow(n);
+          task.row = previousSuspenseListRow = createSuspenseListRow(
+            previousSuspenseListRow
+          );
           task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
           resumeSegmentID = createPendingSegment(
             request,
-            previousSuspenseListRow,
+            n,
             null,
             task.formatContext,
             0 === i ? revealOrder.lastPushedText : !0,
@@ -4839,7 +4831,8 @@ __DEV__ &&
                 resumeSegmentID.textEmbedded
               ),
               (resumeSegmentID.status = 1),
-              0 === --n.pendingTasks && finishSuspenseListRow(request, n);
+              0 === --previousSuspenseListRow.pendingTasks &&
+                finishSuspenseListRow(request, previousSuspenseListRow);
           } catch (thrownValue) {
             throw (
               ((resumeSegmentID.status = 12 === request.status ? 3 : 4),
@@ -4850,6 +4843,10 @@ __DEV__ &&
         task.blockedSegment = revealOrder;
         revealOrder.lastPushedText = !1;
       }
+      null !== prevRow &&
+        null !== previousSuspenseListRow &&
+        0 < previousSuspenseListRow.pendingTasks &&
+        (prevRow.pendingTasks++, (previousSuspenseListRow.next = prevRow));
       task.treeContext = prevTreeContext;
       task.row = prevRow;
       task.keyPath = keyPath;
