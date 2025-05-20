@@ -29,6 +29,7 @@ let ReactDOM;
 let ReactDOMFizzServer;
 let ReactDOMFizzStatic;
 let Suspense;
+let SuspenseList;
 let container;
 let Scheduler;
 let act;
@@ -50,6 +51,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     ReactDOMFizzServer = require('react-dom/server.browser');
     ReactDOMFizzStatic = require('react-dom/static.browser');
     Suspense = React.Suspense;
+    SuspenseList = React.unstable_SuspenseList;
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -2240,6 +2242,85 @@ describe('ReactDOMFizzStaticBrowser', () => {
         <head />
         <body data-x="">Hello</body>
       </html>,
+    );
+  });
+
+  // @gate enableHalt && enableSuspenseList
+  it('can resume a partially prerendered SuspenseList', async () => {
+    const errors = [];
+
+    let resolveA;
+    const promiseA = new Promise(r => (resolveA = r));
+    let resolveB;
+    const promiseB = new Promise(r => (resolveB = r));
+
+    async function ComponentA() {
+      await promiseA;
+      return 'A';
+    }
+
+    async function ComponentB() {
+      await promiseB;
+      return 'B';
+    }
+
+    function App() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards">
+            <Suspense fallback="Loading A">
+              <ComponentA />
+            </Suspense>
+            <Suspense fallback="Loading B">
+              <ComponentB />
+            </Suspense>
+            <Suspense fallback="Loading C">C</Suspense>
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    const controller = new AbortController();
+    let pendingResult;
+    await serverAct(async () => {
+      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+        },
+      });
+    });
+
+    controller.abort();
+    const prerendered = await pendingResult;
+    const postponedState = JSON.stringify(prerendered.postponed);
+
+    await readIntoContainer(prerendered.prelude);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Loading A'}
+        {'Loading B'}
+        {'C' /* TODO: This should not be resolved. */}
+      </div>,
+    );
+
+    expect(prerendered.postponed).not.toBe(null);
+
+    await resolveA();
+    await resolveB();
+
+    const dynamic = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, JSON.parse(postponedState)),
+    );
+
+    await readIntoContainer(dynamic);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'A'}
+        {'B'}
+        {'C'}
+      </div>,
     );
   });
 });
