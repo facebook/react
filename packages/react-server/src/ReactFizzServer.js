@@ -1740,7 +1740,7 @@ function tryToResolveTogetherRow(
     }
   }
   if (allCompleteAndInlinable) {
-    unblockSuspenseListRow(request, togetherRow, null);
+    unblockSuspenseListRow(request, togetherRow, togetherRow.hoistables);
   }
 }
 
@@ -5697,7 +5697,7 @@ function flushPartialBoundary(
     // unblock the boundary itself which can issue its complete instruction.
     // TODO: Ideally the complete instruction would be in a single <script> tag.
     if (row.pendingTasks === 1) {
-      unblockSuspenseListRow(request, row, null);
+      unblockSuspenseListRow(request, row, row.hoistables);
     } else {
       row.pendingTasks--;
     }
