@@ -108,7 +108,12 @@ describe('ReactDOMFizzSuspenseList', () => {
 
   function createAsyncText(text) {
     let resolved = false;
+    let error = undefined;
     const Component = function () {
+      if (error !== undefined) {
+        Scheduler.log('Error! [' + error.message + ']');
+        throw error;
+      }
       if (!resolved) {
         Scheduler.log('Suspend! [' + text + ']');
         throw promise;
@@ -118,6 +123,10 @@ describe('ReactDOMFizzSuspenseList', () => {
     const promise = new Promise(resolve => {
       Component.resolve = function () {
         resolved = true;
+        return resolve();
+      };
+      Component.reject = function (e) {
+        error = e;
         return resolve();
       };
     });
@@ -773,5 +782,66 @@ describe('ReactDOMFizzSuspenseList', () => {
     expect(errors).toEqual([
       'The render was aborted by the server without a reason.',
     ]);
+  });
+
+  // @gate enableSuspenseList
+  it('can error a pending SuspenseList', async () => {
+    const A = createAsyncText('A');
+
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <A />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <Text text="B" />
+            </Suspense>
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    const errors = [];
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />, {
+        onError(error) {
+          errors.push(error.message);
+        },
+      });
+      pipe(writable);
+    });
+
+    assertLog([
+      'Suspend! [A]',
+      'B', // TODO: Defer rendering the content after fallback if previous suspended,
+      'Loading A',
+      'Loading B',
+    ]);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading A</span>
+        <span>Loading B</span>
+      </div>,
+    );
+
+    await serverAct(async () => {
+      A.reject(new Error('hi'));
+    });
+
+    assertLog(['Error! [hi]']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading A</span>
+        <span>B</span>
+      </div>,
+    );
+
+    expect(errors).toEqual(['hi']);
+    expect(hasErrored).toBe(false);
+    expect(hasCompleted).toBe(true);
   });
 });

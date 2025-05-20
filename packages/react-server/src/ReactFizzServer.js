@@ -4392,6 +4392,14 @@ function erroredTask(
       encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, false);
       untrackBoundary(request, boundary);
 
+      const boundaryRow = boundary.row;
+      if (boundaryRow !== null) {
+        // Unblock the SuspenseListRow that was blocked by this boundary.
+        if (--boundaryRow.pendingTasks === 0) {
+          finishSuspenseListRow(request, boundaryRow);
+        }
+      }
+
       // Regardless of what happens next, this boundary won't be displayed,
       // so we can flush it, if the parent already flushed.
       if (boundary.parentFlushed) {
