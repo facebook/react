@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0e7282ba3b791d49c979637fa380732d>>
+ * @generated SignedSource<<bf0afa7959c30f46358df4f701b7dfdf>>
  */
 
 "use strict";
@@ -6775,35 +6775,36 @@ function updateSuspenseListComponent(current, workInProgress, renderLanes) {
   var nextProps = workInProgress.pendingProps,
     revealOrder = nextProps.revealOrder,
     tailMode = nextProps.tail;
-  reconcileChildren(current, workInProgress, nextProps.children, renderLanes);
-  nextProps = suspenseStackCursor.current;
-  if (0 !== (nextProps & 2))
-    (nextProps = (nextProps & 1) | 2), (workInProgress.flags |= 128);
-  else {
-    if (null !== current && 0 !== (current.flags & 128))
-      a: for (current = workInProgress.child; null !== current; ) {
-        if (13 === current.tag)
-          null !== current.memoizedState &&
-            scheduleSuspenseWorkOnFiber(current, renderLanes, workInProgress);
-        else if (19 === current.tag)
+  nextProps = nextProps.children;
+  var suspenseContext = suspenseStackCursor.current,
+    shouldForceFallback = 0 !== (suspenseContext & 2);
+  shouldForceFallback
+    ? ((suspenseContext = (suspenseContext & 1) | 2),
+      (workInProgress.flags |= 128))
+    : (suspenseContext &= 1);
+  push(suspenseStackCursor, suspenseContext);
+  reconcileChildren(current, workInProgress, nextProps, renderLanes);
+  if (!shouldForceFallback && null !== current && 0 !== (current.flags & 128))
+    a: for (current = workInProgress.child; null !== current; ) {
+      if (13 === current.tag)
+        null !== current.memoizedState &&
           scheduleSuspenseWorkOnFiber(current, renderLanes, workInProgress);
-        else if (null !== current.child) {
-          current.child.return = current;
-          current = current.child;
-          continue;
-        }
-        if (current === workInProgress) break a;
-        for (; null === current.sibling; ) {
-          if (null === current.return || current.return === workInProgress)
-            break a;
-          current = current.return;
-        }
-        current.sibling.return = current.return;
-        current = current.sibling;
+      else if (19 === current.tag)
+        scheduleSuspenseWorkOnFiber(current, renderLanes, workInProgress);
+      else if (null !== current.child) {
+        current.child.return = current;
+        current = current.child;
+        continue;
       }
-    nextProps &= 1;
-  }
-  push(suspenseStackCursor, nextProps);
+      if (current === workInProgress) break a;
+      for (; null === current.sibling; ) {
+        if (null === current.return || current.return === workInProgress)
+          break a;
+        current = current.return;
+      }
+      current.sibling.return = current.return;
+      current = current.sibling;
+    }
   if (0 === (workInProgress.mode & 1)) workInProgress.memoizedState = null;
   else
     switch (revealOrder) {
@@ -11211,11 +11212,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-c6c2a52a-20250519" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-4c6967be-20250520" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-c6c2a52a-20250519\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-4c6967be-20250520\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11265,10 +11266,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1307 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-c6c2a52a-20250519",
+    version: "19.2.0-native-fb-4c6967be-20250520",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-c6c2a52a-20250519"
+    reconcilerVersion: "19.2.0-native-fb-4c6967be-20250520"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1307.rendererConfig = extraDevToolsConfig);

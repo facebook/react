@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<467d53e2c6a4cb25602fbdf8e2ce023d>>
+ * @generated SignedSource<<4e09cafefa2ad6cfb84c0038c60e06af>>
  */
 
 "use strict";
@@ -4649,6 +4649,20 @@ __DEV__ &&
         }
       };
     }
+    function validateSuspenseListNestedChild(childSlot, index) {
+      var isAnArray = isArrayImpl(childSlot);
+      childSlot = !isAnArray && "function" === typeof getIteratorFn(childSlot);
+      return isAnArray || childSlot
+        ? ((isAnArray = isAnArray ? "array" : "iterable"),
+          console.error(
+            "A nested %s was passed to row #%s in <SuspenseList />. Wrap it in an additional SuspenseList to configure its revealOrder: <SuspenseList revealOrder=...> ... <SuspenseList revealOrder=...>{%s}</SuspenseList> ... </SuspenseList>",
+            isAnArray,
+            index,
+            isAnArray
+          ),
+          !1)
+        : !0;
+    }
     function finishQueueingConcurrentUpdates() {
       for (
         var endIndex = concurrentQueuesIndex,
@@ -8431,20 +8445,6 @@ __DEV__ &&
         propagationRoot
       );
     }
-    function validateSuspenseListNestedChild(childSlot, index) {
-      var isAnArray = isArrayImpl(childSlot);
-      childSlot = !isAnArray && "function" === typeof getIteratorFn(childSlot);
-      return isAnArray || childSlot
-        ? ((isAnArray = isAnArray ? "array" : "iterable"),
-          console.error(
-            "A nested %s was passed to row #%s in <SuspenseList />. Wrap it in an additional SuspenseList to configure its revealOrder: <SuspenseList revealOrder=...> ... <SuspenseList revealOrder=...>{%s}</SuspenseList> ... </SuspenseList>",
-            isAnArray,
-            index,
-            isAnArray
-          ),
-          !1)
-        : !0;
-    }
     function initSuspenseListRenderState(
       workInProgress,
       isBackwards,
@@ -8474,6 +8474,15 @@ __DEV__ &&
         revealOrder = nextProps.revealOrder,
         tailMode = nextProps.tail;
       nextProps = nextProps.children;
+      var suspenseContext = suspenseStackCursor.current,
+        shouldForceFallback = 0 !== (suspenseContext & ForceSuspenseFallback);
+      shouldForceFallback
+        ? ((suspenseContext =
+            (suspenseContext & SubtreeSuspenseContextMask) |
+            ForceSuspenseFallback),
+          (workInProgress.flags |= 128))
+        : (suspenseContext &= SubtreeSuspenseContextMask);
+      push(suspenseStackCursor, suspenseContext, workInProgress);
       if (
         void 0 !== revealOrder &&
         "forwards" !== revealOrder &&
@@ -8536,12 +8545,29 @@ __DEV__ &&
         !1 !== nextProps
       )
         if (isArrayImpl(nextProps))
-          for (var i = 0; i < nextProps.length; i++) {
-            if (!validateSuspenseListNestedChild(nextProps[i], i)) break a;
+          for (
+            suspenseContext = 0;
+            suspenseContext < nextProps.length;
+            suspenseContext++
+          ) {
+            if (
+              !validateSuspenseListNestedChild(
+                nextProps[suspenseContext],
+                suspenseContext
+              )
+            )
+              break a;
           }
-        else if (((i = getIteratorFn(nextProps)), "function" === typeof i)) {
-          if ((i = i.call(nextProps)))
-            for (var step = i.next(), _i = 0; !step.done; step = i.next()) {
+        else if (
+          ((suspenseContext = getIteratorFn(nextProps)),
+          "function" === typeof suspenseContext)
+        ) {
+          if ((suspenseContext = suspenseContext.call(nextProps)))
+            for (
+              var step = suspenseContext.next(), _i = 0;
+              !step.done;
+              step = suspenseContext.next()
+            ) {
               if (!validateSuspenseListNestedChild(step.value, _i)) break a;
               _i++;
             }
@@ -8551,40 +8577,31 @@ __DEV__ &&
             revealOrder
           );
       reconcileChildren(current, workInProgress, nextProps, renderLanes);
-      nextProps = suspenseStackCursor.current;
-      if (0 !== (nextProps & ForceSuspenseFallback))
-        (nextProps =
-          (nextProps & SubtreeSuspenseContextMask) | ForceSuspenseFallback),
-          (workInProgress.flags |= 128);
-      else {
-        if (null !== current && 0 !== (current.flags & 128))
-          a: for (current = workInProgress.child; null !== current; ) {
-            if (13 === current.tag)
-              null !== current.memoizedState &&
-                scheduleSuspenseWorkOnFiber(
-                  current,
-                  renderLanes,
-                  workInProgress
-                );
-            else if (19 === current.tag)
+      if (
+        !shouldForceFallback &&
+        null !== current &&
+        0 !== (current.flags & 128)
+      )
+        a: for (current = workInProgress.child; null !== current; ) {
+          if (13 === current.tag)
+            null !== current.memoizedState &&
               scheduleSuspenseWorkOnFiber(current, renderLanes, workInProgress);
-            else if (null !== current.child) {
-              current.child.return = current;
-              current = current.child;
-              continue;
-            }
-            if (current === workInProgress) break a;
-            for (; null === current.sibling; ) {
-              if (null === current.return || current.return === workInProgress)
-                break a;
-              current = current.return;
-            }
-            current.sibling.return = current.return;
-            current = current.sibling;
+          else if (19 === current.tag)
+            scheduleSuspenseWorkOnFiber(current, renderLanes, workInProgress);
+          else if (null !== current.child) {
+            current.child.return = current;
+            current = current.child;
+            continue;
           }
-        nextProps &= SubtreeSuspenseContextMask;
-      }
-      push(suspenseStackCursor, nextProps, workInProgress);
+          if (current === workInProgress) break a;
+          for (; null === current.sibling; ) {
+            if (null === current.return || current.return === workInProgress)
+              break a;
+            current = current.return;
+          }
+          current.sibling.return = current.return;
+          current = current.sibling;
+        }
       if (0 === (workInProgress.mode & 1)) workInProgress.memoizedState = null;
       else
         switch (revealOrder) {
@@ -17609,11 +17626,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-c6c2a52a-20250519" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-4c6967be-20250520" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-c6c2a52a-20250519\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-4c6967be-20250520\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17639,10 +17656,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-c6c2a52a-20250519",
+        version: "19.2.0-native-fb-4c6967be-20250520",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-c6c2a52a-20250519"
+        reconcilerVersion: "19.2.0-native-fb-4c6967be-20250520"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
