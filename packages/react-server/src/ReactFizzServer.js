@@ -236,6 +236,7 @@ type LegacyContext = {
 type SuspenseListRow = {
   pendingTasks: number, // The number of tasks, previous rows and inner suspense boundaries blocking this row.
   boundaries: null | Array<SuspenseBoundary>, // The boundaries in this row waiting to be unblocked by the previous row. (null means this row is not blocked)
+  hoistables: HoistableState, // Any dependencies that this row depends on. Future rows need to also depend on it.
   together: boolean, // All the boundaries within this row must be revealed together.
   next: null | SuspenseListRow, // The next row blocked by this one.
 };
@@ -1676,22 +1677,32 @@ function replaySuspenseBoundary(
 
 function finishSuspenseListRow(request: Request, row: SuspenseListRow): void {
   // This row finished. Now we have to unblock all the next rows that were blocked on this.
-  unblockSuspenseListRow(request, row.next);
+  unblockSuspenseListRow(request, row.next, row.hoistables);
 }
 
 function unblockSuspenseListRow(
   request: Request,
   unblockedRow: null | SuspenseListRow,
+  inheritedHoistables: null | HoistableState,
 ): void {
   // We do this in a loop to avoid stack overflow for very long lists that get unblocked.
   while (unblockedRow !== null) {
+    if (inheritedHoistables !== null) {
+      // Hoist any hoistables from the previous row into the next row so that it can be
+      // later transferred to all the rows.
+      hoistHoistables(unblockedRow.hoistables, inheritedHoistables);
+    }
     // Unblocking the boundaries will decrement the count of this row but we keep it above
     // zero so they never finish this row recursively.
     const unblockedBoundaries = unblockedRow.boundaries;
     if (unblockedBoundaries !== null) {
       unblockedRow.boundaries = null;
       for (let i = 0; i < unblockedBoundaries.length; i++) {
-        finishedTask(request, unblockedBoundaries[i], null, null);
+        const unblockedBoundary = unblockedBoundaries[i];
+        if (inheritedHoistables !== null) {
+          hoistHoistables(unblockedBoundary.contentState, inheritedHoistables);
+        }
+        finishedTask(request, unblockedBoundary, null, null);
       }
     }
     // Instead we decrement at the end to keep it all in this loop.
@@ -1700,6 +1711,7 @@ function unblockSuspenseListRow(
       // Still blocked.
       break;
     }
+    inheritedHoistables = unblockedRow.hoistables;
     unblockedRow = unblockedRow.next;
   }
 }
@@ -1728,7 +1740,7 @@ function tryToResolveTogetherRow(
     }
   }
   if (allCompleteAndInlinable) {
-    unblockSuspenseListRow(request, togetherRow);
+    unblockSuspenseListRow(request, togetherRow, null);
   }
 }
 
@@ -1738,6 +1750,7 @@ function createSuspenseListRow(
   const newRow: SuspenseListRow = {
     pendingTasks: 1, // At first the row is blocked on attempting rendering itself.
     boundaries: null,
+    hoistables: createHoistableState(),
     together: false,
     next: null,
   };
@@ -4869,10 +4882,15 @@ function finishedTask(
       // If the boundary is eligible to be outlined during flushing we can't cancel the fallback
       // since we might need it when it's being outlined.
       if (boundary.status === COMPLETED) {
+        const boundaryRow = boundary.row;
+        if (boundaryRow !== null) {
+          // Hoist the HoistableState from the boundary to the row so that the next rows
+          // can depend on the same dependencies.
+          hoistHoistables(boundaryRow.hoistables, boundary.contentState);
+        }
         if (!isEligibleForOutlining(request, boundary)) {
           boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
           boundary.fallbackAbortableTasks.clear();
-          const boundaryRow = boundary.row;
           if (boundaryRow !== null) {
             // If we aren't eligible for outlining, we don't have to wait until we flush it.
             if (--boundaryRow.pendingTasks === 0) {
@@ -5679,7 +5697,7 @@ function flushPartialBoundary(
     // unblock the boundary itself which can issue its complete instruction.
     // TODO: Ideally the complete instruction would be in a single <script> tag.
     if (row.pendingTasks === 1) {
-      unblockSuspenseListRow(request, row);
+      unblockSuspenseListRow(request, row, null);
     } else {
       row.pendingTasks--;
     }
