@@ -27,9 +27,10 @@ let writable;
 let container;
 let buffer = '';
 let hasErrored = false;
+let hasCompleted = false;
 let fatalError = undefined;
 
-describe('ReactDOMFizSuspenseList', () => {
+describe('ReactDOMFizzSuspenseList', () => {
   beforeEach(() => {
     jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
@@ -59,6 +60,7 @@ describe('ReactDOMFizSuspenseList', () => {
 
     buffer = '';
     hasErrored = false;
+    hasCompleted = false;
 
     writable = new Stream.PassThrough();
     writable.setEncoding('utf8');
@@ -68,6 +70,9 @@ describe('ReactDOMFizSuspenseList', () => {
     writable.on('error', error => {
       hasErrored = true;
       fatalError = error;
+    });
+    writable.on('finish', () => {
+      hasCompleted = true;
     });
   });
 
@@ -713,5 +718,60 @@ describe('ReactDOMFizSuspenseList', () => {
         <span>C</span>
       </div>,
     );
+  });
+
+  // @gate enableSuspenseList
+  it('can abort a pending SuspenseList', async () => {
+    const A = createAsyncText('A');
+
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <A />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <Text text="B" />
+            </Suspense>
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    const errors = [];
+    let abortStream;
+    await serverAct(async () => {
+      const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(<Foo />, {
+        onError(error) {
+          errors.push(error.message);
+        },
+      });
+      pipe(writable);
+      abortStream = abort;
+    });
+
+    assertLog([
+      'Suspend! [A]',
+      'B', // TODO: Defer rendering the content after fallback if previous suspended,
+      'Loading A',
+      'Loading B',
+    ]);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading A</span>
+        <span>Loading B</span>
+      </div>,
+    );
+
+    await serverAct(() => {
+      abortStream();
+    });
+
+    expect(hasCompleted).toBe(true);
+    expect(errors).toEqual([
+      'The render was aborted by the server without a reason.',
+    ]);
   });
 });

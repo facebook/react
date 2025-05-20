@@ -4706,6 +4706,14 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       }
     }
 
+    const boundaryRow = boundary.row;
+    if (boundaryRow !== null) {
+      // Unblock the SuspenseListRow that was blocked by this boundary.
+      if (--boundaryRow.pendingTasks === 0) {
+        finishSuspenseListRow(request, boundaryRow);
+      }
+    }
+
     // If this boundary was still pending then we haven't already cancelled its fallbacks.
     // We'll need to abort the fallbacks, which will also error that parent boundary.
     boundary.fallbackAbortableTasks.forEach(fallbackTask =>
