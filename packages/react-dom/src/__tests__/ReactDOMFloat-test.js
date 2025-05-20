@@ -21,6 +21,7 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
+let SuspenseList;
 let textCache;
 let loadCache;
 let writable;
@@ -74,6 +75,7 @@ describe('ReactDOMFloat', () => {
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
+    SuspenseList = React.unstable_SuspenseList;
     Scheduler = require('scheduler/unstable_mock');
 
     const InternalTestUtils = require('internal-test-utils');
@@ -5741,6 +5743,71 @@ body {
           <div>inner blocked fallback</div>
           <link rel="preload" href="completed inner" as="style" />
           <link rel="preload" href="in fallback inner" as="style" />
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('delays "forwards" SuspenseList rows until the css of previous rows have completed', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <SuspenseList revealOrder="forwards">
+              <Suspense fallback="loading foo...">
+                <BlockedOn value="foo">
+                  <link rel="stylesheet" href="foo" precedence="foo" />
+                  foo
+                </BlockedOn>
+              </Suspense>
+              <Suspense fallback="loading bar...">bar</Suspense>
+            </SuspenseList>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('foo');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      loadStylesheets();
+    });
+    await assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'foo'}
+          {'bar'}
+          <link as="style" href="foo" rel="preload" />
         </body>
       </html>,
     );
