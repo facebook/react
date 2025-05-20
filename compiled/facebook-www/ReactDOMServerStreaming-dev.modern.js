@@ -3523,6 +3523,10 @@ __DEV__ &&
     function hoistStylesheetDependency(stylesheet) {
       this.stylesheets.add(stylesheet);
     }
+    function hoistHoistables(parentState, childState) {
+      childState.styles.forEach(hoistStyleQueueDependency, parentState);
+      childState.stylesheets.forEach(hoistStylesheetDependency, parentState);
+    }
     function getComponentNameFromType(type) {
       if (null == type) return null;
       if ("function" === typeof type)
@@ -4431,11 +4435,14 @@ __DEV__ &&
       };
       null !== row &&
         (row.pendingTasks++,
-        (row = row.boundaries),
-        null !== row &&
+        (contentPreamble = row.boundaries),
+        null !== contentPreamble &&
           (request.allPendingTasks++,
           fallbackAbortableTasks.pendingTasks++,
-          row.push(fallbackAbortableTasks)));
+          contentPreamble.push(fallbackAbortableTasks)),
+        (request = row.inheritedHoistables),
+        null !== request &&
+          hoistHoistables(fallbackAbortableTasks.contentState, request));
       return fallbackAbortableTasks;
     }
     function createRenderTask(
@@ -4717,18 +4724,33 @@ __DEV__ &&
         : ((request.status = 13), (request.fatalError = error));
     }
     function finishSuspenseListRow(request, row) {
-      unblockSuspenseListRow(request, row.next);
+      unblockSuspenseListRow(request, row.next, row.hoistables);
     }
-    function unblockSuspenseListRow(request, unblockedRow) {
+    function unblockSuspenseListRow(
+      request,
+      unblockedRow,
+      inheritedHoistables
+    ) {
       for (; null !== unblockedRow; ) {
+        null !== inheritedHoistables &&
+          (hoistHoistables(unblockedRow.hoistables, inheritedHoistables),
+          (unblockedRow.inheritedHoistables = inheritedHoistables));
         var unblockedBoundaries = unblockedRow.boundaries;
         if (null !== unblockedBoundaries) {
           unblockedRow.boundaries = null;
-          for (var i = 0; i < unblockedBoundaries.length; i++)
-            finishedTask(request, unblockedBoundaries[i], null, null);
+          for (var i = 0; i < unblockedBoundaries.length; i++) {
+            var unblockedBoundary = unblockedBoundaries[i];
+            null !== inheritedHoistables &&
+              hoistHoistables(
+                unblockedBoundary.contentState,
+                inheritedHoistables
+              );
+            finishedTask(request, unblockedBoundary, null, null);
+          }
         }
         unblockedRow.pendingTasks--;
         if (0 < unblockedRow.pendingTasks) break;
+        inheritedHoistables = unblockedRow.hoistables;
         unblockedRow = unblockedRow.next;
       }
     }
@@ -4753,13 +4775,16 @@ __DEV__ &&
             break;
           }
         }
-        allCompleteAndInlinable && unblockSuspenseListRow(request, togetherRow);
+        allCompleteAndInlinable &&
+          unblockSuspenseListRow(request, togetherRow, togetherRow.hoistables);
       }
     }
     function createSuspenseListRow(previousRow) {
       var newRow = {
         pendingTasks: 1,
         boundaries: null,
+        hoistables: createHoistableState(),
+        inheritedHoistables: null,
         together: !1,
         next: null
       };
@@ -7101,13 +7126,15 @@ __DEV__ &&
                 boundary.parentFlushed &&
                   request.completedBoundaries.push(boundary),
                 1 === boundary.status &&
-                  (500 < boundary.byteSize ||
+                  ((row = boundary.row),
+                  null !== row &&
+                    hoistHoistables(row.hoistables, boundary.contentState),
+                  500 < boundary.byteSize ||
                     (boundary.fallbackAbortableTasks.forEach(
                       abortTaskSoft,
                       request
                     ),
                     boundary.fallbackAbortableTasks.clear(),
-                    (row = boundary.row),
                     null !== row &&
                       0 === --row.pendingTasks &&
                       finishSuspenseListRow(request, row)),
@@ -7291,12 +7318,7 @@ __DEV__ &&
             boundary.rootSegmentID
           ),
           hoistableState &&
-            ((boundary = boundary.fallbackState),
-            boundary.styles.forEach(hoistStyleQueueDependency, hoistableState),
-            boundary.stylesheets.forEach(
-              hoistStylesheetDependency,
-              hoistableState
-            )),
+            hoistHoistables(hoistableState, boundary.fallbackState),
           flushSubtree(request, destination, segment, hoistableState);
       else if (
         500 < boundary.byteSize &&
@@ -7313,12 +7335,7 @@ __DEV__ &&
       else {
         flushedByteSize += boundary.byteSize;
         hoistableState &&
-          ((segment = boundary.contentState),
-          segment.styles.forEach(hoistStyleQueueDependency, hoistableState),
-          segment.stylesheets.forEach(
-            hoistStylesheetDependency,
-            hoistableState
-          ));
+          hoistHoistables(hoistableState, boundary.contentState);
         segment = boundary.row;
         null !== segment &&
           500 < boundary.byteSize &&
@@ -7829,7 +7846,11 @@ __DEV__ &&
                 row.together &&
                 1 === boundary$jscomp$0.pendingTasks &&
                 (1 === row.pendingTasks
-                  ? unblockSuspenseListRow(clientRenderedBoundaries, row)
+                  ? unblockSuspenseListRow(
+                      clientRenderedBoundaries,
+                      row,
+                      row.hoistables
+                    )
                   : row.pendingTasks--);
               JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
                 boundary,
