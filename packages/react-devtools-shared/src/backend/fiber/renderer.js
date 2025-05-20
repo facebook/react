@@ -5859,7 +5859,7 @@ export function attach(
     return unresolvedSource;
   }
 
-  function getComponentTree(): string {
+  function internal_only_getComponentTree(): string {
     let treeString = '';
 
     function buildTreeString(
@@ -5946,7 +5946,7 @@ export function attach(
     getNearestMountedDOMNode,
     getElementIDForHostInstance,
     getInstanceAndStyle,
-    getComponentTree,
+    ...(__IS_INTERNAL__ && {internal_only_getComponentTree}),
     getOwnersList,
     getPathForElement,
     getProfilingData,
