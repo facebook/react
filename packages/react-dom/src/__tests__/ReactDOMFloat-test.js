@@ -5754,15 +5754,22 @@ body {
       renderToPipeableStream(
         <html>
           <body>
-            <SuspenseList revealOrder="forwards">
-              <Suspense fallback="loading foo...">
-                <BlockedOn value="foo">
-                  <link rel="stylesheet" href="foo" precedence="foo" />
-                  foo
+            <Suspense fallback="loading...">
+              <SuspenseList revealOrder="forwards">
+                <Suspense fallback="loading foo...">
+                  <BlockedOn value="foo">
+                    <link rel="stylesheet" href="foo" precedence="foo" />
+                    foo
+                  </BlockedOn>
+                </Suspense>
+                <Suspense fallback="loading bar...">bar</Suspense>
+                <BlockedOn value="bar">
+                  <Suspense fallback="loading baz...">
+                    <BlockedOn value="baz">baz</BlockedOn>
+                  </Suspense>
                 </BlockedOn>
-              </Suspense>
-              <Suspense fallback="loading bar...">bar</Suspense>
-            </SuspenseList>
+              </SuspenseList>
+            </Suspense>
           </body>
         </html>,
       ).pipe(writable);
@@ -5771,15 +5778,31 @@ body {
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head />
+        <body>loading...</body>
+      </html>,
+    );
+
+    // unblock css loading
+    await act(() => {
+      resolveText('foo');
+    });
+
+    // bar is still blocking the whole list
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
         <body>
-          {'loading foo...'}
-          {'loading bar...'}
+          {'loading...'}
+          <link as="style" href="foo" rel="preload" />
         </body>
       </html>,
     );
 
+    // unblock inner loading states
     await act(() => {
-      resolveText('foo');
+      resolveText('bar');
     });
 
     expect(getMeaningfulChildren(document)).toEqual(
@@ -5790,6 +5813,27 @@ body {
         <body>
           {'loading foo...'}
           {'loading bar...'}
+          {'loading baz...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    // resolve the last boundary
+    await act(() => {
+      resolveText('baz');
+    });
+
+    // still blocked on the css of the first row
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+          {'loading baz...'}
           <link as="style" href="foo" rel="preload" />
         </body>
       </html>,
@@ -5807,6 +5851,7 @@ body {
         <body>
           {'foo'}
           {'bar'}
+          {'baz'}
           <link as="style" href="foo" rel="preload" />
         </body>
       </html>,

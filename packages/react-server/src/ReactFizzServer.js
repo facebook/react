@@ -237,6 +237,7 @@ type SuspenseListRow = {
   pendingTasks: number, // The number of tasks, previous rows and inner suspense boundaries blocking this row.
   boundaries: null | Array<SuspenseBoundary>, // The boundaries in this row waiting to be unblocked by the previous row. (null means this row is not blocked)
   hoistables: HoistableState, // Any dependencies that this row depends on. Future rows need to also depend on it.
+  inheritedHoistables: null | HoistableState, // Any dependencies that previous row depend on, that new boundaries of this row needs.
   together: boolean, // All the boundaries within this row must be revealed together.
   next: null | SuspenseListRow, // The next row blocked by this one.
 };
@@ -790,6 +791,10 @@ function createSuspenseBoundary(
       request.allPendingTasks++;
       boundary.pendingTasks++;
       blockedBoundaries.push(boundary);
+    }
+    const inheritedHoistables = row.inheritedHoistables;
+    if (inheritedHoistables !== null) {
+      hoistHoistables(boundary.contentState, inheritedHoistables);
     }
   }
   return boundary;
@@ -1691,6 +1696,10 @@ function unblockSuspenseListRow(
       // Hoist any hoistables from the previous row into the next row so that it can be
       // later transferred to all the rows.
       hoistHoistables(unblockedRow.hoistables, inheritedHoistables);
+      // Mark the row itself for any newly discovered Suspense boundaries to inherit.
+      // This is different from hoistables because that also includes hoistables from
+      // all the boundaries below this row and not just previous rows.
+      unblockedRow.inheritedHoistables = inheritedHoistables;
     }
     // Unblocking the boundaries will decrement the count of this row but we keep it above
     // zero so they never finish this row recursively.
@@ -1751,6 +1760,7 @@ function createSuspenseListRow(
     pendingTasks: 1, // At first the row is blocked on attempting rendering itself.
     boundaries: null,
     hoistables: createHoistableState(),
+    inheritedHoistables: null,
     together: false,
     next: null,
   };
