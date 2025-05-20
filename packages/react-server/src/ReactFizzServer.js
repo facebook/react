@@ -236,6 +236,7 @@ type LegacyContext = {
 type SuspenseListRow = {
   pendingTasks: number, // The number of tasks, previous rows and inner suspense boundaries blocking this row.
   boundaries: null | Array<SuspenseBoundary>, // The boundaries in this row waiting to be unblocked by the previous row. (null means this row is not blocked)
+  together: boolean, // All the boundaries within this row must be revealed together.
   next: null | SuspenseListRow, // The next row blocked by this one.
 };
 
@@ -1404,6 +1405,11 @@ function renderSuspenseBoundary(
           }
           return;
         }
+      } else {
+        const boundaryRow = prevRow;
+        if (boundaryRow !== null && boundaryRow.together) {
+          tryToResolveTogetherRow(request, boundaryRow);
+        }
       }
     } catch (thrownValue: mixed) {
       newBoundary.status = CLIENT_RENDERED;
@@ -1670,8 +1676,14 @@ function replaySuspenseBoundary(
 
 function finishSuspenseListRow(request: Request, row: SuspenseListRow): void {
   // This row finished. Now we have to unblock all the next rows that were blocked on this.
+  unblockSuspenseListRow(request, row.next);
+}
+
+function unblockSuspenseListRow(
+  request: Request,
+  unblockedRow: null | SuspenseListRow,
+): void {
   // We do this in a loop to avoid stack overflow for very long lists that get unblocked.
-  let unblockedRow = row.next;
   while (unblockedRow !== null) {
     // Unblocking the boundaries will decrement the count of this row but we keep it above
     // zero so they never finish this row recursively.
@@ -1692,12 +1704,41 @@ function finishSuspenseListRow(request: Request, row: SuspenseListRow): void {
   }
 }
 
+function tryToResolveTogetherRow(
+  request: Request,
+  togetherRow: SuspenseListRow,
+): void {
+  // If we have a "together" row and all the pendingTasks are really the boundaries themselves,
+  // and we won't outline any of them then we can unblock this row early so that we can inline
+  // all the boundaries at once.
+  const boundaries = togetherRow.boundaries;
+  if (boundaries === null || togetherRow.pendingTasks !== boundaries.length) {
+    return;
+  }
+  let allCompleteAndInlinable = true;
+  for (let i = 0; i < boundaries.length; i++) {
+    const rowBoundary = boundaries[i];
+    if (
+      rowBoundary.pendingTasks !== 1 ||
+      rowBoundary.parentFlushed ||
+      isEligibleForOutlining(request, rowBoundary)
+    ) {
+      allCompleteAndInlinable = false;
+      break;
+    }
+  }
+  if (allCompleteAndInlinable) {
+    unblockSuspenseListRow(request, togetherRow);
+  }
+}
+
 function createSuspenseListRow(
   previousRow: null | SuspenseListRow,
 ): SuspenseListRow {
   const newRow: SuspenseListRow = {
     pendingTasks: 1, // At first the row is blocked on attempting rendering itself.
     boundaries: null,
+    together: false,
     next: null,
   };
   if (previousRow !== null && previousRow.pendingTasks > 0) {
@@ -1978,7 +2019,27 @@ function renderSuspenseList(
   }
 
   if (revealOrder === 'together') {
-    // TODO
+    const prevKeyPath = task.keyPath;
+    const prevRow = task.row;
+    const newRow = (task.row = createSuspenseListRow(null));
+    // This will cause boundaries to block on this row, but there's nothing to
+    // unblock them. We'll use the partial flushing pass to unblock them.
+    newRow.boundaries = [];
+    newRow.together = true;
+    task.keyPath = keyPath;
+    renderNodeDestructive(request, task, children, -1);
+    if (--newRow.pendingTasks === 0) {
+      finishSuspenseListRow(request, newRow);
+    }
+    task.keyPath = prevKeyPath;
+    task.row = prevRow;
+    if (prevRow !== null && newRow.pendingTasks > 0) {
+      // If we are part of an outer SuspenseList and our row is still pending, then that blocks
+      // the parent row from completing. We can continue the chain.
+      prevRow.pendingTasks++;
+      newRow.next = prevRow;
+    }
+    return;
   }
   // For other reveal order modes, we just render it as a fragment.
   const prevKeyPath = task.keyPath;
@@ -4759,6 +4820,8 @@ function finishedTask(
   if (row !== null) {
     if (--row.pendingTasks === 0) {
       finishSuspenseListRow(request, row);
+    } else if (row.together) {
+      tryToResolveTogetherRow(request, row);
     }
   }
   request.allPendingTasks--;
@@ -4847,6 +4910,10 @@ function finishedTask(
             }
           }
         }
+      }
+      const boundaryRow = boundary.row;
+      if (boundaryRow !== null && boundaryRow.together) {
+        tryToResolveTogetherRow(request, boundaryRow);
       }
     }
   }
@@ -5603,6 +5670,20 @@ function flushPartialBoundary(
     }
   }
   completedSegments.splice(0, i);
+
+  const row = boundary.row;
+  if (row !== null && row.together && boundary.pendingTasks === 1) {
+    // "together" rows are blocked on their own boundaries.
+    // We have now flushed all the boundary's segments as partials.
+    // We can now unblock it from blocking the row that will eventually
+    // unblock the boundary itself which can issue its complete instruction.
+    // TODO: Ideally the complete instruction would be in a single <script> tag.
+    if (row.pendingTasks === 1) {
+      unblockSuspenseListRow(request, row);
+    } else {
+      row.pendingTasks--;
+    }
+  }
 
   return writeHoistablesForBoundary(
     destination,
