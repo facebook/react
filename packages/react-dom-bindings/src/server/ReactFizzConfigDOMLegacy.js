@@ -172,7 +172,6 @@ export {
   completeResumableState,
   emitEarlyPreloads,
   supportsClientAPIs,
-  canHavePreamble,
   hoistPreambleState,
   isPreambleReady,
   isPreambleContext,
@@ -192,6 +191,10 @@ export function getViewTransitionFormatContext(
 ): FormatContext {
   // ViewTransition reveals are not supported in legacy renders.
   return parentContext;
+}
+
+export function canHavePreamble(formatContext: FormatContext): boolean {
+  return false;
 }
 
 export function pushTextInstance(

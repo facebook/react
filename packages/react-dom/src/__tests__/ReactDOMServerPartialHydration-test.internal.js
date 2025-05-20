@@ -2444,16 +2444,14 @@ describe('ReactDOMServerPartialHydration', () => {
 
     function App({showMore}) {
       return (
-        <div>
-          <SuspenseList revealOrder="together">
-            {a}
-            {showMore ? (
-              <Suspense fallback="Loading B">
-                <AlwaysSuspend />
-              </Suspense>
-            ) : null}
-          </SuspenseList>
-        </div>
+        <SuspenseList revealOrder="together">
+          {a}
+          {showMore ? (
+            <Suspense fallback="Loading B">
+              <AlwaysSuspend />
+            </Suspense>
+          ) : null}
+        </SuspenseList>
       );
     }
 
