@@ -5394,6 +5394,33 @@ function flushSegment(
     return flushSubtree(request, destination, segment, hoistableState);
   }
 
+  const row = boundary.row;
+  if (
+    boundary.status === PENDING &&
+    row !== null &&
+    row.together &&
+    row.boundaries !== null &&
+    row.pendingTasks === row.boundaries.length
+  ) {
+    // If we have a "together" row and all the pendingTasks are really the boundaries themselves,
+    // and we won't outline any of them then we can unblock this row early so that we can inline
+    // all the boundaries at once.
+    let allComplete = true;
+    for (let i = 0; i < row.boundaries.length; i++) {
+      const rowBoundary = row.boundaries[i];
+      if (
+        rowBoundary.pendingTasks !== 1 ||
+        isEligibleForOutlining(request, rowBoundary)
+      ) {
+        allComplete = false;
+        break;
+      }
+    }
+    if (allComplete) {
+      unblockSuspenseListRow(request, row);
+    }
+  }
+
   boundary.parentFlushed = true;
   // This segment is a Suspense boundary. We need to decide whether to
   // emit the content or the fallback now.
@@ -5401,7 +5428,6 @@ function flushSegment(
     // Emit a client rendered suspense boundary wrapper.
     // We never queue the inner boundary so we'll never emit its content or partial segments.
 
-    const row = boundary.row;
     if (row !== null) {
       // Since this boundary end up client rendered, we can unblock future suspense list rows.
       // This means that they may appear out of order if the future rows succeed but this is
@@ -5500,7 +5526,6 @@ function flushSegment(
       hoistHoistables(hoistableState, boundary.contentState);
     }
 
-    const row = boundary.row;
     if (row !== null && isEligibleForOutlining(request, boundary)) {
       // Once we have written the boundary, we can unblock the row and let future
       // rows be written. This may schedule new completed boundaries.
