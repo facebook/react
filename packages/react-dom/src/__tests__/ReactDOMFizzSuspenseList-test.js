@@ -255,6 +255,39 @@ describe('ReactDOMFizSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
+  it('displays all "together" in a single pass', async () => {
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="together">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <Text text="A" />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <Text text="B" />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading C" />}>
+              <Text text="C" />
+            </Suspense>
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+    pipe(writable);
+    await 0;
+    const bufferedContent = buffer;
+    buffer = '';
+
+    assertLog(['A', 'B', 'C', 'Loading A', 'Loading B', 'Loading C']);
+
+    expect(bufferedContent).toMatchInlineSnapshot(
+      `"<div><!--$--><span>A</span><!--/$--><!--$--><span>B</span><!--/$--><!--$--><span>C</span><!--/$--></div>"`,
+    );
+  });
+
+  // @gate enableSuspenseList
   it('displays all "together" even when nested as siblings', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
