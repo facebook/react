@@ -510,7 +510,7 @@ function commitPlacement(finishedWork: Fiber): void {
 
   if (!supportsMutation) {
     if (enableFragmentRefs) {
-      appendImmutableNodeToFragmentInstances(
+      commitImmutablePlacementNodeToFragmentInstances(
         finishedWork,
         parentFragmentInstances,
       );
@@ -582,7 +582,7 @@ function commitPlacement(finishedWork: Fiber): void {
   }
 }
 
-function appendImmutableNodeToFragmentInstances(
+function commitImmutablePlacementNodeToFragmentInstances(
   finishedWork: Fiber,
   parentFragmentInstances: null | Array<FragmentInstanceType>,
 ): void {
@@ -602,10 +602,16 @@ function appendImmutableNodeToFragmentInstances(
 
   const child = finishedWork.child;
   if (child !== null) {
-    appendImmutableNodeToFragmentInstances(child, parentFragmentInstances);
+    commitImmutablePlacementNodeToFragmentInstances(
+      child,
+      parentFragmentInstances,
+    );
     let sibling = child.sibling;
     while (sibling !== null) {
-      appendImmutableNodeToFragmentInstances(sibling, parentFragmentInstances);
+      commitImmutablePlacementNodeToFragmentInstances(
+        sibling,
+        parentFragmentInstances,
+      );
       sibling = sibling.sibling;
     }
   }
