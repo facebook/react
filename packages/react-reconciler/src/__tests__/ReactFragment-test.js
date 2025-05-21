@@ -12,6 +12,7 @@
 let React;
 let ReactNoop;
 let waitForAll;
+let assertConsoleErrorDev;
 
 describe('ReactFragment', () => {
   beforeEach(function () {
@@ -22,6 +23,7 @@ describe('ReactFragment', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   it('should render a single child via noop renderer', async () => {
@@ -740,9 +742,15 @@ describe('ReactFragment', () => {
     await waitForAll([]);
 
     ReactNoop.render(<Foo condition={false} />);
-    await expect(async () => await waitForAll([])).toErrorDev(
-      'Each child in a list should have a unique "key" prop.',
-    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n' +
+        '\n' +
+        'Check the render method of `div`. ' +
+        'It was passed a child from Foo. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Foo (at **)',
+    ]);
 
     expect(ops).toEqual([]);
     expect(ReactNoop).toMatchRenderedOutput(
@@ -937,9 +945,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    await expect(async () => await waitForAll([])).toErrorDev(
-      'Each child in a list should have a unique "key" prop.',
-    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n' +
+        '\n' +
+        'Check the top-level render call using <Foo>. ' +
+        'It was passed a child from Foo. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in span (at **)\n' +
+        '    in Foo (at **)',
+    ]);
 
     ReactNoop.render(<Foo condition={false} />);
     // The key warning gets deduped because it's in the same component.
@@ -964,5 +979,52 @@ describe('ReactFragment', () => {
         <div>Hello</div>
       </>,
     );
+  });
+
+  it('should preserve state of children when adding a fragment wrapped in Lazy', async function () {
+    const ops = [];
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    const lazyChild = React.lazy(async () => ({
+      default: (
+        <>
+          <Stateful key="a" />
+          <div key="b">World</div>
+        </>
+      ),
+    }));
+
+    function Foo({condition}) {
+      return condition ? <Stateful key="a" /> : lazyChild;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    await waitForAll([]);
+
+    ReactNoop.render(<Foo condition={false} />);
+    await waitForAll([]);
+
+    expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>Hello</div>
+        <div>World</div>
+      </>,
+    );
+
+    ReactNoop.render(<Foo condition={true} />);
+    await waitForAll([]);
+
+    expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
+    expect(ReactNoop).toMatchRenderedOutput(<div>Hello</div>);
   });
 });

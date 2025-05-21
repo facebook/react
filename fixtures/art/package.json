@@ -5,9 +5,9 @@
     "@babel/preset-env": "^7.10.4",
     "@babel/preset-react": "^7.10.4",
     "babel-loader": "^8.1.0",
-    "react": "^18.2.0",
-    "react-art": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.0.0",
+    "react-art": "^19.0.0",
+    "react-dom": "^19.0.0",
     "webpack": "^1.14.0"
   },
   "scripts": {

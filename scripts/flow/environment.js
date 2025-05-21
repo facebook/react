@@ -9,26 +9,98 @@
 
 /* eslint-disable */
 
-declare var __PROFILE__: boolean;
-declare var __UMD__: boolean;
-declare var __EXPERIMENTAL__: boolean;
-declare var __VARIANT__: boolean;
+declare const __PROFILE__: boolean;
+declare const __EXPERIMENTAL__: boolean;
+declare const __VARIANT__: boolean;
 
-declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
+declare const __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/
 
-declare var globalThis: Object;
+declare const globalThis: Object;
 
-declare var queueMicrotask: (fn: Function) => void;
-declare var reportError: (error: mixed) => void;
-declare var AggregateError: Class<Error>;
+declare const queueMicrotask: (fn: Function) => void;
+declare const reportError: (error: mixed) => void;
+declare const AggregateError: Class<Error>;
+
+declare const FinalizationRegistry: any;
 
 declare module 'create-react-class' {
-  declare var exports: React$CreateClass;
+  declare const exports: $FlowFixMe;
 }
 
-declare var trustedTypes: {
+declare interface ConsoleTask {
+  run<T>(f: () => T): T;
+}
+
+declare var console: {
+  assert(condition: mixed, ...data: Array<any>): void,
+  clear(): void,
+  count(label?: string): void,
+  countReset(label?: string): void,
+  debug(...data: Array<any>): void,
+  dir(...data: Array<any>): void,
+  dirxml(...data: Array<any>): void,
+  error(...data: Array<any>): void,
+  _exception(...data: Array<any>): void,
+  group(...data: Array<any>): void,
+  groupCollapsed(...data: Array<any>): void,
+  groupEnd(): void,
+  info(...data: Array<any>): void,
+  log(...data: Array<any>): void,
+  profile(name?: string): void,
+  profileEnd(name?: string): void,
+  table(
+    tabularData:
+      | {[key: string]: any, ...}
+      | Array<{[key: string]: any, ...}>
+      | Array<Array<any>>,
+  ): void,
+  time(label?: string): void,
+  timeEnd(label: string): void,
+  timeStamp(
+    label?: string,
+    start?: string | number,
+    end?: string | number,
+    trackName?: string,
+    trackGroup?: string,
+    color?: string,
+  ): void,
+  timeLog(label?: string, ...data?: Array<any>): void,
+  trace(...data: Array<any>): void,
+  warn(...data: Array<any>): void,
+  createTask(label: string): ConsoleTask,
+  ...
+};
+
+type ScrollTimelineOptions = {
+  source: Element,
+  axis?: 'block' | 'inline' | 'x' | 'y',
+  ...
+};
+
+declare class ScrollTimeline extends AnimationTimeline {
+  constructor(options?: ScrollTimelineOptions): void;
+  axis: 'block' | 'inline' | 'x' | 'y';
+  source: Element;
+}
+
+// Flow hides the props of React$Element, this overrides it to unhide
+// them for React internals.
+// prettier-ignore
+declare opaque type React$Element<
+  +ElementType: React$ElementType,
+  +P = React$ElementProps<ElementType>,
+>: {
+  +type: ElementType,
+  +props: P,
+  +key: React$Key | null,
+  +ref: any,
+};
+
+declare type React$CustomJSXFactory = any;
+
+declare const trustedTypes: {
   isHTML: (value: any) => boolean,
   isScript: (value: any) => boolean,
   isScriptURL: (value: any) => boolean,
@@ -74,15 +146,32 @@ declare module 'EventListener' {
 }
 
 declare function __webpack_chunk_load__(id: string): Promise<mixed>;
-declare function __webpack_require__(id: string): any;
+declare const __webpack_require__: ((id: string) => any) & {
+  u: string => string,
+};
+
+declare function __turbopack_load__(id: string): Promise<mixed>;
+declare const __turbopack_require__: ((id: string) => any) & {
+  u: string => string,
+};
+
+declare var parcelRequire: {
+  (id: string): any,
+  load: (url: string) => Promise<mixed>,
+  extendImportMap: (importMap: {[string]: string}) => void,
+  meta: {
+    publicUrl: string,
+    devServer: string | null,
+  },
+};
 
 declare module 'fs/promises' {
-  declare var access: (path: string, mode?: number) => Promise<void>;
-  declare var lstat: (
+  declare const access: (path: string, mode?: number) => Promise<void>;
+  declare const lstat: (
     path: string,
     options?: ?{bigint?: boolean},
   ) => Promise<mixed>;
-  declare var readdir: (
+  declare const readdir: (
     path: string,
     options?:
       | ?string
@@ -91,7 +180,7 @@ declare module 'fs/promises' {
           withFileTypes?: ?boolean,
         },
   ) => Promise<Buffer>;
-  declare var readFile: (
+  declare const readFile: (
     path: string,
     options?:
       | ?string
@@ -99,7 +188,7 @@ declare module 'fs/promises' {
           encoding?: ?string,
         },
   ) => Promise<Buffer>;
-  declare var readlink: (
+  declare const readlink: (
     path: string,
     options?:
       | ?string
@@ -107,7 +196,7 @@ declare module 'fs/promises' {
           encoding?: ?string,
         },
   ) => Promise<mixed>;
-  declare var realpath: (
+  declare const realpath: (
     path: string,
     options?:
       | ?string
@@ -115,13 +204,13 @@ declare module 'fs/promises' {
           encoding?: ?string,
         },
   ) => Promise<mixed>;
-  declare var stat: (
+  declare const stat: (
     path: string,
     options?: ?{bigint?: boolean},
   ) => Promise<mixed>;
 }
 declare module 'pg' {
-  declare var Pool: (options: mixed) => {
+  declare const Pool: (options: mixed) => {
     query: (query: string, values?: Array<mixed>) => void,
   };
 }
@@ -259,25 +348,208 @@ declare module 'pg/lib/utils' {
   };
 }
 
-declare class AsyncLocalStorage<T> {
-  disable(): void;
-  getStore(): T | void;
-  run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
-  enterWith(store: T): void;
-}
-
+// Node
 declare module 'async_hooks' {
   declare class AsyncLocalStorage<T> {
     disable(): void;
     getStore(): T | void;
-    run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
+    run<R>(store: T, callback: (...args: any[]) => R, ...args: any[]): R;
     enterWith(store: T): void;
   }
+  declare interface AsyncResource {}
+  declare function executionAsyncId(): number;
+  declare function executionAsyncResource(): AsyncResource;
+  declare function triggerAsyncId(): number;
+  declare type HookCallbacks = {
+    init?: (
+      asyncId: number,
+      type: string,
+      triggerAsyncId: number,
+      resource: AsyncResource,
+    ) => void,
+    before?: (asyncId: number) => void,
+    after?: (asyncId: number) => void,
+    promiseResolve?: (asyncId: number) => void,
+    destroy?: (asyncId: number) => void,
+  };
+  declare class AsyncHook {
+    enable(): this;
+    disable(): this;
+  }
+  declare function createHook(callbacks: HookCallbacks): AsyncHook;
 }
+
+// Edge
+declare class AsyncLocalStorage<T> {
+  disable(): void;
+  getStore(): T | void;
+  run<R>(store: T, callback: (...args: any[]) => R, ...args: any[]): R;
+  enterWith(store: T): void;
+}
+
+declare const async_hooks: {
+  createHook(callbacks: any): any,
+  executionAsyncId(): number,
+};
 
 declare module 'node:worker_threads' {
   declare class MessageChannel {
     port1: MessagePort;
     port2: MessagePort;
   }
+}
+
+declare module 'jest-diff' {
+  declare type CompareKeys = ((a: string, b: string) => number) | void;
+  declare type DiffOptions = {
+    aAnnotation?: string,
+    aColor?: (arg: string) => string,
+    aIndicator?: string,
+    bAnnotation?: string,
+    bColor?: (arg: string) => string,
+    bIndicator?: string,
+    changeColor?: (arg: string) => string,
+    changeLineTrailingSpaceColor?: (arg: string) => string,
+    commonColor?: (arg: string) => string,
+    commonIndicator?: string,
+    commonLineTrailingSpaceColor?: (arg: string) => string,
+    contextLines?: number,
+    emptyFirstOrLastLinePlaceholder?: string,
+    expand?: boolean,
+    includeChangeCounts?: boolean,
+    omitAnnotationLines?: boolean,
+    patchColor?: (arg: string) => string,
+    compareKeys?: CompareKeys,
+  };
+  declare function diff(a: any, b: any, options?: DiffOptions): string;
+}
+
+declare const Bun: {
+  hash(
+    input: string | $TypedArray | DataView | ArrayBuffer | SharedArrayBuffer,
+  ): number,
+};
+
+// Navigation API
+
+declare const navigation: Navigation;
+
+interface NavigationResult {
+  committed: Promise<NavigationHistoryEntry>;
+  finished: Promise<NavigationHistoryEntry>;
+}
+
+declare class Navigation extends EventTarget {
+  entries(): NavigationHistoryEntry[];
+  +currentEntry: NavigationHistoryEntry | null;
+  updateCurrentEntry(options: NavigationUpdateCurrentEntryOptions): void;
+  +transition: NavigationTransition | null;
+
+  +canGoBack: boolean;
+  +canGoForward: boolean;
+
+  navigate(url: string, options?: NavigationNavigateOptions): NavigationResult;
+  reload(options?: NavigationReloadOptions): NavigationResult;
+
+  traverseTo(key: string, options?: NavigationOptions): NavigationResult;
+  back(options?: NavigationOptions): NavigationResult;
+  forward(options?: NavigationOptions): NavigationResult;
+
+  onnavigate: ((this: Navigation, ev: NavigateEvent) => any) | null;
+  onnavigatesuccess: ((this: Navigation, ev: Event) => any) | null;
+  onnavigateerror: ((this: Navigation, ev: ErrorEvent) => any) | null;
+  oncurrententrychange:
+    | ((this: Navigation, ev: NavigationCurrentEntryChangeEvent) => any)
+    | null;
+
+  // TODO: Implement addEventListener overrides. Doesn't seem like Flow supports this.
+}
+
+declare class NavigationTransition {
+  +navigationType: NavigationTypeString;
+  +from: NavigationHistoryEntry;
+  +finished: Promise<void>;
+}
+
+interface NavigationHistoryEntryEventMap {
+  dispose: Event;
+}
+
+interface NavigationHistoryEntry extends EventTarget {
+  +key: string;
+  +id: string;
+  +url: string | null;
+  +index: number;
+  +sameDocument: boolean;
+
+  getState(): mixed;
+
+  ondispose: ((this: NavigationHistoryEntry, ev: Event) => any) | null;
+
+  // TODO: Implement addEventListener overrides. Doesn't seem like Flow supports this.
+}
+
+declare var NavigationHistoryEntry: {
+  prototype: NavigationHistoryEntry,
+  new(): NavigationHistoryEntry,
+};
+
+type NavigationTypeString = 'reload' | 'push' | 'replace' | 'traverse';
+
+interface NavigationUpdateCurrentEntryOptions {
+  state: mixed;
+}
+
+interface NavigationOptions {
+  info?: mixed;
+}
+
+interface NavigationNavigateOptions extends NavigationOptions {
+  state?: mixed;
+  history?: 'auto' | 'push' | 'replace';
+}
+
+interface NavigationReloadOptions extends NavigationOptions {
+  state?: mixed;
+}
+
+declare class NavigationCurrentEntryChangeEvent extends Event {
+  constructor(type: string, eventInit?: any): void;
+
+  +navigationType: NavigationTypeString | null;
+  +from: NavigationHistoryEntry;
+}
+
+declare class NavigateEvent extends Event {
+  constructor(type: string, eventInit?: any): void;
+
+  +navigationType: NavigationTypeString;
+  +canIntercept: boolean;
+  +userInitiated: boolean;
+  +hashChange: boolean;
+  +hasUAVisualTransition: boolean;
+  +destination: NavigationDestination;
+  +signal: AbortSignal;
+  +formData: FormData | null;
+  +downloadRequest: string | null;
+  +info?: mixed;
+
+  intercept(options?: NavigationInterceptOptions): void;
+  scroll(): void;
+}
+
+interface NavigationInterceptOptions {
+  handler?: () => Promise<void>;
+  focusReset?: 'after-transition' | 'manual';
+  scroll?: 'after-transition' | 'manual';
+}
+
+declare class NavigationDestination {
+  +url: string;
+  +key: string | null;
+  +id: string | null;
+  +index: number;
+  +sameDocument: boolean;
+
+  getState(): mixed;
 }

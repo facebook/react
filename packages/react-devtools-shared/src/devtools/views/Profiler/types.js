@@ -7,8 +7,10 @@
  * @flow
  */
 
-import type {ElementType} from 'react-devtools-shared/src/types';
-import type {SerializedElement} from '../Components/types';
+import type {
+  ElementType,
+  SerializedElement,
+} from 'react-devtools-shared/src/frontend/types';
 import type {
   TimelineData,
   TimelineDataExport,
@@ -23,6 +25,9 @@ export type CommitTreeNode = {
   parentID: number,
   treeBaseDuration: number,
   type: ElementType,
+  // If component is compiled with Forget, the backend will send its name as Forget(...)
+  // Later, on the frontend side, we will strip HOC names and Forget prefix.
+  compiledWithForget: boolean,
 };
 
 export type CommitTree = {
@@ -37,6 +42,9 @@ export type SnapshotNode = {
   hocDisplayNames: Array<string> | null,
   key: number | string | null,
   type: ElementType,
+  // If component is compiled with Forget, the backend will send its name as Forget(...)
+  // Later, on the frontend side, we will strip HOC names and Forget prefix.
+  compiledWithForget: boolean,
 };
 
 export type ChangeDescription = {

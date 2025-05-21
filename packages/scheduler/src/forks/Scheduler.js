@@ -12,13 +12,13 @@
 import type {PriorityLevel} from '../SchedulerPriorities';
 
 import {
-  enableSchedulerDebugging,
   enableProfiling,
-  enableIsInputPending,
-  enableIsInputPendingContinuous,
   frameYieldMs,
-  continuousYieldMs,
-  maxYieldMs,
+  userBlockingPriorityTimeout,
+  lowPriorityTimeout,
+  normalPriorityTimeout,
+  enableRequestPaint,
+  enableAlwaysYieldScheduler,
 } from '../SchedulerFeatureFlags';
 
 import {push, pop, peek} from '../SchedulerMinHeap';
@@ -75,24 +75,12 @@ if (hasPerformanceNow) {
 // 0b111111111111111111111111111111
 var maxSigned31BitInt = 1073741823;
 
-// Times out immediately
-var IMMEDIATE_PRIORITY_TIMEOUT = -1;
-// Eventually times out
-var USER_BLOCKING_PRIORITY_TIMEOUT = 250;
-var NORMAL_PRIORITY_TIMEOUT = 5000;
-var LOW_PRIORITY_TIMEOUT = 10000;
-// Never times out
-var IDLE_PRIORITY_TIMEOUT = maxSigned31BitInt;
-
 // Tasks are stored on a min heap
 var taskQueue: Array<Task> = [];
 var timerQueue: Array<Task> = [];
 
 // Incrementing id counter. Used to maintain insertion order.
 var taskIdCounter = 1;
-
-// Pausing the scheduler is useful for debugging.
-var isSchedulerPaused = false;
 
 var currentTask = null;
 var currentPriorityLevel = NormalPriority;
@@ -103,23 +91,14 @@ var isPerformingWork = false;
 var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
+var needsPaint = false;
+
 // Capture local references to native APIs, in case a polyfill overrides them.
 const localSetTimeout = typeof setTimeout === 'function' ? setTimeout : null;
 const localClearTimeout =
   typeof clearTimeout === 'function' ? clearTimeout : null;
 const localSetImmediate =
   typeof setImmediate !== 'undefined' ? setImmediate : null; // IE and Node.js + jsdom
-
-const isInputPending =
-  typeof navigator !== 'undefined' &&
-  // $FlowFixMe[prop-missing]
-  navigator.scheduling !== undefined &&
-  // $FlowFixMe[incompatible-type]
-  navigator.scheduling.isInputPending !== undefined
-    ? navigator.scheduling.isInputPending.bind(navigator.scheduling)
-    : null;
-
-const continuousOptions = {includeContinuous: enableIsInputPendingContinuous};
 
 function advanceTimers(currentTime: number) {
   // Check for tasks that are no longer delayed and add them to the queue.
@@ -210,13 +189,12 @@ function workLoop(initialTime: number) {
   let currentTime = initialTime;
   advanceTimers(currentTime);
   currentTask = peek(taskQueue);
-  while (
-    currentTask !== null &&
-    !(enableSchedulerDebugging && isSchedulerPaused)
-  ) {
-    if (currentTask.expirationTime > currentTime && shouldYieldToHost()) {
-      // This currentTask hasn't expired, and we've reached the deadline.
-      break;
+  while (currentTask !== null) {
+    if (!enableAlwaysYieldScheduler) {
+      if (currentTask.expirationTime > currentTime && shouldYieldToHost()) {
+        // This currentTask hasn't expired, and we've reached the deadline.
+        break;
+      }
     }
     // $FlowFixMe[incompatible-use] found when upgrading Flow
     const callback = currentTask.callback;
@@ -260,6 +238,12 @@ function workLoop(initialTime: number) {
       pop(taskQueue);
     }
     currentTask = peek(taskQueue);
+    if (enableAlwaysYieldScheduler) {
+      if (currentTask === null || currentTask.expirationTime > currentTime) {
+        // This currentTask hasn't expired we yield to the browser task.
+        break;
+      }
+    }
   }
   // Return whether there's additional work
   if (currentTask !== null) {
@@ -362,20 +346,25 @@ function unstable_scheduleCallback(
   var timeout;
   switch (priorityLevel) {
     case ImmediatePriority:
-      timeout = IMMEDIATE_PRIORITY_TIMEOUT;
+      // Times out immediately
+      timeout = -1;
       break;
     case UserBlockingPriority:
-      timeout = USER_BLOCKING_PRIORITY_TIMEOUT;
+      // Eventually times out
+      timeout = userBlockingPriorityTimeout;
       break;
     case IdlePriority:
-      timeout = IDLE_PRIORITY_TIMEOUT;
+      // Never times out
+      timeout = maxSigned31BitInt;
       break;
     case LowPriority:
-      timeout = LOW_PRIORITY_TIMEOUT;
+      // Eventually times out
+      timeout = lowPriorityTimeout;
       break;
     case NormalPriority:
     default:
-      timeout = NORMAL_PRIORITY_TIMEOUT;
+      // Eventually times out
+      timeout = normalPriorityTimeout;
       break;
   }
 
@@ -426,22 +415,6 @@ function unstable_scheduleCallback(
   return newTask;
 }
 
-function unstable_pauseExecution() {
-  isSchedulerPaused = true;
-}
-
-function unstable_continueExecution() {
-  isSchedulerPaused = false;
-  if (!isHostCallbackScheduled && !isPerformingWork) {
-    isHostCallbackScheduled = true;
-    requestHostCallback();
-  }
-}
-
-function unstable_getFirstCallbackNode(): Task | null {
-  return peek(taskQueue);
-}
-
 function unstable_cancelCallback(task: Task) {
   if (enableProfiling) {
     if (task.isQueued) {
@@ -469,70 +442,27 @@ let taskTimeoutID: TimeoutID = (-1: any);
 // It does not attempt to align with frame boundaries, since most tasks don't
 // need to be frame aligned; for those that do, use requestAnimationFrame.
 let frameInterval = frameYieldMs;
-const continuousInputInterval = continuousYieldMs;
-const maxInterval = maxYieldMs;
 let startTime = -1;
 
-let needsPaint = false;
-
 function shouldYieldToHost(): boolean {
+  if (!enableAlwaysYieldScheduler && enableRequestPaint && needsPaint) {
+    // Yield now.
+    return true;
+  }
   const timeElapsed = getCurrentTime() - startTime;
   if (timeElapsed < frameInterval) {
     // The main thread has only been blocked for a really short amount of time;
     // smaller than a single frame. Don't yield yet.
     return false;
   }
-
-  // The main thread has been blocked for a non-negligible amount of time. We
-  // may want to yield control of the main thread, so the browser can perform
-  // high priority tasks. The main ones are painting and user input. If there's
-  // a pending paint or a pending input, then we should yield. But if there's
-  // neither, then we can yield less often while remaining responsive. We'll
-  // eventually yield regardless, since there could be a pending paint that
-  // wasn't accompanied by a call to `requestPaint`, or other main thread tasks
-  // like network events.
-  if (enableIsInputPending) {
-    if (needsPaint) {
-      // There's a pending paint (signaled by `requestPaint`). Yield now.
-      return true;
-    }
-    if (timeElapsed < continuousInputInterval) {
-      // We haven't blocked the thread for that long. Only yield if there's a
-      // pending discrete input (e.g. click). It's OK if there's pending
-      // continuous input (e.g. mouseover).
-      if (isInputPending !== null) {
-        return isInputPending();
-      }
-    } else if (timeElapsed < maxInterval) {
-      // Yield if there's either a pending discrete or continuous input.
-      if (isInputPending !== null) {
-        return isInputPending(continuousOptions);
-      }
-    } else {
-      // We've blocked the thread for a long time. Even if there's no pending
-      // input, there may be some other scheduled work that we don't know about,
-      // like a network event. Yield now.
-      return true;
-    }
-  }
-
-  // `isInputPending` isn't available. Yield now.
+  // Yield now.
   return true;
 }
 
 function requestPaint() {
-  if (
-    enableIsInputPending &&
-    navigator !== undefined &&
-    // $FlowFixMe[prop-missing]
-    navigator.scheduling !== undefined &&
-    // $FlowFixMe[incompatible-type]
-    navigator.scheduling.isInputPending !== undefined
-  ) {
+  if (enableRequestPaint) {
     needsPaint = true;
   }
-
-  // Since we yield every frame regardless, `requestPaint` has no effect.
 }
 
 function forceFrameRate(fps: number) {
@@ -553,6 +483,9 @@ function forceFrameRate(fps: number) {
 }
 
 const performWorkUntilDeadline = () => {
+  if (enableRequestPaint) {
+    needsPaint = false;
+  }
   if (isMessageLoopRunning) {
     const currentTime = getCurrentTime();
     // Keep track of the start time so we can measure how long the main thread
@@ -578,9 +511,6 @@ const performWorkUntilDeadline = () => {
       }
     }
   }
-  // Yielding to the browser will give it a chance to paint, so we can
-  // reset this.
-  needsPaint = false;
 };
 
 let schedulePerformWorkUntilDeadline;
@@ -653,9 +583,6 @@ export {
   unstable_getCurrentPriorityLevel,
   shouldYieldToHost as unstable_shouldYield,
   requestPaint as unstable_requestPaint,
-  unstable_continueExecution,
-  unstable_pauseExecution,
-  unstable_getFirstCallbackNode,
   getCurrentTime as unstable_now,
   forceFrameRate as unstable_forceFrameRate,
 };

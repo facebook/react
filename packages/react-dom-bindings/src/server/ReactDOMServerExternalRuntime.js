@@ -7,26 +7,14 @@
 
 // Imports are resolved statically by the closure compiler in release bundles
 // and by rollup in jest unit tests
-import {
-  clientRenderBoundary,
-  completeBoundaryWithStyles,
-  completeBoundary,
-  completeSegment,
-} from './fizz-instruction-set/ReactDOMFizzInstructionSetExternalRuntime';
-
-if (!window.$RC) {
-  // TODO: Eventually remove, we currently need to set these globals for
-  // compatibility with ReactDOMFizzInstructionSet
-  window.$RC = completeBoundary;
-  window.$RM = new Map();
-}
+import './fizz-instruction-set/ReactDOMFizzInstructionSetExternalRuntime';
 
 if (document.body != null) {
   if (document.readyState === 'loading') {
     installFizzInstrObserver(document.body);
   }
   // $FlowFixMe[incompatible-cast]
-  handleExistingNodes((document.body /*: HTMLElement */));
+  handleExistingNodes((document.body: HTMLElement));
 } else {
   // Document must be loading -- body may not exist yet if the fizz external
   // runtime is sent in <head> (e.g. as a preinit resource)
@@ -38,7 +26,7 @@ if (document.body != null) {
         installFizzInstrObserver(document.body);
       }
       // $FlowFixMe[incompatible-cast]
-      handleExistingNodes((document.body /*: HTMLElement */));
+      handleExistingNodes((document.body: HTMLElement));
 
       // We can call disconnect without takeRecord here,
       // since we only expect a single document.body
@@ -49,15 +37,15 @@ if (document.body != null) {
   domBodyObserver.observe(document.documentElement, {childList: true});
 }
 
-function handleExistingNodes(target /*: HTMLElement */) {
+function handleExistingNodes(target: HTMLElement) {
   const existingNodes = target.querySelectorAll('template');
   for (let i = 0; i < existingNodes.length; i++) {
     handleNode(existingNodes[i]);
   }
 }
 
-function installFizzInstrObserver(target /*: Node */) {
-  const handleMutations = (mutations /*: Array<MutationRecord> */) => {
+function installFizzInstrObserver(target: Node) {
+  const handleMutations = (mutations: Array<MutationRecord>) => {
     for (let i = 0; i < mutations.length; i++) {
       const addedNodes = mutations[i].addedNodes;
       for (let j = 0; j < addedNodes.length; j++) {
@@ -80,35 +68,32 @@ function installFizzInstrObserver(target /*: Node */) {
   });
 }
 
-function handleNode(node_ /*: Node */) {
+function handleNode(node_: Node) {
   // $FlowFixMe[incompatible-cast]
-  if (node_.nodeType !== 1 || !(node_ /*: HTMLElement */).dataset) {
+  if (node_.nodeType !== 1 || !(node_: HTMLElement).dataset) {
     return;
   }
   // $FlowFixMe[incompatible-cast]
-  const node = (node_ /*: HTMLElement */);
+  const node = (node_: HTMLElement);
   const dataset = node.dataset;
   if (dataset['rxi'] != null) {
-    clientRenderBoundary(
+    window['$RX'](
       dataset['bid'],
       dataset['dgst'],
       dataset['msg'],
       dataset['stck'],
+      dataset['cstck'],
     );
     node.remove();
   } else if (dataset['rri'] != null) {
     // Convert styles here, since its type is Array<Array<string>>
-    completeBoundaryWithStyles(
-      dataset['bid'],
-      dataset['sid'],
-      JSON.parse(dataset['sty']),
-    );
+    window['$RR'](dataset['bid'], dataset['sid'], JSON.parse(dataset['sty']));
     node.remove();
   } else if (dataset['rci'] != null) {
-    completeBoundary(dataset['bid'], dataset['sid']);
+    window['$RC'](dataset['bid'], dataset['sid']);
     node.remove();
   } else if (dataset['rsi'] != null) {
-    completeSegment(dataset['sid'], dataset['pid']);
+    window['$RS'](dataset['sid'], dataset['pid']);
     node.remove();
   }
 }

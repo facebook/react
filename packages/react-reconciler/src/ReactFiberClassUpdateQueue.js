@@ -110,8 +110,6 @@ import {
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from './getComponentNameFromFiber';
 
-import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
-
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {
   markSkippedUpdateLanes,
@@ -125,6 +123,10 @@ import {
 import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook';
 
 import assign from 'shared/assign';
+import {
+  peekEntangledActionLane,
+  peekEntangledActionThenable,
+} from './ReactFiberAsyncAction';
 
 export type Update<State> = {
   lane: Lane,
@@ -398,10 +400,7 @@ function getStateFromUpdate<State>(
         }
         const nextState = payload.call(instance, prevState, nextProps);
         if (__DEV__) {
-          if (
-            debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictLegacyMode
-          ) {
+          if (workInProgress.mode & StrictLegacyMode) {
             setIsStrictModeForDevtools(true);
             try {
               payload.call(instance, prevState, nextProps);
@@ -431,10 +430,7 @@ function getStateFromUpdate<State>(
         }
         partialState = payload.call(instance, prevState, nextProps);
         if (__DEV__) {
-          if (
-            debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictLegacyMode
-          ) {
+          if (workInProgress.mode & StrictLegacyMode) {
             setIsStrictModeForDevtools(true);
             try {
               payload.call(instance, prevState, nextProps);
@@ -463,12 +459,38 @@ function getStateFromUpdate<State>(
   return prevState;
 }
 
+let didReadFromEntangledAsyncAction: boolean = false;
+
+// Each call to processUpdateQueue should be accompanied by a call to this. It's
+// only in a separate function because in updateHostRoot, it must happen after
+// all the context stacks have been pushed to, to prevent a stack mismatch. A
+// bit unfortunate.
+export function suspendIfUpdateReadFromEntangledAsyncAction() {
+  // Check if this update is part of a pending async action. If so, we'll
+  // need to suspend until the action has finished, so that it's batched
+  // together with future updates in the same action.
+  // TODO: Once we support hooks inside useMemo (or an equivalent
+  // memoization boundary like Forget), hoist this logic so that it only
+  // suspends if the memo boundary produces a new value.
+  if (didReadFromEntangledAsyncAction) {
+    const entangledActionThenable = peekEntangledActionThenable();
+    if (entangledActionThenable !== null) {
+      // TODO: Instead of the throwing the thenable directly, throw a
+      // special object like `use` does so we can detect if it's captured
+      // by userspace.
+      throw entangledActionThenable;
+    }
+  }
+}
+
 export function processUpdateQueue<State>(
   workInProgress: Fiber,
   props: any,
   instance: any,
   renderLanes: Lanes,
 ): void {
+  didReadFromEntangledAsyncAction = false;
+
   // This is always non-null on a ClassComponent or HostRoot
   const queue: UpdateQueue<State> = (workInProgress.updateQueue: any);
 
@@ -526,7 +548,7 @@ export function processUpdateQueue<State>(
     let newState = queue.baseState;
     // TODO: Don't need to accumulate this. Instead, we can remove renderLanes
     // from the original lanes.
-    let newLanes = NoLanes;
+    let newLanes: Lanes = NoLanes;
 
     let newBaseState = null;
     let newFirstBaseUpdate = null;
@@ -570,6 +592,13 @@ export function processUpdateQueue<State>(
         newLanes = mergeLanes(newLanes, updateLane);
       } else {
         // This update does have sufficient priority.
+
+        // Check if this update is part of a pending async action. If so,
+        // we'll need to suspend until the action has finished, so that it's
+        // batched together with future updates in the same action.
+        if (updateLane !== NoLane && updateLane === peekEntangledActionLane()) {
+          didReadFromEntangledAsyncAction = true;
+        }
 
         if (newLastBaseUpdate !== null) {
           const clone: Update<State> = {

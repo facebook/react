@@ -9,55 +9,90 @@
 
 'use strict';
 
+import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
+import {Readable} from 'stream';
+
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
-
-// Don't wait before processing work on the server.
-// TODO: we can replace this with FlightServer.act().
-global.setImmediate = cb => cb();
 
 let act;
 let use;
 let clientExports;
+let clientExportsESM;
 let clientModuleError;
 let webpackMap;
 let Stream;
+let FlightReact;
 let React;
-let ReactDOM;
+let FlightReactDOM;
 let ReactDOMClient;
 let ReactServerDOMServer;
+let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let ReactDOMFizzServer;
+let ReactDOMStaticServer;
 let Suspense;
 let ErrorBoundary;
+let JSDOM;
+let ReactServerScheduler;
+let reactServerAct;
+let assertConsoleErrorDev;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
+    // For this first reset we are going to load the dom-node version of react-server-dom-webpack/server
+    // This can be thought of as essentially being the React Server Components scope with react-server
+    // condition
     jest.resetModules();
 
+    JSDOM = require('jsdom').JSDOM;
+
+    ReactServerScheduler = require('scheduler');
+    patchSetImmediate(ReactServerScheduler);
+    reactServerAct = require('internal-test-utils').act;
+
     // Simulate the condition resolution
+    jest.mock('react', () => require('react/react.react-server'));
+    FlightReact = require('react');
+    FlightReactDOM = require('react-dom');
+
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.node.unbundled'),
     );
-
-    ReactServerDOMClient = require('react-server-dom-webpack/client');
-
-    act = require('internal-test-utils').act;
+    if (__EXPERIMENTAL__) {
+      jest.mock('react-server-dom-webpack/static', () =>
+        require('react-server-dom-webpack/static.node.unbundled'),
+      );
+    }
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
+    clientExportsESM = WebpackMock.clientExportsESM;
     clientModuleError = WebpackMock.clientModuleError;
     webpackMap = WebpackMock.webpackMap;
 
+    ReactServerDOMServer = require('react-server-dom-webpack/server');
+    if (__EXPERIMENTAL__) {
+      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
+    }
+
+    // This reset is to load modules for the SSR/Browser scope.
+    jest.unmock('react-server-dom-webpack/server');
+    __unmockReact();
+    jest.resetModules();
+    act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     Stream = require('stream');
     React = require('react');
-    ReactDOM = require('react-dom');
-    ReactDOMFizzServer = require('react-dom/server.node');
     use = React.use;
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
-    ReactServerDOMServer = require('react-server-dom-webpack/server.node.unbundled');
+    ReactDOMFizzServer = require('react-dom/server.node');
+    ReactDOMStaticServer = require('react-dom/static.node');
+    ReactServerDOMClient = require('react-server-dom-webpack/client');
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -75,6 +110,49 @@ describe('ReactFlightDOM', () => {
       }
     };
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await reactServerAct(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
+
+  async function readInto(
+    container: Document | HTMLElement,
+    stream: ReadableStream,
+  ) {
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    let content = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        content += decoder.decode();
+        break;
+      }
+      content += decoder.decode(value, {stream: true});
+    }
+    if (container.nodeType === 9 /* DOCUMENT */) {
+      const doc = new JSDOM(content).window.document;
+      container.documentElement.innerHTML = doc.documentElement.innerHTML;
+      while (container.documentElement.attributes.length > 0) {
+        container.documentElement.removeAttribute(
+          container.documentElement.attributes[0].name,
+        );
+      }
+      const attrs = doc.documentElement.attributes;
+      for (let i = 0; i < attrs.length; i++) {
+        container.documentElement.setAttribute(attrs[i].name, attrs[i].value);
+      }
+    } else {
+      container.innerHTML = content;
+    }
+  }
 
   function getTestStream() {
     const writable = new Stream.PassThrough();
@@ -99,6 +177,54 @@ describe('ReactFlightDOM', () => {
     throw theInfinitePromise;
   }
 
+  function getMeaningfulChildren(element) {
+    const children = [];
+    let node = element.firstChild;
+    while (node) {
+      if (node.nodeType === 1) {
+        if (
+          // some tags are ambiguous and might be hidden because they look like non-meaningful children
+          // so we have a global override where if this data attribute is included we also include the node
+          node.hasAttribute('data-meaningful') ||
+          (node.tagName === 'SCRIPT' &&
+            node.hasAttribute('src') &&
+            node.hasAttribute('async')) ||
+          (node.tagName !== 'SCRIPT' &&
+            node.tagName !== 'TEMPLATE' &&
+            node.tagName !== 'template' &&
+            !node.hasAttribute('hidden') &&
+            !node.hasAttribute('aria-hidden') &&
+            // Ignore the render blocking expect
+            (node.getAttribute('rel') !== 'expect' ||
+              node.getAttribute('blocking') !== 'render'))
+        ) {
+          const props = {};
+          const attributes = node.attributes;
+          for (let i = 0; i < attributes.length; i++) {
+            if (
+              attributes[i].name === 'id' &&
+              attributes[i].value.includes(':')
+            ) {
+              // We assume this is a React added ID that's a non-visual implementation detail.
+              continue;
+            }
+            props[attributes[i].name] = attributes[i].value;
+          }
+          props.children = getMeaningfulChildren(node);
+          children.push(React.createElement(node.tagName.toLowerCase(), props));
+        }
+      } else if (node.nodeType === 3) {
+        children.push(node.data);
+      }
+      node = node.nextSibling;
+    }
+    return children.length === 0
+      ? undefined
+      : children.length === 1
+        ? children[0]
+        : children;
+  }
+
   it('should resolve HTML using Node streams', async () => {
     function Text({children}) {
       return <span>{children}</span>;
@@ -120,9 +246,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <App />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -169,9 +294,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <RootModel />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<RootModel />, webpackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -205,9 +329,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <RootModel />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<RootModel />, webpackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -239,9 +362,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <RootModel />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<RootModel />, webpackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -288,9 +410,11 @@ describe('ReactFlightDOM', () => {
     );
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <Component greeting={hi} />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <Component greeting={hi} />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -325,9 +449,11 @@ describe('ReactFlightDOM', () => {
     const {Component} = clientExports(Module);
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <Component greeting={'Hello'} />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <Component greeting={'Hello'} />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -363,9 +489,11 @@ describe('ReactFlightDOM', () => {
     const {split: Component} = clientExports(Module);
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <Component greeting={'Hello'} />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <Component greeting={'Hello'} />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -403,9 +531,11 @@ describe('ReactFlightDOM', () => {
     const AsyncModuleRef2 = await clientExports(AsyncModule2);
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -436,14 +566,16 @@ describe('ReactFlightDOM', () => {
     const AsyncModuleRef = clientExports(AsyncModule);
 
     function ServerComponent() {
-      const text = use(AsyncModuleRef);
+      const text = FlightReact.use(AsyncModuleRef);
       return <p>{text}</p>;
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -454,6 +586,107 @@ describe('ReactFlightDOM', () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>Async Text</p>');
+  });
+
+  it('should unwrap async ESM module references', async () => {
+    const AsyncModule = Promise.resolve(function AsyncModule({text}) {
+      return 'Async: ' + text;
+    });
+
+    const AsyncModule2 = Promise.resolve({
+      exportName: 'Module',
+    });
+
+    function Print({response}) {
+      return <p>{use(response)}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const AsyncModuleRef = await clientExportsESM(AsyncModule);
+    const AsyncModuleRef2 = await clientExportsESM(AsyncModule2);
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
+        webpackMap,
+      ),
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>Async: Module</p>');
+  });
+
+  it('should error when a bundler uses async ESM modules with createClientModuleProxy', async () => {
+    const AsyncModule = Promise.resolve(function AsyncModule() {
+      return 'This should not be rendered';
+    });
+
+    function Print({response}) {
+      return <p>{use(response)}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <ErrorBoundary
+          fallback={error => (
+            <p>
+              {__DEV__ ? error.message + ' + ' : null}
+              {error.digest}
+            </p>
+          )}>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <Print response={response} />
+          </Suspense>
+        </ErrorBoundary>
+      );
+    }
+
+    const AsyncModuleRef = await clientExportsESM(AsyncModule, {
+      forceClientModuleProxy: true,
+    });
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <AsyncModuleRef />,
+        webpackMap,
+        {
+          onError(error) {
+            return __DEV__ ? 'a dev digest' : `digest(${error.message})`;
+          },
+        },
+      ),
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App response={response} />);
+    });
+
+    const errorMessage = `The module "${Object.keys(webpackMap).at(0)}" is marked as an async ESM module but was loaded as a CJS proxy. This is probably a bug in the React Server Components bundler.`;
+
+    expect(container.innerHTML).toBe(
+      __DEV__
+        ? `<p>${errorMessage} + a dev digest</p>`
+        : `<p>digest(${errorMessage})</p>`,
+    );
   });
 
   it('should be able to import a name called "then"', async () => {
@@ -478,9 +711,8 @@ describe('ReactFlightDOM', () => {
     const ThenRef = clientExports(thenExports).then;
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ThenRef />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<ThenRef />, webpackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -504,6 +736,46 @@ describe('ReactFlightDOM', () => {
       'Cannot access Component.deep on the server. ' +
         'You cannot dot into a client module from a server component. ' +
         'You can only pass the imported name through.',
+    );
+  });
+
+  it('throws when await a client module prop of client exports', async () => {
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    async function awaitExport() {
+      const mod = await ClientModule;
+      return await Promise.resolve(mod.Component);
+    }
+    await expect(awaitExport()).rejects.toThrowError(
+      `Cannot await or return from a thenable. ` +
+        `You cannot await a client module from a server component.`,
+    );
+  });
+
+  it('throws when accessing a symbol prop from client exports', () => {
+    const symbol = Symbol('test');
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    function read() {
+      return ClientModule[symbol];
+    }
+    expect(read).toThrowError(
+      'Cannot read Symbol exports. ' +
+        'Only named exports are supported on a client module imported on the server.',
+    );
+  });
+
+  it('does not throw when toString:ing client exports', () => {
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    expect(Object.prototype.toString.call(ClientModule)).toBe(
+      '[object Object]',
+    );
+    expect(Object.prototype.toString.call(ClientModule.Component)).toBe(
+      '[object Function]',
     );
   });
 
@@ -632,15 +904,13 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      model,
-      webpackMap,
-      {
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(model, webpackMap, {
         onError(x) {
           reportedErrors.push(x);
           return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
         },
-      },
+      }),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -657,14 +927,18 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // This isn't enough to show anything.
-    await act(() => {
-      resolveFriends();
+    await serverAct(async () => {
+      await act(() => {
+        resolveFriends();
+      });
     });
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // We can now show the details. Sidebar and posts are still loading.
-    await act(() => {
-      resolveName();
+    await serverAct(async () => {
+      await act(() => {
+        resolveName();
+      });
     });
     // Advance time enough to trigger a nested fallback.
     await act(() => {
@@ -681,9 +955,11 @@ describe('ReactFlightDOM', () => {
 
     const theError = new Error('Game over');
     // Let's *fail* loading games.
-    await act(async () => {
-      await rejectGames(theError);
-      await 'the inner async function';
+    await serverAct(async () => {
+      await act(async () => {
+        await rejectGames(theError);
+        await 'the inner async function';
+      });
     });
     const expectedGamesValue = __DEV__
       ? '<p>Game over + a dev digest</p>'
@@ -699,9 +975,11 @@ describe('ReactFlightDOM', () => {
     reportedErrors = [];
 
     // We can now show the sidebar.
-    await act(async () => {
-      await resolvePhotos();
-      await 'the inner async function';
+    await serverAct(async () => {
+      await act(async () => {
+        await resolvePhotos();
+        await 'the inner async function';
+      });
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -711,9 +989,11 @@ describe('ReactFlightDOM', () => {
     );
 
     // Show everything.
-    await act(async () => {
-      await resolvePosts();
-      await 'the inner async function';
+    await serverAct(async () => {
+      await act(async () => {
+        await resolvePosts();
+        await 'the inner async function';
+      });
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -722,6 +1002,116 @@ describe('ReactFlightDOM', () => {
         expectedGamesValue,
     );
 
+    expect(reportedErrors).toEqual([]);
+  });
+
+  it('should handle streaming async server components', async () => {
+    const reportedErrors = [];
+
+    const Row = async ({current, next}) => {
+      const chunk = await next;
+
+      if (chunk.done) {
+        return chunk.value;
+      }
+
+      return (
+        <Suspense fallback={chunk.value}>
+          <Row current={chunk.value} next={chunk.next} />
+        </Suspense>
+      );
+    };
+
+    function createResolvablePromise() {
+      let _resolve, _reject;
+
+      const promise = new Promise((resolve, reject) => {
+        _resolve = resolve;
+        _reject = reject;
+      });
+
+      return {promise, resolve: _resolve, reject: _reject};
+    }
+
+    function createSuspendedChunk(initialValue) {
+      const {promise, resolve, reject} = createResolvablePromise();
+
+      return {
+        row: (
+          <Suspense fallback={initialValue}>
+            <Row current={initialValue} next={promise} />
+          </Suspense>
+        ),
+        resolve,
+        reject,
+      };
+    }
+
+    function makeDelayedText() {
+      const {promise, resolve, reject} = createResolvablePromise();
+      async function DelayedText() {
+        const data = await promise;
+        return <div>{data}</div>;
+      }
+      return [DelayedText, resolve, reject];
+    }
+
+    const [Posts, resolvePostsData] = makeDelayedText();
+    const [Photos, resolvePhotosData] = makeDelayedText();
+    const suspendedChunk = createSuspendedChunk(<p>loading</p>);
+    const {writable, readable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        suspendedChunk.row,
+        webpackMap,
+        {
+          onError(error) {
+            reportedErrors.push(error);
+          },
+        },
+      ),
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function ClientRoot() {
+      return use(response);
+    }
+
+    await act(() => {
+      root.render(<ClientRoot />);
+    });
+
+    expect(container.innerHTML).toBe('<p>loading</p>');
+
+    const donePromise = createResolvablePromise();
+
+    const value = (
+      <Suspense fallback={<p>loading posts and photos</p>}>
+        <Posts />
+        <Photos />
+      </Suspense>
+    );
+
+    await serverAct(async () => {
+      await act(async () => {
+        suspendedChunk.resolve({value, done: false, next: donePromise.promise});
+        donePromise.resolve({value, done: true});
+      });
+    });
+
+    expect(container.innerHTML).toBe('<p>loading posts and photos</p>');
+
+    await serverAct(async () => {
+      await act(async () => {
+        await resolvePostsData('posts');
+        await resolvePhotosData('photos');
+      });
+    });
+
+    expect(container.innerHTML).toBe('<div>posts</div><div>photos</div>');
     expect(reportedErrors).toEqual([]);
   });
 
@@ -754,9 +1144,11 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOMClient.createRoot(container);
 
     const stream1 = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <App color="red" />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <App color="red" />,
+        webpackMap,
+      ),
     );
     pipe(stream1.writable);
     const response1 = ReactServerDOMClient.createFromReadableStream(
@@ -782,9 +1174,11 @@ describe('ReactFlightDOM', () => {
     inputB.value = 'goodbye';
 
     const stream2 = getTestStream();
-    const {pipe: pipe2} = ReactServerDOMServer.renderToPipeableStream(
-      <App color="blue" />,
-      webpackMap,
+    const {pipe: pipe2} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <App color="blue" />,
+        webpackMap,
+      ),
     );
     pipe2(stream2.writable);
     const response2 = ReactServerDOMClient.createFromReadableStream(
@@ -814,18 +1208,20 @@ describe('ReactFlightDOM', () => {
     const reportedErrors = [];
 
     const {writable, readable} = getTestStream();
-    const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
-      <div>
-        <InfiniteSuspend />
-      </div>,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
-          const message = typeof x === 'string' ? x : x.message;
-          return __DEV__ ? 'a dev digest' : `digest("${message}")`;
+    const {pipe, abort} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <div>
+          <InfiniteSuspend />
+        </div>,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+            const message = typeof x === 'string' ? x : x.message;
+            return __DEV__ ? 'a dev digest' : `digest("${message}")`;
+          },
         },
-      },
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -858,9 +1254,7 @@ describe('ReactFlightDOM', () => {
       abort('for reasons');
     });
     if (__DEV__) {
-      expect(container.innerHTML).toBe(
-        '<p>Error: for reasons + a dev digest</p>',
-      );
+      expect(container.innerHTML).toBe('<p>for reasons + a dev digest</p>');
     } else {
       expect(container.innerHTML).toBe('<p>digest("for reasons")</p>');
     }
@@ -878,16 +1272,18 @@ describe('ReactFlightDOM', () => {
     const ClientReference = clientModuleError(new Error('module init error'));
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <div>
-        <ClientComponent prop={ClientReference} />
-      </div>,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <div>
+          <ClientComponent prop={ClientReference} />
+        </div>,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
         },
-      },
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -928,16 +1324,18 @@ describe('ReactFlightDOM', () => {
     );
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <div>
-        <ClientComponent prop={ClientReference} />
-      </div>,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <div>
+          <ClientComponent prop={ClientReference} />
+        </div>,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
         },
-      },
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -987,17 +1385,19 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <div>
-        <ClientComponent />
-      </div>,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x.message);
-          return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <div>
+          <ClientComponent />
+        </div>,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x.message);
+            return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
+          },
         },
-      },
+      ),
     );
     pipe(writable);
 
@@ -1066,9 +1466,11 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -1122,15 +1524,17 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
-          return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+            return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
+          },
         },
-      },
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -1148,7 +1552,7 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  it('should support ReactDOM.preload when rendering in Fiber', async () => {
+  it('should support float methods when rendering in Fiber', async () => {
     function Component() {
       return <p>hello world</p>;
     }
@@ -1156,16 +1560,34 @@ describe('ReactFlightDOM', () => {
     const ClientComponent = clientExports(Component);
 
     async function ServerComponent() {
-      ReactDOM.preload('before', {as: 'style'});
+      FlightReactDOM.prefetchDNS('d before');
+      FlightReactDOM.preconnect('c before');
+      FlightReactDOM.preconnect('c2 before', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preload('l before', {as: 'style'});
+      FlightReactDOM.preloadModule('lm before');
+      FlightReactDOM.preloadModule('lm2 before', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preinit('i before', {as: 'script'});
+      FlightReactDOM.preinitModule('m before');
+      FlightReactDOM.preinitModule('m2 before', {crossOrigin: 'anonymous'});
       await 1;
-      ReactDOM.preload('after', {as: 'style'});
+      FlightReactDOM.prefetchDNS('d after');
+      FlightReactDOM.preconnect('c after');
+      FlightReactDOM.preconnect('c2 after', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preload('l after', {as: 'style'});
+      FlightReactDOM.preloadModule('lm after');
+      FlightReactDOM.preloadModule('lm2 after', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preinit('i after', {as: 'script'});
+      FlightReactDOM.preinitModule('m after');
+      FlightReactDOM.preinitModule('m2 after', {crossOrigin: 'anonymous'});
       return <ClientComponent />;
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
     );
     pipe(writable);
 
@@ -1196,14 +1618,119 @@ describe('ReactFlightDOM', () => {
     await act(() => {
       root.render(<App />);
     });
-    expect(document.head.innerHTML).toBe(
-      '<link rel="preload" as="style" href="before">' +
-        '<link rel="preload" as="style" href="after">',
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="dns-prefetch" href="d before" />
+          <link rel="preconnect" href="c before" />
+          <link rel="preconnect" href="c2 before" crossorigin="" />
+          <link rel="preload" as="style" href="l before" />
+          <link rel="modulepreload" href="lm before" />
+          <link rel="modulepreload" href="lm2 before" crossorigin="" />
+          <script async="" src="i before" />
+          <script type="module" async="" src="m before" />
+          <script type="module" async="" src="m2 before" crossorigin="" />
+          <link rel="dns-prefetch" href="d after" />
+          <link rel="preconnect" href="c after" />
+          <link rel="preconnect" href="c2 after" crossorigin="" />
+          <link rel="preload" as="style" href="l after" />
+          <link rel="modulepreload" href="lm after" />
+          <link rel="modulepreload" href="lm2 after" crossorigin="" />
+          <script async="" src="i after" />
+          <script type="module" async="" src="m after" />
+          <script type="module" async="" src="m2 after" crossorigin="" />
+        </head>
+        <body />
+      </html>,
     );
-    expect(container.innerHTML).toBe('<p>hello world</p>');
+    expect(getMeaningfulChildren(container)).toEqual(<p>hello world</p>);
   });
 
-  it('should support ReactDOM.preload when rendering in Fizz', async () => {
+  // @gate enablePostpone
+  it('should allow postponing in Flight through a serialized promise', async () => {
+    const Context = React.createContext();
+    const ContextProvider = Context.Provider;
+
+    function Foo() {
+      const value = React.use(React.useContext(Context));
+      return <span>{value}</span>;
+    }
+
+    const ClientModule = clientExports({
+      ContextProvider,
+      Foo,
+    });
+
+    async function getFoo() {
+      React.unstable_postpone('foo');
+    }
+
+    function App() {
+      return (
+        <ClientModule.ContextProvider value={getFoo()}>
+          <div>
+            <Suspense fallback="loading...">
+              <ClientModule.Foo />
+            </Suspense>
+          </div>
+        </ClientModule.ContextProvider>
+      );
+    }
+
+    const {writable, readable} = getTestStream();
+
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap),
+    );
+    pipe(writable);
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response = ReactServerDOMClient.createFromReadableStream(readable);
+      }
+      return response;
+    }
+
+    function Response() {
+      return getResponse();
+    }
+
+    const errors = [];
+    function onError(error, errorInfo) {
+      errors.push(error, errorInfo);
+    }
+    const result = await serverAct(() =>
+      ReactDOMStaticServer.prerenderToNodeStream(<Response />, {
+        onError,
+      }),
+    );
+
+    const prelude = await new Promise((resolve, reject) => {
+      let content = '';
+      result.prelude.on('data', chunk => {
+        content += Buffer.from(chunk).toString('utf8');
+      });
+      result.prelude.on('error', error => {
+        reject(error);
+      });
+      result.prelude.on('end', () => resolve(content));
+    });
+
+    expect(errors).toEqual([]);
+    const doc = new JSDOM(prelude).window.document;
+    expect(getMeaningfulChildren(doc)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div>loading...</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('should support float methods when rendering in Fizz', async () => {
     function Component() {
       return <p>hello world</p>;
     }
@@ -1211,9 +1738,25 @@ describe('ReactFlightDOM', () => {
     const ClientComponent = clientExports(Component);
 
     async function ServerComponent() {
-      ReactDOM.preload('before', {as: 'style'});
+      FlightReactDOM.prefetchDNS('d before');
+      FlightReactDOM.preconnect('c before');
+      FlightReactDOM.preconnect('c2 before', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preload('l before', {as: 'style'});
+      FlightReactDOM.preloadModule('lm before');
+      FlightReactDOM.preloadModule('lm2 before', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preinit('i before', {as: 'script'});
+      FlightReactDOM.preinitModule('m before');
+      FlightReactDOM.preinitModule('m2 before', {crossOrigin: 'anonymous'});
       await 1;
-      ReactDOM.preload('after', {as: 'style'});
+      FlightReactDOM.prefetchDNS('d after');
+      FlightReactDOM.preconnect('c after');
+      FlightReactDOM.preconnect('c2 after', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preload('l after', {as: 'style'});
+      FlightReactDOM.preloadModule('lm after');
+      FlightReactDOM.preloadModule('lm2 after', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preinit('i after', {as: 'script'});
+      FlightReactDOM.preinitModule('m after');
+      FlightReactDOM.preinitModule('m2 after', {crossOrigin: 'anonymous'});
       return <ClientComponent />;
     }
 
@@ -1226,9 +1769,11 @@ describe('ReactFlightDOM', () => {
     // module graphs and we are contriving the sequencing to work in a way where
     // the right HostDispatcher is in scope during the Flight Server Float calls and the
     // Flight Client hint dispatches
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
     );
     pipe(flightWritable);
 
@@ -1249,25 +1794,37 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    await act(async () => {
+    await serverAct(async () => {
       ReactDOMFizzServer.renderToPipeableStream(<App />).pipe(fizzWritable);
     });
 
-    const decoder = new TextDecoder();
-    const reader = fizzReadable.getReader();
-    let content = '';
-    while (true) {
-      const {done, value} = await reader.read();
-      if (done) {
-        content += decoder.decode();
-        break;
-      }
-      content += decoder.decode(value, {stream: true});
-    }
-
-    expect(content).toEqual(
-      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before"/>' +
-        '<link rel="preload" as="style" href="after"/></head><body><p>hello world</p></body></html>',
+    await readInto(document, fizzReadable);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="dns-prefetch" href="d before" />
+          <link rel="preconnect" href="c before" />
+          <link rel="preconnect" href="c2 before" crossorigin="" />
+          <link rel="dns-prefetch" href="d after" />
+          <link rel="preconnect" href="c after" />
+          <link rel="preconnect" href="c2 after" crossorigin="" />
+          <script async="" src="i before" />
+          <script type="module" async="" src="m before" />
+          <script type="module" async="" src="m2 before" crossorigin="" />
+          <script async="" src="i after" />
+          <script type="module" async="" src="m after" />
+          <script type="module" async="" src="m2 after" crossorigin="" />
+          <link rel="preload" as="style" href="l before" />
+          <link rel="modulepreload" href="lm before" />
+          <link rel="modulepreload" href="lm2 before" crossorigin="" />
+          <link rel="preload" as="style" href="l after" />
+          <link rel="modulepreload" href="lm after" />
+          <link rel="modulepreload" href="lm2 after" crossorigin="" />
+        </head>
+        <body>
+          <p>hello world</p>
+        </body>
+      </html>,
     );
   });
 
@@ -1279,16 +1836,16 @@ describe('ReactFlightDOM', () => {
     const ClientComponent = clientExports(Component);
 
     async function ServerComponent1() {
-      ReactDOM.preload('before1', {as: 'style'});
+      FlightReactDOM.preload('before1', {as: 'style'});
       await 1;
-      ReactDOM.preload('after1', {as: 'style'});
+      FlightReactDOM.preload('after1', {as: 'style'});
       return <ClientComponent />;
     }
 
     async function ServerComponent2() {
-      ReactDOM.preload('before2', {as: 'style'});
+      FlightReactDOM.preload('before2', {as: 'style'});
       await 1;
-      ReactDOM.preload('after2', {as: 'style'});
+      FlightReactDOM.preload('after2', {as: 'style'});
       return <ClientComponent />;
     }
 
@@ -1328,11 +1885,11 @@ describe('ReactFlightDOM', () => {
     // pausing to let Flight runtime tick. This is a test only artifact of the fact that
     // we aren't operating separate module graphs for flight and fiber. In a real app
     // each would have their own dispatcher and there would be no cross dispatching.
-    await 1;
+    await serverAct(() => {});
 
     const {writable: fizzWritable1, readable: fizzReadable1} = getTestStream();
     const {writable: fizzWritable2, readable: fizzReadable2} = getTestStream();
-    await act(async () => {
+    await serverAct(async () => {
       ReactDOMFizzServer.renderToPipeableStream(
         <App stream={flightReadable1} />,
       ).pipe(fizzWritable1);
@@ -1362,12 +1919,30 @@ describe('ReactFlightDOM', () => {
     ]);
 
     expect(content1).toEqual(
-      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before1"/>' +
-        '<link rel="preload" as="style" href="after1"/></head><body><p>hello world</p></body></html>',
+      '<!DOCTYPE html><html><head><link rel="preload" href="before1" as="style"/>' +
+        '<link rel="preload" href="after1" as="style"/>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          : '') +
+        '</head>' +
+        '<body><p>hello world</p>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '') +
+        '</body></html>',
     );
     expect(content2).toEqual(
-      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before2"/>' +
-        '<link rel="preload" as="style" href="after2"/></head><body><p>hello world</p></body></html>',
+      '<!DOCTYPE html><html><head><link rel="preload" href="before2" as="style"/>' +
+        '<link rel="preload" href="after2" as="style"/>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          : '') +
+        '</head>' +
+        '<body><p>hello world</p>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '') +
+        '</body></html>',
     );
   });
 
@@ -1379,30 +1954,32 @@ describe('ReactFlightDOM', () => {
     const ClientComponent = clientExports(Component);
 
     async function ServerComponent() {
-      ReactDOM.prefetchDNS('dns');
-      ReactDOM.preconnect('preconnect');
-      ReactDOM.preload('load', {as: 'style'});
-      ReactDOM.preinit('init', {as: 'script'});
+      FlightReactDOM.prefetchDNS('dns');
+      FlightReactDOM.preconnect('preconnect');
+      FlightReactDOM.preload('load', {as: 'style'});
+      FlightReactDOM.preinit('init', {as: 'script'});
       // again but vary preconnect to demonstrate crossOrigin participates in the key
-      ReactDOM.prefetchDNS('dns');
-      ReactDOM.preconnect('preconnect', {crossOrigin: 'anonymous'});
-      ReactDOM.preload('load', {as: 'style'});
-      ReactDOM.preinit('init', {as: 'script'});
+      FlightReactDOM.prefetchDNS('dns');
+      FlightReactDOM.preconnect('preconnect', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preload('load', {as: 'style'});
+      FlightReactDOM.preinit('init', {as: 'script'});
       await 1;
       // after an async point
-      ReactDOM.prefetchDNS('dns');
-      ReactDOM.preconnect('preconnect', {crossOrigin: 'use-credentials'});
-      ReactDOM.preload('load', {as: 'style'});
-      ReactDOM.preinit('init', {as: 'script'});
+      FlightReactDOM.prefetchDNS('dns');
+      FlightReactDOM.preconnect('preconnect', {crossOrigin: 'use-credentials'});
+      FlightReactDOM.preload('load', {as: 'style'});
+      FlightReactDOM.preinit('init', {as: 'script'});
       return <ClientComponent />;
     }
 
     const {writable, readable} = getTestStream();
 
-    ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
-    ).pipe(writable);
+    await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ).pipe(writable),
+    );
 
     const hintRows = [];
     async function collectHints(stream) {
@@ -1432,5 +2009,1136 @@ describe('ReactFlightDOM', () => {
 
     await collectHints(readable);
     expect(hintRows.length).toEqual(6);
+  });
+
+  it('should be able to include a client reference in printed errors', async () => {
+    const reportedErrors = [];
+
+    const ClientComponent = clientExports(function ({prop}) {
+      return 'This should never render';
+    });
+
+    const ClientReference = clientExports({});
+
+    class InvalidValue {}
+
+    const {writable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <div>
+          <ClientComponent prop={ClientReference} invalid={InvalidValue} />
+        </div>,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
+        },
+      ),
+    );
+    pipe(writable);
+
+    expect(reportedErrors.length).toBe(1);
+    if (__DEV__) {
+      expect(reportedErrors[0].message).toEqual(
+        'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  <... prop={client} invalid={function InvalidValue}>\n' +
+          '                             ^^^^^^^^^^^^^^^^^^^^^^^',
+      );
+    } else {
+      expect(reportedErrors[0].message).toEqual(
+        'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  {prop: client, invalid: function InvalidValue}\n' +
+          '                          ^^^^^^^^^^^^^^^^^^^^^',
+      );
+    }
+  });
+
+  it('should be able to render a client reference as return value', async () => {
+    const ClientModule = clientExports({
+      text: 'Hello World',
+    });
+
+    function ServerComponent() {
+      return ClientModule.text;
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(response);
+    });
+    expect(container.innerHTML).toBe('Hello World');
+  });
+
+  it('can abort synchronously during render', async () => {
+    function Sibling() {
+      return <p>sibling</p>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading 1...</p>}>
+            <ComponentThatAborts />
+            <Sibling />
+          </Suspense>
+          <Suspense fallback={<p>loading 2...</p>}>
+            <Sibling />
+          </Suspense>
+          <div>
+            <Suspense fallback={<p>loading 3...</p>}>
+              <div>
+                <Sibling />
+              </div>
+            </Suspense>
+          </div>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+    function ComponentThatAborts() {
+      abortRef.current();
+      return <p>hello world</p>;
+    }
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+
+    await serverAct(() => {
+      const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
+        <App />,
+        webpackMap,
+      );
+      abortRef.current = abort;
+      pipe(flightWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    const response =
+      ReactServerDOMClient.createFromReadableStream(flightReadable);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const shellErrors = [];
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onShellError(error) {
+            shellErrors.push(error.message);
+          },
+        },
+      ).pipe(fizzWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(shellErrors).toEqual([]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        <p>loading 1...</p>
+        <p>loading 2...</p>
+        <div>
+          <p>loading 3...</p>
+        </div>
+      </div>,
+    );
+  });
+
+  it('can abort during render in an async tick', async () => {
+    async function Sibling() {
+      return <p>sibling</p>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading 1...</p>}>
+            <ComponentThatAborts />
+            <Sibling />
+          </Suspense>
+          <Suspense fallback={<p>loading 2...</p>}>
+            <Sibling />
+          </Suspense>
+          <div>
+            <Suspense fallback={<p>loading 3...</p>}>
+              <div>
+                <Sibling />
+              </div>
+            </Suspense>
+          </div>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+    async function ComponentThatAborts() {
+      await 1;
+      abortRef.current();
+      return <p>hello world</p>;
+    }
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+
+    await serverAct(() => {
+      const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
+        <App />,
+        webpackMap,
+      );
+      abortRef.current = abort;
+      pipe(flightWritable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    const response =
+      ReactServerDOMClient.createFromReadableStream(flightReadable);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const shellErrors = [];
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onShellError(error) {
+            shellErrors.push(error.message);
+          },
+        },
+      ).pipe(fizzWritable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(shellErrors).toEqual([]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        <p>loading 1...</p>
+        <p>loading 2...</p>
+        <div>
+          <p>loading 3...</p>
+        </div>
+      </div>,
+    );
+  });
+
+  it('can abort during render in a lazy initializer for a component', async () => {
+    function Sibling() {
+      return <p>sibling</p>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading 1...</p>}>
+            <LazyAbort />
+          </Suspense>
+          <Suspense fallback={<p>loading 2...</p>}>
+            <Sibling />
+          </Suspense>
+          <div>
+            <Suspense fallback={<p>loading 3...</p>}>
+              <div>
+                <Sibling />
+              </div>
+            </Suspense>
+          </div>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+    const LazyAbort = React.lazy(() => {
+      abortRef.current();
+      return {
+        then(cb) {
+          cb({default: 'div'});
+        },
+      };
+    });
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+
+    await serverAct(() => {
+      const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
+        <App />,
+        webpackMap,
+      );
+      abortRef.current = abort;
+      pipe(flightWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    const response =
+      ReactServerDOMClient.createFromReadableStream(flightReadable);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const shellErrors = [];
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onShellError(error) {
+            shellErrors.push(error.message);
+          },
+        },
+      ).pipe(fizzWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(shellErrors).toEqual([]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        <p>loading 1...</p>
+        <p>loading 2...</p>
+        <div>
+          <p>loading 3...</p>
+        </div>
+      </div>,
+    );
+  });
+
+  it('can abort during render in a lazy initializer for an element', async () => {
+    function Sibling() {
+      return <p>sibling</p>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading 1...</p>}>{lazyAbort}</Suspense>
+          <Suspense fallback={<p>loading 2...</p>}>
+            <Sibling />
+          </Suspense>
+          <div>
+            <Suspense fallback={<p>loading 3...</p>}>
+              <div>
+                <Sibling />
+              </div>
+            </Suspense>
+          </div>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+    const lazyAbort = React.lazy(() => {
+      abortRef.current();
+      return {
+        then(cb) {
+          cb({default: 'hello world'});
+        },
+      };
+    });
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+
+    await serverAct(() => {
+      const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
+        <App />,
+        webpackMap,
+      );
+      abortRef.current = abort;
+      pipe(flightWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    const response =
+      ReactServerDOMClient.createFromReadableStream(flightReadable);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const shellErrors = [];
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onShellError(error) {
+            shellErrors.push(error.message);
+          },
+        },
+      ).pipe(fizzWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(shellErrors).toEqual([]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        <p>loading 1...</p>
+        <p>loading 2...</p>
+        <div>
+          <p>loading 3...</p>
+        </div>
+      </div>,
+    );
+  });
+
+  it('can abort during a synchronous thenable resolution', async () => {
+    function Sibling() {
+      return <p>sibling</p>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading 1...</p>}>{thenable}</Suspense>
+          <Suspense fallback={<p>loading 2...</p>}>
+            <Sibling />
+          </Suspense>
+          <div>
+            <Suspense fallback={<p>loading 3...</p>}>
+              <div>
+                <Sibling />
+              </div>
+            </Suspense>
+          </div>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+    const thenable = {
+      then(cb) {
+        abortRef.current();
+        cb(thenable.value);
+      },
+    };
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+
+    await serverAct(() => {
+      const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
+        <App />,
+        webpackMap,
+      );
+      abortRef.current = abort;
+      pipe(flightWritable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    const response =
+      ReactServerDOMClient.createFromReadableStream(flightReadable);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const shellErrors = [];
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onShellError(error) {
+            shellErrors.push(error.message);
+          },
+        },
+      ).pipe(fizzWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(shellErrors).toEqual([]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        <p>loading 1...</p>
+        <p>loading 2...</p>
+        <div>
+          <p>loading 3...</p>
+        </div>
+      </div>,
+    );
+  });
+
+  it('wont serialize thenables that were not already settled by the time an abort happens', async () => {
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading 1...</p>}>
+            <ComponentThatAborts />
+          </Suspense>
+          <Suspense fallback={<p>loading 2...</p>}>{thenable1}</Suspense>
+          <div>
+            <Suspense fallback={<p>loading 3...</p>}>{thenable2}</Suspense>
+          </div>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+    const thenable1 = {
+      then(cb) {
+        cb('hello world');
+      },
+    };
+
+    const thenable2 = {
+      then(cb) {
+        cb('hello world');
+      },
+      status: 'fulfilled',
+      value: 'hello world',
+    };
+
+    function ComponentThatAborts() {
+      abortRef.current();
+      return thenable1;
+    }
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+
+    await serverAct(() => {
+      const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
+        <App />,
+        webpackMap,
+      );
+      abortRef.current = abort;
+      pipe(flightWritable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    const response =
+      ReactServerDOMClient.createFromReadableStream(flightReadable);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const shellErrors = [];
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onShellError(error) {
+            shellErrors.push(error.message);
+          },
+        },
+      ).pipe(fizzWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(shellErrors).toEqual([]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        <p>loading 1...</p>
+        <p>loading 2...</p>
+        <div>hello world</div>
+      </div>,
+    );
+  });
+
+  it('can error synchronously after aborting without an unhandled rejection error', async () => {
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading...</p>}>
+            <ComponentThatAborts />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+
+    async function ComponentThatAborts() {
+      abortRef.current();
+      throw new Error('boom');
+    }
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+
+    await serverAct(() => {
+      const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
+        <App />,
+        webpackMap,
+      );
+      abortRef.current = abort;
+      pipe(flightWritable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    const response =
+      ReactServerDOMClient.createFromReadableStream(flightReadable);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const shellErrors = [];
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onShellError(error) {
+            shellErrors.push(error.message);
+          },
+        },
+      ).pipe(fizzWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(shellErrors).toEqual([]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        <p>loading...</p>
+      </div>,
+    );
+  });
+
+  it('can error synchronously after aborting in a synchronous Component', async () => {
+    const rejectError = new Error('bam!');
+    const rejectedPromise = Promise.reject(rejectError);
+    rejectedPromise.catch(() => {});
+    rejectedPromise.status = 'rejected';
+    rejectedPromise.reason = rejectError;
+
+    const resolvedValue = <p>hello world</p>;
+    const resolvedPromise = Promise.resolve(resolvedValue);
+    resolvedPromise.status = 'fulfilled';
+    resolvedPromise.value = resolvedValue;
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading...</p>}>
+            <ComponentThatAborts />
+          </Suspense>
+          <Suspense fallback={<p>loading too...</p>}>
+            {rejectedPromise}
+          </Suspense>
+          <Suspense fallback={<p>loading three...</p>}>
+            {resolvedPromise}
+          </Suspense>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+
+    // This test is specifically asserting that this works with Sync Server Component
+    function ComponentThatAborts() {
+      abortRef.current();
+      throw new Error('boom');
+    }
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+
+    await serverAct(() => {
+      const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
+        <App />,
+        webpackMap,
+        {
+          onError(e) {
+            console.error(e);
+          },
+        },
+      );
+      abortRef.current = abort;
+      pipe(flightWritable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'bam!',
+    ]);
+
+    const response =
+      ReactServerDOMClient.createFromReadableStream(flightReadable);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const shellErrors = [];
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onShellError(error) {
+            shellErrors.push(error.message);
+          },
+        },
+      ).pipe(fizzWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'bam!',
+    ]);
+
+    expect(shellErrors).toEqual([]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        <p>loading...</p>
+        <p>loading too...</p>
+        <p>hello world</p>
+      </div>,
+    );
+  });
+
+  // @gate experimental
+  it('can prerender', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Greeting />
+        </div>
+      );
+    }
+
+    async function Greeting() {
+      await greetingPromise;
+      return 'hello world';
+    }
+
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            <App />,
+            webpackMap,
+          ),
+      };
+    });
+
+    resolveGreeting();
+    const {prelude} = await pendingResult;
+
+    const response = ReactServerDOMClient.createFromReadableStream(
+      Readable.toWeb(prelude),
+    );
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const shellErrors = [];
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onShellError(error) {
+            shellErrors.push(error.message);
+          },
+        },
+      ).pipe(fizzWritable);
+    });
+
+    expect(shellErrors).toEqual([]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(<div>hello world</div>);
+  });
+
+  // @gate enableHalt
+  it('does not propagate abort reasons errors when aborting a prerender', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <Greeting />
+          </Suspense>
+        </div>
+      );
+    }
+
+    async function Greeting() {
+      await greetingPromise;
+      return 'hello world';
+    }
+
+    const controller = new AbortController();
+    const errors = [];
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            <App />,
+            webpackMap,
+            {
+              signal: controller.signal,
+              onError(err) {
+                errors.push(err);
+              },
+            },
+          ),
+      };
+    });
+
+    controller.abort('boom');
+    resolveGreeting();
+    const {prelude} = await pendingResult;
+
+    expect(errors).toEqual([]);
+
+    const preludeWeb = Readable.toWeb(prelude);
+    const response = ReactServerDOMClient.createFromReadableStream(preludeWeb);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    errors.length = 0;
+    let abortFizz;
+    await serverAct(async () => {
+      const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onError(error) {
+            errors.push(error);
+          },
+        },
+      );
+      pipe(fizzWritable);
+      abortFizz = abort;
+    });
+
+    await serverAct(() => {
+      abortFizz('bam');
+    });
+
+    expect(errors).toEqual([new Error('Connection closed.')]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(<div>loading...</div>);
+  });
+
+  // @gate enableHalt
+  it('will leave async iterables in an incomplete state when halting', async () => {
+    let resolve;
+    const wait = new Promise(r => (resolve = r));
+    const errors = [];
+
+    const multiShotIterable = {
+      async *[Symbol.asyncIterator]() {
+        yield {hello: 'A'};
+        await wait;
+        yield {hi: 'B'};
+        return 'C';
+      },
+    };
+
+    const controller = new AbortController();
+    const {pendingResult} = await serverAct(() => {
+      return {
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            {
+              multiShotIterable,
+            },
+            {},
+            {
+              onError(x) {
+                errors.push(x);
+              },
+              signal: controller.signal,
+            },
+          ),
+      };
+    });
+
+    controller.abort();
+    await serverAct(() => resolve());
+
+    const {prelude} = await pendingResult;
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      Readable.toWeb(prelude),
+    );
+
+    const iterator = result.multiShotIterable[Symbol.asyncIterator]();
+
+    expect(await iterator.next()).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+
+    const race = Promise.race([
+      iterator.next(),
+      new Promise(r => setTimeout(() => r('timeout'), 10)),
+    ]);
+
+    await 1;
+    jest.advanceTimersByTime('100');
+    expect(await race).toBe('timeout');
+  });
+
+  // @gate enableHalt
+  it('will halt unfinished chunks inside Suspense when aborting a prerender', async () => {
+    const controller = new AbortController();
+    function ComponentThatAborts() {
+      controller.abort('boom');
+      return null;
+    }
+
+    async function Greeting() {
+      await 1;
+      return 'hello world';
+    }
+
+    async function Farewell() {
+      return 'goodbye world';
+    }
+
+    async function Wrapper() {
+      return (
+        <Suspense fallback="loading too...">
+          <ComponentThatAborts />
+        </Suspense>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <Greeting />
+          </Suspense>
+          <Wrapper />
+          <Suspense fallback="loading three...">
+            <Farewell />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+    const {pendingResult} = await serverAct(() => {
+      return {
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            <App />,
+            {},
+            {
+              onError(x) {
+                errors.push(x);
+              },
+              signal: controller.signal,
+            },
+          ),
+      };
+    });
+
+    const {prelude} = await pendingResult;
+
+    expect(errors).toEqual([]);
+
+    const preludeWeb = Readable.toWeb(prelude);
+    const response = ReactServerDOMClient.createFromReadableStream(preludeWeb);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+    errors.length = 0;
+    let abortFizz;
+    await serverAct(async () => {
+      const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onError(error, errorInfo) {
+            errors.push(error);
+          },
+        },
+      );
+      pipe(fizzWritable);
+      abortFizz = abort;
+    });
+
+    await serverAct(() => {
+      abortFizz('boom');
+    });
+
+    // one error per boundary
+    const err = new Error('Connection closed.');
+    expect(errors).toEqual([err, err, err]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        {'loading...'}
+        {'loading too...'}
+        {'loading three...'}
+      </div>,
+    );
+  });
+
+  it('rejecting a thenable after an abort before flush should not lead to a frozen readable', async () => {
+    const ClientComponent = clientExports(function (props: {
+      promise: Promise<void>,
+    }) {
+      return 'hello world';
+    });
+
+    let reject;
+    const promise = new Promise((_, re) => {
+      reject = re;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <ClientComponent promise={promise} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+    const {writable, readable} = getTestStream();
+    const {pipe, abort} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap, {
+        onError(x) {
+          errors.push(x);
+        },
+      }),
+    );
+    await serverAct(() => {
+      abort('STOP');
+      reject('STOP');
+    });
+    pipe(writable);
+
+    const reader = readable.getReader();
+    while (true) {
+      const {done} = await reader.read();
+      if (done) {
+        break;
+      }
+    }
+
+    expect(errors).toEqual(['STOP']);
+
+    // We expect it to get to the end here rather than hang on the reader.
   });
 });

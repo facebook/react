@@ -11,4 +11,4 @@
 // Use __VARIANT__ to simulate a GK. The tests will be run twice: once
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
-export const enableProfiling = __VARIANT__;
+export const enableRequestPaint = __VARIANT__;

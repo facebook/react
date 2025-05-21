@@ -27,8 +27,8 @@ import TabBar from './TabBar';
 import {SettingsContextController} from './Settings/SettingsContext';
 import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
-import ViewSourceContext from './Components/ViewSourceContext';
 import FetchFileWithCachingContext from './Components/FetchFileWithCachingContext';
+import {InspectedElementContextController} from './Components/InspectedElementContext';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
 import {TimelineContextController} from 'react-devtools-timeline/src/TimelineContext';
@@ -46,25 +46,25 @@ import styles from './DevTools.css';
 
 import './root.css';
 
-import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
 import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContext';
 import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {BrowserTheme} from 'react-devtools-shared/src/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
+import type {Source} from 'react-devtools-shared/src/shared/types';
 
 export type TabID = 'components' | 'profiler';
 
 export type ViewElementSource = (
-  id: number,
-  inspectedElement: InspectedElement,
+  source: Source,
+  symbolicatedSource: Source | null,
 ) => void;
-export type ViewUrlSource = (url: string, row: number, column: number) => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
 ) => void;
 export type CanViewElementSource = (
-  inspectedElement: InspectedElement,
+  source: Source,
+  symbolicatedSource: Source | null,
 ) => boolean;
 
 export type Props = {
@@ -79,7 +79,6 @@ export type Props = {
   warnIfUnsupportedVersionDetected?: boolean,
   viewAttributeSourceFunction?: ?ViewAttributeSource,
   viewElementSourceFunction?: ?ViewElementSource,
-  viewUrlSourceFunction?: ?ViewUrlSource,
   readOnly?: boolean,
   hideSettings?: boolean,
   hideToggleErrorAction?: boolean,
@@ -139,7 +138,6 @@ export default function DevTools({
   warnIfUnsupportedVersionDetected = false,
   viewAttributeSourceFunction,
   viewElementSourceFunction,
-  viewUrlSourceFunction,
   readOnly,
   hideSettings,
   hideToggleErrorAction,
@@ -203,15 +201,6 @@ export default function DevTools({
     [canViewElementSourceFunction, viewElementSourceFunction],
   );
 
-  const viewSource = useMemo(
-    () => ({
-      viewUrlSourceFunction: viewUrlSourceFunction || null,
-      // todo(blakef): Add inspect(...) method here and remove viewElementSource
-      // to consolidate source code inspection.
-    }),
-    [viewUrlSourceFunction],
-  );
-
   const contextMenu = useMemo(
     () => ({
       isEnabledForInspectedElement: enabledInspectedElementContextMenu,
@@ -269,6 +258,7 @@ export default function DevTools({
   useEffect(() => {
     logEvent({event_name: 'loaded-dev-tools'});
   }, []);
+
   return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
@@ -280,14 +270,14 @@ export default function DevTools({
                 componentsPortalContainer={componentsPortalContainer}
                 profilerPortalContainer={profilerPortalContainer}>
                 <ViewElementSourceContext.Provider value={viewElementSource}>
-                  <ViewSourceContext.Provider value={viewSource}>
-                    <HookNamesModuleLoaderContext.Provider
-                      value={hookNamesModuleLoaderFunction || null}>
-                      <FetchFileWithCachingContext.Provider
-                        value={fetchFileWithCaching || null}>
-                        <TreeContextController>
-                          <ProfilerContextController>
-                            <TimelineContextController>
+                  <HookNamesModuleLoaderContext.Provider
+                    value={hookNamesModuleLoaderFunction || null}>
+                    <FetchFileWithCachingContext.Provider
+                      value={fetchFileWithCaching || null}>
+                      <TreeContextController>
+                        <ProfilerContextController>
+                          <TimelineContextController>
+                            <InspectedElementContextController>
                               <ThemeProvider>
                                 <div
                                   className={styles.DevTools}
@@ -327,12 +317,12 @@ export default function DevTools({
                                   </div>
                                 </div>
                               </ThemeProvider>
-                            </TimelineContextController>
-                          </ProfilerContextController>
-                        </TreeContextController>
-                      </FetchFileWithCachingContext.Provider>
-                    </HookNamesModuleLoaderContext.Provider>
-                  </ViewSourceContext.Provider>
+                            </InspectedElementContextController>
+                          </TimelineContextController>
+                        </ProfilerContextController>
+                      </TreeContextController>
+                    </FetchFileWithCachingContext.Provider>
+                  </HookNamesModuleLoaderContext.Provider>
                 </ViewElementSourceContext.Provider>
               </SettingsContextController>
               <UnsupportedBridgeProtocolDialog />

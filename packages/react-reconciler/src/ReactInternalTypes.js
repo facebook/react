@@ -7,14 +7,18 @@
  * @flow
  */
 
-import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
   ReactContext,
   StartTransitionOptions,
   Wakeable,
   Usable,
+  ReactFormState,
+  Awaited,
+  ReactComponentInfo,
+  ReactDebugInfo,
 } from 'shared/ReactTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
@@ -22,17 +26,20 @@ import type {Lane, Lanes, LaneMap} from './ReactFiberLane';
 import type {RootTag} from './ReactRootTags';
 import type {
   Container,
+  Instance,
   TimeoutHandle,
   NoTimeout,
+  ActivityInstance,
   SuspenseInstance,
   TransitionStatus,
 } from './ReactFiberConfig';
 import type {Cache} from './ReactFiberCacheComponent';
-import type {
-  TracingMarkerInstance,
-  Transition,
-} from './ReactFiberTracingMarkerComponent';
+import type {Transition} from 'react/src/ReactStartTransition';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
+import type {ComponentStackNode} from 'react-server/src/ReactFizzComponentStack';
+import type {ThenableState} from './ReactFiberThenable';
+import type {ScheduledGesture} from './ReactFiberGestureScheduler';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -53,7 +60,9 @@ export type HookType =
   | 'useSyncExternalStore'
   | 'useId'
   | 'useCacheRefresh'
-  | 'useOptimistic';
+  | 'useOptimistic'
+  | 'useFormState'
+  | 'useActionState';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -65,6 +74,7 @@ export type ContextDependency<T> = {
 export type Dependencies = {
   lanes: Lanes,
   firstContext: ContextDependency<mixed> | null,
+  _debugThenableState?: null | ThenableState, // DEV-only
   ...
 };
 
@@ -154,15 +164,6 @@ export type Fiber = {
   subtreeFlags: Flags,
   deletions: Array<Fiber> | null,
 
-  // Singly linked list fast path to the next fiber with side-effects.
-  nextEffect: Fiber | null,
-
-  // The first and last fiber with side-effect within this subtree. This allows
-  // us to reuse a slice of the linked list when we reuse the work done within
-  // this fiber.
-  firstEffect: Fiber | null,
-  lastEffect: Fiber | null,
-
   lanes: Lanes,
   childLanes: Lanes,
 
@@ -197,9 +198,10 @@ export type Fiber = {
   // to be the same as work in progress.
   // __DEV__ only
 
-  _debugSource?: Source | null,
-  _debugOwner?: Fiber | null,
-  _debugIsCurrentlyTiming?: boolean,
+  _debugInfo?: ReactDebugInfo | null,
+  _debugOwner?: ReactComponentInfo | Fiber | null,
+  _debugStack?: string | Error | null,
+  _debugTask?: ConsoleTask | null,
   _debugNeedsRemount?: boolean,
 
   // Used to verify that the order of hooks does not change between renders.
@@ -219,8 +221,6 @@ type BaseFiberRootProperties = {
 
   pingCache: WeakMap<Wakeable, Set<mixed>> | Map<Wakeable, Set<mixed>> | null,
 
-  // A finished work-in-progress HostRoot that's ready to be committed.
-  finishedWork: Fiber | null,
   // Timeout handle returned by setTimeout. Used to cancel a pending timeout, if
   // it's superseded by a new one.
   timeoutHandle: TimeoutHandle | NoTimeout,
@@ -246,11 +246,11 @@ type BaseFiberRootProperties = {
   pendingLanes: Lanes,
   suspendedLanes: Lanes,
   pingedLanes: Lanes,
+  warmLanes: Lanes,
   expiredLanes: Lanes,
+  indicatorLanes: Lanes, // enableDefaultTransitionIndicator only
   errorRecoveryDisabledLanes: Lanes,
   shellSuspendCounter: number,
-
-  finishedLanes: Lanes,
 
   entangledLanes: Lanes,
   entanglements: LaneMap<Lanes>,
@@ -265,10 +265,34 @@ type BaseFiberRootProperties = {
   // a reference to.
   identifierPrefix: string,
 
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
   onRecoverableError: (
     error: mixed,
-    errorInfo: {digest?: ?string, componentStack?: ?string},
+    errorInfo: {+componentStack?: ?string},
   ) => void,
+
+  // enableDefaultTransitionIndicator only
+  onDefaultTransitionIndicator: () => void | (() => void),
+  pendingIndicator: null | (() => void),
+
+  formState: ReactFormState<any, any> | null,
+
+  // enableViewTransition only
+  transitionTypes: null | TransitionTypes, // TODO: Make this a LaneMap.
+  // enableGestureTransition only
+  pendingGestures: null | ScheduledGesture,
+  stoppingGestures: null | ScheduledGesture,
+  gestureClone: null | Instance,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.
@@ -279,8 +303,10 @@ type UpdaterTrackingOnlyFiberRootProperties = {
 };
 
 export type SuspenseHydrationCallbacks = {
-  onHydrated?: (suspenseInstance: SuspenseInstance) => void,
-  onDeleted?: (suspenseInstance: SuspenseInstance) => void,
+  +onHydrated?: (
+    hydrationBoundary: SuspenseInstance | ActivityInstance,
+  ) => void,
+  +onDeleted?: (hydrationBoundary: SuspenseInstance | ActivityInstance) => void,
   ...
 };
 
@@ -339,7 +365,7 @@ export type TransitionTracingCallbacks = {
 // The following fields are only used in transition tracing in Profile builds
 type TransitionTracingOnlyFiberRootProperties = {
   transitionCallbacks: null | TransitionTracingCallbacks,
-  transitionLanes: Array<Set<Transition> | null>,
+  transitionLanes: LaneMap<Set<Transition> | null>,
   // Transitions on the root can be represented as a bunch of tracing markers.
   // Each entangled group of transitions can be treated as a tracing marker.
   // It will have a set of pending suspense boundaries. These transitions
@@ -347,6 +373,11 @@ type TransitionTracingOnlyFiberRootProperties = {
   // empty. We can represent this as a Map of transitions to suspense
   // boundary sets
   incompleteTransitions: Map<Transition, TracingMarkerInstance>,
+};
+
+type ProfilerCommitHooksOnlyFiberRootProperties = {
+  effectDuration: number,
+  passiveEffectDuration: number,
 };
 
 // Exported FiberRoot type includes all properties,
@@ -357,7 +388,7 @@ export type FiberRoot = {
   ...SuspenseCallbackOnlyFiberRootProperties,
   ...UpdaterTrackingOnlyFiberRootProperties,
   ...TransitionTracingOnlyFiberRootProperties,
-  ...
+  ...ProfilerCommitHooksOnlyFiberRootProperties,
 };
 
 type BasicStateAction<S> = (S => S) | S;
@@ -378,6 +409,7 @@ export type Dispatcher = {
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
+  // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
   useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
   useInsertionEffect(
     create: () => (() => void) | void,
@@ -395,7 +427,7 @@ export type Dispatcher = {
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useDeferredValue<T>(value: T): T,
+  useDeferredValue<T>(value: T, initialValue?: T): T,
   useTransition(): [
     boolean,
     (callback: () => void, options?: StartTransitionOptions) => void,
@@ -406,16 +438,27 @@ export type Dispatcher = {
     getServerSnapshot?: () => T,
   ): T,
   useId(): string,
-  useCacheRefresh?: () => <T>(?() => T, ?T) => void,
-  useMemoCache?: (size: number) => Array<any>,
-  useHostTransitionStatus?: () => TransitionStatus,
-  useOptimistic?: <S, A>(
+  useCacheRefresh: () => <T>(?() => T, ?T) => void,
+  useMemoCache: (size: number) => Array<any>,
+  useHostTransitionStatus: () => TransitionStatus,
+  useOptimistic: <S, A>(
     passthrough: S,
     reducer: ?(S, A) => S,
   ) => [S, (A) => void],
+  useFormState: <S, P>(
+    action: (Awaited<S>, P) => S,
+    initialState: Awaited<S>,
+    permalink?: string,
+  ) => [Awaited<S>, (P) => void, boolean],
+  useActionState: <S, P>(
+    action: (Awaited<S>, P) => S,
+    initialState: Awaited<S>,
+    permalink?: string,
+  ) => [Awaited<S>, (P) => void, boolean],
 };
 
-export type CacheDispatcher = {
-  getCacheSignal: () => AbortSignal,
+export type AsyncDispatcher = {
   getCacheForType: <T>(resourceType: () => T) => T,
+  // DEV-only
+  getOwner: () => null | Fiber | ReactComponentInfo | ComponentStackNode,
 };

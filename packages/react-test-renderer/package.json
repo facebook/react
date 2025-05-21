@@ -1,6 +1,6 @@
 {
   "name": "react-test-renderer",
-  "version": "18.2.0",
+  "version": "19.1.0",
   "description": "React package for snapshot testing.",
   "main": "index.js",
   "repository": {
@@ -17,21 +17,19 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://reactjs.org/",
+  "homepage": "https://react.dev/",
   "dependencies": {
-    "react-is": "^18.2.0",
-    "react-shallow-renderer": "^16.15.0",
-    "scheduler": "^0.23.0"
+    "react-is": "^19.1.0",
+    "scheduler": "^0.26.0"
   },
   "peerDependencies": {
-    "react": "^18.2.0"
+    "react": "^19.1.0"
   },
   "files": [
     "LICENSE",
     "README.md",
     "index.js",
     "shallow.js",
-    "cjs/",
-    "umd/"
+    "cjs/"
   ]
 }

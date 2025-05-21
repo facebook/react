@@ -3,8 +3,7 @@
 // This test harness mounts each test app as a separate root to test multi-root applications.
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import {createRoot} from 'react-dom/client';
+import * as ReactDOMClient from 'react-dom/client';
 import ListApp from '../e2e-apps/ListApp';
 
 function mountApp(App: () => React$Node) {
@@ -12,7 +11,7 @@ function mountApp(App: () => React$Node) {
 
   ((document.body: any): HTMLBodyElement).appendChild(container);
 
-  const root = createRoot(container);
+  const root = ReactDOMClient.createRoot(container);
   root.render(<App />);
 }
 function mountTestApp() {
@@ -27,5 +26,5 @@ window.parent.REACT_DOM_APP = {
   createTestNameSelector: name => `[data-testname="${name}"]`,
   findAllNodes: (container, nodes) =>
     container.querySelectorAll(nodes.join(' ')),
-  ...ReactDOM,
+  ...ReactDOMClient,
 };

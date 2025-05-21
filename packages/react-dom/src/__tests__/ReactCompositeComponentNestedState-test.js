@@ -10,15 +10,17 @@
 'use strict';
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
+let act;
 
 describe('ReactCompositeComponentNestedState-state', () => {
   beforeEach(() => {
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
   });
 
-  it('should provide up to date values for props', () => {
+  it('should provide up to date values for props', async () => {
     class ParentComponent extends React.Component {
       state = {color: 'blue'};
 
@@ -96,11 +98,16 @@ describe('ReactCompositeComponentNestedState-state', () => {
     document.body.appendChild(container);
 
     const logger = jest.fn();
+    const root = ReactDOMClient.createRoot(container);
 
-    void ReactDOM.render(<ParentComponent logger={logger} />, container);
+    await act(async () => {
+      root.render(<ParentComponent logger={logger} />);
+    });
 
-    // click "light green"
-    container.childNodes[0].childNodes[3].click();
+    await act(async () => {
+      // click "light green"
+      container.childNodes[0].childNodes[3].click();
+    });
 
     expect(logger.mock.calls).toEqual([
       ['parent-render', 'blue'],

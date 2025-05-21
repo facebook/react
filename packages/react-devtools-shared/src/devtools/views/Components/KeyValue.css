@@ -34,7 +34,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
+  cursor: pointer;
+  border-radius: 0.125rem;
+  padding: 0px 2px;
 }
+
+.Link:hover {
+  background-color: var(--color-background-hover);
+}
+
 
 .ExpandCollapseToggleSpacer {
   flex: 0 0 1rem;

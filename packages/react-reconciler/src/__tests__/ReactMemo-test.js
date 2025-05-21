@@ -12,7 +12,6 @@
 
 'use strict';
 
-let PropTypes;
 let React;
 let ReactNoop;
 let Suspense;
@@ -20,12 +19,12 @@ let Scheduler;
 let act;
 let waitForAll;
 let assertLog;
+let assertConsoleErrorDev;
 
 describe('memo', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -35,6 +34,7 @@ describe('memo', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   function Text(props) {
@@ -45,43 +45,6 @@ describe('memo', () => {
   async function fakeImport(result) {
     return {default: result};
   }
-
-  it('warns when giving a ref (simple)', async () => {
-    // This test lives outside sharedTests because the wrappers don't forward
-    // refs properly, and they end up affecting the current owner which is used
-    // by the warning (making the messages not line up).
-    function App() {
-      return null;
-    }
-    App = React.memo(App);
-    function Outer() {
-      return <App ref={() => {}} />;
-    }
-    ReactNoop.render(<Outer />);
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: Function components cannot be given refs. Attempts to access ' +
-        'this ref will fail.',
-    ]);
-  });
-
-  it('warns when giving a ref (complex)', async () => {
-    // defaultProps means this won't use SimpleMemoComponent (as of this writing)
-    // SimpleMemoComponent is unobservable tho, so we can't check :)
-    function App() {
-      return null;
-    }
-    App.defaultProps = {};
-    App = React.memo(App);
-    function Outer() {
-      return <App ref={() => {}} />;
-    }
-    ReactNoop.render(<Outer />);
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'App: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
-      'Warning: Function components cannot be given refs. Attempts to access ' +
-        'this ref will fail.',
-    ]);
-  });
 
   // Tests should run against both the lazy and non-lazy versions of `memo`.
   // To make the tests work for both versions, we wrap the non-lazy version in
@@ -140,8 +103,9 @@ describe('memo', () => {
 
         function readContext(Context) {
           const dispatcher =
-            React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-              .ReactCurrentDispatcher.current;
+            React
+              .__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+              .H;
           return dispatcher.readContext(Context);
         }
 
@@ -409,6 +373,7 @@ describe('memo', () => {
         expect(ReactNoop).toMatchRenderedOutput(<span prop="1!" />);
       });
 
+      // @gate !disableDefaultPropsExceptForClasses
       it('supports defaultProps defined on the memo() return value', async () => {
         function Counter({a, b, c, d, e}) {
           return <Text text={a + b + c + d + e} />;
@@ -434,18 +399,30 @@ describe('memo', () => {
         // The final layer uses memo() from test fixture (which might be lazy).
         Counter = memo(Counter);
 
-        await expect(async () => {
-          await act(() => {
-            ReactNoop.render(
-              <Suspense fallback={<Text text="Loading..." />}>
-                <Counter e={5} />
-              </Suspense>,
-            );
-          });
-          assertLog(['Loading...', 15]);
-        }).toErrorDev([
-          'Counter: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-        ]);
+        await act(() => {
+          ReactNoop.render(
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Counter e={5} />
+            </Suspense>,
+          );
+        });
+        assertLog(['Loading...', 15]);
+        if (label === 'lazy') {
+          assertConsoleErrorDev(
+            [
+              'Counter: Support for defaultProps will be removed from memo components in a future major release. ' +
+                'Use JavaScript default parameters instead.',
+            ],
+            {withoutStack: true},
+          );
+        } else {
+          assertConsoleErrorDev([
+            'Counter: Support for defaultProps will be removed from memo components in a future major release. ' +
+              'Use JavaScript default parameters instead.\n' +
+              '    in Indirection (at **)',
+          ]);
+        }
+
         expect(ReactNoop).toMatchRenderedOutput(<span prop={15} />);
 
         // Should bail out because props have not changed
@@ -468,123 +445,65 @@ describe('memo', () => {
       });
 
       it('warns if the first argument is undefined', () => {
-        expect(() => memo()).toErrorDev(
-          'memo: The first argument must be a component. Instead ' +
-            'received: undefined',
+        memo();
+        assertConsoleErrorDev(
+          [
+            'memo: The first argument must be a component. Instead ' +
+              'received: undefined',
+          ],
           {withoutStack: true},
         );
       });
 
       it('warns if the first argument is null', () => {
-        expect(() => memo(null)).toErrorDev(
-          'memo: The first argument must be a component. Instead ' +
-            'received: null',
+        memo(null);
+        assertConsoleErrorDev(
+          [
+            'memo: The first argument must be a component. Instead ' +
+              'received: null',
+          ],
           {withoutStack: true},
         );
       });
 
-      it('validates propTypes declared on the inner component', async () => {
-        function FnInner(props) {
-          return props.inner;
-        }
-        FnInner.propTypes = {inner: PropTypes.number.isRequired};
-        const Fn = React.memo(FnInner);
-
-        // Mount
-        await expect(async () => {
-          ReactNoop.render(<Fn inner="2" />);
-          await waitForAll([]);
-        }).toErrorDev(
-          'Invalid prop `inner` of type `string` supplied to `FnInner`, expected `number`.',
-        );
-
-        // Update
-        await expect(async () => {
-          ReactNoop.render(<Fn inner={false} />);
-          await waitForAll([]);
-        }).toErrorDev(
-          'Invalid prop `inner` of type `boolean` supplied to `FnInner`, expected `number`.',
-        );
-      });
-
-      it('validates propTypes declared on the outer component', async () => {
-        function FnInner(props) {
-          return props.outer;
-        }
-        const Fn = React.memo(FnInner);
-        Fn.propTypes = {outer: PropTypes.number.isRequired};
-
-        // Mount
-        await expect(async () => {
-          ReactNoop.render(<Fn outer="3" />);
-          await waitForAll([]);
-        }).toErrorDev(
-          // Outer props are checked in createElement
-          'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.',
-        );
-
-        // Update
-        await expect(async () => {
-          ReactNoop.render(<Fn outer={false} />);
-          await waitForAll([]);
-        }).toErrorDev(
-          // Outer props are checked in createElement
-          'Invalid prop `outer` of type `boolean` supplied to `FnInner`, expected `number`.',
-        );
-      });
-
-      it('validates nested propTypes declarations', async () => {
+      // @gate !disableDefaultPropsExceptForClasses
+      it('handles nested defaultProps declarations', async () => {
         function Inner(props) {
           return props.inner + props.middle + props.outer;
         }
-        Inner.propTypes = {inner: PropTypes.number.isRequired};
-        Inner.defaultProps = {inner: 0};
+        Inner.defaultProps = {inner: 1};
         const Middle = React.memo(Inner);
-        Middle.propTypes = {middle: PropTypes.number.isRequired};
-        Middle.defaultProps = {middle: 0};
+        Middle.defaultProps = {middle: 10};
         const Outer = React.memo(Middle);
-        Outer.propTypes = {outer: PropTypes.number.isRequired};
-        Outer.defaultProps = {outer: 0};
+        Outer.defaultProps = {outer: 100};
 
-        // No warning expected because defaultProps satisfy both.
-        ReactNoop.render(
-          <div>
-            <Outer />
-          </div>,
+        const root = ReactNoop.createRoot();
+        await act(() => {
+          root.render(
+            <div>
+              <Outer />
+            </div>,
+          );
+        });
+        assertConsoleErrorDev(
+          [
+            'Inner: ' +
+              'Support for defaultProps will be removed from memo components in a future major release. ' +
+              'Use JavaScript default parameters instead.',
+          ],
+          {withoutStack: true},
         );
-        await expect(async () => {
-          await waitForAll([]);
-        }).toErrorDev([
-          'Inner: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-        ]);
+        expect(root).toMatchRenderedOutput(<div>111</div>);
 
-        // Mount
-        await expect(async () => {
-          ReactNoop.render(
+        await act(async () => {
+          root.render(
             <div>
               <Outer inner="2" middle="3" outer="4" />
             </div>,
           );
           await waitForAll([]);
-        }).toErrorDev([
-          'Invalid prop `outer` of type `string` supplied to `Inner`, expected `number`.',
-          'Invalid prop `middle` of type `string` supplied to `Inner`, expected `number`.',
-          'Invalid prop `inner` of type `string` supplied to `Inner`, expected `number`.',
-        ]);
-
-        // Update
-        await expect(async () => {
-          ReactNoop.render(
-            <div>
-              <Outer inner={false} middle={false} outer={false} />
-            </div>,
-          );
-          await waitForAll([]);
-        }).toErrorDev([
-          'Invalid prop `outer` of type `boolean` supplied to `Inner`, expected `number`.',
-          'Invalid prop `middle` of type `boolean` supplied to `Inner`, expected `number`.',
-          'Invalid prop `inner` of type `boolean` supplied to `Inner`, expected `number`.',
-        ]);
+        });
+        expect(root).toMatchRenderedOutput(<div>234</div>);
       });
 
       it('does not drop lower priority state updates when bailing out at higher pri (simple)', async () => {
@@ -657,98 +576,102 @@ describe('memo', () => {
       });
     });
 
-    it('should fall back to showing something meaningful if no displayName or name are present', () => {
-      const MemoComponent = React.memo(props => <div {...props} />);
-      MemoComponent.propTypes = {
-        required: PropTypes.string.isRequired,
-      };
-
-      expect(() =>
-        ReactNoop.render(<MemoComponent optional="foo" />),
-      ).toErrorDev(
-        'Warning: Failed prop type: The prop `required` is marked as required in ' +
-          '`Memo`, but its value is `undefined`.',
-        // There's no component stack in this warning because the inner function is anonymous.
-        // If we wanted to support this (for the Error frames / source location)
-        // we could do this by updating ReactComponentStackFrame.
-        {withoutStack: true},
+    it('should skip memo in the stack if neither displayName nor name are present', async () => {
+      const MemoComponent = React.memo(props => [<span />]);
+      ReactNoop.render(
+        <p>
+          <MemoComponent />
+        </p>,
       );
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'Each child in a list should have a unique "key" prop. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
+          '    in **/ReactMemo-test.js:**:** (at **)',
+      ]);
     });
 
-    it('should honor a displayName if set on the inner component in warnings', () => {
-      function Component(props) {
-        return <div {...props} />;
-      }
-      Component.displayName = 'Inner';
-      const MemoComponent = React.memo(Component);
-      MemoComponent.propTypes = {
-        required: PropTypes.string.isRequired,
-      };
-
-      expect(() =>
-        ReactNoop.render(<MemoComponent optional="foo" />),
-      ).toErrorDev(
-        'Warning: Failed prop type: The prop `required` is marked as required in ' +
-          '`Inner`, but its value is `undefined`.\n' +
+    it('should use the inner function name for the stack', async () => {
+      const MemoComponent = React.memo(function Inner(props, ref) {
+        return [<span />];
+      });
+      ReactNoop.render(
+        <p>
+          <MemoComponent />
+        </p>,
+      );
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
           '    in Inner (at **)',
-      );
+      ]);
     });
 
-    it('should honor a displayName if set on the memo wrapper in warnings', () => {
-      const MemoComponent = React.memo(function Component(props) {
-        return <div {...props} />;
+    it('should use the inner name in the stack', async () => {
+      const fn = (props, ref) => {
+        return [<span />];
+      };
+      Object.defineProperty(fn, 'name', {value: 'Inner'});
+      const MemoComponent = React.memo(fn);
+      ReactNoop.render(
+        <p>
+          <MemoComponent />
+        </p>,
+      );
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
+          '    in Inner (at **)',
+      ]);
+    });
+
+    it('can use the outer displayName in the stack', async () => {
+      const MemoComponent = React.memo((props, ref) => {
+        return [<span />];
       });
       MemoComponent.displayName = 'Outer';
-      MemoComponent.propTypes = {
-        required: PropTypes.string.isRequired,
-      };
-
-      expect(() =>
-        ReactNoop.render(<MemoComponent optional="foo" />),
-      ).toErrorDev(
-        'Warning: Failed prop type: The prop `required` is marked as required in ' +
-          '`Outer`, but its value is `undefined`.\n' +
-          '    in Component (at **)',
+      ReactNoop.render(
+        <p>
+          <MemoComponent />
+        </p>,
       );
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
+          '    in Outer (at **)',
+      ]);
     });
 
-    it('should pass displayName to an anonymous inner component so it shows up in component stacks', () => {
-      const MemoComponent = React.memo(props => {
-        return <div {...props} />;
-      });
-      MemoComponent.displayName = 'Memo';
-      MemoComponent.propTypes = {
-        required: PropTypes.string.isRequired,
+    it('should prefer the inner to the outer displayName in the stack', async () => {
+      const fn = (props, ref) => {
+        return [<span />];
       };
-
-      expect(() =>
-        ReactNoop.render(<MemoComponent optional="foo" />),
-      ).toErrorDev(
-        'Warning: Failed prop type: The prop `required` is marked as required in ' +
-          '`Memo`, but its value is `undefined`.\n' +
-          '    in Memo (at **)',
-      );
-    });
-
-    it('should honor a outer displayName when wrapped component and memo component set displayName at the same time.', () => {
-      function Component(props) {
-        return <div {...props} />;
-      }
-      Component.displayName = 'Inner';
-
-      const MemoComponent = React.memo(Component);
+      Object.defineProperty(fn, 'name', {value: 'Inner'});
+      const MemoComponent = React.memo(fn);
       MemoComponent.displayName = 'Outer';
-      MemoComponent.propTypes = {
-        required: PropTypes.string.isRequired,
-      };
-
-      expect(() =>
-        ReactNoop.render(<MemoComponent optional="foo" />),
-      ).toErrorDev(
-        'Warning: Failed prop type: The prop `required` is marked as required in ' +
-          '`Outer`, but its value is `undefined`.\n' +
-          '    in Inner (at **)',
+      ReactNoop.render(
+        <p>
+          <MemoComponent />
+        </p>,
       );
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
+          '    in Inner (at **)',
+      ]);
     });
   }
 });

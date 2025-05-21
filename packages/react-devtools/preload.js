@@ -1,11 +1,11 @@
 const {clipboard, shell, contextBridge} = require('electron');
 const fs = require('fs');
-const {address} = require('ip');
+const internalIP = require('internal-ip');
 
 // Expose protected methods so that render process does not need unsafe node integration
 contextBridge.exposeInMainWorld('api', {
   electron: {clipboard, shell},
-  ip: {address},
+  ip: {address: internalIP.v4.sync},
   getDevTools() {
     let devtools;
     try {
@@ -35,7 +35,7 @@ contextBridge.exposeInMainWorld('api', {
     }
     const host = process.env.HOST || 'localhost';
     const protocol = useHttps ? 'https' : 'http';
-    const port = +process.env.PORT || 8097;
+    const port = +process.env.REACT_DEVTOOLS_PORT || +process.env.PORT || 8097;
     return {options, useHttps, host, protocol, port};
   },
 });

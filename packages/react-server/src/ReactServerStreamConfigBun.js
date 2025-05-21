@@ -7,10 +7,13 @@
  * @flow
  */
 
+/* global Bun */
+
 type BunReadableStreamController = ReadableStreamController & {
   end(): mixed,
   write(data: Chunk | BinaryChunk): void,
   error(error: Error): void,
+  flush?: () => void,
 };
 export type Destination = BunReadableStreamController;
 
@@ -19,12 +22,18 @@ export opaque type Chunk = string;
 export type BinaryChunk = $ArrayBufferView;
 
 export function scheduleWork(callback: () => void) {
-  callback();
+  setTimeout(callback, 0);
 }
 
+export const scheduleMicrotask = queueMicrotask;
+
 export function flushBuffered(destination: Destination) {
-  // WHATWG Streams do not yet have a way to flush the underlying
-  // transform streams. https://github.com/whatwg/streams/issues/960
+  // Bun direct streams provide a flush function.
+  // If we don't have any more data to send right now.
+  // Flush whatever is in the buffer to the wire.
+  if (typeof destination.flush === 'function') {
+    destination.flush();
+  }
 }
 
 export function beginWriting(destination: Destination) {}
@@ -68,12 +77,6 @@ export function typedArrayToBinaryChunk(
   return content;
 }
 
-export function clonePrecomputedChunk(
-  chunk: PrecomputedChunk,
-): PrecomputedChunk {
-  return chunk;
-}
-
 export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
   return Buffer.byteLength(chunk, 'utf8');
 }
@@ -95,4 +98,16 @@ export function closeWithError(destination: Destination, error: mixed): void {
     // to a global callback in addition to this anyway. So it's fine just to close this.
     destination.close();
   }
+}
+
+export function createFastHash(input: string): string | number {
+  return Bun.hash(input);
+}
+
+export function readAsDataURL(blob: Blob): Promise<string> {
+  return blob.arrayBuffer().then(arrayBuffer => {
+    const encoded = Buffer.from(arrayBuffer).toString('base64');
+    const mimeType = blob.type || 'application/octet-stream';
+    return 'data:' + mimeType + ';base64,' + encoded;
+  });
 }

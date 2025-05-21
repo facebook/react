@@ -7,6 +7,7 @@ const ReactFlightWebpackPlugin = require('react-server-dom-webpack/plugin');
 const fs = require('fs');
 const {createHash} = require('crypto');
 const path = require('path');
+const {pathToFileURL} = require('url');
 const webpack = require('webpack');
 const resolve = require('resolve');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
@@ -199,7 +200,7 @@ module.exports = function (webpackEnv) {
       ? shouldUseSourceMap
         ? 'source-map'
         : false
-      : isEnvDevelopment && 'cheap-module-source-map',
+      : isEnvDevelopment && 'source-map',
     // These are the "entry points" to our application.
     // This means they will be the "root" imports that are included in JS bundle.
     entry: isEnvProduction
@@ -235,7 +236,7 @@ module.exports = function (webpackEnv) {
               .relative(paths.appSrc, info.absoluteResourcePath)
               .replace(/\\/g, '/')
         : isEnvDevelopment &&
-          (info => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/')),
+          (info => pathToFileURL(path.resolve(info.absoluteResourcePath))),
     },
     cache: {
       type: 'filesystem',

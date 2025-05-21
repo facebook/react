@@ -13,6 +13,7 @@ export type ServerReference<T: Function> = T & {
   $$typeof: symbol,
   $$id: string,
   $$bound: null | Array<ReactClientValue>,
+  $$location?: Error,
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -47,28 +48,75 @@ export function registerClientReference<T>(
 const FunctionBind = Function.prototype.bind;
 // $FlowFixMe[method-unbinding]
 const ArraySlice = Array.prototype.slice;
-function bind(this: ServerReference<any>) {
-  // $FlowFixMe[unsupported-syntax]
+function bind(this: ServerReference<any>): any {
+  // $FlowFixMe[prop-missing]
   const newFn = FunctionBind.apply(this, arguments);
   if (this.$$typeof === SERVER_REFERENCE_TAG) {
-    // $FlowFixMe[method-unbinding]
+    if (__DEV__) {
+      const thisBind = arguments[0];
+      if (thisBind != null) {
+        console.error(
+          'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+        );
+      }
+    }
     const args = ArraySlice.call(arguments, 1);
-    newFn.$$typeof = SERVER_REFERENCE_TAG;
-    newFn.$$id = this.$$id;
-    newFn.$$bound = this.$$bound ? this.$$bound.concat(args) : args;
+    const $$typeof = {value: SERVER_REFERENCE_TAG};
+    const $$id = {value: this.$$id};
+    const $$bound = {value: this.$$bound ? this.$$bound.concat(args) : args};
+    return Object.defineProperties(
+      (newFn: any),
+      __DEV__
+        ? {
+            $$typeof,
+            $$id,
+            $$bound,
+            $$location: {
+              value: this.$$location,
+              configurable: true,
+            },
+            bind: {value: bind, configurable: true},
+          }
+        : {
+            $$typeof,
+            $$id,
+            $$bound,
+            bind: {value: bind, configurable: true},
+          },
+    );
   }
   return newFn;
 }
 
-export function registerServerReference<T>(
-  reference: ServerReference<T>,
+export function registerServerReference<T: Function>(
+  reference: T,
   id: string,
   exportName: string,
 ): ServerReference<T> {
-  return Object.defineProperties((reference: any), {
-    $$typeof: {value: SERVER_REFERENCE_TAG},
-    $$id: {value: id + '#' + exportName},
-    $$bound: {value: null},
-    bind: {value: bind},
-  });
+  const $$typeof = {value: SERVER_REFERENCE_TAG};
+  const $$id = {
+    value: id + '#' + exportName,
+    configurable: true,
+  };
+  const $$bound = {value: null, configurable: true};
+  return Object.defineProperties(
+    (reference: any),
+    __DEV__
+      ? {
+          $$typeof,
+          $$id,
+          $$bound,
+          $$location: {
+            value: Error('react-stack-top-frame'),
+            configurable: true,
+          },
+          bind: {value: bind, configurable: true},
+        }
+      : {
+          $$typeof,
+          $$id,
+          $$bound,
+          bind: {value: bind, configurable: true},
+        },
+  );
 }

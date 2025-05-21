@@ -10,7 +10,10 @@
 import {REACT_FORWARD_REF_TYPE, REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
 export function forwardRef<Props, ElementType: React$ElementType>(
-  render: (props: Props, ref: React$Ref<ElementType>) => React$Node,
+  render: (
+    props: Props,
+    ref: React$RefSetter<React$ElementRef<ElementType>>,
+  ) => React$Node,
 ) {
   if (__DEV__) {
     if (render != null && render.$$typeof === REACT_MEMO_TYPE) {
@@ -36,9 +39,9 @@ export function forwardRef<Props, ElementType: React$ElementType>(
     }
 
     if (render != null) {
-      if (render.defaultProps != null || render.propTypes != null) {
+      if (render.defaultProps != null) {
         console.error(
-          'forwardRef render functions do not support propTypes or defaultProps. ' +
+          'forwardRef render functions do not support defaultProps. ' +
             'Did you accidentally pass a React component?',
         );
       }
@@ -68,6 +71,9 @@ export function forwardRef<Props, ElementType: React$ElementType>(
         //   React.forwardRef((props, ref) => {...});
         // This kind of inner function is not used elsewhere so the side effect is okay.
         if (!render.name && !render.displayName) {
+          Object.defineProperty(render, 'name', {
+            value: name,
+          });
           render.displayName = name;
         }
       },

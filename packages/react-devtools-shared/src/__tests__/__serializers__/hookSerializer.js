@@ -34,7 +34,7 @@ function serializeHook(hook) {
   };
 }
 
-// test() is part of Jest's serializer API
+// `test` is part of Jest's serializer API
 export function test(maybeHook) {
   if (maybeHook === null || typeof maybeHook !== 'object') {
     return false;

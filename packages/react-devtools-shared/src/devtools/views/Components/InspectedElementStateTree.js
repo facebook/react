@@ -9,17 +9,18 @@
 
 import {copy} from 'clipboard-js';
 import * as React from 'react';
-import {ElementTypeHostComponent} from 'react-devtools-shared/src/types';
+import {ElementTypeHostComponent} from 'react-devtools-shared/src/frontend/types';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
 import {alphaSortEntries, serializeDataForCopy} from '../utils';
 import Store from '../../store';
 import styles from './InspectedElementSharedStyles.css';
+import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
-import type {InspectedElement} from './types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 
 type Props = {
   bridge: FrontendBridge,
@@ -35,25 +36,26 @@ export default function InspectedElementStateTree({
   store,
 }: Props): React.Node {
   const {state, type} = inspectedElement;
+  if (state == null) {
+    return null;
+  }
 
   // HostSingleton and HostHoistable may have state that we don't want to expose to users
   const isHostComponent = type === ElementTypeHostComponent;
-
-  const entries = state != null ? Object.entries(state) : null;
-  const isEmpty = entries === null || entries.length === 0;
-
+  const entries = Object.entries(state);
+  const isEmpty = entries.length === 0;
   if (isEmpty || isHostComponent) {
     return null;
   }
 
-  if (entries !== null) {
-    entries.sort(alphaSortEntries);
-  }
-
-  const handleCopy = () => copy(serializeDataForCopy(((state: any): Object)));
+  entries.sort(alphaSortEntries);
+  const handleCopy = withPermissionsCheck(
+    {permissions: ['clipboardWrite']},
+    () => copy(serializeDataForCopy(state)),
+  );
 
   return (
-    <div className={styles.InspectedElementTree}>
+    <div>
       <div className={styles.HeaderRow}>
         <div className={styles.Header}>state</div>
         {!isEmpty && (

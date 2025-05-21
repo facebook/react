@@ -7,6 +7,53 @@
  * @flow
  */
 
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {HydrationDiffNode} from 'react-reconciler/src/ReactFiberHydrationDiffs';
+
+import {
+  current,
+  runWithFiberInDEV,
+} from 'react-reconciler/src/ReactCurrentFiber';
+import {
+  HostComponent,
+  HostHoistable,
+  HostSingleton,
+  HostText,
+} from 'react-reconciler/src/ReactWorkTags';
+
+import {describeDiff} from 'react-reconciler/src/ReactFiberHydrationDiffs';
+
+function describeAncestors(
+  ancestor: Fiber,
+  child: Fiber,
+  props: null | {children: null},
+): string {
+  let fiber: null | Fiber = child;
+  let node: null | HydrationDiffNode = null;
+  let distanceFromLeaf = 0;
+  while (fiber) {
+    if (fiber === ancestor) {
+      distanceFromLeaf = 0;
+    }
+    node = {
+      fiber: fiber,
+      children: node !== null ? [node] : [],
+      serverProps:
+        fiber === child ? props : fiber === ancestor ? null : undefined,
+      serverTail: [],
+      distanceFromLeaf: distanceFromLeaf,
+    };
+    distanceFromLeaf++;
+    fiber = fiber.return;
+  }
+  if (node !== null) {
+    // Describe the node using the hydration diff logic.
+    // Replace + with - to mark ancestor and child. It's kind of arbitrary.
+    return describeDiff(node).replaceAll(/^[+-]/gm, '>');
+  }
+  return '';
+}
+
 type Info = {tag: string};
 export type AncestorInfoDev = {
   current: ?Info,
@@ -22,6 +69,7 @@ export type AncestorInfoDev = {
 
   // <head> or <body>
   containerTagInScope: ?Info,
+  implicitRootScope: boolean,
 };
 
 // This validation code was written based on the HTML5 parsing spec:
@@ -170,10 +218,11 @@ const emptyAncestorInfoDev: AncestorInfoDev = {
   dlItemTagAutoclosing: null,
 
   containerTagInScope: null,
+  implicitRootScope: false,
 };
 
 function updatedAncestorInfoDev(
-  oldInfo: ?AncestorInfoDev,
+  oldInfo: null | AncestorInfoDev,
   tag: string,
 ): AncestorInfoDev {
   if (__DEV__) {
@@ -189,14 +238,14 @@ function updatedAncestorInfoDev(
       ancestorInfo.pTagInButtonScope = null;
     }
 
-    // See rules for 'li', 'dd', 'dt' start tags in
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
     if (
       specialTags.indexOf(tag) !== -1 &&
       tag !== 'address' &&
       tag !== 'div' &&
       tag !== 'p'
     ) {
+      // See rules for 'li', 'dd', 'dt' start tags in
+      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
       ancestorInfo.listItemTagAutoclosing = null;
       ancestorInfo.dlItemTagAutoclosing = null;
     }
@@ -230,6 +279,17 @@ function updatedAncestorInfoDev(
       ancestorInfo.containerTagInScope = info;
     }
 
+    if (
+      oldInfo === null &&
+      (tag === '#document' || tag === 'html' || tag === 'body')
+    ) {
+      // While <head> is also a singleton we don't want to support semantics where
+      // you can escape the head by rendering a body singleton so we treat it like a normal scope
+      ancestorInfo.implicitRootScope = true;
+    } else if (ancestorInfo.implicitRootScope === true) {
+      ancestorInfo.implicitRootScope = false;
+    }
+
     return ancestorInfo;
   } else {
     return (null: any);
@@ -239,12 +299,23 @@ function updatedAncestorInfoDev(
 /**
  * Returns whether
  */
-function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
+function isTagValidWithParent(
+  tag: string,
+  parentTag: ?string,
+  implicitRootScope: boolean,
+): boolean {
   // First, let's check if we're in an unusual parsing mode...
   switch (parentTag) {
     // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
     case 'select':
-      return tag === 'option' || tag === 'optgroup' || tag === '#text';
+      return (
+        tag === 'hr' ||
+        tag === 'option' ||
+        tag === 'optgroup' ||
+        tag === 'script' ||
+        tag === 'template' ||
+        tag === '#text'
+      );
     case 'optgroup':
       return tag === 'option' || tag === '#text';
     // Strictly speaking, seeing an <option> doesn't mean we're in a <select>
@@ -307,10 +378,22 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
       );
     // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
     case 'html':
+      if (implicitRootScope) {
+        // When our parent tag is html and we're in the root scope we will actually
+        // insert most tags into the body so we need to fall through to validating
+        // the specific tag with "in body" parsing mode below
+        break;
+      }
       return tag === 'head' || tag === 'body' || tag === 'frameset';
     case 'frameset':
       return tag === 'frame';
     case '#document':
+      if (implicitRootScope) {
+        // When our parent is the Document and we're in the root scope we will actually
+        // insert most tags into the body so we need to fall through to validating
+        // the specific tag with "in body" parsing mode below
+        break;
+      }
       return tag === 'html';
   }
 
@@ -337,14 +420,11 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
     case 'rt':
       return impliedEndTags.indexOf(parentTag) === -1;
 
-    case 'body':
     case 'caption':
     case 'col':
     case 'colgroup':
     case 'frameset':
     case 'frame':
-    case 'head':
-    case 'html':
     case 'tbody':
     case 'td':
     case 'tfoot':
@@ -356,6 +436,24 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
       // so we allow it only if we don't know what the parent is, as all other
       // cases are invalid.
       return parentTag == null;
+    case 'head':
+      // We support rendering <head> in the root when the container is
+      // #document, <html>, or <body>.
+      return implicitRootScope || parentTag === null;
+    case 'html':
+      // We support rendering <html> in the root when the container is
+      // #document
+      return (
+        (implicitRootScope && parentTag === '#document') || parentTag === null
+      );
+    case 'body':
+      // We support rendering <body> in the root when the container is
+      // #document or <html>
+      return (
+        (implicitRootScope &&
+          (parentTag === '#document' || parentTag === 'html')) ||
+        parentTag === null
+      );
   }
 
   return true;
@@ -433,16 +531,35 @@ function findInvalidAncestorForTag(
 
 const didWarn: {[string]: boolean} = {};
 
+function findAncestor(parent: null | Fiber, tagName: string): null | Fiber {
+  while (parent) {
+    switch (parent.tag) {
+      case HostComponent:
+      case HostHoistable:
+      case HostSingleton:
+        if (parent.type === tagName) {
+          return parent;
+        }
+    }
+    parent = parent.return;
+  }
+  return null;
+}
+
 function validateDOMNesting(
   childTag: string,
   ancestorInfo: AncestorInfoDev,
-): void {
+): boolean {
   if (__DEV__) {
     ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
     const parentInfo = ancestorInfo.current;
     const parentTag = parentInfo && parentInfo.tag;
 
-    const invalidParent = isTagValidWithParent(childTag, parentTag)
+    const invalidParent = isTagValidWithParent(
+      childTag,
+      parentTag,
+      ancestorInfo.implicitRootScope,
+    )
       ? null
       : parentInfo;
     const invalidAncestor = invalidParent
@@ -450,7 +567,7 @@ function validateDOMNesting(
       : findInvalidAncestorForTag(childTag, ancestorInfo);
     const invalidParentOrAncestor = invalidParent || invalidAncestor;
     if (!invalidParentOrAncestor) {
-      return;
+      return true;
     }
 
     const ancestorTag = invalidParentOrAncestor.tag;
@@ -459,9 +576,17 @@ function validateDOMNesting(
       // eslint-disable-next-line react-internal/safe-string-coercion
       String(!!invalidParent) + '|' + childTag + '|' + ancestorTag;
     if (didWarn[warnKey]) {
-      return;
+      return false;
     }
     didWarn[warnKey] = true;
+
+    const child = current;
+    const ancestor = child ? findAncestor(child.return, ancestorTag) : null;
+
+    const ancestorDescription =
+      child !== null && ancestor !== null
+        ? describeAncestors(ancestor, child, null)
+        : '';
 
     const tagDisplayName = '<' + childTag + '>';
     if (invalidParent) {
@@ -472,49 +597,97 @@ function validateDOMNesting(
           'the browser.';
       }
       console.error(
-        'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s',
+        'In HTML, %s cannot be a child of <%s>.%s\n' +
+          'This will cause a hydration error.%s',
         tagDisplayName,
         ancestorTag,
         info,
+        ancestorDescription,
       );
     } else {
       console.error(
-        'validateDOMNesting(...): %s cannot appear as a descendant of ' +
-          '<%s>.',
+        'In HTML, %s cannot be a descendant of <%s>.\n' +
+          'This will cause a hydration error.%s',
         tagDisplayName,
         ancestorTag,
+        ancestorDescription,
       );
     }
+    if (child) {
+      // For debugging purposes find the nearest ancestor that caused the issue.
+      // The stack trace of this ancestor can be useful to find the cause.
+      // If the parent is a direct parent in the same owner, we don't bother.
+      const parent = child.return;
+      if (
+        ancestor !== null &&
+        parent !== null &&
+        (ancestor !== parent || parent._debugOwner !== child._debugOwner)
+      ) {
+        runWithFiberInDEV(ancestor, () => {
+          console.error(
+            // We repeat some context because this log might be taken out of context
+            // such as in React DevTools or grouped server logs.
+            '<%s> cannot contain a nested %s.\n' +
+              'See this log for the ancestor stack trace.',
+            ancestorTag,
+            tagDisplayName,
+          );
+        });
+      }
+    }
+    return false;
   }
+  return true;
 }
 
-function validateTextNesting(childText: string, parentTag: string): void {
+function validateTextNesting(
+  childText: string,
+  parentTag: string,
+  implicitRootScope: boolean,
+): boolean {
   if (__DEV__) {
-    if (isTagValidWithParent('#text', parentTag)) {
-      return;
+    if (implicitRootScope || isTagValidWithParent('#text', parentTag, false)) {
+      return true;
     }
 
-    // eslint-disable-next-line react-internal/safe-string-coercion
     const warnKey = '#text|' + parentTag;
     if (didWarn[warnKey]) {
-      return;
+      return false;
     }
     didWarn[warnKey] = true;
 
+    const child = current;
+    const ancestor = child ? findAncestor(child, parentTag) : null;
+
+    const ancestorDescription =
+      child !== null && ancestor !== null
+        ? describeAncestors(
+            ancestor,
+            child,
+            child.tag !== HostText ? {children: null} : null,
+          )
+        : '';
+
     if (/\S/.test(childText)) {
       console.error(
-        'validateDOMNesting(...): Text nodes cannot appear as a child of <%s>.',
+        'In HTML, text nodes cannot be a child of <%s>.\n' +
+          'This will cause a hydration error.%s',
         parentTag,
+        ancestorDescription,
       );
     } else {
       console.error(
-        'validateDOMNesting(...): Whitespace text nodes cannot appear as a child of <%s>. ' +
+        'In HTML, whitespace text nodes cannot be a child of <%s>. ' +
           "Make sure you don't have any extra whitespace between tags on " +
-          'each line of your source code.',
+          'each line of your source code.\n' +
+          'This will cause a hydration error.%s',
         parentTag,
+        ancestorDescription,
       );
     }
+    return false;
   }
+  return true;
 }
 
 export {updatedAncestorInfoDev, validateDOMNesting, validateTextNesting};

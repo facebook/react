@@ -31,12 +31,19 @@ module.exports = {
 
     Reflect: 'readonly',
     globalThis: 'readonly',
+
+    FinalizationRegistry: 'readonly',
+
+    ScrollTimeline: 'readonly',
+    navigation: 'readonly',
+
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
     // FB
     __DEV__: 'readonly',
     // Node.js Server Rendering
+    process: 'readonly',
     setImmediate: 'readonly',
     Buffer: 'readonly',
     // Trusted Types
@@ -52,6 +59,7 @@ module.exports = {
 
     // Temp
     AsyncLocalStorage: 'readonly',
+    async_hooks: 'readonly',
 
     // jest
     jest: 'readonly',
@@ -66,6 +74,17 @@ module.exports = {
   rules: {
     'no-undef': 'error',
     'no-shadow-restricted-names': 'error',
+    'no-restricted-syntax': [
+      'error',
+      // TODO: Can be removed once we upgrade GCC to a version without `optimizeArgumentsArray` optimization.
+      {
+        selector: 'Identifier[name=/^JSCompiler_OptimizeArgumentsArray_/]',
+        message:
+          'Google Closure Compiler optimized `arguments` access. ' +
+          'This affects function arity. ' +
+          'Create a reference to `arguments` to avoid this optimization',
+      },
+    ],
   },
 
   // These plugins aren't used, but eslint complains if an eslint-ignore comment

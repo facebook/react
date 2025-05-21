@@ -189,7 +189,7 @@ function markUpdateLaneFromFiberToRoot(
   sourceFiber: Fiber,
   update: ConcurrentUpdate | null,
   lane: Lane,
-): void {
+): null | FiberRoot {
   // Update the source fiber's lanes
   sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
   let alternate = sourceFiber.alternate;
@@ -238,10 +238,14 @@ function markUpdateLaneFromFiberToRoot(
     parent = parent.return;
   }
 
-  if (isHidden && update !== null && node.tag === HostRoot) {
+  if (node.tag === HostRoot) {
     const root: FiberRoot = node.stateNode;
-    markHiddenUpdate(root, update, lane);
+    if (isHidden && update !== null) {
+      markHiddenUpdate(root, update, lane);
+    }
+    return root;
   }
+  return null;
 }
 
 function getRootForUpdatedFiber(sourceFiber: Fiber): FiberRoot | null {

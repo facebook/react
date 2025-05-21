@@ -34,7 +34,6 @@ describe('updaters', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableUpdaterTracking = true;
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
 
     mockDevToolsHook = {
       injectInternals: jest.fn(() => {}),
@@ -106,17 +105,19 @@ describe('updaters', () => {
 
     const Parent = () => <Child />;
     const Child = () => null;
-    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
 
     await act(() => {
-      ReactDOM.render(<Parent />, container);
+      root.render(<Parent />);
     });
     expect(allSchedulerTags).toEqual([[HostRoot]]);
+    assertLog(['onCommitRoot']);
 
     await act(() => {
-      ReactDOM.render(<Parent />, container);
+      root.render(<Parent />);
     });
     expect(allSchedulerTags).toEqual([[HostRoot], [HostRoot]]);
+    assertLog(['onCommitRoot']);
   });
 
   it('should report a function component as the scheduler for a hooks update', async () => {
@@ -141,18 +142,20 @@ describe('updaters', () => {
     };
     const Child = () => null;
 
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      ReactDOM.render(<Parent />, document.createElement('div'));
+      root.render(<Parent />);
     });
     expect(scheduleForA).not.toBeNull();
     expect(scheduleForB).not.toBeNull();
     expect(allSchedulerTypes).toEqual([[null]]);
+    assertLog(['onCommitRoot']);
 
     await act(() => {
       scheduleForA();
     });
     expect(allSchedulerTypes).toEqual([[null], [SchedulingComponentA]]);
-
+    assertLog(['onCommitRoot']);
     await act(() => {
       scheduleForB();
     });
@@ -161,6 +164,7 @@ describe('updaters', () => {
       [SchedulingComponentA],
       [SchedulingComponentB],
     ]);
+    assertLog(['onCommitRoot']);
   });
 
   it('should report a class component as the scheduler for a setState update', async () => {
@@ -174,11 +178,12 @@ describe('updaters', () => {
     }
     const Child = () => null;
     let instance;
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      ReactDOM.render(<Parent />, document.createElement('div'));
+      root.render(<Parent />);
     });
     expect(allSchedulerTypes).toEqual([[null]]);
-
+    assertLog(['onCommitRoot']);
     expect(instance).not.toBeNull();
     await act(() => {
       instance.setState({});
@@ -260,6 +265,9 @@ describe('updaters', () => {
     await waitForAll([]);
   });
 
+  // This test should be convertable to createRoot but the allScheduledTypes assertions are no longer the same
+  // So I'm leaving it in legacy mode for now and just disabling if legacy mode is turned off
+  // @gate !disableLegacyMode
   it('should cover suspense pings', async () => {
     let data = null;
     let resolver = null;

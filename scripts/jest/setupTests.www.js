@@ -8,8 +8,17 @@ jest.mock('shared/ReactFeatureFlags', () => {
   );
   const actual = jest.requireActual('shared/forks/ReactFeatureFlags.www');
 
-  // This flag is only used by tests, it should never be set elsewhere.
-  actual.forceConcurrentByDefaultForTesting = !__VARIANT__;
+  // Flags that aren't currently used, but we still want to force variants to keep the
+  // code live.
+  actual.disableInputAttributeSyncing = __VARIANT__;
+
+  // These are hardcoded to true for the next release,
+  // but still run the tests against both variants until
+  // we remove the flag.
+  actual.disableClientCache = __VARIANT__;
+
+  // Some value that doesn't impact existing tests
+  actual.ownerStackLimit = __VARIANT__ ? 500 : 1e4;
 
   return actual;
 });
@@ -28,12 +37,9 @@ jest.mock('scheduler/src/SchedulerFeatureFlags', () => {
     schedulerSrcPath + '/src/forks/SchedulerFeatureFlags.www'
   );
 
-  // These flags are not a dynamic on www, but we still want to run
-  // tests in both versions.
-  actual.enableIsInputPending = __VARIANT__;
-  actual.enableIsInputPendingContinuous = __VARIANT__;
-  actual.enableProfiling = __VARIANT__;
-  actual.enableSchedulerDebugging = __VARIANT__;
+  // Add flags here that are not a dynamic on www,
+  // but we still want to run tests in both versions.
+  // <this list is empty>
 
   return actual;
 });

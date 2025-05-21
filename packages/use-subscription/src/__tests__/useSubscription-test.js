@@ -13,12 +13,13 @@ let act;
 let useSubscription;
 let BehaviorSubject;
 let React;
-let ReactTestRenderer;
+let ReactDOMClient;
 let Scheduler;
 let ReplaySubject;
 let assertLog;
 let waitForAll;
 let waitFor;
+let waitForPaint;
 
 describe('useSubscription', () => {
   beforeEach(() => {
@@ -27,7 +28,7 @@ describe('useSubscription', () => {
 
     useSubscription = require('use-subscription').useSubscription;
     React = require('react');
-    ReactTestRenderer = require('react-test-renderer');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
 
     act = require('internal-test-utils').act;
@@ -37,6 +38,7 @@ describe('useSubscription', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    waitForPaint = InternalTestUtils.waitForPaint;
     assertLog = InternalTestUtils.assertLog;
     waitFor = InternalTestUtils.waitFor;
   });
@@ -80,12 +82,9 @@ describe('useSubscription', () => {
     }
 
     const observable = createBehaviorSubject();
-    let renderer;
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      renderer = ReactTestRenderer.create(
-        <Subscription source={observable} />,
-        {unstable_isConcurrent: true},
-      );
+      root.render(<Subscription source={observable} />);
     });
     assertLog(['default']);
 
@@ -96,7 +95,7 @@ describe('useSubscription', () => {
     assertLog(['abc']);
 
     // Unmounting the subscriber should remove listeners
-    await act(() => renderer.update(<div />));
+    await act(() => root.render(<div />));
     await act(() => observable.next(456));
     await waitForAll([]);
   });
@@ -132,12 +131,9 @@ describe('useSubscription', () => {
     }
 
     let observable = createReplaySubject('initial');
-    let renderer;
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      renderer = ReactTestRenderer.create(
-        <Subscription source={observable} />,
-        {unstable_isConcurrent: true},
-      );
+      root.render(<Subscription source={observable} />);
     });
     assertLog(['initial']);
     await act(() => observable.next('updated'));
@@ -147,7 +143,7 @@ describe('useSubscription', () => {
 
     // Unsetting the subscriber prop should reset subscribed values
     observable = createReplaySubject(undefined);
-    await act(() => renderer.update(<Subscription source={observable} />));
+    await act(() => root.render(<Subscription source={observable} />));
     assertLog(['default']);
   });
 
@@ -181,12 +177,9 @@ describe('useSubscription', () => {
 
     expect(subscriptions).toHaveLength(0);
 
-    let renderer;
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      renderer = ReactTestRenderer.create(
-        <Subscription source={observableA} />,
-        {unstable_isConcurrent: true},
-      );
+      root.render(<Subscription source={observableA} />);
     });
 
     // Updates while subscribed should re-render the child component
@@ -195,7 +188,7 @@ describe('useSubscription', () => {
     expect(subscriptions[0]).toBe(observableA);
 
     // Unsetting the subscriber prop should reset subscribed values
-    await act(() => renderer.update(<Subscription source={observableB} />));
+    await act(() => root.render(<Subscription source={observableB} />));
 
     assertLog(['b-0']);
     expect(subscriptions).toHaveLength(2);
@@ -240,12 +233,9 @@ describe('useSubscription', () => {
 
     expect(subscriptions).toHaveLength(0);
 
-    let renderer;
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      renderer = ReactTestRenderer.create(
-        <Subscription source={observableA} />,
-        {unstable_isConcurrent: true},
-      );
+      root.render(<Subscription source={observableA} />);
     });
 
     // Updates while subscribed should re-render the child component
@@ -254,7 +244,7 @@ describe('useSubscription', () => {
     expect(subscriptions[0]).toBe(observableA);
 
     // Unsetting the subscriber prop should reset subscribed values
-    await act(() => renderer.update(<Subscription source={observableB} />));
+    await act(() => root.render(<Subscription source={observableB} />));
     assertLog(['b-0']);
     expect(subscriptions).toHaveLength(2);
     expect(subscriptions[1]).toBe(observableB);
@@ -328,11 +318,9 @@ describe('useSubscription', () => {
     const observableA = createBehaviorSubject('a-0');
     const observableB = createBehaviorSubject('b-0');
 
-    let renderer;
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      renderer = ReactTestRenderer.create(<Parent observed={observableA} />, {
-        unstable_isConcurrent: true,
-      });
+      root.render(<Parent observed={observableA} />);
     });
     assertLog(['Child: a-0', 'Grandchild: a-0']);
     expect(log).toEqual(['Parent.componentDidMount']);
@@ -340,7 +328,7 @@ describe('useSubscription', () => {
     // Start React update, but don't finish
     await act(async () => {
       React.startTransition(() => {
-        renderer.update(<Parent observed={observableB} />);
+        root.render(<Parent observed={observableB} />);
       });
 
       await waitFor(['Child: b-0']);
@@ -352,20 +340,16 @@ describe('useSubscription', () => {
       observableB.next('b-3');
     });
 
+    assertLog(['Grandchild: b-0', 'Child: b-3', 'Grandchild: b-3']);
+
     // Update again
-    await act(() => renderer.update(<Parent observed={observableA} />));
+    await act(() => root.render(<Parent observed={observableA} />));
 
     // Flush everything and ensure that the correct subscribable is used
     // We expect the last emitted update to be rendered (because of the commit phase value check)
     // But the intermediate ones should be ignored,
     // And the final rendered output should be the higher-priority observable.
-    assertLog([
-      'Grandchild: b-0',
-      'Child: b-3',
-      'Grandchild: b-3',
-      'Child: a-0',
-      'Grandchild: a-0',
-    ]);
+    assertLog(['Child: a-0', 'Grandchild: a-0']);
     expect(log).toEqual([
       'Parent.componentDidMount',
       'Parent.componentDidUpdate',
@@ -431,11 +415,9 @@ describe('useSubscription', () => {
     const observableA = createBehaviorSubject('a-0');
     const observableB = createBehaviorSubject('b-0');
 
-    let renderer;
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      renderer = ReactTestRenderer.create(<Parent observed={observableA} />, {
-        unstable_isConcurrent: true,
-      });
+      root.render(<Parent observed={observableA} />);
     });
     assertLog(['Child: a-0', 'Grandchild: a-0']);
     expect(log).toEqual(['Parent.componentDidMount:a-0']);
@@ -444,7 +426,7 @@ describe('useSubscription', () => {
     // Start React update, but don't finish
     await act(async () => {
       React.startTransition(() => {
-        renderer.update(<Parent observed={observableB} />);
+        root.render(<Parent observed={observableB} />);
       });
       await waitFor(['Child: b-0']);
       expect(log).toEqual([]);
@@ -454,13 +436,9 @@ describe('useSubscription', () => {
       observableA.next('a-2');
 
       // Update again
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        React.startTransition(() => {
-          renderer.update(<Parent observed={observableA} />);
-        });
-      } else {
-        renderer.update(<Parent observed={observableA} />);
-      }
+      React.startTransition(() => {
+        root.render(<Parent observed={observableA} />);
+      });
 
       // Flush everything and ensure that the correct subscribable is used
       await waitForAll([
@@ -524,16 +502,13 @@ describe('useSubscription', () => {
 
     eventHandler.subscribe(async value => {
       if (value === false) {
-        renderer.unmount();
+        root.unmount();
       }
     });
 
-    let renderer;
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      renderer = ReactTestRenderer.create(
-        <Subscription source={eventHandler} />,
-        {unstable_isConcurrent: true},
-      );
+      root.render(<Subscription source={eventHandler} />);
     });
     assertLog([true]);
 
@@ -562,18 +537,13 @@ describe('useSubscription', () => {
       return null;
     }
 
-    let renderer;
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      renderer = ReactTestRenderer.create(
-        <Subscription subscription={subscription1} />,
-        {unstable_isConcurrent: true},
-      );
+      root.render(<Subscription subscription={subscription1} />);
     });
     await waitForAll([]);
 
-    await act(() =>
-      renderer.update(<Subscription subscription={subscription2} />),
-    );
+    await act(() => root.render(<Subscription subscription={subscription2} />));
     await waitForAll([]);
   });
 
@@ -599,15 +569,15 @@ describe('useSubscription', () => {
       return value;
     };
 
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(async () => {
       // Initial render of "A"
       mutate('A');
-      ReactTestRenderer.create(
+      root.render(
         <React.Fragment>
           <Subscriber id="first" />
           <Subscriber id="second" />
         </React.Fragment>,
-        {unstable_isConcurrent: true},
       );
       await waitForAll(['render:first:A', 'render:second:A']);
 
@@ -627,7 +597,7 @@ describe('useSubscription', () => {
       React.startTransition(() => {
         mutate('C');
       });
-      await waitFor(['render:first:C', 'render:second:C']);
+      await waitForPaint(['render:first:C', 'render:second:C']);
       React.startTransition(() => {
         mutate('D');
       });

@@ -18,6 +18,7 @@ export type DOMEventName =
   // 'animationstart' |
   | 'beforeblur' // Not a real event. This is used by event experiments.
   | 'beforeinput'
+  | 'beforetoggle'
   | 'blur'
   | 'canplay'
   | 'canplaythrough'
@@ -88,6 +89,7 @@ export type DOMEventName =
   | 'reset'
   | 'resize'
   | 'scroll'
+  | 'scrollend'
   | 'seeked'
   | 'seeking'
   | 'select'
@@ -104,6 +106,9 @@ export type DOMEventName =
   | 'touchmove'
   | 'touchstart'
   // These are vendor-prefixed so you should use the exported constants instead:
+  // 'transitionrun' |
+  // 'transitionstart' |
+  // 'transitioncancel' |
   // 'transitionend' |
   | 'volumechange'
   | 'waiting'
@@ -115,5 +120,12 @@ export const ANIMATION_ITERATION: DOMEventName =
   getVendorPrefixedEventName('animationiteration');
 export const ANIMATION_START: DOMEventName =
   getVendorPrefixedEventName('animationstart');
+
+export const TRANSITION_RUN: DOMEventName =
+  getVendorPrefixedEventName('transitionrun');
+export const TRANSITION_START: DOMEventName =
+  getVendorPrefixedEventName('transitionstart');
+export const TRANSITION_CANCEL: DOMEventName =
+  getVendorPrefixedEventName('transitioncancel');
 export const TRANSITION_END: DOMEventName =
   getVendorPrefixedEventName('transitionend');

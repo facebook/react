@@ -27,6 +27,7 @@ import {
   SyntheticWheelEvent,
   SyntheticClipboardEvent,
   SyntheticPointerEvent,
+  SyntheticToggleEvent,
 } from '../../events/SyntheticEvent';
 
 import {
@@ -140,6 +141,7 @@ function extractEvents(
       SyntheticEventCtor = SyntheticTransitionEvent;
       break;
     case 'scroll':
+    case 'scrollend':
       SyntheticEventCtor = SyntheticUIEvent;
       break;
     case 'wheel':
@@ -159,6 +161,11 @@ function extractEvents(
     case 'pointerover':
     case 'pointerup':
       SyntheticEventCtor = SyntheticPointerEvent;
+      break;
+    case 'toggle':
+    case 'beforetoggle':
+      // MDN claims <details> should not receive ToggleEvent contradicting the spec: https://html.spec.whatwg.org/multipage/indices.html#event-toggle
+      SyntheticEventCtor = SyntheticToggleEvent;
       break;
     default:
       // Unknown event. This is used by createEventHandle.
@@ -199,7 +206,7 @@ function extractEvents(
       // nonDelegatedEvents list in DOMPluginEventSystem.
       // Then we can remove this special list.
       // This is a breaking change that can wait until React 18.
-      domEventName === 'scroll';
+      (domEventName === 'scroll' || domEventName === 'scrollend');
 
     const listeners = accumulateSinglePhaseListeners(
       targetInst,

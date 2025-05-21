@@ -10,6 +10,7 @@
 import type {Writable} from 'stream';
 
 import {TextEncoder} from 'util';
+import {createHash} from 'crypto';
 
 interface MightBeFlushable {
   flush?: () => void;
@@ -24,6 +25,8 @@ export type BinaryChunk = Uint8Array;
 export function scheduleWork(callback: () => void) {
   setImmediate(callback);
 }
+
+export const scheduleMicrotask = queueMicrotask;
 
 export function flushBuffered(destination: Destination) {
   // If we don't have any more data to send right now.
@@ -60,7 +63,8 @@ function writeStringChunk(destination: Destination, stringChunk: string) {
       currentView = new Uint8Array(VIEW_SIZE);
       writtenBytes = 0;
     }
-    writeToDestination(destination, textEncoder.encode(stringChunk));
+    // Write the raw string chunk and let the consumer handle the encoding.
+    writeToDestination(destination, stringChunk);
     return;
   }
 
@@ -98,15 +102,6 @@ function writeViewChunk(
     return;
   }
   if (chunk.byteLength > VIEW_SIZE) {
-    if (__DEV__) {
-      if (precomputedChunkSet && precomputedChunkSet.has(chunk)) {
-        console.error(
-          'A large precomputed chunk was passed to writeChunk without being copied.' +
-            ' Large chunks get enqueued directly and are not copied. This is incompatible with precomputed chunks because you cannot enqueue the same precomputed chunk twice.' +
-            ' Use "cloneChunk" to make a copy of this large precomputed chunk before writing it. This is a bug in React.',
-        );
-      }
-    }
     // this chunk may overflow a single view which implies it was not
     // one that is cached by the streaming renderer. We will enqueu
     // it directly and expect it is not re-used
@@ -200,14 +195,14 @@ export function stringToChunk(content: string): Chunk {
   return content;
 }
 
-const precomputedChunkSet = __DEV__ ? new Set<PrecomputedChunk>() : null;
-
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   const precomputedChunk = textEncoder.encode(content);
 
   if (__DEV__) {
-    if (precomputedChunkSet) {
-      precomputedChunkSet.add(precomputedChunk);
+    if (precomputedChunk.byteLength > VIEW_SIZE) {
+      console.error(
+        'precomputed chunks must be smaller than the view size configured for this host. This is a bug in React.',
+      );
     }
   }
 
@@ -219,14 +214,6 @@ export function typedArrayToBinaryChunk(
 ): BinaryChunk {
   // Convert any non-Uint8Array array to Uint8Array. We could avoid this for Uint8Arrays.
   return new Uint8Array(content.buffer, content.byteOffset, content.byteLength);
-}
-
-export function clonePrecomputedChunk(
-  precomputedChunk: PrecomputedChunk,
-): PrecomputedChunk {
-  return precomputedChunk.length > VIEW_SIZE
-    ? precomputedChunk.slice()
-    : precomputedChunk;
 }
 
 export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
@@ -242,4 +229,18 @@ export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
 export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
   destination.destroy(error);
+}
+
+export function createFastHash(input: string): string | number {
+  const hash = createHash('md5');
+  hash.update(input);
+  return hash.digest('hex');
+}
+
+export function readAsDataURL(blob: Blob): Promise<string> {
+  return blob.arrayBuffer().then(arrayBuffer => {
+    const encoded = Buffer.from(arrayBuffer).toString('base64');
+    const mimeType = blob.type || 'application/octet-stream';
+    return 'data:' + mimeType + ';base64,' + encoded;
+  });
 }

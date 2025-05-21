@@ -28,7 +28,7 @@ describe('isomorphic act()', () => {
     ReactNoop = require('react-noop-renderer');
     DiscreteEventPriority =
       require('react-reconciler/constants').DiscreteEventPriority;
-    act = React.unstable_act;
+    act = React.act;
     use = React.use;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
@@ -50,8 +50,20 @@ describe('isomorphic act()', () => {
     return text;
   }
 
+  it('behavior in production', () => {
+    if (!__DEV__) {
+      if (gate('fb')) {
+        expect(() => act(() => {})).toThrow(
+          'act(...) is not supported in production builds of React',
+        );
+      } else {
+        expect(React).not.toHaveProperty('act');
+      }
+    }
+  });
+
   // @gate __DEV__
-  test('bypasses queueMicrotask', async () => {
+  it('bypasses queueMicrotask', async () => {
     const root = ReactNoop.createRoot();
 
     // First test what happens without wrapping in act. This update would
@@ -78,12 +90,12 @@ describe('isomorphic act()', () => {
   });
 
   // @gate __DEV__
-  test('return value – sync callback', async () => {
+  it('return value – sync callback', async () => {
     expect(await act(() => 'hi')).toEqual('hi');
   });
 
   // @gate __DEV__
-  test('return value – sync callback, nested', async () => {
+  it('return value – sync callback, nested', async () => {
     const returnValue = await act(() => {
       return act(() => 'hi');
     });
@@ -91,7 +103,7 @@ describe('isomorphic act()', () => {
   });
 
   // @gate __DEV__
-  test('return value – async callback', async () => {
+  it('return value – async callback', async () => {
     const returnValue = await act(async () => {
       return await Promise.resolve('hi');
     });
@@ -99,7 +111,7 @@ describe('isomorphic act()', () => {
   });
 
   // @gate __DEV__
-  test('return value – async callback, nested', async () => {
+  it('return value – async callback, nested', async () => {
     const returnValue = await act(async () => {
       return await act(async () => {
         return await Promise.resolve('hi');
@@ -108,8 +120,8 @@ describe('isomorphic act()', () => {
     expect(returnValue).toEqual('hi');
   });
 
-  // @gate __DEV__
-  test('in legacy mode, updates are batched', () => {
+  // @gate __DEV__ && !disableLegacyMode
+  it('in legacy mode, updates are batched', () => {
     const root = ReactNoop.createLegacyRoot();
 
     // Outside of `act`, legacy updates are flushed completely synchronously
@@ -136,8 +148,8 @@ describe('isomorphic act()', () => {
     expect(root).toMatchRenderedOutput('C');
   });
 
-  // @gate __DEV__
-  test('in legacy mode, in an async scope, updates are batched until the first `await`', async () => {
+  // @gate __DEV__ && !disableLegacyMode
+  it('in legacy mode, in an async scope, updates are batched until the first `await`', async () => {
     const root = ReactNoop.createLegacyRoot();
 
     await act(async () => {
@@ -167,8 +179,8 @@ describe('isomorphic act()', () => {
     });
   });
 
-  // @gate __DEV__
-  test('in legacy mode, in an async scope, updates are batched until the first `await` (regression test: batchedUpdates)', async () => {
+  // @gate __DEV__ && !disableLegacyMode
+  it('in legacy mode, in an async scope, updates are batched until the first `await` (regression test: batchedUpdates)', async () => {
     const root = ReactNoop.createLegacyRoot();
 
     await act(async () => {
@@ -206,7 +218,7 @@ describe('isomorphic act()', () => {
   });
 
   // @gate __DEV__
-  test('unwraps promises by yielding to microtasks (async act scope)', async () => {
+  it('unwraps promises by yielding to microtasks (async act scope)', async () => {
     const promise = Promise.resolve('Async');
 
     function Fallback() {
@@ -231,7 +243,7 @@ describe('isomorphic act()', () => {
   });
 
   // @gate __DEV__
-  test('unwraps promises by yielding to microtasks (non-async act scope)', async () => {
+  it('unwraps promises by yielding to microtasks (non-async act scope)', async () => {
     const promise = Promise.resolve('Async');
 
     function Fallback() {
@@ -258,7 +270,7 @@ describe('isomorphic act()', () => {
   });
 
   // @gate __DEV__
-  test('warns if a promise is used in a non-awaited `act` scope', async () => {
+  it('warns if a promise is used in a non-awaited `act` scope', async () => {
     const promise = new Promise(() => {});
 
     function Fallback() {
@@ -290,7 +302,7 @@ describe('isomorphic act()', () => {
 
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error.mock.calls[0][0]).toContain(
-      'Warning: A component suspended inside an `act` scope, but the `act` ' +
+      'A component suspended inside an `act` scope, but the `act` ' +
         'call was not awaited. When testing React components that ' +
         'depend on asynchronous data, you must await the result:\n\n' +
         'await act(() => ...)',
@@ -298,7 +310,7 @@ describe('isomorphic act()', () => {
   });
 
   // @gate __DEV__
-  test('does not warn when suspending via legacy `throw` API  in non-awaited `act` scope', async () => {
+  it('does not warn when suspending via legacy `throw` API  in non-awaited `act` scope', async () => {
     let didResolve = false;
     let resolvePromise;
     const promise = new Promise(r => {

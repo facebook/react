@@ -26,10 +26,7 @@ import {updateValueIfChanged} from '../../client/inputValueTracking';
 import {setDefaultValue} from '../../client/ReactDOMInput';
 import {enqueueStateRestore} from '../ReactDOMControlledComponent';
 
-import {
-  disableInputAttributeSyncing,
-  enableCustomElementPropertySupport,
-} from 'shared/ReactFeatureFlags';
+import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 import {batchedUpdates} from '../ReactDOMUpdateBatching';
 import {
   processDispatchQueue,
@@ -311,7 +308,6 @@ function extractEvents(
   } else if (shouldUseClickEvent(targetNode)) {
     getTargetInstFunc = getTargetInstForClickEvent;
   } else if (
-    enableCustomElementPropertySupport &&
     targetInst &&
     isCustomElement(targetInst.elementType, targetInst.memoizedProps)
   ) {

@@ -13,14 +13,15 @@
     "prompts": "^2.4.2",
     "react": "experimental",
     "react-dom": "experimental",
-    "undici": "^5.20.0"
+    "undici": "^5.20.0",
+    "webpack-sources": "^3.2.0"
   },
   "scripts": {
     "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "prestart": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "dev": "concurrently \"npm run dev:region\" \"npm run dev:global\"",
     "dev:global": "NODE_ENV=development BUILD_PATH=dist node server/global",
-    "dev:region": "NODE_ENV=development BUILD_PATH=dist nodemon --watch src --watch dist -- --experimental-loader ./loader/region.js --conditions=react-server server/region",
+    "dev:region": "NODE_ENV=development BUILD_PATH=dist nodemon --watch src --watch dist -- --enable-source-maps --experimental-loader ./loader/region.js --conditions=react-server server/region",
     "start": "concurrently \"npm run start:region\" \"npm run start:global\"",
     "start:global": "NODE_ENV=production node server/global",
     "start:region": "NODE_ENV=production node --experimental-loader ./loader/region.js --conditions=react-server server/region"

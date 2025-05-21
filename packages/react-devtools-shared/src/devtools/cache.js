@@ -15,7 +15,7 @@ import {createContext} from 'react';
 // TODO (cache) Remove this cache; it is outdated and will not work with newer APIs like startTransition.
 
 // Cache implementation was forked from the React repo:
-// https://github.com/facebook/react/blob/main/packages/react-cache/src/ReactCache.js
+// https://github.com/facebook/react/blob/main/packages/react-cache/src/ReactCacheOld.js
 //
 // This cache is simpler than react-cache in that:
 // 1. Individual items don't need to be invalidated.
@@ -53,26 +53,36 @@ export type Resource<Input, Key, Value> = {
   read(Input): Value,
   preload(Input): void,
   write(Key, Value): void,
-  ...
 };
 
 const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-const ReactCurrentDispatcher = (React: any)
-  .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher;
-
-function readContext(Context: ReactContext<null>) {
-  const dispatcher = ReactCurrentDispatcher.current;
-  if (dispatcher === null) {
-    throw new Error(
-      'react-cache: read and preload may only be called from within a ' +
-        "component's render. They are not supported in event handlers or " +
-        'lifecycle methods.',
-    );
-  }
-  return dispatcher.readContext(Context);
+let readContext;
+if (typeof React.use === 'function') {
+  readContext = function (Context: ReactContext<null>) {
+    return React.use(Context);
+  };
+} else if (
+  typeof (React: any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED ===
+  'object'
+) {
+  const ReactCurrentDispatcher = (React: any)
+    .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher;
+  readContext = function (Context: ReactContext<null>) {
+    const dispatcher = ReactCurrentDispatcher.current;
+    if (dispatcher === null) {
+      throw new Error(
+        'react-cache: read and preload may only be called from within a ' +
+          "component's render. They are not supported in event handlers or " +
+          'lifecycle methods.',
+      );
+    }
+    return dispatcher.readContext(Context);
+  };
+} else {
+  throw new Error('react-cache: Unsupported React version');
 }
 
 const CacheContext = createContext(null);

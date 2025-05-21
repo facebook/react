@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {StyleXPlugin} from 'react-devtools-shared/src/types';
+import type {StyleXPlugin} from 'react-devtools-shared/src/frontend/types';
 import isArray from 'react-devtools-shared/src/isArray';
 
 const cachedStyleNameToValueMap: Map<string, string> = new Map();

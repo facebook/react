@@ -146,13 +146,11 @@ type JestPromiseType = {
    * Use rejects to unwrap the reason of a rejected promise so any other
    * matcher can be chained. If the promise is fulfilled the assertion fails.
    */
-  // eslint-disable-next-line no-use-before-define
   rejects: JestExpectType,
   /**
    * Use resolves to unwrap the value of a fulfilled promise so any other
    * matcher can be chained. If the promise is rejected the assertion fails.
    */
-  // eslint-disable-next-line no-use-before-define
   resolves: JestExpectType,
 };
 
@@ -960,7 +958,7 @@ declare function beforeAll(
 ): void;
 
 /** A context for grouping tests together */
-declare var describe: {
+declare const describe: {
   /**
    * Creates a block that groups together several related tests in one "test suite"
    */
@@ -991,7 +989,7 @@ declare var describe: {
 };
 
 /** An individual test unit */
-declare var it: {
+declare const it: {
   /**
    * An individual test unit
    *
@@ -1079,15 +1077,15 @@ declare function fit(
   timeout?: number
 ): void;
 /** An individual test unit */
-declare var test: typeof it;
+declare const test: typeof it;
 /** A disabled group of tests */
-declare var xdescribe: typeof describe;
+declare const xdescribe: typeof describe;
 /** A focused group of tests */
-declare var fdescribe: typeof describe;
+declare const fdescribe: typeof describe;
 /** A disabled individual test */
-declare var xit: typeof it;
+declare const xit: typeof it;
 /** A disabled individual test */
-declare var xtest: typeof it;
+declare const xtest: typeof it;
 
 type JestPrettyFormatColors = {
   comment: {close: string, open: string},
@@ -1098,10 +1096,8 @@ type JestPrettyFormatColors = {
 };
 
 type JestPrettyFormatIndent = string => string;
-// eslint-disable-next-line no-unused-vars
 type JestPrettyFormatRefs = Array<any>;
 type JestPrettyFormatPrint = any => string;
-// eslint-disable-next-line no-unused-vars
 type JestPrettyFormatStringOrNull = string | null;
 
 type JestPrettyFormatOptions = {
@@ -1112,7 +1108,6 @@ type JestPrettyFormatOptions = {
   indent: number,
   maxDepth: number,
   min: boolean,
-  // eslint-disable-next-line no-use-before-define
   plugins: JestPrettyFormatPlugins,
   printFunctionName: boolean,
   spacing: string,
@@ -1139,7 +1134,7 @@ type JestPrettyFormatPlugin = {
 type JestPrettyFormatPlugins = Array<JestPrettyFormatPlugin>;
 
 /** The expect function is used every time you want to test a value */
-declare var expect: {
+declare const expect: {
   /** The object that you want to make assertions against */
   (
     value: any
@@ -1173,4 +1168,4 @@ declare var expect: {
 };
 
 /** Holds all functions related to manipulating test runner */
-declare var jest: JestObjectType;
+declare const jest: JestObjectType;

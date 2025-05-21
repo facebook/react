@@ -9,7 +9,7 @@
 
 import type {HookSourceAndMetadata} from './loadSourceAndMetadata';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
-import type {HookNames} from 'react-devtools-shared/src/types';
+import type {HookNames} from 'react-devtools-shared/src/frontend/types';
 import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
 
 import {withAsyncPerfMeasurements} from 'react-devtools-shared/src/PerformanceLoggingUtils';

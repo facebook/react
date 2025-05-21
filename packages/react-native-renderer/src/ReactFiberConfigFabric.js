@@ -12,15 +12,22 @@ import type {
   TouchedViewDataAtPoint,
   ViewConfig,
 } from './ReactNativeTypes';
-import {create, diff} from './ReactNativeAttributePayload';
+import {create, diff} from './ReactNativeAttributePayloadFabric';
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
+  NoEventPriority,
   DefaultEventPriority,
   DiscreteEventPriority,
+  ContinuousEventPriority,
+  IdleEventPriority,
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import {HostText} from 'react-reconciler/src/ReactWorkTags';
+import {
+  getInstanceFromHostFiber,
+  traverseFragmentInstance,
+} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 // Modules provided by RN:
 import {
@@ -30,11 +37,11 @@ import {
   createPublicTextInstance,
   type PublicInstance as ReactNativePublicInstance,
   type PublicTextInstance,
+  type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 const {
   createNode,
-  cloneNode,
   cloneNodeWithNewChildren,
   cloneNodeWithNewChildrenAndProps,
   cloneNodeWithNewProps,
@@ -45,10 +52,33 @@ const {
   registerEventHandler,
   unstable_DefaultEventPriority: FabricDefaultPriority,
   unstable_DiscreteEventPriority: FabricDiscretePriority,
+  unstable_ContinuousEventPriority: FabricContinuousPriority,
+  unstable_IdleEventPriority: FabricIdlePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
-import {diffInCommitPhase} from 'shared/ReactFeatureFlags';
+import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
+
+import {
+  getInspectorDataForViewTag,
+  getInspectorDataForViewAtPoint,
+  getInspectorDataForInstance,
+} from './ReactNativeFiberInspector';
+
+import {
+  passChildrenWhenCloningPersistedNodes,
+  enableLazyPublicInstanceInFabric,
+} from 'shared/ReactFeatureFlags';
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import type {ReactContext} from 'shared/ReactTypes';
+
+export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Consider exporting the react-native version.
+export const rendererPackageName = 'react-native-renderer';
+export const extraDevToolsConfig = {
+  getInspectorDataForInstance,
+  getInspectorDataForViewTag,
+  getInspectorDataForViewAtPoint,
+};
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -74,8 +104,11 @@ export type Instance = {
     currentProps: Props,
     // Reference to the React handle (the fiber)
     internalInstanceHandle: InternalInstanceHandle,
-    // Exposed through refs.
-    publicInstance: PublicInstance,
+    // Exposed through refs. Potentially lazily created.
+    publicInstance: PublicInstance | null,
+    // This is only necessary to lazily create `publicInstance`.
+    // Will be set to `null` after that is created.
+    publicRootInstance?: PublicRootInstance | null,
   },
 };
 export type TextInstance = {
@@ -87,8 +120,11 @@ export type TextInstance = {
 };
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
-export type Container = number;
-export type ChildSet = Object;
+export type Container = {
+  containerTag: number,
+  publicInstance: PublicRootInstance | null,
+};
+export type ChildSet = Object | Array<Node>;
 export type HostContext = $ReadOnly<{
   isInAParentText: boolean,
 }>;
@@ -122,7 +158,6 @@ export * from 'react-reconciler/src/ReactFiberConfigWithNoMutation';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoScopes';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoMicrotasks';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
 
@@ -132,6 +167,8 @@ export function appendInitialChild(
 ): void {
   appendChildNode(parentInstance.node, child.node);
 }
+
+const PROD_HOST_CONTEXT: HostContext = {isInAParentText: true};
 
 export function createInstance(
   type: string,
@@ -158,27 +195,42 @@ export function createInstance(
   const node = createNode(
     tag, // reactTag
     viewConfig.uiViewClassName, // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     updatePayload, // props
     internalInstanceHandle, // internalInstanceHandle
   );
 
-  const component = createPublicInstance(
-    tag,
-    viewConfig,
-    internalInstanceHandle,
-  );
-
-  return {
-    node: node,
-    canonical: {
-      nativeTag: tag,
+  if (enableLazyPublicInstanceInFabric) {
+    return {
+      node: node,
+      canonical: {
+        nativeTag: tag,
+        viewConfig,
+        currentProps: props,
+        internalInstanceHandle,
+        publicInstance: null,
+        publicRootInstance: rootContainerInstance.publicInstance,
+      },
+    };
+  } else {
+    const component = createPublicInstance(
+      tag,
       viewConfig,
-      currentProps: props,
       internalInstanceHandle,
-      publicInstance: component,
-    },
-  };
+      rootContainerInstance.publicInstance,
+    );
+
+    return {
+      node: node,
+      canonical: {
+        nativeTag: tag,
+        viewConfig,
+        currentProps: props,
+        internalInstanceHandle,
+        publicInstance: component,
+      },
+    };
+  }
 }
 
 export function createTextInstance(
@@ -199,7 +251,7 @@ export function createTextInstance(
   const node = createNode(
     tag, // reactTag
     'RCTRawText', // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     {text: text}, // props
     internalInstanceHandle, // instance handle
   );
@@ -221,33 +273,50 @@ export function finalizeInitialChildren(
 export function getRootHostContext(
   rootContainerInstance: Container,
 ): HostContext {
-  return {isInAParentText: false};
+  if (__DEV__) {
+    return {isInAParentText: false};
+  }
+
+  return PROD_HOST_CONTEXT;
 }
 
 export function getChildHostContext(
   parentHostContext: HostContext,
   type: string,
 ): HostContext {
-  const prevIsInAParentText = parentHostContext.isInAParentText;
-  const isInAParentText =
-    type === 'AndroidTextInput' || // Android
-    type === 'RCTMultilineTextInputView' || // iOS
-    type === 'RCTSinglelineTextInputView' || // iOS
-    type === 'RCTText' ||
-    type === 'RCTVirtualText';
+  if (__DEV__) {
+    const prevIsInAParentText = parentHostContext.isInAParentText;
+    const isInAParentText =
+      type === 'AndroidTextInput' || // Android
+      type === 'RCTMultilineTextInputView' || // iOS
+      type === 'RCTSinglelineTextInputView' || // iOS
+      type === 'RCTText' ||
+      type === 'RCTVirtualText';
 
-  // TODO: If this is an offscreen host container, we should reuse the
-  // parent context.
+    // TODO: If this is an offscreen host container, we should reuse the
+    // parent context.
 
-  if (prevIsInAParentText !== isInAParentText) {
-    return {isInAParentText};
-  } else {
-    return parentHostContext;
+    if (prevIsInAParentText !== isInAParentText) {
+      return {isInAParentText};
+    }
   }
+
+  return parentHostContext;
 }
 
 export function getPublicInstance(instance: Instance): null | PublicInstance {
-  if (instance.canonical != null && instance.canonical.publicInstance != null) {
+  if (instance.canonical != null) {
+    if (instance.canonical.publicInstance == null) {
+      instance.canonical.publicInstance = createPublicInstance(
+        instance.canonical.nativeTag,
+        instance.canonical.viewConfig,
+        instance.canonical.internalInstanceHandle,
+        instance.canonical.publicRootInstance ?? null,
+      );
+      // This was only necessary to create the public instance.
+      instance.canonical.publicRootInstance = null;
+    }
+
     return instance.canonical.publicInstance;
   }
 
@@ -277,37 +346,26 @@ function getPublicTextInstance(
 export function getPublicInstanceFromInternalInstanceHandle(
   internalInstanceHandle: InternalInstanceHandle,
 ): null | PublicInstance | PublicTextInstance {
+  const instance = internalInstanceHandle.stateNode;
+
+  // React resets all the fields in the fiber when the component is unmounted
+  // to prevent memory leaks.
+  if (instance == null) {
+    return null;
+  }
+
   if (internalInstanceHandle.tag === HostText) {
-    const textInstance: TextInstance = internalInstanceHandle.stateNode;
+    const textInstance: TextInstance = instance;
     return getPublicTextInstance(textInstance, internalInstanceHandle);
   }
 
-  const instance: Instance = internalInstanceHandle.stateNode;
-  return getPublicInstance(instance);
+  const elementInstance: Instance = internalInstanceHandle.stateNode;
+  return getPublicInstance(elementInstance);
 }
 
 export function prepareForCommit(containerInfo: Container): null | Object {
   // Noop
   return null;
-}
-
-export function prepareUpdate(
-  instance: Instance,
-  type: string,
-  oldProps: Props,
-  newProps: Props,
-  hostContext: HostContext,
-): null | Object {
-  if (diffInCommitPhase) {
-    return null;
-  }
-  const viewConfig = instance.canonical.viewConfig;
-  const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
-  // TODO: If the event handlers have changed, we need to update the current props
-  // in the commit phase but there is no host config hook to do it yet.
-  // So instead we hack it by updating it in the render phase.
-  instance.canonical.currentProps = newProps;
-  return updatePayload;
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
@@ -324,7 +382,20 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function getCurrentEventPriority(): EventPriority {
+let currentUpdatePriority: EventPriority = NoEventPriority;
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
+}
+
+export function resolveUpdatePriority(): EventPriority {
+  if (currentUpdatePriority !== NoEventPriority) {
+    return currentUpdatePriority;
+  }
+
   const currentEventPriority = fabricGetCurrentEventPriority
     ? fabricGetCurrentEventPriority()
     : null;
@@ -333,6 +404,10 @@ export function getCurrentEventPriority(): EventPriority {
     switch (currentEventPriority) {
       case FabricDiscretePriority:
         return DiscreteEventPriority;
+      case FabricContinuousPriority:
+        return ContinuousEventPriority;
+      case FabricIdlePriority:
+        return IdleEventPriority;
       case FabricDefaultPriority:
       default:
         return DefaultEventPriority;
@@ -340,6 +415,16 @@ export function getCurrentEventPriority(): EventPriority {
   }
 
   return DefaultEventPriority;
+}
+
+export function trackSchedulerEvent(): void {}
+
+export function resolveEventType(): null | string {
+  return null;
+}
+
+export function resolveEventTimeStamp(): number {
+  return -1.1;
 }
 
 export function shouldAttemptEagerTransition(): boolean {
@@ -364,22 +449,18 @@ export const supportsPersistence = true;
 
 export function cloneInstance(
   instance: Instance,
-  updatePayload: null | Object,
   type: string,
   oldProps: Props,
   newProps: Props,
-  internalInstanceHandle: InternalInstanceHandle,
   keepChildren: boolean,
-  recyclableInstance: null | Instance,
+  newChildSet: ?ChildSet,
 ): Instance {
-  if (diffInCommitPhase) {
-    const viewConfig = instance.canonical.viewConfig;
-    updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
-    // TODO: If the event handlers have changed, we need to update the current props
-    // in the commit phase but there is no host config hook to do it yet.
-    // So instead we hack it by updating it in the render phase.
-    instance.canonical.currentProps = newProps;
-  }
+  const viewConfig = instance.canonical.viewConfig;
+  const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
+  // TODO: If the event handlers have changed, we need to update the current props
+  // in the commit phase but there is no host config hook to do it yet.
+  // So instead we hack it by updating it in the render phase.
+  instance.canonical.currentProps = newProps;
 
   const node = instance.node;
   let clone;
@@ -387,20 +468,30 @@ export function cloneInstance(
     if (updatePayload !== null) {
       clone = cloneNodeWithNewProps(node, updatePayload);
     } else {
-      if (diffInCommitPhase) {
-        // No changes
-        return instance;
-      } else {
-        clone = cloneNode(node);
-      }
+      // No changes
+      return instance;
     }
   } else {
-    if (updatePayload !== null) {
-      clone = cloneNodeWithNewChildrenAndProps(node, updatePayload);
+    // If passChildrenWhenCloningPersistedNodes is enabled, children will be non-null
+    if (newChildSet != null) {
+      if (updatePayload !== null) {
+        clone = cloneNodeWithNewChildrenAndProps(
+          node,
+          newChildSet,
+          updatePayload,
+        );
+      } else {
+        clone = cloneNodeWithNewChildren(node, newChildSet);
+      }
     } else {
-      clone = cloneNodeWithNewChildren(node);
+      if (updatePayload !== null) {
+        clone = cloneNodeWithNewChildrenAndProps(node, updatePayload);
+      } else {
+        clone = cloneNodeWithNewChildren(node);
+      }
     }
   }
+
   return {
     node: clone,
     canonical: instance.canonical,
@@ -411,7 +502,6 @@ export function cloneHiddenInstance(
   instance: Instance,
   type: string,
   props: Props,
-  internalInstanceHandle: InternalInstanceHandle,
 ): Instance {
   const viewConfig = instance.canonical.viewConfig;
   const node = instance.node;
@@ -428,37 +518,44 @@ export function cloneHiddenInstance(
 export function cloneHiddenTextInstance(
   instance: Instance,
   text: string,
-  internalInstanceHandle: InternalInstanceHandle,
 ): TextInstance {
   throw new Error('Not yet implemented.');
 }
 
-export function createContainerChildSet(container: Container): ChildSet {
-  return createChildNodeSet(container);
+export function createContainerChildSet(): ChildSet {
+  if (passChildrenWhenCloningPersistedNodes) {
+    return [];
+  } else {
+    return createChildNodeSet();
+  }
 }
 
 export function appendChildToContainerChildSet(
   childSet: ChildSet,
   child: Instance | TextInstance,
 ): void {
-  appendChildNodeToSet(childSet, child.node);
+  if (passChildrenWhenCloningPersistedNodes) {
+    childSet.push(child.node);
+  } else {
+    appendChildNodeToSet(childSet, child.node);
+  }
 }
 
 export function finalizeContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  completeRoot(container, newChildren);
+  // Noop - children will be replaced in replaceContainerChildren
 }
 
 export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
-): void {}
-
-export function getInstanceFromNode(node: any): empty {
-  throw new Error('Not yet implemented.');
+): void {
+  completeRoot(container.containerTag, newChildren);
 }
+
+export {getClosestInstanceFromNode as getInstanceFromNode};
 
 export function beforeActiveInstanceBlur(
   internalInstanceHandle: InternalInstanceHandle,
@@ -486,16 +583,155 @@ export function maySuspendCommit(type: Type, props: Props): boolean {
   return false;
 }
 
-export function preloadInstance(type: Type, props: Props): boolean {
+export function maySuspendCommitOnUpdate(
+  type: Type,
+  oldProps: Props,
+  newProps: Props,
+): boolean {
+  return false;
+}
+
+export function maySuspendCommitInSyncRender(
+  type: Type,
+  props: Props,
+): boolean {
+  return false;
+}
+
+export function preloadInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): boolean {
   return true;
 }
 
 export function startSuspendingCommit(): void {}
 
-export function suspendInstance(type: Type, props: Props): void {}
+export function suspendInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): void {}
+
+export function suspendOnActiveViewTransition(container: Container): void {}
 
 export function waitForCommitToBeReady(): null {
   return null;
 }
 
+export type FragmentInstanceType = {
+  _fragmentFiber: Fiber,
+  _observers: null | Set<IntersectionObserver>,
+  observeUsing: (observer: IntersectionObserver) => void,
+  unobserveUsing: (observer: IntersectionObserver) => void,
+};
+
+function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
+  this._fragmentFiber = fragmentFiber;
+  this._observers = null;
+}
+
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.observeUsing = function (
+  this: FragmentInstanceType,
+  observer: IntersectionObserver,
+): void {
+  if (this._observers === null) {
+    this._observers = new Set();
+  }
+  this._observers.add(observer);
+  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
+};
+function observeChild(child: Fiber, observer: IntersectionObserver) {
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  const publicInstance = getPublicInstance(instance);
+  if (publicInstance == null) {
+    throw new Error('Expected to find a host node. This is a bug in React.');
+  }
+  // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
+  observer.observe(publicInstance);
+  return false;
+}
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.unobserveUsing = function (
+  this: FragmentInstanceType,
+  observer: IntersectionObserver,
+): void {
+  if (this._observers === null || !this._observers.has(observer)) {
+    if (__DEV__) {
+      console.error(
+        'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
+          'instance. First attach the observer with observeUsing()',
+      );
+    }
+  } else {
+    this._observers.delete(observer);
+    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
+  }
+};
+function unobserveChild(child: Fiber, observer: IntersectionObserver) {
+  const instance = getInstanceFromHostFiber<Instance>(child);
+  const publicInstance = getPublicInstance(instance);
+  if (publicInstance == null) {
+    throw new Error('Expected to find a host node. This is a bug in React.');
+  }
+  // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
+  observer.unobserve(publicInstance);
+  return false;
+}
+
+export function createFragmentInstance(
+  fragmentFiber: Fiber,
+): FragmentInstanceType {
+  return new (FragmentInstance: any)(fragmentFiber);
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Fiber,
+  instance: FragmentInstanceType,
+): void {
+  instance._fragmentFiber = fragmentFiber;
+}
+
+export function commitNewChildToFragmentInstance(
+  child: Fiber,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  if (fragmentInstance._observers !== null) {
+    fragmentInstance._observers.forEach(observer => {
+      observeChild(child, observer);
+    });
+  }
+}
+
+export function deleteChildFromFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
 export const NotPendingTransition: TransitionStatus = null;
+export const HostTransitionContext: ReactContext<TransitionStatus> = {
+  $$typeof: REACT_CONTEXT_TYPE,
+  Provider: (null: any),
+  Consumer: (null: any),
+  _currentValue: NotPendingTransition,
+  _currentValue2: NotPendingTransition,
+  _threadCount: 0,
+};
+
+export type FormInstance = Instance;
+export function resetFormInstance(form: Instance): void {}
+
+// -------------------
+//     Microtasks
+// -------------------
+
+export const supportsMicrotasks: boolean =
+  typeof RN$enableMicrotasksInReact !== 'undefined' &&
+  !!RN$enableMicrotasksInReact;
+
+export const scheduleMicrotask: any =
+  typeof queueMicrotask === 'function' ? queueMicrotask : scheduleTimeout;

@@ -9,14 +9,30 @@
 
 import type {
   Thenable,
-  PendingThenable,
   FulfilledThenable,
   RejectedThenable,
 } from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
+import type {Transition} from 'react/src/ReactStartTransition';
 
-import {requestTransitionLane} from './ReactFiberRootScheduler';
+import {
+  requestTransitionLane,
+  ensureScheduleIsScheduled,
+} from './ReactFiberRootScheduler';
 import {NoLane} from './ReactFiberLane';
+import {
+  hasScheduledTransitionWork,
+  clearAsyncTransitionTimer,
+} from './ReactProfilerTimer';
+import {
+  enableComponentPerformanceTrack,
+  enableProfilerTimer,
+  enableDefaultTransitionIndicator,
+} from 'shared/ReactFeatureFlags';
+import {clearEntangledAsyncTransitionTypes} from './ReactFiberTransitionTypes';
+
+import noop from 'shared/noop';
+import reportGlobalError from 'shared/reportGlobalError';
 
 // If there are multiple, concurrent async actions, they are entangled. All
 // transition updates that occur while the async action is still in progress
@@ -32,144 +48,216 @@ let currentEntangledListeners: Array<() => mixed> | null = null;
 let currentEntangledPendingCount: number = 0;
 // The transition lane shared by all updates in the entangled scope.
 let currentEntangledLane: Lane = NoLane;
+// A thenable that resolves when the entangled scope completes. It does not
+// resolve to a particular value because it's only used for suspending the UI
+// until the async action scope has completed.
+let currentEntangledActionThenable: Thenable<void> | null = null;
 
-export function requestAsyncActionContext<S>(
-  actionReturnValue: mixed,
-  finishedState: S,
-): Thenable<S> | S {
-  if (
-    actionReturnValue !== null &&
-    typeof actionReturnValue === 'object' &&
-    typeof actionReturnValue.then === 'function'
-  ) {
-    // This is an async action.
-    //
-    // Return a thenable that resolves once the action scope (i.e. the async
-    // function passed to startTransition) has finished running.
+// Track the default indicator for every root. undefined means we haven't
+// had any roots registered yet. null means there's more than one callback.
+// If there's more than one callback we bailout to not supporting isomorphic
+// default indicators.
+let isomorphicDefaultTransitionIndicator:
+  | void
+  | null
+  | (() => void | (() => void)) = undefined;
+// The clean up function for the currently running indicator.
+let pendingIsomorphicIndicator: null | (() => void) = null;
+// The number of roots that have pending Transitions that depend on the
+// started isomorphic indicator.
+let pendingEntangledRoots: number = 0;
+let needsIsomorphicIndicator: boolean = false;
 
-    const thenable: Thenable<mixed> = (actionReturnValue: any);
-    let entangledListeners;
-    if (currentEntangledListeners === null) {
-      // There's no outer async action scope. Create a new one.
-      entangledListeners = currentEntangledListeners = [];
-      currentEntangledPendingCount = 0;
-      currentEntangledLane = requestTransitionLane();
-    } else {
-      entangledListeners = currentEntangledListeners;
-    }
-
-    currentEntangledPendingCount++;
-    let resultStatus = 'pending';
-    let rejectedReason;
-    thenable.then(
-      () => {
-        resultStatus = 'fulfilled';
-        pingEngtangledActionScope();
+export function entangleAsyncAction<S>(
+  transition: Transition,
+  thenable: Thenable<S>,
+): Thenable<S> {
+  // `thenable` is the return value of the async action scope function. Create
+  // a combined thenable that resolves once every entangled scope function
+  // has finished.
+  if (currentEntangledListeners === null) {
+    // There's no outer async action scope. Create a new one.
+    const entangledListeners = (currentEntangledListeners = []);
+    currentEntangledPendingCount = 0;
+    currentEntangledLane = requestTransitionLane(transition);
+    const entangledThenable: Thenable<void> = {
+      status: 'pending',
+      value: undefined,
+      then(resolve: void => mixed) {
+        entangledListeners.push(resolve);
       },
-      error => {
-        resultStatus = 'rejected';
-        rejectedReason = error;
-        pingEngtangledActionScope();
-      },
-    );
-
-    // Create a thenable that represents the result of this action, but doesn't
-    // resolve until the entire entangled scope has finished.
-    //
-    // Expressed using promises:
-    //   const [thisResult] = await Promise.all([thisAction, entangledAction]);
-    //   return thisResult;
-    const resultThenable = createResultThenable<S>(entangledListeners);
-
-    // Attach a listener to fill in the result.
-    entangledListeners.push(() => {
-      switch (resultStatus) {
-        case 'fulfilled': {
-          const fulfilledThenable: FulfilledThenable<S> = (resultThenable: any);
-          fulfilledThenable.status = 'fulfilled';
-          fulfilledThenable.value = finishedState;
-          break;
-        }
-        case 'rejected': {
-          const rejectedThenable: RejectedThenable<S> = (resultThenable: any);
-          rejectedThenable.status = 'rejected';
-          rejectedThenable.reason = rejectedReason;
-          break;
-        }
-        case 'pending':
-        default: {
-          // The listener above should have been called first, so `resultStatus`
-          // should already be set to the correct value.
-          throw new Error(
-            'Thenable should have already resolved. This ' +
-              'is a bug in React.',
-          );
-        }
-      }
-    });
-
-    return resultThenable;
-  } else {
-    // This is not an async action, but it may be part of an outer async action.
-    if (currentEntangledListeners === null) {
-      return finishedState;
-    } else {
-      // Return a thenable that does not resolve until the entangled actions
-      // have finished.
-      const entangledListeners = currentEntangledListeners;
-      const resultThenable = createResultThenable<S>(entangledListeners);
-      entangledListeners.push(() => {
-        const fulfilledThenable: FulfilledThenable<S> = (resultThenable: any);
-        fulfilledThenable.status = 'fulfilled';
-        fulfilledThenable.value = finishedState;
-      });
-      return resultThenable;
+    };
+    currentEntangledActionThenable = entangledThenable;
+    if (enableDefaultTransitionIndicator) {
+      needsIsomorphicIndicator = true;
+      // We'll check if we need a default indicator in a microtask. Ensure
+      // we have this scheduled even if no root is scheduled.
+      ensureScheduleIsScheduled();
     }
   }
+  currentEntangledPendingCount++;
+  thenable.then(pingEngtangledActionScope, pingEngtangledActionScope);
+  return thenable;
 }
 
 function pingEngtangledActionScope() {
-  if (
-    currentEntangledListeners !== null &&
-    --currentEntangledPendingCount === 0
-  ) {
-    // All the actions have finished. Close the entangled async action scope
-    // and notify all the listeners.
-    const listeners = currentEntangledListeners;
-    currentEntangledListeners = null;
-    currentEntangledLane = NoLane;
-    for (let i = 0; i < listeners.length; i++) {
-      const listener = listeners[i];
-      listener();
+  if (--currentEntangledPendingCount === 0) {
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if (!hasScheduledTransitionWork()) {
+        // If we have received no updates since we started the entangled Actions
+        // that means it didn't lead to a Transition being rendered. We need to
+        // clear the timer so that if we start another entangled sequence we use
+        // the next start timer instead of appearing like we were blocked the
+        // whole time. We currently don't log a track for Actions that don't
+        // render a Transition.
+        clearAsyncTransitionTimer();
+      }
+    }
+    clearEntangledAsyncTransitionTypes();
+    if (pendingEntangledRoots === 0) {
+      stopIsomorphicDefaultIndicator();
+    }
+    if (currentEntangledListeners !== null) {
+      // All the actions have finished. Close the entangled async action scope
+      // and notify all the listeners.
+      if (currentEntangledActionThenable !== null) {
+        const fulfilledThenable: FulfilledThenable<void> =
+          (currentEntangledActionThenable: any);
+        fulfilledThenable.status = 'fulfilled';
+      }
+      const listeners = currentEntangledListeners;
+      currentEntangledListeners = null;
+      currentEntangledLane = NoLane;
+      currentEntangledActionThenable = null;
+      needsIsomorphicIndicator = false;
+      for (let i = 0; i < listeners.length; i++) {
+        const listener = listeners[i];
+        listener();
+      }
     }
   }
 }
 
-function createResultThenable<S>(
-  entangledListeners: Array<() => mixed>,
-): Thenable<S> {
-  // Waits for the entangled async action to complete, then resolves to the
-  // result of an individual action.
-  const resultThenable: PendingThenable<S> = {
+export function chainThenableValue<T>(
+  thenable: Thenable<T>,
+  result: T,
+): Thenable<T> {
+  // Equivalent to: Promise.resolve(thenable).then(() => result), except we can
+  // cheat a bit since we know that that this thenable is only ever consumed
+  // by React.
+  //
+  // We don't technically require promise support on the client yet, hence this
+  // extra code.
+  const listeners = [];
+  const thenableWithOverride: Thenable<T> = {
     status: 'pending',
     value: null,
     reason: null,
-    then(resolve: S => mixed) {
-      // This is a bit of a cheat. `resolve` expects a value of type `S` to be
-      // passed, but because we're instrumenting the `status` field ourselves,
-      // and we know this thenable will only be used by React, we also know
-      // the value isn't actually needed. So we add the resolve function
-      // directly to the entangled listeners.
-      //
-      // This is also why we don't need to check if the thenable is still
-      // pending; the Suspense implementation already performs that check.
-      const ping: () => mixed = (resolve: any);
-      entangledListeners.push(ping);
+    then(resolve: T => mixed) {
+      listeners.push(resolve);
     },
   };
-  return resultThenable;
+  thenable.then(
+    (value: T) => {
+      const fulfilledThenable: FulfilledThenable<T> =
+        (thenableWithOverride: any);
+      fulfilledThenable.status = 'fulfilled';
+      fulfilledThenable.value = result;
+      for (let i = 0; i < listeners.length; i++) {
+        const listener = listeners[i];
+        listener(result);
+      }
+    },
+    error => {
+      const rejectedThenable: RejectedThenable<T> = (thenableWithOverride: any);
+      rejectedThenable.status = 'rejected';
+      rejectedThenable.reason = error;
+      for (let i = 0; i < listeners.length; i++) {
+        const listener = listeners[i];
+        // This is a perf hack where we call the `onFulfill` ping function
+        // instead of `onReject`, because we know that React is the only
+        // consumer of these promises, and it passes the same listener to both.
+        // We also know that it will read the error directly off the
+        // `.reason` field.
+        listener((undefined: any));
+      }
+    },
+  );
+  return thenableWithOverride;
 }
 
 export function peekEntangledActionLane(): Lane {
   return currentEntangledLane;
+}
+
+export function peekEntangledActionThenable(): Thenable<void> | null {
+  return currentEntangledActionThenable;
+}
+
+export function registerDefaultIndicator(
+  onDefaultTransitionIndicator: () => void | (() => void),
+): void {
+  if (!enableDefaultTransitionIndicator) {
+    return;
+  }
+  if (isomorphicDefaultTransitionIndicator === undefined) {
+    isomorphicDefaultTransitionIndicator = onDefaultTransitionIndicator;
+  } else if (
+    isomorphicDefaultTransitionIndicator !== onDefaultTransitionIndicator
+  ) {
+    isomorphicDefaultTransitionIndicator = null;
+    // Stop any on-going indicator since it's now ambiguous.
+    stopIsomorphicDefaultIndicator();
+  }
+}
+
+export function startIsomorphicDefaultIndicatorIfNeeded() {
+  if (!enableDefaultTransitionIndicator) {
+    return;
+  }
+  if (!needsIsomorphicIndicator) {
+    return;
+  }
+  if (
+    isomorphicDefaultTransitionIndicator != null &&
+    pendingIsomorphicIndicator === null
+  ) {
+    try {
+      pendingIsomorphicIndicator =
+        isomorphicDefaultTransitionIndicator() || noop;
+    } catch (x) {
+      pendingIsomorphicIndicator = noop;
+      reportGlobalError(x);
+    }
+  }
+}
+
+function stopIsomorphicDefaultIndicator() {
+  if (!enableDefaultTransitionIndicator) {
+    return;
+  }
+  if (pendingIsomorphicIndicator !== null) {
+    const cleanup = pendingIsomorphicIndicator;
+    pendingIsomorphicIndicator = null;
+    cleanup();
+  }
+}
+
+function releaseIsomorphicIndicator() {
+  if (--pendingEntangledRoots === 0) {
+    stopIsomorphicDefaultIndicator();
+  }
+}
+
+export function hasOngoingIsomorphicIndicator(): boolean {
+  return pendingIsomorphicIndicator !== null;
+}
+
+export function retainIsomorphicIndicator(): () => void {
+  pendingEntangledRoots++;
+  return releaseIsomorphicIndicator;
+}
+
+export function markIsomorphicIndicatorHandled(): void {
+  needsIsomorphicIndicator = false;
 }

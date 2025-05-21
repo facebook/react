@@ -13,6 +13,7 @@
 let JSDOM;
 let Stream;
 let React;
+let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzStatic;
 let Suspense;
@@ -29,10 +30,9 @@ describe('ReactDOMFizzStatic', () => {
     jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    if (__EXPERIMENTAL__) {
-      ReactDOMFizzStatic = require('react-dom/static');
-    }
+    ReactDOMFizzStatic = require('react-dom/static');
     Stream = require('stream');
     Suspense = React.Suspense;
 
@@ -84,6 +84,10 @@ describe('ReactDOMFizzStatic', () => {
       if (node.nodeName === 'SCRIPT') {
         const script = document.createElement('script');
         script.textContent = node.textContent;
+        for (let i = 0; i < node.attributes.length; i++) {
+          const attribute = node.attributes[i];
+          script.setAttribute(attribute.name, attribute.value);
+        }
         fakeBody.removeChild(node);
         container.appendChild(script);
       } else {
@@ -98,11 +102,14 @@ describe('ReactDOMFizzStatic', () => {
     while (node) {
       if (node.nodeType === 1) {
         if (
-          node.tagName !== 'SCRIPT' &&
+          (node.tagName !== 'SCRIPT' || node.hasAttribute('type')) &&
           node.tagName !== 'TEMPLATE' &&
           node.tagName !== 'template' &&
           !node.hasAttribute('hidden') &&
-          !node.hasAttribute('aria-hidden')
+          !node.hasAttribute('aria-hidden') &&
+          // Ignore the render blocking expect
+          (node.getAttribute('rel') !== 'expect' ||
+            node.getAttribute('blocking') !== 'render')
         ) {
           const props = {};
           const attributes = node.attributes;
@@ -127,8 +134,8 @@ describe('ReactDOMFizzStatic', () => {
     return children.length === 0
       ? undefined
       : children.length === 1
-      ? children[0]
-      : children;
+        ? children[0]
+        : children;
   }
 
   function resolveText(text) {
@@ -206,7 +213,6 @@ describe('ReactDOMFizzStatic', () => {
     return readText(text);
   }
 
-  // @gate experimental
   it('should render a fully static document, send it and then hydrate it', async () => {
     function App() {
       return (
@@ -218,11 +224,17 @@ describe('ReactDOMFizzStatic', () => {
       );
     }
 
-    const promise = ReactDOMFizzStatic.prerenderToNodeStreams(<App />);
+    const promise = ReactDOMFizzStatic.prerenderToNodeStream(<App />);
 
     resolveText('Hello');
 
     const result = await promise;
+
+    expect(result.postponed).toBe(
+      gate(flags => flags.enableHalt || flags.enablePostpone)
+        ? null
+        : undefined,
+    );
 
     await act(async () => {
       result.prelude.pipe(writable);
@@ -234,5 +246,265 @@ describe('ReactDOMFizzStatic', () => {
     });
 
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+  });
+
+  it('should support importMap option', async () => {
+    const importMap = {
+      foo: 'path/to/foo.js',
+    };
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(
+      <html>
+        <body>hello world</body>
+      </html>,
+      {importMap},
+    );
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual([
+      <script type="importmap">{JSON.stringify(importMap)}</script>,
+      'hello world',
+    ]);
+  });
+
+  it('supports onHeaders', async () => {
+    let headers;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('image', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preload('font', {as: 'font'});
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      onHeaders,
+    });
+    expect(headers).toEqual({
+      Link: `
+<font>; rel=preload; as="font"; crossorigin="",
+ <image>; rel=preload; as="image"; fetchpriority="high"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual('hello');
+  });
+
+  // @gate enablePostpone
+  it('includes stylesheet preloads in onHeaders when postponing in the Shell', async () => {
+    let headers;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('image', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preinit('style', {as: 'style'});
+      React.unstable_postpone();
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      onHeaders,
+    });
+    expect(headers).toEqual({
+      Link: `
+<image>; rel=preload; as="image"; fetchpriority="high",
+ <style>; rel=preload; as="style"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(undefined);
+  });
+
+  it('will prerender Suspense fallbacks before children', async () => {
+    const values = [];
+    function Indirection({children}) {
+      values.push(children);
+      return children;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense
+            fallback={
+              <div>
+                <Indirection>outer loading...</Indirection>
+              </div>
+            }>
+            <Suspense
+              fallback={
+                <div>
+                  <Indirection>first inner loading...</Indirection>
+                </div>
+              }>
+              <div>
+                <Indirection>hello world</Indirection>
+              </div>
+            </Suspense>
+            <Suspense
+              fallback={
+                <div>
+                  <Indirection>second inner loading...</Indirection>
+                </div>
+              }>
+              <div>
+                <Indirection>goodbye world</Indirection>
+              </div>
+            </Suspense>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />);
+
+    expect(values).toEqual([
+      'outer loading...',
+      'first inner loading...',
+      'second inner loading...',
+      'hello world',
+      'goodbye world',
+    ]);
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>hello world</div>
+        <div>goodbye world</div>
+      </div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('does not fatally error when aborting with a postpone during a prerender', async () => {
+    let postponedValue;
+    try {
+      React.unstable_postpone('aborting with postpone');
+    } catch (e) {
+      postponedValue = e;
+    }
+
+    const controller = new AbortController();
+    const infinitePromise = new Promise(() => {});
+    function App() {
+      React.use(infinitePromise);
+      return <div>aborted</div>;
+    }
+
+    const pendingResult = ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      signal: controller.signal,
+    });
+    pendingResult.catch(() => {});
+
+    await Promise.resolve();
+    controller.abort(postponedValue);
+
+    const result = await pendingResult;
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(undefined);
+  });
+
+  // @gate enablePostpone
+  it('does not fatally error when aborting with a postpone during a prerender from within', async () => {
+    let postponedValue;
+    try {
+      React.unstable_postpone('aborting with postpone');
+    } catch (e) {
+      postponedValue = e;
+    }
+
+    const controller = new AbortController();
+    function App() {
+      controller.abort(postponedValue);
+      return <div>aborted</div>;
+    }
+
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      signal: controller.signal,
+    });
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(undefined);
+  });
+
+  // @gate enableHalt
+  it('will halt a prerender when aborting with an error during a render', async () => {
+    const controller = new AbortController();
+    function App() {
+      controller.abort('sync');
+      return <div>hello world</div>;
+    }
+
+    const errors = [];
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      signal: controller.signal,
+      onError(error) {
+        errors.push(error);
+      },
+    });
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(errors).toEqual(['sync']);
+    expect(getVisibleChildren(container)).toEqual(undefined);
+  });
+
+  // @gate enableHalt
+  it('will halt a prerender when aborting with an error in a microtask', async () => {
+    const errors = [];
+
+    const controller = new AbortController();
+    function App() {
+      React.use(
+        new Promise(() => {
+          Promise.resolve().then(() => {
+            controller.abort('async');
+          });
+        }),
+      );
+      return <div>hello world</div>;
+    }
+
+    errors.length = 0;
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      signal: controller.signal,
+      onError(error) {
+        errors.push(error);
+      },
+    });
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(errors).toEqual(['async']);
+    expect(getVisibleChildren(container)).toEqual(undefined);
   });
 });

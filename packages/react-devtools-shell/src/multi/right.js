@@ -7,7 +7,7 @@
 
 import * as React from 'react';
 import {useLayoutEffect, useRef, useState} from 'react';
-import {render} from 'react-dom';
+import {createRoot} from 'react-dom/client';
 
 function createContainer() {
   const container = document.createElement('div');
@@ -37,4 +37,4 @@ function EffectWithState() {
   );
 }
 
-render(<EffectWithState />, createContainer());
+createRoot(createContainer()).render(<EffectWithState />);

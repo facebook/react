@@ -8,12 +8,10 @@
  */
 
 import isAttributeNameSafe from '../shared/isAttributeNameSafe';
-import {
-  enableTrustedTypesIntegration,
-  enableCustomElementPropertySupport,
-} from 'shared/ReactFeatureFlags';
+import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
+import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
 
 /**
  * Get the value for a attribute on a node. Only used in DEV for SSR validation.
@@ -33,7 +31,7 @@ export function getValueForAttribute(
       // shouldRemoveAttribute
       switch (typeof expected) {
         case 'function':
-        case 'symbol': // eslint-disable-line
+        case 'symbol':
           return expected;
         case 'boolean': {
           const prefix = name.toLowerCase().slice(0, 5);
@@ -73,25 +71,18 @@ export function getValueForAttributeOnCustomComponent(
           // it would be expected that they end up not having an attribute.
           return expected;
         case 'function':
-          if (enableCustomElementPropertySupport) {
-            return expected;
-          }
-          break;
+          return expected;
         case 'boolean':
-          if (enableCustomElementPropertySupport) {
-            if (expected === false) {
-              return expected;
-            }
+          if (expected === false) {
+            return expected;
           }
       }
       return expected === undefined ? undefined : null;
     }
     const value = node.getAttribute(name);
 
-    if (enableCustomElementPropertySupport) {
-      if (value === '' && expected === true) {
-        return true;
-      }
+    if (value === '' && expected === true) {
+      return true;
     }
 
     if (__DEV__) {
@@ -119,7 +110,7 @@ export function setValueForAttribute(
     switch (typeof value) {
       case 'undefined':
       case 'function':
-      case 'symbol': // eslint-disable-line
+      case 'symbol':
         node.removeAttribute(name);
         return;
       case 'boolean': {
@@ -206,6 +197,7 @@ export function setValueForPropertyOnCustomComponent(
     const eventName = name.slice(2, useCapture ? name.length - 7 : undefined);
 
     const prevProps = getFiberCurrentPropsFromNode(node);
+    // $FlowFixMe[invalid-computed-prop]
     const prevValue = prevProps != null ? prevProps[name] : null;
     if (typeof prevValue === 'function') {
       node.removeEventListener(eventName, prevValue, useCapture);
@@ -225,6 +217,8 @@ export function setValueForPropertyOnCustomComponent(
       return;
     }
   }
+
+  trackHostMutation();
 
   if (name in (node: any)) {
     (node: any)[name] = value;

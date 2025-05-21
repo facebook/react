@@ -12,7 +12,6 @@
 import {
   insertNodesAndExecuteScripts,
   mergeOptions,
-  withLoadingReadyState,
 } from '../test-utils/FizzTestUtils';
 
 let JSDOM;
@@ -22,6 +21,7 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
+let SuspenseList;
 let textCache;
 let loadCache;
 let writable;
@@ -32,11 +32,11 @@ let hasErrored = false;
 let fatalError = undefined;
 let renderOptions;
 let waitForAll;
-let waitForThrow;
 let assertLog;
 let Scheduler;
 let clientAct;
 let streamingContainer;
+let assertConsoleErrorDev;
 
 describe('ReactDOMFloat', () => {
   beforeEach(() => {
@@ -64,6 +64,9 @@ describe('ReactDOMFloat', () => {
     global.Node = global.window.Node;
     global.addEventListener = global.window.addEventListener;
     global.MutationObserver = global.window.MutationObserver;
+    // The Fizz runtime assumes requestAnimationFrame exists so we need to polyfill it.
+    global.requestAnimationFrame = global.window.requestAnimationFrame = cb =>
+      setTimeout(cb);
     container = document.getElementById('container');
 
     React = require('react');
@@ -72,13 +75,14 @@ describe('ReactDOMFloat', () => {
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
+    SuspenseList = React.unstable_SuspenseList;
     Scheduler = require('scheduler/unstable_mock');
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
-    waitForThrow = InternalTestUtils.waitForThrow;
     assertLog = InternalTestUtils.assertLog;
     clientAct = InternalTestUtils.act;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
 
     textCache = new Map();
     loadCache = new Set();
@@ -97,7 +101,7 @@ describe('ReactDOMFloat', () => {
     });
 
     renderOptions = {};
-    if (gate(flags => flags.enableFizzExternalRuntime)) {
+    if (gate(flags => flags.shouldUseFizzExternalRuntime)) {
       renderOptions.unstable_externalRuntimeSrc =
         'react-dom/unstable_server-external-runtime';
     }
@@ -123,120 +127,118 @@ describe('ReactDOMFloat', () => {
     buffer = '';
 
     if (!bufferedContent) {
+      jest.runAllTimers();
       return;
     }
 
-    await withLoadingReadyState(async () => {
-      const bodyMatch = bufferedContent.match(bodyStartMatch);
-      const headMatch = bufferedContent.match(headStartMatch);
+    const bodyMatch = bufferedContent.match(bodyStartMatch);
+    const headMatch = bufferedContent.match(headStartMatch);
 
-      if (streamingContainer === null) {
-        // This is the first streamed content. We decide here where to insert it. If we get <html>, <head>, or <body>
-        // we abandon the pre-built document and start from scratch. If we get anything else we assume it goes into the
-        // container. This is not really production behavior because you can't correctly stream into a deep div effectively
-        // but it's pragmatic for tests.
+    if (streamingContainer === null) {
+      // This is the first streamed content. We decide here where to insert it. If we get <html>, <head>, or <body>
+      // we abandon the pre-built document and start from scratch. If we get anything else we assume it goes into the
+      // container. This is not really production behavior because you can't correctly stream into a deep div effectively
+      // but it's pragmatic for tests.
 
-        if (
-          bufferedContent.startsWith('<head>') ||
-          bufferedContent.startsWith('<head ') ||
-          bufferedContent.startsWith('<body>') ||
-          bufferedContent.startsWith('<body ')
-        ) {
-          // wrap in doctype to normalize the parsing process
-          bufferedContent = '<!DOCTYPE html><html>' + bufferedContent;
-        } else if (
-          bufferedContent.startsWith('<html>') ||
-          bufferedContent.startsWith('<html ')
-        ) {
-          throw new Error(
-            'Recieved <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
-          );
-        }
+      if (
+        bufferedContent.startsWith('<head>') ||
+        bufferedContent.startsWith('<head ') ||
+        bufferedContent.startsWith('<body>') ||
+        bufferedContent.startsWith('<body ')
+      ) {
+        // wrap in doctype to normalize the parsing process
+        bufferedContent = '<!DOCTYPE html><html>' + bufferedContent;
+      } else if (
+        bufferedContent.startsWith('<html>') ||
+        bufferedContent.startsWith('<html ')
+      ) {
+        throw new Error(
+          'Recieved <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
+        );
+      }
 
-        if (bufferedContent.startsWith('<!DOCTYPE html>')) {
-          // we can just use the whole document
-          const tempDom = new JSDOM(bufferedContent);
-
-          // Wipe existing head and body content
-          document.head.innerHTML = '';
-          document.body.innerHTML = '';
-
-          // Copy the <html> attributes over
-          const tempHtmlNode = tempDom.window.document.documentElement;
-          for (let i = 0; i < tempHtmlNode.attributes.length; i++) {
-            const attr = tempHtmlNode.attributes[i];
-            document.documentElement.setAttribute(attr.name, attr.value);
-          }
-
-          if (headMatch) {
-            // We parsed a head open tag. we need to copy head attributes and insert future
-            // content into <head>
-            streamingContainer = document.head;
-            const tempHeadNode = tempDom.window.document.head;
-            for (let i = 0; i < tempHeadNode.attributes.length; i++) {
-              const attr = tempHeadNode.attributes[i];
-              document.head.setAttribute(attr.name, attr.value);
-            }
-            const source = document.createElement('head');
-            source.innerHTML = tempHeadNode.innerHTML;
-            await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
-          }
-
-          if (bodyMatch) {
-            // We parsed a body open tag. we need to copy head attributes and insert future
-            // content into <body>
-            streamingContainer = document.body;
-            const tempBodyNode = tempDom.window.document.body;
-            for (let i = 0; i < tempBodyNode.attributes.length; i++) {
-              const attr = tempBodyNode.attributes[i];
-              document.body.setAttribute(attr.name, attr.value);
-            }
-            const source = document.createElement('body');
-            source.innerHTML = tempBodyNode.innerHTML;
-            await insertNodesAndExecuteScripts(source, document.body, CSPnonce);
-          }
-
-          if (!headMatch && !bodyMatch) {
-            throw new Error('expected <head> or <body> after <html>');
-          }
-        } else {
-          // we assume we are streaming into the default container'
-          streamingContainer = container;
-          const div = document.createElement('div');
-          div.innerHTML = bufferedContent;
-          await insertNodesAndExecuteScripts(div, container, CSPnonce);
-        }
-      } else if (streamingContainer === document.head) {
-        bufferedContent = '<!DOCTYPE html><html><head>' + bufferedContent;
+      if (bufferedContent.startsWith('<!DOCTYPE html>')) {
+        // we can just use the whole document
         const tempDom = new JSDOM(bufferedContent);
 
-        const tempHeadNode = tempDom.window.document.head;
-        const source = document.createElement('head');
-        source.innerHTML = tempHeadNode.innerHTML;
-        await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
+        // Wipe existing head and body content
+        document.head.innerHTML = '';
+        document.body.innerHTML = '';
+
+        // Copy the <html> attributes over
+        const tempHtmlNode = tempDom.window.document.documentElement;
+        for (let i = 0; i < tempHtmlNode.attributes.length; i++) {
+          const attr = tempHtmlNode.attributes[i];
+          document.documentElement.setAttribute(attr.name, attr.value);
+        }
+
+        if (headMatch) {
+          // We parsed a head open tag. we need to copy head attributes and insert future
+          // content into <head>
+          streamingContainer = document.head;
+          const tempHeadNode = tempDom.window.document.head;
+          for (let i = 0; i < tempHeadNode.attributes.length; i++) {
+            const attr = tempHeadNode.attributes[i];
+            document.head.setAttribute(attr.name, attr.value);
+          }
+          const source = document.createElement('head');
+          source.innerHTML = tempHeadNode.innerHTML;
+          await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
+        }
 
         if (bodyMatch) {
+          // We parsed a body open tag. we need to copy head attributes and insert future
+          // content into <body>
           streamingContainer = document.body;
-
           const tempBodyNode = tempDom.window.document.body;
           for (let i = 0; i < tempBodyNode.attributes.length; i++) {
             const attr = tempBodyNode.attributes[i];
             document.body.setAttribute(attr.name, attr.value);
           }
-          const bodySource = document.createElement('body');
-          bodySource.innerHTML = tempBodyNode.innerHTML;
-          await insertNodesAndExecuteScripts(
-            bodySource,
-            document.body,
-            CSPnonce,
-          );
+          const source = document.createElement('body');
+          source.innerHTML = tempBodyNode.innerHTML;
+          await insertNodesAndExecuteScripts(source, document.body, CSPnonce);
+        }
+
+        if (!headMatch && !bodyMatch) {
+          throw new Error('expected <head> or <body> after <html>');
         }
       } else {
+        // we assume we are streaming into the default container'
+        streamingContainer = container;
         const div = document.createElement('div');
         div.innerHTML = bufferedContent;
-        await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
+        await insertNodesAndExecuteScripts(div, container, CSPnonce);
       }
-    }, document);
+    } else if (streamingContainer === document.head) {
+      bufferedContent = '<!DOCTYPE html><html><head>' + bufferedContent;
+      const tempDom = new JSDOM(bufferedContent);
+
+      const tempHeadNode = tempDom.window.document.head;
+      const source = document.createElement('head');
+      source.innerHTML = tempHeadNode.innerHTML;
+      await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
+
+      if (bodyMatch) {
+        streamingContainer = document.body;
+
+        const tempBodyNode = tempDom.window.document.body;
+        for (let i = 0; i < tempBodyNode.attributes.length; i++) {
+          const attr = tempBodyNode.attributes[i];
+          document.body.setAttribute(attr.name, attr.value);
+        }
+        const bodySource = document.createElement('body');
+        bodySource.innerHTML = tempBodyNode.innerHTML;
+        await insertNodesAndExecuteScripts(bodySource, document.body, CSPnonce);
+      }
+    } else {
+      const div = document.createElement('div');
+      div.innerHTML = bufferedContent;
+      await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
+    }
+    await 0;
+    // Let throttled boundaries reveal
+    jest.runAllTimers();
   }
 
   function getMeaningfulChildren(element) {
@@ -257,7 +259,10 @@ describe('ReactDOMFloat', () => {
             node.tagName !== 'TEMPLATE' &&
             node.tagName !== 'template' &&
             !node.hasAttribute('hidden') &&
-            !node.hasAttribute('aria-hidden'))
+            !node.hasAttribute('aria-hidden') &&
+            // Ignore the render blocking expect
+            (node.getAttribute('rel') !== 'expect' ||
+              node.getAttribute('blocking') !== 'render'))
         ) {
           const props = {};
           const attributes = node.attributes;
@@ -282,8 +287,8 @@ describe('ReactDOMFloat', () => {
     return children.length === 0
       ? undefined
       : children.length === 1
-      ? children[0]
-      : children;
+        ? children[0]
+        : children;
   }
 
   function BlockedOn({value, children}) {
@@ -369,11 +374,15 @@ describe('ReactDOMFloat', () => {
   }
 
   function loadStylesheets(hrefs) {
+    loadStylesheetsFrom(document, hrefs);
+  }
+
+  function loadStylesheetsFrom(root, hrefs) {
     const event = new window.Event('load');
-    const nodes = document.querySelectorAll('link[rel="stylesheet"]');
-    resolveLoadables(hrefs, nodes, event, href =>
-      Scheduler.log('load stylesheet: ' + href),
-    );
+    const nodes = root.querySelectorAll('link[rel="stylesheet"]');
+    resolveLoadables(hrefs, nodes, event, href => {
+      Scheduler.log('load stylesheet: ' + href);
+    });
   }
 
   function errorStylesheets(hrefs) {
@@ -400,7 +409,6 @@ describe('ReactDOMFloat', () => {
     }
   }
 
-  // @gate enableFloat
   it('can render resources before singletons', async () => {
     const root = ReactDOMClient.createRoot(document);
     root.render(
@@ -433,7 +441,6 @@ describe('ReactDOMFloat', () => {
     );
   });
 
-  // @gate enableFloat
   it('can hydrate non Resources in head when Resources are also inserted there', async () => {
     await act(() => {
       const {pipe} = renderToPipeableStream(
@@ -499,139 +506,143 @@ describe('ReactDOMFloat', () => {
     );
   });
 
-  // @gate enableFloat || !__DEV__
   it('warns if you render resource-like elements above <head> or <body>', async () => {
     const root = ReactDOMClient.createRoot(document);
 
-    await expect(async () => {
-      root.render(
-        <>
-          <noscript>foo</noscript>
-          <html>
-            <body>foo</body>
-          </html>
-        </>,
-      );
-      const aggregateError = await waitForThrow();
-      expect(aggregateError.errors.length).toBe(2);
-      expect(aggregateError.errors[0].message).toContain(
-        'Invalid insertion of NOSCRIPT',
-      );
-      expect(aggregateError.errors[1].message).toContain(
-        'The node to be removed is not a child of this node',
-      );
-    }).toErrorDev(
+    root.render(
+      <>
+        <noscript>foo</noscript>
+        <html>
+          <body>foo</body>
+        </html>
+      </>,
+    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
       [
         'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
-        'Warning: validateDOMNesting(...): <noscript> cannot appear as a child of <#document>.',
+        {withoutStack: true},
       ],
-      {withoutStack: 1},
+    ]);
+
+    root.render(
+      <html>
+        <template>foo</template>
+        <body>foo</body>
+      </html>,
     );
-
-    await expect(async () => {
-      root.render(
-        <html>
-          <template>foo</template>
-          <body>foo</body>
-        </html>,
-      );
-      await waitForAll([]);
-    }).toErrorDev([
-      'Cannot render <template> outside the main document. Try moving it into the root <head> tag.',
-      'Warning: validateDOMNesting(...): <template> cannot appear as a child of <html>.',
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render <template> outside the main document. Try moving it into the root <head> tag.\n' +
+        '    in html (at **)',
+      'In HTML, <template> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n\n' +
+        '> <html>\n' +
+        '>   <template>\n' +
+        '    ...\n' +
+        '\n' +
+        '    in template (at **)',
     ]);
 
-    await expect(async () => {
-      root.render(
-        <html>
-          <body>foo</body>
-          <style>foo</style>
-        </html>,
-      );
-      await waitForAll([]);
-    }).toErrorDev([
-      'Cannot render a <style> outside the main document without knowing its precedence and a unique href key. React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags.  Note that hoisting <style> tags is considered an advanced feature that most will not use directly. Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style> to the <style> tag.',
-      'Warning: validateDOMNesting(...): <style> cannot appear as a child of <html>.',
+    root.render(
+      <html>
+        <body>foo</body>
+        <style>foo</style>
+      </html>,
+    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <style> outside the main document without knowing its precedence ' +
+        'and a unique href key. React can hoist and deduplicate <style> tags if you provide a ' +
+        '`precedence` prop along with an `href` prop that does not conflict with the `href` ' +
+        'values used in any other hoisted <style> or <link rel="stylesheet" ...> tags.  ' +
+        'Note that hoisting <style> tags is considered an advanced feature that most will not use directly. ' +
+        'Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` ' +
+        'and `href="some unique resource identifier"`.\n' +
+        '    in html (at **)',
+      'In HTML, <style> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n\n' +
+        '> <html>\n' +
+        '    <body>\n' +
+        '>   <style>\n' +
+        '\n' +
+        '    in style (at **)',
     ]);
 
-    await expect(async () => {
-      root.render(
-        <>
-          <html>
-            <body>foo</body>
-          </html>
-          <link rel="stylesheet" href="foo" />
-        </>,
-      );
-      const aggregateError = await waitForThrow();
-      expect(aggregateError.errors.length).toBe(2);
-      expect(aggregateError.errors[0].message).toContain(
-        'Invalid insertion of LINK',
-      );
-      expect(aggregateError.errors[1].message).toContain(
-        'The node to be removed is not a child of this node',
-      );
-    }).toErrorDev(
+    root.render(
+      <>
+        <html>
+          <body>foo</body>
+        </html>
+        <link rel="stylesheet" href="foo" />
+      </>,
+    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
       [
-        'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. Consider adding precedence="default" or moving it into the root <head> tag.',
-        'Warning: validateDOMNesting(...): <link> cannot appear as a child of <#document>.',
+        'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. ' +
+          'Consider adding precedence="default" or moving it into the root <head> tag.',
+        {withoutStack: true},
       ],
-      {withoutStack: 1},
-    );
-
-    await expect(async () => {
-      root.render(
-        <>
-          <html>
-            <body>foo</body>
-            <script href="foo" />
-          </html>
-        </>,
-      );
-      await waitForAll([]);
-    }).toErrorDev([
-      'Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag.',
-      'Warning: validateDOMNesting(...): <script> cannot appear as a child of <html>.',
     ]);
 
-    await expect(async () => {
-      root.render(
+    root.render(
+      <>
         <html>
-          <script async={true} onLoad={() => {}} href="bar" />
           <body>foo</body>
-        </html>,
-      );
-      await waitForAll([]);
-    }).toErrorDev([
-      'Cannot render a <script> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>.',
+          <script href="foo" />
+        </html>
+      </>,
+    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a sync or defer <script> outside the main document without knowing its order. ' +
+        'Try adding async="" or moving it into the root <head> tag.\n' +
+        '    in html (at **)',
+      'In HTML, <script> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '    <body>\n' +
+        '>   <script href="foo">\n' +
+        '\n' +
+        '    in script (at **)',
     ]);
 
-    await expect(async () => {
-      root.render(
-        <>
-          <link rel="foo" onLoad={() => {}} href="bar" />
-          <html>
-            <body>foo</body>
-          </html>
-        </>,
-      );
-      const aggregateError = await waitForThrow();
-      expect(aggregateError.errors.length).toBe(2);
-      expect(aggregateError.errors[0].message).toContain(
-        'Invalid insertion of LINK',
-      );
-      expect(aggregateError.errors[1].message).toContain(
-        'The node to be removed is not a child of this node',
-      );
-    }).toErrorDev(
-      [
-        'Cannot render a <link> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>.',
-      ],
-      {withoutStack: 1},
+    root.render(
+      <html>
+        <script async={true} onLoad={() => {}} href="bar" />
+        <body>foo</body>
+      </html>,
     );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <script> with onLoad or onError listeners outside the main document. ' +
+        'Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or ' +
+        'somewhere in the <body>.\n' +
+        '    in html (at **)',
+    ]);
+
+    root.render(
+      <>
+        <link rel="foo" onLoad={() => {}} href="bar" />
+        <html>
+          <body>foo</body>
+        </html>
+      </>,
+    );
+    await waitForAll([]);
+    assertConsoleErrorDev(
+      [
+        'Cannot render a <link> with onLoad or onError listeners outside the main document. ' +
+          'Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or ' +
+          'somewhere in the <body>.',
+      ],
+      {withoutStack: true},
+    );
+    return;
   });
 
-  // @gate enableFloat
   it('can acquire a resource after releasing it in the same commit', async () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(
@@ -671,61 +682,6 @@ describe('ReactDOMFloat', () => {
     );
   });
 
-  // @gate enableFloat
-  it('emits resources before everything else when rendering with no head', async () => {
-    function App() {
-      return (
-        <>
-          <title>foo</title>
-          <link rel="preload" href="foo" as="style" />
-        </>
-      );
-    }
-
-    await act(() => {
-      buffer = `<!DOCTYPE html><html><head>${ReactDOMFizzServer.renderToString(
-        <App />,
-      )}</head><body>foo</body></html>`;
-    });
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="preload" href="foo" as="style" />
-          <title>foo</title>
-        </head>
-        <body>foo</body>
-      </html>,
-    );
-  });
-
-  // @gate enableFloat
-  it('emits resources before everything else when rendering with just a head', async () => {
-    function App() {
-      return (
-        <head>
-          <title>foo</title>
-          <link rel="preload" href="foo" as="style" />
-        </head>
-      );
-    }
-
-    await act(() => {
-      buffer = `<!DOCTYPE html><html>${ReactDOMFizzServer.renderToString(
-        <App />,
-      )}<body>foo</body></html>`;
-    });
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="preload" href="foo" as="style" />
-          <title>foo</title>
-        </head>
-        <body>foo</body>
-      </html>,
-    );
-  });
-
-  // @gate enableFloat
   it('emits an implicit <head> element to hold resources when none is rendered but an <html> is rendered', async () => {
     const chunks = [];
 
@@ -746,12 +702,22 @@ describe('ReactDOMFloat', () => {
       pipe(writable);
     });
     expect(chunks).toEqual([
-      '<!DOCTYPE html><html><head><script async="" src="foo"></script><title>foo</title></head><body>bar',
+      '<!DOCTYPE html><html><head><script async="" src="foo"></script>' +
+        (gate(flags => flags.shouldUseFizzExternalRuntime)
+          ? '<script src="react-dom/unstable_server-external-runtime" async=""></script>'
+          : '') +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          : '') +
+        '<title>foo</title></head>' +
+        '<body>bar' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : ''),
       '</body></html>',
     ]);
   });
 
-  // @gate enableFloat
   it('dedupes if the external runtime is explicitly loaded using preinit', async () => {
     const unstable_externalRuntimeSrc = 'src-of-external-runtime';
     function App() {
@@ -781,11 +747,70 @@ describe('ReactDOMFloat', () => {
     });
 
     expect(
-      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
+      Array.from(document.querySelectorAll('script[async]')).map(
+        n => n.outerHTML,
+      ),
     ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
   });
 
-  // @gate enableFloat
+  it('can send style insertion implementation independent of boundary commpletion instruction implementation', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Suspense fallback="loading foo...">
+              <BlockedOn value="foo">foo</BlockedOn>
+            </Suspense>
+            <Suspense fallback="loading bar...">
+              <BlockedOn value="bar">
+                <link rel="stylesheet" href="bar" precedence="bar" />
+                bar
+              </BlockedOn>
+            </Suspense>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('foo');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          foo
+          {'loading bar...'}
+        </body>
+      </html>,
+    );
+    await act(() => {
+      resolveText('bar');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="bar" data-precedence="bar" />
+        </head>
+        <body>
+          foo
+          {'loading bar...'}
+          <link rel="preload" href="bar" as="style" />
+        </body>
+      </html>,
+    );
+  });
+
   it('can avoid inserting a late stylesheet if it already rendered on the client', async () => {
     await act(() => {
       renderToPipeableStream(
@@ -835,6 +860,8 @@ describe('ReactDOMFloat', () => {
       </html>,
     );
     await waitForAll([]);
+    loadPreloads();
+    await assertLog(['load preload: foo']);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -852,15 +879,9 @@ describe('ReactDOMFloat', () => {
       resolveText('bar');
     });
     await act(() => {
-      const sheets = document.querySelectorAll(
-        'link[rel="stylesheet"][data-precedence]',
-      );
-      const event = document.createEvent('Event');
-      event.initEvent('load', true, true);
-      for (let i = 0; i < sheets.length; i++) {
-        sheets[i].dispatchEvent(event);
-      }
+      loadStylesheets();
     });
+    await assertLog(['load stylesheet: foo', 'load stylesheet: bar']);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -880,15 +901,9 @@ describe('ReactDOMFloat', () => {
       resolveText('foo');
     });
     await act(() => {
-      const sheets = document.querySelectorAll(
-        'link[rel="stylesheet"][data-precedence]',
-      );
-      const event = document.createEvent('Event');
-      event.initEvent('load', true, true);
-      for (let i = 0; i < sheets.length; i++) {
-        sheets[i].dispatchEvent(event);
-      }
+      loadStylesheets();
     });
+    await assertLog([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -906,7 +921,6 @@ describe('ReactDOMFloat', () => {
     );
   });
 
-  // @gate enableFloat
   it('can hoist <link rel="stylesheet" .../> and <style /> tags together, respecting order of discovery', async () => {
     const css = `
 body {
@@ -1132,6 +1146,30 @@ body {
       </html>,
     );
     await waitForAll([]);
+    await act(() => {
+      loadPreloads();
+      loadStylesheets();
+    });
+    await assertLog([
+      'load preload: one4',
+      'load preload: three4',
+      'load preload: seven1',
+      'load preload: one2',
+      'load preload: two2',
+      'load preload: five1',
+      'load preload: three3',
+      'load preload: four3',
+      'load stylesheet: one1',
+      'load stylesheet: one2',
+      'load stylesheet: one4',
+      'load stylesheet: two2',
+      'load stylesheet: three1',
+      'load stylesheet: three3',
+      'load stylesheet: three4',
+      'load stylesheet: four3',
+      'load stylesheet: five1',
+      'load stylesheet: seven1',
+    ]);
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -1191,7 +1229,6 @@ body {
     );
   });
 
-  // @gate enableFloat
   it('client renders a boundary if a style Resource dependency fails to load', async () => {
     function App() {
       return (
@@ -1213,6 +1250,13 @@ body {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>loading...</body>
+      </html>,
+    );
 
     await act(() => {
       resolveText('unblock');
@@ -1241,9 +1285,7 @@ body {
     const suspenseInstance = boundaryTemplateInstance.previousSibling;
 
     expect(suspenseInstance.data).toEqual('$!');
-    expect(boundaryTemplateInstance.dataset.dgst).toBe(
-      'Resource failed to load',
-    );
+    expect(boundaryTemplateInstance.dataset.dgst).toBe('CSS failed to load');
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -1289,11 +1331,10 @@ body {
     );
     expect(errors).toEqual([
       'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-      'Resource failed to load',
+      'CSS failed to load',
     ]);
   });
 
-  // @gate enableFloat
   it('treats stylesheet links with a precedence as a resource', async () => {
     await act(() => {
       const {pipe} = renderToPipeableStream(
@@ -1334,7 +1375,6 @@ body {
     );
   });
 
-  // @gate enableFloat
   it('inserts text separators following text when followed by an element that is converted to a resource and thus removed from the html inline', async () => {
     // If you render many of these as siblings the values get emitted as a single text with no separator sometimes
     // because the link gets elided as a resource
@@ -1381,7 +1421,6 @@ body {
     );
   });
 
-  // @gate enableFloat
   it('hoists late stylesheets the correct precedence', async () => {
     function PresetPrecedence() {
       ReactDOM.preinit('preset', {as: 'style', precedence: 'preset'});
@@ -1666,7 +1705,6 @@ body {
     );
   });
 
-  // @gate enableFloat
   it('normalizes stylesheet resource precedence for all boundaries inlined as part of the shell flush', async () => {
     await act(() => {
       const {pipe} = renderToPipeableStream(
@@ -1750,7 +1788,6 @@ body {
     );
   });
 
-  // @gate enableFloat
   it('stylesheet resources are inserted according to precedence order on the client', async () => {
     await act(() => {
       const {pipe} = renderToPipeableStream(
@@ -1816,6 +1853,16 @@ body {
       </html>,
     );
     await waitForAll([]);
+    await act(() => {
+      loadPreloads();
+      loadStylesheets();
+    });
+    await assertLog([
+      'load preload: baz',
+      'load stylesheet: foo',
+      'load stylesheet: baz',
+      'load stylesheet: bar',
+    ]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -1831,7 +1878,6 @@ body {
     );
   });
 
-  // @gate enableFloat
   it('inserts preloads in render phase eagerly', async () => {
     function Throw() {
       throw new Error('Uh oh!');
@@ -1873,7 +1919,6 @@ body {
     );
   });
 
-  // @gate enableFloat
   it('will include child boundary stylesheet resources in the boundary reveal instruction', async () => {
     await act(() => {
       const {pipe} = renderToPipeableStream(
@@ -1992,7 +2037,6 @@ body {
     );
   });
 
-  // @gate enableFloat
   it('will hoist resources of child boundaries emitted as part of a partial boundary to the parent boundary', async () => {
     await act(() => {
       const {pipe} = renderToPipeableStream(
@@ -2156,7 +2200,6 @@ body {
     );
   });
 
-  // @gate enableFloat
   it('encodes attributes consistently whether resources are flushed in shell or in late boundaries', async () => {
     function App() {
       return (
@@ -2215,40 +2258,43 @@ body {
         </html>
       );
     }
-    await expect(async () => {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(<App />);
-        pipe(writable);
-      });
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <link
-              rel="stylesheet"
-              href="foo"
-              data-precedence="default"
-              crossorigin="anonymous"
-              media="all"
-              integrity="somehash"
-              referrerpolicy="origin"
-              data-foo={'"quoted"'}
-              nonstandardattr="attr"
-              properlyformattednonstandardattr="attr"
-            />
-          </head>
-          <body>
-            <div>loading...</div>
-          </body>
-        </html>,
-      );
-    }).toErrorDev([
-      'React does not recognize the `nonStandardAttr` prop on a DOM element.' +
-        ' If you intentionally want it to appear in the DOM as a custom attribute,' +
-        ' spell it as lowercase `nonstandardattr` instead. If you accidentally passed it from a' +
-        ' parent component, remove it from the DOM element.',
-      'Invalid values for props `shouldnotincludefunctions`, `norsymbols` on <link> tag. Either remove them from' +
-        ' the element, or pass a string or number value to keep them in the DOM. For' +
-        ' details, see https://reactjs.org/link/attribute-behavior',
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            href="foo"
+            data-precedence="default"
+            crossorigin="anonymous"
+            media="all"
+            integrity="somehash"
+            referrerpolicy="origin"
+            data-foo={'"quoted"'}
+            nonstandardattr="attr"
+            properlyformattednonstandardattr="attr"
+          />
+        </head>
+        <body>
+          <div>loading...</div>
+        </body>
+      </html>,
+    );
+    assertConsoleErrorDev([
+      'React does not recognize the `nonStandardAttr` prop on a DOM element. ' +
+        'If you intentionally want it to appear in the DOM as a custom attribute, ' +
+        'spell it as lowercase `nonstandardattr` instead. If you accidentally passed it from a ' +
+        'parent component, remove it from the DOM element.\n' +
+        '    in link (at **)\n' +
+        '    in App (at **)',
+      'Invalid values for props `shouldnotincludefunctions`, `norsymbols` on <link> tag. ' +
+        'Either remove them from the element, or pass a string or number value to keep them in the DOM. ' +
+        'For details, see https://react.dev/link/attribute-behavior \n' +
+        '    in link (at **)\n' +
+        '    in App (at **)',
     ]);
 
     // Now we flush the stylesheet with the boundary
@@ -2300,7 +2346,6 @@ body {
     );
   });
 
-  // @gate enableFloat
   it('boundary stylesheet resource dependencies hoist to a parent boundary when flushed inline', async () => {
     await act(() => {
       const {pipe} = renderToPipeableStream(
@@ -2423,7 +2468,6 @@ body {
     );
   });
 
-  // @gate enableFloat
   it('always enforces crossOrigin "anonymous" for font preloads', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'font', type: 'font/woff2'});
@@ -2587,34 +2631,131 @@ body {
     );
   });
 
-  it('warns if you render a tag with itemProp outside <body> or <head>', async () => {
+  it('warns if you render <meta> tag with itemProp outside <body> or <head>', async () => {
     const root = ReactDOMClient.createRoot(document);
     root.render(
       <html>
         <meta itemProp="foo" />
-        <title itemProp="foo">title</title>
-        <style itemProp="foo">style</style>
-        <link itemProp="foo" />
-        <script itemProp="foo" />
       </html>,
     );
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev([
-      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-      'Cannot render a <title> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <title> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-      'Cannot render a <style> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <style> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-      'Cannot render a <link> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <link> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-      'Cannot render a <script> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <script> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-      'validateDOMNesting(...): <meta> cannot appear as a child of <html>',
-      'validateDOMNesting(...): <title> cannot appear as a child of <html>',
-      'validateDOMNesting(...): <style> cannot appear as a child of <html>',
-      'validateDOMNesting(...): <link> cannot appear as a child of <html>',
-      'validateDOMNesting(...): <script> cannot appear as a child of <html>',
+
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. ' +
+        '`itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. ' +
+        'If you were intending for React to hoist this <meta> remove the `itemProp` prop. ' +
+        'Otherwise, try moving this tag into the <head> or <body> of the Document.\n' +
+        '    in html (at **)',
+      'In HTML, <meta> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '>   <meta itemProp="foo">' +
+        '\n' +
+        '\n    in meta (at **)',
     ]);
   });
 
-  // @gate enableFloat
+  it('warns if you render a <title> tag with itemProp outside <body> or <head>', async () => {
+    const root = ReactDOMClient.createRoot(document);
+    root.render(
+      <html>
+        <title itemProp="foo">title</title>
+      </html>,
+    );
+
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <title> outside the main document if it has an `itemProp` prop. ' +
+        '`itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. ' +
+        'If you were intending for React to hoist this <title> remove the `itemProp` prop. ' +
+        'Otherwise, try moving this tag into the <head> or <body> of the Document.\n' +
+        '    in html (at **)',
+      'In HTML, <title> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '>   <title itemProp="foo">' +
+        '\n' +
+        '\n    in title (at **)',
+    ]);
+  });
+
+  it('warns if you render a <style> tag with itemProp outside <body> or <head>', async () => {
+    const root = ReactDOMClient.createRoot(document);
+    root.render(
+      <html>
+        <style itemProp="foo">style</style>
+      </html>,
+    );
+
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <style> outside the main document if it has an `itemProp` prop. ' +
+        '`itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. ' +
+        'If you were intending for React to hoist this <style> remove the `itemProp` prop. ' +
+        'Otherwise, try moving this tag into the <head> or <body> of the Document.\n' +
+        '    in html (at **)',
+      'In HTML, <style> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '>   <style itemProp="foo">' +
+        '\n' +
+        '\n    in style (at **)',
+    ]);
+  });
+
+  it('warns if you render a <link> tag with itemProp outside <body> or <head>', async () => {
+    const root = ReactDOMClient.createRoot(document);
+    root.render(
+      <html>
+        <link itemProp="foo" />
+      </html>,
+    );
+
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <link> outside the main document if it has an `itemProp` prop. ' +
+        '`itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. ' +
+        'If you were intending for React to hoist this <link> remove the `itemProp` prop. ' +
+        'Otherwise, try moving this tag into the <head> or <body> of the Document.\n' +
+        '    in html (at **)',
+      'In HTML, <link> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '>   <link itemProp="foo">\n' +
+        '\n' +
+        '    in link (at **)',
+    ]);
+  });
+
+  it('warns if you render a <script> tag with itemProp outside <body> or <head>', async () => {
+    const root = ReactDOMClient.createRoot(document);
+    root.render(
+      <html>
+        <script itemProp="foo" />
+      </html>,
+    );
+
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Cannot render a <script> outside the main document if it has an `itemProp` prop. ' +
+        '`itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. ' +
+        'If you were intending for React to hoist this <script> remove the `itemProp` prop. ' +
+        'Otherwise, try moving this tag into the <head> or <body> of the Document.\n' +
+        '    in html (at **)',
+      'In HTML, <script> cannot be a child of <html>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <html>\n' +
+        '>   <script itemProp="foo">\n' +
+        '\n' +
+        '    in script (at **)',
+    ]);
+  });
+
   it('can hydrate resources and components in the head and body even if a browser or 3rd party script injects extra html nodes', async () => {
     // This is a stress test case for hydrating a complex combination of hoistable elements, hoistable resources and host components
     // in an environment that has been manipulated by 3rd party scripts/extensions to modify the <head> and <body>
@@ -2852,7 +2993,96 @@ body {
     ]);
   });
 
-  xit('can delay commit until css resources error', async () => {
+  // https://github.com/facebook/react/issues/27585
+  it('does not reinsert already inserted stylesheets during a delayed commit', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <link rel="stylesheet" href="first" precedence="default" />
+            <link rel="stylesheet" href="second" precedence="default" />
+            server
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="first" data-precedence="default" />
+          <link rel="stylesheet" href="second" data-precedence="default" />
+        </head>
+        <body>server</body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.createRoot(document.body);
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    root.render(
+      <>
+        <link rel="stylesheet" href="first" precedence="default" />
+        <link rel="stylesheet" href="third" precedence="default" />
+        <div>client</div>
+      </>,
+    );
+    await waitForAll([]);
+    await act(() => {
+      loadPreloads();
+      loadStylesheets();
+    });
+    await assertLog([
+      'load preload: third',
+      'load stylesheet: first',
+      'load stylesheet: second',
+      'load stylesheet: third',
+    ]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="first" data-precedence="default" />
+          <link rel="stylesheet" href="second" data-precedence="default" />
+          <link rel="stylesheet" href="third" data-precedence="default" />
+          <link rel="preload" href="third" as="style" />
+        </head>
+        <body>
+          <div>client</div>
+        </body>
+      </html>,
+    );
+
+    // In a transition we add another reference to an already loaded resource
+    // https://github.com/facebook/react/issues/27585
+    React.startTransition(() => {
+      root.render(
+        <>
+          <link rel="stylesheet" href="first" precedence="default" />
+          <link rel="stylesheet" href="third" precedence="default" />
+          <div>client</div>
+          <link rel="stylesheet" href="first" precedence="default" />
+        </>,
+      );
+    });
+    await waitForAll([]);
+    // In https://github.com/facebook/react/issues/27585 the order updated
+    // to second, third, first
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="first" data-precedence="default" />
+          <link rel="stylesheet" href="second" data-precedence="default" />
+          <link rel="stylesheet" href="third" data-precedence="default" />
+          <link rel="preload" href="third" as="style" />
+        </head>
+        <body>
+          <div>client</div>
+        </body>
+      </html>,
+    );
+  });
+
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can delay commit until css resources error', async () => {
     // TODO: This test fails and crashes jest. need to figure out why before unskipping.
     const root = ReactDOMClient.createRoot(container);
     expect(getMeaningfulChildren(container)).toBe(undefined);
@@ -2885,24 +3115,7 @@ body {
       <link rel="preload" as="style" href="bar" />,
     ]);
 
-    // Try just this and crash all of Jest
     errorStylesheets(['bar']);
-
-    // // Try this and it fails the test when it shouldn't
-    // await act(() => {
-    //   errorStylesheets(['bar']);
-    // });
-
-    // // Try this there is nothing throwing here which is not really surprising since
-    // // the error is bubbling up through some kind of unhandled promise rejection thingy but
-    // // still I thought it was worth confirming
-    // try {
-    //   await act(() => {
-    //     errorStylesheets(['bar']);
-    //   });
-    // } catch (e) {
-    //   console.log(e);
-    // }
 
     loadStylesheets(['foo']);
     assertLog(['load stylesheet: foo', 'error stylesheet: bar']);
@@ -3066,6 +3279,11 @@ body {
       </App>,
     );
     await waitForAll([]);
+    await act(() => {
+      loadPreloads(['bar']);
+      loadStylesheets(['bar']);
+    });
+    await assertLog(['load preload: bar', 'load stylesheet: bar']);
 
     // The bar stylesheet was inserted. There's still a "foo" preload, even
     // though that update was superseded.
@@ -3132,6 +3350,301 @@ body {
           <link rel="preload" href="bar" as="style" />
         </head>
         <body>hello3</body>
+      </html>,
+    );
+  });
+
+  it('will put a Suspense boundary into fallback if it contains a stylesheet not loaded during a sync update', async () => {
+    function App({children}) {
+      return (
+        <html>
+          <body>{children}</body>
+        </html>
+      );
+    }
+    const root = ReactDOMClient.createRoot(document);
+
+    await clientAct(() => {
+      root.render(<App />);
+    });
+    await waitForAll([]);
+
+    await clientAct(() => {
+      root.render(
+        <App>
+          <Suspense fallback="loading...">
+            <div>
+              hello
+              <link rel="stylesheet" href="foo" precedence="default" />
+            </div>
+          </Suspense>
+        </App>,
+      );
+    });
+    await waitForAll([]);
+
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      // Although the commit suspended, a preload was inserted.
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preload" href="foo" as="style" />
+          </head>
+          <body>loading...</body>
+        </html>,
+      );
+
+      loadPreloads(['foo']);
+      assertLog(['load preload: foo']);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+          </head>
+          <body>loading...</body>
+        </html>,
+      );
+    }
+
+    loadStylesheets(['foo']);
+    assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body>
+          <div>hello</div>
+        </body>
+      </html>,
+    );
+
+    await clientAct(() => {
+      root.render(
+        <App>
+          <Suspense fallback="loading...">
+            <div>
+              hello
+              <link rel="stylesheet" href="foo" precedence="default" />
+              <link rel="stylesheet" href="bar" precedence="default" />
+            </div>
+          </Suspense>
+        </App>,
+      );
+    });
+    await waitForAll([]);
+    if (gate(flags => flags.alwaysThrottleRetries)) {
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preload" href="bar" as="style" />
+          </head>
+          <body>
+            <div style="display: none;">hello</div>loading...
+          </body>
+        </html>,
+      );
+
+      loadPreloads(['bar']);
+      assertLog(['load preload: bar']);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preload" href="bar" as="style" />
+          </head>
+          <body>
+            <div style="display: none;">hello</div>loading...
+          </body>
+        </html>,
+      );
+    }
+    loadStylesheets(['bar']);
+    assertLog(['load stylesheet: bar']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>
+          <div style="">hello</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('will assume stylesheets already in the document have loaded if it cannot confirm it is not yet loaded', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+          </head>
+          <body>
+            <div id="foo" />
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    const root = ReactDOMClient.createRoot(document.querySelector('#foo'));
+
+    root.render(
+      <div>
+        <Suspense fallback="loading...">
+          <link rel="stylesheet" href="foo" precedence="default" />
+          hello world
+        </Suspense>
+      </div>,
+    );
+
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div id="foo">
+            <div>hello world</div>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('will assume wait for loading stylesheets to load before continuing', async () => {
+    let ssr = true;
+    function Component() {
+      if (ssr) {
+        return null;
+      } else {
+        return (
+          <>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            <div>hello client</div>
+          </>
+        );
+      }
+    }
+
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <div>
+              <Suspense fallback="loading...">
+                <BlockedOn value="reveal">
+                  <link rel="stylesheet" href="foo" precedence="default" />
+                  <div>hello world</div>
+                </BlockedOn>
+              </Suspense>
+            </div>
+            <div>
+              <Suspense fallback="loading 2...">
+                <Component />
+              </Suspense>
+            </div>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div>loading...</div>
+          <div />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('reveal');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div>loading...</div>
+          <div />
+          <link rel="preload" href="foo" as="style" />
+        </body>
+      </html>,
+    );
+
+    ssr = false;
+
+    ReactDOMClient.hydrateRoot(
+      document,
+      <html>
+        <body>
+          <div>
+            <Suspense fallback="loading...">
+              <BlockedOn value="reveal">
+                <link rel="stylesheet" href="foo" precedence="default" />
+                <div>hello world</div>
+              </BlockedOn>
+            </Suspense>
+          </div>
+          <div>
+            <Suspense fallback="loading 2...">
+              <Component />
+            </Suspense>
+          </div>
+        </body>
+      </html>,
+    );
+    await waitForAll([]);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div>loading...</div>
+          <div />
+          <link rel="preload" href="foo" as="style" />
+        </body>
+      </html>,
+    );
+
+    loadStylesheets();
+    assertLog(['load stylesheet: foo']);
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      "Hydration failed because the server rendered HTML didn't match the client.",
+    ]);
+    jest.runAllTimers();
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div>
+            <div>hello world</div>
+          </div>
+          <div>
+            <div>hello client</div>
+          </div>
+          <link rel="preload" href="foo" as="style" />
+        </body>
       </html>,
     );
   });
@@ -3381,6 +3894,92 @@ body {
           <link rel="preload" href="B" as="style" />
         </head>
         <body>B</body>
+      </html>,
+    );
+  });
+
+  it('loading a stylesheet as part of an error boundary UI, during initial render', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        const error = this.state.error;
+        if (error !== null) {
+          return (
+            <>
+              <link rel="stylesheet" href="A" precedence="default" />
+              {error.message}
+            </>
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    function Throws() {
+      throw new Error('Oops!');
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <ErrorBoundary>
+              <Suspense fallback="Loading...">
+                <Throws />
+              </Suspense>
+            </ErrorBoundary>
+          </body>
+        </html>
+      );
+    }
+
+    // Initial server render. Because something threw, a Suspense fallback
+    // is shown.
+    await act(() => {
+      renderToPipeableStream(<App />, {
+        onError(x) {
+          Scheduler.log('Caught server error: ' + x.message);
+        },
+      }).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>Loading...</body>
+      </html>,
+    );
+    assertLog(['Caught server error: Oops!']);
+
+    // Hydrate the tree. The error boundary will capture the error and attempt
+    // to show an error screen. However, the error screen includes a stylesheet,
+    // so the commit should suspend until the stylesheet loads.
+    ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+
+    // A preload for the stylesheet is inserted, but we still haven't committed
+    // the error screen.
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link as="style" href="A" rel="preload" />
+        </head>
+        <body>Loading...</body>
+      </html>,
+    );
+
+    // Finish loading the stylesheets. The commit should be unblocked, and the
+    // error screen should appear.
+    await clientAct(() => loadStylesheets());
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link data-precedence="default" href="A" rel="stylesheet" />
+          <link as="style" href="A" rel="preload" />
+        </head>
+        <body>Oops!</body>
       </html>,
     );
   });
@@ -3928,6 +4527,87 @@ body {
     );
   });
 
+  it('can promote images to high priority when at least one instance specifies a high fetchPriority', async () => {
+    function App() {
+      // If a ends up in a higher priority queue than b it will flush first
+      ReactDOM.preload('a', {as: 'image'});
+      ReactDOM.preload('b', {as: 'image'});
+      return (
+        <html>
+          <body>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            <img src="1" />
+            <img src="2" />
+            <img src="3" />
+            <img src="4" />
+            <img src="5" />
+            <img src="6" />
+            <img src="7" />
+            <img src="8" />
+            <img src="9" />
+            <img src="10" />
+            <img src="11" />
+            <img src="12" />
+            <img src="a" fetchPriority="low" />
+            <img src="a" />
+            <img src="a" fetchPriority="high" />
+            <img src="a" />
+            <img src="a" />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          {/* The First 10 high priority images were just the first 10 rendered images */}
+          <link rel="preload" as="image" href="1" />
+          <link rel="preload" as="image" href="2" />
+          <link rel="preload" as="image" href="3" />
+          <link rel="preload" as="image" href="4" />
+          <link rel="preload" as="image" href="5" />
+          <link rel="preload" as="image" href="6" />
+          <link rel="preload" as="image" href="7" />
+          <link rel="preload" as="image" href="8" />
+          <link rel="preload" as="image" href="9" />
+          <link rel="preload" as="image" href="10" />
+          {/* The "a" image was rendered a few times but since at least one of those was with
+          fetchPriorty="high" it ends up in the high priority queue */}
+          <link rel="preload" as="image" href="a" />
+          {/* Stylesheets come in between high priority images and regular preloads */}
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          {/* The remainig images that preloaded at regular priority */}
+          <link rel="preload" as="image" href="b" />
+          <link rel="preload" as="image" href="11" />
+          <link rel="preload" as="image" href="12" />
+        </head>
+        <body>
+          <img src="1" />
+          <img src="2" />
+          <img src="3" />
+          <img src="4" />
+          <img src="5" />
+          <img src="6" />
+          <img src="7" />
+          <img src="8" />
+          <img src="9" />
+          <img src="10" />
+          <img src="11" />
+          <img src="12" />
+          <img src="a" fetchpriority="low" />
+          <img src="a" />
+          <img src="a" fetchpriority="high" />
+          <img src="a" />
+          <img src="a" />
+        </body>
+      </html>,
+    );
+  });
+
   it('preloads from rendered images properly use srcSet and sizes', async () => {
     function App() {
       ReactDOM.preload('1', {as: 'image', imageSrcSet: 'ss1'});
@@ -3999,6 +4679,864 @@ body {
     );
   });
 
+  // https://github.com/vercel/next.js/discussions/54799
+  it('omits preloads when an <img> is inside a <picture>', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <picture>
+              <img src="foo" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcSet="webpsrc" />
+              <img src="jpg fallback" />
+            </picture>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <picture>
+            <img src="foo" />
+          </picture>
+          <picture>
+            <source type="image/webp" srcset="webpsrc" />
+            <img src="jpg fallback" />
+          </picture>
+        </body>
+      </html>,
+    );
+  });
+
+  // Fixes: https://github.com/facebook/react/issues/27910
+  it('omits preloads for images inside noscript tags', async () => {
+    function App() {
+      return (
+        <html>
+          <body>
+            <img src="foo" />
+            <noscript>
+              <img src="bar" />
+            </noscript>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="image" />
+        </head>
+        <body>
+          <img src="foo" />
+          <noscript>&lt;img src="bar"&gt;</noscript>
+        </body>
+      </html>,
+    );
+  });
+
+  it('should handle media on image preload', async () => {
+    function App({isClient}) {
+      ReactDOM.preload('/server', {
+        as: 'image',
+        imageSrcSet: '/server',
+        imageSizes: '100vw',
+        media: 'print and (min-width: 768px)',
+      });
+
+      if (isClient) {
+        ReactDOM.preload('/client', {
+          as: 'image',
+          imageSrcSet: '/client',
+          imageSizes: '100vw',
+          media: 'screen and (max-width: 480px)',
+        });
+      }
+
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/server"
+            imagesizes="100vw"
+            media="print and (min-width: 768px)"
+          />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/server"
+            imagesizes="100vw"
+            media="print and (min-width: 768px)"
+          />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    root.render(<App isClient={true} />);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/server"
+            imagesizes="100vw"
+            media="print and (min-width: 768px)"
+          />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/client"
+            imagesizes="100vw"
+            media="screen and (max-width: 480px)"
+          />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+  });
+
+  it('should warn if you preload a stylesheet and then render a style tag with the same href', async () => {
+    const style = 'body { color: red; }';
+    function App() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return (
+        <html>
+          <body>
+            hello
+            <style precedence="default" href="foo">
+              {style}
+            </style>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    assertConsoleErrorDev([
+      'React encountered a hoistable style tag for the same href as a preload: "foo". ' +
+        'When using a style tag to inline styles you should not also preload it as a stylsheet.\n' +
+        '    in style (at **)\n' +
+        '    in App (at **)',
+    ]);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <style data-precedence="default" data-href="foo">
+            {style}
+          </style>
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+  });
+
+  it('should preload only once even if you discover a stylesheet, script, or moduleScript late', async () => {
+    function App() {
+      // We start with preinitializing some resources first
+      ReactDOM.preinit('shell preinit/shell', {as: 'style'});
+      ReactDOM.preinit('shell preinit/shell', {as: 'script'});
+      ReactDOM.preinitModule('shell preinit/shell', {as: 'script'});
+
+      // We initiate all the shell preloads
+      ReactDOM.preload('shell preinit/shell', {as: 'style'});
+      ReactDOM.preload('shell preinit/shell', {as: 'script'});
+      ReactDOM.preloadModule('shell preinit/shell', {as: 'script'});
+
+      ReactDOM.preload('shell/shell preinit', {as: 'style'});
+      ReactDOM.preload('shell/shell preinit', {as: 'script'});
+      ReactDOM.preloadModule('shell/shell preinit', {as: 'script'});
+
+      ReactDOM.preload('shell/shell render', {as: 'style'});
+      ReactDOM.preload('shell/shell render', {as: 'script'});
+      ReactDOM.preloadModule('shell/shell render');
+
+      ReactDOM.preload('shell/late preinit', {as: 'style'});
+      ReactDOM.preload('shell/late preinit', {as: 'script'});
+      ReactDOM.preloadModule('shell/late preinit');
+
+      ReactDOM.preload('shell/late render', {as: 'style'});
+      ReactDOM.preload('shell/late render', {as: 'script'});
+      ReactDOM.preloadModule('shell/late render');
+
+      // we preinit later ones that should be created by
+      ReactDOM.preinit('shell/shell preinit', {as: 'style'});
+      ReactDOM.preinit('shell/shell preinit', {as: 'script'});
+      ReactDOM.preinitModule('shell/shell preinit');
+
+      ReactDOM.preinit('late/shell preinit', {as: 'style'});
+      ReactDOM.preinit('late/shell preinit', {as: 'script'});
+      ReactDOM.preinitModule('late/shell preinit');
+      return (
+        <html>
+          <body>
+            <link
+              rel="stylesheet"
+              precedence="default"
+              href="shell/shell render"
+            />
+            <script async={true} src="shell/shell render" />
+            <script type="module" async={true} src="shell/shell render" />
+            <link
+              rel="stylesheet"
+              precedence="default"
+              href="late/shell render"
+            />
+            <script async={true} src="late/shell render" />
+            <script type="module" async={true} src="late/shell render" />
+            <Suspense fallback="late...">
+              <BlockedOn value="late">
+                <Late />
+              </BlockedOn>
+            </Suspense>
+            <Suspense fallback="later...">
+              <BlockedOn value="later">
+                <Later />
+              </BlockedOn>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    function Late() {
+      ReactDOM.preload('late/later preinit', {as: 'style'});
+      ReactDOM.preload('late/later preinit', {as: 'script'});
+      ReactDOM.preloadModule('late/later preinit');
+
+      ReactDOM.preload('late/later render', {as: 'style'});
+      ReactDOM.preload('late/later render', {as: 'script'});
+      ReactDOM.preloadModule('late/later render');
+
+      ReactDOM.preload('late/shell preinit', {as: 'style'});
+      ReactDOM.preload('late/shell preinit', {as: 'script'});
+      ReactDOM.preloadModule('late/shell preinit');
+
+      ReactDOM.preload('late/shell render', {as: 'style'});
+      ReactDOM.preload('late/shell render', {as: 'script'});
+      ReactDOM.preloadModule('late/shell render');
+
+      // late preinits don't actually flush so we won't see this in the DOM as a stylesehet but we should see
+      // the preload for this resource
+      ReactDOM.preinit('shell/late preinit', {as: 'style'});
+      ReactDOM.preinit('shell/late preinit', {as: 'script'});
+      ReactDOM.preinitModule('shell/late preinit');
+      return (
+        <>
+          Late
+          <link
+            rel="stylesheet"
+            precedence="default"
+            href="shell/late render"
+          />
+          <script async={true} src="shell/late render" />
+          <script type="module" async={true} src="shell/late render" />
+        </>
+      );
+    }
+
+    function Later() {
+      // late preinits don't actually flush so we won't see this in the DOM as a stylesehet but we should see
+      // the preload for this resource
+      ReactDOM.preinit('late/later preinit', {as: 'style'});
+      ReactDOM.preinit('late/later preinit', {as: 'script'});
+      ReactDOM.preinitModule('late/later preinit');
+      return (
+        <>
+          Later
+          <link
+            rel="stylesheet"
+            precedence="default"
+            href="late/later render"
+          />
+          <script async={true} src="late/later render" />
+          <script type="module" async={true} src="late/later render" />
+        </>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell preinit/shell"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell render"
+          />
+          <script async="" src="shell preinit/shell" />
+          <script async="" src="shell preinit/shell" type="module" />
+          <script async="" src="shell/shell preinit" />
+          <script async="" src="shell/shell preinit" type="module" />
+          <script async="" src="late/shell preinit" />
+          <script async="" src="late/shell preinit" type="module" />
+          <script async="" src="shell/shell render" />
+          <script async="" src="shell/shell render" type="module" />
+          <script async="" src="late/shell render" />
+          <script async="" src="late/shell render" type="module" />
+          <link rel="preload" as="style" href="shell/late preinit" />
+          <link rel="preload" as="script" href="shell/late preinit" />
+          <link rel="modulepreload" href="shell/late preinit" />
+          <link rel="preload" as="style" href="shell/late render" />
+          <link rel="preload" as="script" href="shell/late render" />
+          <link rel="modulepreload" href="shell/late render" />
+        </head>
+        <body>
+          {'late...'}
+          {'later...'}
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('late');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell preinit/shell"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell render"
+          />
+          {/* FROM HERE */}
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/late render"
+          />
+          {/** TO HERE:
+           * This was hoisted by boundary complete instruction. The preload was already emitted in the
+           * shell but we see it below because this was inserted clientside by precedence.
+           * We don't observe the "shell/late preinit" because these do not flush unless they are flushing
+           * with the shell
+           * */}
+          <script async="" src="shell preinit/shell" />
+          <script async="" src="shell preinit/shell" type="module" />
+          <script async="" src="shell/shell preinit" />
+          <script async="" src="shell/shell preinit" type="module" />
+          <script async="" src="late/shell preinit" />
+          <script async="" src="late/shell preinit" type="module" />
+          <script async="" src="shell/shell render" />
+          <script async="" src="shell/shell render" type="module" />
+          <script async="" src="late/shell render" />
+          <script async="" src="late/shell render" type="module" />
+          <link rel="preload" as="style" href="shell/late preinit" />
+          <link rel="preload" as="script" href="shell/late preinit" />
+          <link rel="modulepreload" href="shell/late preinit" />
+          <link rel="preload" as="style" href="shell/late render" />
+          <link rel="preload" as="script" href="shell/late render" />
+          <link rel="modulepreload" href="shell/late render" />
+        </head>
+        <body>
+          {'late...'}
+          {'later...'}
+          {/* FROM HERE */}
+          <script async="" src="shell/late preinit" />
+          <script async="" src="shell/late preinit" type="module" />
+          <script async="" src="shell/late render" />
+          <script async="" src="shell/late render" type="module" />
+          <link rel="preload" as="style" href="late/later preinit" />
+          <link rel="preload" as="script" href="late/later preinit" />
+          <link rel="modulepreload" href="late/later preinit" />
+          <link rel="preload" as="style" href="late/later render" />
+          <link rel="preload" as="script" href="late/later render" />
+          <link rel="modulepreload" href="late/later render" />
+          {/** TO HERE:
+           * These resources streamed into the body during the boundary flush. Scripts go first then
+           * preloads according to our streaming queue priorities. Note also that late/shell resources
+           * where the resource already emitted in the shell and the preload is invoked later do not
+           * end up with a preload in the document at all.
+           * */}
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('later');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell preinit/shell"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/late render"
+          />
+          {/* FROM HERE */}
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/later render"
+          />
+          {/** TO HERE:
+           * This was hoisted by boundary complete instruction. The preload was already emitted in the
+           * shell but we see it below because this was inserted clientside by precedence
+           * We don't observe the "late/later preinit" because these do not flush unless they are flushing
+           * with the shell
+           * */}
+          <script async="" src="shell preinit/shell" />
+          <script async="" src="shell preinit/shell" type="module" />
+          <script async="" src="shell/shell preinit" />
+          <script async="" src="shell/shell preinit" type="module" />
+          <script async="" src="late/shell preinit" />
+          <script async="" src="late/shell preinit" type="module" />
+          <script async="" src="shell/shell render" />
+          <script async="" src="shell/shell render" type="module" />
+          <script async="" src="late/shell render" />
+          <script async="" src="late/shell render" type="module" />
+          <link rel="preload" as="style" href="shell/late preinit" />
+          <link rel="preload" as="script" href="shell/late preinit" />
+          <link rel="modulepreload" href="shell/late preinit" />
+          <link rel="preload" as="style" href="shell/late render" />
+          <link rel="preload" as="script" href="shell/late render" />
+          <link rel="modulepreload" href="shell/late render" />
+        </head>
+        <body>
+          {'late...'}
+          {'later...'}
+          <script async="" src="shell/late preinit" />
+          <script async="" src="shell/late preinit" type="module" />
+          <script async="" src="shell/late render" />
+          <script async="" src="shell/late render" type="module" />
+          <link rel="preload" as="style" href="late/later preinit" />
+          <link rel="preload" as="script" href="late/later preinit" />
+          <link rel="modulepreload" href="late/later preinit" />
+          <link rel="preload" as="style" href="late/later render" />
+          <link rel="preload" as="script" href="late/later render" />
+          <link rel="modulepreload" href="late/later render" />
+          {/* FROM HERE */}
+          <script async="" src="late/later preinit" />
+          <script async="" src="late/later preinit" type="module" />
+          <script async="" src="late/later render" />
+          <script async="" src="late/later render" type="module" />
+          {/** TO HERE:
+           * These resources streamed into the body during the boundary flush. Scripts go first then
+           * preloads according to our streaming queue priorities
+           * */}
+        </body>
+      </html>,
+    );
+    loadStylesheets();
+    // Let the styles flush and then flush the boundaries
+    await 0;
+    await 0;
+    jest.runAllTimers();
+    assertLog([
+      'load stylesheet: shell preinit/shell',
+      'load stylesheet: shell/shell preinit',
+      'load stylesheet: late/shell preinit',
+      'load stylesheet: shell/shell render',
+      'load stylesheet: late/shell render',
+      'load stylesheet: shell/late render',
+      'load stylesheet: late/later render',
+    ]);
+
+    ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell preinit/shell"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/late render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/later render"
+          />
+          {/* FROM HERE */}
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/late preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/later preinit"
+          />
+          {/** TO HERE:
+           * The client render patches in the two missing preinit stylesheets when hydration happens
+           * Note that this is only because we repeated the calls to preinit on the client
+           * */}
+          <script async="" src="shell preinit/shell" />
+          <script async="" src="shell preinit/shell" type="module" />
+          <script async="" src="shell/shell preinit" />
+          <script async="" src="shell/shell preinit" type="module" />
+          <script async="" src="late/shell preinit" />
+          <script async="" src="late/shell preinit" type="module" />
+          <script async="" src="shell/shell render" />
+          <script async="" src="shell/shell render" type="module" />
+          <script async="" src="late/shell render" />
+          <script async="" src="late/shell render" type="module" />
+          <link rel="preload" as="style" href="shell/late preinit" />
+          <link rel="preload" as="script" href="shell/late preinit" />
+          <link rel="modulepreload" href="shell/late preinit" />
+          <link rel="preload" as="style" href="shell/late render" />
+          <link rel="preload" as="script" href="shell/late render" />
+          <link rel="modulepreload" href="shell/late render" />
+        </head>
+        <body>
+          {'Late'}
+          {'Later'}
+          <script async="" src="shell/late preinit" />
+          <script async="" src="shell/late preinit" type="module" />
+          <script async="" src="shell/late render" />
+          <script async="" src="shell/late render" type="module" />
+          <link rel="preload" as="style" href="late/later preinit" />
+          <link rel="preload" as="script" href="late/later preinit" />
+          <link rel="modulepreload" href="late/later preinit" />
+          <link rel="preload" as="style" href="late/later render" />
+          <link rel="preload" as="script" href="late/later render" />
+          <link rel="modulepreload" href="late/later render" />
+          <script async="" src="late/later preinit" />
+          <script async="" src="late/later preinit" type="module" />
+          <script async="" src="late/later render" />
+          <script async="" src="late/later render" type="module" />
+        </body>
+      </html>,
+    );
+  });
+
+  it('does not flush hoistables for fallbacks', async () => {
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense
+              fallback={
+                <>
+                  <div>fallback1</div>
+                  <meta name="fallback1" />
+                  <title>foo</title>
+                </>
+              }>
+              <>
+                <div>primary1</div>
+                <meta name="primary1" />
+              </>
+            </Suspense>
+            <Suspense
+              fallback={
+                <>
+                  <div>fallback2</div>
+                  <meta name="fallback2" />
+                  <link rel="foo" href="bar" />
+                </>
+              }>
+              <>
+                <div>primary2</div>
+                <BlockedOn value="first">
+                  <meta name="primary2" />
+                </BlockedOn>
+              </>
+            </Suspense>
+            <Suspense
+              fallback={
+                <>
+                  <div>fallback3</div>
+                  <meta name="fallback3" />
+                  <Suspense fallback="deep">
+                    <div>deep fallback ... primary content</div>
+                    <meta name="deep fallback" />
+                  </Suspense>
+                </>
+              }>
+              <>
+                <div>primary3</div>
+                <BlockedOn value="second">
+                  <meta name="primary3" />
+                </BlockedOn>
+              </>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+      resolveText('first');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta name="primary1" />
+          <meta name="primary2" />
+        </head>
+        <body>
+          <div>primary1</div>
+          <div>primary2</div>
+          <div>fallback3</div>
+          <div>deep fallback ... primary content</div>
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('second');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta name="primary1" />
+          <meta name="primary2" />
+        </head>
+        <body>
+          <div>primary1</div>
+          <div>primary2</div>
+          <div>primary3</div>
+          <meta name="primary3" />
+        </body>
+      </html>,
+    );
+  });
+
+  it('avoids flushing hoistables from completed boundaries nested inside fallbacks', async () => {
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense
+              fallback={
+                <Suspense
+                  fallback={
+                    <>
+                      <div>nested fallback1</div>
+                      <meta name="nested fallback1" />
+                    </>
+                  }>
+                  <>
+                    <div>nested primary1</div>
+                    <meta name="nested primary1" />
+                  </>
+                </Suspense>
+              }>
+              <BlockedOn value="release" />
+              <>
+                <div>primary1</div>
+                <meta name="primary1" />
+              </>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          {/* The primary content hoistables emit */}
+          <meta name="primary1" />
+        </head>
+        <body>
+          {/* The fallback content emits but the hoistables do not even if they
+              inside a nested suspense boundary that is resolved */}
+          <div>nested primary1</div>
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('release');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta name="primary1" />
+        </head>
+        <body>
+          <div>primary1</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('should never flush hoistables before the preamble', async () => {
+    let resolve;
+    const promise = new Promise(res => {
+      resolve = res;
+    });
+
+    function App() {
+      ReactDOM.preinit('foo', {as: 'script'});
+      React.use(promise);
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    // we assert the default JSDOM still in tact
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolve();
+    });
+
+    // we assert the DOM was replaced entirely because we streamed an opening html tag
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <script async="" src="foo" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
@@ -4013,13 +5551,23 @@ body {
         );
       }
 
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(<App url="foo" />).pipe(writable);
-        });
-      }).toErrorDev([
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+      await act(() => {
+        renderToPipeableStream(<App url="foo" />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.\n' +
+          '    in App (at **)',
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. ' +
+          'Browsers do not perform DNS queries using CORS and setting this attribute ' +
+          'on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just ' +
+          'a single string argument, `href`.\n' +
+          '    in App (at **)',
       ]);
 
       expect(getMeaningfulChildren(document)).toEqual(
@@ -4032,11 +5580,21 @@ body {
       );
 
       const root = ReactDOMClient.hydrateRoot(document, <App url="foo" />);
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev([
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.\n' +
+          '    in App (at **)',
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. ' +
+          'Browsers do not perform DNS queries using CORS and setting this attribute ' +
+          'on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just ' +
+          'a single string argument, `href`.\n' +
+          '    in App (at **)',
       ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -4048,11 +5606,21 @@ body {
       );
 
       root.render(<App url="bar" />);
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev([
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
-        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered something with type "object" as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.\n' +
+          '    in App (at **)',
+        'ReactDOM.prefetchDNS(): Expected only one argument, `href`, ' +
+          'but encountered something with type "object" as a second argument instead. ' +
+          'This argument is reserved for future options and is currently disallowed. ' +
+          'It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. ' +
+          'Browsers do not perform DNS queries using CORS and setting this attribute ' +
+          'on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just ' +
+          'a single string argument, `href`.\n' +
+          '    in App (at **)',
       ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -4064,6 +5632,295 @@ body {
         </html>,
       );
     });
+  });
+
+  it('does not wait for stylesheets of completed fallbacks', async () => {
+    function Unblock({value}) {
+      resolveText(value);
+      return null;
+    }
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense fallback="loading...">
+              <div>hello world</div>
+              <BlockedOn value="unblock inner boundaries">
+                <Suspense
+                  fallback={
+                    <>
+                      <link
+                        rel="stylesheet"
+                        href="completed inner"
+                        precedence="default"
+                      />
+                      <div>inner fallback</div>
+                      <Unblock value="completed inner" />
+                    </>
+                  }>
+                  <BlockedOn value="completed inner" />
+                  <div>inner boundary</div>
+                </Suspense>
+                <Suspense
+                  fallback={
+                    <>
+                      <link
+                        rel="stylesheet"
+                        href="in fallback inner"
+                        precedence="default"
+                      />
+                      <div>inner blocked fallback</div>
+                    </>
+                  }>
+                  <BlockedOn value="in fallback inner" />
+                  <div>inner blocked boundary</div>
+                </Suspense>
+              </BlockedOn>
+              <BlockedOn value="complete root" />
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>loading...</body>
+      </html>,
+    );
+
+    await act(async () => {
+      resolveText('unblock inner boundaries');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          loading...
+          <link rel="preload" href="completed inner" as="style" />
+          <link rel="preload" href="in fallback inner" as="style" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('completed inner');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          loading...
+          <link rel="preload" href="completed inner" as="style" />
+          <link rel="preload" href="in fallback inner" as="style" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('complete root');
+    });
+    await act(() => {
+      loadStylesheets();
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            href="in fallback inner"
+            data-precedence="default"
+          />
+        </head>
+        <body>
+          <div>hello world</div>
+          <div>inner boundary</div>
+          <div>inner blocked fallback</div>
+          <link rel="preload" href="completed inner" as="style" />
+          <link rel="preload" href="in fallback inner" as="style" />
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('delays "forwards" SuspenseList rows until the css of previous rows have completed', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Suspense fallback="loading...">
+              <SuspenseList revealOrder="forwards">
+                <Suspense fallback="loading foo...">
+                  <BlockedOn value="foo">
+                    <link rel="stylesheet" href="foo" precedence="foo" />
+                    foo
+                  </BlockedOn>
+                </Suspense>
+                <Suspense fallback="loading bar...">bar</Suspense>
+                <BlockedOn value="bar">
+                  <Suspense fallback="loading baz...">
+                    <BlockedOn value="baz">baz</BlockedOn>
+                  </Suspense>
+                </BlockedOn>
+              </SuspenseList>
+            </Suspense>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>loading...</body>
+      </html>,
+    );
+
+    // unblock css loading
+    await act(() => {
+      resolveText('foo');
+    });
+
+    // bar is still blocking the whole list
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    // unblock inner loading states
+    await act(() => {
+      resolveText('bar');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+          {'loading baz...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    // resolve the last boundary
+    await act(() => {
+      resolveText('baz');
+    });
+
+    // still blocked on the css of the first row
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+          {'loading baz...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      loadStylesheets();
+    });
+    await assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'foo'}
+          {'bar'}
+          {'baz'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('delays "together" SuspenseList rows until the css of previous rows have completed', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <SuspenseList revealOrder="together">
+              <Suspense fallback="loading foo...">
+                <BlockedOn value="foo">
+                  <link rel="stylesheet" href="foo" precedence="foo" />
+                  foo
+                </BlockedOn>
+              </Suspense>
+              <Suspense fallback="loading bar...">bar</Suspense>
+            </SuspenseList>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('foo');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      loadStylesheets();
+    });
+    await assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="foo" />
+        </head>
+        <body>
+          {'foo'}
+          {'bar'}
+          <link as="style" href="foo" rel="preload" />
+        </body>
+      </html>,
+    );
   });
 
   describe('ReactDOM.preconnect(href, { crossOrigin })', () => {
@@ -4082,13 +5939,15 @@ body {
         );
       }
 
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(<App url="foo" />).pipe(writable);
-        });
-      }).toErrorDev(
-        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered something with type "boolean" instead. Try removing this option or passing a string value instead.',
-      );
+      await act(() => {
+        renderToPipeableStream(<App url="foo" />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) ' +
+          'to be a string but encountered something with type "boolean" instead. ' +
+          'Try removing this option or passing a string value instead.\n' +
+          '    in App (at **)',
+      ]);
 
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -4102,11 +5961,13 @@ body {
       );
 
       const root = ReactDOMClient.hydrateRoot(document, <App url="foo" />);
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered something with type "boolean" instead. Try removing this option or passing a string value instead.',
-      );
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) ' +
+          'to be a string but encountered something with type "boolean" instead. ' +
+          'Try removing this option or passing a string value instead.\n' +
+          '    in App (at **)',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -4119,11 +5980,13 @@ body {
       );
 
       root.render(<App url="bar" />);
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered something with type "boolean" instead. Try removing this option or passing a string value instead.',
-      );
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) ' +
+          'to be a string but encountered something with type "boolean" instead. ' +
+          'Try removing this option or passing a string value instead.\n' +
+          '    in App (at **)',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -4141,7 +6004,6 @@ body {
   });
 
   describe('ReactDOM.preload(href, { as: ... })', () => {
-    // @gate enableFloat
     it('creates a preload resource when called', async () => {
       function App() {
         ReactDOM.preload('foo', {as: 'style'});
@@ -4230,7 +6092,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('can seed connection props for stylesheet and script resources', async () => {
       function App() {
         ReactDOM.preload('foo', {
@@ -4272,7 +6133,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('warns if you do not pass in a valid href argument or options argument', async () => {
       function App() {
         ReactDOM.preload();
@@ -4283,15 +6143,28 @@ body {
         return <div>foo</div>;
       }
 
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(<App />).pipe(writable);
-        });
-      }).toErrorDev([
-        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `href` argument encountered was `undefined`. The `options` argument encountered was `undefined`.',
-        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `href` argument encountered was an empty string. The `options` argument encountered was `undefined`.',
-        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `options` argument encountered was `null`.',
-        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `as` option encountered was `undefined`.',
+      await act(() => {
+        renderToPipeableStream(<App />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an ' +
+          '`options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. ' +
+          'The `href` argument encountered was `undefined`. ' +
+          'The `options` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an ' +
+          '`options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. ' +
+          'The `href` argument encountered was an empty string. ' +
+          'The `options` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an ' +
+          '`options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. ' +
+          'The `options` argument encountered was `null`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an ' +
+          '`options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. ' +
+          'The `as` option encountered was `undefined`.\n' +
+          '    in App (at **)',
       ]);
     });
 
@@ -4442,8 +6315,167 @@ body {
     });
   });
 
+  describe('ReactDOM.preloadModule(href, options)', () => {
+    it('preloads scripts as modules', async () => {
+      function App({ssr}) {
+        const prefix = ssr ? 'ssr ' : 'browser ';
+        ReactDOM.preloadModule(prefix + 'plain');
+        ReactDOM.preloadModule(prefix + 'default', {as: 'script'});
+        ReactDOM.preloadModule(prefix + 'cors', {
+          crossOrigin: 'use-credentials',
+        });
+        ReactDOM.preloadModule(prefix + 'integrity', {integrity: 'some hash'});
+        ReactDOM.preloadModule(prefix + 'serviceworker', {as: 'serviceworker'});
+        return <div>hello</div>;
+      }
+      await act(() => {
+        renderToPipeableStream(<App ssr={true} />).pipe(writable);
+      });
+      expect(getMeaningfulChildren(document.body)).toEqual(
+        <div id="container">
+          <link rel="modulepreload" href="ssr plain" />
+          <link rel="modulepreload" href="ssr default" />
+          <link
+            rel="modulepreload"
+            href="ssr cors"
+            crossorigin="use-credentials"
+          />
+          <link
+            rel="modulepreload"
+            href="ssr integrity"
+            integrity="some hash"
+          />
+          <link
+            rel="modulepreload"
+            href="ssr serviceworker"
+            as="serviceworker"
+          />
+          <div>hello</div>
+        </div>,
+      );
+
+      ReactDOMClient.hydrateRoot(container, <App />);
+      await waitForAll([]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="modulepreload" href="browser plain" />
+            <link rel="modulepreload" href="browser default" />
+            <link
+              rel="modulepreload"
+              href="browser cors"
+              crossorigin="use-credentials"
+            />
+            <link
+              rel="modulepreload"
+              href="browser integrity"
+              integrity="some hash"
+            />
+            <link
+              rel="modulepreload"
+              href="browser serviceworker"
+              as="serviceworker"
+            />
+          </head>
+          <body>
+            <div id="container">
+              <link rel="modulepreload" href="ssr plain" />
+              <link rel="modulepreload" href="ssr default" />
+              <link
+                rel="modulepreload"
+                href="ssr cors"
+                crossorigin="use-credentials"
+              />
+              <link
+                rel="modulepreload"
+                href="ssr integrity"
+                integrity="some hash"
+              />
+              <link
+                rel="modulepreload"
+                href="ssr serviceworker"
+                as="serviceworker"
+              />
+              <div>hello</div>
+            </div>
+          </body>
+        </html>,
+      );
+    });
+
+    it('warns if you provide invalid arguments', async () => {
+      function App() {
+        ReactDOM.preloadModule();
+        ReactDOM.preloadModule(() => {});
+        ReactDOM.preloadModule('');
+        ReactDOM.preloadModule('1', true);
+        ReactDOM.preloadModule('2', {as: true});
+        return <div>hello</div>;
+      }
+      await act(() => {
+        renderToPipeableStream(<App />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was something with type "function".\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was an empty string.\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `options` argument encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally,' +
+          ' an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `as` option encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+      ]);
+      expect(getMeaningfulChildren(document.body)).toEqual(
+        <div id="container">
+          <link rel="modulepreload" href="1" />
+          <link rel="modulepreload" href="2" />
+          <div>hello</div>
+        </div>,
+      );
+
+      const root = ReactDOMClient.createRoot(
+        document.getElementById('container'),
+      );
+      root.render(<App />);
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, ' +
+          'an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was something with type "function".\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an ' +
+          '`options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `href` argument encountered was an empty string.\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an ' +
+          '`options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `options` argument encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an ' +
+          '`options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. ' +
+          'The `as` option encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+      ]);
+    });
+  });
+
   describe('ReactDOM.preinit(href, { as: ... })', () => {
-    // @gate enableFloat
     it('creates a stylesheet resource when ReactDOM.preinit(..., {as: "style" }) is called', async () => {
       function App() {
         ReactDOM.preinit('foo', {as: 'style'});
@@ -4527,7 +6559,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('creates a stylesheet resource in the ownerDocument when ReactDOM.preinit(..., {as: "style" }) is called outside of render on the client', async () => {
       function App() {
         React.useEffect(() => {
@@ -4553,8 +6584,7 @@ body {
       );
     });
 
-    // @gate enableFloat
-    it('creates a stylesheet resource in the ownerDocument when ReactDOM.preinit(..., {as: "style" }) is called outside of render on the client', async () => {
+    it('creates a stylesheet resource in the ownerDocument when ReactDOM.preinit(..., {as: "style" }) is called in shadowRoot', async () => {
       // This is testing behavior, but it shows that it is not a good idea to preinit inside a shadowRoot. The point is we are asserting a behavior
       // you would want to avoid in a real app.
       const shadow = document.body.attachShadow({mode: 'open'});
@@ -4597,7 +6627,6 @@ body {
       expect(getMeaningfulChildren(shadow)).toEqual(<div>shadow</div>);
     });
 
-    // @gate enableFloat
     it('creates a script resource when ReactDOM.preinit(..., {as: "script" }) is called', async () => {
       function App() {
         ReactDOM.preinit('foo', {as: 'script'});
@@ -4675,7 +6704,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('creates a script resource when ReactDOM.preinit(..., {as: "script" }) is called outside of render on the client', async () => {
       function App() {
         React.useEffect(() => {
@@ -4701,7 +6729,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('warns if you do not pass in a valid href argument or options argument', async () => {
       function App() {
         ReactDOM.preinit();
@@ -4712,16 +6739,27 @@ body {
         return <div>foo</div>;
       }
 
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(<App />).pipe(writable);
-        });
-      }).toErrorDev([
-        'ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string but encountered `undefined` instead',
-        'ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string but encountered an empty string instead',
-        'ReactDOM.preinit(): Expected the `options` argument (second) to be an object with an `as` property describing the type of resource to be preinitialized but encountered `null` instead',
-        'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain a valid value describing the type of resource to be preinitialized but encountered `undefined` instead. Valid values for `as` are "style" and "script".',
-        'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain a valid value describing the type of resource to be preinitialized but encountered "foo" instead. Valid values for `as` are "style" and "script".',
+      await act(() => {
+        renderToPipeableStream(<App />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string ' +
+          'but encountered `undefined` instead.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string ' +
+          'but encountered an empty string instead.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinit(): Expected the `options` argument (second) to be an object with an `as` ' +
+          'property describing the type of resource to be preinitialized but encountered `null` instead.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain ' +
+          'a valid value describing the type of resource to be preinitialized but encountered `undefined` instead. ' +
+          'Valid values for `as` are "style" and "script".\n' +
+          '    in App (at **)',
+        'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain ' +
+          'a valid value describing the type of resource to be preinitialized but encountered "foo" instead. ' +
+          'Valid values for `as` are "style" and "script".\n' +
+          '    in App (at **)',
       ]);
     });
 
@@ -4980,8 +7018,168 @@ body {
     });
   });
 
+  describe('ReactDOM.preinitModule(href, options)', () => {
+    it('creates a script module resources', async () => {
+      function App({ssr}) {
+        const prefix = ssr ? 'ssr ' : 'browser ';
+        ReactDOM.preinitModule(prefix + 'plain');
+        ReactDOM.preinitModule(prefix + 'default', {as: 'script'});
+        ReactDOM.preinitModule(prefix + 'cors', {
+          crossOrigin: 'use-credentials',
+        });
+        ReactDOM.preinitModule(prefix + 'integrity', {integrity: 'some hash'});
+        ReactDOM.preinitModule(prefix + 'warning', {as: 'style'});
+        return <div>hello</div>;
+      }
+      await act(() => {
+        renderToPipeableStream(<App ssr={true} />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `as` option encountered was "style".\n' +
+          '    in App (at **)',
+      ]);
+      expect(getMeaningfulChildren(document.body)).toEqual(
+        <div id="container">
+          <script type="module" src="ssr plain" async="" />
+          <script type="module" src="ssr default" async="" />
+          <script
+            type="module"
+            src="ssr cors"
+            crossorigin="use-credentials"
+            async=""
+          />
+          <script
+            type="module"
+            src="ssr integrity"
+            integrity="some hash"
+            async=""
+          />
+          <div>hello</div>
+        </div>,
+      );
+
+      ReactDOMClient.hydrateRoot(container, <App />);
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `as` option encountered was "style".\n' +
+          '    in App (at **)',
+      ]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <script type="module" src="browser plain" async="" />
+            <script type="module" src="browser default" async="" />
+            <script
+              type="module"
+              src="browser cors"
+              crossorigin="use-credentials"
+              async=""
+            />
+            <script
+              type="module"
+              src="browser integrity"
+              integrity="some hash"
+              async=""
+            />
+          </head>
+          <body>
+            <div id="container">
+              <script type="module" src="ssr plain" async="" />
+              <script type="module" src="ssr default" async="" />
+              <script
+                type="module"
+                src="ssr cors"
+                crossorigin="use-credentials"
+                async=""
+              />
+              <script
+                type="module"
+                src="ssr integrity"
+                integrity="some hash"
+                async=""
+              />
+              <div>hello</div>
+            </div>
+          </body>
+        </html>,
+      );
+    });
+
+    it('warns if you provide invalid arguments', async () => {
+      function App() {
+        ReactDOM.preinitModule();
+        ReactDOM.preinitModule(() => {});
+        ReactDOM.preinitModule('');
+        ReactDOM.preinitModule('1', true);
+        ReactDOM.preinitModule('2', {as: true});
+        return <div>hello</div>;
+      }
+      await act(() => {
+        renderToPipeableStream(<App />).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was something with type "function".\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was an empty string.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `options` argument encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `as` option encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+      ]);
+      expect(getMeaningfulChildren(document.body)).toEqual(
+        <div id="container">
+          <div>hello</div>
+        </div>,
+      );
+
+      const root = ReactDOMClient.createRoot(
+        document.getElementById('container'),
+      );
+      root.render(<App />);
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was `undefined`.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was something with type "function".\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `href` argument encountered was an empty string.\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `options` argument encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` ' +
+          'string and, optionally, an `options` object with a valid `as` property. ' +
+          'The `as` option encountered was something with type "boolean".\n' +
+          '    in App (at **)',
+      ]);
+    });
+  });
+
   describe('Stylesheet Resources', () => {
-    // @gate enableFloat
     it('treats link rel stylesheet elements as a stylesheet resource when it includes a precedence when server rendering', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -5008,7 +7206,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('treats link rel stylesheet elements as a stylesheet resource when it includes a precedence when client rendering', async () => {
       const root = ReactDOMClient.createRoot(document);
       root.render(
@@ -5021,6 +7218,14 @@ body {
         </html>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog([
+        'load preload: aresource',
+        'load stylesheet: aresource',
+      ]);
 
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -5034,7 +7239,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('treats link rel stylesheet elements as a stylesheet resource when it includes a precedence when hydrating', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -5072,7 +7276,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('hoists stylesheet resources to the correct precedence', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -5114,6 +7317,22 @@ body {
         </html>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog([
+        'load preload: bar1',
+        'load preload: foo3',
+        'load preload: default2',
+        'load stylesheet: foo1',
+        'load stylesheet: foo2',
+        'load stylesheet: foo3',
+        'load stylesheet: default1',
+        'load stylesheet: default2',
+        'load stylesheet: bar1',
+      ]);
+
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -5134,7 +7353,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('retains styles even after the last referring Resource unmounts', async () => {
       // This test is true until a future update where there is some form of garbage collection.
       const root = ReactDOMClient.createRoot(document);
@@ -5149,6 +7367,11 @@ body {
         </html>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog(['load preload: foo', 'load stylesheet: foo']);
 
       root.render(
         <html>
@@ -5167,7 +7390,7 @@ body {
       );
     });
 
-    // @gate enableFloat && enableHostSingletons && enableClientRenderFallbackOnTextMismatch
+    // @gate favorSafetyOverHydrationPerf
     it('retains styles even when a new html, head, and/body mount', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -5198,15 +7421,18 @@ body {
           },
         },
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        [
-          'Warning: Text content did not match. Server: "server" Client: "client"',
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-        ],
-        {withoutStack: 1},
-      );
+      await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog([
+        'load preload: qux',
+        'load stylesheet: foo',
+        'load stylesheet: bar',
+        'load stylesheet: qux',
+      ]);
+
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -5219,58 +7445,6 @@ body {
       );
     });
 
-    // @gate enableFloat && !enableHostSingletons
-    it('retains styles even when a new html, head, and/body mount - without HostSingleton', async () => {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(
-          <html>
-            <head />
-            <body>
-              <link rel="stylesheet" href="foo" precedence="foo" />
-              <link rel="stylesheet" href="bar" precedence="bar" />
-              server
-            </body>
-          </html>,
-        );
-        pipe(writable);
-      });
-      const errors = [];
-      ReactDOMClient.hydrateRoot(
-        document,
-        <html>
-          <head>
-            <link rel="stylesheet" href="qux" precedence="qux" />
-            <link rel="stylesheet" href="foo" precedence="foo" />
-          </head>
-          <body>client</body>
-        </html>,
-        {
-          onRecoverableError(error) {
-            errors.push(error.message);
-          },
-        },
-      );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        [
-          'Warning: Text content did not match. Server: "server" Client: "client"',
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-        ],
-        {withoutStack: 1},
-      );
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <link rel="stylesheet" href="qux" data-precedence="qux" />
-            <link rel="stylesheet" href="foo" data-precedence="foo" />
-          </head>
-          <body>client</body>
-        </html>,
-      );
-    });
-
-    // @gate enableFloat && enableHostSingletons
     it('retains styles in head through head remounts', async () => {
       const root = ReactDOMClient.createRoot(document);
       root.render(
@@ -5285,6 +7459,16 @@ body {
         </html>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog([
+        'load preload: foo',
+        'load preload: bar',
+        'load stylesheet: foo',
+        'load stylesheet: bar',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -5307,6 +7491,12 @@ body {
         </html>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog(['load preload: baz', 'load stylesheet: baz']);
+
       // The reason we do not see preloads in the head is they are inserted synchronously
       // during render and then when the new singleton mounts it resets it's content, retaining only styles
       expect(getMeaningfulChildren(document)).toEqual(
@@ -5321,7 +7511,7 @@ body {
         </html>,
       );
     });
-    // @gate enableFloat
+
     it('can support styles inside portals to a shadowRoot', async () => {
       const shadow = document.body.attachShadow({mode: 'open'});
       const root = ReactDOMClient.createRoot(container);
@@ -5344,6 +7534,16 @@ body {
         </>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+        loadStylesheetsFrom(shadow);
+      });
+      await assertLog([
+        'load preload: foo',
+        'load stylesheet: foo',
+        'load stylesheet: foo',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -5365,7 +7565,7 @@ body {
         <div>shadow</div>,
       ]);
     });
-    // @gate enableFloat
+
     it('can support styles inside portals to an element in shadowRoots', async () => {
       const template = document.createElement('template');
       template.innerHTML =
@@ -5404,6 +7604,24 @@ body {
         </>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+        loadStylesheetsFrom(shadow);
+        loadStylesheetsFrom(shadowContainer2);
+        loadStylesheetsFrom(shadowContainer2);
+      });
+      await assertLog([
+        'load preload: foo',
+        'load preload: bar',
+        'load preload: baz',
+        'load preload: qux',
+        'load stylesheet: foo',
+        'load stylesheet: foo',
+        'load stylesheet: baz',
+        'load stylesheet: bar',
+        'load stylesheet: qux',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -5435,7 +7653,6 @@ body {
       ]);
     });
 
-    // @gate enableFloat
     it('escapes hrefs when selecting matching elements in the document when rendering Resources', async () => {
       function App() {
         ReactDOM.preload('preload', {as: 'style'});
@@ -5476,6 +7693,18 @@ body {
       }
       root.render(<ClientApp />);
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog([
+        'load preload: preload',
+        'load preload: with\nnewline',
+        'load preload: style"][rel="stylesheet',
+        'load stylesheet: style',
+        'load stylesheet: with\\slashes',
+        'load stylesheet: style"][rel="stylesheet',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -5503,7 +7732,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('escapes hrefs when selecting matching elements in the document when using preload and preinit', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -5566,7 +7794,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('does not create stylesheet resources when inside an <svg> context', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -5627,7 +7854,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('does not create stylesheet resources when inside a <noscript> context', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -5669,55 +7895,86 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('warns if you provide a `precedence` prop with other props that invalidate the creation of a stylesheet resource', async () => {
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(
-            <html>
-              <body>
-                <link rel="stylesheet" precedence="default" />
-                <link rel="stylesheet" href="" precedence="default" />
-                <link
-                  rel="stylesheet"
-                  href="foo"
-                  precedence="default"
-                  onLoad={() => {}}
-                  onError={() => {}}
-                />
-                <link
-                  rel="stylesheet"
-                  href="foo"
-                  precedence="default"
-                  onLoad={() => {}}
-                />
-                <link
-                  rel="stylesheet"
-                  href="foo"
-                  precedence="default"
-                  onError={() => {}}
-                />
-                <link
-                  rel="stylesheet"
-                  href="foo"
-                  precedence="default"
-                  disabled={false}
-                />
-              </body>
-            </html>,
-          ).pipe(writable);
-        });
-      }).toErrorDev(
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <link rel="stylesheet" precedence="default" />
+              <link rel="stylesheet" href="" precedence="default" />
+              <link
+                rel="stylesheet"
+                href="foo"
+                precedence="default"
+                onLoad={() => {}}
+                onError={() => {}}
+              />
+              <link
+                rel="stylesheet"
+                href="foo"
+                precedence="default"
+                onLoad={() => {}}
+              />
+              <link
+                rel="stylesheet"
+                href="foo"
+                precedence="default"
+                onError={() => {}}
+              />
+              <link
+                rel="stylesheet"
+                href="foo"
+                precedence="default"
+                disabled={false}
+              />
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+      assertConsoleErrorDev(
         [
-          gate(flags => flags.enableFilterEmptyStringAttributesDOM)
-            ? 'An empty string ("") was passed to the href attribute. To fix this, either do not render the element at all or pass null to href instead of an empty string.'
-            : undefined,
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and expected the `href` prop to be a non-empty string but ecountered `undefined` instead. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop ensure there is a non-empty string `href` prop as well, otherwise remove the `precedence` prop.',
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and expected the `href` prop to be a non-empty string but ecountered an empty string instead. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop ensure there is a non-empty string `href` prop as well, otherwise remove the `precedence` prop.',
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and `onLoad` and `onError` props. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.',
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and `onLoad` prop. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `onLoad` prop, otherwise remove the `precedence` prop.',
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and `onError` prop. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `onError` prop, otherwise remove the `precedence` prop.',
-          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and a `disabled` prop. The presence of the `disabled` prop indicates an intent to manage the stylesheet active state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `disabled` prop, otherwise remove the `precedence` prop.',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and ' +
+            'expected the `href` prop to be a non-empty string but ecountered `undefined` instead. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
+            '`precedence` prop ensure there is a non-empty string `href` prop as well, ' +
+            'otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and ' +
+            'expected the `href` prop to be a non-empty string but ecountered an empty string instead. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
+            '`precedence` prop ensure there is a non-empty string `href` prop as well, ' +
+            'otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
+          'An empty string ("") was passed to the href attribute. ' +
+            'To fix this, either do not render the element at all or ' +
+            'pass null to href instead of an empty string.\n' +
+            '    in link (at **)',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and ' +
+            '`onLoad` and `onError` props. The presence of loading and error handlers indicates ' +
+            'an intent to manage the stylesheet loading state from your from your Component code ' +
+            'and React will not hoist or deduplicate this stylesheet. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
+            '`precedence` prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and ' +
+            '`onLoad` prop. The presence of loading and error handlers indicates an intent to ' +
+            'manage the stylesheet loading state from your from your Component code and ' +
+            'React will not hoist or deduplicate this stylesheet. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the ' +
+            '`precedence` prop remove the `onLoad` prop, otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and `onError` prop. ' +
+            'The presence of loading and error handlers indicates an intent to manage the stylesheet loading state ' +
+            'from your from your Component code and React will not hoist or deduplicate this stylesheet. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` ' +
+            'prop remove the `onError` prop, otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
+          'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and a `disabled` prop. ' +
+            'The presence of the `disabled` prop indicates an intent to manage the stylesheet active state from ' +
+            'your from your Component code and React will not hoist or deduplicate this stylesheet. ' +
+            'If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` ' +
+            'prop remove the `disabled` prop, otherwise remove the `precedence` prop.\n' +
+            '    in link (at **)',
         ].filter(Boolean),
       );
 
@@ -5735,14 +7992,18 @@ body {
           </body>
         </html>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev([
-        'React encountered a <link rel="stylesheet" href="foo" ... /> with a `precedence` prop that also included the `onLoad` and `onError` props. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.',
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'React encountered a <link rel="stylesheet" href="foo" ... /> with a `precedence` ' +
+          'prop that also included the `onLoad` and `onError` props. ' +
+          'The presence of loading and error handlers indicates an intent to manage the stylesheet ' +
+          'loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. ' +
+          'If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` ' +
+          'prop remove the `onLoad` and `onError` props, otherwise remove the `precedence` prop.\n' +
+          '    in body (at **)',
       ]);
     });
 
-    // @gate enableFloat
     it('will not block displaying a Suspense boundary on a stylesheet with media that does not match', async () => {
       await act(() => {
         renderToPipeableStream(
@@ -5859,7 +8120,6 @@ body {
   });
 
   describe('Style Resource', () => {
-    // @gate enableFloat
     it('treats <style href="..." precedence="..."> elements as a style resource when server rendering', async () => {
       const css = `
 body {
@@ -5889,7 +8149,6 @@ body {
       );
     });
 
-    // @gate enableFloat
     it('can insert style resources as part of a boundary reveal', async () => {
       const cssRed = `
 body {
@@ -6005,7 +8264,6 @@ background-color: green;
       );
     });
 
-    // @gate enableFloat
     it('can emit styles early when a partial boundary flushes', async () => {
       const css = 'body { background-color: red; }';
       await act(() => {
@@ -6318,26 +8576,28 @@ background-color: green;
     });
 
     it('warns if you render a <style> with an href with a space on the server', async () => {
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(
-            <html>
-              <body>
-                <style href="foo bar" precedence="default">
-                  style
-                </style>
-              </body>
-            </html>,
-          ).pipe(writable);
-        });
-      }).toErrorDev(
-        'React expected the `href` prop for a <style> tag opting into hoisting semantics using the `precedence` prop to not have any spaces but ecountered spaces instead. using spaces in this prop will cause hydration of this style to fail on the client. The href for the <style> where this ocurred is "foo bar".',
-      );
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <style href="foo bar" precedence="default">
+                style
+              </style>
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'React expected the `href` prop for a <style> tag opting into hoisting semantics ' +
+          'using the `precedence` prop to not have any spaces but ecountered spaces instead. ' +
+          'using spaces in this prop will cause hydration of this style to fail on the client. ' +
+          'The href for the <style> where this ocurred is "foo bar".\n' +
+          '    in style (at **)',
+      ]);
     });
   });
 
   describe('Script Resources', () => {
-    // @gate enableFloat
     it('treats async scripts without onLoad or onError as Resources', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -6417,7 +8677,6 @@ background-color: green;
       );
     });
 
-    // @gate enableFloat
     it('does not create script resources when inside an <svg> context', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -6478,7 +8737,6 @@ background-color: green;
       );
     });
 
-    // @gate enableFloat
     it('does not create script resources when inside a <noscript> context', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -6522,7 +8780,6 @@ background-color: green;
   });
 
   describe('Hoistables', () => {
-    // @gate enableFloat
     it('can hoist meta tags on the server and hydrate them on the client', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -6576,7 +8833,6 @@ background-color: green;
       );
     });
 
-    // @gate enableFloat
     it('can hoist meta tags on the client', async () => {
       const root = ReactDOMClient.createRoot(container);
       await act(() => {
@@ -6598,7 +8854,6 @@ background-color: green;
       expect(getMeaningfulChildren(document.head)).toEqual(undefined);
     });
 
-    // @gate enableFloat
     it('can hoist link (non-stylesheet) tags on the server and hydrate them on the client', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -6652,7 +8907,6 @@ background-color: green;
       );
     });
 
-    // @gate enableFloat
     it('can hoist link (non-stylesheet) tags on the client', async () => {
       const root = ReactDOMClient.createRoot(container);
       await act(() => {
@@ -6674,7 +8928,6 @@ background-color: green;
       expect(getMeaningfulChildren(document.head)).toEqual(undefined);
     });
 
-    // @gate enableFloat
     it('can hoist title tags on the server and hydrate them on the client', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -6728,7 +8981,6 @@ background-color: green;
       );
     });
 
-    // @gate enableFloat
     it('can hoist title tags on the client', async () => {
       const root = ReactDOMClient.createRoot(container);
       await act(() => {
@@ -6750,7 +9002,6 @@ background-color: green;
       expect(getMeaningfulChildren(document.head)).toEqual(undefined);
     });
 
-    // @gate enableFloat
     it('prioritizes ordering for certain hoistables over others when rendering on the server', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -6762,6 +9013,7 @@ background-color: green;
               <link rel="preload" href="foo" as="style" />
               <link rel="preconnect" href="bar" />
               <link rel="dns-prefetch" href="baz" />
+              <meta name="viewport" />
               <meta charSet="utf-8" />
             </body>
           </html>,
@@ -6774,73 +9026,21 @@ background-color: green;
           <head>
             {/* charset first */}
             <meta charset="utf-8" />
-            {/* preconnect links next */}
-            <link rel="preconnect" href="bar" />
-            <link rel="dns-prefetch" href="baz" />
-            {/* preloads next */}
-            <link rel="preload" href="foo" as="style" />
+            {/* viewport meta next */}
+            <meta name="viewport" />
             {/* Everything else last */}
             <link rel="foo" href="foo" />
             <meta name="bar" />
             <title>a title</title>
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preconnect" href="bar" />
+            <link rel="dns-prefetch" href="baz" />
           </head>
           <body />
         </html>,
       );
     });
 
-    // @gate enableFloat
-    it('emits hoistables before other content when streaming in late', async () => {
-      let content = '';
-      writable.on('data', chunk => (content += chunk));
-
-      await act(() => {
-        const {pipe} = renderToPipeableStream(
-          <html>
-            <body>
-              <meta name="early" />
-              <Suspense fallback={null}>
-                <BlockedOn value="foo">
-                  <div>foo</div>
-                  <meta name="late" />
-                </BlockedOn>
-              </Suspense>
-            </body>
-          </html>,
-        );
-        pipe(writable);
-      });
-
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <meta name="early" />
-          </head>
-          <body />
-        </html>,
-      );
-      content = '';
-
-      await act(() => {
-        resolveText('foo');
-      });
-
-      expect(content.slice(0, 30)).toEqual('<meta name="late"/><div hidden');
-
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <meta name="early" />
-          </head>
-          <body>
-            <div>foo</div>
-            <meta name="late" />
-          </body>
-        </html>,
-      );
-    });
-
-    // @gate enableFloat
     it('supports rendering hoistables outside of <html> scope', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -7018,7 +9218,6 @@ background-color: green;
       );
     });
 
-    // @gate enableFloat
     it('does not hoist inside an <svg> context', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -7052,7 +9251,6 @@ background-color: green;
       ]);
     });
 
-    // @gate enableFloat
     it('does not hoist inside noscript context', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -7079,7 +9277,7 @@ background-color: green;
       ]);
     });
 
-    // @gate enableFloat && enableHostSingletons && (enableClientRenderFallbackOnTextMismatch || !__DEV__)
+    // @gate favorSafetyOverHydrationPerf
     it('can render a title before a singleton even if that singleton clears its contents', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -7115,15 +9313,7 @@ background-color: green;
         },
       );
 
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        [
-          'Warning: Text content did not match. Server: "server" Client: "client"',
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-        ],
-        {withoutStack: 1},
-      );
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -7136,7 +9326,6 @@ background-color: green;
       );
     });
 
-    // @gate enableFloat
     it('can update title tags', async () => {
       const root = ReactDOMClient.createRoot(container);
       await act(() => {

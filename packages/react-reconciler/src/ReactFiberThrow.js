@@ -20,9 +20,11 @@ import {
   ClassComponent,
   HostRoot,
   IncompleteClassComponent,
+  IncompleteFunctionComponent,
   FunctionComponent,
   ForwardRef,
   SimpleMemoComponent,
+  ActivityComponent,
   SuspenseComponent,
   OffscreenComponent,
 } from './ReactWorkTags';
@@ -36,11 +38,11 @@ import {
   ForceClientRender,
   ScheduleRetry,
 } from './ReactFiberFlags';
-import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
+import {NoMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
-  enableDebugTracing,
-  enableLazyContextPropagation,
   enableUpdaterTracking,
+  enablePostpone,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValueAtFiber} from './ReactCapturedValue';
 import {
@@ -57,8 +59,8 @@ import {
 } from './ReactFiberSuspenseContext';
 import {
   renderDidError,
+  queueConcurrentError,
   renderDidSuspendDelayIfPossible,
-  onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   attachPingListener,
@@ -66,8 +68,7 @@ import {
   renderDidSuspend,
 } from './ReactFiberWorkLoop';
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext';
-import {logCapturedError} from './ReactFiberErrorLogger';
-import {logComponentSuspended} from './DebugTracing';
+import {logUncaughtError, logCaughtError} from './ReactFiberErrorLogger';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
   SyncLane,
@@ -79,12 +80,16 @@ import {
   getIsHydrating,
   markDidThrowWhileHydratingDEV,
   queueHydrationError,
+  HydrationMismatchException,
 } from './ReactFiberHydrationContext';
 import {ConcurrentRoot} from './ReactRootTags';
 import {noopSuspenseyCommitThenable} from './ReactFiberThenable';
+import {REACT_POSTPONE_TYPE} from 'shared/ReactSymbols';
+import {runWithFiberInDEV} from './ReactCurrentFiber';
+import {callComponentDidCatchInDEV} from './ReactFiberCallUserSpace';
 
 function createRootErrorUpdate(
-  fiber: Fiber,
+  root: FiberRoot,
   errorInfo: CapturedValue<mixed>,
   lane: Lane,
 ): Update<mixed> {
@@ -94,21 +99,28 @@ function createRootErrorUpdate(
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element: null};
-  const error = errorInfo.value;
   update.callback = () => {
-    onUncaughtError(error);
-    logCapturedError(fiber, errorInfo);
+    if (__DEV__) {
+      runWithFiberInDEV(errorInfo.source, logUncaughtError, root, errorInfo);
+    } else {
+      logUncaughtError(root, errorInfo);
+    }
   };
   return update;
 }
 
-function createClassErrorUpdate(
-  fiber: Fiber,
-  errorInfo: CapturedValue<mixed>,
-  lane: Lane,
-): Update<mixed> {
+function createClassErrorUpdate(lane: Lane): Update<mixed> {
   const update = createUpdate(lane);
   update.tag = CaptureUpdate;
+  return update;
+}
+
+function initializeClassErrorUpdate(
+  update: Update<mixed>,
+  root: FiberRoot,
+  fiber: Fiber,
+  errorInfo: CapturedValue<mixed>,
+): void {
   const getDerivedStateFromError = fiber.type.getDerivedStateFromError;
   if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
@@ -119,7 +131,17 @@ function createClassErrorUpdate(
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
-      logCapturedError(fiber, errorInfo);
+      if (__DEV__) {
+        runWithFiberInDEV(
+          errorInfo.source,
+          logCaughtError,
+          root,
+          fiber,
+          errorInfo,
+        );
+      } else {
+        logCaughtError(root, fiber, errorInfo);
+      }
     };
   }
 
@@ -130,7 +152,17 @@ function createClassErrorUpdate(
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
-      logCapturedError(fiber, errorInfo);
+      if (__DEV__) {
+        runWithFiberInDEV(
+          errorInfo.source,
+          logCaughtError,
+          root,
+          fiber,
+          errorInfo,
+        );
+      } else {
+        logCaughtError(root, fiber, errorInfo);
+      }
       if (typeof getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
         // we keep track of which ones already failed during this batch.
@@ -139,11 +171,15 @@ function createClassErrorUpdate(
         // not defined.
         markLegacyErrorBoundaryAsFailed(this);
       }
-      const error = errorInfo.value;
-      const stack = errorInfo.stack;
-      this.componentDidCatch(error, {
-        componentStack: stack !== null ? stack : '',
-      });
+      if (__DEV__) {
+        callComponentDidCatchInDEV(this, errorInfo);
+      } else {
+        const error = errorInfo.value;
+        const stack = errorInfo.stack;
+        this.componentDidCatch(error, {
+          componentStack: stack !== null ? stack : '',
+        });
+      }
       if (__DEV__) {
         if (typeof getDerivedStateFromError !== 'function') {
           // If componentDidCatch is the only error boundary method defined,
@@ -160,31 +196,29 @@ function createClassErrorUpdate(
       }
     };
   }
-  return update;
 }
 
 function resetSuspendedComponent(sourceFiber: Fiber, rootRenderLanes: Lanes) {
-  if (enableLazyContextPropagation) {
-    const currentSourceFiber = sourceFiber.alternate;
-    if (currentSourceFiber !== null) {
-      // Since we never visited the children of the suspended component, we
-      // need to propagate the context change now, to ensure that we visit
-      // them during the retry.
-      //
-      // We don't have to do this for errors because we retry errors without
-      // committing in between. So this is specific to Suspense.
-      propagateParentContextChangesToDeferredTree(
-        currentSourceFiber,
-        sourceFiber,
-        rootRenderLanes,
-      );
-    }
+  const currentSourceFiber = sourceFiber.alternate;
+  if (currentSourceFiber !== null) {
+    // Since we never visited the children of the suspended component, we
+    // need to propagate the context change now, to ensure that we visit
+    // them during the retry.
+    //
+    // We don't have to do this for errors because we retry errors without
+    // committing in between. So this is specific to Suspense.
+    propagateParentContextChangesToDeferredTree(
+      currentSourceFiber,
+      sourceFiber,
+      rootRenderLanes,
+    );
   }
 
   // Reset the memoizedState to what it was before we attempted to render it.
   // A legacy mode Suspense quirk, only relevant to hook components.
   const tag = sourceFiber.tag;
   if (
+    !disableLegacyMode &&
     (sourceFiber.mode & ConcurrentMode) === NoMode &&
     (tag === FunctionComponent ||
       tag === ForwardRef ||
@@ -204,14 +238,17 @@ function resetSuspendedComponent(sourceFiber: Fiber, rootRenderLanes: Lanes) {
 
 function markSuspenseBoundaryShouldCapture(
   suspenseBoundary: Fiber,
-  returnFiber: Fiber,
+  returnFiber: Fiber | null,
   sourceFiber: Fiber,
   root: FiberRoot,
   rootRenderLanes: Lanes,
 ): Fiber | null {
   // This marks a Suspense boundary so that when we're unwinding the stack,
   // it captures the suspended "exception" and does a second (fallback) pass.
-  if ((suspenseBoundary.mode & ConcurrentMode) === NoMode) {
+  if (
+    !disableLegacyMode &&
+    (suspenseBoundary.mode & ConcurrentMode) === NoMode
+  ) {
     // Legacy Mode Suspense
     //
     // If the boundary is in legacy mode, we should *not*
@@ -258,6 +295,13 @@ function markSuspenseBoundaryShouldCapture(
           const update = createUpdate(SyncLane);
           update.tag = ForceUpdate;
           enqueueUpdate(sourceFiber, update, SyncLane);
+        }
+      } else if (sourceFiber.tag === FunctionComponent) {
+        const currentSourceFiber = sourceFiber.alternate;
+        if (currentSourceFiber === null) {
+          // This is a new mount. Change the tag so it's not mistaken for a
+          // completed function component.
+          sourceFiber.tag = IncompleteFunctionComponent;
         }
       }
 
@@ -317,11 +361,11 @@ function markSuspenseBoundaryShouldCapture(
 
 function throwException(
   root: FiberRoot,
-  returnFiber: Fiber,
+  returnFiber: Fiber | null,
   sourceFiber: Fiber,
   value: mixed,
   rootRenderLanes: Lanes,
-): void {
+): boolean {
   // The source fiber did not complete.
   sourceFiber.flags |= Incomplete;
 
@@ -332,233 +376,284 @@ function throwException(
     }
   }
 
-  if (
-    value !== null &&
-    typeof value === 'object' &&
-    typeof value.then === 'function'
-  ) {
-    // This is a wakeable. The component suspended.
-    const wakeable: Wakeable = (value: any);
-    resetSuspendedComponent(sourceFiber, rootRenderLanes);
-
-    if (__DEV__) {
-      if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
-        markDidThrowWhileHydratingDEV();
-      }
+  if (value !== null && typeof value === 'object') {
+    if (enablePostpone && value.$$typeof === REACT_POSTPONE_TYPE) {
+      // Act as if this is an infinitely suspending promise.
+      value = {then: function () {}};
     }
+    if (typeof value.then === 'function') {
+      // This is a wakeable. The component suspended.
+      const wakeable: Wakeable = (value: any);
+      resetSuspendedComponent(sourceFiber, rootRenderLanes);
 
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (sourceFiber.mode & DebugTracingMode) {
-          const name = getComponentNameFromFiber(sourceFiber) || 'Unknown';
-          logComponentSuspended(name, wakeable);
+      if (__DEV__) {
+        if (
+          getIsHydrating() &&
+          (disableLegacyMode || sourceFiber.mode & ConcurrentMode)
+        ) {
+          markDidThrowWhileHydratingDEV();
         }
       }
-    }
 
-    // Mark the nearest Suspense boundary to switch to rendering a fallback.
-    const suspenseBoundary = getSuspenseHandler();
-    if (suspenseBoundary !== null) {
-      switch (suspenseBoundary.tag) {
-        case SuspenseComponent: {
-          // If this suspense boundary is not already showing a fallback, mark
-          // the in-progress render as suspended. We try to perform this logic
-          // as soon as soon as possible during the render phase, so the work
-          // loop can know things like whether it's OK to switch to other tasks,
-          // or whether it can wait for data to resolve before continuing.
-          // TODO: Most of these checks are already performed when entering a
-          // Suspense boundary. We should track the information on the stack so
-          // we don't have to recompute it on demand. This would also allow us
-          // to unify with `use` which needs to perform this logic even sooner,
-          // before `throwException` is called.
-          if (sourceFiber.mode & ConcurrentMode) {
-            if (getShellBoundary() === null) {
-              // Suspended in the "shell" of the app. This is an undesirable
-              // loading state. We should avoid committing this tree.
-              renderDidSuspendDelayIfPossible();
-            } else {
-              // If we suspended deeper than the shell, we don't need to delay
-              // the commmit. However, we still call renderDidSuspend if this is
-              // a new boundary, to tell the work loop that a new fallback has
-              // appeared during this render.
-              // TODO: Theoretically we should be able to delete this branch.
-              // It's currently used for two things: 1) to throttle the
-              // appearance of successive loading states, and 2) in
-              // SuspenseList, to determine whether the children include any
-              // pending fallbacks. For 1, we should apply throttling to all
-              // retries, not just ones that render an additional fallback. For
-              // 2, we should check subtreeFlags instead. Then we can delete
-              // this branch.
-              const current = suspenseBoundary.alternate;
-              if (current === null) {
-                renderDidSuspend();
+      // Mark the nearest Suspense boundary to switch to rendering a fallback.
+      const suspenseBoundary = getSuspenseHandler();
+      if (suspenseBoundary !== null) {
+        switch (suspenseBoundary.tag) {
+          case ActivityComponent:
+          case SuspenseComponent: {
+            // If this suspense/activity boundary is not already showing a fallback, mark
+            // the in-progress render as suspended. We try to perform this logic
+            // as soon as soon as possible during the render phase, so the work
+            // loop can know things like whether it's OK to switch to other tasks,
+            // or whether it can wait for data to resolve before continuing.
+            // TODO: Most of these checks are already performed when entering a
+            // Suspense boundary. We should track the information on the stack so
+            // we don't have to recompute it on demand. This would also allow us
+            // to unify with `use` which needs to perform this logic even sooner,
+            // before `throwException` is called.
+            if (disableLegacyMode || sourceFiber.mode & ConcurrentMode) {
+              if (getShellBoundary() === null) {
+                // Suspended in the "shell" of the app. This is an undesirable
+                // loading state. We should avoid committing this tree.
+                renderDidSuspendDelayIfPossible();
+              } else {
+                // If we suspended deeper than the shell, we don't need to delay
+                // the commmit. However, we still call renderDidSuspend if this is
+                // a new boundary, to tell the work loop that a new fallback has
+                // appeared during this render.
+                // TODO: Theoretically we should be able to delete this branch.
+                // It's currently used for two things: 1) to throttle the
+                // appearance of successive loading states, and 2) in
+                // SuspenseList, to determine whether the children include any
+                // pending fallbacks. For 1, we should apply throttling to all
+                // retries, not just ones that render an additional fallback. For
+                // 2, we should check subtreeFlags instead. Then we can delete
+                // this branch.
+                const current = suspenseBoundary.alternate;
+                if (current === null) {
+                  renderDidSuspend();
+                }
               }
             }
-          }
 
-          suspenseBoundary.flags &= ~ForceClientRender;
-          markSuspenseBoundaryShouldCapture(
-            suspenseBoundary,
-            returnFiber,
-            sourceFiber,
-            root,
-            rootRenderLanes,
-          );
-          // Retry listener
-          //
-          // If the fallback does commit, we need to attach a different type of
-          // listener. This one schedules an update on the Suspense boundary to
-          // turn the fallback state off.
-          //
-          // Stash the wakeable on the boundary fiber so we can access it in the
-          // commit phase.
-          //
-          // When the wakeable resolves, we'll attempt to render the boundary
-          // again ("retry").
+            suspenseBoundary.flags &= ~ForceClientRender;
+            markSuspenseBoundaryShouldCapture(
+              suspenseBoundary,
+              returnFiber,
+              sourceFiber,
+              root,
+              rootRenderLanes,
+            );
+            // Retry listener
+            //
+            // If the fallback does commit, we need to attach a different type of
+            // listener. This one schedules an update on the Suspense boundary to
+            // turn the fallback state off.
+            //
+            // Stash the wakeable on the boundary fiber so we can access it in the
+            // commit phase.
+            //
+            // When the wakeable resolves, we'll attempt to render the boundary
+            // again ("retry").
 
-          // Check if this is a Suspensey resource. We do not attach retry
-          // listeners to these, because we don't actually need them for
-          // rendering. Only for committing. Instead, if a fallback commits
-          // and the only thing that suspended was a Suspensey resource, we
-          // retry immediately.
-          // TODO: Refactor throwException so that we don't have to do this type
-          // check. The caller already knows what the cause was.
-          const isSuspenseyResource = wakeable === noopSuspenseyCommitThenable;
-          if (isSuspenseyResource) {
-            suspenseBoundary.flags |= ScheduleRetry;
-          } else {
-            const retryQueue: RetryQueue | null =
-              (suspenseBoundary.updateQueue: any);
-            if (retryQueue === null) {
-              suspenseBoundary.updateQueue = new Set([wakeable]);
-            } else {
-              retryQueue.add(wakeable);
-            }
-          }
-          break;
-        }
-        case OffscreenComponent: {
-          if (suspenseBoundary.mode & ConcurrentMode) {
-            suspenseBoundary.flags |= ShouldCapture;
+            // Check if this is a Suspensey resource. We do not attach retry
+            // listeners to these, because we don't actually need them for
+            // rendering. Only for committing. Instead, if a fallback commits
+            // and the only thing that suspended was a Suspensey resource, we
+            // retry immediately.
+            // TODO: Refactor throwException so that we don't have to do this type
+            // check. The caller already knows what the cause was.
             const isSuspenseyResource =
               wakeable === noopSuspenseyCommitThenable;
             if (isSuspenseyResource) {
               suspenseBoundary.flags |= ScheduleRetry;
             } else {
-              const offscreenQueue: OffscreenQueue | null =
+              const retryQueue: RetryQueue | null =
                 (suspenseBoundary.updateQueue: any);
-              if (offscreenQueue === null) {
-                const newOffscreenQueue: OffscreenQueue = {
-                  transitions: null,
-                  markerInstances: null,
-                  retryQueue: new Set([wakeable]),
-                };
-                suspenseBoundary.updateQueue = newOffscreenQueue;
+              if (retryQueue === null) {
+                suspenseBoundary.updateQueue = new Set([wakeable]);
               } else {
-                const retryQueue = offscreenQueue.retryQueue;
-                if (retryQueue === null) {
-                  offscreenQueue.retryQueue = new Set([wakeable]);
-                } else {
-                  retryQueue.add(wakeable);
-                }
+                retryQueue.add(wakeable);
+              }
+
+              // We only attach ping listeners in concurrent mode. Legacy
+              // Suspense always commits fallbacks synchronously, so there are
+              // no pings.
+              if (disableLegacyMode || suspenseBoundary.mode & ConcurrentMode) {
+                attachPingListener(root, wakeable, rootRenderLanes);
               }
             }
-            break;
+            return false;
           }
-          // Fall through
-        }
-        default: {
-          throw new Error(
-            `Unexpected Suspense handler tag (${suspenseBoundary.tag}). This ` +
-              'is a bug in React.',
-          );
-        }
-      }
-      // We only attach ping listeners in concurrent mode. Legacy Suspense always
-      // commits fallbacks synchronously, so there are no pings.
-      if (suspenseBoundary.mode & ConcurrentMode) {
-        attachPingListener(root, wakeable, rootRenderLanes);
-      }
-      return;
-    } else {
-      // No boundary was found. Unless this is a sync update, this is OK.
-      // We can suspend and wait for more data to arrive.
+          case OffscreenComponent: {
+            if (disableLegacyMode || suspenseBoundary.mode & ConcurrentMode) {
+              suspenseBoundary.flags |= ShouldCapture;
+              const isSuspenseyResource =
+                wakeable === noopSuspenseyCommitThenable;
+              if (isSuspenseyResource) {
+                suspenseBoundary.flags |= ScheduleRetry;
+              } else {
+                const offscreenQueue: OffscreenQueue | null =
+                  (suspenseBoundary.updateQueue: any);
+                if (offscreenQueue === null) {
+                  const newOffscreenQueue: OffscreenQueue = {
+                    transitions: null,
+                    markerInstances: null,
+                    retryQueue: new Set([wakeable]),
+                  };
+                  suspenseBoundary.updateQueue = newOffscreenQueue;
+                } else {
+                  const retryQueue = offscreenQueue.retryQueue;
+                  if (retryQueue === null) {
+                    offscreenQueue.retryQueue = new Set([wakeable]);
+                  } else {
+                    retryQueue.add(wakeable);
+                  }
+                }
 
-      if (root.tag === ConcurrentRoot) {
-        // In a concurrent root, suspending without a Suspense boundary is
-        // allowed. It will suspend indefinitely without committing.
-        //
-        // TODO: Should we have different behavior for discrete updates? What
-        // about flushSync? Maybe it should put the tree into an inert state,
-        // and potentially log a warning. Revisit this for a future release.
-        attachPingListener(root, wakeable, rootRenderLanes);
-        renderDidSuspendDelayIfPossible();
-        return;
+                attachPingListener(root, wakeable, rootRenderLanes);
+              }
+              return false;
+            }
+          }
+        }
+        throw new Error(
+          `Unexpected Suspense handler tag (${suspenseBoundary.tag}). This ` +
+            'is a bug in React.',
+        );
       } else {
-        // In a legacy root, suspending without a boundary is always an error.
-        const uncaughtSuspenseError = new Error(
-          'A component suspended while responding to synchronous input. This ' +
-            'will cause the UI to be replaced with a loading indicator. To ' +
-            'fix, updates that suspend should be wrapped ' +
-            'with startTransition.',
-        );
-        value = uncaughtSuspenseError;
-      }
-    }
-  } else {
-    // This is a regular error, not a Suspense wakeable.
-    if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
-      markDidThrowWhileHydratingDEV();
-      const suspenseBoundary = getSuspenseHandler();
-      // If the error was thrown during hydration, we may be able to recover by
-      // discarding the dehydrated content and switching to a client render.
-      // Instead of surfacing the error, find the nearest Suspense boundary
-      // and render it again without hydration.
-      if (suspenseBoundary !== null) {
-        if ((suspenseBoundary.flags & ShouldCapture) === NoFlags) {
-          // Set a flag to indicate that we should try rendering the normal
-          // children again, not the fallback.
-          suspenseBoundary.flags |= ForceClientRender;
-        }
-        markSuspenseBoundaryShouldCapture(
-          suspenseBoundary,
-          returnFiber,
-          sourceFiber,
-          root,
-          rootRenderLanes,
-        );
+        // No boundary was found. Unless this is a sync update, this is OK.
+        // We can suspend and wait for more data to arrive.
 
-        // Even though the user may not be affected by this error, we should
-        // still log it so it can be fixed.
-        queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
-        return;
+        if (disableLegacyMode || root.tag === ConcurrentRoot) {
+          // In a concurrent root, suspending without a Suspense boundary is
+          // allowed. It will suspend indefinitely without committing.
+          //
+          // TODO: Should we have different behavior for discrete updates? What
+          // about flushSync? Maybe it should put the tree into an inert state,
+          // and potentially log a warning. Revisit this for a future release.
+          attachPingListener(root, wakeable, rootRenderLanes);
+          renderDidSuspendDelayIfPossible();
+          return false;
+        } else {
+          // In a legacy root, suspending without a boundary is always an error.
+          const uncaughtSuspenseError = new Error(
+            'A component suspended while responding to synchronous input. This ' +
+              'will cause the UI to be replaced with a loading indicator. To ' +
+              'fix, updates that suspend should be wrapped ' +
+              'with startTransition.',
+          );
+          value = uncaughtSuspenseError;
+        }
       }
-    } else {
-      // Otherwise, fall through to the error path.
     }
   }
 
-  value = createCapturedValueAtFiber(value, sourceFiber);
-  renderDidError(value);
+  // This is a regular error, not a Suspense wakeable.
+  if (
+    getIsHydrating() &&
+    (disableLegacyMode || sourceFiber.mode & ConcurrentMode)
+  ) {
+    markDidThrowWhileHydratingDEV();
+    const hydrationBoundary = getSuspenseHandler();
+    // If the error was thrown during hydration, we may be able to recover by
+    // discarding the dehydrated content and switching to a client render.
+    // Instead of surfacing the error, find the nearest Suspense boundary
+    // and render it again without hydration.
+    if (hydrationBoundary !== null) {
+      if ((hydrationBoundary.flags & ShouldCapture) === NoFlags) {
+        // Set a flag to indicate that we should try rendering the normal
+        // children again, not the fallback.
+        hydrationBoundary.flags |= ForceClientRender;
+      }
+      markSuspenseBoundaryShouldCapture(
+        hydrationBoundary,
+        returnFiber,
+        sourceFiber,
+        root,
+        rootRenderLanes,
+      );
+
+      // Even though the user may not be affected by this error, we should
+      // still log it so it can be fixed.
+      if (value !== HydrationMismatchException) {
+        const wrapperError = new Error(
+          'There was an error while hydrating but React was able to recover by ' +
+            'instead client rendering from the nearest Suspense boundary.',
+          {cause: value},
+        );
+        queueHydrationError(
+          createCapturedValueAtFiber(wrapperError, sourceFiber),
+        );
+      }
+      return false;
+    } else {
+      if (value !== HydrationMismatchException) {
+        const wrapperError = new Error(
+          'There was an error while hydrating but React was able to recover by ' +
+            'instead client rendering the entire root.',
+          {cause: value},
+        );
+        queueHydrationError(
+          createCapturedValueAtFiber(wrapperError, sourceFiber),
+        );
+      }
+      const workInProgress: Fiber = (root.current: any).alternate;
+      // Schedule an update at the root to log the error but this shouldn't
+      // actually happen because we should recover.
+      workInProgress.flags |= ShouldCapture;
+      const lane = pickArbitraryLane(rootRenderLanes);
+      workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
+      const rootErrorInfo = createCapturedValueAtFiber(value, sourceFiber);
+      const update = createRootErrorUpdate(
+        workInProgress.stateNode,
+        rootErrorInfo, // This should never actually get logged due to the recovery.
+        lane,
+      );
+      enqueueCapturedUpdate(workInProgress, update);
+      renderDidError();
+      return false;
+    }
+  } else {
+    // Otherwise, fall through to the error path.
+  }
+
+  const wrapperError = new Error(
+    'There was an error during concurrent rendering but React was able to recover by ' +
+      'instead synchronously rendering the entire root.',
+    {cause: value},
+  );
+  queueConcurrentError(createCapturedValueAtFiber(wrapperError, sourceFiber));
+  renderDidError();
 
   // We didn't find a boundary that could handle this type of exception. Start
   // over and traverse parent path again, this time treating the exception
   // as an error.
+
+  if (returnFiber === null) {
+    // There's no return fiber, which means the root errored. This should never
+    // happen. Return `true` to trigger a fatal error (panic).
+    return true;
+  }
+
+  const errorInfo = createCapturedValueAtFiber(value, sourceFiber);
   let workInProgress: Fiber = returnFiber;
   do {
     switch (workInProgress.tag) {
       case HostRoot: {
-        const errorInfo = value;
         workInProgress.flags |= ShouldCapture;
         const lane = pickArbitraryLane(rootRenderLanes);
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
-        const update = createRootErrorUpdate(workInProgress, errorInfo, lane);
+        const update = createRootErrorUpdate(
+          workInProgress.stateNode,
+          errorInfo,
+          lane,
+        );
         enqueueCapturedUpdate(workInProgress, update);
-        return;
+        return false;
       }
       case ClassComponent:
         // Capture and retry
-        const errorInfo = value;
         const ctor = workInProgress.type;
         const instance = workInProgress.stateNode;
         if (
@@ -572,13 +667,10 @@ function throwException(
           const lane = pickArbitraryLane(rootRenderLanes);
           workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
           // Schedule the error boundary to re-render using updated state
-          const update = createClassErrorUpdate(
-            workInProgress,
-            errorInfo,
-            lane,
-          );
+          const update = createClassErrorUpdate(lane);
+          initializeClassErrorUpdate(update, root, workInProgress, errorInfo);
           enqueueCapturedUpdate(workInProgress, update);
-          return;
+          return false;
         }
         break;
       default:
@@ -587,6 +679,13 @@ function throwException(
     // $FlowFixMe[incompatible-type] we bail out when we get a null
     workInProgress = workInProgress.return;
   } while (workInProgress !== null);
+
+  return false;
 }
 
-export {throwException, createRootErrorUpdate, createClassErrorUpdate};
+export {
+  throwException,
+  createRootErrorUpdate,
+  createClassErrorUpdate,
+  initializeClassErrorUpdate,
+};

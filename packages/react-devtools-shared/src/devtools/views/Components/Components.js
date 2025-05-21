@@ -8,14 +8,7 @@
  */
 
 import * as React from 'react';
-import {
-  Fragment,
-  Suspense,
-  useEffect,
-  useLayoutEffect,
-  useReducer,
-  useRef,
-} from 'react';
+import {Fragment, useEffect, useLayoutEffect, useReducer, useRef} from 'react';
 import Tree from './Tree';
 import {OwnersListContextController} from './OwnersListContext';
 import portaledContent from '../portaledContent';
@@ -26,7 +19,6 @@ import {
 } from 'react-devtools-shared/src/storage';
 import InspectedElementErrorBoundary from './InspectedElementErrorBoundary';
 import InspectedElement from './InspectedElement';
-import {InspectedElementContextController} from './InspectedElementContext';
 import {ModalDialog} from '../ModalDialog';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import {NativeStyleContextController} from './NativeStyleEditor/context';
@@ -169,11 +161,7 @@ function Components(_: {}) {
             <div className={styles.InspectedElementWrapper}>
               <NativeStyleContextController>
                 <InspectedElementErrorBoundary>
-                  <Suspense fallback={<Loading />}>
-                    <InspectedElementContextController>
-                      <InspectedElement />
-                    </InspectedElementContextController>
-                  </Suspense>
+                  <InspectedElement />
                 </InspectedElementErrorBoundary>
               </NativeStyleContextController>
             </div>
@@ -184,10 +172,6 @@ function Components(_: {}) {
       </OwnersListContextController>
     </SettingsModalContextController>
   );
-}
-
-function Loading() {
-  return <div className={styles.Loading}>Loading...</div>;
 }
 
 const LOCAL_STORAGE_KEY = 'React::DevTools::createResizeReducer';
@@ -259,6 +243,4 @@ function setResizeCSSVariable(
   }
 }
 
-export default (portaledContent(
-  Components,
-): React$StatelessFunctionalComponent<{}>);
+export default (portaledContent(Components): React$ComponentType<{}>);

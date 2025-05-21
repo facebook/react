@@ -52,16 +52,17 @@ const preProcess = async (destinationPath, tempPath) => {
   await ensureDir(tempPath); // Create temp dir for this new build
 };
 
-const build = async (tempPath, manifestPath) => {
+const build = async (tempPath, manifestPath, envExtension = {}) => {
   const binPath = join(tempPath, 'bin');
   const zipPath = join(tempPath, 'zip');
+  const mergedEnv = {...process.env, ...envExtension};
 
   const webpackPath = join(__dirname, 'node_modules', '.bin', 'webpack');
   execSync(
     `${webpackPath} --config webpack.config.js --output-path ${binPath}`,
     {
       cwd: __dirname,
-      env: process.env,
+      env: mergedEnv,
       stdio: 'inherit',
     },
   );
@@ -69,7 +70,7 @@ const build = async (tempPath, manifestPath) => {
     `${webpackPath} --config webpack.backend.js --output-path ${binPath}`,
     {
       cwd: __dirname,
-      env: process.env,
+      env: mergedEnv,
       stdio: 'inherit',
     },
   );
@@ -132,16 +133,32 @@ const postProcess = async (tempPath, destinationPath) => {
   await remove(tempPath); // Clean up temp directory and files
 };
 
+const SUPPORTED_BUILDS = ['chrome', 'firefox', 'edge'];
+
 const main = async buildId => {
+  if (!SUPPORTED_BUILDS.includes(buildId)) {
+    throw new Error(
+      `Unexpected build id - "${buildId}". Use one of ${JSON.stringify(
+        SUPPORTED_BUILDS,
+      )}.`,
+    );
+  }
+
   const root = join(__dirname, buildId);
   const manifestPath = join(root, 'manifest.json');
   const destinationPath = join(root, 'build');
+
+  const envExtension = {
+    IS_CHROME: buildId === 'chrome',
+    IS_FIREFOX: buildId === 'firefox',
+    IS_EDGE: buildId === 'edge',
+  };
 
   try {
     const tempPath = join(__dirname, 'build', buildId);
     await ensureLocalBuild();
     await preProcess(destinationPath, tempPath);
-    await build(tempPath, manifestPath);
+    await build(tempPath, manifestPath, envExtension);
 
     const builtUnpackedPath = join(destinationPath, 'unpacked');
     await postProcess(tempPath, destinationPath);

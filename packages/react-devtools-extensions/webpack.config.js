@@ -1,18 +1,11 @@
 'use strict';
 
-const {resolve} = require('path');
+const {resolve, isAbsolute, relative} = require('path');
 const Webpack = require('webpack');
-const {
-  DARK_MODE_DIMMED_WARNING_COLOR,
-  DARK_MODE_DIMMED_ERROR_COLOR,
-  DARK_MODE_DIMMED_LOG_COLOR,
-  LIGHT_MODE_DIMMED_WARNING_COLOR,
-  LIGHT_MODE_DIMMED_ERROR_COLOR,
-  LIGHT_MODE_DIMMED_LOG_COLOR,
-  GITHUB_URL,
-  getVersionString,
-} = require('./utils');
+const TerserPlugin = require('terser-webpack-plugin');
+const {GITHUB_URL, getVersionString} = require('./utils');
 const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
+const SourceMapIgnoreListPlugin = require('react-devtools-shared/SourceMapIgnoreListPlugin');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -35,6 +28,11 @@ const DEVTOOLS_VERSION = getVersionString(process.env.DEVTOOLS_VERSION);
 const EDITOR_URL = process.env.EDITOR_URL || null;
 const LOGGING_URL = process.env.LOGGING_URL || null;
 
+const IS_CHROME = process.env.IS_CHROME === 'true';
+const IS_FIREFOX = process.env.IS_FIREFOX === 'true';
+const IS_EDGE = process.env.IS_EDGE === 'true';
+const IS_INTERNAL_VERSION = process.env.FEATURE_FLAG_TARGET === 'extension-fb';
+
 const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
 const babelOptions = {
@@ -48,16 +46,17 @@ const babelOptions = {
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-source-map' : false,
+  devtool: false,
   entry: {
-    background: './src/background.js',
-    backendManager: './src/backendManager.js',
-    main: './src/main.js',
+    background: './src/background/index.js',
+    backendManager: './src/contentScripts/backendManager.js',
+    fileFetcher: './src/contentScripts/fileFetcher.js',
+    main: './src/main/index.js',
     panel: './src/panel.js',
     proxy: './src/contentScripts/proxy.js',
     prepareInjection: './src/contentScripts/prepareInjection.js',
-    renderer: './src/contentScripts/renderer.js',
     installHook: './src/contentScripts/installHook.js',
+    hookSettingsInjector: './src/contentScripts/hookSettingsInjector.js',
   },
   output: {
     path: __dirname + '/build',
@@ -80,7 +79,24 @@ module.exports = {
     },
   },
   optimization: {
-    minimize: false,
+    minimize: !__DEV__,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            unused: true,
+            dead_code: true,
+          },
+          mangle: {
+            keep_fnames: true,
+          },
+          format: {
+            comments: false,
+          },
+        },
+        extractComments: false,
+      }),
+    ],
   },
   plugins: [
     new Webpack.ProvidePlugin({
@@ -93,19 +109,107 @@ module.exports = {
       __EXTENSION__: true,
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
+      __IS_CHROME__: IS_CHROME,
+      __IS_FIREFOX__: IS_FIREFOX,
+      __IS_EDGE__: IS_EDGE,
+      __IS_NATIVE__: false,
+      __IS_INTERNAL_VERSION__: IS_INTERNAL_VERSION,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.LOGGING_URL': `"${LOGGING_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,
-      'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
-      'process.env.DARK_MODE_DIMMED_ERROR_COLOR': `"${DARK_MODE_DIMMED_ERROR_COLOR}"`,
-      'process.env.DARK_MODE_DIMMED_LOG_COLOR': `"${DARK_MODE_DIMMED_LOG_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
     }),
+    new Webpack.SourceMapDevToolPlugin({
+      filename: '[file].map',
+      include: 'installHook.js',
+      noSources: !__DEV__,
+      // https://github.com/webpack/webpack/issues/3603#issuecomment-1743147144
+      moduleFilenameTemplate(info) {
+        const {absoluteResourcePath, namespace, resourcePath} = info;
+
+        if (isAbsolute(absoluteResourcePath)) {
+          return relative(__dirname + '/build', absoluteResourcePath);
+        }
+
+        // Mimic Webpack's default behavior:
+        return `webpack://${namespace}/${resourcePath}`;
+      },
+    }),
+    new SourceMapIgnoreListPlugin({
+      shouldIgnoreSource: (assetName, _source) => {
+        if (__DEV__) {
+          // Don't ignore list anything in DEV build for debugging purposes
+          return false;
+        }
+
+        const contentScriptNamesToIgnoreList = [
+          // This is where we override console
+          'installHook',
+        ];
+
+        return contentScriptNamesToIgnoreList.some(ignoreListName =>
+          assetName.startsWith(ignoreListName),
+        );
+      },
+    }),
+    {
+      apply(compiler) {
+        if (__DEV__) {
+          return;
+        }
+
+        const {RawSource} = compiler.webpack.sources;
+        compiler.hooks.compilation.tap(
+          'CustomContentForHookScriptPlugin',
+          compilation => {
+            compilation.hooks.processAssets.tap(
+              {
+                name: 'CustomContentForHookScriptPlugin',
+                stage: Webpack.Compilation.PROCESS_ASSETS_STAGE_DEV_TOOLING,
+                additionalAssets: true,
+              },
+              assets => {
+                // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+                for (const [name, asset] of Object.entries(assets)) {
+                  if (name !== 'installHook.js.map') {
+                    continue;
+                  }
+
+                  const mapContent = asset.source().toString();
+                  if (!mapContent) {
+                    continue;
+                  }
+
+                  const map = JSON.parse(mapContent);
+                  map.sourcesContent = map.sources.map(sourceName => {
+                    if (!sourceName.endsWith('/hook.js')) {
+                      return null;
+                    }
+
+                    return (
+                      '/*\n' +
+                      ' * This script is from React DevTools.\n' +
+                      " * You're likely here because you thought it sent an error or warning to the console.\n" +
+                      ' * React DevTools patches the console to support features like appending component stacks, \n' +
+                      ' * so this file appears as a source. However, the console call actually came from another script.\n' +
+                      " * To remove this script from stack traces, open your browser's DevTools (to enable source mapping) before these console calls happen.\n" +
+                      ' */'
+                    );
+                  });
+
+                  compilation.updateAsset(
+                    name,
+                    new RawSource(JSON.stringify(map)),
+                  );
+                }
+              },
+            );
+          },
+        );
+      },
+    },
   ],
   module: {
     defaultRules: [

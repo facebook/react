@@ -9,7 +9,7 @@
 
 import {clamp} from '../clamp';
 
-describe(clamp, () => {
+describe('clamp', () => {
   it('should return min if value < min', () => {
     expect(clamp(0, 1, -1)).toBe(0);
     expect(clamp(0.1, 1.1, 0.05)).toBe(0.1);

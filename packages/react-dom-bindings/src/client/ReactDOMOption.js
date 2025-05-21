@@ -26,7 +26,11 @@ export function validateOptionProps(element: Element, props: Object) {
           if (child == null) {
             return;
           }
-          if (typeof child === 'string' || typeof child === 'number') {
+          if (
+            typeof child === 'string' ||
+            typeof child === 'number' ||
+            typeof child === 'bigint'
+          ) {
             return;
           }
           if (!didWarnInvalidChild) {

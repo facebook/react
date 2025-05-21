@@ -7,7 +7,8 @@
  * @flow
  */
 
-import type {Element} from './types';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
+
 import * as React from 'react';
 import {useContext, useMemo} from 'react';
 import {TreeStateContext} from './TreeContext';
@@ -27,19 +28,19 @@ export default function SelectedTreeHighlight(_: {}): React.Node {
   const {lineHeight} = useContext(SettingsContext);
   const store = useContext(StoreContext);
   const treeFocused = useContext(TreeFocusedContext);
-  const {ownerID, selectedElementID} = useContext(TreeStateContext);
+  const {ownerID, inspectedElementID} = useContext(TreeStateContext);
 
   const subscription = useMemo(
     () => ({
       getCurrentValue: () => {
         if (
-          selectedElementID === null ||
-          store.isInsideCollapsedSubTree(selectedElementID)
+          inspectedElementID === null ||
+          store.isInsideCollapsedSubTree(inspectedElementID)
         ) {
           return null;
         }
 
-        const element = store.getElementByID(selectedElementID);
+        const element = store.getElementByID(inspectedElementID);
         if (
           element === null ||
           element.isCollapsed ||
@@ -82,7 +83,7 @@ export default function SelectedTreeHighlight(_: {}): React.Node {
         };
       },
     }),
-    [selectedElementID, store],
+    [inspectedElementID, store],
   );
   const data = useSubscription<Data | null>(subscription);
 

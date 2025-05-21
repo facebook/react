@@ -12,35 +12,35 @@
 let ReactCache;
 let createResource;
 let React;
-let ReactFeatureFlags;
-let ReactTestRenderer;
+let ReactNoop;
 let Scheduler;
 let Suspense;
 let TextResource;
 let textResourceShouldFail;
 let waitForAll;
+let waitForPaint;
 let assertLog;
 let waitForThrow;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactCache', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     Suspense = React.Suspense;
     ReactCache = require('react-cache');
     createResource = ReactCache.unstable_createResource;
-    ReactTestRenderer = require('react-test-renderer');
+    ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     assertLog = InternalTestUtils.assertLog;
     waitForThrow = InternalTestUtils.waitForThrow;
+    waitForPaint = InternalTestUtils.waitForPaint;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
     act = InternalTestUtils.act;
 
     TextResource = createResource(
@@ -120,11 +120,15 @@ describe('ReactCache', () => {
       );
     }
 
-    ReactTestRenderer.create(<App />, {
-      unstable_isConcurrent: true,
-    });
+    const root = ReactNoop.createRoot();
+    root.render(<App />);
 
-    await waitForAll(['Suspend! [Hi]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [Hi]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [Hi]',
+    ]);
 
     jest.advanceTimersByTime(100);
     assertLog(['Promise resolved [Hi]']);
@@ -140,11 +144,15 @@ describe('ReactCache', () => {
       );
     }
 
-    const root = ReactTestRenderer.create(<App />, {
-      unstable_isConcurrent: true,
-    });
+    const root = ReactNoop.createRoot();
+    root.render(<App />);
 
-    await waitForAll(['Suspend! [Hi]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [Hi]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [Hi]',
+    ]);
 
     textResourceShouldFail = true;
     let error;
@@ -157,7 +165,7 @@ describe('ReactCache', () => {
     assertLog(['Promise rejected [Hi]', 'Error! [Hi]', 'Error! [Hi]']);
 
     // Should throw again on a subsequent read
-    root.update(<App />);
+    root.render(<App />);
     await waitForThrow('Failed to load: Hi');
     assertLog(['Error! [Hi]', 'Error! [Hi]']);
   });
@@ -176,59 +184,87 @@ describe('ReactCache', () => {
       return BadTextResource.read(['Hi', 100]);
     }
 
-    ReactTestRenderer.create(
+    const root = ReactNoop.createRoot();
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <App />
       </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
     );
 
     if (__DEV__) {
-      await expect(async () => {
-        await waitForAll(['App', 'Loading...']);
-      }).toErrorDev([
+      await waitForAll([
+        'App',
+        'Loading...',
+        // pre-warming
+        'App',
+      ]);
+      assertConsoleErrorDev([
         'Invalid key type. Expected a string, number, symbol, or ' +
-          'boolean, but instead received: Hi,100\n\n' +
+          "boolean, but instead received: [ 'Hi', 100 ]\n\n" +
           'To use non-primitive values as keys, you must pass a hash ' +
-          'function as the second argument to createResource().',
+          'function as the second argument to createResource().\n' +
+          '    in App (at **)',
+
+        // pre-warming
+        'Invalid key type. Expected a string, number, symbol, or ' +
+          "boolean, but instead received: [ 'Hi', 100 ]\n\n" +
+          'To use non-primitive values as keys, you must pass a hash ' +
+          'function as the second argument to createResource().\n' +
+          '    in App (at **)',
       ]);
     } else {
-      await waitForAll(['App', 'Loading...']);
+      await waitForAll([
+        'App',
+        'Loading...',
+        // pre-warming
+        'App',
+      ]);
     }
   });
 
   it('evicts least recently used values', async () => {
     ReactCache.unstable_setGlobalCacheLimit(3);
 
+    const root = ReactNoop.createRoot();
     // Render 1, 2, and 3
-    const root = ReactTestRenderer.create(
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <AsyncText ms={100} text={1} />
         <AsyncText ms={100} text={2} />
         <AsyncText ms={100} text={3} />
       </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
     );
-    await waitForAll(['Suspend! [1]', 'Loading...']);
+    await waitForPaint(['Suspend! [1]', 'Loading...']);
     jest.advanceTimersByTime(100);
     assertLog(['Promise resolved [1]']);
-    await waitForAll([1, 'Suspend! [2]']);
+    await waitForAll([
+      1,
+      'Suspend! [2]',
+      ...(gate('alwaysThrottleRetries')
+        ? []
+        : [1, 'Suspend! [2]', 'Suspend! [3]']),
+    ]);
 
     jest.advanceTimersByTime(100);
-    assertLog(['Promise resolved [2]']);
-    await waitForAll([1, 2, 'Suspend! [3]']);
+    assertLog([
+      'Promise resolved [2]',
+      ...(gate('alwaysThrottleRetries') ? [] : ['Promise resolved [3]']),
+    ]);
+    await waitForAll([
+      1,
+      2,
+      ...(gate('alwaysThrottleRetries') ? ['Suspend! [3]'] : [3]),
+    ]);
+
+    jest.advanceTimersByTime(100);
+    assertLog(gate('alwaysThrottleRetries') ? ['Promise resolved [3]'] : []);
+    await waitForAll(gate('alwaysThrottleRetries') ? [1, 2, 3] : []);
 
     await act(() => jest.advanceTimersByTime(100));
-    assertLog(['Promise resolved [3]', 1, 2, 3]);
-
     expect(root).toMatchRenderedOutput('123');
 
     // Render 1, 4, 5
-    root.update(
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <AsyncText ms={100} text={1} />
         <AsyncText ms={100} text={4} />
@@ -236,26 +272,24 @@ describe('ReactCache', () => {
       </Suspense>,
     );
 
-    await waitForAll([1, 'Suspend! [4]', 'Loading...']);
+    await waitForAll([
+      1,
+      'Suspend! [4]',
+      'Loading...',
+      1,
+      'Suspend! [4]',
+      'Suspend! [5]',
+    ]);
 
     await act(() => jest.advanceTimersByTime(100));
-    assertLog([
-      'Promise resolved [4]',
-      1,
-      4,
-      'Suspend! [5]',
-      'Promise resolved [5]',
-      1,
-      4,
-      5,
-    ]);
+    assertLog(['Promise resolved [4]', 'Promise resolved [5]', 1, 4, 5]);
 
     expect(root).toMatchRenderedOutput('145');
 
     // We've now rendered values 1, 2, 3, 4, 5, over our limit of 3. The least
     // recently used values are 2 and 3. They should have been evicted.
 
-    root.update(
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <AsyncText ms={100} text={1} />
         <AsyncText ms={100} text={2} />
@@ -269,19 +303,14 @@ describe('ReactCache', () => {
       // 2 and 3 suspend because they were evicted from the cache
       'Suspend! [2]',
       'Loading...',
+
+      1,
+      'Suspend! [2]',
+      'Suspend! [3]',
     ]);
 
     await act(() => jest.advanceTimersByTime(100));
-    assertLog([
-      'Promise resolved [2]',
-      1,
-      2,
-      'Suspend! [3]',
-      'Promise resolved [3]',
-      1,
-      2,
-      3,
-    ]);
+    assertLog(['Promise resolved [2]', 'Promise resolved [3]', 1, 2, 3]);
     expect(root).toMatchRenderedOutput('123');
   });
 
@@ -293,13 +322,11 @@ describe('ReactCache', () => {
       return <Text text="Result" />;
     }
 
-    const root = ReactTestRenderer.create(
+    const root = ReactNoop.createRoot();
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <App />
       </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
     );
 
     await waitForAll(['Loading...']);
@@ -351,29 +378,29 @@ describe('ReactCache', () => {
       }
     }
 
-    const root = ReactTestRenderer.create(
+    const root = ReactNoop.createRoot();
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <BadAsyncText text="Hi" />
       </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
     );
 
-    await waitForAll(['Suspend! [Hi]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [Hi]',
+      'Loading...',
+      // pre-warming
+      'Suspend! [Hi]',
+    ]);
 
     resolveThenable('Hi');
     // This thenable improperly resolves twice. We should not update the
     // cached value.
     resolveThenable('Hi muahahaha I am different');
 
-    root.update(
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <BadAsyncText text="Hi" />
       </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
     );
 
     assertLog([]);

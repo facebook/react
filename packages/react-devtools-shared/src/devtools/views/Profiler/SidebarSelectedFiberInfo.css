@@ -11,6 +11,9 @@
   padding: 0.5rem;
   user-select: none;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .Component {

@@ -3,11 +3,14 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @jest-environment node
  */
 
 'use strict';
 
-const ESLintTester = require('eslint').RuleTester;
+const ESLintTesterV7 = require('eslint-v7').RuleTester;
+const ESLintTesterV9 = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
 
@@ -513,6 +516,22 @@ const tests = {
       options: [{additionalHooks: 'useCustomEffect'}],
     },
     {
+      // behaves like no deps
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useSpecialEffect(() => {
+            console.log(props.foo);
+          }, null);
+        }
+      `,
+      options: [
+        {
+          additionalHooks: 'useSpecialEffect',
+          experimental_autoDependenciesHooks: ['useSpecialEffect'],
+        },
+      ],
+    },
+    {
       code: normalizeIndent`
         function MyComponent(props) {
           useCustomEffect(() => {
@@ -604,6 +623,8 @@ const tests = {
           const [state4, dispatch2] = React.useReducer();
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
+          const [state9, dispatch5] = useActionState();
+          const [state10, dispatch6] = React.useActionState();
           const [isPending1] = useTransition();
           const [isPending2, startTransition2] = useTransition();
           const [isPending3] = React.useTransition();
@@ -621,6 +642,8 @@ const tests = {
             setState2();
             dispatch1();
             dispatch2();
+            dispatch5();
+            dispatch6();
             startTransition1();
             startTransition2();
             startTransition3();
@@ -643,7 +666,7 @@ const tests = {
             maybeDispatch();
           }, [
             // Dynamic
-            state1, state2, state3, state4, state5, state6,
+            state1, state2, state3, state4, state5, state6, state9, state10,
             maybeRef1, maybeRef2,
             isPending2, isPending4,
 
@@ -1452,8 +1475,49 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          useEffect(() => {
+            console.log('banana banana banana');
+          }, undefined);
+        }
+      `,
+    },
   ],
   invalid: [
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useSpecialEffect(() => {
+            console.log(props.foo);
+          }, null);
+        }
+      `,
+      options: [{additionalHooks: 'useSpecialEffect'}],
+      errors: [
+        {
+          message:
+            "React Hook useSpecialEffect was passed a dependency list that is not an array literal. This means we can't statically verify whether you've passed the correct dependencies.",
+        },
+        {
+          message:
+            "React Hook useSpecialEffect has a missing dependency: 'props.foo'. Either include it or remove the dependency array.",
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useSpecialEffect(() => {
+                    console.log(props.foo);
+                  }, [props.foo]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
     {
       code: normalizeIndent`
         function MyComponent(props) {
@@ -1475,6 +1539,51 @@ const tests = {
                   useCallback(() => {
                     console.log(props.foo?.toString());
                   }, [props.foo]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      // Affected code should use React.useActionState instead
+      code: normalizeIndent`
+        function ComponentUsingFormState(props) {
+          const [state7, dispatch3] = useFormState();
+          const [state8, dispatch4] = ReactDOM.useFormState();
+          useEffect(() => {
+            dispatch3();
+            dispatch4();
+
+            // dynamic
+            console.log(state7);
+            console.log(state8);
+
+          }, [state7, state8]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has missing dependencies: 'dispatch3' and 'dispatch4'. " +
+            'Either include them or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [dispatch3, dispatch4, state7, state8]',
+              output: normalizeIndent`
+                function ComponentUsingFormState(props) {
+                  const [state7, dispatch3] = useFormState();
+                  const [state8, dispatch4] = ReactDOM.useFormState();
+                  useEffect(() => {
+                    dispatch3();
+                    dispatch4();
+
+                    // dynamic
+                    console.log(state7);
+                    console.log(state8);
+
+                  }, [dispatch3, dispatch4, state7, state8]);
                 }
               `,
             },
@@ -4664,17 +4773,8 @@ const tests = {
           return <div ref={myRef} />;
         }
       `,
-      output: `
-        function MyComponent() {
-          const myRef = useRef();
-          useLayoutEffect_SAFE_FOR_SSR(() => {
-            const handleMove = () => {};
-            myRef.current.addEventListener('mousemove', handleMove);
-            return () => myRef.current.removeEventListener('mousemove', handleMove);
-          });
-          return <div ref={myRef} />;
-        }
-      `,
+      // No changes
+      output: null,
       errors: [
         `The ref value 'myRef.current' will likely have changed by the time ` +
           `this effect cleanup function runs. If this ref points to a node ` +
@@ -6738,7 +6838,7 @@ const tests = {
             '  }\n' +
             '  fetchData();\n' +
             `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-            'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching',
+            'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching',
           suggestions: undefined,
         },
       ],
@@ -6762,7 +6862,7 @@ const tests = {
             '  }\n' +
             '  fetchData();\n' +
             `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-            'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching',
+            'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching',
           suggestions: undefined,
         },
       ],
@@ -7036,18 +7136,7 @@ const tests = {
       errors: [
         {
           message:
-            "React Hook useEffect has a missing dependency: 'myEffect'. " +
-            'Either include it or remove the dependency array.',
-          suggestions: [
-            {
-              desc: 'Update the dependencies array to be: [myEffect]',
-              output: normalizeIndent`
-                function MyComponent({myEffect}) {
-                  useEffect(myEffect, [myEffect]);
-                }
-              `,
-            },
-          ],
+            'React Hook useEffect received a function whose dependencies are unknown. Pass an inline function instead.',
         },
       ],
     },
@@ -7092,6 +7181,19 @@ const tests = {
           message:
             "React Hook useEffect has a missing dependency: 'local'. " +
             'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [local]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const local = {};
+                  useEffect(() => {
+                    console.log(local);
+                  }, [local]);
+                }
+              `,
+            },
+          ],
         },
       ],
       // Keep this until major IDEs and VS Code FB ESLint plugin support Suggestions API.
@@ -7605,6 +7707,19 @@ const tests = {
         },
       ],
     },
+    {
+      code: normalizeIndent`
+        function useCustomCallback(callback, deps) {
+          return useCallback(callback, deps)
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.',
+        },
+      ],
+    },
   ],
 };
 
@@ -7681,6 +7796,34 @@ const testsFlow = {
   invalid: [
     {
       code: normalizeIndent`
+        hook useExample(a) {
+          useEffect(() => {
+            console.log(a);
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'a'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [a]',
+              output: normalizeIndent`
+                hook useExample(a) {
+                  useEffect(() => {
+                    console.log(a);
+                  }, [a]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
       function Foo() {
         const foo = ({}: any);
         useMemo(() => {
@@ -7728,12 +7871,67 @@ const testsTypescript = {
     },
     {
       code: normalizeIndent`
+        function MyComponent() {
+          const [state, setState] = React.useState<number>(0);
+
+          useSpecialEffect(() => {
+            const someNumber: typeof state = 2;
+            setState(prevState => prevState + someNumber);
+          })
+        }
+      `,
+      options: [
+        {
+          additionalHooks: 'useSpecialEffect',
+          experimental_autoDependenciesHooks: ['useSpecialEffect'],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
         function App() {
           const foo = {x: 1};
           React.useEffect(() => {
             const bar = {x: 2};
             const baz = bar as typeof foo;
             console.log(baz);
+          }, []);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App(props) {
+          React.useEffect(() => {
+            console.log(props.test);
+          }, [props.test] as const);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App(props) {
+          React.useEffect(() => {
+            console.log(props.test);
+          }, [props.test] as any);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App(props) {
+          React.useEffect((() => {
+            console.log(props.test);
+          }) as any, [props.test]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function useMyThing<T>(): void {
+          useEffect(() => {
+            let foo: T;
+            console.log(foo);
           }, []);
         }
       `,
@@ -8044,6 +8242,48 @@ const testsTypescript = {
         function MyComponent() {
           const [state, setState] = React.useState<number>(0);
 
+          useSpecialEffect(() => {
+            const someNumber: typeof state = 2;
+            setState(prevState => prevState + someNumber + state);
+          }, [])
+        }
+      `,
+      options: [
+        {
+          additionalHooks: 'useSpecialEffect',
+          experimental_autoDependenciesHooks: ['useSpecialEffect'],
+        },
+      ],
+      errors: [
+        {
+          message:
+            "React Hook useSpecialEffect has a missing dependency: 'state'. " +
+            'Either include it or remove the dependency array. ' +
+            `You can also do a functional update 'setState(s => ...)' ` +
+            `if you only need 'state' in the 'setState' call.`,
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [state]',
+              output: normalizeIndent`
+              function MyComponent() {
+                const [state, setState] = React.useState<number>(0);
+
+                useSpecialEffect(() => {
+                  const someNumber: typeof state = 2;
+                  setState(prevState => prevState + someNumber + state);
+                }, [state])
+              }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [state, setState] = React.useState<number>(0);
+
           useMemo(() => {
             const someNumber: typeof state = 2;
             console.log(someNumber);
@@ -8088,6 +8328,19 @@ const testsTypescript = {
             "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
             "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function useCustomCallback(callback, deps) {
+          return useCallback(callback as any, deps)
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.',
         },
       ],
     },
@@ -8169,10 +8422,14 @@ if (!process.env.CI) {
   testsFlow.invalid = testsFlow.invalid.filter(predicate);
   testsTypescript.valid = testsTypescript.valid.filter(predicate);
   testsTypescript.invalid = testsTypescript.invalid.filter(predicate);
+  testsTypescriptEslintParserV4.valid =
+    testsTypescriptEslintParserV4.valid.filter(predicate);
+  testsTypescriptEslintParserV4.invalid =
+    testsTypescriptEslintParserV4.invalid.filter(predicate);
 }
 
-describe('react-hooks', () => {
-  const parserOptions = {
+describe('rules-of-hooks/exhaustive-deps', () => {
+  const parserOptionsV7 = {
     ecmaFeatures: {
       jsx: true,
     },
@@ -8180,23 +8437,68 @@ describe('react-hooks', () => {
     sourceType: 'module',
   };
 
-  const testsBabelEslint = {
+  const languageOptionsV9 = {
+    ecmaVersion: 6,
+    sourceType: 'module',
+    parserOptions: {
+      ecmaFeatures: {
+        jsx: true,
+      },
+    },
+  };
+
+  const testsBabelEslint = tests;
+
+  const testsHermesParser = {
     valid: [...testsFlow.valid, ...tests.valid],
     invalid: [...testsFlow.invalid, ...tests.invalid],
   };
 
-  new ESLintTester({
+  new ESLintTesterV7({
     parser: require.resolve('babel-eslint'),
-    parserOptions,
-  }).run('parser: babel-eslint', ReactHooksESLintRule, testsBabelEslint);
-
-  new ESLintTester({
-    parser: require.resolve('@babel/eslint-parser'),
-    parserOptions,
+    parserOptions: parserOptionsV7,
   }).run(
-    'parser: @babel/eslint-parser',
+    'eslint: v7, parser: babel-eslint',
     ReactHooksESLintRule,
     testsBabelEslint
+  );
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('@babel/eslint-parser'),
+    },
+  }).run(
+    'eslint: v9, parser: @babel/eslint-parser',
+    ReactHooksESLintRule,
+    testsBabelEslint
+  );
+
+  new ESLintTesterV7({
+    parser: require.resolve('hermes-eslint'),
+    parserOptions: {
+      sourceType: 'module',
+      enableExperimentalComponentSyntax: true,
+    },
+  }).run(
+    'eslint: v7, parser: hermes-eslint',
+    ReactHooksESLintRule,
+    testsHermesParser
+  );
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('hermes-eslint'),
+      parserOptions: {
+        sourceType: 'module',
+        enableExperimentalComponentSyntax: true,
+      },
+    },
+  }).run(
+    'eslint: v9, parser: hermes-eslint',
+    ReactHooksESLintRule,
+    testsHermesParser
   );
 
   const testsTypescriptEslintParser = {
@@ -8204,49 +8506,119 @@ describe('react-hooks', () => {
     invalid: [...testsTypescript.invalid, ...tests.invalid],
   };
 
-  new ESLintTester({
+  new ESLintTesterV7({
     parser: require.resolve('@typescript-eslint/parser-v2'),
-    parserOptions,
+    parserOptions: parserOptionsV7,
   }).run(
-    'parser: @typescript-eslint/parser@2.x',
+    'eslint: v7, parser: @typescript-eslint/parser@2.x',
     ReactHooksESLintRule,
     testsTypescriptEslintParser
   );
 
-  new ESLintTester({
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('@typescript-eslint/parser-v2'),
+    },
+  }).run(
+    'eslint: v9, parser: @typescript-eslint/parser@2.x',
+    ReactHooksESLintRule,
+    testsTypescriptEslintParser
+  );
+
+  new ESLintTesterV7({
     parser: require.resolve('@typescript-eslint/parser-v3'),
-    parserOptions,
+    parserOptions: parserOptionsV7,
   }).run(
-    'parser: @typescript-eslint/parser@3.x',
+    'eslint: v7, parser: @typescript-eslint/parser@3.x',
     ReactHooksESLintRule,
     testsTypescriptEslintParser
   );
 
-  new ESLintTester({
-    parser: require.resolve('@typescript-eslint/parser-v4'),
-    parserOptions,
-  }).run('parser: @typescript-eslint/parser@4.x', ReactHooksESLintRule, {
-    valid: [
-      ...testsTypescriptEslintParserV4.valid,
-      ...testsTypescriptEslintParser.valid,
-    ],
-    invalid: [
-      ...testsTypescriptEslintParserV4.invalid,
-      ...testsTypescriptEslintParser.invalid,
-    ],
-  });
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('@typescript-eslint/parser-v3'),
+    },
+  }).run(
+    'eslint: v9, parser: @typescript-eslint/parser@3.x',
+    ReactHooksESLintRule,
+    testsTypescriptEslintParser
+  );
 
-  new ESLintTester({
+  new ESLintTesterV7({
+    parser: require.resolve('@typescript-eslint/parser-v4'),
+    parserOptions: parserOptionsV7,
+  }).run(
+    'eslint: v7, parser: @typescript-eslint/parser@4.x',
+    ReactHooksESLintRule,
+    {
+      valid: [
+        ...testsTypescriptEslintParserV4.valid,
+        ...testsTypescriptEslintParser.valid,
+      ],
+      invalid: [
+        ...testsTypescriptEslintParserV4.invalid,
+        ...testsTypescriptEslintParser.invalid,
+      ],
+    }
+  );
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('@typescript-eslint/parser-v4'),
+    },
+  }).run(
+    'eslint: v9, parser: @typescript-eslint/parser@4.x',
+    ReactHooksESLintRule,
+    {
+      valid: [
+        ...testsTypescriptEslintParserV4.valid,
+        ...testsTypescriptEslintParser.valid,
+      ],
+      invalid: [
+        ...testsTypescriptEslintParserV4.invalid,
+        ...testsTypescriptEslintParser.invalid,
+      ],
+    }
+  );
+
+  new ESLintTesterV7({
     parser: require.resolve('@typescript-eslint/parser-v5'),
-    parserOptions,
-  }).run('parser: @typescript-eslint/parser@^5.0.0-0', ReactHooksESLintRule, {
-    valid: [
-      ...testsTypescriptEslintParserV4.valid,
-      ...testsTypescriptEslintParser.valid,
-    ],
-    invalid: [
-      ...testsTypescriptEslintParserV4.invalid,
-      ...testsTypescriptEslintParser.invalid,
-    ],
-  });
+    parserOptions: parserOptionsV7,
+  }).run(
+    'eslint: v7, parser: @typescript-eslint/parser@^5.0.0-0',
+    ReactHooksESLintRule,
+    {
+      valid: [
+        ...testsTypescriptEslintParserV4.valid,
+        ...testsTypescriptEslintParser.valid,
+      ],
+      invalid: [
+        ...testsTypescriptEslintParserV4.invalid,
+        ...testsTypescriptEslintParser.invalid,
+      ],
+    }
+  );
+
+  new ESLintTesterV9({
+    languageOptions: {
+      ...languageOptionsV9,
+      parser: require('@typescript-eslint/parser-v5'),
+    },
+  }).run(
+    'eslint: v9, parser: @typescript-eslint/parser@^5.0.0',
+    ReactHooksESLintRule,
+    {
+      valid: [
+        ...testsTypescriptEslintParserV4.valid,
+        ...testsTypescriptEslintParser.valid,
+      ],
+      invalid: [
+        ...testsTypescriptEslintParserV4.invalid,
+        ...testsTypescriptEslintParser.invalid,
+      ],
+    }
+  );
 });

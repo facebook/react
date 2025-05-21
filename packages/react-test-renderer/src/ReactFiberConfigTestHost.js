@@ -7,11 +7,20 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
+
 import isArray from 'shared/isArray';
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {
   DefaultEventPriority,
+  NoEventPriority,
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
+
+export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Consider exporting the react-native version.
+export const rendererPackageName = 'react-test-renderer';
+export const extraDevToolsConfig = null;
 
 export type Type = string;
 export type Props = Object;
@@ -54,12 +63,10 @@ export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
 
 const NO_CONTEXT = {};
-const UPDATE_SIGNAL = {};
 const nodeToInstanceMap = new WeakMap<any, Instance>();
 
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
-  Object.freeze(UPDATE_SIGNAL);
 }
 
 export function getPublicInstance(inst: Instance | TextInstance): $FlowFixMe {
@@ -165,6 +172,21 @@ export function createInstance(
   };
 }
 
+export function cloneMutableInstance(
+  instance: Instance,
+  keepChildren: boolean,
+): Instance {
+  return {
+    type: instance.type,
+    props: instance.props,
+    isHidden: instance.isHidden,
+    children: keepChildren ? instance.children : [],
+    internalInstanceHandle: null,
+    rootContainerInstance: instance.rootContainerInstance,
+    tag: 'INSTANCE',
+  };
+}
+
 export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
@@ -186,17 +208,6 @@ export function finalizeInitialChildren(
   return false;
 }
 
-export function prepareUpdate(
-  testElement: Instance,
-  type: string,
-  oldProps: Props,
-  newProps: Props,
-  rootContainerInstance: Container,
-  hostContext: Object,
-): null | {...} {
-  return UPDATE_SIGNAL;
-}
-
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
@@ -214,8 +225,38 @@ export function createTextInstance(
   };
 }
 
-export function getCurrentEventPriority(): EventPriority {
+export function cloneMutableTextInstance(
+  textInstance: TextInstance,
+): TextInstance {
+  return {
+    text: textInstance.text,
+    isHidden: textInstance.isHidden,
+    tag: 'TEXT',
+  };
+}
+
+let currentUpdatePriority: EventPriority = NoEventPriority;
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
+}
+
+export function resolveUpdatePriority(): EventPriority {
+  if (currentUpdatePriority !== NoEventPriority) {
+    return currentUpdatePriority;
+  }
   return DefaultEventPriority;
+}
+
+export function trackSchedulerEvent(): void {}
+export function resolveEventType(): null | string {
+  return null;
+}
+export function resolveEventTimeStamp(): number {
+  return -1.1;
 }
 export function shouldAttemptEagerTransition(): boolean {
   return false;
@@ -237,7 +278,6 @@ export const supportsMutation = true;
 
 export function commitUpdate(
   instance: Instance,
-  updatePayload: null | {...},
   type: string,
   oldProps: Props,
   newProps: Props,
@@ -291,12 +331,174 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
+export function applyViewTransitionName(
+  instance: Instance,
+  name: string,
+  className: ?string,
+): void {
+  // Noop
+}
+
+export function restoreViewTransitionName(
+  instance: Instance,
+  props: Props,
+): void {
+  // Noop
+}
+
+export function cancelViewTransitionName(
+  instance: Instance,
+  name: string,
+  props: Props,
+): void {
+  // Noop
+}
+
+export function cancelRootViewTransitionName(rootContainer: Container): void {
+  // Noop
+}
+
+export function restoreRootViewTransitionName(rootContainer: Container): void {
+  // Noop
+}
+
+export function cloneRootViewTransitionContainer(
+  rootContainer: Container,
+): Instance {
+  return {
+    type: 'ROOT',
+    props: {},
+    isHidden: false,
+    children: [],
+    internalInstanceHandle: null,
+    rootContainerInstance: rootContainer,
+    tag: 'INSTANCE',
+  };
+}
+
+export function removeRootViewTransitionClone(
+  rootContainer: Container,
+  clone: Instance,
+): void {
+  // Noop since it was never inserted anywhere.
+}
+
+export type InstanceMeasurement = null;
+
+export function measureInstance(instance: Instance): InstanceMeasurement {
+  return null;
+}
+
+export function measureClonedInstance(instance: Instance): InstanceMeasurement {
+  return null;
+}
+
+export function wasInstanceInViewport(
+  measurement: InstanceMeasurement,
+): boolean {
+  return true;
+}
+
+export function hasInstanceChanged(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  return false;
+}
+
+export function hasInstanceAffectedParent(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  return false;
+}
+
+export function startViewTransition(
+  rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  layoutCallback: () => void,
+  afterMutationCallback: () => void,
+  spawnedWorkCallback: () => void,
+  passiveCallback: () => mixed,
+  errorCallback: mixed => void,
+): null | RunningViewTransition {
+  mutationCallback();
+  layoutCallback();
+  // Skip afterMutationCallback(). We don't need it since we're not animating.
+  spawnedWorkCallback();
+  // Skip passiveCallback(). Spawned work will schedule a task.
+  return null;
+}
+
+export type RunningViewTransition = null;
+
+export function startGestureTransition(
+  rootContainer: Container,
+  timeline: GestureTimeline,
+  rangeStart: number,
+  rangeEnd: number,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  animateCallback: () => void,
+  errorCallback: mixed => void,
+): null | RunningViewTransition {
+  mutationCallback();
+  animateCallback();
+  return null;
+}
+
+export function stopViewTransition(transition: RunningViewTransition) {}
+
+export type ViewTransitionInstance = null | {name: string, ...};
+
+export function createViewTransitionInstance(
+  name: string,
+): ViewTransitionInstance {
+  return null;
+}
+
+export type FragmentInstanceType = null;
+
+export function createFragmentInstance(
+  fragmentFiber: Object,
+): FragmentInstanceType {
+  return null;
+}
+
+export function updateFragmentInstanceFiber(
+  fragmentFiber: Object,
+  instance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
+export function commitNewChildToFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // noop
+}
+
+export function deleteChildFromFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  // Noop
+}
+
 export function getInstanceFromNode(mockNode: Object): Object | null {
   const instance = nodeToInstanceMap.get(mockNode);
   if (instance !== undefined) {
     return instance.internalInstanceHandle;
   }
   return null;
+}
+
+export type GestureTimeline = null;
+
+export function getCurrentGestureOffset(provider: GestureTimeline): number {
+  return 0;
 }
 
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
@@ -335,17 +537,53 @@ export function maySuspendCommit(type: Type, props: Props): boolean {
   return false;
 }
 
-export function preloadInstance(type: Type, props: Props): boolean {
+export function maySuspendCommitOnUpdate(
+  type: Type,
+  oldProps: Props,
+  newProps: Props,
+): boolean {
+  return false;
+}
+
+export function maySuspendCommitInSyncRender(
+  type: Type,
+  props: Props,
+): boolean {
+  return false;
+}
+
+export function preloadInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): boolean {
   // Return true to indicate it's already loaded
   return true;
 }
 
 export function startSuspendingCommit(): void {}
 
-export function suspendInstance(type: Type, props: Props): void {}
+export function suspendInstance(
+  instance: Instance,
+  type: Type,
+  props: Props,
+): void {}
+
+export function suspendOnActiveViewTransition(container: Container): void {}
 
 export function waitForCommitToBeReady(): null {
   return null;
 }
 
 export const NotPendingTransition: TransitionStatus = null;
+export const HostTransitionContext: ReactContext<TransitionStatus> = {
+  $$typeof: REACT_CONTEXT_TYPE,
+  Provider: (null: any),
+  Consumer: (null: any),
+  _currentValue: NotPendingTransition,
+  _currentValue2: NotPendingTransition,
+  _threadCount: 0,
+};
+
+export type FormInstance = Instance;
+export function resetFormInstance(form: Instance): void {}

@@ -12,21 +12,7 @@ import ReactVersion from 'shared/ReactVersion';
 export {ReactVersion as version};
 
 export function renderToReadableStream() {
-  return require('./src/server/ReactDOMFizzServerEdge').renderToReadableStream.apply(
-    this,
-    arguments,
-  );
-}
-
-export function renderToNodeStream() {
-  return require('./src/server/ReactDOMFizzServerEdge').renderToNodeStream.apply(
-    this,
-    arguments,
-  );
-}
-
-export function renderToStaticNodeStream() {
-  return require('./src/server/ReactDOMFizzServerEdge').renderToStaticNodeStream.apply(
+  return require('./src/server/react-dom-server.edge').renderToReadableStream.apply(
     this,
     arguments,
   );
@@ -41,6 +27,13 @@ export function renderToString() {
 
 export function renderToStaticMarkup() {
   return require('./src/server/ReactDOMLegacyServerBrowser').renderToStaticMarkup.apply(
+    this,
+    arguments,
+  );
+}
+
+export function resume() {
+  return require('./src/server/react-dom-server.edge').resume.apply(
     this,
     arguments,
   );

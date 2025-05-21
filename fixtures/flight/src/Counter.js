@@ -4,11 +4,13 @@ import * as React from 'react';
 
 import Container from './Container.js';
 
-export function Counter() {
-  const [count, setCount] = React.useState(0);
+export function Counter({incrementAction}) {
+  const [count, incrementFormAction] = React.useActionState(incrementAction, 0);
   return (
     <Container>
-      <button onClick={() => setCount(c => c + 1)}>Count: {count}</button>
+      <form>
+        <button formAction={incrementFormAction}>Count: {count}</button>
+      </form>
     </Container>
   );
 }

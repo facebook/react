@@ -8,3 +8,4 @@
  */
 
 export * from 'react-native-renderer/src/ReactFiberConfigFabric';
+export * from 'react-client/src/ReactClientConsoleConfigPlain';

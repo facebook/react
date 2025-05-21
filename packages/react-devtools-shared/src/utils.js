@@ -9,23 +9,24 @@
 
 import LRU from 'lru-cache';
 import {
-  isElement,
-  typeOf,
-  ContextConsumer,
-  ContextProvider,
-  ForwardRef,
-  Fragment,
-  Lazy,
-  Memo,
-  Portal,
-  Profiler,
-  StrictMode,
-  Suspense,
-} from 'react-is';
-import {
-  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
-  REACT_TRACING_MARKER_TYPE as TracingMarker,
+  REACT_CONSUMER_TYPE,
+  REACT_CONTEXT_TYPE,
+  REACT_FORWARD_REF_TYPE,
+  REACT_FRAGMENT_TYPE,
+  REACT_LAZY_TYPE,
+  REACT_ELEMENT_TYPE,
+  REACT_LEGACY_ELEMENT_TYPE,
+  REACT_MEMO_TYPE,
+  REACT_PORTAL_TYPE,
+  REACT_PROFILER_TYPE,
+  REACT_PROVIDER_TYPE,
+  REACT_STRICT_MODE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
+  REACT_SUSPENSE_TYPE,
+  REACT_TRACING_MARKER_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
+import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -36,25 +37,44 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-  LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
-  LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
-  LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
-  LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
+  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
+  SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+  SESSION_STORAGE_RECORD_TIMELINE_KEY,
 } from './constants';
-import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
+import {
+  ComponentFilterElementType,
+  ComponentFilterLocation,
+  ElementTypeHostComponent,
+} from './frontend/types';
 import {
   ElementTypeRoot,
   ElementTypeClass,
   ElementTypeForwardRef,
   ElementTypeFunction,
   ElementTypeMemo,
-} from 'react-devtools-shared/src/types';
-import {localStorageGetItem, localStorageSetItem} from './storage';
+  ElementTypeVirtual,
+} from 'react-devtools-shared/src/frontend/types';
+import {
+  localStorageGetItem,
+  localStorageSetItem,
+  sessionStorageGetItem,
+  sessionStorageRemoveItem,
+  sessionStorageSetItem,
+} from 'react-devtools-shared/src/storage';
 import {meta} from './hydration';
 import isArray from './isArray';
 
-import type {ComponentFilter, ElementType, BrowserTheme} from './types';
-import type {LRUCache} from 'react-devtools-shared/src/types';
+import type {
+  ComponentFilter,
+  ElementType,
+  SerializedElement as SerializedElementFrontend,
+  LRUCache,
+} from 'react-devtools-shared/src/frontend/types';
+import type {
+  ProfilingSettings,
+  SerializedElement as SerializedElementBackend,
+} from 'react-devtools-shared/src/backend/types';
+import {isSynchronousXHRSupported} from './backend/utils';
 
 // $FlowFixMe[method-unbinding]
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -109,7 +129,7 @@ export function getWrappedDisplayName(
   wrapperName: string,
   fallbackName?: string,
 ): string {
-  const displayName = (outerType: any).displayName;
+  const displayName = (outerType: any)?.displayName;
   return (
     displayName || `${wrapperName}(${getDisplayName(innerType, fallbackName)})`
   );
@@ -145,15 +165,14 @@ export function getUID(): number {
   return ++uidCounter;
 }
 
-export function utfDecodeString(array: Array<number>): string {
-  // Avoid spreading the array (e.g. String.fromCodePoint(...array))
-  // Functions arguments are first placed on the stack before the function is called
-  // which throws a RangeError for large arrays.
-  // See github.com/facebook/react/issues/22293
+export function utfDecodeStringWithRanges(
+  array: Array<number>,
+  left: number,
+  right: number,
+): string {
   let string = '';
-  for (let i = 0; i < array.length; i++) {
-    const char = array[i];
-    string += String.fromCodePoint(char);
+  for (let i = left; i <= right; i++) {
+    string += String.fromCodePoint(array[i]);
   }
   return string;
 }
@@ -209,8 +228,10 @@ export function printOperationsArray(operations: Array<number>) {
   const stringTableEnd = i + stringTableSize;
   while (i < stringTableEnd) {
     const nextLength = operations[i++];
-    const nextString = utfDecodeString(
-      (operations.slice(i, i + nextLength): any),
+    const nextString = utfDecodeStringWithRanges(
+      operations,
+      i,
+      i + nextLength - 1,
     );
     stringTable.push(nextString);
     i += nextLength;
@@ -329,7 +350,8 @@ export function getSavedComponentFilters(): Array<ComponentFilter> {
       LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
     );
     if (raw != null) {
-      return JSON.parse(raw);
+      const parsedFilters: Array<ComponentFilter> = JSON.parse(raw);
+      return filterOutLocationComponentFilters(parsedFilters);
     }
   } catch (error) {}
   return getDefaultComponentFilters();
@@ -340,55 +362,25 @@ export function setSavedComponentFilters(
 ): void {
   localStorageSetItem(
     LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
-    JSON.stringify(componentFilters),
+    JSON.stringify(filterOutLocationComponentFilters(componentFilters)),
   );
 }
 
-function parseBool(s: ?string): ?boolean {
-  if (s === 'true') {
-    return true;
+// Following __debugSource removal from Fiber, the new approach for finding the source location
+// of a component, represented by the Fiber, is based on lazily generating and parsing component stack frames
+// To find the original location, React DevTools will perform symbolication, source maps are required for that.
+// In order to start filtering Fibers, we need to find location for all of them, which can't be done lazily.
+// Eager symbolication can become quite expensive for large applications.
+export function filterOutLocationComponentFilters(
+  componentFilters: Array<ComponentFilter>,
+): Array<ComponentFilter> {
+  // This is just an additional check to preserve the previous state
+  // Filters can be stored on the backend side or in user land (in a window object)
+  if (!Array.isArray(componentFilters)) {
+    return componentFilters;
   }
-  if (s === 'false') {
-    return false;
-  }
-}
 
-export function castBool(v: any): ?boolean {
-  if (v === true || v === false) {
-    return v;
-  }
-}
-
-export function castBrowserTheme(v: any): ?BrowserTheme {
-  if (v === 'light' || v === 'dark' || v === 'auto') {
-    return v;
-  }
-}
-
-export function getAppendComponentStack(): boolean {
-  const raw = localStorageGetItem(
-    LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
-  );
-  return parseBool(raw) ?? true;
-}
-
-export function getBreakOnConsoleErrors(): boolean {
-  const raw = localStorageGetItem(LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS);
-  return parseBool(raw) ?? false;
-}
-
-export function getHideConsoleLogsInStrictMode(): boolean {
-  const raw = localStorageGetItem(
-    LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
-  );
-  return parseBool(raw) ?? false;
-}
-
-export function getShowInlineWarningsAndErrors(): boolean {
-  const raw = localStorageGetItem(
-    LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
-  );
-  return parseBool(raw) ?? true;
+  return componentFilters.filter(f => f.type !== ComponentFilterLocation);
 }
 
 export function getDefaultOpenInEditorURL(): string {
@@ -407,24 +399,45 @@ export function getOpenInEditorURL(): string {
   return getDefaultOpenInEditorURL();
 }
 
-export function separateDisplayNameAndHOCs(
+type ParseElementDisplayNameFromBackendReturn = {
+  formattedDisplayName: string | null,
+  hocDisplayNames: Array<string> | null,
+  compiledWithForget: boolean,
+};
+export function parseElementDisplayNameFromBackend(
   displayName: string | null,
   type: ElementType,
-): [string | null, Array<string> | null] {
+): ParseElementDisplayNameFromBackendReturn {
   if (displayName === null) {
-    return [null, null];
+    return {
+      formattedDisplayName: null,
+      hocDisplayNames: null,
+      compiledWithForget: false,
+    };
+  }
+
+  if (displayName.startsWith('Forget(')) {
+    const displayNameWithoutForgetWrapper = displayName.slice(
+      7,
+      displayName.length - 1,
+    );
+
+    const {formattedDisplayName, hocDisplayNames} =
+      parseElementDisplayNameFromBackend(displayNameWithoutForgetWrapper, type);
+    return {formattedDisplayName, hocDisplayNames, compiledWithForget: true};
   }
 
   let hocDisplayNames = null;
-
   switch (type) {
     case ElementTypeClass:
     case ElementTypeForwardRef:
     case ElementTypeFunction:
     case ElementTypeMemo:
+    case ElementTypeVirtual:
       if (displayName.indexOf('(') >= 0) {
         const matches = displayName.match(/[^()]+/g);
         if (matches != null) {
+          // $FlowFixMe[incompatible-type]
           displayName = matches.pop();
           hocDisplayNames = matches;
         }
@@ -434,7 +447,12 @@ export function separateDisplayNameAndHOCs(
       break;
   }
 
-  return [displayName, hocDisplayNames];
+  return {
+    // $FlowFixMe[incompatible-return]
+    formattedDisplayName: displayName,
+    hocDisplayNames,
+    compiledWithForget: false,
+  };
 }
 
 // Pulled from react-compat
@@ -536,6 +554,7 @@ export type DataType =
   | 'class_instance'
   | 'data_view'
   | 'date'
+  | 'error'
   | 'function'
   | 'html_all_collection'
   | 'html_element'
@@ -545,6 +564,7 @@ export type DataType =
   | 'nan'
   | 'null'
   | 'number'
+  | 'thenable'
   | 'object'
   | 'react_element'
   | 'regexp'
@@ -554,6 +574,21 @@ export type DataType =
   | 'undefined'
   | 'unknown';
 
+function isError(data: Object): boolean {
+  // If it doesn't event look like an error, it won't be an actual error.
+  if ('name' in data && 'message' in data) {
+    while (data) {
+      // $FlowFixMe[method-unbinding]
+      if (Object.prototype.toString.call(data) === '[object Error]') {
+        return true;
+      }
+      data = Object.getPrototypeOf(data);
+    }
+  }
+
+  return false;
+}
+
 /**
  * Get a enhanced/artificial type string based on the object instance
  */
@@ -562,10 +597,6 @@ export function getDataType(data: Object): DataType {
     return 'null';
   } else if (data === undefined) {
     return 'undefined';
-  }
-
-  if (isElement(data)) {
-    return 'react_element';
   }
 
   if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
@@ -589,6 +620,12 @@ export function getDataType(data: Object): DataType {
         return 'number';
       }
     case 'object':
+      if (
+        data.$$typeof === REACT_ELEMENT_TYPE ||
+        data.$$typeof === REACT_LEGACY_ELEMENT_TYPE
+      ) {
+        return 'react_element';
+      }
       if (isArray(data)) {
         return 'array';
       } else if (ArrayBuffer.isView(data)) {
@@ -611,6 +648,10 @@ export function getDataType(data: Object): DataType {
         }
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
+      } else if (typeof data.then === 'function') {
+        return 'thenable';
+      } else if (isError(data)) {
+        return 'error';
       } else {
         // $FlowFixMe[method-unbinding]
         const toStringValue = Object.prototype.toString.call(data);
@@ -643,34 +684,87 @@ export function getDataType(data: Object): DataType {
   }
 }
 
+// Fork of packages/react-is/src/ReactIs.js:30, but with legacy element type
+// Which has been changed in https://github.com/facebook/react/pull/28813
+function typeOfWithLegacyElementSymbol(object: any): mixed {
+  if (typeof object === 'object' && object !== null) {
+    const $$typeof = object.$$typeof;
+    switch ($$typeof) {
+      case REACT_ELEMENT_TYPE:
+      case REACT_LEGACY_ELEMENT_TYPE:
+        const type = object.type;
+
+        switch (type) {
+          case REACT_FRAGMENT_TYPE:
+          case REACT_PROFILER_TYPE:
+          case REACT_STRICT_MODE_TYPE:
+          case REACT_SUSPENSE_TYPE:
+          case REACT_SUSPENSE_LIST_TYPE:
+          case REACT_VIEW_TRANSITION_TYPE:
+            return type;
+          default:
+            const $$typeofType = type && type.$$typeof;
+
+            switch ($$typeofType) {
+              case REACT_CONTEXT_TYPE:
+              case REACT_FORWARD_REF_TYPE:
+              case REACT_LAZY_TYPE:
+              case REACT_MEMO_TYPE:
+                return $$typeofType;
+              case REACT_CONSUMER_TYPE:
+                if (enableRenderableContext) {
+                  return $$typeofType;
+                }
+              // Fall through
+              case REACT_PROVIDER_TYPE:
+                if (!enableRenderableContext) {
+                  return $$typeofType;
+                }
+              // Fall through
+              default:
+                return $$typeof;
+            }
+        }
+      case REACT_PORTAL_TYPE:
+        return $$typeof;
+    }
+  }
+
+  return undefined;
+}
+
 export function getDisplayNameForReactElement(
   element: React$Element<any>,
 ): string | null {
-  const elementType = typeOf(element);
+  const elementType = typeOfWithLegacyElementSymbol(element);
   switch (elementType) {
-    case ContextConsumer:
+    case REACT_CONSUMER_TYPE:
       return 'ContextConsumer';
-    case ContextProvider:
+    case REACT_PROVIDER_TYPE:
       return 'ContextProvider';
-    case ForwardRef:
+    case REACT_CONTEXT_TYPE:
+      return 'Context';
+    case REACT_FORWARD_REF_TYPE:
       return 'ForwardRef';
-    case Fragment:
+    case REACT_FRAGMENT_TYPE:
       return 'Fragment';
-    case Lazy:
+    case REACT_LAZY_TYPE:
       return 'Lazy';
-    case Memo:
+    case REACT_MEMO_TYPE:
       return 'Memo';
-    case Portal:
+    case REACT_PORTAL_TYPE:
       return 'Portal';
-    case Profiler:
+    case REACT_PROFILER_TYPE:
       return 'Profiler';
-    case StrictMode:
+    case REACT_STRICT_MODE_TYPE:
       return 'StrictMode';
-    case Suspense:
+    case REACT_SUSPENSE_TYPE:
       return 'Suspense';
-    case SuspenseList:
+    case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
-    case TracingMarker:
+    case REACT_VIEW_TRANSITION_TYPE:
+      return 'ViewTransition';
+    case REACT_TRACING_MARKER_TYPE:
       return 'TracingMarker';
     default:
       const {type} = element;
@@ -737,9 +831,10 @@ export function formatDataForPreview(
     case 'html_element':
       return `<${truncateForDisplay(data.tagName.toLowerCase())} />`;
     case 'function':
-      return truncateForDisplay(
-        `ƒ ${typeof data.name === 'function' ? '' : data.name}() {}`,
-      );
+      if (typeof data.name === 'function' || data.name === '') {
+        return '() => {}';
+      }
+      return `${truncateForDisplay(data.name)}() {}`;
     case 'string':
       return `"${data}"`;
     case 'bigint':
@@ -841,7 +936,61 @@ export function formatDataForPreview(
     case 'date':
       return data.toString();
     case 'class_instance':
-      return data.constructor.name;
+      try {
+        let resolvedConstructorName = data.constructor.name;
+        if (typeof resolvedConstructorName === 'string') {
+          return resolvedConstructorName;
+        }
+
+        resolvedConstructorName = Object.getPrototypeOf(data).constructor.name;
+        if (typeof resolvedConstructorName === 'string') {
+          return resolvedConstructorName;
+        }
+
+        try {
+          return truncateForDisplay(String(data));
+        } catch (error) {
+          return 'unserializable';
+        }
+      } catch (error) {
+        return 'unserializable';
+      }
+    case 'thenable':
+      let displayName: string;
+      if (isPlainObject(data)) {
+        displayName = 'Thenable';
+      } else {
+        let resolvedConstructorName = data.constructor.name;
+        if (typeof resolvedConstructorName !== 'string') {
+          resolvedConstructorName =
+            Object.getPrototypeOf(data).constructor.name;
+        }
+        if (typeof resolvedConstructorName === 'string') {
+          displayName = resolvedConstructorName;
+        } else {
+          displayName = 'Thenable';
+        }
+      }
+      switch (data.status) {
+        case 'pending':
+          return `pending ${displayName}`;
+        case 'fulfilled':
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(data.value, false);
+            return `fulfilled ${displayName} {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `fulfilled ${displayName} {…}`;
+          }
+        case 'rejected':
+          if (showFormattedValue) {
+            const formatted = formatDataForPreview(data.reason, false);
+            return `rejected ${displayName} {${truncateForDisplay(formatted)}}`;
+          } else {
+            return `rejected ${displayName} {…}`;
+          }
+        default:
+          return displayName;
+      }
     case 'object':
       if (showFormattedValue) {
         const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
@@ -865,13 +1014,15 @@ export function formatDataForPreview(
       } else {
         return '{…}';
       }
+    case 'error':
+      return truncateForDisplay(String(data));
     case 'boolean':
     case 'number':
     case 'infinity':
     case 'nan':
     case 'null':
     case 'undefined':
-      return data;
+      return String(data);
     default:
       try {
         return truncateForDisplay(String(data));
@@ -889,3 +1040,80 @@ export const isPlainObject = (object: Object): boolean => {
   const objectParentPrototype = Object.getPrototypeOf(objectPrototype);
   return !objectParentPrototype;
 };
+
+export function backendToFrontendSerializedElementMapper(
+  element: SerializedElementBackend,
+): SerializedElementFrontend {
+  const {formattedDisplayName, hocDisplayNames, compiledWithForget} =
+    parseElementDisplayNameFromBackend(element.displayName, element.type);
+
+  return {
+    ...element,
+    displayName: formattedDisplayName,
+    hocDisplayNames,
+    compiledWithForget,
+  };
+}
+
+/**
+ * Should be used when treating url as a Chrome Resource URL.
+ */
+export function normalizeUrlIfValid(url: string): string {
+  try {
+    // TODO: Chrome will use the basepath to create a Resource URL.
+    return new URL(url).toString();
+  } catch {
+    // Giving up if it's not a valid URL without basepath
+    return url;
+  }
+}
+
+export function getIsReloadAndProfileSupported(): boolean {
+  // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  let isBackendStorageAPISupported = false;
+  try {
+    localStorage.getItem('test');
+    isBackendStorageAPISupported = true;
+  } catch (error) {}
+
+  return isBackendStorageAPISupported && isSynchronousXHRSupported();
+}
+
+// Expected to be used only by browser extension and react-devtools-inline
+export function getIfReloadedAndProfiling(): boolean {
+  return (
+    sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+  );
+}
+
+export function getProfilingSettings(): ProfilingSettings {
+  return {
+    recordChangeDescriptions:
+      sessionStorageGetItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
+      'true',
+    recordTimeline:
+      sessionStorageGetItem(SESSION_STORAGE_RECORD_TIMELINE_KEY) === 'true',
+  };
+}
+
+export function onReloadAndProfile(
+  recordChangeDescriptions: boolean,
+  recordTimeline: boolean,
+): void {
+  sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
+  sessionStorageSetItem(
+    SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+    recordChangeDescriptions ? 'true' : 'false',
+  );
+  sessionStorageSetItem(
+    SESSION_STORAGE_RECORD_TIMELINE_KEY,
+    recordTimeline ? 'true' : 'false',
+  );
+}
+
+export function onReloadAndProfileFlagsReset(): void {
+  sessionStorageRemoveItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY);
+  sessionStorageRemoveItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY);
+  sessionStorageRemoveItem(SESSION_STORAGE_RECORD_TIMELINE_KEY);
+}

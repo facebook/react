@@ -12,7 +12,8 @@ import type {LoggerEvent} from 'react-devtools-shared/src/Logger';
 import {registerEventLogger} from 'react-devtools-shared/src/Logger';
 import {enableLogger} from 'react-devtools-feature-flags';
 
-let loggingIFrame = null;
+let currentLoggingIFrame = null;
+let currentSessionId = null;
 let missedEvents: Array<LoggerEvent> = [];
 
 type LoggerContext = {
@@ -21,32 +22,27 @@ type LoggerContext = {
 
 export function registerDevToolsEventLogger(
   surface: string,
-  fetchAdditionalContext: ?() =>
-    | LoggerContext
-    | ?(() => Promise<LoggerContext>),
+  fetchAdditionalContext?:
+    | (() => LoggerContext)
+    | (() => Promise<LoggerContext>),
 ): void {
   async function logEvent(event: LoggerEvent) {
     if (enableLogger) {
-      if (loggingIFrame != null) {
-        let metadata = null;
-        if (event.metadata != null) {
-          metadata = event.metadata;
-          // $FlowFixMe[cannot-write]: metadata is not writable and nullable
-          // $FlowFixMe[prop-missing]
-          delete event.metadata;
-        }
-        loggingIFrame.contentWindow.postMessage(
+      if (currentLoggingIFrame != null && currentSessionId != null) {
+        const {metadata, ...eventWithoutMetadata} = event;
+        const additionalContext: LoggerContext | {} =
+          fetchAdditionalContext != null ? await fetchAdditionalContext() : {};
+
+        currentLoggingIFrame?.contentWindow?.postMessage(
           {
             source: 'react-devtools-logging',
-            event: event,
+            event: eventWithoutMetadata,
             context: {
+              ...additionalContext,
+              metadata: metadata != null ? JSON.stringify(metadata) : '',
+              session_id: currentSessionId,
               surface,
               version: process.env.DEVTOOLS_VERSION,
-              metadata: metadata !== null ? JSON.stringify(metadata) : '',
-              ...(fetchAdditionalContext != null
-                ? // $FlowFixMe[not-an-object]
-                  await fetchAdditionalContext()
-                : {}),
             },
           },
           '*',
@@ -58,11 +54,8 @@ export function registerDevToolsEventLogger(
   }
 
   function handleLoggingIFrameLoaded(iframe: HTMLIFrameElement) {
-    if (loggingIFrame != null) {
-      return;
-    }
+    currentLoggingIFrame = iframe;
 
-    loggingIFrame = iframe;
     if (missedEvents.length > 0) {
       missedEvents.forEach(event => logEvent(event));
       missedEvents = [];
@@ -74,18 +67,21 @@ export function registerDevToolsEventLogger(
   if (enableLogger) {
     const loggingUrl = process.env.LOGGING_URL;
     const body = document.body;
+
     if (
       typeof loggingUrl === 'string' &&
       loggingUrl.length > 0 &&
-      body != null
+      body != null &&
+      currentLoggingIFrame == null
     ) {
       registerEventLogger(logEvent);
+      currentSessionId = window.crypto.randomUUID();
 
       const iframe = document.createElement('iframe');
+
+      iframe.onload = () => handleLoggingIFrameLoaded(iframe);
       iframe.src = loggingUrl;
-      iframe.onload = function (...args) {
-        handleLoggingIFrameLoaded(iframe);
-      };
+
       body.appendChild(iframe);
     }
   }

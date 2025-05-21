@@ -31,74 +31,81 @@ import ComponentSearchInput from './ComponentSearchInput';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import SelectedTreeHighlight from './SelectedTreeHighlight';
 import TreeFocusedContext from './TreeFocusedContext';
-import {useHighlightNativeElement, useSubscription} from '../hooks';
+import {useHighlightHostInstance, useSubscription} from '../hooks';
 import {clearErrorsAndWarnings as clearErrorsAndWarningsAPI} from 'react-devtools-shared/src/backendAPI';
 import styles from './Tree.css';
 import ButtonIcon from '../ButtonIcon';
 import Button from '../Button';
 import {logEvent} from 'react-devtools-shared/src/Logger';
+import {useExtensionComponentsPanelVisibility} from 'react-devtools-shared/src/frontend/hooks/useExtensionComponentsPanelVisibility';
+import {useChangeOwnerAction} from './OwnersListContext';
 
 // Never indent more than this number of pixels (even if we have the room).
 const DEFAULT_INDENTATION_SIZE = 12;
 
 export type ItemData = {
-  numElements: number,
   isNavigatingWithKeyboard: boolean,
-  lastScrolledIDRef: {current: number | null, ...},
   onElementMouseEnter: (id: number) => void,
   treeFocused: boolean,
 };
 
-type Props = {};
+function calculateInitialScrollOffset(
+  inspectedElementIndex: number | null,
+  elementHeight: number,
+): number | void {
+  if (inspectedElementIndex === null) {
+    return undefined;
+  }
 
-export default function Tree(props: Props): React.Node {
+  if (inspectedElementIndex < 3) {
+    return undefined;
+  }
+
+  // Make 3 elements on top of the inspected one visible
+  return (inspectedElementIndex - 3) * elementHeight;
+}
+
+export default function Tree(): React.Node {
   const dispatch = useContext(TreeDispatcherContext);
   const {
     numElements,
     ownerID,
     searchIndex,
     searchResults,
-    selectedElementID,
-    selectedElementIndex,
+    inspectedElementID,
+    inspectedElementIndex,
   } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {hideSettings} = useContext(OptionsContext);
+  const {lineHeight} = useContext(SettingsContext);
+
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] =
     useState(false);
-  const {highlightNativeElement, clearHighlightNativeElement} =
-    useHighlightNativeElement();
+  const {highlightHostInstance, clearHighlightHostInstance} =
+    useHighlightHostInstance();
+  const [treeFocused, setTreeFocused] = useState<boolean>(false);
+  const componentsPanelVisible = useExtensionComponentsPanelVisibility(bridge);
+
   const treeRef = useRef<HTMLDivElement | null>(null);
   const focusTargetRef = useRef<HTMLDivElement | null>(null);
+  const listRef = useRef(null);
 
-  const [treeFocused, setTreeFocused] = useState<boolean>(false);
+  useEffect(() => {
+    if (!componentsPanelVisible) {
+      return;
+    }
 
-  const {lineHeight, showInlineWarningsAndErrors} = useContext(SettingsContext);
-
-  // Make sure a newly selected element is visible in the list.
-  // This is helpful for things like the owners list and search.
-  //
-  // TRICKY:
-  // It's important to use a callback ref for this, rather than a ref object and an effect.
-  // As an optimization, the AutoSizer component does not render children when their size would be 0.
-  // This means that in some cases (if the browser panel size is initially really small),
-  // the Tree component might render without rendering an inner List.
-  // In this case, the list ref would be null on mount (when the scroll effect runs),
-  // meaning the scroll action would be skipped (since ref updates don't re-run effects).
-  // Using a callback ref accounts for this case...
-  const listCallbackRef = useCallback(
-    (list: $FlowFixMe) => {
-      if (list != null && selectedElementIndex !== null) {
-        list.scrollToItem(selectedElementIndex, 'smart');
-      }
-    },
-    [selectedElementIndex],
-  );
+    if (listRef.current != null && inspectedElementIndex !== null) {
+      listRef.current.scrollToItem(inspectedElementIndex, 'smart');
+    }
+  }, [inspectedElementIndex, componentsPanelVisible]);
 
   // Picking an element in the inspector should put focus into the tree.
-  // This ensures that keyboard navigation works right after picking a node.
+  // If possible, navigation works right after picking a node.
+  // NOTE: This is not guaranteed to work, because browser extension panels are hosted inside an iframe.
   useEffect(() => {
-    function handleStopInspectingNative(didSelectNode: boolean) {
+    function handleStopInspectingHost(didSelectNode: boolean) {
       if (didSelectNode && focusTargetRef.current !== null) {
         focusTargetRef.current.focus();
         logEvent({
@@ -107,15 +114,10 @@ export default function Tree(props: Props): React.Node {
         });
       }
     }
-    bridge.addListener('stopInspectingNative', handleStopInspectingNative);
+    bridge.addListener('stopInspectingHost', handleStopInspectingHost);
     return () =>
-      bridge.removeListener('stopInspectingNative', handleStopInspectingNative);
+      bridge.removeListener('stopInspectingHost', handleStopInspectingHost);
   }, [bridge]);
-
-  // This ref is passed down the context to elements.
-  // It lets them avoid autoscrolling to the same item many times
-  // when a selected virtual row goes in and out of the viewport.
-  const lastScrolledIDRef = useRef<number | null>(null);
 
   // Navigate the tree with up/down arrow keys.
   useEffect(() => {
@@ -141,8 +143,8 @@ export default function Tree(props: Props): React.Node {
         case 'ArrowLeft':
           event.preventDefault();
           element =
-            selectedElementID !== null
-              ? store.getElementByID(selectedElementID)
+            inspectedElementID !== null
+              ? store.getElementByID(inspectedElementID)
               : null;
           if (element !== null) {
             if (event.altKey) {
@@ -161,8 +163,8 @@ export default function Tree(props: Props): React.Node {
         case 'ArrowRight':
           event.preventDefault();
           element =
-            selectedElementID !== null
-              ? store.getElementByID(selectedElementID)
+            inspectedElementID !== null
+              ? store.getElementByID(inspectedElementID)
               : null;
           if (element !== null) {
             if (event.altKey) {
@@ -210,35 +212,27 @@ export default function Tree(props: Props): React.Node {
     return () => {
       container.removeEventListener('keydown', handleKeyDown);
     };
-  }, [dispatch, selectedElementID, store]);
+  }, [dispatch, inspectedElementID, store]);
 
   // Focus management.
   const handleBlur = useCallback(() => setTreeFocused(false), []);
-  const handleFocus = useCallback(() => {
-    setTreeFocused(true);
+  const handleFocus = useCallback(() => setTreeFocused(true), []);
 
-    if (selectedElementIndex === null && numElements > 0) {
-      dispatch({
-        type: 'SELECT_ELEMENT_AT_INDEX',
-        payload: 0,
-      });
-    }
-  }, [dispatch, numElements, selectedElementIndex]);
-
+  const changeOwnerAction = useChangeOwnerAction();
   const handleKeyPress = useCallback(
     (event: $FlowFixMe) => {
       switch (event.key) {
         case 'Enter':
         case ' ':
-          if (selectedElementID !== null) {
-            dispatch({type: 'SELECT_OWNER', payload: selectedElementID});
+          if (inspectedElementID !== null) {
+            changeOwnerAction(inspectedElementID);
           }
           break;
         default:
           break;
       }
     },
-    [dispatch, selectedElementID],
+    [dispatch, inspectedElementID],
   );
 
   // If we switch the selected element while using the keyboard,
@@ -255,19 +249,19 @@ export default function Tree(props: Props): React.Node {
       didSelectNewSearchResult = true;
     }
     if (isNavigatingWithKeyboard || didSelectNewSearchResult) {
-      if (selectedElementID !== null) {
-        highlightNativeElement(selectedElementID);
+      if (inspectedElementID !== null) {
+        highlightHostInstance(inspectedElementID);
       } else {
-        clearHighlightNativeElement();
+        clearHighlightHostInstance();
       }
     }
   }, [
     bridge,
     isNavigatingWithKeyboard,
-    highlightNativeElement,
+    highlightHostInstance,
     searchIndex,
     searchResults,
-    selectedElementID,
+    inspectedElementID,
   ]);
 
   // Highlight last hovered element.
@@ -276,10 +270,10 @@ export default function Tree(props: Props): React.Node {
       // Ignore hover while we're navigating with keyboard.
       // This avoids flicker from the hovered nodes under the mouse.
       if (!isNavigatingWithKeyboard) {
-        highlightNativeElement(id);
+        highlightHostInstance(id);
       }
     },
-    [isNavigatingWithKeyboard, highlightNativeElement],
+    [isNavigatingWithKeyboard, highlightHostInstance],
   );
 
   const handleMouseMove = useCallback(() => {
@@ -288,25 +282,17 @@ export default function Tree(props: Props): React.Node {
     setIsNavigatingWithKeyboard(false);
   }, []);
 
-  const handleMouseLeave = clearHighlightNativeElement;
+  const handleMouseLeave = clearHighlightHostInstance;
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
   const itemData = useMemo<ItemData>(
     () => ({
-      numElements,
       isNavigatingWithKeyboard,
       onElementMouseEnter: handleElementMouseEnter,
-      lastScrolledIDRef,
       treeFocused,
     }),
-    [
-      numElements,
-      isNavigatingWithKeyboard,
-      handleElementMouseEnter,
-      lastScrolledIDRef,
-      treeFocused,
-    ],
+    [isNavigatingWithKeyboard, handleElementMouseEnter, treeFocused],
   );
 
   const itemKey = useCallback(
@@ -325,8 +311,8 @@ export default function Tree(props: Props): React.Node {
   const errorsOrWarningsSubscription = useMemo(
     () => ({
       getCurrentValue: () => ({
-        errors: store.errorCount,
-        warnings: store.warningCount,
+        errors: store.componentWithErrorCount,
+        warnings: store.componentWithWarningCount,
       }),
       subscribe: (callback: Function) => {
         store.addListener('mutated', callback);
@@ -361,7 +347,7 @@ export default function Tree(props: Props): React.Node {
     <TreeFocusedContext.Provider value={treeFocused}>
       <div className={styles.Tree} ref={treeRef}>
         <div className={styles.SearchInput}>
-          {store.supportsNativeInspection && (
+          {store.supportsClickToInspect && (
             <Fragment>
               <InspectHostNodesToggle />
               <div className={styles.VRule} />
@@ -370,40 +356,38 @@ export default function Tree(props: Props): React.Node {
           <Suspense fallback={<Loading />}>
             {ownerID !== null ? <OwnersStack /> : <ComponentSearchInput />}
           </Suspense>
-          {showInlineWarningsAndErrors &&
-            ownerID === null &&
-            (errors > 0 || warnings > 0) && (
-              <React.Fragment>
-                <div className={styles.VRule} />
-                {errors > 0 && (
-                  <div className={styles.IconAndCount}>
-                    <Icon className={styles.ErrorIcon} type="error" />
-                    {errors}
-                  </div>
-                )}
-                {warnings > 0 && (
-                  <div className={styles.IconAndCount}>
-                    <Icon className={styles.WarningIcon} type="warning" />
-                    {warnings}
-                  </div>
-                )}
-                <Button
-                  onClick={handlePreviousErrorOrWarningClick}
-                  title="Scroll to previous error or warning">
-                  <ButtonIcon type="up" />
-                </Button>
-                <Button
-                  onClick={handleNextErrorOrWarningClick}
-                  title="Scroll to next error or warning">
-                  <ButtonIcon type="down" />
-                </Button>
-                <Button
-                  onClick={clearErrorsAndWarnings}
-                  title="Clear all errors and warnings">
-                  <ButtonIcon type="clear" />
-                </Button>
-              </React.Fragment>
-            )}
+          {ownerID === null && (errors > 0 || warnings > 0) && (
+            <React.Fragment>
+              <div className={styles.VRule} />
+              {errors > 0 && (
+                <div className={styles.IconAndCount}>
+                  <Icon className={styles.ErrorIcon} type="error" />
+                  {errors}
+                </div>
+              )}
+              {warnings > 0 && (
+                <div className={styles.IconAndCount}>
+                  <Icon className={styles.WarningIcon} type="warning" />
+                  {warnings}
+                </div>
+              )}
+              <Button
+                onClick={handlePreviousErrorOrWarningClick}
+                title="Scroll to previous error or warning">
+                <ButtonIcon type="up" />
+              </Button>
+              <Button
+                onClick={handleNextErrorOrWarningClick}
+                title="Scroll to next error or warning">
+                <ButtonIcon type="down" />
+              </Button>
+              <Button
+                onClick={clearErrorsAndWarnings}
+                title="Clear all errors and warnings">
+                <ButtonIcon type="clear" />
+              </Button>
+            </React.Fragment>
+          )}
           {!hideSettings && (
             <Fragment>
               <div className={styles.VRule} />
@@ -428,12 +412,16 @@ export default function Tree(props: Props): React.Node {
                 <FixedSizeList
                   className={styles.List}
                   height={height}
+                  initialScrollOffset={calculateInitialScrollOffset(
+                    inspectedElementIndex,
+                    lineHeight,
+                  )}
                   innerElementType={InnerElementType}
                   itemCount={numElements}
                   itemData={itemData}
                   itemKey={itemKey}
                   itemSize={lineHeight}
-                  ref={listCallbackRef}
+                  ref={listRef}
                   width={width}>
                   {Element}
                 </FixedSizeList>
@@ -538,7 +526,7 @@ function updateIndentationSizeVar(
 }
 
 // $FlowFixMe[missing-local-annot]
-function InnerElementType({children, style, ...rest}) {
+function InnerElementType({children, style}) {
   const {ownerID} = useContext(TreeStateContext);
 
   const cachedChildWidths = useMemo<WeakMap<HTMLElement, number>>(
@@ -589,8 +577,7 @@ function InnerElementType({children, style, ...rest}) {
     <div
       className={styles.InnerElementType}
       ref={divRef}
-      style={style}
-      {...rest}>
+      style={{...style, pointerEvents: null}}>
       <SelectedTreeHighlight />
       {children}
     </div>

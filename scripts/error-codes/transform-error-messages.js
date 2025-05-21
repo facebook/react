@@ -49,6 +49,11 @@ module.exports = function (babel) {
       errorMsgExpressions
     );
 
+    if (errorMsgLiteral === 'react-stack-top-frame') {
+      // This is a special case for generating stack traces.
+      return;
+    }
+
     let prodErrorId = errorMap[errorMsgLiteral];
     if (prodErrorId === undefined) {
       // There is no error code for this message. Add an inline comment
@@ -122,7 +127,10 @@ module.exports = function (babel) {
 
     // Outputs:
     // Error(formatProdErrorMessage(ERR_CODE, adj, noun));
-    const newErrorCall = t.callExpression(t.identifier('Error'), [prodMessage]);
+    const newErrorCall = t.callExpression(t.identifier('Error'), [
+      prodMessage,
+      ...node.arguments.slice(1),
+    ]);
     newErrorCall[SEEN_SYMBOL] = true;
     path.replaceWith(newErrorCall);
   }

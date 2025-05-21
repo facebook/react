@@ -21,17 +21,25 @@ import type {
 import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {
+  NoEventPriority,
+  DiscreteEventPriority,
   DefaultEventPriority,
   IdleEventPriority,
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
+
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactVersion from 'shared/ReactVersion';
 
 type Container = {
   rootID: string,
@@ -70,8 +78,12 @@ type TextInstance = {
 type HostContext = Object;
 type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
+  onUncaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
+  onCaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
+  onDefaultTransitionIndicator?: () => void | (() => void),
   ...
 };
+type InstanceMeasurement = null;
 
 type SuspenseyCommitSubscription = {
   pendingCount: number,
@@ -80,12 +92,18 @@ type SuspenseyCommitSubscription = {
 
 export type TransitionStatus = mixed;
 
+export type FormInstance = Instance;
+
+export type RunningViewTransition = null;
+
+export type ViewTransitionInstance = null | {name: string, ...};
+
+export type GestureTimeline = null;
+
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
-const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
-  Object.freeze(UPDATE_SIGNAL);
 }
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
@@ -222,13 +240,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function cloneInstance(
     instance: Instance,
-    updatePayload: null | Object,
     type: string,
     oldProps: Props,
     newProps: Props,
-    internalInstanceHandle: Object,
     keepChildren: boolean,
-    recyclableInstance: null | Instance,
+    children: ?$ReadOnlyArray<Instance>,
   ): Instance {
     if (__DEV__) {
       checkPropStringCoercion(newProps.children, 'children');
@@ -237,7 +253,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       id: instance.id,
       type: type,
       parent: instance.parent,
-      children: keepChildren ? instance.children : [],
+      children: keepChildren ? instance.children : children ?? [],
       text: shouldSetTextContent(type, newProps)
         ? computeText((newProps.children: any) + '', instance.context)
         : null,
@@ -275,7 +291,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       throw new Error('Error in host config.');
     }
     return (
-      typeof props.children === 'string' || typeof props.children === 'number'
+      typeof props.children === 'string' ||
+      typeof props.children === 'number' ||
+      typeof props.children === 'bigint'
     );
   }
 
@@ -303,7 +321,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     suspenseyCommitSubscription = null;
   }
 
-  function suspendInstance(type: string, props: Props): void {
+  function suspendInstance(
+    instance: Instance,
+    type: string,
+    props: Props,
+  ): void {
     const src = props.src;
     if (type === 'suspensey-thing' && typeof src === 'string') {
       // Attach a listener to the suspensey thing and create a subscription
@@ -357,6 +379,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   }
 
   const sharedHostConfig = {
+    rendererVersion: ReactVersion,
+    rendererPackageName: 'react-noop',
+
     supportsSingletons: false,
 
     getRootHostContext() {
@@ -433,6 +458,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return inst;
     },
 
+    cloneMutableInstance(instance: Instance, keepChildren: boolean): Instance {
+      throw new Error('Not yet implemented.');
+    },
+
     appendInitialChild(
       parentInstance: Instance,
       child: Instance | TextInstance,
@@ -451,21 +480,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       props: Props,
     ): boolean {
       return false;
-    },
-
-    prepareUpdate(
-      instance: Instance,
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-    ): null | {...} {
-      if (oldProps === null) {
-        throw new Error('Should have old props');
-      }
-      if (newProps === null) {
-        throw new Error('Should have new props');
-      }
-      return UPDATE_SIGNAL;
     },
 
     shouldSetTextContent,
@@ -499,6 +513,26 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return inst;
     },
 
+    cloneMutableTextInstance(textInstance: TextInstance): TextInstance {
+      throw new Error('Not yet implemented.');
+    },
+
+    createFragmentInstance(fragmentFiber) {
+      return null;
+    },
+
+    updateFragmentInstanceFiber(fragmentFiber, fragmentInstance) {
+      // Noop
+    },
+
+    commitNewChildToFragmentInstance(child, fragmentInstance) {
+      // Noop
+    },
+
+    deleteChildFromFragmentInstance(child, fragmentInstance) {
+      // Noop
+    },
+
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: -1,
@@ -508,15 +542,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       typeof queueMicrotask === 'function'
         ? queueMicrotask
         : typeof Promise !== 'undefined'
-        ? callback =>
-            Promise.resolve(null)
-              .then(callback)
-              .catch(error => {
-                setTimeout(() => {
-                  throw error;
-                });
-              })
-        : setTimeout,
+          ? callback =>
+              Promise.resolve(null)
+                .then(callback)
+                .catch(error => {
+                  setTimeout(() => {
+                    throw error;
+                  });
+                })
+          : setTimeout,
 
     prepareForCommit(): null | Object {
       return null;
@@ -524,8 +558,24 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     resetAfterCommit(): void {},
 
-    getCurrentEventPriority() {
+    setCurrentUpdatePriority,
+    getCurrentUpdatePriority,
+
+    resolveUpdatePriority() {
+      if (currentUpdatePriority !== NoEventPriority) {
+        return currentUpdatePriority;
+      }
       return currentEventPriority;
+    },
+
+    trackSchedulerEvent(): void {},
+
+    resolveEventType(): null | string {
+      return null;
+    },
+
+    resolveEventTimeStamp(): number {
+      return -1.1;
     },
 
     shouldAttemptEagerTransition(): boolean {
@@ -579,13 +629,33 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return type === 'suspensey-thing' && typeof props.src === 'string';
     },
 
+    maySuspendCommitOnUpdate(
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+    ): boolean {
+      // Asks whether it's possible for this combination of type and props
+      // to ever need to suspend. This is different from asking whether it's
+      // currently ready because even if it's ready now, it might get purged
+      // from the cache later.
+      return (
+        type === 'suspensey-thing' &&
+        typeof newProps.src === 'string' &&
+        newProps.src !== oldProps.src
+      );
+    },
+
+    maySuspendCommitInSyncRender(type: string, props: Props): boolean {
+      return true;
+    },
+
     mayResourceSuspendCommit(resource: mixed): boolean {
       throw new Error(
         'Resources are not implemented for React Noop yet. This method should not be called',
       );
     },
 
-    preloadInstance(type: string, props: Props): boolean {
+    preloadInstance(instance: Instance, type: string, props: Props): boolean {
       if (type !== 'suspensey-thing' || typeof props.src !== 'string') {
         throw new Error('Attempted to preload unexpected instance: ' + type);
       }
@@ -610,12 +680,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         }
         return false;
       } else {
-        // If this is false, React will trigger a fallback, if needed.
         return record.status === 'fulfilled';
       }
     },
 
-    preloadResource(resource: mixed): boolean {
+    preloadResource(resource: mixed): number {
       throw new Error(
         'Resources are not implemented for React Noop yet. This method should not be called',
       );
@@ -630,9 +699,23 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       );
     },
 
+    suspendOnActiveViewTransition(container: Container): void {
+      // Not implemented
+    },
+
     waitForCommitToBeReady,
 
     NotPendingTransition: (null: TransitionStatus),
+
+    resetFormInstance(form: Instance) {},
+
+    bindToConsole(methodName, args, badgeName) {
+      return Function.prototype.bind.apply(
+        // eslint-disable-next-line react-internal/no-production-logging
+        console[methodName],
+        [console].concat(args),
+      );
+    },
   };
 
   const hostConfig = useMutation
@@ -648,7 +731,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         commitUpdate(
           instance: Instance,
-          updatePayload: Object,
           type: string,
           oldProps: Props,
           newProps: Props,
@@ -710,6 +792,104 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           textInstance.hidden = false;
         },
 
+        applyViewTransitionName(
+          instance: Instance,
+          name: string,
+          className: ?string,
+        ): void {},
+
+        restoreViewTransitionName(instance: Instance, props: Props): void {},
+
+        cancelViewTransitionName(
+          instance: Instance,
+          name: string,
+          props: Props,
+        ): void {},
+
+        cancelRootViewTransitionName(rootContainer: Container): void {},
+
+        restoreRootViewTransitionName(rootContainer: Container): void {},
+
+        cloneRootViewTransitionContainer(rootContainer: Container): Instance {
+          throw new Error('Not yet implemented.');
+        },
+
+        removeRootViewTransitionClone(
+          rootContainer: Container,
+          clone: Instance,
+        ): void {
+          throw new Error('Not implemented.');
+        },
+
+        measureInstance(instance: Instance): InstanceMeasurement {
+          return null;
+        },
+
+        measureClonedInstance(instance: Instance): InstanceMeasurement {
+          return null;
+        },
+
+        wasInstanceInViewport(measurement: InstanceMeasurement): boolean {
+          return true;
+        },
+
+        hasInstanceChanged(
+          oldMeasurement: InstanceMeasurement,
+          newMeasurement: InstanceMeasurement,
+        ): boolean {
+          return false;
+        },
+
+        hasInstanceAffectedParent(
+          oldMeasurement: InstanceMeasurement,
+          newMeasurement: InstanceMeasurement,
+        ): boolean {
+          return false;
+        },
+
+        startViewTransition(
+          rootContainer: Container,
+          transitionTypes: null | TransitionTypes,
+          mutationCallback: () => void,
+          layoutCallback: () => void,
+          afterMutationCallback: () => void,
+          spawnedWorkCallback: () => void,
+          passiveCallback: () => mixed,
+          errorCallback: mixed => void,
+        ): null | RunningViewTransition {
+          mutationCallback();
+          layoutCallback();
+          // Skip afterMutationCallback(). We don't need it since we're not animating.
+          spawnedWorkCallback();
+          // Skip passiveCallback(). Spawned work will schedule a task.
+          return null;
+        },
+
+        startGestureTransition(
+          rootContainer: Container,
+          timeline: GestureTimeline,
+          rangeStart: number,
+          rangeEnd: number,
+          transitionTypes: null | TransitionTypes,
+          mutationCallback: () => void,
+          animateCallback: () => void,
+          errorCallback: mixed => void,
+        ): null | RunningViewTransition {
+          mutationCallback();
+          animateCallback();
+          return null;
+        },
+
+        stopViewTransition(transition: RunningViewTransition) {},
+
+        createViewTransitionInstance(name: string): ViewTransitionInstance {
+          return null;
+        },
+
+        getCurrentGestureOffset(provider: GestureTimeline): number {
+          return 0;
+        },
+
         resetTextContent(instance: Instance): void {
           instance.text = null;
         },
@@ -722,9 +902,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         cloneInstance,
         clearContainer,
 
-        createContainerChildSet(
-          container: Container,
-        ): Array<Instance | TextInstance> {
+        createContainerChildSet(): Array<Instance | TextInstance> {
           return [];
         },
 
@@ -760,18 +938,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           instance: Instance,
           type: string,
           props: Props,
-          internalInstanceHandle: Object,
         ): Instance {
-          const clone = cloneInstance(
-            instance,
-            null,
-            type,
-            props,
-            props,
-            internalInstanceHandle,
-            true,
-            null,
-          );
+          const clone = cloneInstance(instance, type, props, props, true, null);
           clone.hidden = true;
           return clone;
         },
@@ -779,7 +947,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         cloneHiddenTextInstance(
           instance: TextInstance,
           text: string,
-          internalInstanceHandle: Object,
         ): TextInstance {
           const clone = {
             text: instance.text,
@@ -811,7 +978,42 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
+  let currentUpdatePriority = NoEventPriority;
+  function setCurrentUpdatePriority(newPriority: EventPriority): void {
+    currentUpdatePriority = newPriority;
+  }
+
+  function getCurrentUpdatePriority(): EventPriority {
+    return currentUpdatePriority;
+  }
+
   let currentEventPriority = DefaultEventPriority;
+
+  function createJSXElementForTestComparison(type, props) {
+    if (__DEV__) {
+      const element = {
+        type: type,
+        $$typeof: REACT_ELEMENT_TYPE,
+        key: null,
+        props: props,
+        _owner: null,
+        _store: __DEV__ ? {} : undefined,
+      };
+      Object.defineProperty(element, 'ref', {
+        enumerable: false,
+        value: null,
+      });
+      return element;
+    } else {
+      return {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type: type,
+        key: null,
+        ref: null,
+        props: props,
+      };
+    }
+  }
 
   function childToJSX(child, text) {
     if (text !== null) {
@@ -831,7 +1033,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         return childToJSX(child[0], null);
       }
       const children = child.map(c => childToJSX(c, null));
-      if (children.every(c => typeof c === 'string' || typeof c === 'number')) {
+      if (
+        children.every(
+          c =>
+            typeof c === 'string' ||
+            typeof c === 'number' ||
+            typeof c === 'bigint',
+        )
+      ) {
         return children.join('');
       }
       return children;
@@ -850,15 +1059,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (children !== null) {
         props.children = children;
       }
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type: instance.type,
-        key: null,
-        ref: null,
-        props: props,
-        _owner: null,
-        _store: __DEV__ ? {} : undefined,
-      };
+      return createJSXElementForTestComparison(instance.type, props);
     }
     // This is a text instance
     const textInstance: TextInstance = (child: any);
@@ -890,15 +1091,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return null;
     }
     if (isArray(children)) {
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type: REACT_FRAGMENT_TYPE,
-        key: null,
-        ref: null,
-        props: {children},
-        _owner: null,
-        _store: __DEV__ ? {} : undefined,
-      };
+      return createJSXElementForTestComparison(REACT_FRAGMENT_TYPE, {children});
     }
     return children;
   }
@@ -909,15 +1102,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return null;
     }
     if (isArray(children)) {
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type: REACT_FRAGMENT_TYPE,
-        key: null,
-        ref: null,
-        props: {children},
-        _owner: null,
-        _store: __DEV__ ? {} : undefined,
-      };
+      return createJSXElementForTestComparison(REACT_FRAGMENT_TYPE, {children});
     }
     return children;
   }
@@ -932,14 +1117,32 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         );
       }
     }
-    return NoopRenderer.flushSync(fn);
+    if (disableLegacyMode) {
+      const previousTransition = ReactSharedInternals.T;
+      const preivousEventPriority = currentEventPriority;
+      try {
+        ReactSharedInternals.T = null;
+        currentEventPriority = DiscreteEventPriority;
+        if (fn) {
+          return fn();
+        } else {
+          return undefined;
+        }
+      } finally {
+        ReactSharedInternals.T = previousTransition;
+        currentEventPriority = preivousEventPriority;
+        NoopRenderer.flushSyncWork();
+      }
+    } else {
+      return NoopRenderer.flushSyncFromReconciler(fn);
+    }
   }
 
   function onRecoverableError(error) {
     // TODO: Turn this on once tests are fixed
-    // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
     // console.error(error);
   }
+  function onDefaultTransitionIndicator(): void | (() => void) {}
 
   let idCounter = 0;
 
@@ -992,7 +1195,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           null,
           false,
           '',
+          NoopRenderer.defaultOnUncaughtError,
+          NoopRenderer.defaultOnCaughtError,
           onRecoverableError,
+          onDefaultTransitionIndicator,
           null,
         );
         roots.set(rootID, root);
@@ -1014,7 +1220,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         null,
         false,
         '',
+        options && options.onUncaughtError
+          ? options.onUncaughtError
+          : NoopRenderer.defaultOnUncaughtError,
+        options && options.onCaughtError
+          ? options.onCaughtError
+          : NoopRenderer.defaultOnCaughtError,
         onRecoverableError,
+        options && options.onDefaultTransitionIndicator
+          ? options.onDefaultTransitionIndicator
+          : onDefaultTransitionIndicator,
         options && options.unstable_transitionCallbacks
           ? options.unstable_transitionCallbacks
           : null,
@@ -1034,6 +1249,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     createLegacyRoot() {
+      if (disableLegacyMode) {
+        throw new Error('createLegacyRoot: Unsupported Legacy Mode API.');
+      }
+
       const container = {
         rootID: '' + idCounter++,
         pendingChildren: [],
@@ -1046,7 +1265,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         null,
         false,
         '',
+        NoopRenderer.defaultOnUncaughtError,
+        NoopRenderer.defaultOnCaughtError,
         onRecoverableError,
+        onDefaultTransitionIndicator,
         null,
       );
       return {
@@ -1060,6 +1282,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         getChildrenAsJSX() {
           return getChildrenAsJSX(container);
         },
+        legacy: true,
       };
     },
 
@@ -1131,6 +1354,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     renderLegacySyncRoot(element: React$Element<any>, callback: ?Function) {
+      if (disableLegacyMode) {
+        throw new Error('createLegacyRoot: Unsupported Legacy Mode API.');
+      }
       const rootID = DEFAULT_ROOT_ID;
       const container = ReactNoop.getOrCreateRootContainer(rootID, LegacyRoot);
       const root = roots.get(container.rootID);
@@ -1216,7 +1442,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return Scheduler.unstable_flushExpired();
     },
 
-    unstable_runWithPriority: NoopRenderer.runWithPriority,
+    unstable_runWithPriority: function runWithPriority<T>(
+      priority: EventPriority,
+      fn: () => T,
+    ): T {
+      const previousPriority = getCurrentUpdatePriority();
+      try {
+        setCurrentUpdatePriority(priority);
+        return fn();
+      } finally {
+        setCurrentUpdatePriority(previousPriority);
+      }
+    },
 
     batchedUpdates: NoopRenderer.batchedUpdates,
 

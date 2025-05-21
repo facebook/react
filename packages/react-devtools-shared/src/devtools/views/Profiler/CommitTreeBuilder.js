@@ -17,11 +17,14 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
 } from 'react-devtools-shared/src/constants';
-import {utfDecodeString} from 'react-devtools-shared/src/utils';
-import {ElementTypeRoot} from 'react-devtools-shared/src/types';
+import {
+  parseElementDisplayNameFromBackend,
+  utfDecodeStringWithRanges,
+} from 'react-devtools-shared/src/utils';
+import {ElementTypeRoot} from 'react-devtools-shared/src/frontend/types';
 import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {ElementType} from 'react-devtools-shared/src/frontend/types';
 import type {
   CommitTree,
   CommitTreeNode,
@@ -133,6 +136,7 @@ function recursivelyInitializeTree(
         id,
       ): any): number),
       type: node.type,
+      compiledWithForget: node.compiledWithForget,
     });
 
     node.children.forEach(childID =>
@@ -170,8 +174,10 @@ function updateTree(
   const stringTableEnd = i + stringTableSize;
   while (i < stringTableEnd) {
     const nextLength = operations[i++];
-    const nextString = utfDecodeString(
-      (operations.slice(i, i + nextLength): any),
+    const nextString = utfDecodeStringWithRanges(
+      operations,
+      i,
+      i + nextLength - 1,
     );
     stringTable.push(nextString);
     i += nextLength;
@@ -212,6 +218,7 @@ function updateTree(
             parentID: 0,
             treeBaseDuration: 0, // This will be updated by a subsequent operation
             type,
+            compiledWithForget: false,
           };
 
           nodes.set(id, node);
@@ -239,15 +246,19 @@ function updateTree(
           const parentNode = getClonedNode(parentID);
           parentNode.children = parentNode.children.concat(id);
 
+          const {formattedDisplayName, hocDisplayNames, compiledWithForget} =
+            parseElementDisplayNameFromBackend(displayName, type);
+
           const node: CommitTreeNode = {
             children: [],
-            displayName,
-            hocDisplayNames: null,
+            displayName: formattedDisplayName,
+            hocDisplayNames: hocDisplayNames,
             id,
             key,
             parentID,
             treeBaseDuration: 0, // This will be updated by a subsequent operation
             type,
+            compiledWithForget,
           };
 
           nodes.set(id, node);
@@ -380,18 +391,22 @@ const __printTree = (commitTree: CommitTree) => {
       const id = queue.shift();
       const depth = queue.shift();
 
+      // $FlowFixMe[incompatible-call]
       const node = nodes.get(id);
       if (node == null) {
+        // $FlowFixMe[incompatible-type]
         throw Error(`Could not find node with id "${id}" in commit tree`);
       }
 
       console.log(
+        // $FlowFixMe[incompatible-call]
         `${'•'.repeat(depth)}${node.id}:${node.displayName || ''} ${
           node.key ? `key:"${node.key}"` : ''
         } (${node.treeBaseDuration})`,
       );
 
       node.children.forEach(childID => {
+        // $FlowFixMe[unsafe-addition]
         queue.push(childID, depth + 1);
       });
     }

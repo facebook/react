@@ -11,7 +11,6 @@
 
 const React = require('react');
 const ReactDOMClient = require('react-dom/client');
-const ReactTestUtils = require('react-dom/test-utils');
 const act = require('internal-test-utils').act;
 
 // Helpers
@@ -59,6 +58,7 @@ const expectChildren = function (container, children) {
           continue;
         }
         textNode = outerNode.childNodes[mountIndex];
+        expect(textNode != null).toBe(true);
         expect(textNode.nodeType).toBe(3);
         expect(textNode.data).toBe(child);
         mountIndex++;
@@ -77,143 +77,177 @@ const expectChildren = function (container, children) {
  * faster to render and update.
  */
 describe('ReactMultiChildText', () => {
-  jest.setTimeout(20000);
+  jest.setTimeout(30000);
 
   it('should correctly handle all possible children for render and update', async () => {
-    await expect(async () => {
-      // prettier-ignore
-      await testAllPermutations([
-        // basic values
-        undefined, [],
-        null, [],
-        false, [],
-        true, [],
-        0, '0',
-        1.2, '1.2',
-        '', [],
-        'foo', 'foo',
+    spyOnDev(console, 'error').mockImplementation(() => {});
+    // prettier-ignore
+    await testAllPermutations([
+      // basic values
+      undefined, [],
+      null, [],
+      false, [],
+      true, [],
+      0, '0',
+      1.2, '1.2',
+      '', [],
+      'foo', 'foo',
+    
+      [], [],
+      [undefined], [],
+      [null], [],
+      [false], [],
+      [true], [],
+      [0], ['0'],
+      [1.2], ['1.2'],
+      [''], [],
+      ['foo'], ['foo'],
+      [<div />], [<div />],
+    
+      // two adjacent values
+      [true, 0], ['0'],
+      [0, 0], ['0', '0'],
+      [1.2, 0], ['1.2', '0'],
+      [0, ''], ['0', ''],
+      ['foo', 0], ['foo', '0'],
+      [0, <div />], ['0', <div />],
+    
+      [true, 1.2], ['1.2'],
+      [1.2, 0], ['1.2', '0'],
+      [1.2, 1.2], ['1.2', '1.2'],
+      [1.2, ''], ['1.2', ''],
+      ['foo', 1.2], ['foo', '1.2'],
+      [1.2, <div />], ['1.2', <div />],
+    
+      [true, ''], [''],
+      ['', 0], ['', '0'],
+      [1.2, ''], ['1.2', ''],
+      ['', ''], ['', ''],
+      ['foo', ''], ['foo', ''],
+      ['', <div />], ['', <div />],
+    
+      [true, 'foo'], ['foo'],
+      ['foo', 0], ['foo', '0'],
+      [1.2, 'foo'], ['1.2', 'foo'],
+      ['foo', ''], ['foo', ''],
+      ['foo', 'foo'], ['foo', 'foo'],
+      ['foo', <div />], ['foo', <div />],
+    
+      // values separated by an element
+      [true, <div />, true], [<div />],
+      [1.2, <div />, 1.2], ['1.2', <div />, '1.2'],
+      ['', <div />, ''], ['', <div />, ''],
+      ['foo', <div />, 'foo'], ['foo', <div />, 'foo'],
+    
+      [true, 1.2, <div />, '', 'foo'], ['1.2', <div />, '', 'foo'],
+      [1.2, '', <div />, 'foo', true], ['1.2', '', <div />, 'foo'],
+      ['', 'foo', <div />, true, 1.2], ['', 'foo', <div />, '1.2'],
+    
+      [true, 1.2, '', <div />, 'foo', true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
+      ['', 'foo', true, <div />, 1.2, '', 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
+    
+      // values inside arrays
+      [[true], [true]], [],
+      [[1.2], [1.2]], ['1.2', '1.2'],
+      [[''], ['']], ['', ''],
+      [['foo'], ['foo']], ['foo', 'foo'],
+      [[<div />], [<div />]], [<div />, <div />],
+    
+      [[true, 1.2, <div />], '', 'foo'], ['1.2', <div />, '', 'foo'],
+      [1.2, '', [<div />, 'foo', true]], ['1.2', '', <div />, 'foo'],
+      ['', ['foo', <div />, true], 1.2], ['', 'foo', <div />, '1.2'],
+    
+      [true, [1.2, '', <div />, 'foo'], true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
+      ['', 'foo', [true, <div />, 1.2, ''], 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
+    
+      // values inside elements
+      [<div>{true}{1.2}{<div />}</div>, '', 'foo'], [<div />, '', 'foo'],
+      [1.2, '', <div>{<div />}{'foo'}{true}</div>], ['1.2', '', <div />],
+      ['', <div>{'foo'}{<div />}{true}</div>, 1.2], ['', <div />, '1.2'],
+    
+      [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
+      ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
+    ]);
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error.mock.calls[0][0]).toMatch(
+        'Each child in a list should have a unique "key" prop.',
+      );
+      expect(console.error.mock.calls[1][0]).toMatch(
+        'Each child in a list should have a unique "key" prop.',
+      );
+    }
+  });
 
-        [], [],
-        [undefined], [],
-        [null], [],
-        [false], [],
-        [true], [],
-        [0], ['0'],
-        [1.2], ['1.2'],
-        [''], [],
-        ['foo'], ['foo'],
-        [<div />], [<div />],
-
-        // two adjacent values
-        [true, 0], ['0'],
-        [0, 0], ['0', '0'],
-        [1.2, 0], ['1.2', '0'],
-        [0, ''], ['0', ''],
-        ['foo', 0], ['foo', '0'],
-        [0, <div />], ['0', <div />],
-
-        [true, 1.2], ['1.2'],
-        [1.2, 0], ['1.2', '0'],
-        [1.2, 1.2], ['1.2', '1.2'],
-        [1.2, ''], ['1.2', ''],
-        ['foo', 1.2], ['foo', '1.2'],
-        [1.2, <div />], ['1.2', <div />],
-
-        [true, ''], [''],
-        ['', 0], ['', '0'],
-        [1.2, ''], ['1.2', ''],
-        ['', ''], ['', ''],
-        ['foo', ''], ['foo', ''],
-        ['', <div />], ['', <div />],
-
-        [true, 'foo'], ['foo'],
-        ['foo', 0], ['foo', '0'],
-        [1.2, 'foo'], ['1.2', 'foo'],
-        ['foo', ''], ['foo', ''],
-        ['foo', 'foo'], ['foo', 'foo'],
-        ['foo', <div />], ['foo', <div />],
-
-        // values separated by an element
-        [true, <div />, true], [<div />],
-        [1.2, <div />, 1.2], ['1.2', <div />, '1.2'],
-        ['', <div />, ''], ['', <div />, ''],
-        ['foo', <div />, 'foo'], ['foo', <div />, 'foo'],
-
-        [true, 1.2, <div />, '', 'foo'], ['1.2', <div />, '', 'foo'],
-        [1.2, '', <div />, 'foo', true], ['1.2', '', <div />, 'foo'],
-        ['', 'foo', <div />, true, 1.2], ['', 'foo', <div />, '1.2'],
-
-        [true, 1.2, '', <div />, 'foo', true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
-        ['', 'foo', true, <div />, 1.2, '', 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
-
-        // values inside arrays
-        [[true], [true]], [],
-        [[1.2], [1.2]], ['1.2', '1.2'],
-        [[''], ['']], ['', ''],
-        [['foo'], ['foo']], ['foo', 'foo'],
-        [[<div />], [<div />]], [<div />, <div />],
-
-        [[true, 1.2, <div />], '', 'foo'], ['1.2', <div />, '', 'foo'],
-        [1.2, '', [<div />, 'foo', true]], ['1.2', '', <div />, 'foo'],
-        ['', ['foo', <div />, true], 1.2], ['', 'foo', <div />, '1.2'],
-
-        [true, [1.2, '', <div />, 'foo'], true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
-        ['', 'foo', [true, <div />, 1.2, ''], 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
-
-        // values inside elements
-        [<div>{true}{1.2}{<div />}</div>, '', 'foo'], [<div />, '', 'foo'],
-        [1.2, '', <div>{<div />}{'foo'}{true}</div>], ['1.2', '', <div />],
-        ['', <div>{'foo'}{<div />}{true}</div>, 1.2], ['', <div />, '1.2'],
-
-        [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
-        ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
-      ]);
-    }).toErrorDev([
-      'Warning: Each child in a list should have a unique "key" prop.',
-      'Warning: Each child in a list should have a unique "key" prop.',
+  it('should correctly handle bigint children for render and update', async () => {
+    // prettier-ignore
+    await testAllPermutations([
+      10n, '10',
+      [10n], ['10']
     ]);
   });
 
-  it('should throw if rendering both HTML and children', () => {
-    expect(function () {
-      ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>,
-      );
-    }).toThrow();
+  it('should throw if rendering both HTML and children', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(
+          <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>,
+        );
+      }),
+    ).rejects.toThrow();
   });
 
-  it('should render between nested components and inline children', () => {
-    ReactTestUtils.renderIntoDocument(
-      <div>
-        <h1>
-          <span />
-          <span />
-        </h1>
-      </div>,
-    );
+  it('should render between nested components and inline children', async () => {
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
 
-    expect(function () {
-      ReactTestUtils.renderIntoDocument(
+    await act(() => {
+      root.render(
         <div>
-          <h1>A</h1>
+          <h1>
+            <span />
+            <span />
+          </h1>
         </div>,
       );
-    }).not.toThrow();
+    });
 
-    expect(function () {
-      ReactTestUtils.renderIntoDocument(
-        <div>
-          <h1>{['A']}</h1>
-        </div>,
-      );
-    }).not.toThrow();
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(
+          <div>
+            <h1>A</h1>
+          </div>,
+        );
+      }),
+    ).resolves.not.toThrow();
 
-    expect(function () {
-      ReactTestUtils.renderIntoDocument(
-        <div>
-          <h1>{['A', 'B']}</h1>
-        </div>,
-      );
-    }).not.toThrow();
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(
+          <div>
+            <h1>{['A']}</h1>
+          </div>,
+        );
+      }),
+    ).resolves.not.toThrow();
+
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(
+          <div>
+            <h1>{['A', 'B']}</h1>
+          </div>,
+        );
+      }),
+    ).resolves.not.toThrow();
   });
 });

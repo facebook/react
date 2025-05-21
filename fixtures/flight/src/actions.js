@@ -2,7 +2,13 @@
 
 import {setServerState} from './ServerState.js';
 
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function like() {
+  // Test loading state
+  await sleep(1000);
   setServerState('Liked!');
   return new Promise((resolve, reject) => resolve('Liked'));
 }
@@ -17,4 +23,10 @@ export async function greet(formData) {
     `;
   }
   return 'Hi ' + name + '!';
+}
+
+export async function increment(n) {
+  // Test loading state
+  await sleep(1000);
+  return n + 1;
 }

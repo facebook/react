@@ -9,11 +9,14 @@
 
 import type Store from 'react-devtools-shared/src/devtools/store';
 
+import {
+  getLegacyRenderImplementation,
+  getModernRenderImplementation,
+} from './utils';
+
 describe('commit tree', () => {
   let React;
-  let ReactDOMClient;
   let Scheduler;
-  let legacyRender;
   let store: Store;
   let utils;
 
@@ -21,19 +24,20 @@ describe('commit tree', () => {
     utils = require('./utils');
     utils.beforeEachProfiling();
 
-    legacyRender = utils.legacyRender;
-
     store = global.store;
     store.collapseNodesByDefault = false;
     store.recordChangeDescriptions = true;
 
     React = require('react');
-    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
   });
 
+  const {render: legacyRender} = getLegacyRenderImplementation();
+  const {render: modernRender} = getModernRenderImplementation();
+
   // @reactVersion >= 16.9
-  it('should be able to rebuild the store tree for each commit', () => {
+  // @reactVersion <= 18.2
+  it('should be able to rebuild the store tree for each commit (legacy render)', () => {
     const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
       return new Array(count)
@@ -45,16 +49,14 @@ describe('commit tree', () => {
       return null;
     });
 
-    const container = document.createElement('div');
-
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => legacyRender(<Parent count={1} />, container));
+    utils.act(() => legacyRender(<Parent count={1} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Parent>
             <Child key="0"> [Memo]
     `);
-    utils.act(() => legacyRender(<Parent count={3} />, container));
+    utils.act(() => legacyRender(<Parent count={3} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Parent>
@@ -62,14 +64,73 @@ describe('commit tree', () => {
             <Child key="1"> [Memo]
             <Child key="2"> [Memo]
     `);
-    utils.act(() => legacyRender(<Parent count={2} />, container));
+    utils.act(() => legacyRender(<Parent count={2} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Parent>
             <Child key="0"> [Memo]
             <Child key="1"> [Memo]
     `);
-    utils.act(() => legacyRender(<Parent count={0} />, container));
+    utils.act(() => legacyRender(<Parent count={0} />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Parent>
+    `);
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+    const commitTrees = [];
+    for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
+      commitTrees.push(
+        store.profilerStore.profilingCache.getCommitTree({
+          commitIndex,
+          rootID,
+        }),
+      );
+    }
+
+    expect(commitTrees[0].nodes.size).toBe(3); // <Root> + <Parent> + <Child>
+    expect(commitTrees[1].nodes.size).toBe(5); // <Root> + <Parent> + <Child> x 3
+    expect(commitTrees[2].nodes.size).toBe(4); // <Root> + <Parent> + <Child> x 2
+    expect(commitTrees[3].nodes.size).toBe(2); // <Root> + <Parent>
+  });
+
+  // @reactVersion >= 18
+  it('should be able to rebuild the store tree for each commit (createRoot)', () => {
+    const Parent = ({count}) => {
+      Scheduler.unstable_advanceTime(10);
+      return new Array(count)
+        .fill(true)
+        .map((_, index) => <Child key={index} />);
+    };
+    const Child = React.memo(function Child() {
+      Scheduler.unstable_advanceTime(2);
+      return null;
+    });
+
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => modernRender(<Parent count={1} />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child key="0"> [Memo]
+    `);
+    utils.act(() => modernRender(<Parent count={3} />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child key="0"> [Memo]
+            <Child key="1"> [Memo]
+            <Child key="2"> [Memo]
+    `);
+    utils.act(() => modernRender(<Parent count={2} />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child key="0"> [Memo]
+            <Child key="1"> [Memo]
+    `);
+    utils.act(() => modernRender(<Parent count={0} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
           <Parent>
@@ -118,25 +179,24 @@ describe('commit tree', () => {
     });
 
     // @reactVersion >= 16.9
+    // @reactVersion <= 18.2
     it('should support Lazy components (legacy render)', async () => {
-      const container = document.createElement('div');
-
       utils.act(() => store.profilerStore.startProfiling());
-      utils.act(() => legacyRender(<App renderChildren={true} />, container));
+      utils.act(() => legacyRender(<App renderChildren={true} />));
       await Promise.resolve();
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <App>
               <Suspense>
       `);
-      utils.act(() => legacyRender(<App renderChildren={true} />, container));
+      utils.act(() => legacyRender(<App renderChildren={true} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <App>
             ▾ <Suspense>
                 <LazyInnerComponent>
       `);
-      utils.act(() => legacyRender(<App renderChildren={false} />, container));
+      utils.act(() => legacyRender(<App renderChildren={false} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
             <App>
@@ -161,25 +221,22 @@ describe('commit tree', () => {
 
     // @reactVersion >= 18.0
     it('should support Lazy components (createRoot)', async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-
       utils.act(() => store.profilerStore.startProfiling());
-      utils.act(() => root.render(<App renderChildren={true} />));
+      utils.act(() => modernRender(<App renderChildren={true} />));
       await Promise.resolve();
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <App>
               <Suspense>
       `);
-      utils.act(() => root.render(<App renderChildren={true} />));
+      utils.act(() => modernRender(<App renderChildren={true} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <App>
             ▾ <Suspense>
                 <LazyInnerComponent>
       `);
-      utils.act(() => root.render(<App renderChildren={false} />));
+      utils.act(() => modernRender(<App renderChildren={false} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
             <App>
@@ -203,17 +260,16 @@ describe('commit tree', () => {
     });
 
     // @reactVersion >= 16.9
+    // @reactVersion <= 18.2
     it('should support Lazy components that are unmounted before resolving (legacy render)', async () => {
-      const container = document.createElement('div');
-
       utils.act(() => store.profilerStore.startProfiling());
-      utils.act(() => legacyRender(<App renderChildren={true} />, container));
+      utils.act(() => legacyRender(<App renderChildren={true} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <App>
               <Suspense>
       `);
-      utils.act(() => legacyRender(<App renderChildren={false} />, container));
+      utils.act(() => legacyRender(<App renderChildren={false} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
             <App>
@@ -237,17 +293,14 @@ describe('commit tree', () => {
 
     // @reactVersion >= 18.0
     it('should support Lazy components that are unmounted before resolving (createRoot)', async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-
       utils.act(() => store.profilerStore.startProfiling());
-      utils.act(() => root.render(<App renderChildren={true} />));
+      utils.act(() => modernRender(<App renderChildren={true} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <App>
               <Suspense>
       `);
-      utils.act(() => root.render(<App renderChildren={false} />));
+      utils.act(() => modernRender(<App renderChildren={false} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
             <App>

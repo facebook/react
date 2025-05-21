@@ -12,13 +12,17 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
-import {updateValueIfChanged} from './inputValueTracking';
+import {track, trackHydrated, updateValueIfChanged} from './inputValueTracking';
 import getActiveElement from './getActiveElement';
-import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+import {
+  disableInputAttributeSyncing,
+  enableHydrationChangeEvent,
+} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import type {ToStringValue} from './ToStringValue';
 import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
+import {queueChangeEvent} from '../events/ReactDOMEventReplaying';
 
 let didWarnValueDefaultValue = false;
 let didWarnCheckedDefaultChecked = false;
@@ -56,7 +60,7 @@ export function validateInputProps(element: Element, props: Object) {
           '(specify either the checked prop, or the defaultChecked prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -73,7 +77,7 @@ export function validateInputProps(element: Element, props: Object) {
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -175,8 +179,13 @@ export function updateInput(
     }
   }
 
-  if (checked != null && node.checked !== !!checked) {
-    node.checked = checked;
+  if (checked != null) {
+    // Important to set this even if it's not a change in order to update input
+    // value tracking with radio buttons
+    // TODO: Should really update input value tracking for the whole radio
+    // button group in an effect or something (similar to #27024)
+    node.checked =
+      checked && typeof checked !== 'function' && typeof checked !== 'symbol';
   }
 
   if (
@@ -224,6 +233,8 @@ export function initInput(
     // Avoid setting value attribute on submit/reset inputs as it overrides the
     // default value provided by the browser. See: #12872
     if (isButton && (value === undefined || value === null)) {
+      // We track the value just in case it changes type later on.
+      track((element: any));
       return;
     }
 
@@ -234,7 +245,7 @@ export function initInput(
 
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
-    if (!isHydrating) {
+    if (!isHydrating || enableHydrationChangeEvent) {
       if (disableInputAttributeSyncing) {
         // When not syncing the value attribute, the value property points
         // directly to the React prop. Only assign it if it exists.
@@ -292,12 +303,10 @@ export function initInput(
     typeof checkedOrDefault !== 'symbol' &&
     !!checkedOrDefault;
 
-  // The checked property never gets assigned. It must be manually set.
-  // We don't want to do this when hydrating so that existing user input isn't
-  // modified
-  // TODO: I'm pretty sure this is a bug because initialValueTracking won't be
-  // correct for the hydration case then.
-  if (!isHydrating) {
+  if (isHydrating && !enableHydrationChangeEvent) {
+    // Detach .checked from .defaultChecked but leave user input alone
+    node.checked = node.checked;
+  } else {
     node.checked = !!initialChecked;
   }
 
@@ -331,6 +340,43 @@ export function initInput(
       checkAttributeStringCoercion(name, 'name');
     }
     node.name = name;
+  }
+  track((element: any));
+}
+
+export function hydrateInput(
+  element: Element,
+  value: ?string,
+  defaultValue: ?string,
+  checked: ?boolean,
+  defaultChecked: ?boolean,
+): void {
+  const node: HTMLInputElement = (element: any);
+
+  const defaultValueStr =
+    defaultValue != null ? toString(getToStringValue(defaultValue)) : '';
+  const initialValue =
+    value != null ? toString(getToStringValue(value)) : defaultValueStr;
+
+  const checkedOrDefault = checked != null ? checked : defaultChecked;
+  // TODO: This 'function' or 'symbol' check isn't replicated in other places
+  // so this semantic is inconsistent.
+  const initialChecked =
+    typeof checkedOrDefault !== 'function' &&
+    typeof checkedOrDefault !== 'symbol' &&
+    !!checkedOrDefault;
+
+  // Detach .checked from .defaultChecked but leave user input alone
+  node.checked = node.checked;
+
+  const changed = trackHydrated((node: any), initialValue, initialChecked);
+  if (changed) {
+    // If the current value is different, that suggests that the user
+    // changed it before hydration. Queue a replay of the change event.
+    // For radio buttons the change event only fires on the selected one.
+    if (node.type !== 'radio' || node.checked) {
+      queueChangeEvent(node);
+    }
   }
 }
 
@@ -388,10 +434,6 @@ export function restoreControlledInputState(element: Element, props: Object) {
         );
       }
 
-      // We need update the tracked value on the named cousin since the value
-      // was changed but the input saw no event or value set
-      updateValueIfChanged(otherNode);
-
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
@@ -405,6 +447,16 @@ export function restoreControlledInputState(element: Element, props: Object) {
         otherProps.type,
         otherProps.name,
       );
+    }
+
+    // If any updateInput() call set .checked to true, an input in this group
+    // (often, `rootNode` itself) may have become unchecked
+    for (let i = 0; i < group.length; i++) {
+      const otherNode = ((group[i]: any): HTMLInputElement);
+      if (otherNode.form !== rootNode.form) {
+        continue;
+      }
+      updateValueIfChanged(otherNode);
     }
   }
 }

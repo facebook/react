@@ -23,6 +23,16 @@ let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
 let waitForAll;
+let assertConsoleErrorDev;
+
+function normalizeError(msg) {
+  // Take the first sentence to make it easier to assert on.
+  const idx = msg.indexOf('.');
+  if (idx > -1) {
+    return msg.slice(0, idx + 1);
+  }
+  return msg;
+}
 
 describe('ReactDOM HostSingleton', () => {
   beforeEach(() => {
@@ -36,6 +46,7 @@ describe('ReactDOM HostSingleton', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
 
     // Test Environment
     const jsdom = new JSDOM(
@@ -93,7 +104,10 @@ describe('ReactDOM HostSingleton', () => {
             el.tagName !== 'TEMPLATE' &&
             el.tagName !== 'template' &&
             !el.hasAttribute('hidden') &&
-            !el.hasAttribute('aria-hidden')) ||
+            !el.hasAttribute('aria-hidden') &&
+            // Ignore the render blocking expect
+            (node.getAttribute('rel') !== 'expect' ||
+              node.getAttribute('blocking') !== 'render')) ||
           el.hasAttribute('data-meaningful')
         ) {
           const props = {};
@@ -119,11 +133,10 @@ describe('ReactDOM HostSingleton', () => {
     return children.length === 0
       ? undefined
       : children.length === 1
-      ? children[0]
-      : children;
+        ? children[0]
+        : children;
   }
 
-  // @gate enableHostSingletons && enableFloat
   it('warns if you render the same singleton twice at the same time', async () => {
     const root = ReactDOMClient.createRoot(document);
     root.render(
@@ -154,11 +167,15 @@ describe('ReactDOM HostSingleton', () => {
         <body />
       </html>,
     );
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev(
-      'Warning: You are mounting a new head component when a previous one has not first unmounted. It is an error to render more than one head component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <head> and if you need to mount a new one, ensure any previous ones have unmounted first',
-    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'You are mounting a new head component when a previous one has not first unmounted. ' +
+        'It is an error to render more than one head component at a time and attributes and ' +
+        'children of these components will likely fail in unpredictable ways. ' +
+        'Please only render a single instance of <head> and if you need to mount a new one, ' +
+        'ensure any previous ones have unmounted first.\n' +
+        '    in head (at **)',
+    ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head lang="es" data-foo="foo">
@@ -208,16 +225,7 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableHostSingletons && enableFloat
   it('renders into html, head, and body persistently so the node identities never change and extraneous styles are retained', async () => {
-    gate(flags => {
-      if (flags.enableHostSingletons !== true) {
-        // We throw here because when this test fails it ends up with sync work in a microtask
-        // that throws after the expectTestToFail check asserts the failure. this causes even the
-        // expected failure to fail. This just fails explicitly and early
-        throw new Error('manually opting out of test');
-      }
-    });
     // Server render some html that will get replaced with a client render
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -464,7 +472,7 @@ describe('ReactDOM HostSingleton', () => {
       {
         onRecoverableError(error, errorInfo) {
           hydrationErrors.push([
-            error.message,
+            normalizeError(error.message),
             errorInfo.componentStack
               ? errorInfo.componentStack.split('\n')[1].trim()
               : null,
@@ -472,26 +480,11 @@ describe('ReactDOM HostSingleton', () => {
         },
       },
     );
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev(
-      [
-        `Warning: Expected server HTML to contain a matching <div> in <body>.
-    in div (at **)
-    in body (at **)
-    in html (at **)`,
-        `Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.`,
-      ],
-      {withoutStack: 1},
-    );
+    await waitForAll([]);
     expect(hydrationErrors).toEqual([
       [
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
-        'at div',
-      ],
-      [
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-        null,
+        "Hydration failed because the server rendered HTML didn't match the client.",
+        'at div (<anonymous>)',
       ],
     ]);
     expect(persistentElements).toEqual([
@@ -557,6 +550,30 @@ describe('ReactDOM HostSingleton', () => {
     );
     expect(hydrationErrors).toEqual([]);
     await waitForAll([]);
+    assertConsoleErrorDev([
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
+        "This won't be patched up. This can happen if a SSR-ed Client Component used:\n" +
+        '\n' +
+        "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+        "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+        "- Date formatting in a user's locale which doesn't match the server.\n" +
+        '- External changing data without sending a snapshot of it along with the HTML.\n' +
+        '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed ' +
+        'which messes with the HTML before React loaded.\n' +
+        '\n' +
+        'https://react.dev/link/hydration-mismatch\n' +
+        '\n' +
+        '  <html\n' +
+        '+   data-client-foo="foo"\n' +
+        '-   data-client-foo={null}\n' +
+        '  >\n' +
+        '    <head>\n' +
+        '    <body\n' +
+        '+     data-client-baz="baz"\n' +
+        '-     data-client-baz={null}\n' +
+        '    >\n' +
+        '\n    in body (at **)',
+    ]);
     expect(persistentElements).toEqual([
       document.documentElement,
       document.head,
@@ -601,8 +618,8 @@ describe('ReactDOM HostSingleton', () => {
   });
 
   // This test is not supported in this implementation. If we reintroduce insertion edge we should revisit
-  // @gate enableHostSingletons
-  xit('is able to maintain insertions in head and body between tree-adjacent Nodes', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('is able to maintain insertions in head and body between tree-adjacent Nodes', async () => {
     // Server render some html and hydrate on the client
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -732,7 +749,6 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableHostSingletons
   it('clears persistent head and body when html is the container', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -785,7 +801,6 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableHostSingletons
   it('clears persistent head when it is the container', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -817,7 +832,6 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableHostSingletons && enableFloat
   it('clears persistent body when it is the container', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -974,7 +988,6 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableHostSingletons
   it('allows for hydrating without a head', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -1008,17 +1021,20 @@ describe('ReactDOM HostSingleton', () => {
   });
 
   // https://github.com/facebook/react/issues/26128
-  it('(#26128) does not throw when rendering at body', async () => {
+  // @gate !disableLegacyMode
+  it('(#26128) does not throw when rendering at body in legacy mode', async () => {
     ReactDOM.render(<div />, document.body);
   });
 
   // https://github.com/facebook/react/issues/26128
-  it('(#26128) does not throw when rendering at <html>', async () => {
+  // @gate !disableLegacyMode
+  it('(#26128) does not throw when rendering at <html> in legacy mode', async () => {
     ReactDOM.render(<body />, document.documentElement);
   });
 
   // https://github.com/facebook/react/issues/26128
-  it('(#26128) does not throw when rendering at document', async () => {
+  // @gate !disableLegacyMode
+  it('(#26128) does not throw when rendering at document in legacy mode', async () => {
     ReactDOM.render(<html />, document);
   });
 });

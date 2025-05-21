@@ -15,9 +15,8 @@
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 let useState;
 let useReducer;
 let useEffect;
@@ -39,9 +38,8 @@ function initModules() {
   jest.resetModules();
 
   React = require('react');
-  ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
   useState = React.useState;
   useReducer = React.useReducer;
   useEffect = React.useEffect;
@@ -67,14 +65,18 @@ function initModules() {
 
   // Make them available to the helpers.
   return {
-    ReactDOM,
+    ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
-const {resetModules, itRenders, itThrowsWhenRendering, serverRender} =
-  ReactDOMServerIntegrationUtils(initModules);
+const {
+  resetModules,
+  itRenders,
+  itThrowsWhenRendering,
+  clientRenderOnBadMarkup,
+  serverRender,
+} = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerHooks', () => {
   beforeEach(() => {
@@ -148,7 +150,7 @@ describe('ReactDOMServerHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
 
     itRenders('multiple times when an updater is called', async render => {
@@ -422,8 +424,13 @@ describe('ReactDOMServerHooks', () => {
         });
         return 'hi';
       }
-
-      const domNode = await render(<App />, 1);
+      const domNode = await render(
+        <App />,
+        render === clientRenderOnBadMarkup
+          ? // On hydration mismatch we retry and therefore log the warning again.
+            2
+          : 1,
+      );
       expect(domNode.textContent).toEqual('hi');
     });
 
@@ -436,7 +443,13 @@ describe('ReactDOMServerHooks', () => {
         return value;
       }
 
-      const domNode = await render(<App />, 1);
+      const domNode = await render(
+        <App />,
+        render === clientRenderOnBadMarkup
+          ? // On hydration mismatch we retry and therefore log the warning again.
+            2
+          : 1,
+      );
       expect(domNode.textContent).toEqual('0');
     });
   });
@@ -659,7 +672,7 @@ describe('ReactDOMServerHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
   });
 
@@ -762,8 +775,7 @@ describe('ReactDOMServerHooks', () => {
   describe('readContext', () => {
     function readContext(Context) {
       const dispatcher =
-        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-          .ReactCurrentDispatcher.current;
+        React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H;
       return dispatcher.readContext(Context);
     }
 
@@ -859,7 +871,13 @@ describe('ReactDOMServerHooks', () => {
         return <Text text={count} />;
       }
 
-      const domNode1 = await render(<ReadInMemo />, 1);
+      const domNode1 = await render(
+        <ReadInMemo />,
+        render === clientRenderOnBadMarkup
+          ? // On hydration mismatch we retry and therefore log the warning again.
+            2
+          : 1,
+      );
       expect(domNode1.textContent).toEqual('42');
 
       const domNode2 = await render(<ReadInReducer />, 1);

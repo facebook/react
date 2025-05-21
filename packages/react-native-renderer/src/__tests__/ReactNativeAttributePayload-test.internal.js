@@ -204,6 +204,19 @@ describe('ReactNativeAttributePayload', () => {
     ).toEqual({foo: null}); // this should ideally be null. heuristic.
   });
 
+  it('handles attributes defined multiple times', () => {
+    const validAttributes = {foo: true, style: {foo: true}};
+    expect(diff({}, {foo: 4, style: {foo: 2}}, validAttributes)).toEqual({
+      foo: 2,
+    });
+    expect(diff({foo: 4}, {style: {foo: 2}}, validAttributes)).toEqual({
+      foo: 2,
+    });
+    expect(diff({style: {foo: 2}}, {foo: 4}, validAttributes)).toEqual({
+      foo: 4,
+    });
+  });
+
   // Function properties are just markers to native that events should be sent.
   it('should convert functions to booleans', () => {
     // Note that if the property changes from one function to another, we don't

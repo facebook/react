@@ -10,7 +10,11 @@
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import type {Container, SuspenseInstance} from '../client/ReactFiberConfigDOM';
+import type {
+  Container,
+  ActivityInstance,
+  SuspenseInstance,
+} from '../client/ReactFiberConfigDOM';
 import type {DOMEventName} from '../events/DOMEventNames';
 
 import {
@@ -22,9 +26,14 @@ import {attemptSynchronousHydration} from 'react-reconciler/src/ReactFiberReconc
 import {
   getNearestMountedFiber,
   getContainerFromFiber,
+  getActivityInstanceFromFiber,
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
+import {
+  HostRoot,
+  ActivityComponent,
+  SuspenseComponent,
+} from 'react-reconciler/src/ReactWorkTags';
 import {type EventSystemFlags, IS_CAPTURE_PHASE} from './EventSystemFlags';
 
 import getEventTarget from './getEventTarget';
@@ -34,6 +43,10 @@ import {
 } from '../client/ReactDOMComponentTree';
 
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
+import {
+  getCurrentUpdatePriority,
+  setCurrentUpdatePriority,
+} from '../client/ReactDOMUpdatePriority';
 
 import {
   getCurrentPriorityLevel as getCurrentSchedulerPriorityLevel,
@@ -48,13 +61,9 @@ import {
   ContinuousEventPriority,
   DefaultEventPriority,
   IdleEventPriority,
-  getCurrentUpdatePriority,
-  setCurrentUpdatePriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
-
-const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
 // TODO: can we stop exporting these?
 let _enabled: boolean = true;
@@ -115,15 +124,15 @@ function dispatchDiscreteEvent(
   container: EventTarget,
   nativeEvent: AnyNativeEvent,
 ) {
+  const prevTransition = ReactSharedInternals.T;
+  ReactSharedInternals.T = null;
   const previousPriority = getCurrentUpdatePriority();
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = null;
   try {
     setCurrentUpdatePriority(DiscreteEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   }
 }
 
@@ -133,15 +142,15 @@ function dispatchContinuousEvent(
   container: EventTarget,
   nativeEvent: AnyNativeEvent,
 ) {
+  const prevTransition = ReactSharedInternals.T;
+  ReactSharedInternals.T = null;
   const previousPriority = getCurrentUpdatePriority();
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = null;
   try {
     setCurrentUpdatePriority(ContinuousEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   }
 }
 
@@ -227,18 +236,18 @@ export function dispatchEvent(
 
 export function findInstanceBlockingEvent(
   nativeEvent: AnyNativeEvent,
-): null | Container | SuspenseInstance {
+): null | Container | SuspenseInstance | ActivityInstance {
   const nativeEventTarget = getEventTarget(nativeEvent);
   return findInstanceBlockingTarget(nativeEventTarget);
 }
 
 export let return_targetInst: null | Fiber = null;
 
-// Returns a SuspenseInstance or Container if it's blocked.
+// Returns a SuspenseInstance, ActivityInstance or Container if it's blocked.
 // The return_targetInst field above is conceptually part of the return value.
 export function findInstanceBlockingTarget(
   targetNode: Node,
-): null | Container | SuspenseInstance {
+): null | Container | SuspenseInstance | ActivityInstance {
   // TODO: Warn if _enabled is false.
 
   return_targetInst = null;
@@ -254,6 +263,19 @@ export function findInstanceBlockingTarget(
       const tag = nearestMounted.tag;
       if (tag === SuspenseComponent) {
         const instance = getSuspenseInstanceFromFiber(nearestMounted);
+        if (instance !== null) {
+          // Queue the event to be replayed later. Abort dispatching since we
+          // don't want this event dispatched twice through the event system.
+          // TODO: If this is the first discrete event in the queue. Schedule an increased
+          // priority for this boundary.
+          return instance;
+        }
+        // This shouldn't happen, something went wrong but to avoid blocking
+        // the whole system, dispatch the event without a target.
+        // TODO: Warn.
+        targetInst = null;
+      } else if (tag === ActivityComponent) {
+        const instance = getActivityInstanceFromFiber(nearestMounted);
         if (instance !== null) {
           // Queue the event to be replayed later. Abort dispatching since we
           // don't want this event dispatched twice through the event system.
@@ -290,6 +312,7 @@ export function findInstanceBlockingTarget(
 export function getEventPriority(domEventName: DOMEventName): EventPriority {
   switch (domEventName) {
     // Used by SimpleEventPlugin:
+    case 'beforetoggle':
     case 'cancel':
     case 'click':
     case 'close':
@@ -321,6 +344,7 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'resize':
     case 'seeked':
     case 'submit':
+    case 'toggle':
     case 'touchcancel':
     case 'touchend':
     case 'touchstart':
@@ -357,7 +381,6 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'pointerout':
     case 'pointerover':
     case 'scroll':
-    case 'toggle':
     case 'touchmove':
     case 'wheel':
     // Not used by React but could be by user code: (fall through)

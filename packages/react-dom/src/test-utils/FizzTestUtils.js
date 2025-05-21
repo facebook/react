@@ -93,6 +93,7 @@ async function executeScript(script: Element) {
         'You must set the current document to the global document to use script src in tests',
       );
     }
+
     try {
       // $FlowFixMe
       require(scriptSrc);
@@ -104,9 +105,9 @@ async function executeScript(script: Element) {
     const newScript = ownerDocument.createElement('script');
     newScript.textContent = script.textContent;
     // make sure to add nonce back to script if it exists
-    const scriptNonce = script.getAttribute('nonce');
-    if (scriptNonce) {
-      newScript.setAttribute('nonce', scriptNonce);
+    for (let i = 0; i < script.attributes.length; i++) {
+      const attribute = script.attributes[i];
+      newScript.setAttribute(attribute.name, attribute.value);
     }
 
     parent.insertBefore(newScript, script);
@@ -138,42 +139,54 @@ function stripExternalRuntimeInNodes(
   );
 }
 
-// Since JSDOM doesn't implement a streaming HTML parser, we manually overwrite
-// readyState here (currently read by ReactDOMServerExternalRuntime). This does
-// not trigger event callbacks, but we do not rely on any right now.
-async function withLoadingReadyState<T>(
-  fn: () => T,
-  document: Document,
-): Promise<T> {
-  // JSDOM implements readyState in document's direct prototype, but this may
-  // change in later versions
-  let prevDescriptor = null;
-  let proto: Object = document;
-  while (proto != null) {
-    prevDescriptor = Object.getOwnPropertyDescriptor(proto, 'readyState');
-    if (prevDescriptor != null) {
-      break;
+function getVisibleChildren(element: Element): React$Node {
+  const children = [];
+  let node: any = element.firstChild;
+  while (node) {
+    if (node.nodeType === 1) {
+      if (
+        ((node.tagName !== 'SCRIPT' && node.tagName !== 'script') ||
+          node.hasAttribute('data-meaningful')) &&
+        node.tagName !== 'TEMPLATE' &&
+        node.tagName !== 'template' &&
+        !node.hasAttribute('hidden') &&
+        !node.hasAttribute('aria-hidden') &&
+        // Ignore the render blocking expect
+        (node.getAttribute('rel') !== 'expect' ||
+          node.getAttribute('blocking') !== 'render')
+      ) {
+        const props: any = {};
+        const attributes = node.attributes;
+        for (let i = 0; i < attributes.length; i++) {
+          if (
+            attributes[i].name === 'id' &&
+            attributes[i].value.includes(':')
+          ) {
+            // We assume this is a React added ID that's a non-visual implementation detail.
+            continue;
+          }
+          props[attributes[i].name] = attributes[i].value;
+        }
+        props.children = getVisibleChildren(node);
+        children.push(
+          require('react').createElement(node.tagName.toLowerCase(), props),
+        );
+      }
+    } else if (node.nodeType === 3) {
+      children.push(node.data);
     }
-    proto = Object.getPrototypeOf(proto);
+    node = node.nextSibling;
   }
-  Object.defineProperty(document, 'readyState', {
-    get() {
-      return 'loading';
-    },
-    configurable: true,
-  });
-  const result = await fn();
-  // $FlowFixMe[incompatible-type]
-  delete document.readyState;
-  if (prevDescriptor) {
-    Object.defineProperty(proto, 'readyState', prevDescriptor);
-  }
-  return result;
+  return children.length === 0
+    ? undefined
+    : children.length === 1
+      ? children[0]
+      : children;
 }
 
 export {
   insertNodesAndExecuteScripts,
   mergeOptions,
   stripExternalRuntimeInNodes,
-  withLoadingReadyState,
+  getVisibleChildren,
 };

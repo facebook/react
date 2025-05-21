@@ -43,6 +43,7 @@ function willCoercionThrow(value: mixed): boolean {
   }
 }
 
+/** @noinline */
 function testStringCoercion(value: mixed) {
   // If you ended up here by following an exception call stack, here's what's
   // happened: you supplied an object or symbol value to React (as a prop, key,
@@ -78,7 +79,7 @@ export function checkAttributeStringCoercion(
     if (willCoercionThrow(value)) {
       console.error(
         'The provided `%s` attribute is an unsupported type %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
         attributeName,
         typeName(value),
       );
@@ -92,7 +93,7 @@ export function checkKeyStringCoercion(value: mixed): void | string {
     if (willCoercionThrow(value)) {
       console.error(
         'The provided key is an unsupported type %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
         typeName(value),
       );
       return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
@@ -108,7 +109,24 @@ export function checkPropStringCoercion(
     if (willCoercionThrow(value)) {
       console.error(
         'The provided `%s` prop is an unsupported type %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
+        propName,
+        typeName(value),
+      );
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+
+export function checkOptionStringCoercion(
+  value: mixed,
+  propName: string,
+): void | string {
+  if (__DEV__) {
+    if (willCoercionThrow(value)) {
+      console.error(
+        'The provided `%s` option is an unsupported type %s.' +
+          ' This value must be coerced to a string before using it here.',
         propName,
         typeName(value),
       );
@@ -125,7 +143,7 @@ export function checkCSSPropertyStringCoercion(
     if (willCoercionThrow(value)) {
       console.error(
         'The provided `%s` CSS property is an unsupported type %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
         propName,
         typeName(value),
       );
@@ -139,7 +157,7 @@ export function checkHtmlStringCoercion(value: mixed): void | string {
     if (willCoercionThrow(value)) {
       console.error(
         'The provided HTML markup uses a value of unsupported type %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
         typeName(value),
       );
       return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
@@ -153,7 +171,7 @@ export function checkFormFieldValueStringCoercion(value: mixed): void | string {
       console.error(
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
         typeName(value),
       );
       return testStringCoercion(value); // throw (to help callers find troubleshooting comments)

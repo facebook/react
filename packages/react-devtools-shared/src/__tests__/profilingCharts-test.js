@@ -9,18 +9,17 @@
 
 import type Store from 'react-devtools-shared/src/devtools/store';
 
+import {getVersionedRenderImplementation} from './utils';
+
 describe('profiling charts', () => {
   let React;
   let Scheduler;
-  let legacyRender;
   let store: Store;
   let utils;
 
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
-
-    legacyRender = utils.legacyRender;
 
     store = global.store;
     store.collapseNodesByDefault = false;
@@ -29,6 +28,8 @@ describe('profiling charts', () => {
     React = require('react');
     Scheduler = require('scheduler');
   });
+
+  const {render} = getVersionedRenderImplementation();
 
   function getFlamegraphChartData(rootID, commitIndex) {
     const commitTree = store.profilerStore.profilingCache.getCommitTree({
@@ -78,11 +79,9 @@ describe('profiling charts', () => {
         return null;
       });
 
-      const container = document.createElement('div');
-
       utils.act(() => store.profilerStore.startProfiling());
 
-      utils.act(() => legacyRender(<Parent />, container));
+      utils.act(() => render(<Parent />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Parent>
@@ -91,7 +90,7 @@ describe('profiling charts', () => {
               <Child key="third"> [Memo]
       `);
 
-      utils.act(() => legacyRender(<Parent />, container));
+      utils.act(() => render(<Parent />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Parent>
@@ -125,8 +124,8 @@ describe('profiling charts', () => {
               "actualDuration": 0,
               "didRender": true,
               "id": 5,
-              "label": "Memo(Child) key="third" (<0.1ms of <0.1ms)",
-              "name": "Memo(Child)",
+              "label": "Child (Memo) key="third" (<0.1ms of <0.1ms)",
+              "name": "Child",
               "offset": 15,
               "selfDuration": 0,
               "treeBaseDuration": 0,
@@ -135,8 +134,8 @@ describe('profiling charts', () => {
               "actualDuration": 2,
               "didRender": true,
               "id": 4,
-              "label": "Memo(Child) key="second" (2ms of 2ms)",
-              "name": "Memo(Child)",
+              "label": "Child (Memo) key="second" (2ms of 2ms)",
+              "name": "Child",
               "offset": 13,
               "selfDuration": 2,
               "treeBaseDuration": 2,
@@ -145,8 +144,8 @@ describe('profiling charts', () => {
               "actualDuration": 3,
               "didRender": true,
               "id": 3,
-              "label": "Memo(Child) key="first" (3ms of 3ms)",
-              "name": "Memo(Child)",
+              "label": "Child (Memo) key="first" (3ms of 3ms)",
+              "name": "Child",
               "offset": 10,
               "selfDuration": 3,
               "treeBaseDuration": 3,
@@ -176,8 +175,8 @@ describe('profiling charts', () => {
               "actualDuration": 0,
               "didRender": false,
               "id": 5,
-              "label": "Memo(Child) key="third"",
-              "name": "Memo(Child)",
+              "label": "Child (Memo) key="third"",
+              "name": "Child",
               "offset": 15,
               "selfDuration": 0,
               "treeBaseDuration": 0,
@@ -186,8 +185,8 @@ describe('profiling charts', () => {
               "actualDuration": 0,
               "didRender": false,
               "id": 4,
-              "label": "Memo(Child) key="second"",
-              "name": "Memo(Child)",
+              "label": "Child (Memo) key="second"",
+              "name": "Child",
               "offset": 13,
               "selfDuration": 0,
               "treeBaseDuration": 2,
@@ -196,8 +195,8 @@ describe('profiling charts', () => {
               "actualDuration": 0,
               "didRender": false,
               "id": 3,
-              "label": "Memo(Child) key="first"",
-              "name": "Memo(Child)",
+              "label": "Child (Memo) key="first"",
+              "name": "Child",
               "offset": 10,
               "selfDuration": 0,
               "treeBaseDuration": 3,
@@ -228,11 +227,9 @@ describe('profiling charts', () => {
         return null;
       });
 
-      const container = document.createElement('div');
-
       utils.act(() => store.profilerStore.startProfiling());
 
-      utils.act(() => legacyRender(<Parent />, container));
+      utils.act(() => render(<Parent />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Parent>
@@ -241,7 +238,7 @@ describe('profiling charts', () => {
               <Child key="third"> [Memo]
       `);
 
-      utils.act(() => legacyRender(<Parent />, container));
+      utils.act(() => render(<Parent />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Parent>
@@ -267,20 +264,20 @@ describe('profiling charts', () => {
           },
           {
             "id": 3,
-            "label": "Memo(Child) (Memo) key="first" (3ms)",
-            "name": "Memo(Child)",
+            "label": "Child (Memo) key="first" (3ms)",
+            "name": "Child",
             "value": 3,
           },
           {
             "id": 4,
-            "label": "Memo(Child) (Memo) key="second" (2ms)",
-            "name": "Memo(Child)",
+            "label": "Child (Memo) key="second" (2ms)",
+            "name": "Child",
             "value": 2,
           },
           {
             "id": 5,
-            "label": "Memo(Child) (Memo) key="third" (<0.1ms)",
-            "name": "Memo(Child)",
+            "label": "Child (Memo) key="third" (<0.1ms)",
+            "name": "Child",
             "value": 0,
           },
         ]

@@ -13,10 +13,12 @@
 let PropTypes;
 let RCTEventEmitter;
 let React;
+let act;
 let ReactNative;
 let ResponderEventPlugin;
 let UIManager;
 let createReactNativeComponentClass;
+let assertConsoleErrorDev;
 
 // Parallels requireNativeComponent() in that it lazily constructs a view config,
 // And registers view manager event types with ReactNativeViewConfigRegistry.
@@ -67,6 +69,8 @@ beforeEach(() => {
   RCTEventEmitter =
     require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').RCTEventEmitter;
   React = require('react');
+  act = require('internal-test-utils').act;
+  assertConsoleErrorDev = require('internal-test-utils').assertConsoleErrorDev;
   ReactNative = require('react-native-renderer');
   ResponderEventPlugin =
     require('react-native-renderer/src/legacy-events/ResponderEventPlugin').default;
@@ -77,7 +81,8 @@ beforeEach(() => {
       .ReactNativeViewConfigRegistry.register;
 });
 
-it('fails to register the same event name with different types', () => {
+// @gate !disableLegacyMode
+test('fails to register the same event name with different types', async () => {
   const InvalidEvents = createReactNativeComponentClass('InvalidEvents', () => {
     if (!__DEV__) {
       // Simulate a registration error in prod.
@@ -109,25 +114,29 @@ it('fails to register the same event name with different types', () => {
 
   // The first time this renders,
   // we attempt to register the view config and fail.
-  expect(() => ReactNative.render(<InvalidEvents />, 1)).toThrow(
-    'Event cannot be both direct and bubbling: topChange',
-  );
+  await expect(
+    async () => await act(() => ReactNative.render(<InvalidEvents />, 1)),
+  ).rejects.toThrow('Event cannot be both direct and bubbling: topChange');
 
   // Continue to re-register the config and
   // fail so that we don't mask the above failure.
-  expect(() => ReactNative.render(<InvalidEvents />, 1)).toThrow(
-    'Event cannot be both direct and bubbling: topChange',
-  );
+  await expect(
+    async () => await act(() => ReactNative.render(<InvalidEvents />, 1)),
+  ).rejects.toThrow('Event cannot be both direct and bubbling: topChange');
 });
 
-it('fails if unknown/unsupported event types are dispatched', () => {
+// @gate !disableLegacyMode
+test('fails if unknown/unsupported event types are dispatched', () => {
   expect(RCTEventEmitter.register).toHaveBeenCalledTimes(1);
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   const View = fakeRequireNativeComponent('View', {});
 
   ReactNative.render(<View onUnspecifiedEvent={() => {}} />, 1);
 
-  expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+  expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchInlineSnapshot(`
+    "<native root> {}
+      View null"
+  `);
   expect(UIManager.createView).toHaveBeenCalledTimes(1);
 
   const target = UIManager.createView.mock.calls[0][0];
@@ -141,7 +150,8 @@ it('fails if unknown/unsupported event types are dispatched', () => {
   }).toThrow('Unsupported top level event type "unspecifiedEvent" dispatched');
 });
 
-it('handles events', () => {
+// @gate !disableLegacyMode
+test('handles events', () => {
   expect(RCTEventEmitter.register).toHaveBeenCalledTimes(1);
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   const View = fakeRequireNativeComponent('View', {foo: true});
@@ -165,7 +175,11 @@ it('handles events', () => {
     1,
   );
 
-  expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+  expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchInlineSnapshot(`
+    "<native root> {}
+      View {"foo":"outer"}
+        View {"foo":"inner"}"
+  `);
   expect(UIManager.createView).toHaveBeenCalledTimes(2);
 
   // Don't depend on the order of createView() calls.
@@ -198,7 +212,8 @@ it('handles events', () => {
 });
 
 // @gate !disableLegacyContext || !__DEV__
-it('handles events on text nodes', () => {
+// @gate !disableLegacyMode
+test('handles events on text nodes', () => {
   expect(RCTEventEmitter.register).toHaveBeenCalledTimes(1);
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   const Text = fakeRequireNativeComponent('RCTText', {});
@@ -235,6 +250,12 @@ it('handles events on text nodes', () => {
     </ContextHack>,
     1,
   );
+  assertConsoleErrorDev([
+    'ContextHack uses the legacy childContextTypes API which will soon be removed. ' +
+      'Use React.createContext() instead. ' +
+      '(https://react.dev/link/legacy-context)' +
+      '\n    in ContextHack (at **)',
+  ]);
 
   expect(UIManager.createView).toHaveBeenCalledTimes(5);
 
@@ -281,7 +302,8 @@ it('handles events on text nodes', () => {
   ]);
 });
 
-it('handles when a responder is unmounted while a touch sequence is in progress', () => {
+// @gate !disableLegacyMode
+test('handles when a responder is unmounted while a touch sequence is in progress', () => {
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   const View = fakeRequireNativeComponent('View', {id: true});
 
@@ -370,7 +392,8 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
   expect(log).toEqual(['two responder start']);
 });
 
-it('handles events without target', () => {
+// @gate !disableLegacyMode
+test('handles events without target', () => {
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
 
   const View = fakeRequireNativeComponent('View', {id: true});
@@ -460,7 +483,8 @@ it('handles events without target', () => {
   ]);
 });
 
-it('dispatches event with target as instance', () => {
+// @gate !disableLegacyMode
+test('dispatches event with target as instance', () => {
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
 
   const View = fakeRequireNativeComponent('View', {id: true});

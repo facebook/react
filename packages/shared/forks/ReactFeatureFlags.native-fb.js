@@ -9,83 +9,85 @@
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-fb';
+import typeof * as DynamicExportsType from './ReactFeatureFlags.native-fb-dynamic';
 
-// NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
-// Re-export dynamic flags from the internal module. Intentionally using *
-// because this import is compiled to a `require` call.
-import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
+// Re-export dynamic flags from the internal module.
+// Intentionally using * because this import is compiled to a `require` call.
+import * as dynamicFlagsUntyped from 'ReactNativeInternalFeatureFlags';
+const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 
 // We destructure each value before re-exporting to avoid a dynamic look-up on
 // the exports object every time a flag is read.
 export const {
-  enableUseRefAccessWarning,
-  enableDeferRootSchedulingToMicrotask,
   alwaysThrottleRetries,
+  enableHiddenSubtreeInsertionEffectCleanup,
+  enableObjectFiber,
+  enablePersistedModeClonedFlag,
+  enableShallowPropDiffing,
+  enableEagerAlternateStateNodeCleanup,
+  passChildrenWhenCloningPersistedNodes,
+  enableFastAddPropertiesInDiffing,
+  enableLazyPublicInstanceInFabric,
+  renameElementSymbol,
+  enableFragmentRefs,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
-export const enableDebugTracing = false;
-export const enableSchedulingProfiler = __PROFILE__;
-export const enableProfilerTimer = __PROFILE__;
+export const disableClientCache = true;
+export const disableCommentsAsDOMContainers = true;
+export const disableDefaultPropsExceptForClasses = true;
+export const disableInputAttributeSyncing = false;
+export const disableLegacyContext = false;
+export const disableLegacyContextForFunctionComponents = false;
+export const disableLegacyMode = false;
+export const disableSchedulerTimeoutInWorkLoop = false;
+export const disableTextareaChildren = false;
+export const enableAsyncDebugInfo = false;
+export const enableAsyncIterableChildren = false;
+export const enableCPUSuspense = true;
+export const enableCreateEventHandleAPI = false;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+export const enableMoveBefore = true;
+export const enableFizzExternalRuntime = true;
+export const enableHalt = false;
+export const enableInfiniteRenderLoopDetection = false;
+export const enableLegacyCache = false;
+export const enableLegacyFBSupport = false;
+export const enableLegacyHidden = false;
+export const enableNoCloningMemoCache = false;
+export const enablePostpone = false;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
-export const enableProfilerNestedUpdateScheduledHook = false;
-export const enableUpdaterTracking = __PROFILE__;
-export const enableCache = false;
-export const enableLegacyCache = false;
-export const enableCacheElement = true;
-export const enableFetchInstrumentation = false;
-export const enableFormActions = true; // Doesn't affect Native
-export const enableBinaryFlight = true;
-export const enableSchedulerDebugging = false;
-export const debugRenderPhaseSideEffectsForStrictMode = true;
-export const disableJavaScriptURLs = false;
-export const disableCommentsAsDOMContainers = true;
-export const disableInputAttributeSyncing = false;
-export const disableIEWorkarounds = true;
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
+export const enableProfilerTimer = __PROFILE__;
+export const enableReactTestRendererWarning = false;
+export const enableRenderableContext = true;
+export const enableRetryLaneExpiration = false;
+export const enableSchedulingProfiler = __PROFILE__;
+export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
-export const enableCreateEventHandleAPI = false;
-export const enableSuspenseCallback = false;
-export const disableLegacyContext = false;
-export const enableTrustedTypesIntegration = false;
-export const disableTextareaChildren = false;
-export const disableModulePatternComponents = false;
 export const enableSuspenseAvoidThisFallback = false;
-export const enableSuspenseAvoidThisFallbackFizz = false;
-export const enableCPUSuspense = true;
-export const enableUseMemoCacheHook = true;
-export const enableUseEffectEventHook = false;
-export const enableClientRenderFallbackOnTextMismatch = true;
-export const enableComponentStackLocations = false;
-export const enableLegacyFBSupport = false;
-export const enableFilterEmptyStringAttributesDOM = false;
-export const enableGetInspectorDataForInstanceInProduction = true;
-
-export const createRootStrictEffectsByDefault = false;
-
-export const disableSchedulerTimeoutInWorkLoop = false;
-export const enableLazyContextPropagation = false;
-export const enableLegacyHidden = true;
-export const forceConcurrentByDefaultForTesting = false;
-export const enableUnifiedSyncLane = false;
-export const allowConcurrentByDefault = true;
-export const enableCustomElementPropertySupport = false;
-
-export const consoleManagedByDevToolsDuringStrictMode = false;
-export const enableServerContext = true;
-
+export const enableSuspenseCallback = true;
+export const enableTaint = true;
 export const enableTransitionTracing = false;
-
-export const enableFloat = true;
-export const enableHostSingletons = true;
-
-export const useModernStrictMode = false;
-export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-export const enableFizzExternalRuntime = false;
-
-export const diffInCommitPhase = true;
-export const enableAsyncActions = false;
+export const enableTrustedTypesIntegration = false;
+export const enableUpdaterTracking = __PROFILE__;
+export const enableUseEffectEventHook = false;
+export const favorSafetyOverHydrationPerf = true;
+export const retryLaneExpirationMs = 5000;
+export const syncLaneExpirationMs = 250;
+export const transitionLaneExpirationMs = 5000;
+export const enableHydrationLaneScheduling = true;
+export const enableYieldingBeforePassive = false;
+export const enableThrottledScheduling = false;
+export const enableViewTransition = false;
+export const enableGestureTransition = false;
+export const enableScrollEndPolyfill = true;
+export const enableSuspenseyImages = false;
+export const enableFizzBlockingRender = true;
+export const enableSrcObject = false;
+export const enableHydrationChangeEvent = true;
+export const enableDefaultTransitionIndicator = false;
+export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

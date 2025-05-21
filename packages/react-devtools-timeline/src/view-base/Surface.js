@@ -21,7 +21,7 @@ export type ViewRefs = {
   hoveredView: View | null,
 };
 
-// hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
+// hidpi canvas: https://web.dev/articles/canvas-hidipi
 function configureRetinaCanvas(
   canvas: HTMLCanvasElement,
   height: number,

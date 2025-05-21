@@ -259,7 +259,7 @@ describe('ReactDOMImageLoad', () => {
     expect(onLoadSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('it replays the last load event when more than one fire before the end of the layout phase completes', async function () {
+  it('replays the last load event when more than one fire before the end of the layout phase completes', async function () {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
@@ -436,6 +436,7 @@ describe('ReactDOMImageLoad', () => {
     expect(onLoadSpy).not.toHaveBeenCalled();
   });
 
+  // eslint-disable-next-line jest/no-commented-out-tests
   // it('captures the load event if it happens in a suspended subtree and replays it between layout and passive effects on resumption', async function() {
   //   function SuspendingWithImage() {
   //     Scheduler.log('SuspendingWithImage');
@@ -596,5 +597,67 @@ describe('ReactDOMImageLoad', () => {
     // ensure attribute and properties agree
     expect(renderSrcProperty).toBe(commitSrcProperty);
     expect(renderSrcAttr).toBe(commitSrcAttr);
+  });
+
+  it('captures the load event for Blob sources if it happens before commit phase', async function () {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    const blob = new Blob();
+
+    React.startTransition(() =>
+      root.render(
+        <PhaseMarkers>
+          <Img src={blob} onLoad={onLoadSpy} />
+          <Yield />
+          <Text text={'a'} />
+        </PhaseMarkers>,
+      ),
+    );
+
+    await waitFor(['render start', 'Img [object Blob]', 'Yield']);
+    const img = last(images);
+    loadImage(img);
+    assertLog([
+      'actualLoadSpy [[object Blob]]',
+      // no onLoadSpy since we have not completed render
+    ]);
+    await waitForAll(['a', 'load triggered', 'last layout', 'last passive']);
+    expect(img.__needsDispatch).toBe(true);
+    loadImage(img);
+    assertLog([
+      'actualLoadSpy [[object Blob]]', // the browser reloading of the image causes this to yield again
+      'onLoadSpy [[object Blob]]',
+    ]);
+    expect(onLoadSpy).toHaveBeenCalled();
+  });
+
+  it('captures the load event for Blob sources if it happens after commit phase and replays it', async function () {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    const blob = new Blob();
+
+    React.startTransition(() =>
+      root.render(
+        <PhaseMarkers>
+          <Img src={blob} onLoad={onLoadSpy} />
+        </PhaseMarkers>,
+      ),
+    );
+
+    await waitFor([
+      'render start',
+      'Img [object Blob]',
+      'load triggered',
+      'last layout',
+    ]);
+    Scheduler.unstable_requestPaint();
+    const img = last(images);
+    loadImage(img);
+    assertLog(['actualLoadSpy [[object Blob]]', 'onLoadSpy [[object Blob]]']);
+    await waitForAll(['last passive']);
+    expect(img.__needsDispatch).toBe(false);
+    expect(onLoadSpy).toHaveBeenCalledTimes(1);
   });
 });

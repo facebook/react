@@ -19,8 +19,8 @@ import {
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
-import Badge from './Badge';
-import {OwnersListContext} from './OwnersListContext';
+import ElementBadges from './ElementBadges';
+import {OwnersListContext, useChangeOwnerAction} from './OwnersListContext';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {useIsOverflowing} from '../hooks';
 import {StoreContext} from '../context';
@@ -32,7 +32,7 @@ import {
   MenuItem,
 } from '../Components/reach-ui/menu-button';
 
-import type {SerializedElement} from './types';
+import type {SerializedElement} from 'react-devtools-shared/src/frontend/types';
 
 import styles from './OwnersStack.css';
 
@@ -81,6 +81,7 @@ export default function OwnerStack(): React.Node {
   const read = useContext(OwnersListContext);
   const {ownerID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);
+  const changeOwnerAction = useChangeOwnerAction();
 
   const [state, dispatch] = useReducer<State, State, Action>(dialogReducer, {
     ownerID: null,
@@ -116,7 +117,7 @@ export default function OwnerStack(): React.Node {
           type: 'UPDATE_SELECTED_INDEX',
           selectedIndex: index >= 0 ? index : 0,
         });
-        treeDispatch({type: 'SELECT_OWNER', payload: owner.id});
+        changeOwnerAction(owner.id);
       } else {
         dispatch({
           type: 'UPDATE_SELECTED_INDEX',
@@ -202,13 +203,8 @@ type ElementsDropdownProps = {
   owners: Array<SerializedElement>,
   selectedIndex: number,
   selectOwner: SelectOwner,
-  ...
 };
-function ElementsDropdown({
-  owners,
-  selectedIndex,
-  selectOwner,
-}: ElementsDropdownProps) {
+function ElementsDropdown({owners, selectOwner}: ElementsDropdownProps) {
   const store = useContext(StoreContext);
 
   const menuItems = [];
@@ -222,10 +218,10 @@ function ElementsDropdown({
         onSelect={() => (isInStore ? selectOwner(owner) : null)}>
         {owner.displayName}
 
-        <Badge
-          className={styles.Badge}
+        <ElementBadges
           hocDisplayNames={owner.hocDisplayNames}
-          type={owner.type}
+          compiledWithForget={owner.compiledWithForget}
+          className={styles.BadgesBlock}
         />
       </MenuItem>,
     );
@@ -254,7 +250,7 @@ type ElementViewProps = {
 function ElementView({isSelected, owner, selectOwner}: ElementViewProps) {
   const store = useContext(StoreContext);
 
-  const {displayName, hocDisplayNames, type} = owner;
+  const {displayName, hocDisplayNames, compiledWithForget} = owner;
   const isInStore = store.containsElement(owner.id);
 
   const handleChange = useCallback(() => {
@@ -270,10 +266,10 @@ function ElementView({isSelected, owner, selectOwner}: ElementViewProps) {
       onChange={handleChange}>
       {displayName}
 
-      <Badge
-        className={styles.Badge}
+      <ElementBadges
         hocDisplayNames={hocDisplayNames}
-        type={type}
+        compiledWithForget={compiledWithForget}
+        className={styles.BadgesBlock}
       />
     </Toggle>
   );

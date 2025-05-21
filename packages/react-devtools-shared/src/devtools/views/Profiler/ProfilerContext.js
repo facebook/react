@@ -11,7 +11,6 @@ import type {ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import {createContext, useCallback, useContext, useMemo, useState} from 'react';
-import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {useLocalStorage, useSubscription} from '../hooks';
 import {
   TreeDispatcherContext,
@@ -88,7 +87,7 @@ type Props = {
 
 function ProfilerContextController({children}: Props): React.Node {
   const store = useContext(StoreContext);
-  const {selectedElementID} = useContext(TreeStateContext);
+  const {inspectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
 
   const {profilerStore} = store;
@@ -98,7 +97,7 @@ function ProfilerContextController({children}: Props): React.Node {
       getCurrentValue: () => ({
         didRecordCommits: profilerStore.didRecordCommits,
         isProcessingData: profilerStore.isProcessingData,
-        isProfiling: profilerStore.isProfiling,
+        isProfiling: profilerStore.isProfilingBasedOnUserInput,
         profilingData: profilerStore.profilingData,
         supportsProfiling: store.rootSupportsBasicProfiling,
       }),
@@ -166,31 +165,28 @@ function ProfilerContextController({children}: Props): React.Node {
   );
 
   if (prevProfilingData !== profilingData) {
-    batchedUpdates(() => {
-      setPrevProfilingData(profilingData);
+    setPrevProfilingData(profilingData);
 
-      const dataForRoots =
-        profilingData !== null ? profilingData.dataForRoots : null;
-      if (dataForRoots != null) {
-        const firstRootID = dataForRoots.keys().next().value || null;
+    const dataForRoots =
+      profilingData !== null ? profilingData.dataForRoots : null;
+    if (dataForRoots != null) {
+      const firstRootID = dataForRoots.keys().next().value || null;
 
-        if (rootID === null || !dataForRoots.has(rootID)) {
-          let selectedElementRootID = null;
-          if (selectedElementID !== null) {
-            selectedElementRootID =
-              store.getRootIDForElement(selectedElementID);
-          }
-          if (
-            selectedElementRootID !== null &&
-            dataForRoots.has(selectedElementRootID)
-          ) {
-            setRootIDAndClearFiber(selectedElementRootID);
-          } else {
-            setRootIDAndClearFiber(firstRootID);
-          }
+      if (rootID === null || !dataForRoots.has(rootID)) {
+        let selectedElementRootID = null;
+        if (inspectedElementID !== null) {
+          selectedElementRootID = store.getRootIDForElement(inspectedElementID);
+        }
+        if (
+          selectedElementRootID !== null &&
+          dataForRoots.has(selectedElementRootID)
+        ) {
+          setRootIDAndClearFiber(selectedElementRootID);
+        } else {
+          setRootIDAndClearFiber(firstRootID);
         }
       }
-    });
+    }
   }
 
   const [isCommitFilterEnabled, setIsCommitFilterEnabled] =
@@ -229,15 +225,13 @@ function ProfilerContextController({children}: Props): React.Node {
   );
 
   if (isProfiling) {
-    batchedUpdates(() => {
-      if (selectedCommitIndex !== null) {
-        selectCommitIndex(null);
-      }
-      if (selectedFiberID !== null) {
-        selectFiberID(null);
-        selectFiberName(null);
-      }
-    });
+    if (selectedCommitIndex !== null) {
+      selectCommitIndex(null);
+    }
+    if (selectedFiberID !== null) {
+      selectFiberID(null);
+      selectFiberName(null);
+    }
   }
 
   const value = useMemo(

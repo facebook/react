@@ -8,8 +8,8 @@
  */
 
 export {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  act as unstable_act,
+  __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  __COMPILER_RUNTIME,
   Children,
   Component,
   Fragment,
@@ -20,9 +20,7 @@ export {
   cloneElement,
   createContext,
   createElement,
-  createFactory,
   createRef,
-  createServerContext,
   use,
   forwardRef,
   isValidElement,
@@ -42,9 +40,11 @@ export {
   useLayoutEffect,
   useMemo,
   useReducer,
+  useOptimistic,
   useRef,
   useState,
   useSyncExternalStore,
   useTransition,
+  useActionState,
   version,
-} from './src/React';
+} from './src/ReactClient';

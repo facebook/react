@@ -1,3 +1,13 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @emails react-core
+ * @jest-environment node
+ */
+
 let React;
 let ReactNoop;
 let Scheduler;
@@ -8,6 +18,7 @@ let SuspenseList;
 let waitForAll;
 let assertLog;
 let waitFor;
+let assertConsoleErrorDev;
 
 describe('ReactSuspenseList', () => {
   beforeEach(() => {
@@ -27,6 +38,7 @@ describe('ReactSuspenseList', () => {
     assertLog = InternalTestUtils.assertLog;
     waitFor = InternalTestUtils.waitFor;
     act = InternalTestUtils.act;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   function Text(props) {
@@ -62,12 +74,11 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
-      'Warning: "something" is not a supported revealOrder on ' +
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
+      '"something" is not a supported revealOrder on ' +
         '<SuspenseList />. Did you mean "together", "forwards" or "backwards"?' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
@@ -84,12 +95,11 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
-      'Warning: "TOGETHER" is not a valid value for revealOrder on ' +
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
+      '"TOGETHER" is not a valid value for revealOrder on ' +
         '<SuspenseList />. Use lowercase "together" instead.' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
@@ -106,12 +116,11 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
-      'Warning: "forward" is not a valid value for revealOrder on ' +
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
+      '"forward" is not a valid value for revealOrder on ' +
         '<SuspenseList />. React uses the -s suffix in the spelling. ' +
         'Use "forwards" instead.' +
         '\n    in SuspenseList (at **)' +
@@ -137,16 +146,15 @@ describe('ReactSuspenseList', () => {
     // No warning
     await waitForAll([]);
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(
-          <Foo>
-            <Suspense fallback="Loading">Child</Suspense>
-          </Foo>,
-        );
-      });
-    }).toErrorDev([
-      'Warning: A single row was passed to a <SuspenseList revealOrder="forwards" />. ' +
+    await act(() => {
+      ReactNoop.render(
+        <Foo>
+          <Suspense fallback="Loading">Child</Suspense>
+        </Foo>,
+      );
+    });
+    assertConsoleErrorDev([
+      'A single row was passed to a <SuspenseList revealOrder="forwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
         '\n    in SuspenseList (at **)' +
@@ -164,12 +172,11 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
-      'Warning: A single row was passed to a <SuspenseList revealOrder="backwards" />. ' +
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
+      'A single row was passed to a <SuspenseList revealOrder="backwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
         '\n    in SuspenseList (at **)' +
@@ -192,12 +199,11 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo items={['A', 'B']} />);
-      });
-    }).toErrorDev([
-      'Warning: A nested array was passed to row #0 in <SuspenseList />. ' +
+    await act(() => {
+      ReactNoop.render(<Foo items={['A', 'B']} />);
+    });
+    assertConsoleErrorDev([
+      'A nested array was passed to row #0 in <SuspenseList />. ' +
         'Wrap it in an additional SuspenseList to configure its revealOrder: ' +
         '<SuspenseList revealOrder=...> ... ' +
         '<SuspenseList revealOrder=...>{array}</SuspenseList> ... ' +
@@ -239,6 +245,9 @@ describe('ReactSuspenseList', () => {
       'Loading B',
       'Suspend! [C]',
       'Loading C',
+      // pre-warming
+      'Suspend! [B]',
+      'Suspend! [C]',
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
@@ -250,7 +259,11 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => C.resolve());
-    assertLog(['C']);
+    assertLog(
+      gate('alwaysThrottleRetries')
+        ? ['Suspend! [B]', 'C', 'Suspend! [B]']
+        : ['C'],
+    );
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -272,7 +285,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && !disableLegacyMode
   it('shows content independently in legacy mode regardless of option', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -730,7 +743,12 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    await waitForAll(['Suspend! [A]', 'Loading']);
+    await waitForAll([
+      'Suspend! [A]',
+      'Loading',
+      // pre-warming
+      'Suspend! [A]',
+    ]);
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Loading</span>);
 
@@ -897,7 +915,14 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    await waitForAll(['Suspend! [A]', 'Loading A', 'Loading B', 'Loading C']);
+    await waitForAll([
+      'Suspend! [A]',
+      'Loading A',
+      'Loading B',
+      'Loading C',
+      // pre-warming
+      'Suspend! [A]',
+    ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -908,7 +933,7 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => A.resolve());
-    assertLog(['A', 'Suspend! [B]']);
+    assertLog(['A', 'Suspend! [B]', 'Suspend! [B]']);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -956,7 +981,14 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    await waitForAll(['Suspend! [C]', 'Loading C', 'Loading B', 'Loading A']);
+    await waitForAll([
+      'Suspend! [C]',
+      'Loading C',
+      'Loading B',
+      'Loading A',
+      // pre-warming
+      'Suspend! [C]',
+    ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -967,7 +999,12 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => C.resolve());
-    assertLog(['C', 'Suspend! [B]']);
+    assertLog([
+      'C',
+      'Suspend! [B]',
+      // pre-warming
+      'Suspend! [B]',
+    ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -1088,7 +1125,13 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => C.resolve());
-    assertLog(['A', 'C', 'Suspend! [E]']);
+    assertLog([
+      'A',
+      'C',
+      'Suspend! [E]',
+      // pre-warming
+      'Suspend! [E]',
+    ]);
 
     // We can now resolve the full head.
     expect(ReactNoop).toMatchRenderedOutput(
@@ -1103,7 +1146,12 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => E.resolve());
-    assertLog(['E', 'Suspend! [F]']);
+    assertLog([
+      'E',
+      'Suspend! [F]',
+      // pre-warming
+      'Suspend! [F]',
+    ]);
 
     // In the tail we can resolve one-by-one.
     expect(ReactNoop).toMatchRenderedOutput(
@@ -1244,6 +1292,9 @@ describe('ReactSuspenseList', () => {
       'E',
       'Suspend! [F]',
       'Loading F',
+      // pre-warming
+      'Suspend! [D]',
+      'Suspend! [F]',
     ]);
 
     // This will suspend, since the boundaries are avoided. Give them
@@ -1287,7 +1338,13 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => D.resolve());
-    assertLog(['D', 'F', 'Suspend! [B]']);
+    assertLog([
+      'D',
+      'F',
+      'Suspend! [B]',
+      // pre-warming
+      'Suspend! [B]',
+    ]);
 
     // We can now resolve the full head.
     expect(ReactNoop).toMatchRenderedOutput(
@@ -1304,7 +1361,12 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => B.resolve());
-    assertLog(['B', 'Suspend! [A]']);
+    assertLog([
+      'B',
+      'Suspend! [A]',
+      // pre-warming
+      'Suspend! [A]',
+    ]);
 
     // In the tail we can resolve one-by-one.
     expect(ReactNoop).toMatchRenderedOutput(
@@ -1423,7 +1485,12 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    await waitForAll(['Suspend! [A]', 'Loading A']);
+    await waitForAll([
+      'Suspend! [A]',
+      'Loading A',
+      // pre-warming
+      'Suspend! [A]',
+    ]);
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
 
@@ -1479,12 +1546,11 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
-      'Warning: "collapse" is not a supported value for tail on ' +
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
+      '"collapse" is not a supported value for tail on ' +
         '<SuspenseList />. Did you mean "collapsed" or "hidden"?' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
@@ -1501,12 +1567,11 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await expect(async () => {
-      await act(() => {
-        ReactNoop.render(<Foo />);
-      });
-    }).toErrorDev([
-      'Warning: <SuspenseList tail="collapsed" /> is only valid if ' +
+    await act(() => {
+      ReactNoop.render(<Foo />);
+    });
+    assertConsoleErrorDev([
+      '<SuspenseList tail="collapsed" /> is only valid if ' +
         'revealOrder is "forwards" or "backwards". ' +
         'Did you mean to specify revealOrder="forwards"?' +
         '\n    in SuspenseList (at **)' +
@@ -1937,6 +2002,8 @@ describe('ReactSuspenseList', () => {
       'Suspend! [D]',
       'Loading D',
       'Loading E',
+      // pre-warming
+      'Suspend! [B]',
     ]);
 
     // This is suspended due to the update to D causing a loading state.
@@ -1958,7 +2025,11 @@ describe('ReactSuspenseList', () => {
 
     await B.resolve();
 
-    await waitForAll(['B', 'Suspend! [C]']);
+    await waitForAll([
+      'B',
+      'Suspend! [C]',
+      ...(!gate('alwaysThrottleRetries') ? ['Suspend! [C]'] : []),
+    ]);
 
     // Incremental loading is suspended.
     jest.advanceTimersByTime(500);
@@ -2349,95 +2420,13 @@ describe('ReactSuspenseList', () => {
     // This should leave the tree intact.
     await act(() => ReactNoop.render(<Foo updateList={true} />));
 
-    assertLog(['A', 'Suspend! [B]', 'Loading B']);
-
-    expect(ReactNoop).toMatchRenderedOutput(
-      <>
-        <span>A</span>
-        <span>Loading B</span>
-      </>,
-    );
-
-    await act(() => AsyncB.resolve());
-    assertLog(['B']);
-
-    expect(ReactNoop).toMatchRenderedOutput(
-      <>
-        <span>A</span>
-        <span>B</span>
-      </>,
-    );
-
-    // This should be the same instance. I.e. it didn't
-    // remount.
-    expect(previousInst).toBe(setAsyncB);
-  });
-
-  // @gate enableSuspenseList
-  it('is able to re-suspend the last rows during an update with hidden', async () => {
-    const AsyncB = createAsyncText('B');
-
-    let setAsyncB;
-
-    function B() {
-      const [shouldBeAsync, setAsync] = React.useState(false);
-      setAsyncB = setAsync;
-
-      return shouldBeAsync ? (
-        <Suspense fallback={<Text text="Loading B" />}>
-          <AsyncB />
-        </Suspense>
-      ) : (
-        <Text text="Sync B" />
-      );
-    }
-
-    function Foo({updateList}) {
-      return (
-        <SuspenseList revealOrder="forwards" tail="hidden">
-          <Suspense key="A" fallback={<Text text="Loading A" />}>
-            <Text text="A" />
-          </Suspense>
-          <B key="B" updateList={updateList} />
-        </SuspenseList>
-      );
-    }
-
-    ReactNoop.render(<Foo />);
-
-    await waitForAll(['A', 'Sync B']);
-
-    expect(ReactNoop).toMatchRenderedOutput(
-      <>
-        <span>A</span>
-        <span>Sync B</span>
-      </>,
-    );
-
-    const previousInst = setAsyncB;
-
-    // During an update we suspend on B.
-    await act(() => setAsyncB(true));
-
     assertLog([
+      'A',
       'Suspend! [B]',
       'Loading B',
-      // The second pass is the "force hide" pass
-      'Loading B',
+      // pre-warming
+      'Suspend! [B]',
     ]);
-
-    expect(ReactNoop).toMatchRenderedOutput(
-      <>
-        <span>A</span>
-        <span>Loading B</span>
-      </>,
-    );
-
-    // Before we resolve we'll rerender the whole list.
-    // This should leave the tree intact.
-    await act(() => ReactNoop.render(<Foo updateList={true} />));
-
-    assertLog(['A', 'Suspend! [B]', 'Loading B']);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -2518,7 +2507,12 @@ describe('ReactSuspenseList', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
 
       // Try again on low-pri.
-      await waitForAll(['Suspend! [A]', 'Loading A']);
+      await waitForAll([
+        'Suspend! [A]',
+        'Loading A',
+        // pre-warming
+        'Suspend! [A]',
+      ]);
       expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
     });
 
@@ -2794,7 +2788,15 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<App suspendTail={true} />);
 
-    await waitForAll(['App', 'A', 'B', 'Suspend! [C]', 'Fallback']);
+    await waitForAll([
+      'App',
+      'A',
+      'B',
+      'Suspend! [C]',
+      'Fallback',
+      // pre-warming
+      'Suspend! [C]',
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
         <span>A</span>
@@ -2802,7 +2804,9 @@ describe('ReactSuspenseList', () => {
         <span>Loading...</span>
       </>,
     );
-    expect(onRender).toHaveBeenCalledTimes(1);
+    expect(onRender).toHaveBeenCalledTimes(
+      gate('alwaysThrottleRetries') ? 1 : 2,
+    );
 
     // The treeBaseDuration should be the time to render each child. The last
     // one counts the fallback time.
@@ -2825,12 +2829,18 @@ describe('ReactSuspenseList', () => {
         <span>C</span>
       </>,
     );
-    expect(onRender).toHaveBeenCalledTimes(2);
+    expect(onRender).toHaveBeenCalledTimes(
+      gate('alwaysThrottleRetries') ? 2 : 3,
+    );
 
     // actualDuration
-    expect(onRender.mock.calls[1][2]).toBe(1 + 4 + 5);
+    expect(onRender.mock.calls[1][2]).toBe(
+      gate('alwaysThrottleRetries') ? 1 + 4 + 5 : 5,
+    );
     // treeBaseDuration
-    expect(onRender.mock.calls[1][3]).toBe(1 + 4 + 5);
+    expect(onRender.mock.calls[1][3]).toBe(
+      gate('alwaysThrottleRetries') ? 1 + 4 + 5 : 8,
+    );
 
     ReactNoop.render(<App addRow={true} suspendTail={true} />);
 
@@ -2847,6 +2857,8 @@ describe('ReactSuspenseList', () => {
       'Fallback',
       // Lastly we render the tail.
       'Fallback',
+      // pre-warming
+      'Suspend! [C]',
     ]);
 
     // Flush suspended time.
@@ -2861,7 +2873,9 @@ describe('ReactSuspenseList', () => {
         <span>Loading...</span>
       </>,
     );
-    expect(onRender).toHaveBeenCalledTimes(3);
+    expect(onRender).toHaveBeenCalledTimes(
+      gate('alwaysThrottleRetries') ? 4 : 5,
+    );
 
     // The treeBaseDuration should be the time to render the first two
     // children and then two fallbacks.
@@ -2870,12 +2884,21 @@ describe('ReactSuspenseList', () => {
     // with force fallback mode.
 
     // actualDuration
-    expect(onRender.mock.calls[2][2]).toBe((1 + 4 + 5 + 3) * 2 + 3);
+    expect(onRender.mock.calls[2][2]).toBe(
+      gate('alwaysThrottleRetries') ? (1 + 4 + 5 + 3) * 2 + 3 : 10,
+    );
     // treeBaseDuration
-    expect(onRender.mock.calls[2][3]).toBe(1 + 4 + 3 + 3);
+    expect(onRender.mock.calls[2][3]).toBe(
+      gate('alwaysThrottleRetries') ? 1 + 4 + 3 + 3 : 10,
+    );
 
     await act(() => C.resolve());
-    assertLog(['C', 'Suspend! [D]']);
+    assertLog([
+      'C',
+      'Suspend! [D]',
+      // pre-warming
+      'Suspend! [D]',
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
         <span>A</span>
@@ -2884,12 +2907,17 @@ describe('ReactSuspenseList', () => {
         <span>Loading...</span>
       </>,
     );
-    expect(onRender).toHaveBeenCalledTimes(4);
+
+    expect(onRender).toHaveBeenCalledTimes(
+      gate('alwaysThrottleRetries') ? 6 : 7,
+    );
 
     // actualDuration
-    expect(onRender.mock.calls[3][2]).toBe(5 + 12);
+    expect(onRender.mock.calls[5][2]).toBe(
+      gate('alwaysThrottleRetries') ? 12 : 17,
+    );
     // treeBaseDuration
-    expect(onRender.mock.calls[3][3]).toBe(1 + 4 + 5 + 3);
+    expect(onRender.mock.calls[5][3]).toBe(1 + 4 + 5 + 3);
   });
 
   // @gate enableSuspenseList
@@ -2950,7 +2978,14 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    await waitForAll(['Suspend! [A]', 'Loading A', 'Loading B', 'Loading C']);
+    await waitForAll([
+      'Suspend! [A]',
+      'Loading A',
+      'Loading B',
+      'Loading C',
+      // pre-warming
+      'Suspend! [A]',
+    ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -2961,7 +2996,7 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => A.resolve());
-    assertLog(['A', 'Suspend! [B]']);
+    assertLog(['A', 'Suspend! [B]', 'Suspend! [B]']);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
         <span>A</span>
@@ -3084,4 +3119,197 @@ describe('ReactSuspenseList', () => {
       );
     },
   );
+
+  // @gate enableSuspenseList && enableAsyncIterableChildren
+  it('warns for async generator components in "forwards" order', async () => {
+    async function* Generator() {
+      yield 'A';
+      yield 'B';
+    }
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards">
+          <Generator />
+        </SuspenseList>
+      );
+    }
+
+    await act(() => {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    });
+    assertConsoleErrorDev([
+      'A generator Component was passed to a <SuspenseList revealOrder="forwards" />. ' +
+        'This is not supported as a way to generate lists. Instead, pass an ' +
+        'iterable as the children.' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+      '<Generator> is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
+        "This error is often caused by accidentally adding `'use client'` " +
+        'to a module that was originally written for the server.\n' +
+        '    in Foo (at **)',
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in Foo (at **)',
+    ]);
+  });
+
+  // @gate enableSuspenseList && enableAsyncIterableChildren
+  it('can display async iterable in "forwards" order', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+
+    // We use Cached elements to avoid rerender.
+    const ASlot = (
+      <Suspense key="A" fallback={<Text text="Loading A" />}>
+        <A />
+      </Suspense>
+    );
+
+    const BSlot = (
+      <Suspense key="B" fallback={<Text text="Loading B" />}>
+        <B />
+      </Suspense>
+    );
+
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        yield ASlot;
+        yield BSlot;
+      },
+    };
+
+    function Foo() {
+      return <SuspenseList revealOrder="forwards">{iterable}</SuspenseList>;
+    }
+
+    await act(() => {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    });
+
+    assertLog([
+      'Suspend! [A]',
+      'Loading A',
+      'Loading B',
+      // pre-warming
+      'Suspend! [A]',
+    ]);
+
+    assertConsoleErrorDev([
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in SuspenseList (at **)\n' +
+        '    in Foo (at **)',
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in SuspenseList (at **)\n' +
+        '    in Foo (at **)',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    await act(() => A.resolve());
+    assertLog(['A', 'Suspend! [B]', 'Suspend! [B]']);
+
+    assertConsoleErrorDev([
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in SuspenseList (at **)\n' +
+        '    in Foo (at **)',
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in SuspenseList (at **)\n' +
+        '    in Foo (at **)',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    await act(() => B.resolve());
+    assertLog(['B']);
+
+    assertConsoleErrorDev([
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in SuspenseList (at **)\n' +
+        '    in Foo (at **)',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
+  });
+
+  // @gate enableSuspenseList && enableAsyncIterableChildren
+  it('warns if a nested async iterable is passed to a "forwards" list', async () => {
+    function Foo({items}) {
+      return (
+        <SuspenseList revealOrder="forwards">
+          {items}
+          <div>Tail</div>
+        </SuspenseList>
+      );
+    }
+
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        yield (
+          <Suspense key={'A'} fallback="Loading">
+            A
+          </Suspense>
+        );
+        yield (
+          <Suspense key={'B'} fallback="Loading">
+            B
+          </Suspense>
+        );
+      },
+    };
+
+    await act(() => {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo items={iterable} />);
+      });
+    });
+    assertConsoleErrorDev([
+      'A nested async iterable was passed to row #0 in <SuspenseList />. ' +
+        'Wrap it in an additional SuspenseList to configure its revealOrder: ' +
+        '<SuspenseList revealOrder=...> ... ' +
+        '<SuspenseList revealOrder=...>{async iterable}</SuspenseList> ... ' +
+        '</SuspenseList>' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in Foo (at **)',
+    ]);
+  });
 });
