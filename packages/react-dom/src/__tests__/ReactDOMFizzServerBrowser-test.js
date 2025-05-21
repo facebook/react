@@ -20,7 +20,7 @@ let React;
 let ReactDOMFizzServer;
 let Suspense;
 let Scheduler;
-let act;
+let serverAct;
 
 describe('ReactDOMFizzServerBrowser', () => {
   beforeEach(() => {
@@ -28,23 +28,12 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     Scheduler = require('scheduler');
     patchMessageChannel(Scheduler);
-    act = require('internal-test-utils').act;
+    serverAct = require('internal-test-utils').serverAct;
 
     React = require('react');
     ReactDOMFizzServer = require('react-dom/server.browser');
     Suspense = React.Suspense;
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await act(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   const theError = new Error('This is an error');
   function Throw() {

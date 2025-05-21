@@ -22,7 +22,7 @@ let ReactServerDOMClient;
 let Stream;
 let use;
 let ReactServerScheduler;
-let reactServerAct;
+let serverAct;
 
 describe('ReactFlightTurbopackDOMNode', () => {
   beforeEach(() => {
@@ -30,7 +30,7 @@ describe('ReactFlightTurbopackDOMNode', () => {
 
     ReactServerScheduler = require('scheduler');
     patchSetImmediate(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -58,17 +58,6 @@ describe('ReactFlightTurbopackDOMNode', () => {
     Stream = require('stream');
     use = React.use;
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   function readResult(stream) {
     return new Promise((resolve, reject) => {

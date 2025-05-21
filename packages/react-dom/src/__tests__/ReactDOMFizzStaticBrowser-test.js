@@ -31,7 +31,7 @@ let ReactDOMFizzStatic;
 let Suspense;
 let container;
 let Scheduler;
-let act;
+let serverAct;
 
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
@@ -43,7 +43,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     Scheduler = require('scheduler');
     patchMessageChannel(Scheduler);
-    act = require('internal-test-utils').act;
+    serverAct = require('internal-test-utils').serverAct;
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -60,17 +60,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
     }
     document.body.removeChild(container);
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await act(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   const theError = new Error('This is an error');
   function Throw() {

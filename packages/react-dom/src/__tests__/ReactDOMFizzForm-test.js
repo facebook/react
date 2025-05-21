@@ -18,6 +18,7 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 
 let act;
+let serverAct;
 let container;
 let React;
 let ReactDOMServer;
@@ -39,6 +40,7 @@ describe('ReactDOMFizzForm', () => {
     useFormStatus = require('react-dom').useFormStatus;
     useOptimistic = require('react').useOptimistic;
     act = require('internal-test-utils').act;
+    serverAct = require('internal-test-utils').serverAct;
     assertConsoleErrorDev =
       require('internal-test-utils').assertConsoleErrorDev;
     container = document.createElement('div');
@@ -54,14 +56,6 @@ describe('ReactDOMFizzForm', () => {
   afterEach(() => {
     document.body.removeChild(container);
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await act(() => {
-      maybePromise = callback();
-    });
-    return maybePromise;
-  }
 
   function submit(submitter) {
     const form = submitter.form || submitter;
