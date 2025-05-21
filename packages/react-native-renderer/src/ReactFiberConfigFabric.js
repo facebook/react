@@ -695,12 +695,17 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  child: Fiber,
+  childInstance: Instance,
   fragmentInstance: FragmentInstanceType,
 ): void {
+  const publicInstance = getPublicInstance(childInstance);
   if (fragmentInstance._observers !== null) {
+    if (publicInstance == null) {
+      throw new Error('Expected to find a host node. This is a bug in React.');
+    }
     fragmentInstance._observers.forEach(observer => {
-      observeChild(child, observer);
+      // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
+      observer.observe(publicInstance);
     });
   }
 }
