@@ -4182,21 +4182,22 @@ function createSuspenseListRow(previousRow) {
   return newRow;
 }
 function renderSuspenseListRows(request, task, keyPath, rows, revealOrder) {
-  keyPath = task.keyPath;
-  var prevTreeContext = task.treeContext,
-    prevRow = task.row,
-    totalChildren = rows.length,
-    previousSuspenseListRow = null;
+  var prevKeyPath = task.keyPath,
+    prevTreeContext = task.treeContext,
+    prevRow = task.row;
+  task.keyPath = keyPath;
+  keyPath = rows.length;
+  var previousSuspenseListRow = null;
   if (null !== task.replay) {
     var resumeSlots = task.replay.slots;
     if (null !== resumeSlots && "object" === typeof resumeSlots)
-      for (var n = 0; n < totalChildren; n++) {
-        var i = "backwards" !== revealOrder ? n : totalChildren - 1 - n,
+      for (var n = 0; n < keyPath; n++) {
+        var i = "backwards" !== revealOrder ? n : keyPath - 1 - n,
           node = rows[i];
         task.row = previousSuspenseListRow = createSuspenseListRow(
           previousSuspenseListRow
         );
-        task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+        task.treeContext = pushTreeContext(prevTreeContext, keyPath, i);
         var resumeSegmentID = resumeSlots[i];
         "number" === typeof resumeSegmentID
           ? (resumeNode(request, task, resumeSegmentID, node, i),
@@ -4206,30 +4207,26 @@ function renderSuspenseListRows(request, task, keyPath, rows, revealOrder) {
           finishSuspenseListRow(request, previousSuspenseListRow);
       }
     else
-      for (resumeSlots = 0; resumeSlots < totalChildren; resumeSlots++)
+      for (resumeSlots = 0; resumeSlots < keyPath; resumeSlots++)
         (n =
           "backwards" !== revealOrder
             ? resumeSlots
-            : totalChildren - 1 - resumeSlots),
+            : keyPath - 1 - resumeSlots),
           (i = rows[n]),
           (task.row = previousSuspenseListRow =
             createSuspenseListRow(previousSuspenseListRow)),
-          (task.treeContext = pushTreeContext(
-            prevTreeContext,
-            totalChildren,
-            n
-          )),
+          (task.treeContext = pushTreeContext(prevTreeContext, keyPath, n)),
           renderNode(request, task, i, n),
           0 === --previousSuspenseListRow.pendingTasks &&
             finishSuspenseListRow(request, previousSuspenseListRow);
   } else if ("backwards" !== revealOrder)
-    for (revealOrder = 0; revealOrder < totalChildren; revealOrder++)
+    for (revealOrder = 0; revealOrder < keyPath; revealOrder++)
       (resumeSlots = rows[revealOrder]),
         (task.row = previousSuspenseListRow =
           createSuspenseListRow(previousSuspenseListRow)),
         (task.treeContext = pushTreeContext(
           prevTreeContext,
-          totalChildren,
+          keyPath,
           revealOrder
         )),
         renderNode(request, task, resumeSlots, revealOrder),
@@ -4239,12 +4236,12 @@ function renderSuspenseListRows(request, task, keyPath, rows, revealOrder) {
     revealOrder = task.blockedSegment;
     resumeSlots = revealOrder.children.length;
     n = revealOrder.chunks.length;
-    for (i = totalChildren - 1; 0 <= i; i--) {
+    for (i = keyPath - 1; 0 <= i; i--) {
       node = rows[i];
       task.row = previousSuspenseListRow = createSuspenseListRow(
         previousSuspenseListRow
       );
-      task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+      task.treeContext = pushTreeContext(prevTreeContext, keyPath, i);
       resumeSegmentID = createPendingSegment(
         request,
         n,
@@ -4282,7 +4279,7 @@ function renderSuspenseListRows(request, task, keyPath, rows, revealOrder) {
     (prevRow.pendingTasks++, (previousSuspenseListRow.next = prevRow));
   task.treeContext = prevTreeContext;
   task.row = prevRow;
-  task.keyPath = keyPath;
+  task.keyPath = prevKeyPath;
 }
 function renderWithHooks(request, task, keyPath, Component, props, secondArg) {
   var prevThenableState = task.thenableState;
@@ -6784,4 +6781,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-classic-9c7b10e2-20250520";
+exports.version = "19.2.0-www-classic-23884812-20250520";

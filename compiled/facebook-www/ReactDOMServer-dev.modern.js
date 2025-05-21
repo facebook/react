@@ -5047,28 +5047,25 @@ __DEV__ &&
       return newRow;
     }
     function renderSuspenseListRows(request, task, keyPath, rows, revealOrder) {
-      keyPath = task.keyPath;
-      var previousComponentStack = task.componentStack;
+      var prevKeyPath = task.keyPath,
+        prevTreeContext = task.treeContext,
+        prevRow = task.row,
+        previousComponentStack = task.componentStack;
       var previousDebugTask = task.debugTask;
       pushServerComponentStack(task, task.node.props.children._debugInfo);
-      var prevTreeContext = task.treeContext,
-        prevRow = task.row,
-        totalChildren = rows.length,
-        previousSuspenseListRow = null;
+      task.keyPath = keyPath;
+      keyPath = rows.length;
+      var previousSuspenseListRow = null;
       if (null !== task.replay) {
         var resumeSlots = task.replay.slots;
         if (null !== resumeSlots && "object" === typeof resumeSlots)
-          for (var n = 0; n < totalChildren; n++) {
-            var i = "backwards" !== revealOrder ? n : totalChildren - 1 - n,
+          for (var n = 0; n < keyPath; n++) {
+            var i = "backwards" !== revealOrder ? n : keyPath - 1 - n,
               node = rows[i];
             task.row = previousSuspenseListRow = createSuspenseListRow(
               previousSuspenseListRow
             );
-            task.treeContext = pushTreeContext(
-              prevTreeContext,
-              totalChildren,
-              i
-            );
+            task.treeContext = pushTreeContext(prevTreeContext, keyPath, i);
             var resumeSegmentID = resumeSlots[i];
             "number" === typeof resumeSegmentID
               ? (resumeNode(request, task, resumeSegmentID, node, i),
@@ -5078,32 +5075,28 @@ __DEV__ &&
               finishSuspenseListRow(request, previousSuspenseListRow);
           }
         else
-          for (resumeSlots = 0; resumeSlots < totalChildren; resumeSlots++)
+          for (resumeSlots = 0; resumeSlots < keyPath; resumeSlots++)
             (n =
               "backwards" !== revealOrder
                 ? resumeSlots
-                : totalChildren - 1 - resumeSlots),
+                : keyPath - 1 - resumeSlots),
               (i = rows[n]),
               warnForMissingKey(request, task, i),
               (task.row = previousSuspenseListRow =
                 createSuspenseListRow(previousSuspenseListRow)),
-              (task.treeContext = pushTreeContext(
-                prevTreeContext,
-                totalChildren,
-                n
-              )),
+              (task.treeContext = pushTreeContext(prevTreeContext, keyPath, n)),
               renderNode(request, task, i, n),
               0 === --previousSuspenseListRow.pendingTasks &&
                 finishSuspenseListRow(request, previousSuspenseListRow);
       } else if ("backwards" !== revealOrder)
-        for (revealOrder = 0; revealOrder < totalChildren; revealOrder++)
+        for (revealOrder = 0; revealOrder < keyPath; revealOrder++)
           (resumeSlots = rows[revealOrder]),
             warnForMissingKey(request, task, resumeSlots),
             (task.row = previousSuspenseListRow =
               createSuspenseListRow(previousSuspenseListRow)),
             (task.treeContext = pushTreeContext(
               prevTreeContext,
-              totalChildren,
+              keyPath,
               revealOrder
             )),
             renderNode(request, task, resumeSlots, revealOrder),
@@ -5113,12 +5106,12 @@ __DEV__ &&
         revealOrder = task.blockedSegment;
         resumeSlots = revealOrder.children.length;
         n = revealOrder.chunks.length;
-        for (i = totalChildren - 1; 0 <= i; i--) {
+        for (i = keyPath - 1; 0 <= i; i--) {
           node = rows[i];
           task.row = previousSuspenseListRow = createSuspenseListRow(
             previousSuspenseListRow
           );
-          task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+          task.treeContext = pushTreeContext(prevTreeContext, keyPath, i);
           resumeSegmentID = createPendingSegment(
             request,
             n,
@@ -5157,7 +5150,7 @@ __DEV__ &&
         (prevRow.pendingTasks++, (previousSuspenseListRow.next = prevRow));
       task.treeContext = prevTreeContext;
       task.row = prevRow;
-      task.keyPath = keyPath;
+      task.keyPath = prevKeyPath;
       task.componentStack = previousComponentStack;
       task.debugTask = previousDebugTask;
     }
@@ -9977,5 +9970,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-modern-9c7b10e2-20250520";
+    exports.version = "19.2.0-www-modern-23884812-20250520";
   })();
