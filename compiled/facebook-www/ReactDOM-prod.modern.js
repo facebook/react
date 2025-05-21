@@ -8770,11 +8770,16 @@ function commitHostUpdate(finishedWork, newProps, oldProps) {
   }
 }
 function commitNewChildToFragmentInstances(fiber, parentFragmentInstances) {
-  for (var i = 0; i < parentFragmentInstances.length; i++)
-    commitNewChildToFragmentInstance(
-      fiber.stateNode,
-      parentFragmentInstances[i]
-    );
+  if (
+    5 === fiber.tag &&
+    null === fiber.alternate &&
+    null !== parentFragmentInstances
+  )
+    for (var i = 0; i < parentFragmentInstances.length; i++)
+      commitNewChildToFragmentInstance(
+        fiber.stateNode,
+        parentFragmentInstances[i]
+      );
 }
 function commitFragmentInstanceDeletionEffects(fiber) {
   for (var parent = fiber.return; null !== parent; ) {
@@ -8835,7 +8840,7 @@ function insertOrAppendPlacementNodeIntoContainer(
 ) {
   var tag = node.tag;
   if (5 === tag || 6 === tag) {
-    var stateNode = node.stateNode;
+    tag = node.stateNode;
     if (before)
       (9 === parent.nodeType
         ? parent.body
@@ -8844,27 +8849,24 @@ function insertOrAppendPlacementNodeIntoContainer(
           : "HTML" === parent.nodeName
             ? parent.ownerDocument.body
             : parent
-      ).insertBefore(stateNode, before);
+      ).insertBefore(tag, before);
     else
       a: {
         if (9 === parent.nodeType) before = parent.body;
         else if (8 === parent.nodeType) {
           before = parent.parentNode;
-          before.insertBefore(stateNode, parent);
+          before.insertBefore(tag, parent);
           break a;
         } else
           before =
             "HTML" === parent.nodeName ? parent.ownerDocument.body : parent;
-        before.appendChild(stateNode);
+        before.appendChild(tag);
         parent = parent._reactRootContainer;
         (null !== parent && void 0 !== parent) ||
           null !== before.onclick ||
           (before.onclick = noop$1);
       }
     enableFragmentRefs &&
-      5 === tag &&
-      null === node.alternate &&
-      null !== parentFragmentInstances &&
       commitNewChildToFragmentInstances(node, parentFragmentInstances);
     trackHostMutation();
   } else if (
@@ -8901,18 +8903,13 @@ function insertOrAppendPlacementNode(
   parentFragmentInstances
 ) {
   var tag = node.tag;
-  if (5 === tag || 6 === tag) {
-    var stateNode = node.stateNode;
-    before
-      ? parent.insertBefore(stateNode, before)
-      : parent.appendChild(stateNode);
-    enableFragmentRefs &&
-      5 === tag &&
-      null === node.alternate &&
-      null !== parentFragmentInstances &&
-      commitNewChildToFragmentInstances(node, parentFragmentInstances);
-    trackHostMutation();
-  } else if (
+  if (5 === tag || 6 === tag)
+    (tag = node.stateNode),
+      before ? parent.insertBefore(tag, before) : parent.appendChild(tag),
+      enableFragmentRefs &&
+        commitNewChildToFragmentInstances(node, parentFragmentInstances),
+      trackHostMutation();
+  else if (
     4 !== tag &&
     (27 === tag && isSingletonScope(node.type) && (parent = node.stateNode),
     (node = node.child),
@@ -17523,12 +17520,12 @@ function indexOfEventListener(
   }
   return -1;
 }
-function commitNewChildToFragmentInstance(childElement, fragmentInstance) {
+function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
   var eventListeners = fragmentInstance._eventListeners;
   if (null !== eventListeners)
     for (var i = 0; i < eventListeners.length; i++) {
       var _eventListeners$i3 = eventListeners[i];
-      childElement.addEventListener(
+      childInstance.addEventListener(
         _eventListeners$i3.type,
         _eventListeners$i3.listener,
         _eventListeners$i3.optionsOrUseCapture
@@ -17536,7 +17533,7 @@ function commitNewChildToFragmentInstance(childElement, fragmentInstance) {
     }
   null !== fragmentInstance._observers &&
     fragmentInstance._observers.forEach(function (observer) {
-      observer.observe(childElement);
+      observer.observe(childInstance);
     });
 }
 function clearContainerSparingly(container) {
@@ -19298,14 +19295,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2073 = React.version;
 if (
-  "19.2.0-www-modern-f4041aa3-20250521" !==
+  "19.2.0-www-modern-1835b3f7-20250521" !==
   isomorphicReactPackageVersion$jscomp$inline_2073
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2073,
-      "19.2.0-www-modern-f4041aa3-20250521"
+      "19.2.0-www-modern-1835b3f7-20250521"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19323,10 +19320,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2678 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-f4041aa3-20250521",
+  version: "19.2.0-www-modern-1835b3f7-20250521",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-f4041aa3-20250521"
+  reconcilerVersion: "19.2.0-www-modern-1835b3f7-20250521"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2679 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -19738,4 +19735,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-f4041aa3-20250521";
+exports.version = "19.2.0-www-modern-1835b3f7-20250521";

@@ -7834,11 +7834,16 @@ module.exports = function ($$$config) {
     }
   }
   function commitNewChildToFragmentInstances(fiber, parentFragmentInstances) {
-    for (var i = 0; i < parentFragmentInstances.length; i++)
-      commitNewChildToFragmentInstance(
-        fiber.stateNode,
-        parentFragmentInstances[i]
-      );
+    if (
+      5 === fiber.tag &&
+      null === fiber.alternate &&
+      null !== parentFragmentInstances
+    )
+      for (var i = 0; i < parentFragmentInstances.length; i++)
+        commitNewChildToFragmentInstance(
+          fiber.stateNode,
+          parentFragmentInstances[i]
+        );
   }
   function commitFragmentInstanceDeletionEffects(fiber) {
     for (var parent = fiber.return; null !== parent; ) {
@@ -7894,18 +7899,15 @@ module.exports = function ($$$config) {
     parentFragmentInstances
   ) {
     var tag = node.tag;
-    if (5 === tag || 6 === tag) {
-      var stateNode = node.stateNode;
-      before
-        ? insertInContainerBefore(parent, stateNode, before)
-        : appendChildToContainer(parent, stateNode);
-      enableFragmentRefs &&
-        5 === tag &&
-        null === node.alternate &&
-        null !== parentFragmentInstances &&
-        commitNewChildToFragmentInstances(node, parentFragmentInstances);
-      trackHostMutation();
-    } else if (
+    if (5 === tag || 6 === tag)
+      (tag = node.stateNode),
+        before
+          ? insertInContainerBefore(parent, tag, before)
+          : appendChildToContainer(parent, tag),
+        enableFragmentRefs &&
+          commitNewChildToFragmentInstances(node, parentFragmentInstances),
+        trackHostMutation();
+    else if (
       4 !== tag &&
       (supportsSingletons &&
         27 === tag &&
@@ -7940,18 +7942,13 @@ module.exports = function ($$$config) {
     parentFragmentInstances
   ) {
     var tag = node.tag;
-    if (5 === tag || 6 === tag) {
-      var stateNode = node.stateNode;
-      before
-        ? insertBefore(parent, stateNode, before)
-        : appendChild(parent, stateNode);
-      enableFragmentRefs &&
-        5 === tag &&
-        null === node.alternate &&
-        null !== parentFragmentInstances &&
-        commitNewChildToFragmentInstances(node, parentFragmentInstances);
-      trackHostMutation();
-    } else if (
+    if (5 === tag || 6 === tag)
+      (tag = node.stateNode),
+        before ? insertBefore(parent, tag, before) : appendChild(parent, tag),
+        enableFragmentRefs &&
+          commitNewChildToFragmentInstances(node, parentFragmentInstances),
+        trackHostMutation();
+    else if (
       4 !== tag &&
       (supportsSingletons &&
         27 === tag &&
@@ -7978,6 +7975,35 @@ module.exports = function ($$$config) {
           parentFragmentInstances
         ),
           (node = node.sibling);
+  }
+  function commitImmutablePlacementNodeToFragmentInstances(
+    finishedWork,
+    parentFragmentInstances
+  ) {
+    if (enableFragmentRefs)
+      if (5 === finishedWork.tag)
+        commitNewChildToFragmentInstances(
+          finishedWork,
+          parentFragmentInstances
+        );
+      else if (
+        4 !== finishedWork.tag &&
+        ((finishedWork = finishedWork.child), null !== finishedWork)
+      )
+        for (
+          commitImmutablePlacementNodeToFragmentInstances(
+            finishedWork,
+            parentFragmentInstances
+          ),
+            finishedWork = finishedWork.sibling;
+          null !== finishedWork;
+
+        )
+          commitImmutablePlacementNodeToFragmentInstances(
+            finishedWork,
+            parentFragmentInstances
+          ),
+            (finishedWork = finishedWork.sibling);
   }
   function commitHostPortalContainerChildren(
     portal,
@@ -9675,26 +9701,26 @@ module.exports = function ($$$config) {
     var flags = finishedWork.flags;
     if (flags & 2) {
       try {
-        if (supportsMutation) {
-          for (
-            var hostParentFiber,
-              parentFragmentInstances = null,
-              parentFiber = finishedWork.return;
-            null !== parentFiber;
+        for (
+          var hostParentFiber,
+            parentFragmentInstances = null,
+            parentFiber = finishedWork.return;
+          null !== parentFiber;
 
-          ) {
-            if (enableFragmentRefs && isFragmentInstanceParent(parentFiber)) {
-              var fragmentInstance = parentFiber.stateNode;
-              null === parentFragmentInstances
-                ? (parentFragmentInstances = [fragmentInstance])
-                : parentFragmentInstances.push(fragmentInstance);
-            }
-            if (isHostParent(parentFiber)) {
-              hostParentFiber = parentFiber;
-              break;
-            }
-            parentFiber = parentFiber.return;
+        ) {
+          if (enableFragmentRefs && isFragmentInstanceParent(parentFiber)) {
+            var fragmentInstance = parentFiber.stateNode;
+            null === parentFragmentInstances
+              ? (parentFragmentInstances = [fragmentInstance])
+              : parentFragmentInstances.push(fragmentInstance);
           }
+          if (isHostParent(parentFiber)) {
+            hostParentFiber = parentFiber;
+            break;
+          }
+          parentFiber = parentFiber.return;
+        }
+        if (supportsMutation) {
           if (null == hostParentFiber) throw Error(formatProdErrorMessage(160));
           switch (hostParentFiber.tag) {
             case 27:
@@ -9735,7 +9761,12 @@ module.exports = function ($$$config) {
             default:
               throw Error(formatProdErrorMessage(161));
           }
-        }
+        } else
+          enableFragmentRefs &&
+            commitImmutablePlacementNodeToFragmentInstances(
+              finishedWork,
+              parentFragmentInstances
+            );
       } catch (error) {
         captureCommitPhaseError(finishedWork, finishedWork.return, error);
       }
@@ -14104,7 +14135,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-f4041aa3-20250521"
+      reconcilerVersion: "19.2.0-www-classic-1835b3f7-20250521"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

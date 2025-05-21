@@ -13659,11 +13659,16 @@ __DEV__ &&
       }
     }
     function commitNewChildToFragmentInstances(fiber, parentFragmentInstances) {
-      for (var i = 0; i < parentFragmentInstances.length; i++)
-        commitNewChildToFragmentInstance(
-          fiber.stateNode,
-          parentFragmentInstances[i]
-        );
+      if (
+        5 === fiber.tag &&
+        null === fiber.alternate &&
+        null !== parentFragmentInstances
+      )
+        for (var i = 0; i < parentFragmentInstances.length; i++)
+          commitNewChildToFragmentInstance(
+            fiber.stateNode,
+            parentFragmentInstances[i]
+          );
     }
     function commitFragmentInstanceDeletionEffects(fiber) {
       for (var parent = fiber.return; null !== parent; ) {
@@ -13724,7 +13729,7 @@ __DEV__ &&
     ) {
       var tag = node.tag;
       if (5 === tag || 6 === tag) {
-        var stateNode = node.stateNode;
+        tag = node.stateNode;
         if (before)
           warnForReactChildrenConflict(parent),
             (parent.nodeType === DOCUMENT_NODE
@@ -13734,28 +13739,25 @@ __DEV__ &&
                 : "HTML" === parent.nodeName
                   ? parent.ownerDocument.body
                   : parent
-            ).insertBefore(stateNode, before);
+            ).insertBefore(tag, before);
         else
           a: {
             warnForReactChildrenConflict(parent);
             if (parent.nodeType === DOCUMENT_NODE) before = parent.body;
             else if (parent.nodeType === COMMENT_NODE) {
               before = parent.parentNode;
-              before.insertBefore(stateNode, parent);
+              before.insertBefore(tag, parent);
               break a;
             } else
               before =
                 "HTML" === parent.nodeName ? parent.ownerDocument.body : parent;
-            before.appendChild(stateNode);
-            stateNode = parent._reactRootContainer;
-            (null !== stateNode && void 0 !== stateNode) ||
+            before.appendChild(tag);
+            tag = parent._reactRootContainer;
+            (null !== tag && void 0 !== tag) ||
               null !== before.onclick ||
               (before.onclick = noop$1);
           }
         enableFragmentRefs &&
-          5 === tag &&
-          null === node.alternate &&
-          null !== parentFragmentInstances &&
           commitNewChildToFragmentInstances(node, parentFragmentInstances);
         trackHostMutation();
       } else if (
@@ -13792,18 +13794,13 @@ __DEV__ &&
       parentFragmentInstances
     ) {
       var tag = node.tag;
-      if (5 === tag || 6 === tag) {
-        var stateNode = node.stateNode;
-        before
-          ? parent.insertBefore(stateNode, before)
-          : parent.appendChild(stateNode);
-        enableFragmentRefs &&
-          5 === tag &&
-          null === node.alternate &&
-          null !== parentFragmentInstances &&
-          commitNewChildToFragmentInstances(node, parentFragmentInstances);
-        trackHostMutation();
-      } else if (
+      if (5 === tag || 6 === tag)
+        (tag = node.stateNode),
+          before ? parent.insertBefore(tag, before) : parent.appendChild(tag),
+          enableFragmentRefs &&
+            commitNewChildToFragmentInstances(node, parentFragmentInstances),
+          trackHostMutation();
+      else if (
         4 !== tag &&
         (27 === tag && isSingletonScope(node.type) && (parent = node.stateNode),
         (node = node.child),
@@ -25491,12 +25488,12 @@ __DEV__ &&
       }
       return -1;
     }
-    function commitNewChildToFragmentInstance(childElement, fragmentInstance) {
+    function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
       var eventListeners = fragmentInstance._eventListeners;
       if (null !== eventListeners)
         for (var i = 0; i < eventListeners.length; i++) {
           var _eventListeners$i2 = eventListeners[i];
-          childElement.addEventListener(
+          childInstance.addEventListener(
             _eventListeners$i2.type,
             _eventListeners$i2.listener,
             _eventListeners$i2.optionsOrUseCapture
@@ -25504,7 +25501,7 @@ __DEV__ &&
         }
       null !== fragmentInstance._observers &&
         fragmentInstance._observers.forEach(function (observer) {
-          observer.observe(childElement);
+          observer.observe(childInstance);
         });
     }
     function clearContainerSparingly(container) {
@@ -31455,11 +31452,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-classic-f4041aa3-20250521" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-classic-1835b3f7-20250521" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-classic-f4041aa3-20250521\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-classic-1835b3f7-20250521\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31502,10 +31499,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-classic-f4041aa3-20250521",
+          version: "19.2.0-www-classic-1835b3f7-20250521",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-classic-f4041aa3-20250521"
+          reconcilerVersion: "19.2.0-www-classic-1835b3f7-20250521"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -32105,7 +32102,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-classic-f4041aa3-20250521";
+    exports.version = "19.2.0-www-classic-1835b3f7-20250521";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
