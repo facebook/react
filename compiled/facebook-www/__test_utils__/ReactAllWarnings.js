@@ -105,6 +105,7 @@ export default [
   "Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously later calls tries to update the component. Move this work to useEffect instead.",
   "Cannot bind \"this\" of a Server Action. Pass null or undefined as the first argument to .bind().",
   "Cannot call startTransition while rendering.",
+  "Cannot cancel root view transition on a comment node. All view transitions will be globally scoped.",
   "Cannot find single active touch.",
   "Cannot infer the option value of complex children. Pass a `value` prop or use a plain string as children to <option>.",
   "Cannot record touch end without a touch start.\nTouch End: %s\nTouch Bank: %s",

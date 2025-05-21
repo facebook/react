@@ -15941,7 +15941,7 @@ __DEV__ &&
       else
         switch (finishedWork.tag) {
           case 3:
-            viewTransitionContextChanged = !1;
+            rootViewTransitionNameCanceled = viewTransitionContextChanged = !1;
             pushViewTransitionCancelableScope();
             recursivelyTraverseAfterMutationEffects(root, finishedWork);
             if (!viewTransitionContextChanged && !rootViewTransitionAffected) {
@@ -15964,29 +15964,34 @@ __DEV__ &&
                     );
                 }
               finishedWork = root.containerInfo;
-              finishedWork =
+              i =
                 finishedWork.nodeType === DOCUMENT_NODE
                   ? finishedWork.documentElement
                   : finishedWork.ownerDocument.documentElement;
-              null !== finishedWork &&
-                "" === finishedWork.style.viewTransitionName &&
-                ((finishedWork.style.viewTransitionName = "none"),
-                finishedWork.animate(
-                  { opacity: [0, 0], pointerEvents: ["none", "none"] },
-                  {
-                    duration: 0,
-                    fill: "forwards",
-                    pseudoElement: "::view-transition-group(root)"
-                  }
-                ),
-                finishedWork.animate(
-                  { width: [0, 0], height: [0, 0] },
-                  {
-                    duration: 0,
-                    fill: "forwards",
-                    pseudoElement: "::view-transition"
-                  }
-                ));
+              finishedWork.nodeType === COMMENT_NODE
+                ? console.warn(
+                    "Cannot cancel root view transition on a comment node. All view transitions will be globally scoped."
+                  )
+                : null !== i &&
+                  "" === i.style.viewTransitionName &&
+                  ((i.style.viewTransitionName = "none"),
+                  i.animate(
+                    { opacity: [0, 0], pointerEvents: ["none", "none"] },
+                    {
+                      duration: 0,
+                      fill: "forwards",
+                      pseudoElement: "::view-transition-group(root)"
+                    }
+                  ),
+                  i.animate(
+                    { width: [0, 0], height: [0, 0] },
+                    {
+                      duration: 0,
+                      fill: "forwards",
+                      pseudoElement: "::view-transition"
+                    }
+                  ));
+              rootViewTransitionNameCanceled = !0;
             }
             viewTransitionCancelableChildren = null;
             break;
@@ -16546,6 +16551,7 @@ __DEV__ &&
           enableComponentPerformanceTrack &&
             (inHydratedSubtree = wasInHydratedSubtree);
           isViewTransitionEligible &&
+            rootViewTransitionNameCanceled &&
             restoreRootViewTransitionName(finishedRoot.containerInfo);
           if (
             flags & 2048 &&
@@ -24944,12 +24950,13 @@ __DEV__ &&
           : "HTML" === rootContainer.nodeName
             ? rootContainer.ownerDocument.body
             : rootContainer;
-      "root" === rootContainer.style.viewTransitionName &&
-        (rootContainer.style.viewTransitionName = "");
-      rootContainer = rootContainer.ownerDocument.documentElement;
-      null !== rootContainer &&
-        "none" === rootContainer.style.viewTransitionName &&
-        (rootContainer.style.viewTransitionName = "");
+      rootContainer.nodeType !== COMMENT_NODE &&
+        ("root" === rootContainer.style.viewTransitionName &&
+          (rootContainer.style.viewTransitionName = ""),
+        (rootContainer = rootContainer.ownerDocument.documentElement),
+        null !== rootContainer &&
+          "none" === rootContainer.style.viewTransitionName &&
+          (rootContainer.style.viewTransitionName = ""));
     }
     function createMeasurement(rect, computedStyle, element) {
       element = element.ownerDocument.defaultView;
@@ -30017,6 +30024,7 @@ __DEV__ &&
       viewTransitionContextChanged = !1,
       inUpdateViewTransition = !1,
       rootViewTransitionAffected = !1,
+      rootViewTransitionNameCanceled = !1,
       hostParent = null,
       hostParentIsContainer = !1,
       currentHoistableRoot = null,
@@ -31233,11 +31241,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-23884812-20250520" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-3710c4d4-20250521" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-23884812-20250520\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-3710c4d4-20250521\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31280,10 +31288,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-23884812-20250520",
+          version: "19.2.0-www-modern-3710c4d4-20250521",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-23884812-20250520"
+          reconcilerVersion: "19.2.0-www-modern-3710c4d4-20250521"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -31883,7 +31891,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-23884812-20250520";
+    exports.version = "19.2.0-www-modern-3710c4d4-20250521";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

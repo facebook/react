@@ -9767,7 +9767,7 @@ module.exports = function ($$$config) {
     else
       switch (finishedWork.tag) {
         case 3:
-          viewTransitionContextChanged = !1;
+          rootViewTransitionNameCanceled = viewTransitionContextChanged = !1;
           pushViewTransitionCancelableScope();
           recursivelyTraverseAfterMutationEffects(root, finishedWork);
           if (!viewTransitionContextChanged && !rootViewTransitionAffected) {
@@ -9780,6 +9780,7 @@ module.exports = function ($$$config) {
                   finishedWork[i + 2]
                 );
             cancelRootViewTransitionName(root.containerInfo);
+            rootViewTransitionNameCanceled = !0;
           }
           viewTransitionCancelableChildren = null;
           break;
@@ -10184,6 +10185,7 @@ module.exports = function ($$$config) {
         );
         isViewTransitionEligible &&
           supportsMutation &&
+          rootViewTransitionNameCanceled &&
           restoreRootViewTransitionName(finishedRoot.containerInfo);
         if (
           flags & 2048 &&
@@ -13676,6 +13678,7 @@ module.exports = function ($$$config) {
     viewTransitionContextChanged = !1,
     inUpdateViewTransition = !1,
     rootViewTransitionAffected = !1,
+    rootViewTransitionNameCanceled = !1,
     hostParent = null,
     hostParentIsContainer = !1,
     currentHoistableRoot = null,
@@ -14101,7 +14104,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-23884812-20250520"
+      reconcilerVersion: "19.2.0-www-classic-3710c4d4-20250521"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

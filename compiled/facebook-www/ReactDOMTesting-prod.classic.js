@@ -9694,7 +9694,8 @@ var offscreenSubtreeIsHidden = !1,
   shouldFireAfterActiveInstanceBlur = !1,
   viewTransitionContextChanged = !1,
   inUpdateViewTransition = !1,
-  rootViewTransitionAffected = !1;
+  rootViewTransitionAffected = !1,
+  rootViewTransitionNameCanceled = !1;
 function commitBeforeMutationEffects(root, firstChild, committedLanes) {
   root = root.containerInfo;
   eventsEnabled = _enabled;
@@ -11187,7 +11188,7 @@ function commitAfterMutationEffectsOnFiber(finishedWork, root) {
   else
     switch (finishedWork.tag) {
       case 3:
-        viewTransitionContextChanged = !1;
+        rootViewTransitionNameCanceled = viewTransitionContextChanged = !1;
         pushViewTransitionCancelableScope();
         recursivelyTraverseAfterMutationEffects(root, finishedWork);
         if (!viewTransitionContextChanged && !rootViewTransitionAffected) {
@@ -11209,14 +11210,15 @@ function commitAfterMutationEffectsOnFiber(finishedWork, root) {
                 );
             }
           finishedWork = root.containerInfo;
-          finishedWork =
+          i =
             9 === finishedWork.nodeType
               ? finishedWork.documentElement
               : finishedWork.ownerDocument.documentElement;
-          null !== finishedWork &&
-            "" === finishedWork.style.viewTransitionName &&
-            ((finishedWork.style.viewTransitionName = "none"),
-            finishedWork.animate(
+          8 !== finishedWork.nodeType &&
+            null !== i &&
+            "" === i.style.viewTransitionName &&
+            ((i.style.viewTransitionName = "none"),
+            i.animate(
               { opacity: [0, 0], pointerEvents: ["none", "none"] },
               {
                 duration: 0,
@@ -11224,7 +11226,7 @@ function commitAfterMutationEffectsOnFiber(finishedWork, root) {
                 pseudoElement: "::view-transition-group(root)"
               }
             ),
-            finishedWork.animate(
+            i.animate(
               { width: [0, 0], height: [0, 0] },
               {
                 duration: 0,
@@ -11232,6 +11234,7 @@ function commitAfterMutationEffectsOnFiber(finishedWork, root) {
                 pseudoElement: "::view-transition"
               }
             ));
+          rootViewTransitionNameCanceled = !0;
         }
         viewTransitionCancelableChildren = null;
         break;
@@ -11627,6 +11630,7 @@ function commitPassiveMountOnFiber(
         committedTransitions
       );
       isViewTransitionEligible &&
+        rootViewTransitionNameCanceled &&
         restoreRootViewTransitionName(finishedRoot.containerInfo);
       if (
         flags & 2048 &&
@@ -17515,12 +17519,13 @@ function restoreRootViewTransitionName(rootContainer) {
       : "HTML" === rootContainer.nodeName
         ? rootContainer.ownerDocument.body
         : rootContainer;
-  "root" === rootContainer.style.viewTransitionName &&
-    (rootContainer.style.viewTransitionName = "");
-  rootContainer = rootContainer.ownerDocument.documentElement;
-  null !== rootContainer &&
-    "none" === rootContainer.style.viewTransitionName &&
-    (rootContainer.style.viewTransitionName = "");
+  8 !== rootContainer.nodeType &&
+    ("root" === rootContainer.style.viewTransitionName &&
+      (rootContainer.style.viewTransitionName = ""),
+    (rootContainer = rootContainer.ownerDocument.documentElement),
+    null !== rootContainer &&
+      "none" === rootContainer.style.viewTransitionName &&
+      (rootContainer.style.viewTransitionName = ""));
 }
 function createMeasurement(rect, computedStyle, element) {
   element = element.ownerDocument.defaultView;
@@ -19880,14 +19885,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2112 = React.version;
 if (
-  "19.2.0-www-classic-23884812-20250520" !==
+  "19.2.0-www-classic-3710c4d4-20250521" !==
   isomorphicReactPackageVersion$jscomp$inline_2112
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2112,
-      "19.2.0-www-classic-23884812-20250520"
+      "19.2.0-www-classic-3710c4d4-20250521"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19905,10 +19910,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2730 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-23884812-20250520",
+  version: "19.2.0-www-classic-3710c4d4-20250521",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-23884812-20250520"
+  reconcilerVersion: "19.2.0-www-classic-3710c4d4-20250521"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2731 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20471,4 +20476,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-23884812-20250520";
+exports.version = "19.2.0-www-classic-3710c4d4-20250521";
