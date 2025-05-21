@@ -5683,23 +5683,28 @@ function finishedTask(request, boundary, row, segment) {
               queueCompletedSegment(boundary, segment),
             boundary.parentFlushed &&
               request.completedBoundaries.push(boundary),
-            1 === boundary.status &&
-              ((row = boundary.row),
-              null !== row &&
-                hoistHoistables(row.hoistables, boundary.contentState),
-              500 < boundary.byteSize ||
-                (boundary.fallbackAbortableTasks.forEach(
-                  abortTaskSoft,
-                  request
-                ),
-                boundary.fallbackAbortableTasks.clear(),
+            1 === boundary.status
+              ? ((row = boundary.row),
                 null !== row &&
-                  0 === --row.pendingTasks &&
-                  finishSuspenseListRow(request, row)),
-              0 === request.pendingRootTasks &&
-                null === request.trackedPostpones &&
-                null !== boundary.contentPreamble &&
-                preparePreamble(request)))
+                  hoistHoistables(row.hoistables, boundary.contentState),
+                500 < boundary.byteSize ||
+                  (boundary.fallbackAbortableTasks.forEach(
+                    abortTaskSoft,
+                    request
+                  ),
+                  boundary.fallbackAbortableTasks.clear(),
+                  null !== row &&
+                    0 === --row.pendingTasks &&
+                    finishSuspenseListRow(request, row)),
+                0 === request.pendingRootTasks &&
+                  null === request.trackedPostpones &&
+                  null !== boundary.contentPreamble &&
+                  preparePreamble(request))
+              : 5 === boundary.status &&
+                ((boundary = boundary.row),
+                null !== boundary &&
+                  0 === --boundary.pendingTasks &&
+                  finishSuspenseListRow(request, boundary)))
           : (null !== segment &&
               segment.parentFlushed &&
               1 === segment.status &&
@@ -6261,12 +6266,12 @@ function flushCompletedQueues(request, destination) {
       completedBoundaries.splice(0, i);
       var partialBoundaries = request.partialBoundaries;
       for (i = 0; i < partialBoundaries.length; i++) {
-        var boundary$67 = partialBoundaries[i];
+        var boundary$68 = partialBoundaries[i];
         a: {
           clientRenderedBoundaries = request;
           boundary = destination;
-          flushedByteSize = boundary$67.byteSize;
-          var completedSegments = boundary$67.completedSegments;
+          flushedByteSize = boundary$68.byteSize;
+          var completedSegments = boundary$68.completedSegments;
           for (
             JSCompiler_inline_result = 0;
             JSCompiler_inline_result < completedSegments.length;
@@ -6276,7 +6281,7 @@ function flushCompletedQueues(request, destination) {
               !flushPartiallyCompletedSegment(
                 clientRenderedBoundaries,
                 boundary,
-                boundary$67,
+                boundary$68,
                 completedSegments[JSCompiler_inline_result]
               )
             ) {
@@ -6286,10 +6291,10 @@ function flushCompletedQueues(request, destination) {
               break a;
             }
           completedSegments.splice(0, JSCompiler_inline_result);
-          var row = boundary$67.row;
+          var row = boundary$68.row;
           null !== row &&
             row.together &&
-            1 === boundary$67.pendingTasks &&
+            1 === boundary$68.pendingTasks &&
             (1 === row.pendingTasks
               ? unblockSuspenseListRow(
                   clientRenderedBoundaries,
@@ -6299,7 +6304,7 @@ function flushCompletedQueues(request, destination) {
               : row.pendingTasks--);
           JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
             boundary,
-            boundary$67.contentState,
+            boundary$68.contentState,
             clientRenderedBoundaries.renderState
           );
         }
@@ -6361,8 +6366,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$69) {
-    logRecoverableError(request, error$69, {}), fatalError(request, error$69);
+  } catch (error$70) {
+    logRecoverableError(request, error$70, {}), fatalError(request, error$70);
   }
 }
 exports.abortStream = function (stream, reason) {

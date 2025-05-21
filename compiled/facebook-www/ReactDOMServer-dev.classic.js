@@ -7381,23 +7381,28 @@ __DEV__ &&
                   queueCompletedSegment(boundary, segment),
                 boundary.parentFlushed &&
                   request.completedBoundaries.push(boundary),
-                boundary.status === COMPLETED &&
-                  ((row = boundary.row),
-                  null !== row &&
-                    hoistHoistables(row.hoistables, boundary.contentState),
-                  500 < boundary.byteSize ||
-                    (boundary.fallbackAbortableTasks.forEach(
-                      abortTaskSoft,
-                      request
-                    ),
-                    boundary.fallbackAbortableTasks.clear(),
+                boundary.status === COMPLETED
+                  ? ((row = boundary.row),
                     null !== row &&
-                      0 === --row.pendingTasks &&
-                      finishSuspenseListRow(request, row)),
-                  0 === request.pendingRootTasks &&
-                    null === request.trackedPostpones &&
-                    null !== boundary.contentPreamble &&
-                    preparePreamble(request)))
+                      hoistHoistables(row.hoistables, boundary.contentState),
+                    500 < boundary.byteSize ||
+                      (boundary.fallbackAbortableTasks.forEach(
+                        abortTaskSoft,
+                        request
+                      ),
+                      boundary.fallbackAbortableTasks.clear(),
+                      null !== row &&
+                        0 === --row.pendingTasks &&
+                        finishSuspenseListRow(request, row)),
+                    0 === request.pendingRootTasks &&
+                      null === request.trackedPostpones &&
+                      null !== boundary.contentPreamble &&
+                      preparePreamble(request))
+                  : boundary.status === POSTPONED &&
+                    ((boundary = boundary.row),
+                    null !== boundary &&
+                      0 === --boundary.pendingTasks &&
+                      finishSuspenseListRow(request, boundary)))
               : (null !== segment &&
                   segment.parentFlushed &&
                   segment.status === COMPLETED &&
@@ -10041,5 +10046,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-3710c4d4-20250521";
+    exports.version = "19.2.0-www-classic-f4041aa3-20250521";
   })();

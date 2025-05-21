@@ -7127,23 +7127,28 @@ __DEV__ &&
                   queueCompletedSegment(boundary, segment),
                 boundary.parentFlushed &&
                   request.completedBoundaries.push(boundary),
-                1 === boundary.status &&
-                  ((row = boundary.row),
-                  null !== row &&
-                    hoistHoistables(row.hoistables, boundary.contentState),
-                  500 < boundary.byteSize ||
-                    (boundary.fallbackAbortableTasks.forEach(
-                      abortTaskSoft,
-                      request
-                    ),
-                    boundary.fallbackAbortableTasks.clear(),
+                1 === boundary.status
+                  ? ((row = boundary.row),
                     null !== row &&
-                      0 === --row.pendingTasks &&
-                      finishSuspenseListRow(request, row)),
-                  0 === request.pendingRootTasks &&
-                    null === request.trackedPostpones &&
-                    null !== boundary.contentPreamble &&
-                    preparePreamble(request)))
+                      hoistHoistables(row.hoistables, boundary.contentState),
+                    500 < boundary.byteSize ||
+                      (boundary.fallbackAbortableTasks.forEach(
+                        abortTaskSoft,
+                        request
+                      ),
+                      boundary.fallbackAbortableTasks.clear(),
+                      null !== row &&
+                        0 === --row.pendingTasks &&
+                        finishSuspenseListRow(request, row)),
+                    0 === request.pendingRootTasks &&
+                      null === request.trackedPostpones &&
+                      null !== boundary.contentPreamble &&
+                      preparePreamble(request))
+                  : 5 === boundary.status &&
+                    ((boundary = boundary.row),
+                    null !== boundary &&
+                      0 === --boundary.pendingTasks &&
+                      finishSuspenseListRow(request, boundary)))
               : (null !== segment &&
                   segment.parentFlushed &&
                   1 === segment.status &&
