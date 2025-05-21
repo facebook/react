@@ -4938,6 +4938,13 @@ function finishedTask(
           // preparation work during the work phase rather than the when flushing.
           preparePreamble(request);
         }
+      } else if (boundary.status === POSTPONED) {
+        const boundaryRow = boundary.row;
+        if (boundaryRow !== null) {
+          if (--boundaryRow.pendingTasks === 0) {
+            finishSuspenseListRow(request, boundaryRow);
+          }
+        }
       }
     } else {
       if (segment !== null && segment.parentFlushed) {
