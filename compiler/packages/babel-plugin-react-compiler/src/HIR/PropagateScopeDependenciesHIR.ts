@@ -316,6 +316,7 @@ function collectTemporariesSidemapImpl(
         ) {
           temporaries.set(lvalue.identifier.id, {
             identifier: value.place.identifier,
+            reactive: value.place.reactive,
             path: [],
           });
         }
@@ -369,11 +370,13 @@ function getProperty(
   if (resolvedDependency == null) {
     property = {
       identifier: object.identifier,
+      reactive: object.reactive,
       path: [{property: propertyName, optional}],
     };
   } else {
     property = {
       identifier: resolvedDependency.identifier,
+      reactive: resolvedDependency.reactive,
       path: [...resolvedDependency.path, {property: propertyName, optional}],
     };
   }
@@ -532,6 +535,7 @@ export class DependencyCollectionContext {
     this.visitDependency(
       this.#temporaries.get(place.identifier.id) ?? {
         identifier: place.identifier,
+        reactive: place.reactive,
         path: [],
       },
     );
@@ -596,6 +600,7 @@ export class DependencyCollectionContext {
     ) {
       maybeDependency = {
         identifier: maybeDependency.identifier,
+        reactive: maybeDependency.reactive,
         path: [],
       };
     }
@@ -617,7 +622,11 @@ export class DependencyCollectionContext {
         identifier =>
           identifier.declarationId === place.identifier.declarationId,
       ) &&
-      this.#checkValidDependency({identifier: place.identifier, path: []})
+      this.#checkValidDependency({
+        identifier: place.identifier,
+        reactive: place.reactive,
+        path: [],
+      })
     ) {
       currentScope.reassignments.add(place.identifier);
     }
