@@ -26,7 +26,6 @@ let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
-let ReactServerScheduler;
 let serverAct;
 
 // We test pass-through without encoding strings but it should work without it too.
@@ -38,8 +37,7 @@ describe('ReactFlightDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactServerScheduler = require('scheduler');
-    patchSetImmediate(ReactServerScheduler);
+    patchSetImmediate();
     serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution

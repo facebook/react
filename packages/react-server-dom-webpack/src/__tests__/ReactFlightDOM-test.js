@@ -38,7 +38,6 @@ let ReactDOMStaticServer;
 let Suspense;
 let ErrorBoundary;
 let JSDOM;
-let ReactServerScheduler;
 let assertConsoleErrorDev;
 
 describe('ReactFlightDOM', () => {
@@ -50,8 +49,7 @@ describe('ReactFlightDOM', () => {
 
     JSDOM = require('jsdom').JSDOM;
 
-    ReactServerScheduler = require('scheduler');
-    patchSetImmediate(ReactServerScheduler);
+    patchSetImmediate();
     serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution

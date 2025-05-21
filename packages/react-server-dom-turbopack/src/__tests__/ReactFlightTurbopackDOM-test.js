@@ -29,7 +29,6 @@ let ReactDOMClient;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Suspense;
-let ReactServerScheduler;
 let ErrorBoundary;
 
 describe('ReactFlightTurbopackDOM', () => {
@@ -39,8 +38,7 @@ describe('ReactFlightTurbopackDOM', () => {
     // condition
     jest.resetModules();
 
-    ReactServerScheduler = require('scheduler');
-    patchSetImmediate(ReactServerScheduler);
+    patchSetImmediate();
     serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution

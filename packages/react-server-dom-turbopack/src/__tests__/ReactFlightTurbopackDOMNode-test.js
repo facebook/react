@@ -21,15 +21,13 @@ let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
-let ReactServerScheduler;
 let serverAct;
 
 describe('ReactFlightTurbopackDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactServerScheduler = require('scheduler');
-    patchSetImmediate(ReactServerScheduler);
+    patchSetImmediate();
     serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
