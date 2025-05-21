@@ -36,7 +36,6 @@ let Suspense;
 let use;
 let ReactServer;
 let ReactServerDOM;
-let Scheduler;
 let ReactServerScheduler;
 let assertConsoleErrorDev;
 
@@ -73,8 +72,7 @@ describe('ReactFlightDOMBrowser', () => {
     __unmockReact();
     jest.resetModules();
 
-    Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
+    patchMessageChannel();
 
     ({act, assertConsoleErrorDev} = require('internal-test-utils'));
     React = require('react');

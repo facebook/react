@@ -19,15 +19,13 @@ global.TextEncoder = require('util').TextEncoder;
 let React;
 let ReactDOMFizzServer;
 let Suspense;
-let Scheduler;
 let serverAct;
 
 describe('ReactDOMFizzServerBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
+    patchMessageChannel();
     serverAct = require('internal-test-utils').serverAct;
 
     React = require('react');

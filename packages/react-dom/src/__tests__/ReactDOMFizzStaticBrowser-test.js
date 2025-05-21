@@ -30,7 +30,6 @@ let ReactDOMFizzServer;
 let ReactDOMFizzStatic;
 let Suspense;
 let container;
-let Scheduler;
 let serverAct;
 
 describe('ReactDOMFizzStaticBrowser', () => {
@@ -41,8 +40,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     // We need the mocked version of setTimeout inside the document.
     window.setTimeout = setTimeout;
 
-    Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
+    patchMessageChannel();
     serverAct = require('internal-test-utils').serverAct;
 
     React = require('react');

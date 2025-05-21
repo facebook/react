@@ -36,7 +36,7 @@ describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
     jest.resetModules();
     Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
+    patchMessageChannel();
     act = require('internal-test-utils').act;
     serverAct = require('internal-test-utils').serverAct;
     React = require('react');

@@ -28,7 +28,7 @@ describe('ReactClassComponentPropResolutionFizz', () => {
   beforeEach(() => {
     jest.resetModules();
     Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
+    patchMessageChannel();
 
     React = require('react');
     ReactDOMServer = require('react-dom/server.browser');

@@ -26,14 +26,12 @@ let ReactDOMClient;
 let useFormStatus;
 let useOptimistic;
 let useActionState;
-let Scheduler;
 let assertConsoleErrorDev;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
     jest.resetModules();
-    Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
+    patchMessageChannel();
     React = require('react');
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');

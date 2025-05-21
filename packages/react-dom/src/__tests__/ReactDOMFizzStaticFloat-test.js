@@ -27,15 +27,13 @@ let ReactDOMFizzServer;
 let ReactDOMFizzStatic;
 let Suspense;
 let container;
-let Scheduler;
 let act;
 let serverAct;
 
 describe('ReactDOMFizzStaticFloat', () => {
   beforeEach(() => {
     jest.resetModules();
-    Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
+    patchMessageChannel();
     act = require('internal-test-utils').act;
     serverAct = require('internal-test-utils').serverAct;
 
