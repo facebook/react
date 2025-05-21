@@ -2281,17 +2281,19 @@ describe('ReactDOMFizzStaticBrowser', () => {
     }
 
     const controller = new AbortController();
-    let pendingResult;
-    await serverAct(async () => {
-      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+    const pendingResult = serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />, {
         signal: controller.signal,
         onError(x) {
           errors.push(x.message);
         },
-      });
+      }),
+    );
+
+    await serverAct(() => {
+      controller.abort();
     });
 
-    controller.abort();
     const prerendered = await pendingResult;
     const postponedState = JSON.stringify(prerendered.postponed);
 
