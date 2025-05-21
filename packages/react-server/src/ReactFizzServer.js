@@ -1783,6 +1783,8 @@ function renderSuspenseListRows(
 ): void {
   // This is a fork of renderChildrenArray that's aware of tracking rows.
   const prevKeyPath = task.keyPath;
+  const prevTreeContext = task.treeContext;
+  const prevRow = task.row;
   const previousComponentStack = task.componentStack;
   let previousDebugTask = null;
   if (__DEV__) {
@@ -1792,10 +1794,9 @@ function renderSuspenseListRows(
     pushServerComponentStack(task, (task.node: any).props.children._debugInfo);
   }
 
-  const prevTreeContext = task.treeContext;
-  const prevRow = task.row;
-  const totalChildren = rows.length;
+  task.keyPath = keyPath;
 
+  const totalChildren = rows.length;
   let previousSuspenseListRow: null | SuspenseListRow = null;
   if (task.replay !== null) {
     // Replay
