@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<098234c41032e412e98ac45ac7314757>>
+ * @generated SignedSource<<d79bb3946f518083eac300f03ed304e3>>
  */
 
 "use strict";
@@ -8198,6 +8198,41 @@ function commitHostMount(finishedWork) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
 }
+function commitImmutablePlacementNodeToFragmentInstances(
+  finishedWork,
+  parentFragmentInstances
+) {
+  if (enableFragmentRefs)
+    if (5 === finishedWork.tag) {
+      if (
+        5 === finishedWork.tag &&
+        null === finishedWork.alternate &&
+        null !== parentFragmentInstances
+      )
+        for (var i = 0; i < parentFragmentInstances.length; i++)
+          commitNewChildToFragmentInstance(
+            finishedWork.stateNode,
+            parentFragmentInstances[i]
+          );
+    } else if (
+      4 !== finishedWork.tag &&
+      ((finishedWork = finishedWork.child), null !== finishedWork)
+    )
+      for (
+        commitImmutablePlacementNodeToFragmentInstances(
+          finishedWork,
+          parentFragmentInstances
+        ),
+          finishedWork = finishedWork.sibling;
+        null !== finishedWork;
+
+      )
+        commitImmutablePlacementNodeToFragmentInstances(
+          finishedWork,
+          parentFragmentInstances
+        ),
+          (finishedWork = finishedWork.sibling);
+}
 function commitHostPortalContainerChildren(
   portal,
   finishedWork,
@@ -8778,7 +8813,42 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
 }
 function commitReconciliationEffects(finishedWork) {
   var flags = finishedWork.flags;
-  flags & 2 && (finishedWork.flags &= -3);
+  if (flags & 2) {
+    try {
+      for (
+        var parentFragmentInstances = null, parentFiber = finishedWork.return;
+        null !== parentFiber;
+
+      ) {
+        if (
+          enableFragmentRefs &&
+          parentFiber &&
+          7 === parentFiber.tag &&
+          null !== parentFiber.stateNode
+        ) {
+          var fragmentInstance = parentFiber.stateNode;
+          null === parentFragmentInstances
+            ? (parentFragmentInstances = [fragmentInstance])
+            : parentFragmentInstances.push(fragmentInstance);
+        }
+        if (
+          5 === parentFiber.tag ||
+          3 === parentFiber.tag ||
+          4 === parentFiber.tag
+        )
+          break;
+        parentFiber = parentFiber.return;
+      }
+      enableFragmentRefs &&
+        commitImmutablePlacementNodeToFragmentInstances(
+          finishedWork,
+          parentFragmentInstances
+        );
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
+    }
+    finishedWork.flags &= -3;
+  }
   flags & 4096 && (finishedWork.flags &= -4097);
 }
 function recursivelyTraverseLayoutEffects(root, parentFiber) {
@@ -11112,11 +11182,15 @@ function unobserveChild(child, observer) {
   observer.unobserve(child);
   return !1;
 }
-function commitNewChildToFragmentInstance(child, fragmentInstance) {
-  null !== fragmentInstance._observers &&
+function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
+  var publicInstance = getPublicInstance(childInstance);
+  if (null !== fragmentInstance._observers) {
+    if (null == publicInstance)
+      throw Error("Expected to find a host node. This is a bug in React.");
     fragmentInstance._observers.forEach(function (observer) {
-      observeChild(child, observer);
+      observer.observe(publicInstance);
     });
+  }
 }
 var HostTransitionContext = {
     $$typeof: REACT_CONTEXT_TYPE,
@@ -11201,26 +11275,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1257 = {
+  internals$jscomp$inline_1262 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-4c6967be-20250520",
+    version: "19.2.0-native-fb-1835b3f7-20250521",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-4c6967be-20250520"
+    reconcilerVersion: "19.2.0-native-fb-1835b3f7-20250521"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1257.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1262.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1576 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1585 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1576.isDisabled &&
-    hook$jscomp$inline_1576.supportsFiber
+    !hook$jscomp$inline_1585.isDisabled &&
+    hook$jscomp$inline_1585.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1576.inject(
-        internals$jscomp$inline_1257
+      (rendererID = hook$jscomp$inline_1585.inject(
+        internals$jscomp$inline_1262
       )),
-        (injectedHook = hook$jscomp$inline_1576);
+        (injectedHook = hook$jscomp$inline_1585);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
