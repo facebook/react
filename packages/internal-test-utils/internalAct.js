@@ -138,6 +138,7 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
           // those will also fire now, too, which is not ideal. (The public
           // version of `act` doesn't do this.) For this reason, we should try
           // to avoid using timers in our internal tests.
+          j.runAllTicks();
           j.runOnlyPendingTimers();
           // If a committing a fallback triggers another update, it might not
           // get scheduled until a microtask. So wait one more time.
@@ -216,6 +217,7 @@ async function waitForTasksAndTimers(error: Error) {
       // those will also fire now, too, which is not ideal. (The public
       // version of `act` doesn't do this.) For this reason, we should try
       // to avoid using timers in our internal tests.
+      j.runAllTicks();
       j.runOnlyPendingTimers();
       // If a committing a fallback triggers another update, it might not
       // get scheduled until a microtask. So wait one more time.
