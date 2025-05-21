@@ -19,6 +19,7 @@ global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
 let act;
+let serverAct;
 let use;
 let clientExports;
 let clientExportsESM;
@@ -37,8 +38,6 @@ let ReactDOMStaticServer;
 let Suspense;
 let ErrorBoundary;
 let JSDOM;
-let ReactServerScheduler;
-let reactServerAct;
 let assertConsoleErrorDev;
 
 describe('ReactFlightDOM', () => {
@@ -50,9 +49,8 @@ describe('ReactFlightDOM', () => {
 
     JSDOM = require('jsdom').JSDOM;
 
-    ReactServerScheduler = require('scheduler');
-    patchSetImmediate(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    patchSetImmediate();
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -110,17 +108,6 @@ describe('ReactFlightDOM', () => {
       }
     };
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   async function readInto(
     container: Document | HTMLElement,
