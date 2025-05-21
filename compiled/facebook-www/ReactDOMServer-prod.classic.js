@@ -2906,16 +2906,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     ));
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1825 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1827 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1838 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1839 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1840 = new Set(),
-    JSCompiler_object_inline_styles_1841 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1842 = new Set(),
-    JSCompiler_object_inline_scripts_1843 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1844 = new Set(),
-    JSCompiler_object_inline_preloads_1845 = {
+  var JSCompiler_object_inline_preconnects_1840 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1841 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1842 = new Set(),
+    JSCompiler_object_inline_styles_1843 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1844 = new Set(),
+    JSCompiler_object_inline_scripts_1845 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1846 = new Set(),
+    JSCompiler_object_inline_preloads_1847 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2952,7 +2952,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1842.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1844.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src), '"');
       "string" === typeof integrity &&
         bootstrapChunks.push(
@@ -2999,7 +2999,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1842.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1844.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i),
@@ -3021,7 +3021,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push(' async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1825,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1827,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script",
     preamble: { htmlChunks: null, headChunks: null, bodyChunks: null },
@@ -3040,14 +3040,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1838,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1839,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1840,
-    styles: JSCompiler_object_inline_styles_1841,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1842,
-    scripts: JSCompiler_object_inline_scripts_1843,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1844,
-    preloads: JSCompiler_object_inline_preloads_1845,
+    preconnects: JSCompiler_object_inline_preconnects_1840,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1841,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1842,
+    styles: JSCompiler_object_inline_styles_1843,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1844,
+    scripts: JSCompiler_object_inline_scripts_1845,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1846,
+    preloads: JSCompiler_object_inline_preloads_1847,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
   };
@@ -5654,10 +5654,6 @@ function abortTask(task, request, error) {
     if (6 === segment.status) return;
     segment.status = 3;
   }
-  segment = task.row;
-  null !== segment &&
-    0 === --segment.pendingTasks &&
-    finishSuspenseListRow(request, segment);
   segment = getThrownInfo(task.componentStack);
   if (null === boundary) {
     if (13 !== request.status && 14 !== request.status) {
@@ -5670,32 +5666,40 @@ function abortTask(task, request, error) {
       boundary.pendingTasks--;
       0 === boundary.pendingTasks &&
         0 < boundary.nodes.length &&
-        ((task = logRecoverableError(request, error, segment)),
+        ((segment = logRecoverableError(request, error, segment)),
         abortRemainingReplayNodes(
           request,
           null,
           boundary.nodes,
           boundary.slots,
           error,
-          task
+          segment
         ));
       request.pendingRootTasks--;
       0 === request.pendingRootTasks && completeShell(request);
     }
   } else
-    boundary.pendingTasks--,
-      4 !== boundary.status &&
-        ((boundary.status = 4),
-        (task = logRecoverableError(request, error, segment)),
-        (boundary.status = 4),
-        (boundary.errorDigest = task),
-        untrackBoundary(request, boundary),
-        boundary.parentFlushed &&
-          request.clientRenderedBoundaries.push(boundary)),
+    4 !== boundary.status &&
+      ((boundary.status = 4),
+      (segment = logRecoverableError(request, error, segment)),
+      (boundary.status = 4),
+      (boundary.errorDigest = segment),
+      untrackBoundary(request, boundary),
+      boundary.parentFlushed &&
+        request.clientRenderedBoundaries.push(boundary)),
+      boundary.pendingTasks--,
+      (segment = boundary.row),
+      null !== segment &&
+        0 === --segment.pendingTasks &&
+        finishSuspenseListRow(request, segment),
       boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
         return abortTask(fallbackTask, request, error);
       }),
       boundary.fallbackAbortableTasks.clear();
+  task = task.row;
+  null !== task &&
+    0 === --task.pendingTasks &&
+    finishSuspenseListRow(request, task);
   request.allPendingTasks--;
   0 === request.allPendingTasks && completeAll(request);
 }
@@ -6001,19 +6005,25 @@ function performWork(request$jscomp$2) {
                 x$jscomp$0,
                 errorInfo$jscomp$0
               );
-              null === boundary$jscomp$0
-                ? fatalError(request, x$jscomp$0)
-                : (boundary$jscomp$0.pendingTasks--,
-                  4 !== boundary$jscomp$0.status &&
-                    ((boundary$jscomp$0.status = 4),
-                    (boundary$jscomp$0.errorDigest = request$jscomp$0),
-                    untrackBoundary(request, boundary$jscomp$0),
-                    boundary$jscomp$0.parentFlushed &&
-                      request.clientRenderedBoundaries.push(boundary$jscomp$0),
-                    0 === request.pendingRootTasks &&
-                      null === request.trackedPostpones &&
-                      null !== boundary$jscomp$0.contentPreamble &&
-                      preparePreamble(request)));
+              if (null === boundary$jscomp$0) fatalError(request, x$jscomp$0);
+              else if (
+                (boundary$jscomp$0.pendingTasks--,
+                4 !== boundary$jscomp$0.status)
+              ) {
+                boundary$jscomp$0.status = 4;
+                boundary$jscomp$0.errorDigest = request$jscomp$0;
+                untrackBoundary(request, boundary$jscomp$0);
+                var boundaryRow = boundary$jscomp$0.row;
+                null !== boundaryRow &&
+                  0 === --boundaryRow.pendingTasks &&
+                  finishSuspenseListRow(request, boundaryRow);
+                boundary$jscomp$0.parentFlushed &&
+                  request.clientRenderedBoundaries.push(boundary$jscomp$0);
+                0 === request.pendingRootTasks &&
+                  null === request.trackedPostpones &&
+                  null !== boundary$jscomp$0.contentPreamble &&
+                  preparePreamble(request);
+              }
               0 === request.allPendingTasks && completeAll(request);
             }
           } finally {
@@ -6774,4 +6784,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.2.0-www-classic-50389e17-20250520";
+exports.version = "19.2.0-www-classic-9c7b10e2-20250520";

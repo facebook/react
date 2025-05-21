@@ -5517,10 +5517,6 @@ function abortTask(task, request, error) {
     if (6 === segment.status) return;
     segment.status = 3;
   }
-  segment = task.row;
-  null !== segment &&
-    0 === --segment.pendingTasks &&
-    finishSuspenseListRow(request, segment);
   segment = getThrownInfo(task.componentStack);
   if (null === boundary) {
     if (13 !== request.status && 14 !== request.status) {
@@ -5533,32 +5529,40 @@ function abortTask(task, request, error) {
       boundary.pendingTasks--;
       0 === boundary.pendingTasks &&
         0 < boundary.nodes.length &&
-        ((task = logRecoverableError(request, error, segment)),
+        ((segment = logRecoverableError(request, error, segment)),
         abortRemainingReplayNodes(
           request,
           null,
           boundary.nodes,
           boundary.slots,
           error,
-          task
+          segment
         ));
       request.pendingRootTasks--;
       0 === request.pendingRootTasks && completeShell(request);
     }
   } else
-    boundary.pendingTasks--,
-      4 !== boundary.status &&
-        ((boundary.status = 4),
-        (task = logRecoverableError(request, error, segment)),
-        (boundary.status = 4),
-        (boundary.errorDigest = task),
-        untrackBoundary(request, boundary),
-        boundary.parentFlushed &&
-          request.clientRenderedBoundaries.push(boundary)),
+    4 !== boundary.status &&
+      ((boundary.status = 4),
+      (segment = logRecoverableError(request, error, segment)),
+      (boundary.status = 4),
+      (boundary.errorDigest = segment),
+      untrackBoundary(request, boundary),
+      boundary.parentFlushed &&
+        request.clientRenderedBoundaries.push(boundary)),
+      boundary.pendingTasks--,
+      (segment = boundary.row),
+      null !== segment &&
+        0 === --segment.pendingTasks &&
+        finishSuspenseListRow(request, segment),
       boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
         return abortTask(fallbackTask, request, error);
       }),
       boundary.fallbackAbortableTasks.clear();
+  task = task.row;
+  null !== task &&
+    0 === --task.pendingTasks &&
+    finishSuspenseListRow(request, task);
   request.allPendingTasks--;
   0 === request.allPendingTasks && completeAll(request);
 }
@@ -6535,21 +6539,25 @@ exports.renderNextChunk = function (stream) {
                   x$jscomp$0,
                   errorInfo$jscomp$0
                 );
-                null === boundary$jscomp$0
-                  ? fatalError(request, x$jscomp$0)
-                  : (boundary$jscomp$0.pendingTasks--,
-                    4 !== boundary$jscomp$0.status &&
-                      ((boundary$jscomp$0.status = 4),
-                      (boundary$jscomp$0.errorDigest = errorDigest),
-                      untrackBoundary(request, boundary$jscomp$0),
-                      boundary$jscomp$0.parentFlushed &&
-                        request.clientRenderedBoundaries.push(
-                          boundary$jscomp$0
-                        ),
-                      0 === request.pendingRootTasks &&
-                        null === request.trackedPostpones &&
-                        null !== boundary$jscomp$0.contentPreamble &&
-                        preparePreamble(request)));
+                if (null === boundary$jscomp$0) fatalError(request, x$jscomp$0);
+                else if (
+                  (boundary$jscomp$0.pendingTasks--,
+                  4 !== boundary$jscomp$0.status)
+                ) {
+                  boundary$jscomp$0.status = 4;
+                  boundary$jscomp$0.errorDigest = errorDigest;
+                  untrackBoundary(request, boundary$jscomp$0);
+                  var boundaryRow = boundary$jscomp$0.row;
+                  null !== boundaryRow &&
+                    0 === --boundaryRow.pendingTasks &&
+                    finishSuspenseListRow(request, boundaryRow);
+                  boundary$jscomp$0.parentFlushed &&
+                    request.clientRenderedBoundaries.push(boundary$jscomp$0);
+                  0 === request.pendingRootTasks &&
+                    null === request.trackedPostpones &&
+                    null !== boundary$jscomp$0.contentPreamble &&
+                    preparePreamble(request);
+                }
                 0 === request.allPendingTasks && completeAll(request);
               }
             } finally {

@@ -6953,10 +6953,6 @@ __DEV__ &&
         if (6 === segment.status) return;
         segment.status = 3;
       }
-      segment = task.row;
-      null !== segment &&
-        0 === --segment.pendingTasks &&
-        finishSuspenseListRow(request, segment);
       segment = getThrownInfo(task.componentStack);
       if (null === boundary) {
         if (13 !== request.status && 14 !== request.status) {
@@ -6967,36 +6963,49 @@ __DEV__ &&
             return;
           }
           boundary.pendingTasks--;
-          0 === boundary.pendingTasks &&
-            0 < boundary.nodes.length &&
-            ((task = logRecoverableError(request, error, segment, null)),
+          if (0 === boundary.pendingTasks && 0 < boundary.nodes.length) {
+            var errorDigest = logRecoverableError(
+              request,
+              error,
+              segment,
+              null
+            );
             abortRemainingReplayNodes(
               request,
               null,
               boundary.nodes,
               boundary.slots,
               error,
-              task,
+              errorDigest,
               segment,
               !0
-            ));
+            );
+          }
           request.pendingRootTasks--;
           0 === request.pendingRootTasks && completeShell(request);
         }
       } else
-        boundary.pendingTasks--,
-          4 !== boundary.status &&
-            ((boundary.status = 4),
-            (task = logRecoverableError(request, error, segment, null)),
-            (boundary.status = 4),
-            encodeErrorForBoundary(boundary, task, error, segment, !0),
-            untrackBoundary(request, boundary),
-            boundary.parentFlushed &&
-              request.clientRenderedBoundaries.push(boundary)),
+        4 !== boundary.status &&
+          ((boundary.status = 4),
+          (errorDigest = logRecoverableError(request, error, segment, null)),
+          (boundary.status = 4),
+          encodeErrorForBoundary(boundary, errorDigest, error, segment, !0),
+          untrackBoundary(request, boundary),
+          boundary.parentFlushed &&
+            request.clientRenderedBoundaries.push(boundary)),
+          boundary.pendingTasks--,
+          (segment = boundary.row),
+          null !== segment &&
+            0 === --segment.pendingTasks &&
+            finishSuspenseListRow(request, segment),
           boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
             return abortTask(fallbackTask, request, error);
           }),
           boundary.fallbackAbortableTasks.clear();
+      task = task.row;
+      null !== task &&
+        0 === --task.pendingTasks &&
+        finishSuspenseListRow(request, task);
       request.allPendingTasks--;
       0 === request.allPendingTasks && completeAll(request);
     }
@@ -9486,32 +9495,39 @@ __DEV__ &&
                       errorInfo$jscomp$0,
                       debugTask
                     );
-                    null === boundary$jscomp$0
-                      ? fatalError(
-                          request$jscomp$0,
-                          x$jscomp$0,
-                          errorInfo$jscomp$0,
-                          debugTask
-                        )
-                      : (boundary$jscomp$0.pendingTasks--,
-                        4 !== boundary$jscomp$0.status &&
-                          ((boundary$jscomp$0.status = 4),
-                          encodeErrorForBoundary(
-                            boundary$jscomp$0,
-                            errorDigest,
-                            x$jscomp$0,
-                            errorInfo$jscomp$0,
-                            !1
-                          ),
-                          untrackBoundary(request$jscomp$0, boundary$jscomp$0),
-                          boundary$jscomp$0.parentFlushed &&
-                            request$jscomp$0.clientRenderedBoundaries.push(
-                              boundary$jscomp$0
-                            ),
-                          0 === request$jscomp$0.pendingRootTasks &&
-                            null === request$jscomp$0.trackedPostpones &&
-                            null !== boundary$jscomp$0.contentPreamble &&
-                            preparePreamble(request$jscomp$0)));
+                    if (null === boundary$jscomp$0)
+                      fatalError(
+                        request$jscomp$0,
+                        x$jscomp$0,
+                        errorInfo$jscomp$0,
+                        debugTask
+                      );
+                    else if (
+                      (boundary$jscomp$0.pendingTasks--,
+                      4 !== boundary$jscomp$0.status)
+                    ) {
+                      boundary$jscomp$0.status = 4;
+                      encodeErrorForBoundary(
+                        boundary$jscomp$0,
+                        errorDigest,
+                        x$jscomp$0,
+                        errorInfo$jscomp$0,
+                        !1
+                      );
+                      untrackBoundary(request$jscomp$0, boundary$jscomp$0);
+                      var boundaryRow = boundary$jscomp$0.row;
+                      null !== boundaryRow &&
+                        0 === --boundaryRow.pendingTasks &&
+                        finishSuspenseListRow(request$jscomp$0, boundaryRow);
+                      boundary$jscomp$0.parentFlushed &&
+                        request$jscomp$0.clientRenderedBoundaries.push(
+                          boundary$jscomp$0
+                        );
+                      0 === request$jscomp$0.pendingRootTasks &&
+                        null === request$jscomp$0.trackedPostpones &&
+                        null !== boundary$jscomp$0.contentPreamble &&
+                        preparePreamble(request$jscomp$0);
+                    }
                     0 === request$jscomp$0.allPendingTasks &&
                       completeAll(request$jscomp$0);
                   }

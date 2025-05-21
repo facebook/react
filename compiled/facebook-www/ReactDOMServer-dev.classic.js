@@ -7207,10 +7207,6 @@ __DEV__ &&
         if (6 === segment.status) return;
         segment.status = ABORTED;
       }
-      segment = task.row;
-      null !== segment &&
-        0 === --segment.pendingTasks &&
-        finishSuspenseListRow(request, segment);
       segment = getThrownInfo(task.componentStack);
       if (null === boundary) {
         if (13 !== request.status && request.status !== CLOSED) {
@@ -7221,36 +7217,49 @@ __DEV__ &&
             return;
           }
           boundary.pendingTasks--;
-          0 === boundary.pendingTasks &&
-            0 < boundary.nodes.length &&
-            ((task = logRecoverableError(request, error, segment, null)),
+          if (0 === boundary.pendingTasks && 0 < boundary.nodes.length) {
+            var errorDigest = logRecoverableError(
+              request,
+              error,
+              segment,
+              null
+            );
             abortRemainingReplayNodes(
               request,
               null,
               boundary.nodes,
               boundary.slots,
               error,
-              task,
+              errorDigest,
               segment,
               !0
-            ));
+            );
+          }
           request.pendingRootTasks--;
           0 === request.pendingRootTasks && completeShell(request);
         }
       } else
-        boundary.pendingTasks--,
-          boundary.status !== CLIENT_RENDERED &&
-            ((boundary.status = CLIENT_RENDERED),
-            (task = logRecoverableError(request, error, segment, null)),
-            (boundary.status = CLIENT_RENDERED),
-            encodeErrorForBoundary(boundary, task, error, segment, !0),
-            untrackBoundary(request, boundary),
-            boundary.parentFlushed &&
-              request.clientRenderedBoundaries.push(boundary)),
+        boundary.status !== CLIENT_RENDERED &&
+          ((boundary.status = CLIENT_RENDERED),
+          (errorDigest = logRecoverableError(request, error, segment, null)),
+          (boundary.status = CLIENT_RENDERED),
+          encodeErrorForBoundary(boundary, errorDigest, error, segment, !0),
+          untrackBoundary(request, boundary),
+          boundary.parentFlushed &&
+            request.clientRenderedBoundaries.push(boundary)),
+          boundary.pendingTasks--,
+          (segment = boundary.row),
+          null !== segment &&
+            0 === --segment.pendingTasks &&
+            finishSuspenseListRow(request, segment),
           boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
             return abortTask(fallbackTask, request, error);
           }),
           boundary.fallbackAbortableTasks.clear();
+      task = task.row;
+      null !== task &&
+        0 === --task.pendingTasks &&
+        finishSuspenseListRow(request, task);
       request.allPendingTasks--;
       0 === request.allPendingTasks && completeAll(request);
     }
@@ -7586,32 +7595,37 @@ __DEV__ &&
                     errorInfo$jscomp$1,
                     debugTask
                   );
-                  null === boundary$jscomp$0
-                    ? fatalError(
-                        request,
-                        x$jscomp$0,
-                        errorInfo$jscomp$1,
-                        debugTask
-                      )
-                    : (boundary$jscomp$0.pendingTasks--,
-                      boundary$jscomp$0.status !== CLIENT_RENDERED &&
-                        ((boundary$jscomp$0.status = CLIENT_RENDERED),
-                        encodeErrorForBoundary(
-                          boundary$jscomp$0,
-                          prevTaskInDEV,
-                          x$jscomp$0,
-                          errorInfo$jscomp$1,
-                          !1
-                        ),
-                        untrackBoundary(request, boundary$jscomp$0),
-                        boundary$jscomp$0.parentFlushed &&
-                          request.clientRenderedBoundaries.push(
-                            boundary$jscomp$0
-                          ),
-                        0 === request.pendingRootTasks &&
-                          null === request.trackedPostpones &&
-                          null !== boundary$jscomp$0.contentPreamble &&
-                          preparePreamble(request)));
+                  if (null === boundary$jscomp$0)
+                    fatalError(
+                      request,
+                      x$jscomp$0,
+                      errorInfo$jscomp$1,
+                      debugTask
+                    );
+                  else if (
+                    (boundary$jscomp$0.pendingTasks--,
+                    boundary$jscomp$0.status !== CLIENT_RENDERED)
+                  ) {
+                    boundary$jscomp$0.status = CLIENT_RENDERED;
+                    encodeErrorForBoundary(
+                      boundary$jscomp$0,
+                      prevTaskInDEV,
+                      x$jscomp$0,
+                      errorInfo$jscomp$1,
+                      !1
+                    );
+                    untrackBoundary(request, boundary$jscomp$0);
+                    var boundaryRow = boundary$jscomp$0.row;
+                    null !== boundaryRow &&
+                      0 === --boundaryRow.pendingTasks &&
+                      finishSuspenseListRow(request, boundaryRow);
+                    boundary$jscomp$0.parentFlushed &&
+                      request.clientRenderedBoundaries.push(boundary$jscomp$0);
+                    0 === request.pendingRootTasks &&
+                      null === request.trackedPostpones &&
+                      null !== boundary$jscomp$0.contentPreamble &&
+                      preparePreamble(request);
+                  }
                   0 === request.allPendingTasks && completeAll(request);
                 }
               } finally {
@@ -10034,5 +10048,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-50389e17-20250520";
+    exports.version = "19.2.0-www-classic-9c7b10e2-20250520";
   })();
