@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<2a67bfe7090199050e60f8887093044e>>
+ * @generated SignedSource<<c302138ab1d122c4373df15409127816>>
  */
 
 'use strict';
@@ -55945,13 +55945,77 @@ function suppressionsToCompilerError(suppressionRanges) {
 
 const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
 const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
-function findDirectiveEnablingMemoization(directives) {
-    var _a;
-    return ((_a = directives.find(directive => OPT_IN_DIRECTIVES.has(directive.value.value))) !== null && _a !== void 0 ? _a : null);
+const DYNAMIC_GATING_DIRECTIVE = new RegExp('^use memo if\\(([^\\)]*)\\)$');
+function tryFindDirectiveEnablingMemoization(directives, opts) {
+    var _a, _b;
+    const optIn = directives.find(directive => OPT_IN_DIRECTIVES.has(directive.value.value));
+    if (optIn != null) {
+        return Ok(optIn);
+    }
+    const dynamicGating = findDirectivesDynamicGating(directives, opts);
+    if (dynamicGating.isOk()) {
+        return Ok((_b = (_a = dynamicGating.unwrap()) === null || _a === void 0 ? void 0 : _a.directive) !== null && _b !== void 0 ? _b : null);
+    }
+    else {
+        return Err(dynamicGating.unwrapErr());
+    }
 }
 function findDirectiveDisablingMemoization(directives) {
     var _a;
     return ((_a = directives.find(directive => OPT_OUT_DIRECTIVES.has(directive.value.value))) !== null && _a !== void 0 ? _a : null);
+}
+function findDirectivesDynamicGating(directives, opts) {
+    var _a, _b;
+    if (opts.dynamicGating === null) {
+        return Ok(null);
+    }
+    const errors = new CompilerError();
+    const result = [];
+    for (const directive of directives) {
+        const maybeMatch = DYNAMIC_GATING_DIRECTIVE.exec(directive.value.value);
+        if (maybeMatch != null && maybeMatch[1] != null) {
+            if (libExports$1.isValidIdentifier(maybeMatch[1])) {
+                result.push({ directive, match: maybeMatch[1] });
+            }
+            else {
+                errors.push({
+                    reason: `Dynamic gating directive is not a valid JavaScript identifier`,
+                    description: `Found '${directive.value.value}'`,
+                    severity: ErrorSeverity.InvalidReact,
+                    loc: (_a = directive.loc) !== null && _a !== void 0 ? _a : null,
+                    suggestions: null,
+                });
+            }
+        }
+    }
+    if (errors.hasErrors()) {
+        return Err(errors);
+    }
+    else if (result.length > 1) {
+        const error = new CompilerError();
+        error.push({
+            reason: `Multiple dynamic gating directives found`,
+            description: `Expected a single directive but found [${result
+                .map(r => r.directive.value.value)
+                .join(', ')}]`,
+            severity: ErrorSeverity.InvalidReact,
+            loc: (_b = result[0].directive.loc) !== null && _b !== void 0 ? _b : null,
+            suggestions: null,
+        });
+        return Err(error);
+    }
+    else if (result.length === 1) {
+        return Ok({
+            gating: {
+                source: opts.dynamicGating.source,
+                importSpecifierName: result[0].match,
+            },
+            directive: result[0].directive,
+        });
+    }
+    else {
+        return Ok(null);
+    }
 }
 function isCriticalError(err) {
     return !(err instanceof CompilerError) || err.isCritical();
@@ -56185,14 +56249,22 @@ function findFunctionsToCompile(program, pass, programContext) {
     return queue;
 }
 function processFn(fn, fnType, programContext) {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     let directives;
     if (fn.node.body.type !== 'BlockStatement') {
-        directives = { optIn: null, optOut: null };
+        directives = {
+            optIn: null,
+            optOut: null,
+        };
     }
     else {
+        const optIn = tryFindDirectiveEnablingMemoization(fn.node.body.directives, programContext.opts);
+        if (optIn.isErr()) {
+            handleError(optIn.unwrapErr(), programContext, (_a = fn.node.loc) !== null && _a !== void 0 ? _a : null);
+            return null;
+        }
         directives = {
-            optIn: findDirectiveEnablingMemoization(fn.node.body.directives),
+            optIn: optIn.unwrapOr(null),
             optOut: findDirectiveDisablingMemoization(fn.node.body.directives),
         };
     }
@@ -56200,10 +56272,10 @@ function processFn(fn, fnType, programContext) {
     const compileResult = tryCompileFunction(fn, fnType, programContext);
     if (compileResult.kind === 'error') {
         if (directives.optOut != null) {
-            logError(compileResult.error, programContext, (_a = fn.node.loc) !== null && _a !== void 0 ? _a : null);
+            logError(compileResult.error, programContext, (_b = fn.node.loc) !== null && _b !== void 0 ? _b : null);
         }
         else {
-            handleError(compileResult.error, programContext, (_b = fn.node.loc) !== null && _b !== void 0 ? _b : null);
+            handleError(compileResult.error, programContext, (_c = fn.node.loc) !== null && _c !== void 0 ? _c : null);
         }
         const retryResult = retryCompileFunction(fn, fnType, programContext);
         if (retryResult == null) {
@@ -56218,16 +56290,16 @@ function processFn(fn, fnType, programContext) {
         directives.optOut != null) {
         programContext.logEvent({
             kind: 'CompileSkip',
-            fnLoc: (_c = fn.node.body.loc) !== null && _c !== void 0 ? _c : null,
+            fnLoc: (_d = fn.node.body.loc) !== null && _d !== void 0 ? _d : null,
             reason: `Skipped due to '${directives.optOut.value}' directive.`,
-            loc: (_d = directives.optOut.loc) !== null && _d !== void 0 ? _d : null,
+            loc: (_e = directives.optOut.loc) !== null && _e !== void 0 ? _e : null,
         });
         return null;
     }
     programContext.logEvent({
         kind: 'CompileSuccess',
-        fnLoc: (_e = fn.node.loc) !== null && _e !== void 0 ? _e : null,
-        fnName: (_g = (_f = compiledFn.id) === null || _f === void 0 ? void 0 : _f.name) !== null && _g !== void 0 ? _g : null,
+        fnLoc: (_f = fn.node.loc) !== null && _f !== void 0 ? _f : null,
+        fnName: (_h = (_g = compiledFn.id) === null || _g === void 0 ? void 0 : _g.name) !== null && _h !== void 0 ? _h : null,
         memoSlots: compiledFn.memoSlotsUsed,
         memoBlocks: compiledFn.memoBlocks,
         memoValues: compiledFn.memoValues,
@@ -56291,19 +56363,23 @@ function retryCompileFunction(fn, fnType, programContext) {
     }
 }
 function applyCompiledFunctions(program, compiledFns, pass, programContext) {
-    const referencedBeforeDeclared = pass.opts.gating != null
-        ? getFunctionReferencedBeforeDeclarationAtTopLevel(program, compiledFns)
-        : null;
+    var _a, _b;
+    let referencedBeforeDeclared = null;
     for (const result of compiledFns) {
         const { kind, originalFn, compiledFn } = result;
         const transformedFn = createNewFunctionNode(originalFn, compiledFn);
         programContext.alreadyCompiled.add(transformedFn);
-        if (referencedBeforeDeclared != null && kind === 'original') {
-            CompilerError.invariant(pass.opts.gating != null, {
-                reason: "Expected 'gating' import to be present",
-                loc: null,
-            });
-            insertGatedFunctionDeclaration(originalFn, transformedFn, programContext, pass.opts.gating, referencedBeforeDeclared.has(result));
+        let dynamicGating = null;
+        if (originalFn.node.body.type === 'BlockStatement') {
+            const result = findDirectivesDynamicGating(originalFn.node.body.directives, pass.opts);
+            if (result.isOk()) {
+                dynamicGating = (_b = (_a = result.unwrap()) === null || _a === void 0 ? void 0 : _a.gating) !== null && _b !== void 0 ? _b : null;
+            }
+        }
+        const functionGating = dynamicGating !== null && dynamicGating !== void 0 ? dynamicGating : pass.opts.gating;
+        if (kind === 'original' && functionGating != null) {
+            referencedBeforeDeclared !== null && referencedBeforeDeclared !== void 0 ? referencedBeforeDeclared : (referencedBeforeDeclared = getFunctionReferencedBeforeDeclarationAtTopLevel(program, compiledFns));
+            insertGatedFunctionDeclaration(originalFn, transformedFn, programContext, functionGating, referencedBeforeDeclared.has(result));
         }
         else {
             originalFn.replaceWith(transformedFn);
@@ -56339,8 +56415,10 @@ function getReactFunctionType(fn, pass) {
     var _a, _b;
     const hookPattern = pass.opts.environment.hookPattern;
     if (fn.node.body.type === 'BlockStatement') {
-        if (findDirectiveEnablingMemoization(fn.node.body.directives) != null)
+        const optInDirectives = tryFindDirectiveEnablingMemoization(fn.node.body.directives, pass.opts);
+        if (optInDirectives.unwrapOr(null) != null) {
             return (_a = getComponentOrHookLike(fn, hookPattern)) !== null && _a !== void 0 ? _a : 'Other';
+        }
     }
     let componentSyntaxType = null;
     if (fn.isFunctionDeclaration()) {
@@ -56855,6 +56933,9 @@ zod.z.enum([
     'critical_errors',
     'none',
 ]);
+const DynamicGatingOptionsSchema = zod.z.object({
+    source: zod.z.string(),
+});
 const CompilerReactTargetSchema = zod.z.union([
     zod.z.literal('17'),
     zod.z.literal('18'),
@@ -56877,6 +56958,7 @@ const defaultOptions = {
     logger: null,
     gating: null,
     noEmit: false,
+    dynamicGating: null,
     eslintSuppressionRules: null,
     flowSuppressions: true,
     ignoreUseNoForget: false,
@@ -56920,6 +57002,26 @@ function parsePluginOptions(obj) {
                     }
                     else {
                         parsedOptions[key] = tryParseExternalFunction(value);
+                    }
+                    break;
+                }
+                case 'dynamicGating': {
+                    if (value == null) {
+                        parsedOptions[key] = null;
+                    }
+                    else {
+                        const result = DynamicGatingOptionsSchema.safeParse(value);
+                        if (result.success) {
+                            parsedOptions[key] = result.data;
+                        }
+                        else {
+                            CompilerError.throwInvalidConfig({
+                                reason: 'Could not parse dynamic gating. Update React Compiler config to fix the error',
+                                description: `${zodValidationError.fromZodError(result.error)}`,
+                                loc: null,
+                                suggestions: null,
+                            });
+                        }
                     }
                     break;
                 }
