@@ -3119,4 +3119,197 @@ describe('ReactSuspenseList', () => {
       );
     },
   );
+
+  // @gate enableSuspenseList && enableAsyncIterableChildren
+  it('warns for async generator components in "forwards" order', async () => {
+    async function* Generator() {
+      yield 'A';
+      yield 'B';
+    }
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards">
+          <Generator />
+        </SuspenseList>
+      );
+    }
+
+    await act(() => {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    });
+    assertConsoleErrorDev([
+      'A generator Component was passed to a <SuspenseList revealOrder="forwards" />. ' +
+        'This is not supported as a way to generate lists. Instead, pass an ' +
+        'iterable as the children.' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+      '<Generator> is an async Client Component. ' +
+        'Only Server Components can be async at the moment. ' +
+        "This error is often caused by accidentally adding `'use client'` " +
+        'to a module that was originally written for the server.\n' +
+        '    in Foo (at **)',
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in Foo (at **)',
+    ]);
+  });
+
+  // @gate enableSuspenseList && enableAsyncIterableChildren
+  it('can display async iterable in "forwards" order', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+
+    // We use Cached elements to avoid rerender.
+    const ASlot = (
+      <Suspense key="A" fallback={<Text text="Loading A" />}>
+        <A />
+      </Suspense>
+    );
+
+    const BSlot = (
+      <Suspense key="B" fallback={<Text text="Loading B" />}>
+        <B />
+      </Suspense>
+    );
+
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        yield ASlot;
+        yield BSlot;
+      },
+    };
+
+    function Foo() {
+      return <SuspenseList revealOrder="forwards">{iterable}</SuspenseList>;
+    }
+
+    await act(() => {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    });
+
+    assertLog([
+      'Suspend! [A]',
+      'Loading A',
+      'Loading B',
+      // pre-warming
+      'Suspend! [A]',
+    ]);
+
+    assertConsoleErrorDev([
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in SuspenseList (at **)\n' +
+        '    in Foo (at **)',
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in SuspenseList (at **)\n' +
+        '    in Foo (at **)',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    await act(() => A.resolve());
+    assertLog(['A', 'Suspend! [B]', 'Suspend! [B]']);
+
+    assertConsoleErrorDev([
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in SuspenseList (at **)\n' +
+        '    in Foo (at **)',
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in SuspenseList (at **)\n' +
+        '    in Foo (at **)',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    await act(() => B.resolve());
+    assertLog(['B']);
+
+    assertConsoleErrorDev([
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in SuspenseList (at **)\n' +
+        '    in Foo (at **)',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
+  });
+
+  // @gate enableSuspenseList && enableAsyncIterableChildren
+  it('warns if a nested async iterable is passed to a "forwards" list', async () => {
+    function Foo({items}) {
+      return (
+        <SuspenseList revealOrder="forwards">
+          {items}
+          <div>Tail</div>
+        </SuspenseList>
+      );
+    }
+
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        yield (
+          <Suspense key={'A'} fallback="Loading">
+            A
+          </Suspense>
+        );
+        yield (
+          <Suspense key={'B'} fallback="Loading">
+            B
+          </Suspense>
+        );
+      },
+    };
+
+    await act(() => {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo items={iterable} />);
+      });
+    });
+    assertConsoleErrorDev([
+      'A nested async iterable was passed to row #0 in <SuspenseList />. ' +
+        'Wrap it in an additional SuspenseList to configure its revealOrder: ' +
+        '<SuspenseList revealOrder=...> ... ' +
+        '<SuspenseList revealOrder=...>{async iterable}</SuspenseList> ... ' +
+        '</SuspenseList>' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. ' +
+        'Creating promises inside a Client Component or hook is not yet supported, ' +
+        'except via a Suspense-compatible library or framework.\n' +
+        '    in Foo (at **)',
+    ]);
+  });
 });
