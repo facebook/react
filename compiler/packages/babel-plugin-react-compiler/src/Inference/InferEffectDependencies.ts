@@ -10,7 +10,6 @@ import {CompilerError, SourceLocation} from '..';
 import {
   ArrayExpression,
   Effect,
-  Environment,
   FunctionExpression,
   GeneratedSource,
   HIRFunction,
@@ -29,6 +28,9 @@ import {
   isSetStateType,
   isFireFunctionType,
   makeScopeId,
+  HIR,
+  BasicBlock,
+  BlockId,
 } from '../HIR';
 import {collectHoistablePropertyLoadsInInnerFn} from '../HIR/CollectHoistablePropertyLoads';
 import {collectOptionalChainSidemap} from '../HIR/CollectOptionalChainDependencies';
@@ -38,13 +40,20 @@ import {
   createTemporaryPlace,
   fixScopeAndIdentifierRanges,
   markInstructionIds,
+  markPredecessors,
+  reversePostorderBlocks,
 } from '../HIR/HIRBuilder';
 import {
   collectTemporariesSidemap,
   DependencyCollectionContext,
   handleInstruction,
 } from '../HIR/PropagateScopeDependenciesHIR';
-import {eachInstructionOperand, eachTerminalOperand} from '../HIR/visitors';
+import {buildDependencyInstructions} from '../HIR/ScopeDependencyUtils';
+import {
+  eachInstructionOperand,
+  eachTerminalOperand,
+  terminalFallthrough,
+} from '../HIR/visitors';
 import {empty} from '../Utils/Stack';
 import {getOrInsertWith} from '../Utils/utils';
 
@@ -53,7 +62,6 @@ import {getOrInsertWith} from '../Utils/utils';
  * a second argument to the useEffect call if no dependency array is provided.
  */
 export function inferEffectDependencies(fn: HIRFunction): void {
-  let hasRewrite = false;
   const fnExpressions = new Map<
     IdentifierId,
     TInstruction<FunctionExpression>
@@ -86,6 +94,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
    * reactive(Identifier i) = Union_{reference of i}(reactive(reference))
    */
   const reactiveIds = inferReactiveIdentifiers(fn);
+  const rewriteBlocks: Array<BasicBlock> = [];
 
   for (const [, block] of fn.body.blocks) {
     if (block.terminal.kind === 'scope') {
@@ -101,7 +110,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
         );
       }
     }
-    const rewriteInstrs = new Map<InstructionId, Array<Instruction>>();
+    const rewriteInstrs: Array<SpliceInfo> = [];
     for (const instr of block.instructions) {
       const {value, lvalue} = instr;
       if (value.kind === 'FunctionExpression') {
@@ -165,7 +174,6 @@ export function inferEffectDependencies(fn: HIRFunction): void {
         ) {
           // We have a useEffect call with no deps array, so we need to infer the deps
           const effectDeps: Array<Place> = [];
-          const newInstructions: Array<Instruction> = [];
           const deps: ArrayExpression = {
             kind: 'ArrayExpression',
             elements: effectDeps,
@@ -196,24 +204,28 @@ export function inferEffectDependencies(fn: HIRFunction): void {
              */
 
             const usedDeps = [];
-            for (const dep of minimalDeps) {
+            for (const maybeDep of minimalDeps) {
               if (
-                ((isUseRefType(dep.identifier) ||
-                  isSetStateType(dep.identifier)) &&
-                  !reactiveIds.has(dep.identifier.id)) ||
-                isFireFunctionType(dep.identifier)
+                ((isUseRefType(maybeDep.identifier) ||
+                  isSetStateType(maybeDep.identifier)) &&
+                  !reactiveIds.has(maybeDep.identifier.id)) ||
+                isFireFunctionType(maybeDep.identifier)
               ) {
                 // exclude non-reactive hook results, which will never be in a memo block
                 continue;
               }
 
-              const {place, instructions} = writeDependencyToInstructions(
+              const dep = truncateDepAtCurrent(maybeDep);
+              const {place, value, exitBlockId} = buildDependencyInstructions(
                 dep,
-                reactiveIds.has(dep.identifier.id),
                 fn.env,
-                fnExpr.loc,
               );
-              newInstructions.push(...instructions);
+              rewriteInstrs.push({
+                kind: 'block',
+                location: instr.id,
+                value,
+                exitBlockId: exitBlockId,
+              });
               effectDeps.push(place);
               usedDeps.push(dep);
             }
@@ -234,27 +246,32 @@ export function inferEffectDependencies(fn: HIRFunction): void {
               });
             }
 
-            newInstructions.push({
-              id: makeInstructionId(0),
-              loc: GeneratedSource,
-              lvalue: {...depsPlace, effect: Effect.Mutate},
-              value: deps,
-            });
-
             // Step 2: push the inferred deps array as an argument of the useEffect
+            rewriteInstrs.push({
+              kind: 'instr',
+              location: instr.id,
+              value: {
+                id: makeInstructionId(0),
+                loc: GeneratedSource,
+                lvalue: {...depsPlace, effect: Effect.Mutate},
+                value: deps,
+              },
+            });
             value.args.push({...depsPlace, effect: Effect.Freeze});
-            rewriteInstrs.set(instr.id, newInstructions);
             fn.env.inferredEffectLocations.add(callee.loc);
           } else if (loadGlobals.has(value.args[0].identifier.id)) {
             // Global functions have no reactive dependencies, so we can insert an empty array
-            newInstructions.push({
-              id: makeInstructionId(0),
-              loc: GeneratedSource,
-              lvalue: {...depsPlace, effect: Effect.Mutate},
-              value: deps,
+            rewriteInstrs.push({
+              kind: 'instr',
+              location: instr.id,
+              value: {
+                id: makeInstructionId(0),
+                loc: GeneratedSource,
+                lvalue: {...depsPlace, effect: Effect.Mutate},
+                value: deps,
+              },
             });
             value.args.push({...depsPlace, effect: Effect.Freeze});
-            rewriteInstrs.set(instr.id, newInstructions);
             fn.env.inferredEffectLocations.add(callee.loc);
           }
         } else if (
@@ -285,85 +302,164 @@ export function inferEffectDependencies(fn: HIRFunction): void {
         }
       }
     }
-    if (rewriteInstrs.size > 0) {
-      hasRewrite = true;
-      const newInstrs = [];
-      for (const instr of block.instructions) {
-        const newInstr = rewriteInstrs.get(instr.id);
-        if (newInstr != null) {
-          newInstrs.push(...newInstr, instr);
-        } else {
-          newInstrs.push(instr);
-        }
-      }
-      block.instructions = newInstrs;
-    }
+    rewriteSplices(block, rewriteInstrs, rewriteBlocks);
   }
-  if (hasRewrite) {
+
+  if (rewriteBlocks.length > 0) {
+    for (const block of rewriteBlocks) {
+      fn.body.blocks.set(block.id, block);
+    }
+
+    /**
+     * Fixup the HIR to restore RPO, ensure correct predecessors, and renumber
+     * instructions.
+     */
+    reversePostorderBlocks(fn.body);
+    markPredecessors(fn.body);
     // Renumber instructions and fix scope ranges
     markInstructionIds(fn.body);
     fixScopeAndIdentifierRanges(fn.body);
+
     fn.env.hasInferredEffect = true;
   }
 }
 
-function writeDependencyToInstructions(
+function truncateDepAtCurrent(
   dep: ReactiveScopeDependency,
-  reactive: boolean,
-  env: Environment,
-  loc: SourceLocation,
-): {place: Place; instructions: Array<Instruction>} {
-  const instructions: Array<Instruction> = [];
-  let currValue = createTemporaryPlace(env, GeneratedSource);
-  currValue.reactive = reactive;
-  instructions.push({
-    id: makeInstructionId(0),
-    loc: GeneratedSource,
-    lvalue: {...currValue, effect: Effect.Mutate},
-    value: {
-      kind: 'LoadLocal',
-      place: {
-        kind: 'Identifier',
-        identifier: dep.identifier,
-        effect: Effect.Capture,
-        reactive,
-        loc: loc,
-      },
-      loc: loc,
-    },
-  });
-  for (const path of dep.path) {
-    if (path.optional) {
-      /**
-       * TODO: instead of truncating optional paths, reuse
-       * instructions from hoisted dependencies block(s)
-       */
-      break;
-    }
-    if (path.property === 'current') {
-      /*
-       * Prune ref.current accesses. This may over-capture for non-ref values with
-       * a current property, but that's fine.
-       */
-      break;
-    }
-    const nextValue = createTemporaryPlace(env, GeneratedSource);
-    nextValue.reactive = reactive;
-    instructions.push({
-      id: makeInstructionId(0),
-      loc: GeneratedSource,
-      lvalue: {...nextValue, effect: Effect.Mutate},
-      value: {
-        kind: 'PropertyLoad',
-        object: {...currValue, effect: Effect.Capture},
-        property: path.property,
-        loc: loc,
-      },
-    });
-    currValue = nextValue;
+): ReactiveScopeDependency {
+  const idx = dep.path.findIndex(path => path.property === 'current');
+  if (idx === -1) {
+    return dep;
+  } else {
+    return {...dep, path: dep.path.slice(0, idx)};
   }
-  currValue.effect = Effect.Freeze;
-  return {place: currValue, instructions};
+}
+
+type SpliceInfo =
+  | {kind: 'instr'; location: InstructionId; value: Instruction}
+  | {
+      kind: 'block';
+      location: InstructionId;
+      value: HIR;
+      exitBlockId: BlockId;
+    };
+
+function rewriteSplices(
+  originalBlock: BasicBlock,
+  splices: Array<SpliceInfo>,
+  rewriteBlocks: Array<BasicBlock>,
+): void {
+  if (splices.length === 0) {
+    return;
+  }
+  /**
+   * Splice instructions or value blocks into the original block.
+   * --- original block ---
+   * bb_original
+   *   instr1
+   *   ...
+   *   instr2 <-- splice location
+   *   instr3
+   *   ...
+   *   <original terminal>
+   *
+   * If there is more than one block in the splice, this means that we're
+   * splicing in a set of value-blocks of the following structure:
+   * --- blocks we're splicing in ---
+   * bb_entry:
+   *   instrEntry
+   *   ...
+   *   <splice terminal> fallthrough=bb_exit
+   *
+   * bb1(value):
+   *   ...
+   *
+   * bb_exit:
+   *   instrExit
+   *   ...
+   *   <synthetic terminal>
+   *
+   *
+   * --- rewritten blocks ---
+   * bb_original
+   *   instr1
+   *   ... (original instructions)
+   *   instr2
+   *   instrEntry
+   *   ... (spliced instructions)
+   *   <splice terminal> fallthrough=bb_exit
+   *
+   * bb1(value):
+   *   ...
+   *
+   * bb_exit:
+   *   instrExit
+   *   ... (spliced instructions)
+   *   instr3
+   *   ... (original instructions)
+   *   <original terminal>
+   */
+  const originalInstrs = originalBlock.instructions;
+  let currBlock: BasicBlock = {...originalBlock, instructions: []};
+  rewriteBlocks.push(currBlock);
+
+  let cursor = 0;
+  for (const rewrite of splices) {
+    while (originalInstrs[cursor].id < rewrite.location) {
+      CompilerError.invariant(
+        originalInstrs[cursor].id < originalInstrs[cursor + 1].id,
+        {
+          reason:
+            '[InferEffectDependencies] Internal invariant broken: expected block instructions to be sorted',
+          loc: originalInstrs[cursor].loc,
+        },
+      );
+      currBlock.instructions.push(originalInstrs[cursor]);
+      cursor++;
+    }
+    CompilerError.invariant(originalInstrs[cursor].id === rewrite.location, {
+      reason:
+        '[InferEffectDependencies] Internal invariant broken: splice location not found',
+      loc: originalInstrs[cursor].loc,
+    });
+
+    if (rewrite.kind === 'instr') {
+      currBlock.instructions.push(rewrite.value);
+    } else {
+      const {entry, blocks} = rewrite.value;
+      const entryBlock = blocks.get(entry)!;
+      // splice in all instructions from the entry block
+      currBlock.instructions.push(...entryBlock.instructions);
+      if (blocks.size > 1) {
+        /**
+         * We're splicing in a set of value-blocks, which means we need
+         * to push new blocks and update terminals.
+         */
+        CompilerError.invariant(
+          terminalFallthrough(entryBlock.terminal) === rewrite.exitBlockId,
+          {
+            reason:
+              '[InferEffectDependencies] Internal invariant broken: expected entry block to have a fallthrough',
+            loc: entryBlock.terminal.loc,
+          },
+        );
+        const originalTerminal = currBlock.terminal;
+        currBlock.terminal = entryBlock.terminal;
+
+        for (const [id, block] of blocks) {
+          if (id === entry) {
+            continue;
+          }
+          if (id === rewrite.exitBlockId) {
+            block.terminal = originalTerminal;
+            currBlock = block;
+          }
+          rewriteBlocks.push(block);
+        }
+      }
+    }
+  }
+  currBlock.instructions.push(...originalInstrs.slice(cursor));
 }
 
 function inferReactiveIdentifiers(fn: HIRFunction): Set<IdentifierId> {
