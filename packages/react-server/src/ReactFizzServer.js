@@ -1725,6 +1725,26 @@ function unblockSuspenseListRow(
   }
 }
 
+function trackPostponedSuspenseListRow(
+  request: Request,
+  trackedPostpones: PostponedHoles,
+  postponedRow: null | SuspenseListRow,
+): void {
+  // TODO: Because we unconditionally call this, it will be called by finishedTask
+  // and so ends up recursive which can lead to stack overflow for very long lists.
+  if (postponedRow !== null) {
+    const postponedBoundaries = postponedRow.boundaries;
+    if (postponedBoundaries !== null) {
+      postponedRow.boundaries = null;
+      for (let i = 0; i < postponedBoundaries.length; i++) {
+        const postponedBoundary = postponedBoundaries[i];
+        trackPostponedBoundary(request, trackedPostpones, postponedBoundary);
+        finishedTask(request, postponedBoundary, null, null);
+      }
+    }
+  }
+}
+
 function tryToResolveTogetherRow(
   request: Request,
   togetherRow: SuspenseListRow,
@@ -4945,7 +4965,18 @@ function finishedTask(
       } else if (boundary.status === POSTPONED) {
         const boundaryRow = boundary.row;
         if (boundaryRow !== null) {
+          if (request.trackedPostpones !== null) {
+            // If this boundary is postponed, then we need to also postpone any blocked boundaries
+            // in the next row.
+            trackPostponedSuspenseListRow(
+              request,
+              request.trackedPostpones,
+              boundaryRow.next,
+            );
+          }
           if (--boundaryRow.pendingTasks === 0) {
+            // This is really unnecessary since we've already postponed the boundaries but
+            // for pairity with other track+finish paths. We might end up using the hoisting.
             finishSuspenseListRow(request, boundaryRow);
           }
         }
