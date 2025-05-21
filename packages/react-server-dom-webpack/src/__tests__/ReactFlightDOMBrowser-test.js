@@ -24,6 +24,7 @@ let serverExports;
 let webpackMap;
 let webpackServerMap;
 let act;
+let serverAct;
 let React;
 let ReactDOM;
 let ReactDOMClient;
@@ -35,9 +36,7 @@ let Suspense;
 let use;
 let ReactServer;
 let ReactServerDOM;
-let Scheduler;
 let ReactServerScheduler;
-let reactServerAct;
 let assertConsoleErrorDev;
 
 describe('ReactFlightDOMBrowser', () => {
@@ -46,7 +45,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     ReactServerScheduler = require('scheduler');
     patchMessageChannel(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    serverAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
 
@@ -73,8 +72,7 @@ describe('ReactFlightDOMBrowser', () => {
     __unmockReact();
     jest.resetModules();
 
-    Scheduler = require('scheduler');
-    patchMessageChannel(Scheduler);
+    patchMessageChannel();
 
     ({act, assertConsoleErrorDev} = require('internal-test-utils'));
     React = require('react');
@@ -85,17 +83,6 @@ describe('ReactFlightDOMBrowser', () => {
     Suspense = React.Suspense;
     use = React.use;
   });
-
-  async function serverAct(callback) {
-    let maybePromise;
-    await reactServerAct(() => {
-      maybePromise = callback();
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
-      }
-    });
-    return maybePromise;
-  }
 
   function makeDelayedText(Model) {
     let error, _resolve, _reject;

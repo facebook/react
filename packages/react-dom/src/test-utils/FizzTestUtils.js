@@ -167,7 +167,10 @@ function getVisibleChildren(element: Element): React$Node {
           }
           props[attributes[i].name] = attributes[i].value;
         }
-        props.children = getVisibleChildren(node);
+        const nestedChildren = getVisibleChildren(node);
+        if (nestedChildren !== undefined) {
+          props.children = nestedChildren;
+        }
         children.push(
           require('react').createElement(node.tagName.toLowerCase(), props),
         );

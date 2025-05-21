@@ -3073,19 +3073,19 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childElement: Instance,
+  childInstance: Instance,
   fragmentInstance: FragmentInstanceType,
 ): void {
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childElement.addEventListener(type, listener, optionsOrUseCapture);
+      childInstance.addEventListener(type, listener, optionsOrUseCapture);
     }
   }
   if (fragmentInstance._observers !== null) {
     fragmentInstance._observers.forEach(observer => {
-      observer.observe(childElement);
+      observer.observe(childInstance);
     });
   }
 }

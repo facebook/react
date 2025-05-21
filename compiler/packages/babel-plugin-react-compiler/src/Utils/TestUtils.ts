@@ -101,13 +101,10 @@ function parseConfigPragmaEnvironmentForTest(
 ): EnvironmentConfig {
   const maybeConfig: Partial<Record<keyof EnvironmentConfig, unknown>> = {};
 
-  for (const token of pragma.split(' ')) {
-    if (!token.startsWith('@')) {
-      continue;
-    }
-    const keyVal = token.slice(1);
+  for (const keyVal of pragma.split(' @')) {
     const valIdx = keyVal.indexOf(':');
-    const key = valIdx === -1 ? keyVal : keyVal.slice(0, valIdx);
+    const key =
+      valIdx === -1 ? keyVal.split(' ', 1)[0] : keyVal.slice(0, valIdx);
     const val = valIdx === -1 ? undefined : keyVal.slice(valIdx + 1);
     const isSet = val === undefined || val === 'true';
     if (!hasOwnProperty(EnvironmentConfigSchema.shape, key)) {
@@ -176,13 +173,9 @@ export function parseConfigPragmaForTests(
     compilationMode: defaults.compilationMode,
     environment,
   };
-  for (const token of pragma.split(' ')) {
-    if (!token.startsWith('@')) {
-      continue;
-    }
-    const keyVal = token.slice(1);
+  for (const keyVal of pragma.split(' @')) {
     const idx = keyVal.indexOf(':');
-    const key = idx === -1 ? keyVal : keyVal.slice(0, idx);
+    const key = idx === -1 ? keyVal.split(' ', 1)[0] : keyVal.slice(0, idx);
     const val = idx === -1 ? undefined : keyVal.slice(idx + 1);
     if (!hasOwnProperty(defaultOptions, key)) {
       continue;

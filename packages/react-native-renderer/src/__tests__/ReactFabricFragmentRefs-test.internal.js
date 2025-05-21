@@ -80,4 +80,46 @@ describe('Fabric FragmentRefs', () => {
 
     expect(fragmentRef && fragmentRef._fragmentFiber).toBeTruthy();
   });
+
+  describe('observers', () => {
+    // @gate enableFragmentRefs
+    it('observes children, newly added children', async () => {
+      let logs = [];
+      const observer = {
+        observe: entry => {
+          // Here we reference internals because we don't need to mock the native observer
+          // We only need to test that each child node is observed on insertion
+          logs.push(entry.__internalInstanceHandle.pendingProps.nativeID);
+        },
+      };
+      function Test({showB}) {
+        const fragmentRef = React.useRef(null);
+        React.useEffect(() => {
+          fragmentRef.current.observeUsing(observer);
+          const lastRefValue = fragmentRef.current;
+          return () => {
+            lastRefValue.unobserveUsing(observer);
+          };
+        }, []);
+        return (
+          <View nativeID="parent">
+            <React.Fragment ref={fragmentRef}>
+              <View nativeID="A" />
+              {showB && <View nativeID="B" />}
+            </React.Fragment>
+          </View>
+        );
+      }
+
+      await act(() => {
+        ReactFabric.render(<Test showB={false} />, 11, null, true);
+      });
+      expect(logs).toEqual(['A']);
+      logs = [];
+      await act(() => {
+        ReactFabric.render(<Test showB={true} />, 11, null, true);
+      });
+      expect(logs).toEqual(['B']);
+    });
+  });
 });
