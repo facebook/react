@@ -866,8 +866,8 @@ __DEV__ &&
         ? null
         : {
             update: parentViewTransition.update,
-            enter: null,
-            exit: null,
+            enter: "none",
+            exit: "none",
             share: parentViewTransition.update,
             name: parentViewTransition.autoName,
             autoName: parentViewTransition.autoName,
@@ -911,11 +911,11 @@ __DEV__ &&
             ),
             formatContext.nameIdx++),
           pushStringAttribute(target, "vt-update", formatContext.update),
-          null !== formatContext.enter &&
+          "none" !== formatContext.enter &&
             pushStringAttribute(target, "vt-enter", formatContext.enter),
-          null !== formatContext.exit &&
+          "none" !== formatContext.exit &&
             pushStringAttribute(target, "vt-exit", formatContext.exit),
-          null !== formatContext.share &&
+          "none" !== formatContext.share &&
             pushStringAttribute(target, "vt-share", formatContext.share)));
     }
     function pushStyleAttribute(target, style) {
@@ -10120,5 +10120,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-99781d60-20250522";
+    exports.version = "19.2.0-www-classic-08064ea6-20250522";
   })();

@@ -821,8 +821,8 @@ __DEV__ &&
         ? null
         : {
             update: parentViewTransition.update,
-            enter: null,
-            exit: null,
+            enter: "none",
+            exit: "none",
             share: parentViewTransition.update,
             name: parentViewTransition.autoName,
             autoName: parentViewTransition.autoName,
@@ -879,11 +879,11 @@ __DEV__ &&
             ),
             formatContext.nameIdx++),
           pushStringAttribute(target, "vt-update", formatContext.update),
-          null !== formatContext.enter &&
+          "none" !== formatContext.enter &&
             pushStringAttribute(target, "vt-enter", formatContext.enter),
-          null !== formatContext.exit &&
+          "none" !== formatContext.exit &&
             pushStringAttribute(target, "vt-exit", formatContext.exit),
-          null !== formatContext.share &&
+          "none" !== formatContext.share &&
             pushStringAttribute(target, "vt-share", formatContext.share)));
     }
     function pushStyleAttribute(target, style) {
@@ -5746,19 +5746,17 @@ __DEV__ &&
                 null !== parentViewTransition
                   ? ((name$jscomp$0 = parentViewTransition.name),
                     (share = parentViewTransition.share))
-                  : ((name$jscomp$0 = "auto"), (share = null));
+                  : ((name$jscomp$0 = "auto"), (share = "none"));
               } else
-                "none" === share
-                  ? (share = null)
-                  : (null == share && (share = "auto"),
-                    prevContext$jscomp$0.tagScope & 4 &&
-                      (resumableState$jscomp$1.instructions |= 128));
+                null == share && (share = "auto"),
+                  prevContext$jscomp$0.tagScope & 4 &&
+                    (resumableState$jscomp$1.instructions |= 128);
               prevContext$jscomp$0.tagScope & 8
                 ? (resumableState$jscomp$1.instructions |= 128)
-                : (exit = null);
+                : (exit = "none");
               prevContext$jscomp$0.tagScope & 16
                 ? (resumableState$jscomp$1.instructions |= 128)
-                : (enter = null);
+                : (enter = "none");
               var viewTransition = {
                   update: update,
                   enter: enter,

@@ -385,8 +385,8 @@ function getSuspenseViewTransition(parentViewTransition) {
     ? null
     : {
         update: parentViewTransition.update,
-        enter: null,
-        exit: null,
+        enter: "none",
+        exit: "none",
         share: parentViewTransition.update,
         name: parentViewTransition.autoName,
         autoName: parentViewTransition.autoName,
@@ -438,11 +438,11 @@ function pushViewTransitionAttributes(target, formatContext) {
         ),
         formatContext.nameIdx++),
       pushStringAttribute(target, "vt-update", formatContext.update),
-      null !== formatContext.enter &&
+      "none" !== formatContext.enter &&
         pushStringAttribute(target, "vt-enter", formatContext.enter),
-      null !== formatContext.exit &&
+      "none" !== formatContext.exit &&
         pushStringAttribute(target, "vt-exit", formatContext.exit),
-      null !== formatContext.share &&
+      "none" !== formatContext.share &&
         pushStringAttribute(target, "vt-share", formatContext.share)));
 }
 var styleNameCache = new Map();
@@ -4579,19 +4579,17 @@ function renderElement(request, task, keyPath, type, props, ref) {
             null !== parentViewTransition
               ? ((name = parentViewTransition.name),
                 (share = parentViewTransition.share))
-              : ((name = "auto"), (share = null));
+              : ((name = "auto"), (share = "none"));
           } else
-            "none" === share
-              ? (share = null)
-              : (null == share && (share = "auto"),
-                prevContext$jscomp$0.tagScope & 4 &&
-                  (resumableState$jscomp$1.instructions |= 128));
+            null == share && (share = "auto"),
+              prevContext$jscomp$0.tagScope & 4 &&
+                (resumableState$jscomp$1.instructions |= 128);
           prevContext$jscomp$0.tagScope & 8
             ? (resumableState$jscomp$1.instructions |= 128)
-            : (exit = null);
+            : (exit = "none");
           prevContext$jscomp$0.tagScope & 16
             ? (resumableState$jscomp$1.instructions |= 128)
-            : (enter = null);
+            : (enter = "none");
           var viewTransition = {
               update: update,
               enter: enter,
