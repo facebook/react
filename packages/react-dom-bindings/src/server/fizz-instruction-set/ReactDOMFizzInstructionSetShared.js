@@ -87,13 +87,21 @@ export function revealCompletedBoundariesWithViewTransitions(
 ) {
   let shouldStartViewTransition = false;
   let autoNameIdx = 0;
+  const restoreQueue = [];
   function applyViewTransitionName(element, classAttributeName) {
     const className = element.getAttribute(classAttributeName);
     if (!className || className === 'none') {
       return;
     }
+    // Add any elements we apply a name to a queue to be reverted when we start.
+    const elementStyle = element.style;
+    restoreQueue.push(
+      element,
+      elementStyle['viewTransitionName'],
+      elementStyle['viewTransitionClass'],
+    );
     if (className !== 'auto') {
-      element.style['viewTransitionClass'] = className;
+      elementStyle['viewTransitionClass'] = className;
     }
     let name = element.getAttribute('vt-name');
     if (!name) {
@@ -103,7 +111,7 @@ export function revealCompletedBoundariesWithViewTransitions(
       const idPrefix = '';
       name = '\u00AB' + idPrefix + 'T' + autoNameIdx++ + '\u00BB';
     }
-    element.style['viewTransitionName'] = name;
+    elementStyle['viewTransitionName'] = name;
     shouldStartViewTransition = true;
   }
   try {
@@ -240,7 +248,19 @@ export function revealCompletedBoundariesWithViewTransitions(
         types: [], // TODO: Add a hard coded type for Suspense reveals.
       }));
       transition.ready.finally(() => {
-        // TODO
+        // Restore all the names/classes that we applied to what they were before.
+        // We do it in reverse order in case there were duplicates so the first one wins.
+        for (let i = restoreQueue.length - 3; i >= 0; i -= 3) {
+          const element = restoreQueue[i];
+          const elementStyle = element.style;
+          const previousName = restoreQueue[i + 1];
+          elementStyle['viewTransitionName'] = previousName;
+          const previousClassName = restoreQueue[i + 1];
+          elementStyle['viewTransitionClass'] = previousClassName;
+          if (element.getAttribute('style') === '') {
+            element.removeAttribute('style');
+          }
+        }
       });
       transition.finished.finally(() => {
         if (document['__reactViewTransition'] === transition) {
