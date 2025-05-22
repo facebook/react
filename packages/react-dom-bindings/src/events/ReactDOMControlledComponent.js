@@ -30,7 +30,7 @@ function restoreStateOfTarget(target: Node) {
 
   const stateNode = internalInstance.stateNode;
   // Guard against Fiber being unmounted.
-  if (stateNode) {
+  if (stateNode !== null) {
     const props = getFiberCurrentPropsFromNode(stateNode);
     restoreControlledState(
       internalInstance.stateNode,
