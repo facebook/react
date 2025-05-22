@@ -3,6 +3,7 @@
 // Shared implementation and constants between the inline script and external
 // runtime instruction sets.
 
+const ELEMENT_NODE = 1;
 const COMMENT_NODE = 8;
 const ACTIVITY_START_DATA = '&';
 const ACTIVITY_END_DATA = '/&';
@@ -84,6 +85,27 @@ export function revealCompletedBoundariesWithViewTransitions(
   revealBoundaries,
   batch,
 ) {
+  let shouldStartViewTransition = false;
+  let autoNameIdx = 0;
+  function applyViewTransitionName(element, classAttributeName) {
+    const className = element.getAttribute(classAttributeName);
+    if (!className || className === 'none') {
+      return;
+    }
+    if (className !== 'auto') {
+      element.style['viewTransitionClass'] = className;
+    }
+    let name = element.getAttribute('vt-name');
+    if (!name) {
+      // Auto-generate a name for this one.
+      // TODO: We don't have a prefix to pick from here but maybe we don't need it
+      // since it's only applicable temporarily during this specific animation.
+      const idPrefix = '';
+      name = '\u00AB' + idPrefix + 'T' + autoNameIdx++ + '\u00BB';
+    }
+    element.style['viewTransitionName'] = name;
+    shouldStartViewTransition = true;
+  }
   try {
     const existingTransition = document['__reactViewTransition'];
     if (existingTransition) {
@@ -91,7 +113,125 @@ export function revealCompletedBoundariesWithViewTransitions(
       existingTransition.finished.finally(window['$RV'].bind(null, batch));
       return;
     }
-    const shouldStartViewTransition = window['_useVT']; // TODO: Detect.
+    // First collect all entering names that might form pairs exiting names.
+    const appearingViewTransitions = new Map();
+    for (let i = 1; i < batch.length; i += 2) {
+      const contentNode = batch[i];
+      const appearingElements = contentNode.querySelectorAll('[vt-share]');
+      for (let j = 0; j < appearingElements.length; j++) {
+        const appearingElement = appearingElements[j];
+        appearingViewTransitions.set(
+          appearingElement.getAttribute('vt-name'),
+          appearingElement,
+        );
+      }
+    }
+    // Next we'll find the nodes that we're going to animate and apply names to them..
+    for (let i = 0; i < batch.length; i += 2) {
+      const suspenseIdNode = batch[i];
+      const parentInstance = suspenseIdNode.parentNode;
+      if (!parentInstance) {
+        // We may have client-rendered this boundary already. Skip it.
+        continue;
+      }
+      const parentRect = parentInstance.getBoundingClientRect();
+      if (
+        !parentRect.left &&
+        !parentRect.top &&
+        !parentRect.width &&
+        !parentRect.height
+      ) {
+        // If the parent instance is display: none then we don't animate this boundary.
+        // This can happen when this boundary is actually a child of a different boundary that
+        // isn't yet revealed or is about to be revealed, but in that case that boundary
+        // should do the exit/enter and not this one. Conveniently this also lets us skip
+        // this if it's just in a hidden tree in general.
+        // TODO: Should we skip it if it's out of viewport? It's possible that it gets
+        // brought into the viewport by changing size.
+        // TODO: There's a another case where an inner boundary is inside a fallback that
+        // is about to be deleted. In that case we should not run exit animations on the inner.
+        continue;
+      }
+
+      // Apply update animations to any parents and siblings that might be affected.
+      let ancestorElement = parentInstance;
+      do {
+        let childElement = ancestorElement.firstElementChild;
+        while (childElement) {
+          // TODO: Bail out if we can
+          // TODO: If we have already handled this element as part of another exit/enter/share, don't override.
+          applyViewTransitionName(childElement, 'vt-update');
+          childElement = childElement.nextElementSibling;
+        }
+      } while (
+        (ancestorElement = ancestorElement.parentNode) &&
+        ancestorElement.nodeType === ELEMENT_NODE &&
+        ancestorElement.getAttribute('vt-update') !== 'none'
+      );
+
+      // Apply exit animations to the immediate elements inside the fallback.
+      let node = suspenseIdNode;
+      let depth = 0;
+      while (node) {
+        if (node.nodeType === COMMENT_NODE) {
+          const data = node.data;
+          if (data === SUSPENSE_END_DATA) {
+            if (depth === 0) {
+              break;
+            } else {
+              depth--;
+            }
+          } else if (
+            data === SUSPENSE_START_DATA ||
+            data === SUSPENSE_PENDING_START_DATA ||
+            data === SUSPENSE_QUEUED_START_DATA ||
+            data === SUSPENSE_FALLBACK_START_DATA
+          ) {
+            depth++;
+          }
+        } else if (node.nodeType === ELEMENT_NODE) {
+          const exitElement = node;
+          const exitName = exitElement.getAttribute('vt-name');
+          const pairedElement = appearingViewTransitions.get(exitName);
+          applyViewTransitionName(
+            exitElement,
+            pairedElement ? 'vt-share' : 'vt-exit',
+          );
+          if (pairedElement) {
+            // Activate the other side as well.
+            applyViewTransitionName(pairedElement, 'vt-share');
+            appearingViewTransitions.set(exitName, null); // mark claimed
+          }
+          // Next we'll look inside this element for pairs to trigger "share".
+          const disappearingElements =
+            exitElement.querySelectorAll('[vt-share]');
+          for (let j = 0; j < disappearingElements.length; j++) {
+            const disappearingElement = disappearingElements[j];
+            const name = disappearingElement.getAttribute('vt-name');
+            const appearingElement = appearingViewTransitions.get(name);
+            if (appearingElement) {
+              applyViewTransitionName(disappearingElement, 'vt-share');
+              applyViewTransitionName(appearingElement, 'vt-share');
+              appearingViewTransitions.set(name, null); // mark claimed
+            }
+          }
+        }
+        node = node.nextSibling;
+      }
+
+      // Apply enter animations to the new nodes about to be inserted.
+      const contentNode = batch[i + 1];
+      let enterElement = contentNode.firstElementChild;
+      while (enterElement) {
+        const paired =
+          appearingViewTransitions.get(enterElement.getAttribute('vt-name')) ===
+          null;
+        if (!paired) {
+          applyViewTransitionName(enterElement, 'vt-enter');
+        }
+        enterElement = enterElement.nextElementSibling;
+      }
+    }
     if (shouldStartViewTransition) {
       const transition = (document['__reactViewTransition'] = document[
         'startViewTransition'
