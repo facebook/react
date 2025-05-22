@@ -62,31 +62,31 @@
       errorComponentStack && (suspenseIdNode.cstck = errorComponentStack),
       suspenseBoundaryID._reactRetry && suspenseBoundaryID._reactRetry());
   };
-  var $RV = function (revealBoundaries) {
+  var $RV = function (revealBoundaries, batch) {
     try {
       var existingTransition = document.__reactViewTransition;
       if (existingTransition) {
-        existingTransition.finished.then($RV, $RV);
+        existingTransition.finished.finally($RV.bind(null, batch));
         return;
       }
       if (window._useVT) {
         var transition = (document.__reactViewTransition =
           document.startViewTransition({
-            update: revealBoundaries,
+            update: revealBoundaries.bind(null, batch),
             types: []
           }));
+        transition.ready.finally(function () {});
         transition.finished.finally(function () {
           document.__reactViewTransition === transition &&
             (document.__reactViewTransition = null);
         });
+        $RB = [];
         return;
       }
     } catch (x) {}
-    revealBoundaries();
-  }.bind(null, function () {
+    revealBoundaries(batch);
+  }.bind(null, function (batch) {
     $RT = performance.now();
-    var batch = $RB;
-    $RB = [];
     for (var i = 0; i < batch.length; i += 2) {
       var suspenseIdNode = batch[i],
         contentNode = batch[i + 1],
@@ -118,6 +118,7 @@
         suspenseNode._reactRetry && suspenseNode._reactRetry();
       }
     }
+    batch.length = 0;
   });
   var $RC = function (suspenseBoundaryID, contentID) {
     if ((contentID = document.getElementById(contentID)))
@@ -130,7 +131,7 @@
           2 === $RB.length &&
             ((suspenseBoundaryID =
               ("number" !== typeof $RT ? 0 : $RT) + 300 - performance.now()),
-            setTimeout($RV, suspenseBoundaryID));
+            setTimeout($RV.bind(null, $RB), suspenseBoundaryID));
   };
   var $RR = function (suspenseBoundaryID, contentID, stylesheetDescriptors) {
     function cleanupWith(cb) {
