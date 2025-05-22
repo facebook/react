@@ -7354,67 +7354,129 @@ __DEV__ &&
           queueCompletedSegment(boundary, childSegment);
       } else boundary.completedSegments.push(segment);
     }
-    function finishedTask(request, boundary, row, segment) {
+    function finishedTask(request$jscomp$0, boundary$jscomp$0, row, segment) {
       null !== row &&
         (0 === --row.pendingTasks
-          ? finishSuspenseListRow(request, row)
-          : row.together && tryToResolveTogetherRow(request, row));
-      request.allPendingTasks--;
-      if (null === boundary) {
+          ? finishSuspenseListRow(request$jscomp$0, row)
+          : row.together && tryToResolveTogetherRow(request$jscomp$0, row));
+      request$jscomp$0.allPendingTasks--;
+      if (null === boundary$jscomp$0) {
         if (null !== segment && segment.parentFlushed) {
-          if (null !== request.completedRootSegment)
+          if (null !== request$jscomp$0.completedRootSegment)
             throw Error(
               "There can only be one root segment. This is a bug in React."
             );
-          request.completedRootSegment = segment;
+          request$jscomp$0.completedRootSegment = segment;
         }
-        request.pendingRootTasks--;
-        0 === request.pendingRootTasks && completeShell(request);
-      } else
-        boundary.pendingTasks--,
-          boundary.status !== CLIENT_RENDERED &&
-            (0 === boundary.pendingTasks
-              ? (boundary.status === PENDING && (boundary.status = COMPLETED),
-                null !== segment &&
-                  segment.parentFlushed &&
-                  segment.status === COMPLETED &&
-                  queueCompletedSegment(boundary, segment),
-                boundary.parentFlushed &&
-                  request.completedBoundaries.push(boundary),
-                boundary.status === COMPLETED
-                  ? ((row = boundary.row),
-                    null !== row &&
-                      hoistHoistables(row.hoistables, boundary.contentState),
-                    500 < boundary.byteSize ||
-                      (boundary.fallbackAbortableTasks.forEach(
-                        abortTaskSoft,
-                        request
-                      ),
-                      boundary.fallbackAbortableTasks.clear(),
-                      null !== row &&
-                        0 === --row.pendingTasks &&
-                        finishSuspenseListRow(request, row)),
-                    0 === request.pendingRootTasks &&
-                      null === request.trackedPostpones &&
-                      null !== boundary.contentPreamble &&
-                      preparePreamble(request))
-                  : boundary.status === POSTPONED &&
-                    ((boundary = boundary.row),
-                    null !== boundary &&
-                      0 === --boundary.pendingTasks &&
-                      finishSuspenseListRow(request, boundary)))
-              : (null !== segment &&
-                  segment.parentFlushed &&
-                  segment.status === COMPLETED &&
-                  (queueCompletedSegment(boundary, segment),
-                  1 === boundary.completedSegments.length &&
-                    boundary.parentFlushed &&
-                    request.partialBoundaries.push(boundary)),
-                (boundary = boundary.row),
-                null !== boundary &&
-                  boundary.together &&
-                  tryToResolveTogetherRow(request, boundary)));
-      0 === request.allPendingTasks && completeAll(request);
+        request$jscomp$0.pendingRootTasks--;
+        0 === request$jscomp$0.pendingRootTasks &&
+          completeShell(request$jscomp$0);
+      } else if (
+        (boundary$jscomp$0.pendingTasks--,
+        boundary$jscomp$0.status !== CLIENT_RENDERED)
+      )
+        if (0 === boundary$jscomp$0.pendingTasks)
+          if (
+            (boundary$jscomp$0.status === PENDING &&
+              (boundary$jscomp$0.status = COMPLETED),
+            null !== segment &&
+              segment.parentFlushed &&
+              segment.status === COMPLETED &&
+              queueCompletedSegment(boundary$jscomp$0, segment),
+            boundary$jscomp$0.parentFlushed &&
+              request$jscomp$0.completedBoundaries.push(boundary$jscomp$0),
+            boundary$jscomp$0.status === COMPLETED)
+          )
+            (row = boundary$jscomp$0.row),
+              null !== row &&
+                hoistHoistables(row.hoistables, boundary$jscomp$0.contentState),
+              500 < boundary$jscomp$0.byteSize ||
+                (boundary$jscomp$0.fallbackAbortableTasks.forEach(
+                  abortTaskSoft,
+                  request$jscomp$0
+                ),
+                boundary$jscomp$0.fallbackAbortableTasks.clear(),
+                null !== row &&
+                  0 === --row.pendingTasks &&
+                  finishSuspenseListRow(request$jscomp$0, row)),
+              0 === request$jscomp$0.pendingRootTasks &&
+                null === request$jscomp$0.trackedPostpones &&
+                null !== boundary$jscomp$0.contentPreamble &&
+                preparePreamble(request$jscomp$0);
+          else {
+            if (
+              boundary$jscomp$0.status === POSTPONED &&
+              ((boundary$jscomp$0 = boundary$jscomp$0.row),
+              null !== boundary$jscomp$0)
+            ) {
+              if (null !== request$jscomp$0.trackedPostpones) {
+                row = request$jscomp$0.trackedPostpones;
+                var postponedRow = boundary$jscomp$0.next;
+                if (
+                  null !== postponedRow &&
+                  ((segment = postponedRow.boundaries), null !== segment)
+                )
+                  for (
+                    postponedRow.boundaries = null, postponedRow = 0;
+                    postponedRow < segment.length;
+                    postponedRow++
+                  ) {
+                    var postponedBoundary = segment[postponedRow];
+                    var request = request$jscomp$0,
+                      trackedPostpones = row,
+                      boundary = postponedBoundary;
+                    boundary.status = POSTPONED;
+                    boundary.rootSegmentID = request.nextSegmentId++;
+                    request = boundary.trackedContentKeyPath;
+                    if (null === request)
+                      throw Error(
+                        "It should not be possible to postpone at the root. This is a bug in React."
+                      );
+                    var fallbackReplayNode = boundary.trackedFallbackNode,
+                      children = [],
+                      boundaryNode = trackedPostpones.workingMap.get(request);
+                    void 0 === boundaryNode
+                      ? ((boundary = [
+                          request[1],
+                          request[2],
+                          children,
+                          null,
+                          fallbackReplayNode,
+                          boundary.rootSegmentID
+                        ]),
+                        trackedPostpones.workingMap.set(request, boundary),
+                        addToReplayParent(
+                          boundary,
+                          request[0],
+                          trackedPostpones
+                        ))
+                      : ((boundaryNode[4] = fallbackReplayNode),
+                        (boundaryNode[5] = boundary.rootSegmentID));
+                    finishedTask(
+                      request$jscomp$0,
+                      postponedBoundary,
+                      null,
+                      null
+                    );
+                  }
+              }
+              0 === --boundary$jscomp$0.pendingTasks &&
+                finishSuspenseListRow(request$jscomp$0, boundary$jscomp$0);
+            }
+          }
+        else
+          null !== segment &&
+            segment.parentFlushed &&
+            segment.status === COMPLETED &&
+            (queueCompletedSegment(boundary$jscomp$0, segment),
+            1 === boundary$jscomp$0.completedSegments.length &&
+              boundary$jscomp$0.parentFlushed &&
+              request$jscomp$0.partialBoundaries.push(boundary$jscomp$0)),
+            (boundary$jscomp$0 = boundary$jscomp$0.row),
+            null !== boundary$jscomp$0 &&
+              boundary$jscomp$0.together &&
+              tryToResolveTogetherRow(request$jscomp$0, boundary$jscomp$0);
+      0 === request$jscomp$0.allPendingTasks && completeAll(request$jscomp$0);
     }
     function performWork(request$jscomp$2) {
       if (
@@ -8496,6 +8558,18 @@ __DEV__ &&
         (reason = {}),
           logRecoverableError(request, error$4, reason, null),
           fatalError(request, error$4, reason, null);
+      }
+    }
+    function addToReplayParent(node, parentKeyPath, trackedPostpones) {
+      if (null === parentKeyPath) trackedPostpones.rootNodes.push(node);
+      else {
+        var workingMap = trackedPostpones.workingMap,
+          parentNode = workingMap.get(parentKeyPath);
+        void 0 === parentNode &&
+          ((parentNode = [parentKeyPath[1], parentKeyPath[2], [], null]),
+          workingMap.set(parentKeyPath, parentNode),
+          addToReplayParent(parentNode, parentKeyPath[0], trackedPostpones));
+        parentNode[2].push(node);
       }
     }
     function onError() {}
@@ -10046,5 +10120,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.2.0-www-classic-459a2c42-20250521";
+    exports.version = "19.2.0-www-classic-99781d60-20250522";
   })();
