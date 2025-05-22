@@ -18346,7 +18346,7 @@ __DEV__ &&
           } else didWarnStateUpdateForNotYetMountedComponent = new Set([tag]);
           runWithFiberInDEV(fiber, function () {
             console.error(
-              "Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously later calls tries to update the component. Move this work to useEffect instead."
+              "Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously tries to update the component. Move this work to useEffect instead."
             );
           });
         }
@@ -21908,7 +21908,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-0d072884-20250522"
+        reconcilerVersion: "19.2.0-www-classic-3e9db65f-20250522"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

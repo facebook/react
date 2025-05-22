@@ -20036,7 +20036,7 @@ __DEV__ &&
           } else didWarnStateUpdateForNotYetMountedComponent = new Set([tag]);
           runWithFiberInDEV(fiber, function () {
             console.error(
-              "Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously later calls tries to update the component. Move this work to useEffect instead."
+              "Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously tries to update the component. Move this work to useEffect instead."
             );
           });
         }
@@ -31238,11 +31238,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-www-modern-0d072884-20250522" !== isomorphicReactPackageVersion)
+      if ("19.2.0-www-modern-3e9db65f-20250522" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-www-modern-0d072884-20250522\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-www-modern-3e9db65f-20250522\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31285,10 +31285,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-www-modern-0d072884-20250522",
+          version: "19.2.0-www-modern-3e9db65f-20250522",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-www-modern-0d072884-20250522"
+          reconcilerVersion: "19.2.0-www-modern-3e9db65f-20250522"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -31888,7 +31888,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-www-modern-0d072884-20250522";
+    exports.version = "19.2.0-www-modern-3e9db65f-20250522";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -12538,7 +12538,7 @@ __DEV__ &&
           } else didWarnStateUpdateForNotYetMountedComponent = new Set([tag]);
           runWithFiberInDEV(fiber, function () {
             console.error(
-              "Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously later calls tries to update the component. Move this work to useEffect instead."
+              "Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously tries to update the component. Move this work to useEffect instead."
             );
           });
         }
@@ -15386,10 +15386,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-0d072884-20250522",
+        version: "19.2.0-www-classic-3e9db65f-20250522",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-0d072884-20250522"
+        reconcilerVersion: "19.2.0-www-classic-3e9db65f-20250522"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15524,5 +15524,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-classic-0d072884-20250522";
+    exports.version = "19.2.0-www-classic-3e9db65f-20250522";
   })();
