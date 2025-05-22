@@ -18,10 +18,8 @@ const SUSPENSE_FALLBACK_START_DATA = '$!';
 // working. Closure converts it to a dot access anyway, though, so it's not an
 // urgent issue.
 
-export function revealCompletedBoundaries() {
+export function revealCompletedBoundaries(batch) {
   window['$RT'] = performance.now();
-  const batch = window['$RB'];
-  window['$RB'] = [];
   for (let i = 0; i < batch.length; i += 2) {
     const suspenseIdNode = batch[i];
     const contentNode = batch[i + 1];
@@ -79,14 +77,18 @@ export function revealCompletedBoundaries() {
       suspenseNode['_reactRetry']();
     }
   }
+  batch.length = 0;
 }
 
-export function revealCompletedBoundariesWithViewTransitions(revealBoundaries) {
+export function revealCompletedBoundariesWithViewTransitions(
+  revealBoundaries,
+  batch,
+) {
   try {
     const existingTransition = document['__reactViewTransition'];
     if (existingTransition) {
       // Retry after the previous ViewTransition finishes.
-      existingTransition.finished.then(window['$RV'], window['$RV']);
+      existingTransition.finished.finally(window['$RV'].bind(null, batch));
       return;
     }
     const shouldStartViewTransition = window['_useVT']; // TODO: Detect.
@@ -94,14 +96,20 @@ export function revealCompletedBoundariesWithViewTransitions(revealBoundaries) {
       const transition = (document['__reactViewTransition'] = document[
         'startViewTransition'
       ]({
-        update: revealBoundaries,
+        update: revealBoundaries.bind(null, batch),
         types: [], // TODO: Add a hard coded type for Suspense reveals.
       }));
+      transition.ready.finally(() => {
+        // TODO
+      });
       transition.finished.finally(() => {
         if (document['__reactViewTransition'] === transition) {
           document['__reactViewTransition'] = null;
         }
       });
+      // Queue any future completions into its own batch since they won't have been
+      // snapshotted by this one.
+      window['$RB'] = [];
       return;
     }
     // Fall through to reveal.
@@ -109,7 +117,7 @@ export function revealCompletedBoundariesWithViewTransitions(revealBoundaries) {
     // Fall through to reveal.
   }
   // ViewTransitions v2 not supported or no ViewTransitions found. Reveal immediately.
-  revealBoundaries();
+  revealBoundaries(batch);
 }
 
 export function clientRenderBoundary(
@@ -182,7 +190,7 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
     // We always schedule the flush in a timer even if it's very low or negative to allow
     // for multiple completeBoundary calls that are already queued to have a chance to
     // make the batch.
-    setTimeout(window['$RV'], msUntilTimeout);
+    setTimeout(window['$RV'].bind(null, window['$RB']), msUntilTimeout);
   }
 }
 
