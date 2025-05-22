@@ -2702,7 +2702,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
         }
       }
 
-      if (__DEV__ && ReactSharedInternals.actQueue !== null) {
+      if (__DEV__ && ReactSharedInternals.actQueue) {
         // `act` special case: If we're inside an `act` scope, don't consult
         // `shouldYield`. Always keep working until the render is complete.
         // This is not just an optimization: in a unit test environment, we
@@ -4880,7 +4880,7 @@ function scheduleCallback(priorityLevel: any, callback) {
     // If we're currently inside an `act` scope, bypass Scheduler and push to
     // the `act` queue instead.
     const actQueue = ReactSharedInternals.actQueue;
-    if (actQueue !== null) {
+    if (actQueue) {
       actQueue.push(callback);
       return fakeActCallbackNode;
     } else {
@@ -4894,7 +4894,7 @@ function scheduleCallback(priorityLevel: any, callback) {
 
 function shouldForceFlushFallbacksInDEV() {
   // Never force flush in production. This function should get stripped out.
-  return __DEV__ && ReactSharedInternals.actQueue !== null;
+  return __DEV__ && !!ReactSharedInternals.actQueue;
 }
 
 function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
