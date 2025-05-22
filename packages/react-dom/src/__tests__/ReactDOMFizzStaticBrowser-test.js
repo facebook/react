@@ -2262,6 +2262,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
               <ComponentB />
             </Suspense>
             <Suspense fallback="Loading C">C</Suspense>
+            <Suspense fallback="Loading D">D</Suspense>
           </SuspenseList>
         </div>
       );
@@ -2282,6 +2283,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     });
 
     const prerendered = await pendingResult;
+
     const postponedState = JSON.stringify(prerendered.postponed);
 
     await readIntoContainer(prerendered.prelude);
@@ -2289,7 +2291,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
       <div>
         {'Loading A'}
         {'Loading B'}
-        {'C' /* TODO: This should not be resolved. */}
+        {'Loading C'}
+        {'Loading D'}
       </div>,
     );
 
@@ -2309,6 +2312,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
         {'A'}
         {'B'}
         {'C'}
+        {'D'}
       </div>,
     );
   });

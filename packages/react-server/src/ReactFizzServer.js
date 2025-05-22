@@ -1725,6 +1725,26 @@ function unblockSuspenseListRow(
   }
 }
 
+function trackPostponedSuspenseListRow(
+  request: Request,
+  trackedPostpones: PostponedHoles,
+  postponedRow: null | SuspenseListRow,
+): void {
+  // TODO: Because we unconditionally call this, it will be called by finishedTask
+  // and so ends up recursive which can lead to stack overflow for very long lists.
+  if (postponedRow !== null) {
+    const postponedBoundaries = postponedRow.boundaries;
+    if (postponedBoundaries !== null) {
+      postponedRow.boundaries = null;
+      for (let i = 0; i < postponedBoundaries.length; i++) {
+        const postponedBoundary = postponedBoundaries[i];
+        trackPostponedBoundary(request, trackedPostpones, postponedBoundary);
+        finishedTask(request, postponedBoundary, null, null);
+      }
+    }
+  }
+}
+
 function tryToResolveTogetherRow(
   request: Request,
   togetherRow: SuspenseListRow,
@@ -3774,6 +3794,49 @@ function renderChildrenArray(
   }
 }
 
+function trackPostponedBoundary(
+  request: Request,
+  trackedPostpones: PostponedHoles,
+  boundary: SuspenseBoundary,
+): ReplaySuspenseBoundary {
+  boundary.status = POSTPONED;
+  // We need to eagerly assign it an ID because we'll need to refer to
+  // it before flushing and we know that we can't inline it.
+  boundary.rootSegmentID = request.nextSegmentId++;
+
+  const boundaryKeyPath = boundary.trackedContentKeyPath;
+  if (boundaryKeyPath === null) {
+    throw new Error(
+      'It should not be possible to postpone at the root. This is a bug in React.',
+    );
+  }
+
+  const fallbackReplayNode = boundary.trackedFallbackNode;
+
+  const children: Array<ReplayNode> = [];
+  const boundaryNode: void | ReplayNode =
+    trackedPostpones.workingMap.get(boundaryKeyPath);
+  if (boundaryNode === undefined) {
+    const suspenseBoundary: ReplaySuspenseBoundary = [
+      boundaryKeyPath[1],
+      boundaryKeyPath[2],
+      children,
+      null,
+      fallbackReplayNode,
+      boundary.rootSegmentID,
+    ];
+    trackedPostpones.workingMap.set(boundaryKeyPath, suspenseBoundary);
+    addToReplayParent(suspenseBoundary, boundaryKeyPath[0], trackedPostpones);
+    return suspenseBoundary;
+  } else {
+    // Upgrade to ReplaySuspenseBoundary.
+    const suspenseBoundary: ReplaySuspenseBoundary = (boundaryNode: any);
+    suspenseBoundary[4] = fallbackReplayNode;
+    suspenseBoundary[5] = boundary.rootSegmentID;
+    return suspenseBoundary;
+  }
+}
+
 function trackPostpone(
   request: Request,
   trackedPostpones: PostponedHoles,
@@ -3796,22 +3859,12 @@ function trackPostpone(
   }
 
   if (boundary !== null && boundary.status === PENDING) {
-    boundary.status = POSTPONED;
-    // We need to eagerly assign it an ID because we'll need to refer to
-    // it before flushing and we know that we can't inline it.
-    boundary.rootSegmentID = request.nextSegmentId++;
-
-    const boundaryKeyPath = boundary.trackedContentKeyPath;
-    if (boundaryKeyPath === null) {
-      throw new Error(
-        'It should not be possible to postpone at the root. This is a bug in React.',
-      );
-    }
-
-    const fallbackReplayNode = boundary.trackedFallbackNode;
-
-    const children: Array<ReplayNode> = [];
-    if (boundaryKeyPath === keyPath && task.childIndex === -1) {
+    const boundaryNode = trackPostponedBoundary(
+      request,
+      trackedPostpones,
+      boundary,
+    );
+    if (boundary.trackedContentKeyPath === keyPath && task.childIndex === -1) {
       // Assign ID
       if (segment.id === -1) {
         if (segment.parentFlushed) {
@@ -3823,39 +3876,10 @@ function trackPostpone(
         }
       }
       // We postponed directly inside the Suspense boundary so we mark this for resuming.
-      const boundaryNode: ReplaySuspenseBoundary = [
-        boundaryKeyPath[1],
-        boundaryKeyPath[2],
-        children,
-        segment.id,
-        fallbackReplayNode,
-        boundary.rootSegmentID,
-      ];
-      trackedPostpones.workingMap.set(boundaryKeyPath, boundaryNode);
-      addToReplayParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
+      boundaryNode[3] = segment.id;
       return;
-    } else {
-      let boundaryNode: void | ReplayNode =
-        trackedPostpones.workingMap.get(boundaryKeyPath);
-      if (boundaryNode === undefined) {
-        boundaryNode = [
-          boundaryKeyPath[1],
-          boundaryKeyPath[2],
-          children,
-          null,
-          fallbackReplayNode,
-          boundary.rootSegmentID,
-        ];
-        trackedPostpones.workingMap.set(boundaryKeyPath, boundaryNode);
-        addToReplayParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
-      } else {
-        // Upgrade to ReplaySuspenseBoundary.
-        const suspenseBoundary: ReplaySuspenseBoundary = (boundaryNode: any);
-        suspenseBoundary[4] = fallbackReplayNode;
-        suspenseBoundary[5] = boundary.rootSegmentID;
-      }
-      // Fall through to add the child node.
     }
+    // Otherwise, fall through to add the child node.
   }
 
   // We know that this will leave a hole so we might as well assign an ID now.
@@ -4941,7 +4965,18 @@ function finishedTask(
       } else if (boundary.status === POSTPONED) {
         const boundaryRow = boundary.row;
         if (boundaryRow !== null) {
+          if (request.trackedPostpones !== null) {
+            // If this boundary is postponed, then we need to also postpone any blocked boundaries
+            // in the next row.
+            trackPostponedSuspenseListRow(
+              request,
+              request.trackedPostpones,
+              boundaryRow.next,
+            );
+          }
           if (--boundaryRow.pendingTasks === 0) {
+            // This is really unnecessary since we've already postponed the boundaries but
+            // for pairity with other track+finish paths. We might end up using the hoisting.
             finishSuspenseListRow(request, boundaryRow);
           }
         }
