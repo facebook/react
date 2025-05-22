@@ -759,10 +759,9 @@ const SUBTREE_SCOPE = ~(ENTER_SCOPE | EXIT_SCOPE);
 
 type ViewTransitionContext = {
   update: 'none' | 'auto' | string,
-  // null here means that this case can never trigger. Not "auto" like it does in props.
-  enter: null | 'none' | 'auto' | string,
-  exit: null | 'none' | 'auto' | string,
-  share: null | 'none' | 'auto' | string,
+  enter: 'none' | 'auto' | string,
+  exit: 'none' | 'auto' | string,
+  share: 'none' | 'auto' | string,
   name: 'auto' | string,
   autoName: string, // a name that can be used if an explicit one is not defined.
   nameIdx: number, // keeps track of how many duplicates of this name we've emitted.
@@ -917,8 +916,8 @@ function getSuspenseViewTransition(
   // we would've used (the parent ViewTransition name or auto-assign one).
   const viewTransition: ViewTransitionContext = {
     update: parentViewTransition.update, // For deep updates.
-    enter: null,
-    exit: null,
+    enter: 'none',
+    exit: 'none',
     share: parentViewTransition.update, // For exit or enter of reveals.
     name: parentViewTransition.autoName,
     autoName: parentViewTransition.autoName,
@@ -989,13 +988,8 @@ export function getViewTransitionFormatContext(
       share = parentViewTransition.share;
     } else {
       name = 'auto';
-      share = null; // share is only relevant if there's an explicit name
+      share = 'none'; // share is only relevant if there's an explicit name
     }
-  } else if (share === 'none') {
-    // I believe if share is disabled, it means the same thing as if it doesn't
-    // exit because enter/exit will take precedence and if it's deeply nested
-    // it just animates along whatever the parent does when disabled.
-    share = null;
   } else {
     if (share == null) {
       share = 'auto';
@@ -1008,12 +1002,12 @@ export function getViewTransitionFormatContext(
     }
   }
   if (!(parentContext.tagScope & EXIT_SCOPE)) {
-    exit = null; // exit is only relevant for the first ViewTransition inside fallback
+    exit = 'none'; // exit is only relevant for the first ViewTransition inside fallback
   } else {
     resumableState.instructions |= NeedUpgradeToViewTransitions;
   }
   if (!(parentContext.tagScope & ENTER_SCOPE)) {
-    enter = null; // enter is only relevant for the first ViewTransition inside content
+    enter = 'none'; // enter is only relevant for the first ViewTransition inside content
   } else {
     resumableState.instructions |= NeedUpgradeToViewTransitions;
   }
@@ -1125,13 +1119,13 @@ function pushViewTransitionAttributes(
     viewTransition.nameIdx++;
   }
   pushStringAttribute(target, 'vt-update', viewTransition.update);
-  if (viewTransition.enter !== null) {
+  if (viewTransition.enter !== 'none') {
     pushStringAttribute(target, 'vt-enter', viewTransition.enter);
   }
-  if (viewTransition.exit !== null) {
+  if (viewTransition.exit !== 'none') {
     pushStringAttribute(target, 'vt-exit', viewTransition.exit);
   }
-  if (viewTransition.share !== null) {
+  if (viewTransition.share !== 'none') {
     pushStringAttribute(target, 'vt-share', viewTransition.share);
   }
 }
