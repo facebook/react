@@ -90,7 +90,7 @@ export function revealCompletedBoundariesWithViewTransitions(
   const restoreQueue = [];
   function applyViewTransitionName(element, classAttributeName) {
     const className = element.getAttribute(classAttributeName);
-    if (!className || className === 'none') {
+    if (!className) {
       return;
     }
     // Add any elements we apply a name to a queue to be reverted when we start.
@@ -161,22 +161,6 @@ export function revealCompletedBoundariesWithViewTransitions(
         continue;
       }
 
-      // Apply update animations to any parents and siblings that might be affected.
-      let ancestorElement = parentInstance;
-      do {
-        let childElement = ancestorElement.firstElementChild;
-        while (childElement) {
-          // TODO: Bail out if we can
-          // TODO: If we have already handled this element as part of another exit/enter/share, don't override.
-          applyViewTransitionName(childElement, 'vt-update');
-          childElement = childElement.nextElementSibling;
-        }
-      } while (
-        (ancestorElement = ancestorElement.parentNode) &&
-        ancestorElement.nodeType === ELEMENT_NODE &&
-        ancestorElement.getAttribute('vt-update') !== 'none'
-      );
-
       // Apply exit animations to the immediate elements inside the fallback.
       let node = suspenseIdNode;
       let depth = 0;
@@ -239,6 +223,29 @@ export function revealCompletedBoundariesWithViewTransitions(
         }
         enterElement = enterElement.nextElementSibling;
       }
+
+      // Apply update animations to any parents and siblings that might be affected.
+      let ancestorElement = parentInstance;
+      do {
+        let childElement = ancestorElement.firstElementChild;
+        while (childElement) {
+          // TODO: Bail out if we can
+          const updateClassName = childElement.getAttribute('vt-update');
+          if (
+            updateClassName &&
+            updateClassName !== 'none' &&
+            !restoreQueue.includes(childElement)
+          ) {
+            // If we have already handled this element as part of another exit/enter/share, don't override.
+            applyViewTransitionName(childElement, 'vt-update');
+          }
+          childElement = childElement.nextElementSibling;
+        }
+      } while (
+        (ancestorElement = ancestorElement.parentNode) &&
+        ancestorElement.nodeType === ELEMENT_NODE &&
+        ancestorElement.getAttribute('vt-update') !== 'none'
+      );
     }
     if (shouldStartViewTransition) {
       const transition = (document['__reactViewTransition'] = document[
