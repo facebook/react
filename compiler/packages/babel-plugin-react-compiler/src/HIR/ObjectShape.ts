@@ -6,6 +6,7 @@
  */
 
 import {CompilerError} from '../CompilerError';
+import {AliasingSignature} from '../Inference/InferMutationAliasingEffects';
 import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BuiltInType,
@@ -179,6 +180,8 @@ export type FunctionSignature = {
   impure?: boolean;
 
   canonicalName?: string;
+
+  aliasing?: AliasingSignature | null;
 };
 
 /*
@@ -332,6 +335,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       returnValueKind: ValueKind.Mutable,
       noAlias: true,
       mutableOnlyIfOperandsAreMutable: true,
+      aliasing: null,
     }),
   ],
   [

@@ -48,7 +48,7 @@ import {
   eachTerminalOperand,
   eachTerminalSuccessor,
 } from '../HIR/visitors';
-import {assertExhaustive, retainWhere} from '../Utils/utils';
+import {assertExhaustive, retainWhere, Set_isSuperset} from '../Utils/utils';
 import {
   inferTerminalFunctionEffects,
   inferInstructionFunctionEffects,
@@ -790,7 +790,7 @@ function inferParam(
  * │         Mutable          │───┘
  * └──────────────────────────┘
  */
-function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
+export function mergeValueKinds(a: ValueKind, b: ValueKind): ValueKind {
   if (a === b) {
     return a;
   } else if (a === ValueKind.MaybeFrozen || b === ValueKind.MaybeFrozen) {
@@ -832,28 +832,16 @@ function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
   }
 }
 
-/**
- * @returns `true` if `a` is a superset of `b`.
- */
-function isSuperset<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean {
-  for (const v of b) {
-    if (!a.has(v)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 function mergeAbstractValues(
   a: AbstractValue,
   b: AbstractValue,
 ): AbstractValue {
-  const kind = mergeValues(a.kind, b.kind);
+  const kind = mergeValueKinds(a.kind, b.kind);
   if (
     kind === a.kind &&
     kind === b.kind &&
-    isSuperset(a.reason, b.reason) &&
-    isSuperset(a.context, b.context)
+    Set_isSuperset(a.reason, b.reason) &&
+    Set_isSuperset(a.context, b.context)
   ) {
     return a;
   }

@@ -104,6 +104,8 @@ import {validateNoImpureFunctionsInRender} from '../Validation/ValidateNoImpureF
 import {CompilerError} from '..';
 import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
+import {inferMutationAliasingEffects} from '../Inference/InferMutationAliasingEffects';
+import {inferMutationAliasingRanges} from '../Inference/InferMutationAliasingRanges';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -225,6 +227,16 @@ function runWithEnvironment(
 
   analyseFunctions(hir);
   log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
+
+  const mutabilityAliasingErrors = inferMutationAliasingEffects(hir);
+  log({kind: 'hir', name: 'InferMutationAliasingEffects', value: hir});
+  if (env.isInferredMemoEnabled) {
+    if (mutabilityAliasingErrors.isErr()) {
+      throw mutabilityAliasingErrors.unwrapErr();
+    }
+  }
+  inferMutationAliasingRanges(hir);
+  log({kind: 'hir', name: 'InferMutationAliasingRanges', value: hir});
 
   const fnEffectErrors = inferReferenceEffects(hir);
   if (env.isInferredMemoEnabled) {
