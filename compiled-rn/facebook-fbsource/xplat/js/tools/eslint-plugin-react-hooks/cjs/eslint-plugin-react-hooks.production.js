@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<b5fc27344d90540c59050df7e7824523>>
+ * @generated SignedSource<<4d700f808825d94e524fee57ec05a757>>
  */
 
 'use strict';
@@ -29017,7 +29017,8 @@ class HIRBuilder {
     get environment() {
         return __classPrivateFieldGet(this, _HIRBuilder_env, "f");
     }
-    constructor(env, parentFunction, bindings = null, context = null) {
+    constructor(env, options) {
+        var _a, _b, _c;
         _HIRBuilder_instances.add(this);
         _HIRBuilder_completed.set(this, new Map());
         _HIRBuilder_current.set(this, void 0);
@@ -29030,11 +29031,10 @@ class HIRBuilder {
         this.errors = new CompilerError();
         this.fbtDepth = 0;
         __classPrivateFieldSet(this, _HIRBuilder_env, env, "f");
-        __classPrivateFieldSet(this, _HIRBuilder_bindings, bindings !== null && bindings !== void 0 ? bindings : new Map(), "f");
-        this.parentFunction = parentFunction;
-        __classPrivateFieldSet(this, _HIRBuilder_context, context !== null && context !== void 0 ? context : [], "f");
+        __classPrivateFieldSet(this, _HIRBuilder_bindings, (_a = options === null || options === void 0 ? void 0 : options.bindings) !== null && _a !== void 0 ? _a : new Map(), "f");
+        __classPrivateFieldSet(this, _HIRBuilder_context, (_b = options === null || options === void 0 ? void 0 : options.context) !== null && _b !== void 0 ? _b : [], "f");
         __classPrivateFieldSet(this, _HIRBuilder_entry, makeBlockId(env.nextBlockId), "f");
-        __classPrivateFieldSet(this, _HIRBuilder_current, newBlock(__classPrivateFieldGet(this, _HIRBuilder_entry, "f"), 'block'), "f");
+        __classPrivateFieldSet(this, _HIRBuilder_current, newBlock(__classPrivateFieldGet(this, _HIRBuilder_entry, "f"), (_c = options === null || options === void 0 ? void 0 : options.entryBlockKind) !== null && _c !== void 0 ? _c : 'block'), "f");
     }
     currentBlockKind() {
         return __classPrivateFieldGet(this, _HIRBuilder_current, "f").kind;
@@ -29072,7 +29072,7 @@ class HIRBuilder {
         if (babelBinding == null) {
             return { kind: 'Global', name: originalName };
         }
-        const outerBinding = this.parentFunction.scope.parent.getBinding(originalName);
+        const outerBinding = __classPrivateFieldGet(this, _HIRBuilder_env, "f").parentFunction.scope.parent.getBinding(originalName);
         if (babelBinding === outerBinding) {
             const path = babelBinding.path;
             if (path.isImportDefaultSpecifier()) {
@@ -29122,7 +29122,7 @@ class HIRBuilder {
     isContextIdentifier(path) {
         const binding = __classPrivateFieldGet(this, _HIRBuilder_instances, "m", _HIRBuilder_resolveBabelBinding).call(this, path);
         if (binding) {
-            const outerBinding = this.parentFunction.scope.parent.getBinding(path.node.name);
+            const outerBinding = __classPrivateFieldGet(this, _HIRBuilder_env, "f").parentFunction.scope.parent.getBinding(path.node.name);
             if (binding === outerBinding) {
                 return false;
             }
@@ -29211,6 +29211,7 @@ class HIRBuilder {
             const nextId = __classPrivateFieldGet(this, _HIRBuilder_env, "f").nextBlockId;
             __classPrivateFieldSet(this, _HIRBuilder_current, newBlock(nextId, nextBlockKind), "f");
         }
+        return blockId;
     }
     terminateWithContinuation(terminal, continuation) {
         const { id: blockId, kind, instructions } = __classPrivateFieldGet(this, _HIRBuilder_current, "f");
@@ -29416,6 +29417,11 @@ function getReversePostorderedBlocks(func) {
             return;
         }
         const block = func.blocks.get(blockId);
+        CompilerError.invariant(block != null, {
+            reason: '[HIRBuilder] Unexpected null block',
+            description: `expected block ${blockId} to exist`,
+            loc: GeneratedSource,
+        });
         const successors = [...eachTerminalSuccessor(block.terminal)].reverse();
         const fallthrough = terminalFallthrough(block.terminal);
         if (fallthrough != null) {
@@ -30355,9 +30361,12 @@ const DefaultNonmutatingHook = addHook(BUILTIN_SHAPES, {
     returnValueKind: ValueKind.Frozen,
 }, 'DefaultNonmutatingHook');
 
-function lower$1(func, env, bindings = null, capturedRefs = [], parent = null) {
+function lower$1(func, env, bindings = null, capturedRefs = []) {
     var _a, _b, _c;
-    const builder = new HIRBuilder(env, parent !== null && parent !== void 0 ? parent : func, bindings, capturedRefs);
+    const builder = new HIRBuilder(env, {
+        bindings,
+        context: capturedRefs,
+    });
     const context = [];
     for (const ref of capturedRefs !== null && capturedRefs !== void 0 ? capturedRefs : []) {
         context.push({
@@ -30476,7 +30485,7 @@ function lower$1(func, env, bindings = null, capturedRefs = [], parent = null) {
     return Ok({
         id,
         params,
-        fnType: parent == null ? env.fnType : 'Other',
+        fnType: bindings == null ? env.fnType : 'Other',
         returnTypeAnnotation: null,
         returnType: makeType(),
         body: builder.build(),
@@ -33149,9 +33158,12 @@ function lowerFunctionToValue(builder, expr) {
     };
 }
 function lowerFunction(builder, expr) {
-    const componentScope = builder.parentFunction.scope;
+    const componentScope = builder.environment.parentFunction.scope;
     const capturedContext = gatherCapturedContext(expr, componentScope);
-    const lowering = lower$1(expr, builder.environment, builder.bindings, [...builder.context, ...capturedContext], builder.parentFunction);
+    const lowering = lower$1(expr, builder.environment, builder.bindings, [
+        ...builder.context,
+        ...capturedContext,
+    ]);
     let loweredFunc;
     if (lowering.isErr()) {
         lowering
@@ -38356,7 +38368,7 @@ const EnvironmentConfigSchema = zod.z.object({
     lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
 });
 class Environment {
-    constructor(scope, fnType, compilerMode, config, contextIdentifiers, logger, filename, code, programContext) {
+    constructor(scope, fnType, compilerMode, config, contextIdentifiers, parentFunction, logger, filename, code, programContext) {
         _Environment_instances.add(this);
         _Environment_globals.set(this, void 0);
         _Environment_shapes.set(this, void 0);
@@ -38413,6 +38425,7 @@ class Environment {
             const reanimatedModuleType = getReanimatedModuleType(__classPrivateFieldGet(this, _Environment_shapes, "f"));
             __classPrivateFieldGet(this, _Environment_moduleTypes, "f").set(REANIMATED_MODULE_NAME, reanimatedModuleType);
         }
+        this.parentFunction = parentFunction;
         __classPrivateFieldSet(this, _Environment_contextIdentifiers, contextIdentifiers, "f");
         __classPrivateFieldSet(this, _Environment_hoistedIdentifiers, new Set(), "f");
     }
@@ -55272,7 +55285,7 @@ function validateNoFreezingKnownMutableFunctions(fn) {
 function run(func, config, fnType, mode, programContext, logger, filename, code) {
     var _a, _b;
     const contextIdentifiers = findContextIdentifiers(func);
-    const env = new Environment(func.scope, fnType, mode, config, contextIdentifiers, logger, filename, code, programContext);
+    const env = new Environment(func.scope, fnType, mode, config, contextIdentifiers, func, logger, filename, code, programContext);
     (_b = (_a = env.logger) === null || _a === void 0 ? void 0 : _a.debugLogIRs) === null || _b === void 0 ? void 0 : _b.call(_a, {
         kind: 'debug',
         name: 'EnvironmentConfig',
