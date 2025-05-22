@@ -63,19 +63,150 @@
       suspenseBoundaryID._reactRetry && suspenseBoundaryID._reactRetry());
   };
   var $RV = function (revealBoundaries, batch) {
+    function applyViewTransitionName(element, classAttributeName) {
+      var className = element.getAttribute(classAttributeName);
+      className &&
+        ((classAttributeName = element.style),
+        restoreQueue.push(
+          element,
+          classAttributeName.viewTransitionName,
+          classAttributeName.viewTransitionClass
+        ),
+        "auto" !== className &&
+          (classAttributeName.viewTransitionClass = className),
+        (element = element.getAttribute("vt-name")) ||
+          (element = "\u00abT" + autoNameIdx++ + "\u00bb"),
+        (classAttributeName.viewTransitionName = element),
+        (shouldStartViewTransition = !0));
+    }
+    var shouldStartViewTransition = !1,
+      autoNameIdx = 0,
+      restoreQueue = [];
     try {
       var existingTransition = document.__reactViewTransition;
       if (existingTransition) {
         existingTransition.finished.finally($RV.bind(null, batch));
         return;
       }
-      if (window._useVT) {
+      var appearingViewTransitions = new Map();
+      for (
+        existingTransition = 1;
+        existingTransition < batch.length;
+        existingTransition += 2
+      )
+        for (
+          var appearingElements =
+              batch[existingTransition].querySelectorAll("[vt-share]"),
+            j = 0;
+          j < appearingElements.length;
+          j++
+        ) {
+          var appearingElement = appearingElements[j];
+          appearingViewTransitions.set(
+            appearingElement.getAttribute("vt-name"),
+            appearingElement
+          );
+        }
+      for (
+        appearingElements = 0;
+        appearingElements < batch.length;
+        appearingElements += 2
+      ) {
+        var suspenseIdNode = batch[appearingElements],
+          parentInstance = suspenseIdNode.parentNode;
+        if (parentInstance) {
+          var parentRect = parentInstance.getBoundingClientRect();
+          if (
+            parentRect.left ||
+            parentRect.top ||
+            parentRect.width ||
+            parentRect.height
+          ) {
+            appearingElement = suspenseIdNode;
+            for (existingTransition = 0; appearingElement; ) {
+              if (8 === appearingElement.nodeType) {
+                var data = appearingElement.data;
+                if ("/$" === data)
+                  if (0 === existingTransition) break;
+                  else existingTransition--;
+                else
+                  ("$" !== data &&
+                    "$?" !== data &&
+                    "$~" !== data &&
+                    "$!" !== data) ||
+                    existingTransition++;
+              } else if (1 === appearingElement.nodeType) {
+                j = appearingElement;
+                var exitName = j.getAttribute("vt-name"),
+                  pairedElement = appearingViewTransitions.get(exitName);
+                applyViewTransitionName(
+                  j,
+                  pairedElement ? "vt-share" : "vt-exit"
+                );
+                pairedElement &&
+                  (applyViewTransitionName(pairedElement, "vt-share"),
+                  appearingViewTransitions.set(exitName, null));
+                var disappearingElements = j.querySelectorAll("[vt-share]");
+                for (j = 0; j < disappearingElements.length; j++) {
+                  var disappearingElement = disappearingElements[j],
+                    name = disappearingElement.getAttribute("vt-name"),
+                    appearingElement$2 = appearingViewTransitions.get(name);
+                  appearingElement$2 &&
+                    (applyViewTransitionName(disappearingElement, "vt-share"),
+                    applyViewTransitionName(appearingElement$2, "vt-share"),
+                    appearingViewTransitions.set(name, null));
+                }
+              }
+              appearingElement = appearingElement.nextSibling;
+            }
+            for (
+              var enterElement = batch[appearingElements + 1].firstElementChild;
+              enterElement;
+
+            )
+              null !==
+                appearingViewTransitions.get(
+                  enterElement.getAttribute("vt-name")
+                ) && applyViewTransitionName(enterElement, "vt-enter"),
+                (enterElement = enterElement.nextElementSibling);
+            appearingElement = parentInstance;
+            do
+              for (
+                var childElement = appearingElement.firstElementChild;
+                childElement;
+
+              ) {
+                var updateClassName = childElement.getAttribute("vt-update");
+                updateClassName &&
+                  "none" !== updateClassName &&
+                  !restoreQueue.includes(childElement) &&
+                  applyViewTransitionName(childElement, "vt-update");
+                childElement = childElement.nextElementSibling;
+              }
+            while (
+              (appearingElement = appearingElement.parentNode) &&
+              1 === appearingElement.nodeType &&
+              "none" !== appearingElement.getAttribute("vt-update")
+            );
+          }
+        }
+      }
+      if (shouldStartViewTransition) {
         var transition = (document.__reactViewTransition =
           document.startViewTransition({
             update: revealBoundaries.bind(null, batch),
             types: []
           }));
-        transition.ready.finally(function () {});
+        transition.ready.finally(function () {
+          for (var i$4 = restoreQueue.length - 3; 0 <= i$4; i$4 -= 3) {
+            var element = restoreQueue[i$4],
+              elementStyle = element.style;
+            elementStyle.viewTransitionName = restoreQueue[i$4 + 1];
+            elementStyle.viewTransitionClass = restoreQueue[i$4 + 1];
+            "" === element.getAttribute("style") &&
+              element.removeAttribute("style");
+          }
+        });
         transition.finished.finally(function () {
           document.__reactViewTransition === transition &&
             (document.__reactViewTransition = null);
@@ -147,8 +278,8 @@
           "link[data-precedence],style[data-precedence]"
         ),
         styleTagsToHoist = [],
-        i$0 = 0;
-      (node = nodes[i$0++]);
+        i$5 = 0;
+      (node = nodes[i$5++]);
 
     )
       "not all" === node.getAttribute("media")
@@ -158,11 +289,11 @@
     nodes = 0;
     node = [];
     var precedence, resourceEl;
-    for (i$0 = !0; ; ) {
-      if (i$0) {
+    for (i$5 = !0; ; ) {
+      if (i$5) {
         var stylesheetDescriptor = stylesheetDescriptors[nodes++];
         if (!stylesheetDescriptor) {
-          i$0 = !1;
+          i$5 = !1;
           nodes = 0;
           continue;
         }
