@@ -24,6 +24,7 @@ export const {
   enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
+  enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
   enableFastAddPropertiesInDiffing,
   enableLazyPublicInstanceInFabric,
@@ -82,6 +83,7 @@ export const enableViewTransition = false;
 export const enableGestureTransition = false;
 export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
+export const enableFizzBlockingRender = true;
 export const enableSrcObject = false;
 export const enableHydrationChangeEvent = true;
 export const enableDefaultTransitionIndicator = false;
