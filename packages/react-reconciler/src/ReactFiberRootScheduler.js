@@ -20,11 +20,13 @@ import {
   enableComponentPerformanceTrack,
   enableYieldingBeforePassive,
   enableGestureTransition,
+  enableDefaultTransitionIndicator,
 } from 'shared/ReactFeatureFlags';
 import {
   NoLane,
   NoLanes,
   SyncLane,
+  DefaultLane,
   getHighestPriorityLane,
   getNextLanes,
   includesSyncLane,
@@ -78,6 +80,17 @@ import {
   resetNestedUpdateFlag,
   syncNestedUpdateFlag,
 } from './ReactProfilerTimer';
+import {peekEntangledActionLane} from './ReactFiberAsyncAction';
+
+import noop from 'shared/noop';
+import reportGlobalError from 'shared/reportGlobalError';
+
+import {
+  startIsomorphicDefaultIndicatorIfNeeded,
+  hasOngoingIsomorphicIndicator,
+  retainIsomorphicIndicator,
+  markIsomorphicIndicatorHandled,
+} from './ReactFiberAsyncAction';
 
 // A linked list of all the roots with pending work. In an idiomatic app,
 // there's only a single root, but we do support multi root apps, hence this
@@ -124,6 +137,20 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
   // without consulting the schedule.
   mightHavePendingSyncWork = true;
 
+  ensureScheduleIsScheduled();
+
+  if (
+    __DEV__ &&
+    !disableLegacyMode &&
+    ReactSharedInternals.isBatchingLegacy &&
+    root.tag === LegacyRoot
+  ) {
+    // Special `act` case: Record whenever a legacy update is scheduled.
+    ReactSharedInternals.didScheduleLegacyUpdate = true;
+  }
+}
+
+export function ensureScheduleIsScheduled(): void {
   // At the end of the current event, go through each of the roots and ensure
   // there's a task scheduled for each one at the correct priority.
   if (__DEV__ && ReactSharedInternals.actQueue !== null) {
@@ -137,16 +164,6 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
       didScheduleMicrotask = true;
       scheduleImmediateRootScheduleTask();
     }
-  }
-
-  if (
-    __DEV__ &&
-    !disableLegacyMode &&
-    ReactSharedInternals.isBatchingLegacy &&
-    root.tag === LegacyRoot
-  ) {
-    // Special `act` case: Record whenever a legacy update is scheduled.
-    ReactSharedInternals.didScheduleLegacyUpdate = true;
   }
 }
 
@@ -256,8 +273,14 @@ function processRootScheduleInMicrotask() {
       // render it synchronously anyway. We do this during a popstate event to
       // preserve the scroll position of the previous page.
       syncTransitionLanes = currentEventTransitionLane;
+    } else if (enableDefaultTransitionIndicator) {
+      // If we have a Transition scheduled by this event it might be paired
+      // with Default lane scheduled loading indicators. To unbatch it from
+      // other events later on, flush it early to determine whether it
+      // rendered an indicator. This ensures that setState in default priority
+      // event doesn't trigger onDefaultTransitionIndicator.
+      syncTransitionLanes = DefaultLane;
     }
-    currentEventTransitionLane = NoLane;
   }
 
   const currentTime = now();
@@ -314,6 +337,46 @@ function processRootScheduleInMicrotask() {
   // completes.
   if (!hasPendingCommitEffects()) {
     flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
+  }
+
+  if (currentEventTransitionLane !== NoLane) {
+    // Reset Event Transition Lane so that we allocate a new one next time.
+    currentEventTransitionLane = NoLane;
+    startDefaultTransitionIndicatorIfNeeded();
+  }
+}
+
+function startDefaultTransitionIndicatorIfNeeded() {
+  if (!enableDefaultTransitionIndicator) {
+    return;
+  }
+  // Check if we need to start an isomorphic indicator like if an async action
+  // was started.
+  startIsomorphicDefaultIndicatorIfNeeded();
+  // Check all the roots if there are any new indicators needed.
+  let root = firstScheduledRoot;
+  while (root !== null) {
+    if (root.indicatorLanes !== NoLanes && root.pendingIndicator === null) {
+      // We have new indicator lanes that requires a loading state. Start the
+      // default transition indicator.
+      if (hasOngoingIsomorphicIndicator()) {
+        // We already have an isomorphic indicator going which means it has to
+        // also apply to this root since it implies all roots have the same one.
+        // We retain this indicator so that it keeps going until we commit this
+        // root.
+        root.pendingIndicator = retainIsomorphicIndicator();
+      } else {
+        try {
+          const onDefaultTransitionIndicator =
+            root.onDefaultTransitionIndicator;
+          root.pendingIndicator = onDefaultTransitionIndicator() || noop;
+        } catch (x) {
+          root.pendingIndicator = noop;
+          reportGlobalError(x);
+        }
+      }
+    }
+    root = root.next;
   }
 }
 
@@ -645,11 +708,29 @@ export function requestTransitionLane(
   // over. Our heuristic for that is whenever we enter a concurrent work loop.
   if (currentEventTransitionLane === NoLane) {
     // All transitions within the same event are assigned the same lane.
-    currentEventTransitionLane = claimNextTransitionLane();
+    const actionScopeLane = peekEntangledActionLane();
+    currentEventTransitionLane =
+      actionScopeLane !== NoLane
+        ? // We're inside an async action scope. Reuse the same lane.
+          actionScopeLane
+        : // We may or may not be inside an async action scope. If we are, this
+          // is the first update in that scope. Either way, we need to get a
+          // fresh transition lane.
+          claimNextTransitionLane();
   }
   return currentEventTransitionLane;
 }
 
 export function didCurrentEventScheduleTransition(): boolean {
   return currentEventTransitionLane !== NoLane;
+}
+
+export function markIndicatorHandled(root: FiberRoot): void {
+  if (enableDefaultTransitionIndicator) {
+    // The current transition event rendered a synchronous loading state.
+    // Clear it from the indicator lanes. We don't need to show a separate
+    // loading state for this lane.
+    root.indicatorLanes &= ~currentEventTransitionLane;
+    markIsomorphicIndicatorHandled();
+  }
 }
