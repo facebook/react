@@ -248,6 +248,7 @@ type BaseFiberRootProperties = {
   pingedLanes: Lanes,
   warmLanes: Lanes,
   expiredLanes: Lanes,
+  indicatorLanes: Lanes, // enableDefaultTransitionIndicator only
   errorRecoveryDisabledLanes: Lanes,
   shellSuspendCounter: number,
 
@@ -280,7 +281,9 @@ type BaseFiberRootProperties = {
     errorInfo: {+componentStack?: ?string},
   ) => void,
 
+  // enableDefaultTransitionIndicator only
   onDefaultTransitionIndicator: () => void | (() => void),
+  pendingIndicator: null | (() => void),
 
   formState: ReactFormState<any, any> | null,
 
