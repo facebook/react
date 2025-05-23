@@ -195,9 +195,15 @@ describe('ReactDOMFizzStaticBrowser', () => {
       ),
     );
     const prelude = await readContent(result.prelude);
-    expect(prelude).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
-    );
+    if (gate(flags => flags.enableFizzBlockingRender)) {
+      expect(prelude).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head><link rel="expect" href="#«R»" blocking="render"/></head><body>hello world<template id="«R»"></template></body></html>"`,
+      );
+    } else {
+      expect(prelude).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      );
+    }
   });
 
   it('should emit bootstrap script src at the end', async () => {
@@ -1438,8 +1444,15 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(await readContent(content)).toBe(
       '<!DOCTYPE html><html lang="en"><head>' +
         '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
-        '<link rel="expect" href="#«R»" blocking="render"/></head>' +
-        '<body>Hello<template id="«R»"></template></body></html>',
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#«R»" blocking="render"/>'
+          : '') +
+        '</head>' +
+        '<body>Hello' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="«R»"></template>'
+          : '') +
+        '</body></html>',
     );
   });
 
