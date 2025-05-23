@@ -755,7 +755,7 @@ function createChildReconciler(
         const context: ReactContext<mixed> = (newChild: any);
         return createChild(
           returnFiber,
-          readContextDuringReconciliation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context),
           lanes,
         );
       }
@@ -892,7 +892,7 @@ function createChildReconciler(
         return updateSlot(
           returnFiber,
           oldFiber,
-          readContextDuringReconciliation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context),
           lanes,
         );
       }
@@ -1024,7 +1024,7 @@ function createChildReconciler(
           existingChildren,
           returnFiber,
           newIdx,
-          readContextDuringReconciliation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context),
           lanes,
         );
       }
@@ -1901,7 +1901,7 @@ function createChildReconciler(
         return reconcileChildFibersImpl(
           returnFiber,
           currentFirstChild,
-          readContextDuringReconciliation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context),
           lanes,
         );
       }
